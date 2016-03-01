@@ -272,10 +272,14 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link LookupOperation} for the given fields.
+	 * Creates a new {@link LookupOperation}.
 	 *
-	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @param from must not be {@literal null}.
+	 * @param localField must not be {@literal null}.
+	 * @param foreignField must not be {@literal null}.
+	 * @param as must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.9
 	 */
 	public static LookupOperation lookup(String from, String localField, String foreignField, String as) {
 		return lookup(field(from), field(localField), field(foreignField), field(as));
@@ -284,8 +288,12 @@ public class Aggregation {
 	/**
 	 * Creates a new {@link LookupOperation} for the given {@link Fields}.
 	 *
-	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @param from must not be {@literal null}.
+	 * @param localField must not be {@literal null}.
+	 * @param foreignField must not be {@literal null}.
+	 * @param as must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.9
 	 */
 	public static LookupOperation lookup(Field from, Field localField, Field foreignField, Field as) {
 		return new LookupOperation(from, localField, foreignField, as);
@@ -352,11 +360,9 @@ public class Aggregation {
 			operationDocuments.add(operation.toDBObject(context));
 
 			if (operation instanceof FieldsExposingAggregationOperation) {
-				boolean additional = operation instanceof AdditionalFieldsExposingAggregationOperation ? true : false;
 
 				FieldsExposingAggregationOperation exposedFieldsOperation = (FieldsExposingAggregationOperation) operation;
-				context = new ExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields(), rootContext,
-						additional);
+				context = new ExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields(), rootContext);
 			}
 		}
 

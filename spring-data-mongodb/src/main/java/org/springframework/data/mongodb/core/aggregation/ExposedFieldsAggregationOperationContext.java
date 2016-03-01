@@ -17,9 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.DBObject;
 
@@ -29,14 +27,12 @@ import com.mongodb.DBObject;
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
- * @author Alessio Fachechi
  * @since 1.4
  */
 class ExposedFieldsAggregationOperationContext implements AggregationOperationContext {
 
 	private final ExposedFields exposedFields;
 	private final AggregationOperationContext rootContext;
-	private final boolean additional;
 
 	/**
 	 * Creates a new {@link ExposedFieldsAggregationOperationContext} from the given {@link ExposedFields}. Uses the given
@@ -46,28 +42,13 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 * @param rootContext must not be {@literal null}.
 	 */
 	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields,
-													AggregationOperationContext rootContext) {
-		this(exposedFields, rootContext, false);
-	}
-
-	/**
-	 * Creates a new {@link ExposedFieldsAggregationOperationContext} from the given {@link ExposedFields}. Uses the given
-	 * {@link AggregationOperationContext} to perform a mapping to mongo types if necessary.
-	 *
-	 * @param exposedFields must not be {@literal null}.
-	 * @param rootContext must not be {@literal null}.
-	 * @param additional {@literal true} if the context exposes new fields in addition to the previous ones, e.g. in the
-	 * case of a lookup operation, {@literal false} otherwise.
-	 */
-	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields, AggregationOperationContext rootContext,
-													boolean additional) {
+			AggregationOperationContext rootContext) {
 
 		Assert.notNull(exposedFields, "ExposedFields must not be null!");
 		Assert.notNull(rootContext, "RootContext must not be null!");
 
 		this.exposedFields = exposedFields;
 		this.rootContext = rootContext;
-		this.additional = additional;
 	}
 
 	/* 
@@ -129,16 +110,6 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 
 				// We have to synthetic to true, in order to render the field-name as is.
 				return new FieldReference(new ExposedField(name, true));
-			}
-		}
-
-		if (additional) {
-
-			// if no exposed fields found propagate to root context.
-			if (field != null) {
-				return rootContext.getReference(field);
-			} else if (StringUtils.hasText(name)) {
-				return rootContext.getReference(name);
 			}
 		}
 

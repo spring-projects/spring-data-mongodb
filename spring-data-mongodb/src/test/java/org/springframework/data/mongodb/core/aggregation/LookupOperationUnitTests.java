@@ -17,23 +17,56 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
-import com.mongodb.DBObject;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
+
+import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link LookupOperation}.
  *
  * @author Alessio Fachechi
+ * @author Christoph Strobl
  */
 public class LookupOperationUnitTests {
 
+	/**
+	 * @see DATAMONGO-1326
+	 */
 	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullFields() {
-		new LookupOperation((Field) null, (Field) null, (Field) null, (Field) null);
+	public void rejectsNullForFrom() {
+		new LookupOperation(null, Fields.field("localField"), Fields.field("foreignField"), Fields.field("as"));
 	}
 
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNullLocalFieldField() {
+		new LookupOperation(Fields.field("from"), null, Fields.field("foreignField"), Fields.field("as"));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNullForeignField() {
+		new LookupOperation(Fields.field("from"), Fields.field("localField"), null, Fields.field("as"));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNullForAs() {
+		new LookupOperation(Fields.field("from"), Fields.field("localField"), Fields.field("foreignField"), null);
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
 	@Test
 	public void lookupOperationWithValues() {
 
@@ -41,16 +74,28 @@ public class LookupOperationUnitTests {
 
 		DBObject lookupClause = extractDbObjectFromLookupOperation(lookupOperation);
 
-		assertThat((String) lookupClause.get("from"), is(new String("a")));
-		assertThat((String) lookupClause.get("localField"), is(new String("b")));
-		assertThat((String) lookupClause.get("foreignField"), is(new String("c")));
-		assertThat((String) lookupClause.get("as"), is(new String("d")));
+		assertThat(lookupClause,
+				isBsonObject().containing("from", "a") //
+						.containing("localField", "b") //
+						.containing("foreignField", "c") //
+						.containing("as", "d"));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test
+	public void lookupOperationExposesAsField() {
+
+		LookupOperation lookupOperation = Aggregation.lookup("a", "b", "c", "d");
 
 		assertThat(lookupOperation.getFields().exposesNoFields(), is(false));
 		assertThat(lookupOperation.getFields().exposesSingleFieldOnly(), is(true));
+		assertThat(lookupOperation.getFields().getField("d"), notNullValue());
 	}
 
 	private DBObject extractDbObjectFromLookupOperation(LookupOperation lookupOperation) {
+
 		DBObject dbObject = lookupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
 		DBObject lookupClause = DBObjectTestUtils.getAsDBObject(dbObject, "$lookup");
 		return lookupClause;
