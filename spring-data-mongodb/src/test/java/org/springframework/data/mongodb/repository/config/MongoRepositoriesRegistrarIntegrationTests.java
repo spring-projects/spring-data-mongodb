@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.config;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+
+import java.util.Arrays;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,9 +58,7 @@ public class MongoRepositoriesRegistrarIntegrationTests {
 	@Autowired ApplicationContext context;
 
 	@Test
-	public void testConfiguration() {
-
-	}
+	public void testConfiguration() {}
 
 	/**
 	 * @see DATAMONGO-901
@@ -65,12 +66,8 @@ public class MongoRepositoriesRegistrarIntegrationTests {
 	@Test
 	public void registersTypePredictingPostProcessor() {
 
-		for (String name : context.getBeanDefinitionNames()) {
-			if (name.startsWith("org.springframework.data.repository.core.support.RepositoryInterfaceAwareBeanPostProcessor")) {
-				return;
-			}
-		}
+		Iterable<String> beanNames = Arrays.asList(context.getBeanDefinitionNames());
 
-		fail("Expected to find a bean with name starting with RepositoryInterfaceAwareBeanPostProcessor");
+		assertThat(beanNames, hasItem(containsString("RepositoryFactoryBeanSupport_Predictor")));
 	}
 }
