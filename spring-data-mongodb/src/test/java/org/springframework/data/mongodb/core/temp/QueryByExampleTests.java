@@ -58,7 +58,9 @@ public class QueryByExampleTests {
 		Person sample = new Person();
 		sample.lastname = "stark";
 
-		List<Person> result = template.findByExample(sample);
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(2));
 	}
 
@@ -74,7 +76,9 @@ public class QueryByExampleTests {
 		sample.lastname = "stark";
 		sample.firstname = "arya";
 
-		List<Person> result = template.findByExample(sample);
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(1));
 	}
 
@@ -92,7 +96,9 @@ public class QueryByExampleTests {
 		Person sample = new Person();
 		sample.id = p4.id;
 
-		List<Person> result = template.findByExample(sample);
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(1));
 	}
 
@@ -108,7 +114,10 @@ public class QueryByExampleTests {
 		sample.firstname = "jon";
 		sample.firstname = "stark";
 
-		List<Person> result = template.findByExample(sample);
+
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(0));
 	}
 
@@ -122,7 +131,9 @@ public class QueryByExampleTests {
 
 		Person sample = new Person();
 
-		List<Person> result = template.findByExample(sample);
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(3));
 	}
 

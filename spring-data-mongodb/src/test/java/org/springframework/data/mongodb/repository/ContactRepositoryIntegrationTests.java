@@ -54,6 +54,9 @@ public class ContactRepositoryIntegrationTests {
 		assertTrue(repository.findOne(result.getId().toString()) instanceof Person);
 	}
 
+	/**
+	 * @see DATAMONGO-1245
+	 */
 	@Test
 	public void findsContactByUntypedExample() {
 
@@ -65,6 +68,9 @@ public class ContactRepositoryIntegrationTests {
 		assertThat(repository.findOne(example), instanceOf(Person.class));
 	}
 
+	/**
+	 * @see DATAMONGO-1245
+	 */
 	@Test
 	public void findsContactByTypedExample() {
 
@@ -76,6 +82,9 @@ public class ContactRepositoryIntegrationTests {
 		assertThat(repository.findOne(example), instanceOf(Person.class));
 	}
 
+	/**
+	 * @see DATAMONGO-1245
+	 */
 	@Test
 	public void findsNoContactByExample() {
 

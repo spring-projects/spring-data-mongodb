@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.hamcrest.Matcher;
-import org.hamcrest.collection.IsMapContaining;
-import org.hamcrest.core.Is;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 
@@ -70,68 +68,68 @@ public class SerializationUtilsUnitTests {
 	 * @see DATAMONGO-1245
 	 */
 	@Test
-	public void flatMapShouldFlatOutNestedStructureCorrectly() {
+	public void flattenMapShouldFlatOutNestedStructureCorrectly() {
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1).add("nested", new BasicDBObject("value", "conflux")).get();
 
-		assertThat(flatMap(dbo), IsMapContaining.<String, Object> hasEntry("_id", 1));
-		assertThat(flatMap(dbo), IsMapContaining.<String, Object> hasEntry("nested.value", "conflux"));
+		assertThat(flattenMap(dbo), hasEntry("_id", (Object) 1));
+		assertThat(flattenMap(dbo), hasEntry("nested.value", (Object) "conflux"));
 	}
 
 	/**
 	 * @see DATAMONGO-1245
 	 */
 	@Test
-	public void flatMapShouldFlatOutNestedStructureWithListCorrectly() {
+	public void flattenMapShouldFlatOutNestedStructureWithListCorrectly() {
 
 		BasicDBList dbl = new BasicDBList();
 		dbl.addAll(Arrays.asList("nightwielder", "calamity"));
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1).add("nested", new BasicDBObject("value", dbl)).get();
 
-		assertThat(flatMap(dbo), IsMapContaining.<String, Object> hasEntry("_id", 1));
-		assertThat(flatMap(dbo), IsMapContaining.<String, Object> hasEntry("nested.value", dbl));
+		assertThat(flattenMap(dbo), hasEntry("_id", (Object) 1));
+		assertThat(flattenMap(dbo), hasEntry("nested.value", (Object) dbl));
 	}
 
 	/**
 	 * @see DATAMONGO-1245
 	 */
 	@Test
-	public void flatMapShouldLeaveKeywordsUntouched() {
+	public void flattenMapShouldLeaveKeywordsUntouched() {
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1).add("nested", new BasicDBObject("$regex", "^conflux$"))
 				.get();
 
-		Map<String, Object> map = flatMap(dbo);
+		Map<String, Object> map = flattenMap(dbo);
 
-		assertThat(map, IsMapContaining.<String, Object> hasEntry("_id", 1));
+		assertThat(map, hasEntry("_id", (Object) 1));
 		assertThat(map.get("nested"), notNullValue());
-		assertThat(((Map<String, Object>) map.get("nested")).get("$regex"), Is.<Object> is("^conflux$"));
+		assertThat(((Map<String, Object>) map.get("nested")).get("$regex"), is((Object) "^conflux$"));
 	}
 
 	/**
 	 * @see DATAMONGO-1245
 	 */
 	@Test
-	public void flatMapSouldAppendCommandsCorrectly() {
+	public void flattenMapShouldAppendCommandsCorrectly() {
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1)
 				.add("nested", new BasicDBObjectBuilder().add("$regex", "^conflux$").add("$options", "i").get()).get();
 
-		Map<String, Object> map = flatMap(dbo);
+		Map<String, Object> map = flattenMap(dbo);
 
-		assertThat(map, IsMapContaining.<String, Object> hasEntry("_id", 1));
+		assertThat(map, hasEntry("_id", (Object) 1));
 		assertThat(map.get("nested"), notNullValue());
-		assertThat(((Map<String, Object>) map.get("nested")).get("$regex"), Is.<Object> is("^conflux$"));
-		assertThat(((Map<String, Object>) map.get("nested")).get("$options"), Is.<Object> is("i"));
+		assertThat(((Map<String, Object>) map.get("nested")).get("$regex"), is((Object) "^conflux$"));
+		assertThat(((Map<String, Object>) map.get("nested")).get("$options"), is((Object) "i"));
 	}
 
 	/**
 	 * @see DATAMONGO-1245
 	 */
 	@Test
-	public void flatMapShouldReturnEmptyMapWhenSourceIsNull() {
-		assertThat(flatMap(null).isEmpty(), is(true));
+	public void flattenMapShouldReturnEmptyMapWhenSourceIsNull() {
+		assertThat(flattenMap(null).isEmpty(), is(true));
 	}
 
 	static class Complex {

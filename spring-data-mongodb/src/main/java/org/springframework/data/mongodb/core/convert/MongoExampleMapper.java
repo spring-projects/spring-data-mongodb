@@ -17,16 +17,19 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
+import org.bson.BasicBSONObject;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleSpec;
 import org.springframework.data.domain.ExampleSpec.NullHandler;
 import org.springframework.data.domain.ExampleSpec.PropertyValueTransformer;
 import org.springframework.data.domain.ExampleSpec.StringMatcher;
@@ -101,13 +104,11 @@ public class MongoExampleMapper {
 		applyPropertySpecs("", reference, example.getProbeType(), exampleSpecAccessor);
 
 		if (exampleSpecAccessor.isTyped()) {
-			Set<Class<?>> restrictedTypes = new HashSet<Class<?>>();
-			restrictedTypes.add(example.getResultType());
-			this.converter.getTypeMapper().writeTypeRestrictions(reference, restrictedTypes);
+			this.converter.getTypeMapper().writeTypeRestrictions(reference, (Set) Collections.singleton(example.getResultType()));
 		}
 
 		return ObjectUtils.nullSafeEquals(NullHandler.INCLUDE, exampleSpecAccessor.getNullHandler()) ? reference
-				: new BasicDBObject(SerializationUtils.flatMap(reference));
+				: new BasicDBObject(SerializationUtils.flattenMap(reference));
 	}
 
 	private String getMappedPropertyPath(String path, Class<?> probeType) {
@@ -169,15 +170,14 @@ public class MongoExampleMapper {
 		while (iter.hasNext()) {
 
 			Map.Entry<String, Object> entry = iter.next();
-
-			if (entry.getKey().equals("_id") && entry.getValue() == null) {
+			String propertyPath = StringUtils.hasText(path) ? path + "." + entry.getKey() : entry.getKey();
+			String mappedPropertyPath = getMappedPropertyPath(propertyPath, probeType);
+			
+			if(isEmptyIdProperty(entry)) {
 				iter.remove();
 				continue;
 			}
-
-			String propertyPath = StringUtils.hasText(path) ? path + "." + entry.getKey() : entry.getKey();
-
-			String mappedPropertyPath = getMappedPropertyPath(propertyPath, probeType);
+			
 			if (exampleSpecAccessor.isIgnoredPath(propertyPath) || exampleSpecAccessor.isIgnoredPath(mappedPropertyPath)) {
 				iter.remove();
 				continue;
@@ -215,6 +215,10 @@ public class MongoExampleMapper {
 				applyPropertySpecs(propertyPath, (BasicDBObject) entry.getValue(), probeType, exampleSpecAccessor);
 			}
 		}
+	}
+
+	private boolean isEmptyIdProperty(Entry<String, Object> entry) {
+		return entry.getKey().equals("_id") && entry.getValue() == null;
 	}
 
 	private void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher, boolean ignoreCase) {
