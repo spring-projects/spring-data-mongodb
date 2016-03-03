@@ -79,7 +79,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		RepositoryFactorySupport factory = getFactoryInstance(operations);
 
 		if (createIndexesForQueryMethods) {
-			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(operations));
+			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(collectionName -> operations.indexOps(collectionName)));
 		}
 
 		return factory;

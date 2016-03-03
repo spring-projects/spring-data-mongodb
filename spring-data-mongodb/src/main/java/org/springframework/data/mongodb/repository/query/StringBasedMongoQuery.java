@@ -39,7 +39,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
@@ -60,7 +60,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery} for the given {@link MongoQueryMethod} and {@link MongoOperations}.
-	 * 
+	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
@@ -127,7 +127,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return query;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isCountQuery()
 	 */
@@ -147,10 +147,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	/**
 	 * A parser that extracts the parameter bindings from a given query string.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 */
-	private static enum ParameterBindingParser {
+	static enum ParameterBindingParser {
 
 		INSTANCE;
 
@@ -170,7 +170,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		/**
 		 * Returns a list of {@link ParameterBinding}s found in the given {@code input} or an
 		 * {@link Collections#emptyList()}.
-		 * 
+		 *
 		 * @param input can be {@literal null} or empty.
 		 * @param bindings must not be {@literal null}.
 		 * @return
@@ -265,7 +265,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 					int paramIndex = Integer.parseInt(valueMatcher.group(PARAMETER_INDEX_GROUP));
 
 					/*
-					 * The pattern is used as a direct parameter replacement, e.g. 'field': ?1, 
+					 * The pattern is used as a direct parameter replacement, e.g. 'field': ?1,
 					 * therefore we treat it as not quoted to remain backwards compatible.
 					 */
 					boolean quoted = !string.equals(PARAMETER_PREFIX + paramIndex);
@@ -324,7 +324,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	/**
 	 * A generic parameter binding with name or position information.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 */
 	static class ParameterBinding {
@@ -335,7 +335,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 		/**
 		 * Creates a new {@link ParameterBinding} with the given {@code parameterIndex} and {@code quoted} information.
-		 * 
+		 *
 		 * @param parameterIndex
 		 * @param quoted whether or not the parameter is already quoted.
 		 */

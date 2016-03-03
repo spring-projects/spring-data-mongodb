@@ -32,7 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * Integration tests for custom Repository implementations.
- * 
+ *
  * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)

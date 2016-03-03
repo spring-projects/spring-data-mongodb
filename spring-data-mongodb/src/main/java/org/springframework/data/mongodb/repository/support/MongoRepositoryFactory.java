@@ -40,17 +40,26 @@ import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.data.repository.reactive.RxJavaCrudRepository;
+import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 /**
  * Factory to create {@link MongoRepository} instances.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
+
+	private static final boolean PROJECT_REACTOR_PRESENT = ClassUtils.isPresent("reactor.core.publisher.Flux",
+			QueryExecutionConverters.class.getClassLoader());
+	private static final boolean RXJAVA_OBSERVABLE_PRESENT = ClassUtils.isPresent("rx.Observable",
+			QueryExecutionConverters.class.getClassLoader());
 
 	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 
@@ -59,7 +68,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 	/**
 	 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoOperations}.
-	 * 
+	 *
 	 * @param mongoOperations must not be {@literal null}.
 	 */
 	public MongoRepositoryFactory(MongoOperations mongoOperations) {
@@ -76,6 +85,14 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
+
+		boolean isReactiveRepository = (PROJECT_REACTOR_PRESENT && ReactiveCrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface())) || (
+				   RXJAVA_OBSERVABLE_PRESENT && RxJavaCrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()));
+
+		if (isReactiveRepository) {
+			return SimpleReactiveMongoRepository.class;
+		}
+
 
 		boolean isQueryDslRepository = QUERY_DSL_PRESENT
 				&& QueryDslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());

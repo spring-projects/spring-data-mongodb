@@ -54,8 +54,7 @@ public class DefaultIndexOperationsIntegrationTests {
 
 		this.collection = this.template.getDb().getCollection(collectionName, Document.class);
 		this.collection.dropIndexes();
-
-		this.indexOps = new DefaultIndexOperations(template, collectionName);
+		this.indexOps = new DefaultIndexOperations(template.getMongoDbFactory(), collectionName);
 	}
 
 	/**

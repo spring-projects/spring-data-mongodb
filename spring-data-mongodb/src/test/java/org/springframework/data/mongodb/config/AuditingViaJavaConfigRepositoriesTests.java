@@ -39,7 +39,7 @@ import com.mongodb.MongoClient;
 
 /**
  * Integration tests for auditing via Java config.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
  */

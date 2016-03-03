@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import reactor.core.publisher.Flux;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
@@ -29,6 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.bson.Document;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
+import org.reactivestreams.Publisher;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -44,7 +47,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * Wrapper class to contain useful converters for the usage with Mongo.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -59,7 +62,7 @@ abstract class MongoConverters {
 
 	/**
 	 * Returns the converters to be registered.
-	 * 
+	 *
 	 * @return
 	 * @since 1.9
 	 */
@@ -79,6 +82,7 @@ abstract class MongoConverters {
 		converters.add(DocumentToNamedMongoScriptConverter.INSTANCE);
 		converters.add(CurrencyToStringConverter.INSTANCE);
 		converters.add(StringToCurrencyConverter.INSTANCE);
+		converters.add(NumberToNumberConverterFactory.INSTANCE);
 		converters.add(AtomicIntegerToIntegerConverter.INSTANCE);
 		converters.add(AtomicLongToLongConverter.INSTANCE);
 		converters.add(LongToAtomicLongConverter.INSTANCE);
@@ -89,7 +93,7 @@ abstract class MongoConverters {
 
 	/**
 	 * Simple singleton to convert {@link ObjectId}s to their {@link String} representation.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	public static enum ObjectIdToStringConverter implements Converter<ObjectId, String> {
@@ -102,7 +106,7 @@ abstract class MongoConverters {
 
 	/**
 	 * Simple singleton to convert {@link String}s to their {@link ObjectId} representation.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	public static enum StringToObjectIdConverter implements Converter<String, ObjectId> {
@@ -115,7 +119,7 @@ abstract class MongoConverters {
 
 	/**
 	 * Simple singleton to convert {@link ObjectId}s to their {@link java.math.BigInteger} representation.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	public static enum ObjectIdToBigIntegerConverter implements Converter<ObjectId, BigInteger> {
@@ -128,7 +132,7 @@ abstract class MongoConverters {
 
 	/**
 	 * Simple singleton to convert {@link BigInteger}s to their {@link ObjectId} representation.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	public static enum BigIntegerToObjectIdConverter implements Converter<BigInteger, ObjectId> {
@@ -274,7 +278,7 @@ abstract class MongoConverters {
 
 	/**
 	 * {@link Converter} implementation converting {@link Currency} into its ISO 4217 {@link String} representation.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.9
 	 */
@@ -293,9 +297,29 @@ abstract class MongoConverters {
 		}
 	}
 
+	@ReadingConverter
+	public static enum PublisherToFluxConverter implements Converter<Publisher<?>, Flux<?>> {
+
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+
+		@Override
+		public Flux<?> convert(Publisher<?> source) {
+
+			if(source instanceof Flux){
+				return (Flux<?>) source;
+			}
+			return Flux.from((Publisher<?>) source);
+		}
+	}
+
 	/**
 	 * {@link Converter} implementation converting ISO 4217 {@link String} into {@link Currency}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.9
 	 */
@@ -318,7 +342,7 @@ abstract class MongoConverters {
 	 * {@link ConverterFactory} implementation using {@link NumberUtils} for number conversion and parsing. Additionally
 	 * deals with {@link AtomicInteger} and {@link AtomicLong} by calling {@code get()} before performing the actual
 	 * conversion.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.9
 	 */
@@ -351,7 +375,7 @@ abstract class MongoConverters {
 
 			/**
 			 * Creates a new {@link NumberToNumberConverter} for the given target type.
-			 * 
+			 *
 			 * @param targetType must not be {@literal null}.
 			 */
 			public NumberToNumberConverter(Class<T> targetType) {

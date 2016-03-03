@@ -31,7 +31,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObj
 /**
  * Base class for {@link MongoConverter} implementations. Sets up a {@link GenericConversionService} and populates basic
  * converters. Allows registering {@link CustomConversions}.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  */
@@ -43,7 +43,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 
 	/**
 	 * Creates a new {@link AbstractMongoConverter} using the given {@link GenericConversionService}.
-	 * 
+	 *
 	 * @param conversionService
 	 */
 	public AbstractMongoConverter(GenericConversionService conversionService) {
@@ -52,7 +52,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 
 	/**
 	 * Registers the given custom conversions with the converter.
-	 * 
+	 *
 	 * @param conversions
 	 */
 	public void setCustomConversions(CustomConversions conversions) {
@@ -61,7 +61,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 
 	/**
 	 * Registers {@link EntityInstantiators} to customize entity instantiation.
-	 * 
+	 *
 	 * @param instantiators
 	 */
 	public void setInstantiators(EntityInstantiators instantiators) {
@@ -89,7 +89,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 		conversions.registerConvertersIn(conversionService);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#convertToMongoType(java.lang.Object)
 	 */
