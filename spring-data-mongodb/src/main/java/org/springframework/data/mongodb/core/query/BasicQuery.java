@@ -28,6 +28,7 @@ import com.mongodb.util.JSON;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author John Willemin
  */
 public class BasicQuery extends Query {
 
@@ -70,7 +71,11 @@ public class BasicQuery extends Query {
 
 	@Override
 	public DBObject getFieldsObject() {
-		return fieldsObject;
+		if(fieldsObject != null) {
+			return fieldsObject;
+		} else {
+			return super.getFieldsObject();
+		}
 	}
 
 	@Override
