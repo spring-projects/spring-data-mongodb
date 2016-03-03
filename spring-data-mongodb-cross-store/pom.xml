@@ -51,6 +51,14 @@
 			<version>2.0.0.DATAMONGO-1444-SNAPSHOT</version>
 		</dependency>
 
+		<!-- reactive -->
+		<dependency>
+		 	<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-core</artifactId>
+			<version>${reactor}</version>
+			<optional>true</optional>
+		</dependency>
+
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjrt</artifactId>

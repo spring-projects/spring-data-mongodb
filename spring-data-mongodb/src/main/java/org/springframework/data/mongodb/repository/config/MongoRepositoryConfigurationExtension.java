@@ -18,23 +18,34 @@ package org.springframework.data.mongodb.repository.config;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.config.ParsingUtils;
+import org.springframework.data.mongodb.config.BeanNames;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
+import org.springframework.data.repository.config.RepositoryConfiguration;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
+import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
+import org.springframework.data.repository.util.ReactiveWrappers;
 import org.w3c.dom.Element;
 
 /**
  * {@link RepositoryConfigurationExtension} for MongoDB.
  * 
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class MongoRepositoryConfigurationExtension extends RepositoryConfigurationExtensionSupport {
 
@@ -73,7 +84,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 	 */
 	@Override
 	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
-		return Collections.<Class<? extends Annotation>>singleton(Document.class);
+		return Collections.singleton(Document.class);
 	}
 
 	/* 
@@ -82,7 +93,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 	 */
 	@Override
 	protected Collection<Class<?>> getIdentifyingTypes() {
-		return Collections.<Class<?>>singleton(MongoRepository.class);
+		return Collections.singleton(MongoRepository.class);
 	}
 
 	/* 
@@ -109,5 +120,44 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 
 		builder.addPropertyReference("mongoOperations", attributes.getString("mongoTemplateRef"));
 		builder.addPropertyValue("createIndexesForQueryMethods", attributes.getBoolean("createIndexesForQueryMethods"));
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#registerBeansForRoot(org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.data.repository.config.RepositoryConfigurationSource)
+	 */
+	@Override
+	public void registerBeansForRoot(BeanDefinitionRegistry registry, RepositoryConfigurationSource configurationSource) {
+
+		super.registerBeansForRoot(registry, configurationSource);
+
+		if (!registry.containsBeanDefinition(BeanNames.MAPPING_CONTEXT_BEAN_NAME)) {
+
+			RootBeanDefinition definition = new RootBeanDefinition(MongoMappingContext.class);
+			definition.setRole(AbstractBeanDefinition.ROLE_INFRASTRUCTURE);
+			definition.setSource(configurationSource.getSource());
+
+			registry.registerBeanDefinition(BeanNames.MAPPING_CONTEXT_BEAN_NAME, definition);
+		}
+	}
+
+	@Override
+	public <T extends RepositoryConfigurationSource> Collection<RepositoryConfiguration<T>> getRepositoryConfigurations(
+			T configSource, ResourceLoader loader, boolean strictMatchesOnly) {
+
+		Collection<RepositoryConfiguration<T>> repositoryConfigurations = super.getRepositoryConfigurations(configSource,
+				loader, strictMatchesOnly);
+
+		if (ReactiveWrappers.isAvailable()) {
+
+			return repositoryConfigurations.stream().filter(configuration -> {
+
+				Class<?> repositoryInterface = super.loadRepositoryInterface(configuration, loader);
+				return !RepositoryType.isReactiveRepository(repositoryInterface);
+
+			}).collect(Collectors.toList());
+		}
+
+		return repositoryConfigurations;
 	}
 }

@@ -28,6 +28,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.repository.InfiniteStream;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.projection.ProjectionFactory;
@@ -217,6 +218,16 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	Meta getMetaAnnotation() {
 		return AnnotatedElementUtils.findMergedAnnotation(method, Meta.class);
+	}
+
+	/**
+	 * Returns the {@link InfiniteStream} annotation that is applied to the method or {@code null} if not available.
+	 *
+	 * @return
+	 * @since 2.0
+	 */
+	InfiniteStream getInfiniteStreamAnnotation() {
+		return AnnotatedElementUtils.findMergedAnnotation(method, InfiniteStream.class);
 	}
 
 	/**

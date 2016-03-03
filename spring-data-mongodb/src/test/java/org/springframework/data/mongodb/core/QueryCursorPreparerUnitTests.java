@@ -40,7 +40,7 @@ import com.mongodb.client.FindIterable;
 
 /**
  * Unit tests for {@link QueryCursorPreparer}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -49,6 +49,7 @@ import com.mongodb.client.FindIterable;
 public class QueryCursorPreparerUnitTests {
 
 	@Mock MongoDbFactory factory;
+	@Mock MongoExceptionTranslator exceptionTranslatorMock;
 	@Mock FindIterable<Document> cursor;
 
 	@Mock FindIterable<Document> cursorToUse;
@@ -56,6 +57,7 @@ public class QueryCursorPreparerUnitTests {
 	@Before
 	public void setUp() {
 
+		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslatorMock);
 		when(cursor.batchSize(anyInt())).thenReturn(cursor);
 		when(cursor.filter(any(Document.class))).thenReturn(cursor);
 		when(cursor.limit(anyInt())).thenReturn(cursor);

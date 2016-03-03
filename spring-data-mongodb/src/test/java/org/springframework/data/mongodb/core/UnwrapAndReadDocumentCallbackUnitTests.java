@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -32,7 +33,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
  * Unit tests for {@link UnwrapAndReadDocumentCallback}.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  */
@@ -40,11 +41,14 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 public class UnwrapAndReadDocumentCallbackUnitTests {
 
 	@Mock MongoDbFactory factory;
+	@Mock MongoExceptionTranslator exceptionTranslatorMock;
 
 	UnwrapAndReadDocumentCallback<Target> callback;
 
 	@Before
 	public void setUp() {
+
+		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslatorMock);
 
 		MongoTemplate template = new MongoTemplate(factory);
 		MappingMongoConverter converter = new MappingMongoConverter(new DefaultDbRefResolver(factory),

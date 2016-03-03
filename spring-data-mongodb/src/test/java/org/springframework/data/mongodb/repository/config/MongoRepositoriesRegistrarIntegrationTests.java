@@ -37,7 +37,7 @@ import com.mongodb.MongoClient;
 
 /**
  * Integration tests for {@link MongoRepositoriesRegistrar}.
- * 
+ *
  * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)

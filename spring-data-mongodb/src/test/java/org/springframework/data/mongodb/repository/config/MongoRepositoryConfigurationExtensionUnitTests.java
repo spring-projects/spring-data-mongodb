@@ -34,7 +34,7 @@ import org.springframework.data.repository.config.RepositoryConfigurationSource;
 
 /**
  * Unit tests for {@link MongoRepositoryConfigurationExtension}.
- * 
+ *
  * @author Oliver Gierke
  * @since 1.6
  */

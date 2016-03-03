@@ -38,7 +38,7 @@ import com.mongodb.MongoClient;
 
 /**
  * Integration tests for DATAMONGO-1289.
- * 
+ *
  * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)

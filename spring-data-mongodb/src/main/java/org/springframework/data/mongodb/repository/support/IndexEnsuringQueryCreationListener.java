@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.repository.query.MongoEntityMetadata;
@@ -38,23 +39,24 @@ import org.springframework.util.Assert;
  * refers to.
  * 
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
 	private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
 	private static final Logger LOG = LoggerFactory.getLogger(IndexEnsuringQueryCreationListener.class);
 
-	private final MongoOperations operations;
+	private final IndexOperationsProvider indexOperationsProvider;
 
 	/**
 	 * Creates a new {@link IndexEnsuringQueryCreationListener} using the given {@link MongoOperations}.
 	 * 
-	 * @param operations must not be {@literal null}.
+	 * @param indexOperationsProvider must not be {@literal null}.
 	 */
-	public IndexEnsuringQueryCreationListener(MongoOperations operations) {
+	public IndexEnsuringQueryCreationListener(IndexOperationsProvider indexOperationsProvider) {
 
-		Assert.notNull(operations);
-		this.operations = operations;
+		Assert.notNull(indexOperationsProvider);
+		this.indexOperationsProvider = indexOperationsProvider;
 	}
 
 	/*
@@ -85,7 +87,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		}
 
 		MongoEntityMetadata<?> metadata = query.getQueryMethod().getEntityInformation();
-		operations.indexOps(metadata.getCollectionName()).ensureIndex(index);
+		indexOperationsProvider.indexOps(metadata.getCollectionName()).ensureIndex(index);
 		LOG.debug(String.format("Created %s!", index));
 	}
 

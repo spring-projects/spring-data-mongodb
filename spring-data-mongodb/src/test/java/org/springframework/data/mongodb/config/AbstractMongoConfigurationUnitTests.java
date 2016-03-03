@@ -18,11 +18,9 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import example.first.First;
-import example.second.Second;
-
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 import org.junit.Rule;
@@ -45,11 +43,15 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
+import example.first.First;
+import example.second.Second;
+
 /**
  * Unit tests for {@link AbstractMongoConfiguration}.
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public class AbstractMongoConfigurationUnitTests {
 
@@ -63,7 +65,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		AbstractMongoConfiguration configuration = new SampleMongoConfiguration();
 		assertThat(configuration.getMappingBasePackage(), is(SampleMongoConfiguration.class.getPackage().getName()));
-		assertThat(configuration.getInitialEntitySet(), hasSize(1));
+		assertThat(configuration.getInitialEntitySet(), hasSize(2));
 		assertThat(configuration.getInitialEntitySet(), hasItem(Entity.class));
 	}
 
@@ -72,9 +74,7 @@ public class AbstractMongoConfigurationUnitTests {
 	 */
 	@Test
 	public void doesNotScanPackageIfMappingPackageIsNull() throws ClassNotFoundException {
-
 		assertScanningDisabled(null);
-
 	}
 
 	/**
@@ -169,12 +169,12 @@ public class AbstractMongoConfigurationUnitTests {
 
 		AbstractMongoConfiguration configuration = new SampleMongoConfiguration() {
 			@Override
-			protected String getMappingBasePackage() {
-				return value;
+			protected Collection<String> getMappingBasePackages() {
+				return Collections.singleton(value);
 			}
 		};
 
-		assertThat(configuration.getMappingBasePackage(), is(value));
+		assertThat(configuration.getMappingBasePackages(), hasItem(value));
 		assertThat(configuration.getInitialEntitySet(), hasSize(0));
 	}
 

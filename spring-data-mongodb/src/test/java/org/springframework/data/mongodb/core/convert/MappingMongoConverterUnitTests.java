@@ -259,7 +259,7 @@ public class MappingMongoConverterUnitTests {
 
 		List<Object> enums = (List<Object>) result.get("enums");
 		assertThat(enums.size(), is(1));
-		assertThat((String) enums.get(0), is("FIRST"));
+		assertThat(enums.get(0), is("FIRST"));
 	}
 
 	/**
@@ -387,7 +387,7 @@ public class MappingMongoConverterUnitTests {
 
 		Object localeField = document.get("locale");
 		assertThat(localeField, is(instanceOf(String.class)));
-		assertThat((String) localeField, is("en_US"));
+		assertThat(localeField, is("en_US"));
 
 		LocaleWrapper read = converter.read(LocaleWrapper.class, document);
 		assertThat(read.locale, is(Locale.US));
@@ -584,7 +584,7 @@ public class MappingMongoConverterUnitTests {
 	public void convertsObjectsIfNecessary() {
 
 		ObjectId id = new ObjectId();
-		assertThat(converter.convertToMongoType(id), is((Object) id));
+		assertThat(converter.convertToMongoType(id), is(id));
 	}
 
 	/**
@@ -608,7 +608,7 @@ public class MappingMongoConverterUnitTests {
 
 		List<Object> value = (List<Object>) foo;
 		assertThat(value.size(), is(1));
-		assertThat((String) value.get(0), is("Bar"));
+		assertThat(value.get(0), is("Bar"));
 	}
 
 	/**
@@ -647,7 +647,7 @@ public class MappingMongoConverterUnitTests {
 
 		BasicDBList value = (BasicDBList) foo;
 		assertThat(value.size(), is(1));
-		assertThat((String) value.get(0), is("Bar"));
+		assertThat(value.get(0), is("Bar"));
 	}
 
 	/**
@@ -677,7 +677,7 @@ public class MappingMongoConverterUnitTests {
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
 		Object firstObjectInFoo = ((List<?>) result.mapOfObjects.get("Foo")).get(0);
 		assertThat(firstObjectInFoo, is(instanceOf(Map.class)));
-		assertThat((String) ((Map<?, ?>) firstObjectInFoo).get("Hello"), is(equalTo("World")));
+		assertThat(((Map<?, ?>) firstObjectInFoo).get("Hello"), is(equalTo("World")));
 	}
 
 	/**
@@ -697,7 +697,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(foo, is(instanceOf(Map.class)));
 		Object doublyNestedObject = ((Map<?, ?>) foo).get("nested");
 		assertThat(doublyNestedObject, is(instanceOf(Map.class)));
-		assertThat((String) ((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
+		assertThat(((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
 	}
 
 	/**
@@ -719,7 +719,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(firstObjectInFoo, is(instanceOf(Map.class)));
 		Object doublyNestedObject = ((Map<?, ?>) firstObjectInFoo).get("nested");
 		assertThat(doublyNestedObject, is(instanceOf(Map.class)));
-		assertThat((String) ((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
+		assertThat(((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
 	}
 
 	/**
@@ -784,7 +784,7 @@ public class MappingMongoConverterUnitTests {
 		BasicDBList list = (BasicDBList) result.get("Foo");
 
 		assertThat(list.size(), is(1));
-		assertThat(list.get(0), is((Object) Locale.US.toString()));
+		assertThat(list.get(0), is(Locale.US.toString()));
 	}
 
 	/**
@@ -886,17 +886,17 @@ public class MappingMongoConverterUnitTests {
 
 		converter.write(a, result);
 
-		assertThat((String) result.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(A.class.getName()));
-		assertThat((String) result.get("valueType"), is(HashMap.class.getName()));
+		assertThat(result.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(A.class.getName()));
+		assertThat(result.get("valueType"), is(HashMap.class.getName()));
 
 		org.bson.Document object = (org.bson.Document) result.get("value");
 		assertThat(object, is(notNullValue()));
 
 		org.bson.Document inner = (org.bson.Document) object.get("test");
 		assertThat(inner, is(notNullValue()));
-		assertThat((String) inner.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(A.class.getName()));
-		assertThat((String) inner.get("valueType"), is(String.class.getName()));
-		assertThat((String) inner.get("value"), is("testValue"));
+		assertThat(inner.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(A.class.getName()));
+		assertThat(inner.get("valueType"), is(String.class.getName()));
+		assertThat(inner.get("value"), is("testValue"));
 	}
 
 	@Test
@@ -908,7 +908,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(value, result);
 
-		assertThat(result.get("_id"), is((Object) 5));
+		assertThat(result.get("_id"), is(5));
 	}
 
 	/**
@@ -919,7 +919,7 @@ public class MappingMongoConverterUnitTests {
 	public void writesNullValuesForCollection() {
 
 		CollectionWrapper wrapper = new CollectionWrapper();
-		wrapper.contacts = Arrays.<Contact> asList(new Person(), null);
+		wrapper.contacts = Arrays.asList(new Person(), null);
 
 		org.bson.Document result = new org.bson.Document();
 		converter.write(wrapper, result);
@@ -1161,7 +1161,7 @@ public class MappingMongoConverterUnitTests {
 
 		converter.write(wrapper, sink);
 
-		assertThat(sink.get("url"), is((Object) "http://springsource.org"));
+		assertThat(sink.get("url"), is("http://springsource.org"));
 	}
 
 	/**
@@ -1192,7 +1192,7 @@ public class MappingMongoConverterUnitTests {
 		Object idField = document.get("_id");
 		assertThat(idField, is(notNullValue()));
 		assertThat(idField, is(instanceOf(org.bson.Document.class)));
-		assertThat(((org.bson.Document) idField).get("innerId"), is((Object) 4711L));
+		assertThat(((org.bson.Document) idField).get("innerId"), is(4711L));
 	}
 
 	/**
@@ -1544,7 +1544,7 @@ public class MappingMongoConverterUnitTests {
 
 		org.bson.Document map = getAsDocument(result, "treeMapOfPersons");
 		org.bson.Document entry = getAsDocument(map, "key");
-		assertThat(entry.get("foo"), is((Object) "Dave"));
+		assertThat(entry.get("foo"), is("Dave"));
 	}
 
 	/**
@@ -1771,7 +1771,7 @@ public class MappingMongoConverterUnitTests {
 		ClassWithGeoShape result = converter.read(ClassWithGeoShape.class, document);
 
 		assertThat(result, is(notNullValue()));
-		assertThat(result.shape, is((Shape) sphere));
+		assertThat(result.shape, is(sphere));
 	}
 
 	/**
@@ -1883,8 +1883,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document sink = new org.bson.Document();
 		converter.write(source, sink);
 
-		assertThat((String) sink.get("_id"), is("rootId"));
-		assertThat((org.bson.Document) sink.get("nested"), is(new org.bson.Document().append("id", "nestedId")));
+		assertThat(sink.get("_id"), is("rootId"));
+		assertThat(sink.get("nested"), is(new org.bson.Document().append("id", "nestedId")));
 	}
 
 	/**
@@ -1973,7 +1973,7 @@ public class MappingMongoConverterUnitTests {
 
 		converter.write(type, result);
 
-		assertThat(getAsDocument(result, "string"), is((org.bson.Document) new org.bson.Document()));
+		assertThat(getAsDocument(result, "string"), is(new org.bson.Document()));
 
 		org.bson.Document localDateTime = getAsDocument(result, "localDateTime");
 		assertThat(localDateTime.get("value"), is(instanceOf(Date.class)));
@@ -2103,7 +2103,7 @@ public class MappingMongoConverterUnitTests {
 		EnumMap<SampleEnum, String> enumMap;
 	}
 
-	static enum SampleEnum {
+	enum SampleEnum {
 		FIRST {
 			@Override
 			void method() {}
@@ -2118,7 +2118,7 @@ public class MappingMongoConverterUnitTests {
 		abstract void method();
 	}
 
-	static interface InterfaceType {
+	interface InterfaceType {
 
 	}
 
@@ -2396,8 +2396,8 @@ public class MappingMongoConverterUnitTests {
 
 	static class ClassWithMapUsingEnumAsKey {
 
-		static enum FooBarEnum {
-			FOO, BAR;
+		enum FooBarEnum {
+			FOO, BAR
 		}
 
 		Map<FooBarEnum, String> map;

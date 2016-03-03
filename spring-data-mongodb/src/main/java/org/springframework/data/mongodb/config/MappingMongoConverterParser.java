@@ -67,7 +67,7 @@ import org.w3c.dom.Element;
 
 /**
  * Bean definition parser for the {@code mapping-converter} element.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Maciej Walkowiak
@@ -120,6 +120,12 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			converterBuilder.addPropertyValue("customConversions", conversionsDefinition);
 		}
 
+		if(!registry.containsBeanDefinition("indexOperationsProvider")){
+			BeanDefinitionBuilder indexOperationsProviderBuilder = BeanDefinitionBuilder.genericBeanDefinition("org.springframework.data.mongodb.core.DefaultIndexOperationsProvider");
+			indexOperationsProviderBuilder.addConstructorArgReference(dbFactoryRef);
+			parserContext.registerBeanComponent(new BeanComponentDefinition(indexOperationsProviderBuilder.getBeanDefinition(), "indexOperationsProvider"));
+		}
+
 		try {
 			registry.getBeanDefinition(INDEX_HELPER_BEAN_NAME);
 		} catch (NoSuchBeanDefinitionException ignored) {
@@ -129,7 +135,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder
 					.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
 			indexHelperBuilder.addConstructorArgReference(ctxRef);
-			indexHelperBuilder.addConstructorArgReference(dbFactoryRef);
+			indexHelperBuilder.addConstructorArgReference("indexOperationsProvider");
 			indexHelperBuilder.addDependsOn(ctxRef);
 
 			parserContext.registerBeanComponent(new BeanComponentDefinition(indexHelperBuilder.getBeanDefinition(),
@@ -348,7 +354,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 	/**
 	 * {@link TypeFilter} that returns {@literal false} in case any of the given delegates matches.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	private static class NegatingFilter implements TypeFilter {
@@ -357,7 +363,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 		/**
 		 * Creates a new {@link NegatingFilter} with the given delegates.
-		 * 
+		 *
 		 * @param filters
 		 */
 		public NegatingFilter(TypeFilter... filters) {

@@ -78,7 +78,7 @@ import com.mongodb.client.model.UpdateOptions;
 
 /**
  * Unit tests for {@link MongoTemplate}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
@@ -291,7 +291,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		GenericApplicationContext applicationContext = new GenericApplicationContext();
 		applicationContext.getBeanFactory().registerSingleton("foo",
-				new MongoPersistentEntityIndexCreator(new MongoMappingContext(), factory));
+				new MongoPersistentEntityIndexCreator(new MongoMappingContext(), template));
 		applicationContext.refresh();
 
 		GenericApplicationContext spy = spy(applicationContext);
@@ -601,7 +601,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	/**
 	 * Mocks out the {@link MongoTemplate#getDb()} method to return the {@link DB} mock instead of executing the actual
 	 * behaviour.
-	 * 
+	 *
 	 * @return
 	 */
 	private MongoTemplate mockOutGetDb() {

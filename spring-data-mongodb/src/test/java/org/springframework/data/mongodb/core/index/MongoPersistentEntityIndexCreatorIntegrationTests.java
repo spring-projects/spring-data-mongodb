@@ -36,6 +36,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -51,7 +52,7 @@ import com.mongodb.MongoCommandException;
 
 /**
  * Integration tests for {@link MongoPersistentEntityIndexCreator}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
@@ -107,8 +108,10 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 		expectedException.expectMessage("lastname");
 		expectedException.expectCause(IsInstanceOf.<Throwable> instanceOf(MongoCommandException.class));
 
+		MongoTemplate mongoTemplate = new MongoTemplate(new MongoClient(), "issue");
+
 		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),
-				new SimpleMongoDbFactory(new MongoClient(), "issue"));
+				mongoTemplate);
 
 		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin", new Index().named("stormlight")
 				.on("lastname", Direction.ASC).unique(), "datamongo-1125"));
