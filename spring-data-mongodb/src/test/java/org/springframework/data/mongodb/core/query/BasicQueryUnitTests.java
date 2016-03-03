@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,16 @@ package org.springframework.data.mongodb.core.query;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
-import nl.jqno.equalsverifier.EqualsVerifier;
-import nl.jqno.equalsverifier.Warning;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import org.junit.Test;
 import org.springframework.data.domain.Sort.Direction;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 
 /**
  * Unit tests for {@link BasicQuery}.
@@ -138,21 +140,48 @@ public class BasicQueryUnitTests {
 		assertThat(query1, is(not(equalTo(query2))));
 		assertThat(query1.hashCode(), is(not(query2.hashCode())));
 	}
-	
+
+	/**
+	 * @see DATAMONGO-1387
+	 */
+	@Test
+	public void returnsFieldsCorrectly() {
+
+		String qry = "{ \"name\" : \"Thomas\"}";
+		String fields = "{\"name\":1, \"age\":1}";
+
+		BasicQuery query1 = new BasicQuery(qry, fields);
+
+		assertThat(query1.getFieldsObject(), isBsonObject().containing("name").containing("age"));
+	}
+
 	/**
 	 * @see DATAMONGO-1387
 	 */
 	@Test
 	public void handlesFieldsIncludeCorrectly() {
-		
+
 		String qry = "{ \"name\" : \"Thomas\"}";
-		
+
 		BasicQuery query1 = new BasicQuery(qry);
 		query1.fields().include("name");
-		
-		DBObject fieldsObject = query1.getFieldsObject();
-		fieldsObject.containsField("name");
-		assertThat(query1.getFieldsObject(), notNullValue());
-		assertThat(query1.getFieldsObject().containsField("name"), is(true));
+
+		assertThat(query1.getFieldsObject(), isBsonObject().containing("name"));
 	}
+
+	/**
+	 * @see DATAMONGO-1387
+	 */
+	@Test
+	public void combinesFieldsIncludeCorrectly() {
+
+		String qry = "{ \"name\" : \"Thomas\"}";
+		String fields = "{\"name\":1, \"age\":1}";
+
+		BasicQuery query1 = new BasicQuery(qry, fields);
+		query1.fields().include("gender");
+
+		assertThat(query1.getFieldsObject(), isBsonObject().containing("name").containing("age").containing("gender"));
+	}
+
 }
