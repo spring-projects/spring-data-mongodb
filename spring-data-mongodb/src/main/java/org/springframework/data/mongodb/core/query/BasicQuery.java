@@ -70,7 +70,11 @@ public class BasicQuery extends Query {
 
 	@Override
 	public DBObject getFieldsObject() {
-		return fieldsObject;
+		if(fieldsObject != null) {
+			return fieldsObject;
+		} else {
+			return super.getFieldsObject();
+		}
 	}
 
 	@Override
