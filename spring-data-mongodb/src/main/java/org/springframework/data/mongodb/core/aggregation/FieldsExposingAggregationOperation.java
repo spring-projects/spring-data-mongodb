@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,28 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 /**
- * {@link AggregationOperation} that exposes new {@link ExposedFields} that can be used for later aggregation pipeline
- * {@code AggregationOperation}s.
- * 
+ * {@link AggregationOperation} that exposes {@link ExposedFields} that can be used for later aggregation pipeline
+ * {@code AggregationOperation}s. A {@link FieldsExposingAggregationOperation} implementing the
+ * {@link InheritsFieldsAggregationOperation} will expose fields from its parent operations. Not implementing
+ * {@link InheritsFieldsAggregationOperation} will replace existing exposed fields.
+ *
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public interface FieldsExposingAggregationOperation extends AggregationOperation {
 
 	/**
 	 * Returns the fields exposed by the {@link AggregationOperation}.
-	 * 
+	 *
 	 * @return will never be {@literal null}.
 	 */
 	ExposedFields getFields();
+
+	/**
+	 * Marker interface for {@link AggregationOperation} that inherits fields from previous operations.
+	 */
+	static interface InheritsFieldsAggregationOperation extends FieldsExposingAggregationOperation {
+
+	}
+
 }

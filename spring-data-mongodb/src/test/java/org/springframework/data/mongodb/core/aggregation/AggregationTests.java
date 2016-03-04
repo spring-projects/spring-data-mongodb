@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import static org.junit.Assume.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.io.BufferedInputStream;
 import java.text.ParseException;
@@ -76,6 +77,7 @@ import com.mongodb.util.JSON;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -85,6 +87,7 @@ public class AggregationTests {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AggregationTests.class);
 	private static final Version TWO_DOT_FOUR = new Version(2, 4);
 	private static final Version TWO_DOT_SIX = new Version(2, 6);
+	private static final Version THREE_DOT_TWO = new Version(3, 2);
 
 	private static boolean initialized = false;
 
@@ -1066,6 +1069,76 @@ public class AggregationTests {
 
 		assertThat(result.get("_id"), is(equalTo((Object) "counter1")));
 		assertThat(result.get("totalValue"), is(equalTo((Object) 100.0)));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test
+	public void shouldLookupPeopleCorectly() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
+
+		createUsersWithReferencedPersons();
+
+		TypedAggregation<User> agg = newAggregation(User.class, //
+				lookup("person", "_id", "firstname", "linkedPerson"), //
+				sort(ASC, "id"));
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, User.class, DBObject.class);
+
+		List<DBObject> mappedResults = results.getMappedResults();
+
+		DBObject firstItem = mappedResults.get(0);
+
+		assertThat(firstItem, isBsonObject().containing("_id", "u1"));
+		assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test
+	public void shouldGroupByAndLookupPeopleCorectly() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
+
+		createUsersWithReferencedPersons();
+
+		TypedAggregation<User> agg = newAggregation(User.class, //
+				group().min("id").as("foreignKey"), //
+				lookup("person", "foreignKey", "firstname", "linkedPerson"), //
+				sort(ASC, "foreignKey", "linkedPerson.firstname"));
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, User.class, DBObject.class);
+
+		List<DBObject> mappedResults = results.getMappedResults();
+
+		DBObject firstItem = mappedResults.get(0);
+
+		assertThat(firstItem, isBsonObject().containing("foreignKey", "u1"));
+		assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
+	}
+
+	private void createUsersWithReferencedPersons() {
+
+		mongoTemplate.dropCollection(User.class);
+		mongoTemplate.dropCollection(Person.class);
+
+		User user1 = new User("u1");
+		User user2 = new User("u2");
+		User user3 = new User("u3");
+
+		mongoTemplate.save(user1);
+		mongoTemplate.save(user2);
+		mongoTemplate.save(user3);
+
+		Person person1 = new Person("u1", "User 1");
+		Person person2 = new Person("u2", "User 2");
+
+		mongoTemplate.save(person1);
+		mongoTemplate.save(person2);
+		mongoTemplate.save(user3);
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {

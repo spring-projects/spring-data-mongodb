@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
+import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
@@ -41,6 +42,7 @@ import com.mongodb.DBObject;
  * @author Tobias Trelle
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @author Alessio Fachechi
  * @since 1.3
  */
@@ -362,7 +364,12 @@ public class Aggregation {
 			if (operation instanceof FieldsExposingAggregationOperation) {
 
 				FieldsExposingAggregationOperation exposedFieldsOperation = (FieldsExposingAggregationOperation) operation;
-				context = new ExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields(), rootContext);
+
+				if (operation instanceof InheritsFieldsAggregationOperation) {
+					context = new InheritingExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields(), context);
+				} else {
+					context = new ExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields(), context);
+				}
 			}
 		}
 

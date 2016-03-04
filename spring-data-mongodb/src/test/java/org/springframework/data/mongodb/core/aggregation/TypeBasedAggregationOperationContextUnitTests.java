@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
@@ -51,6 +52,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TypeBasedAggregationOperationContextUnitTests {
@@ -185,6 +187,96 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		DBObject definition = (DBObject) group.get("$group");
 
 		assertThat(definition.get("_id"), is(equalTo((Object) "$counter_name")));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test
+	public void lookupShouldInheritFieldsFromInheritingAggregationOperation() {
+
+		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
+		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
+				lookup("OtherCollection", "resourceId", "otherId", "lookup"), sort(Direction.ASC, "resourceId"));
+
+		DBObject dbo = agg.toDbObject("meterData", context);
+		DBObject sort = getPipelineElementFromAggregationAt(dbo, 1);
+
+		DBObject definition = (DBObject) sort.get("$sort");
+
+		assertThat(definition.get("resourceId"), is(equalTo((Object) 1)));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test
+	public void groupLookupShouldInheritFieldsFromPreviousAggregationOperation() {
+
+		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
+		TypedAggregation<MeterData> agg = newAggregation(MeterData.class, group().min("resourceId").as("foreignKey"),
+				lookup("OtherCollection", "foreignKey", "otherId", "lookup"), sort(Direction.ASC, "foreignKey"));
+
+		DBObject dbo = agg.toDbObject("meterData", context);
+		DBObject sort = getPipelineElementFromAggregationAt(dbo, 2);
+
+		DBObject definition = (DBObject) sort.get("$sort");
+
+		assertThat(definition.get("foreignKey"), is(equalTo((Object) 1)));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test
+	public void lookupGroupAggregationShouldUseCorrectGroupField() {
+
+		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
+		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
+				lookup("OtherCollection", "resourceId", "otherId", "lookup"),
+				group().min("lookup.otherkey").as("something_totally_different"));
+
+		DBObject dbo = agg.toDbObject("meterData", context);
+		DBObject group = getPipelineElementFromAggregationAt(dbo, 1);
+
+		DBObject definition = (DBObject) group.get("$group");
+		DBObject field = (DBObject) definition.get("something_totally_different");
+
+		assertThat(field.get("$min"), is(equalTo((Object) "$lookup.otherkey")));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test
+	public void lookupGroupAggregationShouldOverwriteExposedFields() {
+
+		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
+		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
+				lookup("OtherCollection", "resourceId", "otherId", "lookup"),
+				group().min("lookup.otherkey").as("something_totally_different"),
+				sort(Direction.ASC, "something_totally_different"));
+
+		DBObject dbo = agg.toDbObject("meterData", context);
+		DBObject sort = getPipelineElementFromAggregationAt(dbo, 2);
+
+		DBObject definition = (DBObject) sort.get("$sort");
+
+		assertThat(definition.get("something_totally_different"), is(equalTo((Object) 1)));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void lookupGroupAggregationShouldFailInvalidFieldReference() {
+
+		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
+		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
+				lookup("OtherCollection", "resourceId", "otherId", "lookup"),
+				group().min("lookup.otherkey").as("something_totally_different"), sort(Direction.ASC, "resourceId"));
+
+		agg.toDbObject("meterData", context);
 	}
 
 	@Document(collection = "person")

@@ -29,6 +29,7 @@ import com.mongodb.DBObject;
  *
  * @author Alessio Fachechi
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class LookupOperationUnitTests {
 
@@ -99,5 +100,67 @@ public class LookupOperationUnitTests {
 		DBObject dbObject = lookupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
 		DBObject lookupClause = DBObjectTestUtils.getAsDBObject(dbObject, "$lookup");
 		return lookupClause;
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void builderRejectsNullFromField() {
+		LookupOperation.newLookup().from(null);
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void builderRejectsNullLocalField() {
+		LookupOperation.newLookup().from("a").localField(null);
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void builderRejectsNullForeignField() {
+		LookupOperation.newLookup().from("a").localField("b").foreignField(null);
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void builderRejectsNullAsField() {
+		LookupOperation.newLookup().from("a").localField("b").foreignField("c").as(null);
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test
+	public void lookupBuilderBuildsCorrectClause() {
+
+		LookupOperation lookupOperation = LookupOperation.newLookup().from("a").localField("b").foreignField("c").as("d");
+
+		DBObject lookupClause = extractDbObjectFromLookupOperation(lookupOperation);
+
+		assertThat(lookupClause,
+				isBsonObject().containing("from", "a") //
+						.containing("localField", "b") //
+						.containing("foreignField", "c") //
+						.containing("as", "d"));
+	}
+
+	/**
+	 * @see DATAMONGO-1326
+	 */
+	@Test
+	public void lookupBuilderExposesFields() {
+
+		LookupOperation lookupOperation = LookupOperation.newLookup().from("a").localField("b").foreignField("c").as("d");
+
+		assertThat(lookupOperation.getFields().exposesNoFields(), is(false));
+		assertThat(lookupOperation.getFields().exposesSingleFieldOnly(), is(true));
+		assertThat(lookupOperation.getFields().getField("d"), notNullValue());
 	}
 }
