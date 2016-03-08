@@ -22,6 +22,7 @@ import javax.validation.Validator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
@@ -54,14 +55,15 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 	 */
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void onBeforeSave(Object source, DBObject dbo) {
+	public void onBeforeSave(Object obj, DBObject dbo) {
 
-		LOG.debug("Validating object: {}", source);
-		Set violations = validator.validate(source);
+		LOG.debug("Validating object: {}", obj);
+		final Object target = obj instanceof LazyLoadingProxy ? ((LazyLoadingProxy) obj).getTarget() : obj;
+		final Set violations = validator.validate(target);
 
 		if (!violations.isEmpty()) {
 
-			LOG.info("During object: {} validation violations found: {}", source, violations);
+			LOG.info("During object: {} validation violations found: {}", target, violations);
 			throw new ConstraintViolationException(violations);
 		}
 	}
