@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,9 @@ import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.querydsl.core.types.Constant;
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.Operation;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.PathMetadata;
 import com.querydsl.core.types.PathType;
@@ -100,7 +103,6 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		if (ID_KEY.equals(key)) {
 			return mapper.getMappedObject(super.asDBObject(key, value), null);
 		}
-
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
 	}
 
@@ -111,7 +113,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	@Override
 	protected boolean isReference(Path<?> path) {
 
-		MongoPersistentProperty property = getPropertyFor(path);
+		MongoPersistentProperty property = getPropertyForPotentialDbRef(path);
 		return property == null ? false : property.isAssociation();
 	}
 
@@ -121,7 +123,50 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 */
 	@Override
 	protected DBRef asReference(Object constant) {
-		return converter.toDBRef(constant, null);
+		return asReference(constant, null);
+	}
+
+	protected DBRef asReference(Object constant, Path<?> path) {
+		return converter.toDBRef(constant, getPropertyForPotentialDbRef(path));
+	}
+
+	@Override
+	protected String asDBKey(Operation<?> expr, int index) {
+
+		Expression<?> arg = expr.getArg(index);
+		if (arg instanceof Path) {
+
+			Path<?> path = (Path<?>) arg;
+			if (isReference(path)) {
+
+				MongoPersistentProperty property = getPropertyFor(path);
+				if (property.isIdProperty()) {
+					return super.asDBKey(expr, index).replaceAll("." + ID_KEY + "$", "");
+				}
+			}
+
+		}
+		return super.asDBKey(expr, index);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.querydsl.mongodb.MongodbSerializer#convert(com.querydsl.core.types.Path, com.querydsl.core.types.Constant)
+	 */
+	protected Object convert(Path<?> path, Constant<?> constant) {
+
+		if (isReference(path)) {
+
+			MongoPersistentProperty property = getPropertyFor(path);
+
+			if (property.isIdProperty()) {
+				return asReference(constant.getConstant(), path.getMetadata().getParent());
+			}
+
+			return asReference(constant.getConstant(), path);
+		}
+
+		return super.convert(path, constant);
 	}
 
 	private MongoPersistentProperty getPropertyFor(Path<?> path) {
@@ -134,5 +179,27 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
 		return entity != null ? entity.getPersistentProperty(path.getMetadata().getName()) : null;
+	}
+
+	/**
+	 * Checks the given {@literal path} for referencing the {@literal id} property of a {@link DBRef} referenced object.
+	 * If so it returns the referenced {@link MongoPersistentProperty} of the {@link DBRef} instead of the {@literal id}
+	 * property.
+	 *
+	 * @param path
+	 * @return
+	 */
+	private MongoPersistentProperty getPropertyForPotentialDbRef(Path<?> path) {
+
+		if (path == null) {
+			return null;
+		}
+
+		MongoPersistentProperty property = getPropertyFor(path);
+		if (property != null && property.isIdProperty() && path.getMetadata() != null
+				&& path.getMetadata().getParent() != null) {
+			return getPropertyFor(path.getMetadata().getParent());
+		}
+		return property;
 	}
 }
