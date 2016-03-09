@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QPerson;
+import org.springframework.data.mongodb.repository.User;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -43,6 +44,7 @@ public class QuerydslRepositorySupportTests {
 
 	@Autowired MongoOperations operations;
 	Person person;
+	QuerydslRepositorySupport repoSupport;
 
 	@Before
 	public void setUp() {
@@ -50,6 +52,8 @@ public class QuerydslRepositorySupportTests {
 		operations.remove(new Query(), Person.class);
 		person = new Person("Dave", "Matthews");
 		operations.save(person);
+
+		repoSupport = new QuerydslRepositorySupport(operations) {};
 	}
 
 	@Test
@@ -72,10 +76,32 @@ public class QuerydslRepositorySupportTests {
 		operations.save(person);
 
 		QPerson p = QPerson.person;
-		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {};
 
-		SpringDataMongodbQuery<Person> query = support.from(p).where(p.skills.any().in("guitarist"));
+		SpringDataMongodbQuery<Person> query = repoSupport.from(p).where(p.skills.any().in("guitarist"));
 
 		assertThat(query.fetchOne(), is(person));
 	}
+
+	/**
+	 * @see DATAMONGO-1394
+	 */
+	@Test
+	public void shouldAllowDbRefAgainstIdProperty() {
+
+		User bart = new User();
+		bart.setUsername("bart@simpson.com");
+		operations.save(bart);
+
+		person.setCoworker(bart);
+		operations.save(person);
+
+		QPerson p = QPerson.person;
+
+		SpringDataMongodbQuery<Person> queryUsingIdField = repoSupport.from(p).where(p.coworker.id.eq(bart.getId()));
+		SpringDataMongodbQuery<Person> queryUsingRefObject = repoSupport.from(p).where(p.coworker.eq(bart));
+
+		assertThat(queryUsingIdField.fetchOne(), equalTo(person));
+		assertThat(queryUsingIdField.fetchOne(), equalTo(queryUsingRefObject.fetchOne()));
+	}
+
 }
