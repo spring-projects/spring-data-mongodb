@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 by the original author(s).
+ * Copyright 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.util.ClassTypeInformation;
 
@@ -243,6 +244,18 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection(), is("collection-1"));
 	}
 
+	/**
+	 * @see DATAMONGO-1373
+	 */
+	@Test
+	public void metaInformationShouldBeReadCorrectlyFromComposedDocumentAnnotation() {
+
+		BasicMongoPersistentEntity<DocumentWithComposedAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithComposedAnnotation>(
+				ClassTypeInformation.from(DocumentWithComposedAnnotation.class));
+
+		assertThat(entity.getCollection(), is("custom-collection"));
+	}
+
 	@Document(collection = "contacts")
 	class Contact {
 
@@ -284,9 +297,23 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	}
 
+	@ComposedDocumentAnnotation
+	static class DocumentWithComposedAnnotation {
+
+	}
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.TYPE })
 	@Document(collection = "collection-1")
 	static @interface CustomDocumentAnnotation {
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target({ ElementType.TYPE })
+	@Document
+	static @interface ComposedDocumentAnnotation {
+
+		@AliasFor(annotation = Document.class, attribute = "collection")
+		String name() default "custom-collection";
 	}
 }
