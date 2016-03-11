@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import com.mongodb.DBObject;
 import lombok.Builder;
 
 import java.io.BufferedInputStream;
@@ -63,6 +64,8 @@ import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -517,7 +520,7 @@ public class AggregationTests {
 		/*
 		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		
+
 		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
@@ -1481,6 +1484,52 @@ public class AggregationTests {
 		assertThat(firstResult.containsKey("distance"), is(true));
 		assertThat((Double) firstResult.get("distance"), closeTo(117.620092203928, 0.00001));
 	}
+
+	@Test // DATAMONGO-1348
+	public void shouldSupportGeoJsonInGeoNearQueriesForAggregationWithDistanceField() {
+
+		mongoTemplate.insert(new Venue("Penn Station", -73.99408, 40.75057));
+		mongoTemplate.insert(new Venue("10gen Office", -73.99171, 40.738868));
+		mongoTemplate.insert(new Venue("Flatiron Building", -73.988135, 40.741404));
+
+		mongoTemplate.indexOps(Venue.class)
+				.ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE));
+
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
+
+		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear, "distance"));
+		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Venue.class, Document.class);
+
+		assertThat(result.getMappedResults(), hasSize(3));
+
+		Document firstResult = result.getMappedResults().get(0);
+		assertThat(firstResult.containsKey("distance"), is(true));
+		assertThat((Double) firstResult.get("distance"), closeTo(117.61940988193759, 0.00001));
+	}
+
+	@Test // DATAMONGO-1348
+	public void shouldSupportGeoJsonInGeoNearQueriesForAggregationWithDistanceFieldInMiles() {
+
+		mongoTemplate.insert(new Venue("Penn Station", -73.99408, 40.75057));
+		mongoTemplate.insert(new Venue("10gen Office", -73.99171, 40.738868));
+		mongoTemplate.insert(new Venue("Flatiron Building", -73.988135, 40.741404));
+
+		mongoTemplate.indexOps(Venue.class)
+				.ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE));
+
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150)
+				.inMiles();
+
+		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear, "distance"));
+		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Venue.class, Document.class);
+
+		assertThat(result.getMappedResults(), hasSize(3));
+
+		Document firstResult = result.getMappedResults().get(0);
+		assertThat(firstResult.containsKey("distance"), is(true));
+		assertThat((Double) firstResult.get("distance"), closeTo(73.08517, 0.00001));
+	}
+
 
 	@Test // DATAMONGO-1133
 	public void shouldHonorFieldAliasesForFieldReferences() {

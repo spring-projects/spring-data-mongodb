@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Arrays;
 
 import org.bson.Document;
@@ -50,8 +48,6 @@ public final class NearQuery {
 	private boolean spherical;
 	private @Nullable Long num;
 	private @Nullable Long skip;
-
-	private static int PRECISION = 8;
 
 	/**
 	 * Creates a new {@link NearQuery}.
@@ -430,45 +426,38 @@ public final class NearQuery {
 		}
 
 		if (metric != null) {
-			document.put(
-					"distanceMultiplier",
-					usesMetricSystem() ? getMetricSystemNormalizer(metric).divide(new BigDecimal(1000), PRECISION + 3,
-							RoundingMode.HALF_UP).doubleValue() : metric.getMultiplier());
+			document.put("distanceMultiplier", getDistanceMultiplier());
 		}
 
 		if (num != null) {
 			document.put("num", num);
 		}
 
-		if (point instanceof GeoJsonPoint) {
+		if (usesGeoJson()) {
 			document.put("near", point);
 		} else {
 			document.put("near", Arrays.asList(point.getX(), point.getY()));
 		}
 
-		document.put("spherical", spherical ? spherical : point instanceof GeoJson);
+		document.put("spherical", spherical ? spherical : usesGeoJson());
 
 		return document;
 	}
 
+	private double getDistanceMultiplier() {
+		return usesMetricSystem() ? MetricConversion.getMetersToMetricMultiplier(metric) : metric.getMultiplier();
+	}
+
 	private double getDistanceValueInRadiantsOrMeters(Distance distance) {
-		return usesMetricSystem() ? getDistanceInMeters(distance) : distance.getNormalizedValue();
-	}
-
-	private double getDistanceInMeters(Distance distance) {
-
-		return new BigDecimal(distance.getValue()).multiply(getMetricSystemNormalizer(distance.getMetric()))
-				.multiply(new BigDecimal(1000)).doubleValue();
-	}
-
-	private BigDecimal getMetricSystemNormalizer(Metric metric) {
-
-		return new BigDecimal(Metrics.KILOMETERS.getMultiplier()).divide(new BigDecimal(metric.getMultiplier()), PRECISION,
-				RoundingMode.HALF_UP);
+		return usesMetricSystem() ? MetricConversion.getDistanceInMeters(distance) : distance.getNormalizedValue();
 	}
 
 	private boolean usesMetricSystem() {
-		return point instanceof GeoJson;
+		return usesGeoJson();
+	}
+
+	private boolean usesGeoJson() {
+		return point instanceof GeoJsonPoint;
 	}
 
 }
