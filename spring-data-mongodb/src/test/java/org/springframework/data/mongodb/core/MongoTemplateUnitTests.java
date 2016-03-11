@@ -1001,10 +1001,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<Document> capture = ArgumentCaptor.forClass(Document.class);
 		verify(this.db, times(1)).runCommand(capture.capture(), any(Class.class));
 
-		assertThat(
-				capture.getValue(),
-				IsBsonObject.isBsonObject().containing("near.type", "Point").containing("near.coordinates.[0]", 1D)
-						.containing("near.coordinates.[1]", 2D));
+		assertThat(capture.getValue(), IsBsonObject.isBsonObject().containing("near.type", "Point")
+				.containing("near.coordinates.[0]", 1D).containing("near.coordinates.[1]", 2D));
 	}
 
 	static class WithNamedFields {
