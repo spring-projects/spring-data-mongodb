@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
+@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface GeoSpatialIndexed {
 

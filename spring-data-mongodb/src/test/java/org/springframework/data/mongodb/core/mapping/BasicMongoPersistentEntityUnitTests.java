@@ -257,23 +257,15 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Document(collection = "contacts")
-	class Contact {
+	class Contact {}
 
-	}
-
-	class Person extends Contact {
-
-	}
+	class Person extends Contact {}
 
 	@Document(collection = "#{35}")
-	class Company {
-
-	}
+	class Company {}
 
 	@Document(collection = "#{myBean.collectionName}")
-	class DynamicallyMapped {
-
-	}
+	class DynamicallyMapped {}
 
 	class CollectionProvider {
 		String collectionName;
@@ -284,23 +276,15 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Document(language = "spanish")
-	static class DocumentWithLanguage {
+	static class DocumentWithLanguage {}
 
-	}
-
-	static class AnyDocument {
-
-	}
+	static class AnyDocument {}
 
 	@CustomDocumentAnnotation
-	static class DocumentWithCustomAnnotation {
-
-	}
+	static class DocumentWithCustomAnnotation {}
 
 	@ComposedDocumentAnnotation
-	static class DocumentWithComposedAnnotation {
-
-	}
+	static class DocumentWithComposedAnnotation {}
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.TYPE })

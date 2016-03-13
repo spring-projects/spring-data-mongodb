@@ -29,7 +29,7 @@ import org.springframework.data.annotation.QueryAnnotation;
  * @since 1.6
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
 @QueryAnnotation
 public @interface Meta {

@@ -33,7 +33,7 @@ import org.springframework.data.annotation.QueryAnnotation;
  * @author Mark Paluch
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
 @QueryAnnotation
 public @interface Query {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.springframework.data.repository.CrudRepository;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public interface UserWithComplexIdRepository extends CrudRepository<UserWithComplexId, MyId> {
 
@@ -36,31 +37,30 @@ public interface UserWithComplexIdRepository extends CrudRepository<UserWithComp
 
 	@Query("{'_id': ?0}")
 	UserWithComplexId getUserByComplexId(MyId id);
-	
+
 	@ComposedQueryAnnotation
 	UserWithComplexId getUserUsingComposedAnnotationByComplexId(MyId id);
-	
+
 	@ComposedMetaAnnotation
 	@Query("{'_id': {$in: ?0}}")
 	List<UserWithComplexId> findUsersUsingComposedMetaAnnotationByUserIds(Collection<MyId> ids);
-	
-	
+
 	@Retention(RetentionPolicy.RUNTIME)
- 	@Target({ ElementType.METHOD })
- 	@Document
+	@Target({ ElementType.METHOD })
+	@Document
 	@Query
- 	@interface ComposedQueryAnnotation {
- 
- 		@AliasFor(annotation = Query.class, attribute = "value")
- 		String myQuery() default "{'_id': ?0}";
- 	}
-	
+	@interface ComposedQueryAnnotation {
+
+		@AliasFor(annotation = Query.class, attribute = "value")
+		String myQuery() default "{'_id': ?0}";
+	}
+
 	@Retention(RetentionPolicy.RUNTIME)
- 	@Target({ ElementType.METHOD })
- 	@Meta
- 	@interface ComposedMetaAnnotation {
- 
- 		@AliasFor(annotation = Meta.class, attribute = "maxScanDocuments")
- 		long scanDocuments() default 1;
- 	}
+	@Target({ ElementType.METHOD })
+	@Meta
+	@interface ComposedMetaAnnotation {
+
+		@AliasFor(annotation = Meta.class, attribute = "maxScanDocuments")
+		long scanDocuments() default 1;
+	}
 }

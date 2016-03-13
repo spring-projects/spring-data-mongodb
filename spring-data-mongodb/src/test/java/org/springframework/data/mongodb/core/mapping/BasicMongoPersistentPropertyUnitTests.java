@@ -190,27 +190,25 @@ public class BasicMongoPersistentPropertyUnitTests {
 				"id");
 		assertThat(property.isIdProperty(), is(true));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-1373
 	 */
 	@Test
 	public void shouldConsiderComposedAnnotationsForIdField() {
 
-		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class,
-				"myId");
+		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myId");
 		assertThat(property.isIdProperty(), is(true));
 		assertThat(property.getFieldName(), is("_id"));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-1373
 	 */
 	@Test
 	public void shouldConsiderComposedAnnotationsForFields() {
 
-		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class,
-				"myField");
+		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myField");
 		assertThat(property.getFieldName(), is("myField"));
 	}
 
@@ -282,13 +280,13 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		@Id @org.springframework.data.mongodb.core.mapping.Field("id") String id;
 	}
-	
+
 	static class DocumentWithComposedAnnotations {
 
 		@ComposedIdAnnotation @ComposedFieldAnnotation String myId;
 		@ComposedFieldAnnotation(name = "myField") String myField;
 	}
-	
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	@org.springframework.data.mongodb.core.mapping.Field
@@ -297,10 +295,10 @@ public class BasicMongoPersistentPropertyUnitTests {
 		@AliasFor(annotation = org.springframework.data.mongodb.core.mapping.Field.class, attribute = "value")
 		String name() default "_id";
 	}
-	
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	@Id
-	static @interface ComposedIdAnnotation { }
-	
+	static @interface ComposedIdAnnotation {
+	}
 }
