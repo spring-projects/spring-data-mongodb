@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,20 +27,20 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-import org.bson.BasicBSONObject;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleSpec;
-import org.springframework.data.domain.ExampleSpec.NullHandler;
-import org.springframework.data.domain.ExampleSpec.PropertyValueTransformer;
-import org.springframework.data.domain.ExampleSpec.StringMatcher;
+import org.springframework.data.domain.ExampleMatcher.NullHandler;
+import org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer;
+import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
-import org.springframework.data.repository.core.support.ExampleSpecAccessor;
+import org.springframework.data.repository.core.support.ExampleMatcherAccessor;
 import org.springframework.data.repository.query.parser.Part.Type;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -74,11 +74,13 @@ public class MongoExampleMapper {
 	 * Returns the given {@link Example} as {@link DBObject} holding matching values extracted from
 	 * {@link Example#getProbe()}.
 	 *
-	 * @param example
+	 * @param example must not be {@literal null}.
 	 * @return
-	 * @since 1.8
 	 */
 	public DBObject getMappedExample(Example<?> example) {
+
+		Assert.notNull(example, "Example must not be null!");
+
 		return getMappedExample(example, mappingContext.getPersistentEntity(example.getProbeType()));
 	}
 
@@ -86,12 +88,15 @@ public class MongoExampleMapper {
 	 * Returns the given {@link Example} as {@link DBObject} holding matching values extracted from
 	 * {@link Example#getProbe()}.
 	 *
-	 * @param example
-	 * @param entity
+	 * @param example must not be {@literal null}.
+	 * @param entity must not be {@literal null}.
 	 * @return
-	 * @since 1.8
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public DBObject getMappedExample(Example<?> example, MongoPersistentEntity<?> entity) {
+
+		Assert.notNull(example, "Example must not be null!");
+		Assert.notNull(entity, "MongoPersistentEntity must not be null!");
 
 		DBObject reference = (DBObject) converter.convertToMongoType(example.getProbe());
 
@@ -99,16 +104,27 @@ public class MongoExampleMapper {
 			reference.removeField(entity.getIdProperty().getFieldName());
 		}
 
-		ExampleSpecAccessor exampleSpecAccessor = new ExampleSpecAccessor(example.getExampleSpec());
+		ExampleMatcherAccessor matcherAccessor = new ExampleMatcherAccessor(example.getMatcher());
 
-		applyPropertySpecs("", reference, example.getProbeType(), exampleSpecAccessor);
+		applyPropertySpecs("", reference, example.getProbeType(), matcherAccessor);
 
-		if (exampleSpecAccessor.isTyped()) {
-			this.converter.getTypeMapper().writeTypeRestrictions(reference, (Set) Collections.singleton(example.getResultType()));
+		this.converter.getTypeMapper().writeTypeRestrictions(reference, getTypesToMatch(example));
+
+		return ObjectUtils.nullSafeEquals(NullHandler.INCLUDE, matcherAccessor.getNullHandler()) ? reference
+				: new BasicDBObject(SerializationUtils.flattenMap(reference));
+	}
+
+	private Set<Class<?>> getTypesToMatch(Example<?> example) {
+
+		Set<Class<?>> types = new HashSet<Class<?>>();
+
+		for (TypeInformation<?> reference : mappingContext.getManagedTypes()) {
+			if (example.getProbeType().isAssignableFrom(reference.getType())) {
+				types.add(reference.getType());
+			}
 		}
 
-		return ObjectUtils.nullSafeEquals(NullHandler.INCLUDE, exampleSpecAccessor.getNullHandler()) ? reference
-				: new BasicDBObject(SerializationUtils.flattenMap(reference));
+		return types;
 	}
 
 	private String getMappedPropertyPath(String path, Class<?> probeType) {
@@ -159,7 +175,7 @@ public class MongoExampleMapper {
 	}
 
 	private void applyPropertySpecs(String path, DBObject source, Class<?> probeType,
-			ExampleSpecAccessor exampleSpecAccessor) {
+			ExampleMatcherAccessor exampleSpecAccessor) {
 
 		if (!(source instanceof BasicDBObject)) {
 			return;
@@ -172,12 +188,12 @@ public class MongoExampleMapper {
 			Map.Entry<String, Object> entry = iter.next();
 			String propertyPath = StringUtils.hasText(path) ? path + "." + entry.getKey() : entry.getKey();
 			String mappedPropertyPath = getMappedPropertyPath(propertyPath, probeType);
-			
-			if(isEmptyIdProperty(entry)) {
+
+			if (isEmptyIdProperty(entry)) {
 				iter.remove();
 				continue;
 			}
-			
+
 			if (exampleSpecAccessor.isIgnoredPath(propertyPath) || exampleSpecAccessor.isIgnoredPath(mappedPropertyPath)) {
 				iter.remove();
 				continue;
@@ -243,5 +259,4 @@ public class MongoExampleMapper {
 			dbo.put("$options", "i");
 		}
 	}
-
 }

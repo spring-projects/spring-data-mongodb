@@ -30,7 +30,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.TypedExampleSpec;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -273,12 +272,14 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 
 		Query q = new Query(new Criteria().alike(example)).with(pageable);
 
-		long count = mongoOperations.count(q, getResultType(example), entityInformation.getCollectionName());
+		long count = mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName());
+
 		if (count == 0) {
 			return new PageImpl<S>(Collections.<S> emptyList());
 		}
-		return new PageImpl<S>(mongoOperations.find(q, getResultType(example), entityInformation.getCollectionName()), pageable,
-				count);
+
+		return new PageImpl<S>(mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName()),
+				pageable, count);
 	}
 
 	/*
@@ -296,7 +297,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 			q.with(sort);
 		}
 
-		return mongoOperations.find(q, getResultType(example), entityInformation.getCollectionName());
+		return mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -318,7 +319,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.findOne(q, getResultType(example), entityInformation.getCollectionName());
+		return mongoOperations.findOne(q, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -331,7 +332,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.count(q, getResultType(example), entityInformation.getCollectionName());
+		return mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -344,16 +345,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.exists(q, getResultType(example), entityInformation.getCollectionName());
-	}
-
-	private <S extends T> Class<S> getResultType(Example<S> example) {
-
-		if (example.getExampleSpec() instanceof TypedExampleSpec<?>) {
-			return example.getResultType();
-		}
-
-		return (Class<S>) entityInformation.getJavaType();
+		return mongoOperations.exists(q, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	private List<T> findAll(Query query) {

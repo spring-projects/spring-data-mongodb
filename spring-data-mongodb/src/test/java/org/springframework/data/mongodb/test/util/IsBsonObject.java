@@ -151,9 +151,10 @@ public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
 
 	Object getValue(BSONObject source, String path) {
 
-		String[] fragments = path.split("\\.");
+		String[] fragments = path.split("(?<!\\\\)\\.");
+
 		if (fragments.length == 1) {
-			return source.get(path);
+			return source.get(path.replace("\\.", "."));
 		}
 
 		Iterator<String> it = Arrays.asList(fragments).iterator();
@@ -161,7 +162,7 @@ public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
 		Object current = source;
 		while (it.hasNext()) {
 
-			String key = it.next();
+			String key = it.next().replace("\\.", ".");
 
 			if (!(current instanceof BSONObject) && !key.startsWith("[")) {
 				return null;

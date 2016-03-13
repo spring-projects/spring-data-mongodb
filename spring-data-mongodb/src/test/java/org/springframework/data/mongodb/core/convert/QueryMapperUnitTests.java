@@ -240,8 +240,8 @@ public class QueryMapperUnitTests {
 
 		ObjectId accidentallyAnObjectId = new ObjectId();
 
-		Query query = Query.query(Criteria.where("id").is("id_value").and("publishers")
-				.ne(accidentallyAnObjectId.toString()));
+		Query query = Query
+				.query(Criteria.where("id").is("id_value").and("publishers").ne(accidentallyAnObjectId.toString()));
 
 		DBObject dbObject = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(UserEntity.class));
 		assertThat(dbObject.get("publishers"), is(instanceOf(DBObject.class)));
@@ -275,8 +275,8 @@ public class QueryMapperUnitTests {
 	public void translatesPropertyReferenceCorrectly() {
 
 		Query query = query(where("field").is(new CustomizedField()));
-		DBObject result = mapper
-				.getMappedObject(query.getQueryObject(), context.getPersistentEntity(CustomizedField.class));
+		DBObject result = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
 
 		assertThat(result.containsField("foo"), is(true));
 		assertThat(result.keySet().size(), is(1));
@@ -286,8 +286,8 @@ public class QueryMapperUnitTests {
 	public void translatesNestedPropertyReferenceCorrectly() {
 
 		Query query = query(where("field.field").is(new CustomizedField()));
-		DBObject result = mapper
-				.getMappedObject(query.getQueryObject(), context.getPersistentEntity(CustomizedField.class));
+		DBObject result = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
 
 		assertThat(result.containsField("foo.foo"), is(true));
 		assertThat(result.keySet().size(), is(1));
@@ -297,8 +297,8 @@ public class QueryMapperUnitTests {
 	public void returnsOriginalKeyIfNoPropertyReference() {
 
 		Query query = query(where("bar").is(new CustomizedField()));
-		DBObject result = mapper
-				.getMappedObject(query.getQueryObject(), context.getPersistentEntity(CustomizedField.class));
+		DBObject result = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
 
 		assertThat(result.containsField("bar"), is(true));
 		assertThat(result.keySet().size(), is(1));
@@ -643,8 +643,8 @@ public class QueryMapperUnitTests {
 
 		Query query = new Query().with(new Sort("textScore"));
 
-		DBObject dbo = mapper
-				.getMappedSort(query.getSortObject(), context.getPersistentEntity(WithTextScoreProperty.class));
+		DBObject dbo = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithTextScoreProperty.class));
 
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("score", new BasicDBObject("$meta", "textScore")).get()));
 	}
@@ -657,8 +657,8 @@ public class QueryMapperUnitTests {
 
 		Query query = new Query().with(new Sort("id"));
 
-		DBObject dbo = mapper
-				.getMappedSort(query.getSortObject(), context.getPersistentEntity(WithTextScoreProperty.class));
+		DBObject dbo = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithTextScoreProperty.class));
 
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("_id", 1).get()));
 	}
@@ -768,8 +768,8 @@ public class QueryMapperUnitTests {
 	@Test
 	public void withinShouldUseGeoJsonPolygonWhenMappingPolygonOn2DSphereIndex() {
 
-		Query query = query(where("geoJsonPoint").within(
-				new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
+		Query query = query(where("geoJsonPoint")
+				.within(new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
 
 		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
 
@@ -782,8 +782,8 @@ public class QueryMapperUnitTests {
 	@Test
 	public void intersectsShouldUseGeoJsonRepresentationCorrectly() {
 
-		Query query = query(where("geoJsonPoint").intersects(
-				new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
+		Query query = query(where("geoJsonPoint")
+				.intersects(new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
 
 		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
 
@@ -835,7 +835,7 @@ public class QueryMapperUnitTests {
 
 		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
 
-		assertThat(dbo, is(new BasicDBObjectBuilder().add("embedded._id", "conflux").get()));
+		assertThat(dbo, isBsonObject().containing("embedded\\._id", "conflux"));
 	}
 
 	/**

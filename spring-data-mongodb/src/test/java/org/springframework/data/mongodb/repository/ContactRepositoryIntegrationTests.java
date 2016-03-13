@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleSpec;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -37,8 +36,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("config/MongoNamespaceIntegrationTests-context.xml")
 public class ContactRepositoryIntegrationTests {
 
-	@Autowired
-	ContactRepository repository;
+	@Autowired ContactRepository repository;
 
 	@Before
 	public void setUp() throws Exception {
@@ -58,41 +56,10 @@ public class ContactRepositoryIntegrationTests {
 	 * @see DATAMONGO-1245
 	 */
 	@Test
-	public void findsContactByUntypedExample() {
-
-		Person person = new Person("Oliver", "Gierke");
-		Contact result = repository.save(person);
-
-		Example<Person> example = Example.of(person, ExampleSpec.untyped());
-
-		assertThat(repository.findOne(example), instanceOf(Person.class));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
 	public void findsContactByTypedExample() {
 
-		Person person = new Person("Oliver", "Gierke");
-		Contact result = repository.save(person);
+		Person person = repository.save(new Person("Oliver", "Gierke"));
 
-		Example<Person> example = Example.of(person, ExampleSpec.typed(Person.class));
-
-		assertThat(repository.findOne(example), instanceOf(Person.class));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void findsNoContactByExample() {
-
-		Person person = new Person("Oliver", "Gierke");
-		Contact result = repository.save(person);
-
-		Example<Person> example = Example.of(person, ExampleSpec.typed(Contact.class));
-
-		assertThat(repository.findOne(example), is(nullValue()));
+		assertThat(repository.findOne(Example.of(person)), instanceOf(Person.class));
 	}
 }

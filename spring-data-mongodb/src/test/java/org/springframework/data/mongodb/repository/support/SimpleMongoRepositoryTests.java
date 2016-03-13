@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.domain.ExampleMatcher.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,8 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleSpec;
-import org.springframework.data.domain.ExampleSpec.StringMatcher;
+import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.geo.Point;
@@ -262,7 +262,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(new Address(null, null, "Washington"));
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Example<Person> example = Example.of(sample, ExampleSpec.typed(Person.class).withIncludeNullValues());
+		Example<Person> example = Example.of(sample, matching().withIncludeNullValues());
 		List<Person> result = repository.findAll(example);
 
 		assertThat(result, empty());
@@ -281,7 +281,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(dave.getAddress());
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Example<Person> example =  Example.of(sample, ExampleSpec.untyped().withIncludeNullValues());
+		Example<Person> example = Example.of(sample, matching().withIncludeNullValues());
 		List<Person> result = repository.findAll(example);
 
 		assertThat(result, hasItem(dave));
@@ -298,7 +298,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Mat");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Example<Person> example =  Example.of(sample, ExampleSpec.untyped().withStringMatcher(StringMatcher.STARTING));
+		Example<Person> example = Example.of(sample, matching().withStringMatcher(StringMatcher.STARTING));
 		List<Person> result = repository.findAll(example);
 
 		assertThat(result, hasItems(dave, oliver));
@@ -379,14 +379,20 @@ public class SimpleMongoRepositoryTests {
 	@Test
 	public void findAllByExampleShouldProcessInheritanceCorrectly() {
 
-		PersonExtended sample = new PersonExtended() {};
+		PersonExtended reference = new PersonExtended();
+		reference.setLastname("Matthews");
+
+		repository.save(reference);
+
+		PersonExtended sample = new PersonExtended();
 		sample.setLastname("Matthews");
+
 		trimDomainType(sample, "id", "createdAt", "email");
 
 		List<PersonExtended> result = repository.findAll(Example.of(sample));
 
-		assertThat(result, containsInAnyOrder(dave, oliver));
-		assertThat(result, hasSize(2));
+		assertThat(result, hasSize(1));
+		assertThat(result, hasItem(reference));
 	}
 
 	/**
@@ -434,11 +440,6 @@ public class SimpleMongoRepositoryTests {
 		long result = repository.count(Example.of(sample));
 
 		assertThat(result, is(equalTo(2L)));
-	}
-
-	@Document(collection = "customizedPerson")
-	static class PersonExtended extends Person {
-
 	}
 
 	private void assertThatAllReferencePersonsWereStoredCorrectly(Map<String, Person> references, List<Person> saved) {
@@ -489,4 +490,6 @@ public class SimpleMongoRepositoryTests {
 		}
 	}
 
+	@Document
+	static class PersonExtended extends Person {}
 }
