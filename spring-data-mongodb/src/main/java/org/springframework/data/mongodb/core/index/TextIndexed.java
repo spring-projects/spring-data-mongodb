@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,11 @@ import java.lang.annotation.Target;
  * all fields marked with {@link TextIndexed} are combined into one single index. <br />
  * 
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.6
  */
 @Documented
-@Target({ ElementType.FIELD })
+@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TextIndexed {
 

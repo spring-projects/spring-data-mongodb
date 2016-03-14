@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
@@ -43,6 +44,7 @@ import org.springframework.util.StringUtils;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MongoQueryMethod extends QueryMethod {
 
@@ -191,7 +193,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return
 	 */
 	Query getQueryAnnotation() {
-		return method.getAnnotation(Query.class);
+		return AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
 	}
 
 	TypeInformation<?> getReturnType() {
@@ -213,7 +215,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 1.6
 	 */
 	Meta getMetaAnnotation() {
-		return method.getAnnotation(Meta.class);
+		return AnnotatedElementUtils.findMergedAnnotation(method, Meta.class);
 	}
 
 	/**
