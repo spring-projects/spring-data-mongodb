@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 by the original author(s).
+ * Copyright 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,10 @@ package org.springframework.data.mongodb.core.mapping;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.util.Locale;
 
@@ -25,6 +29,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -39,6 +44,7 @@ import org.springframework.util.ReflectionUtils;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class BasicMongoPersistentPropertyUnitTests {
 
@@ -184,6 +190,29 @@ public class BasicMongoPersistentPropertyUnitTests {
 				"id");
 		assertThat(property.isIdProperty(), is(true));
 	}
+	
+	/**
+	 * @see DATAMONGO-1373
+	 */
+	@Test
+	public void shouldConsiderComposedAnnotationsForIdField() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class,
+				"myId");
+		assertThat(property.isIdProperty(), is(true));
+		assertThat(property.getFieldName(), is("_id"));
+	}
+	
+	/**
+	 * @see DATAMONGO-1373
+	 */
+	@Test
+	public void shouldConsiderComposedAnnotationsForFields() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class,
+				"myField");
+		assertThat(property.getFieldName(), is("myField"));
+	}
 
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
@@ -253,4 +282,25 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		@Id @org.springframework.data.mongodb.core.mapping.Field("id") String id;
 	}
+	
+	static class DocumentWithComposedAnnotations {
+
+		@ComposedIdAnnotation @ComposedFieldAnnotation String myId;
+		@ComposedFieldAnnotation(name = "myField") String myField;
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	@org.springframework.data.mongodb.core.mapping.Field
+	static @interface ComposedFieldAnnotation {
+
+		@AliasFor(annotation = org.springframework.data.mongodb.core.mapping.Field.class, attribute = "value")
+		String name() default "_id";
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	@Id
+	static @interface ComposedIdAnnotation { }
+	
 }

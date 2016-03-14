@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.index;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.isBsonObject;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
@@ -54,6 +56,7 @@ import com.mongodb.DBObject;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(Suite.class)
 @SuiteClasses({ IndexResolutionTests.class, GeoSpatialIndexResolutionTests.class, CompoundIndexResolutionTests.class,
@@ -195,6 +198,42 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions.get(0).getIndexOptions(),
 					equalTo(new BasicDBObjectBuilder().add("name", "_name").get()));
 		}
+		
+		/**
+		 * @see DATAMONGO-1373
+		 */
+		@Test
+		public void resolveIndexDefinitionInComposedAnnotatedFields() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					IndexedDocumentWithComposedAnnotations.class);
+
+			assertThat(indexDefinitions, hasSize(2));
+
+			IndexDefinitionHolder indexDefinitionHolder = indexDefinitions.get(1);
+
+			assertThat(indexDefinitionHolder.getIndexKeys(), isBsonObject().containing("fieldWithMyIndexName", 1));
+			assertThat(indexDefinitionHolder.getIndexOptions(),
+					isBsonObject().containing("sparse", true).containing("unique", true).containing("name", "my_index_name"));
+		}
+		
+		/**
+		 * @see DATAMONGO-1373
+		 */
+		@Test
+		public void resolveIndexDefinitionInCustomComposedAnnotatedFields() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					IndexedDocumentWithComposedAnnotations.class);
+
+			assertThat(indexDefinitions, hasSize(2));
+
+			IndexDefinitionHolder indexDefinitionHolder = indexDefinitions.get(0);
+
+			assertThat(indexDefinitionHolder.getIndexKeys(), isBsonObject().containing("fieldWithDifferentIndexName", 1));
+			assertThat(indexDefinitionHolder.getIndexOptions(),
+					isBsonObject().containing("sparse", true).containing("name", "different_name").notContaining("unique"));
+		}
 
 		@Document(collection = "Zero")
 		static class IndexOnLevelZero {
@@ -246,6 +285,44 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document(collection = "no-index")
 		static class NoIndex {
 			@Id String id;
+		}
+		
+		@Document
+		static class IndexedDocumentWithComposedAnnotations {
+
+			@Id String id;
+			@CustomIndexedAnnotation String fieldWithDifferentIndexName;
+			@ComposedIndexedAnnotation String fieldWithMyIndexName;
+		}
+		
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target({ ElementType.FIELD })
+		@ComposedIndexedAnnotation(indexName = "different_name", beUnique = false)
+		static @interface CustomIndexedAnnotation {
+		}
+		
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+		@Indexed
+		static @interface ComposedIndexedAnnotation {
+	
+			@AliasFor(annotation = Indexed.class, attribute = "unique")
+			boolean beUnique() default true;
+			
+			@AliasFor(annotation = Indexed.class, attribute = "sparse")
+			boolean beSparse() default true;
+			
+			@AliasFor(annotation = Indexed.class, attribute = "name")
+			String indexName() default "my_index_name";
+		}
+		
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(ElementType.FIELD)
+		@org.springframework.data.mongodb.core.mapping.Field
+		static @interface ComposedFieldAnnotation {
+	
+			@AliasFor(annotation = org.springframework.data.mongodb.core.mapping.Field.class, attribute = "value")
+			String name() default "_id";
 		}
 
 	}
@@ -319,6 +396,24 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					indexDefinition.getIndexOptions(),
 					equalTo(new BasicDBObjectBuilder().add("name", "location").add("min", 1).add("max", 100).add("bits", 2).get()));
 		}
+		
+		/**
+		 * @see DATAMONGO-1373
+		 */
+		@Test
+		public void resolvesComposedAnnotationIndexDefinitionOptionsCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(GeoSpatialIndexedDocumentWithComposedAnnotation.class);
+
+			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
+
+			assertThat(
+					indexDefinition.getIndexKeys(),
+					isBsonObject().containing("location", "geoHaystack").containing("What light?", 1));
+			assertThat(
+					indexDefinition.getIndexOptions(),
+					isBsonObject().containing("name", "my_geo_index_name").containing("bucketSize", 2.0));
+		}
 
 		@Document(collection = "Zero")
 		static class GeoSpatialIndexOnLevelZero {
@@ -341,6 +436,31 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			@GeoSpatialIndexed(collection = "CollectionOverride", bits = 2, max = 100, min = 1,
 					type = GeoSpatialIndexType.GEO_2D)//
 			Point location;
+		}
+		
+		@Document(collection = "WithComposedAnnotation")
+		static class GeoSpatialIndexedDocumentWithComposedAnnotation {
+
+			@ComposedGeoSpatialIndexed//
+			Point location;
+		}
+		
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target({ ElementType.FIELD })
+		@GeoSpatialIndexed
+		@interface ComposedGeoSpatialIndexed {
+	 
+			@AliasFor(annotation = GeoSpatialIndexed.class, attribute = "name")
+			String indexName() default "my_geo_index_name";
+			
+			@AliasFor(annotation = GeoSpatialIndexed.class, attribute = "additionalField")
+			String theAdditionalFieldINeedToDefine() default "What light?";	 
+			
+			@AliasFor(annotation = GeoSpatialIndexed.class, attribute = "bucketSize")
+			double size() default 2;	 
+			
+			@AliasFor(annotation = GeoSpatialIndexed.class, attribute = "type")
+			GeoSpatialIndexType indexType() default GeoSpatialIndexType.GEO_HAYSTACK;
 		}
 
 	}
@@ -445,6 +565,20 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions, hasSize(1));
 			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "CompoundIndexOnLevelZero", indexDefinitions.get(0));
 		}
+		
+		/**
+		 * @see DATAMONGO-1373
+		 */
+		@Test
+		public void singleCompoundIndexUsingComposedAnnotationsOnTypeResolvedCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CompoundIndexDocumentWithComposedAnnotation.class);
+
+			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions.get(0).getIndexKeys(), isBsonObject().containing("foo", 1).containing("bar", -1));
+			assertThat(indexDefinitions.get(0).getIndexOptions(), isBsonObject().containing("name", "my_compound_index_name").
+					containing("unique", true).containing("background", true));
+		}
 
 		@Document(collection = "CompoundIndexOnLevelOne")
 		static class CompoundIndexOnLevelOne {
@@ -481,6 +615,34 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 				dropDups = true, sparse = true, unique = true) })
 		static class ComountIndexWithAutogeneratedName {
 
+		}
+		
+		@Document(collection = "WithComposedAnnotation")
+		@ComposedCompoundIndex
+		static class CompoundIndexDocumentWithComposedAnnotation {
+
+		}
+		
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target({ ElementType.TYPE })
+		@CompoundIndex
+		@interface ComposedCompoundIndex {
+	 
+			@AliasFor(annotation = CompoundIndex.class, attribute = "def")
+			String fields() default "{'foo': 1, 'bar': -1}";
+			
+			@AliasFor(annotation = CompoundIndex.class, attribute = "background")
+			boolean inBackground() default true;
+			
+			@AliasFor(annotation = CompoundIndex.class, attribute = "name")
+			String indexName() default "my_compound_index_name";
+			
+			@AliasFor(annotation = CompoundIndex.class, attribute = "useGeneratedName")
+			boolean useGeneratedName() default false;
+			
+			@AliasFor(annotation = CompoundIndex.class, attribute = "unique")
+			boolean isUnique() default true;
+			
 		}
 
 	}
@@ -611,6 +773,18 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithOverlappingLanguageProps.class);
 			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), is((Object) "lang"));
 		}
+		
+		/**
+		 * @see DATAMONGO-1373
+		 */
+		@Test
+		public void shouldResolveComposedAnnotationCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(TextIndexedDocumentWithComposedAnnotation.class);
+			
+			DBObject weights = DBObjectTestUtils.getAsDBObject(indexDefinitions.get(0).getIndexOptions(), "weights");
+			assertThat(weights, isBsonObject().containing("foo", 99f));
+		}
 
 		@Document
 		static class TextIndexOnSinglePropertyInRoot {
@@ -695,6 +869,22 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			@TextIndexed String foo;
 			String language;
 			@Language String lang;
+		}
+		
+		@Document
+		static class TextIndexedDocumentWithComposedAnnotation {
+
+			@ComposedTextIndexedAnnotation String foo;
+			String lang;
+		}
+		
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+		@TextIndexed
+		static @interface ComposedTextIndexedAnnotation {
+	
+			@AliasFor(annotation = TextIndexed.class, attribute = "weight")
+			float heavyweight() default 99f;
 		}
 
 	}
