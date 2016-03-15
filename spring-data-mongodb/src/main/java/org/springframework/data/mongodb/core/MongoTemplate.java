@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,6 +138,7 @@ import com.mongodb.util.JSONParseException;
  * @author Chuong Ngo
  * @author Christoph Strobl
  * @author Doménique Tilleuil
+ * @author Mark Paluch
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -662,6 +663,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		if (nearDbObject.containsField("query")) {
 			DBObject query = (DBObject) nearDbObject.get("query");
 			command.put("query", queryMapper.getMappedObject(query, getPersistentEntity(entityClass)));
+		}
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format("Executing geoNear using: %s for class: %s in collection: %s",
+					serializeToJsonSafely(command), entityClass, collectionName));
 		}
 
 		CommandResult commandResult = executeCommand(command, this.readPreference);
