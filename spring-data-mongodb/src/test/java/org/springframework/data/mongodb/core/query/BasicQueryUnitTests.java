@@ -137,4 +137,21 @@ public class BasicQueryUnitTests {
 		assertThat(query1, is(not(equalTo(query2))));
 		assertThat(query1.hashCode(), is(not(query2.hashCode())));
 	}
+	
+	/**
+	 * @see DATAMONGO-1387
+	 */
+	@Test
+	public void handlesFieldsIncludeCorrectly() {
+		
+		String qry = "{ \"name\" : \"Thomas\"}";
+		
+		BasicQuery query1 = new BasicQuery(qry);
+		query1.fields().include("name");
+		
+		DBObject fieldsObject = query1.getFieldsObject();
+		fieldsObject.containsField("name");
+		assertThat(query1.getFieldsObject(), notNullValue());
+		assertThat(query1.getFieldsObject().containsField("name"), is(true));
+	}
 }
