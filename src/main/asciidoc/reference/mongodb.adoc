@@ -1330,8 +1330,8 @@ TextQuery.searching(new TextCriteria().matching("\"coffee cake\""));
 TextQuery.searching(new TextCriteria().phrase("coffee cake"));
 ----
 
-include::../{spring-data-commons-docs}/query-by-example.adoc[]
-include::query-by-example.adoc[]
+include::../{spring-data-commons-docs}/query-by-example.adoc[leveloffset=+1]
+include::query-by-example.adoc[leveloffset=+1]
 
 
 [[mongo.mapreduce]]
