@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.util.Tuple;
+import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 
 import com.mongodb.BulkWriteException;
@@ -148,7 +148,7 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
-		return updateOne(Arrays.asList(Tuple.of(query, update)));
+		return updateOne(Arrays.asList(Pair.of(query, update)));
 	}
 
 	/*
@@ -156,11 +156,11 @@ class DefaultBulkOperations implements BulkOperations {
 	 * @see org.springframework.data.mongodb.core.BulkOperations#updateOne(java.util.List)
 	 */
 	@Override
-	public BulkOperations updateOne(List<Tuple<Query, Update>> updates) {
+	public BulkOperations updateOne(List<Pair<Query, Update>> updates) {
 
 		Assert.notNull(updates, "Updates must not be null!");
 
-		for (Tuple<Query, Update> update : updates) {
+		for (Pair<Query, Update> update : updates) {
 			update(update.getFirst(), update.getSecond(), false, false);
 		}
 
@@ -178,7 +178,7 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
-		return updateMulti(Arrays.asList(Tuple.of(query, update)));
+		return updateMulti(Arrays.asList(Pair.of(query, update)));
 	}
 
 	/*
@@ -186,11 +186,11 @@ class DefaultBulkOperations implements BulkOperations {
 	 * @see org.springframework.data.mongodb.core.BulkOperations#updateMulti(java.util.List)
 	 */
 	@Override
-	public BulkOperations updateMulti(List<Tuple<Query, Update>> updates) {
+	public BulkOperations updateMulti(List<Pair<Query, Update>> updates) {
 
 		Assert.notNull(updates, "Updates must not be null!");
 
-		for (Tuple<Query, Update> update : updates) {
+		for (Pair<Query, Update> update : updates) {
 			update(update.getFirst(), update.getSecond(), false, true);
 		}
 
@@ -211,9 +211,9 @@ class DefaultBulkOperations implements BulkOperations {
 	 * @see org.springframework.data.mongodb.core.BulkOperations#upsert(java.util.List)
 	 */
 	@Override
-	public BulkOperations upsert(List<Tuple<Query, Update>> updates) {
+	public BulkOperations upsert(List<Pair<Query, Update>> updates) {
 
-		for (Tuple<Query, Update> update : updates) {
+		for (Pair<Query, Update> update : updates) {
 			upsert(update.getFirst(), update.getSecond());
 		}
 

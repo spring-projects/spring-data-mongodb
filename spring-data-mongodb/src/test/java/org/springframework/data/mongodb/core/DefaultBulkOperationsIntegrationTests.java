@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.util.Tuple;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -258,7 +258,7 @@ public class DefaultBulkOperationsIntegrationTests {
 	public void mixedBulkOrderedWithList() {
 
 		List<BaseDoc> inserts = Arrays.asList(newDoc("1", "v1"), newDoc("2", "v2"), newDoc("3", "v2"));
-		List<Tuple<Query, Update>> updates = Arrays.asList(Tuple.of(where("value", "v2"), set("value", "v3")));
+		List<Pair<Query, Update>> updates = Arrays.asList(Pair.of(where("value", "v2"), set("value", "v3")));
 		List<Query> removes = Arrays.asList(where("_id", "1"));
 
 		BulkWriteResult result = createBulkOps(BulkMode.ORDERED).insert(inserts).updateMulti(updates).remove(removes)
@@ -276,9 +276,9 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		insertSomeDocuments();
 
-		List<Tuple<Query, Update>> updates = new ArrayList<Tuple<Query, Update>>();
-		updates.add(Tuple.of(where("value", "value1"), set("value", "value3")));
-		updates.add(Tuple.of(where("value", "value2"), set("value", "value4")));
+		List<Pair<Query, Update>> updates = new ArrayList<Pair<Query, Update>>();
+		updates.add(Pair.of(where("value", "value1"), set("value", "value3")));
+		updates.add(Pair.of(where("value", "value2"), set("value", "value4")));
 
 		int modifiedCount = multi ? bulkOps.updateMulti(updates).execute().getModifiedCount()
 				: bulkOps.updateOne(updates).execute().getModifiedCount();

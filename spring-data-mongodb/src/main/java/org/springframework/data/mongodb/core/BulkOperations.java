@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import java.util.List;
 
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.util.Tuple;
+import org.springframework.data.util.Pair;
 
 import com.mongodb.BulkWriteResult;
 
@@ -78,7 +78,7 @@ public interface BulkOperations {
 	 * @param updates Update operations to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations updateOne(List<Tuple<Query, Update>> updates);
+	BulkOperations updateOne(List<Pair<Query, Update>> updates);
 
 	/**
 	 * Add a single update to the bulk operation. For the update request, all matching documents are updated.
@@ -96,7 +96,7 @@ public interface BulkOperations {
 	 * @return The bulk operation.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations updateMulti(List<Tuple<Query, Update>> updates);
+	BulkOperations updateMulti(List<Pair<Query, Update>> updates);
 
 	/**
 	 * Add a single upsert to the bulk operation. An upsert is an update if the set of matching documents is not empty,
@@ -117,7 +117,7 @@ public interface BulkOperations {
 	 * @return The bulk operation.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations upsert(List<Tuple<Query, Update>> updates);
+	BulkOperations upsert(List<Pair<Query, Update>> updates);
 
 	/**
 	 * Add a single remove operation to the bulk operation.
