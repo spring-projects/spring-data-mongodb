@@ -1,6 +1,18 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.9.0.RC1 (2016-03-18)
+-----------------------------------------
+* DATAMONGO-1400 - Adapt to rename of Spring Data Commons' Tuple to Pair.
+* DATAMONGO-1397 - MongoTemplate.geoNear() do not log the Query.
+* DATAMONGO-1392 - Release 1.9 RC1 (Hopper).
+* DATAMONGO-1389 - Adapt test case to changes made for improved type prediction infrastructure.
+* DATAMONGO-1387 - BasicQuery.fields().include() doesn't stick, even though Query.fields().include() does.
+* DATAMONGO-1373 - Problem with custom annotations with AliasFor annotated attributes.
+* DATAMONGO-1326 - Add support for $lookup to aggregation.
+* DATAMONGO-1245 - Add support for Query-By-Example.
+
+
 Changes in version 1.8.4.RELEASE (2016-02-23)
 ---------------------------------------------
 * DATAMONGO-1381 - Release 1.8.4 (Gosling SR4).
