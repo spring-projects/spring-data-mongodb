@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import javax.validation.Validator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
@@ -31,6 +32,7 @@ import com.mongodb.DBObject;
  * before entities are saved in database.
  * 
  * @author Maciej Walkowiak
+ * @author Paul Sterl
  */
 public class ValidatingMongoEventListener extends AbstractMongoEventListener<Object> {
 
@@ -54,14 +56,15 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 	 */
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void onBeforeSave(Object source, DBObject dbo) {
+	public void onBeforeSave(Object obj, DBObject dbo) {
 
-		LOG.debug("Validating object: {}", source);
-		Set violations = validator.validate(source);
+		LOG.debug("Validating object: {}", obj);
+		final Object target = obj instanceof LazyLoadingProxy ? ((LazyLoadingProxy) obj).getTarget() : obj;
+		final Set violations = validator.validate(target);
 
 		if (!violations.isEmpty()) {
 
-			LOG.info("During object: {} validation violations found: {}", source, violations);
+			LOG.info("During object: {} validation violations found: {}", target, violations);
 			throw new ConstraintViolationException(violations);
 		}
 	}

@@ -10,6 +10,7 @@
 	<mongo:db-factory dbname="validation" />
 
 	<mongo:mapping-converter base-package="org.springframework.data.mongodb.core" />
+    <mongo:repositories base-package="org.springframework.data.mongodb.core.mapping.event.repo" />
 
 	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
 		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
