@@ -14,7 +14,7 @@
 == What's new in Spring Data MongoDB 1.8
 
 * `Criteria` offers support for creating `$geoIntersects`.
-* Support http://docs.spring.io/spring/docs/current/spring-framework-reference/html/expressions.html[SpEL expressions] in `@Query`.
+* Support http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/expressions.html[SpEL expressions] in `@Query`.
 * `MongoMappingEvents` expose the collection name they are issued for.
 * Improved support for `<mongo:mongo-client credentials="..." />`.
 * Improved index creation failure error message.
