@@ -3,14 +3,18 @@
 
 [[new-features.1-9-0]]
 == What's new in Spring Data MongoDB 1.9
-* The following annotations have been enabled to build own, composed annotations: `@Document`, `@Id`, `@Field`, `@Indexed`, `@CompoundIndex`, `@GeoSpatialIndexed`, `@TextIndexed`, `@Query`, `@Meta`. 
-
+* The following annotations have been enabled to build own, composed annotations: `@Document`, `@Id`, `@Field`, `@Indexed`, `@CompoundIndex`, `@GeoSpatialIndexed`, `@TextIndexed`, `@Query`, `@Meta`.
+* Support for projections in repository query methods.
+* Out-of-the-box support for `java.util.Currency` in object mapping.
+* Add support for the bulk operations introduced in MongoDB 2.6.
+* Upgrade to Querydsl 4.
+* Assert compatibility with MongoDB 3.0 and MongoDB Java Driver 3.2 (see: <<mongo.mongo-3>>).
 
 [[new-features.1-8-0]]
 == What's new in Spring Data MongoDB 1.8
 
 * `Criteria` offers support for creating `$geoIntersects`.
-* Support http://docs.spring.io/spring/docs/current/spring-framework-reference/html/expressions.html[SpEL expressions] in `@Query`.
+* Support http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/expressions.html[SpEL expressions] in `@Query`.
 * `MongoMappingEvents` expose the collection name they are issued for.
 * Improved support for `<mongo:mongo-client credentials="..." />`.
 * Improved index creation failure error message.

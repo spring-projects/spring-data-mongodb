@@ -1,7 +1,7 @@
 [[preface]]
 = Preface
 
-The Spring Data MongoDB project applies core Spring concepts to the development of solutions using the MongoDB document style data store.  We provide a "template" as a high-level abstraction for storing and querying documents. You will notice similarities to the JDBC support in the Spring Framework.
+The Spring Data MongoDB project applies core Spring concepts to the development of solutions using the MongoDB document style data store. We provide a "template" as a high-level abstraction for storing and querying documents. You will notice similarities to the JDBC support in the Spring Framework.
 
 This document is the reference guide for Spring Data - Document Support. It explains Document module concepts and semantics and the syntax for various stores namespaces.
 
@@ -9,7 +9,7 @@ This section provides some basic introduction to Spring and Document database. T
 
 [[get-started:first-steps:spring]]
 == Knowing Spring
-Spring Data uses Spring framework's http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/spring-core.html[core] functionality, such as the http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/beans.html[IoC] container, http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/validation.html#core-convert[type conversion system], http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/expressions.html[expression language], http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/jmx.html[JMX integration], and portable http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/dao.html#dao-exceptions[DAO exception hierarchy]. While it is not important to know the Spring APIs, understanding the concepts behind them is. At a minimum, the idea behind IoC should be familiar for whatever IoC container you choose to use.
+Spring Data uses Spring framework's http://docs.spring.io/spring/docs/4.2.x/spring-framework-reference/html/spring-core.html[core] functionality, such as the http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/beans.html[IoC] container, http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/validation.html#core-convert[type conversion system], http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/expressions.html[expression language], http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/jmx.html[JMX integration], and portable http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html#dao-exceptions[DAO exception hierarchy]. While it is not important to know the Spring APIs, understanding the concepts behind them is. At a minimum, the idea behind IoC should be familiar for whatever IoC container you choose to use.
 
 The core functionality of the MongoDB and CouchDB support can be used directly, with no need to invoke the IoC services of the Spring Container. This is much like `JdbcTemplate` which can be used 'standalone' without any other services of the Spring container. To leverage all the features of Spring Data document, such as the repository support, you will need to configure some parts of the library using Spring.
 
@@ -30,7 +30,7 @@ The jumping off ground for learning about MongoDB is http://www.mongodb.org/[www
 [[requirements]]
 == Requirements
 
-Spring Data MongoDB 1.x binaries requires JDK level 6.0 and above, and http://spring.io/docs[Spring Framework] 4.0.x and above.
+Spring Data MongoDB 1.x binaries requires JDK level 6.0 and above, and http://spring.io/docs[Spring Framework] {springVersion} and above.
 
 In terms of document stores, http://www.mongodb.org/[MongoDB] at least 2.6.
 
