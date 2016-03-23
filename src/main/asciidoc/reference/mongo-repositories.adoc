@@ -465,6 +465,8 @@ Page<FullTextDocument> page = repository.findAllBy(criteria, new PageRequest(1, 
 List<FullTextDocument> result = repository.findByTitleOrderByScoreDesc("mongodb", criteria);
 ----
 
+include::../{spring-data-commons-docs}/repository-projections.adoc[leveloffset=+2]
+
 [[mongodb.repositories.misc]]
 == Miscellaneous
 
