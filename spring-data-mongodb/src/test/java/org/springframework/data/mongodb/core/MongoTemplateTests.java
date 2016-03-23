@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,7 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.IndexField;
@@ -197,6 +198,7 @@ public class MongoTemplateTests {
 		template.dropCollection(SomeTemplate.class);
 		template.dropCollection(Address.class);
 		template.dropCollection(DocumentWithCollectionOfSamples.class);
+		template.dropCollection(WithGeoJson.class);
 	}
 
 	@Test
@@ -3143,11 +3145,30 @@ public class MongoTemplateTests {
 		assertThat(loaded.refToDocNotUsedInCtor, instanceOf(LazyLoadingProxy.class));
 	}
 
+	/**
+	 * @see DATAMONGO-1401
+	 */
+	@Test
+	public void updateShouldWorkForTypesContainingGeoJsonTypes() {
+
+		WithGeoJson wgj = new WithGeoJson();
+		wgj.id = "1";
+		wgj.description = "datamongo-1401";
+		wgj.point = new GeoJsonPoint(1D, 2D);
+
+		template.save(wgj);
+
+		wgj.description = "datamongo-1401-update";
+		template.save(wgj);
+
+		assertThat(template.findOne(query(where("id").is(wgj.id)), WithGeoJson.class).point, is(equalTo(wgj.point)));
+	}
+
 	static class DoucmentWithNamedIdField {
 
 		@Id String someIdKey;
 
-		@Field(value = "val")//
+		@Field(value = "val") //
 		String value;
 
 		@Override
@@ -3482,6 +3503,15 @@ public class MongoTemplateTests {
 			this.refToDocUsedInCtor = refToDocUsedInCtor;
 		}
 
+	}
+
+	static class WithGeoJson {
+
+		@Id String id;
+		@Version //
+		Integer version;
+		String description;
+		GeoJsonPoint point;
 	}
 
 }
