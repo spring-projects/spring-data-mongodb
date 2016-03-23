@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mapping.model.MappingException;
@@ -122,10 +123,20 @@ public class QueryMapper {
 				continue;
 			}
 
-			Field field = createPropertyField(entity, key, mappingContext);
-			Entry<String, Object> entry = getMappedObjectForField(field, query.get(key));
+			try {
 
-			result.put(entry.getKey(), entry.getValue());
+				Field field = createPropertyField(entity, key, mappingContext);
+				Entry<String, Object> entry = getMappedObjectForField(field, query.get(key));
+				result.put(entry.getKey(), entry.getValue());
+			} catch (InvalidPersistentPropertyPath invalidPathException) {
+
+				// in case the object has not already been mapped
+				if (!(query.get(key) instanceof DBObject)) {
+					throw invalidPathException;
+				}
+
+				result.put(key, query.get(key));
+			}
 		}
 
 		return result;
