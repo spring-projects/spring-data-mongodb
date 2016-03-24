@@ -2160,7 +2160,7 @@ To intercept an object before it goes through the conversion process (which turn
 ----
 public class BeforeConvertListener extends AbstractMongoEventListener<Person> {
   @Override
-  public void onBeforeConvert(Person p) {
+  public void onBeforeConvert(BeforeConvertEvent<Person> event) {
     ... does some auditing manipulation, set timestamps, whatever ...
   }
 }
@@ -2174,7 +2174,7 @@ To intercept an object before it goes into the database, you'd register a subcla
 ----
 public class BeforeSaveListener extends AbstractMongoEventListener<Person> {
   @Override
-  public void onBeforeSave(Person p, DBObject dbo) {
+  public void onBeforeSave(BeforeSaveEvent<Person> event) {
     … change values, delete them, whatever …
   }
 }
