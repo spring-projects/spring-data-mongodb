@@ -29,7 +29,7 @@ To create a Spring project in STS go to File -> New -> Spring Template Project -
 
 Then add the following to pom.xml dependencies section.
 
-[source,xml]
+[source,xml,subs="attributes"]
 ----
 <dependencies>
 
@@ -46,7 +46,7 @@ Then add the following to pom.xml dependencies section.
 
 Also change the version of Spring in the pom.xml to be
 
-[source,xml]
+[source,xml,subs="attributes"]
 ----
 <spring.framework.version>{springVersion}</spring.framework.version>
 ----
