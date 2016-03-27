@@ -314,6 +314,32 @@ public class Update {
 		addMultiFieldOperation("$mul", key, multiplier.doubleValue());
 		return this;
 	}
+	
+	/**
+	 * Update using the {@literal $max} update modifier
+	 *
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/max/
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public Update max(String key, Object value) {
+		addMultiFieldOperation("$max", key, value);
+		return this;
+	}
+
+	/**
+	 * Update using the {@literal $max} update modifier
+	 *
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/min/
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public Update min(String key, Object value) {
+		addMultiFieldOperation("$min", key, value);
+		return this;
+	}
 
 	/**
 	 * The operator supports bitwise {@code and}, bitwise {@code or}, and bitwise {@code xor} operations.
