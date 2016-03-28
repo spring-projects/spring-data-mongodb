@@ -26,7 +26,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>1.5.0.RELEASE</version>
+  <version>1.8.4.RELEASE</version>
 </dependency>
 ```
 
@@ -36,7 +36,7 @@ If you'd rather like the latest snapshots of the upcoming major version, use our
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>1.6.0.BUILD-SNAPSHOT</version>
+  <version>1.9.0.BUILD-SNAPSHOT</version>
 </dependency>
 
 <repository>
