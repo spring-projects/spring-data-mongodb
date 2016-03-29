@@ -195,11 +195,54 @@ public class Aggregation {
 	/**
 	 * Factory method to create a new {@link UnwindOperation} for the field with the given name.
 	 *
-	 * @param fieldName must not be {@literal null} or empty.
+	 * @param field must not be {@literal null} or empty.
 	 * @return
 	 */
 	public static UnwindOperation unwind(String field) {
 		return new UnwindOperation(field(field));
+	}
+
+	/**
+	 * Factory method to create a new {@link UnwindOperation} for the field with the given name and
+	 * {@code preserveNullAndEmptyArrays}. Note that extended unwind is supported in MongoDB version 3.2+.
+	 *
+	 * @param field must not be {@literal null} or empty.
+	 * @param preserveNullAndEmptyArrays {@literal true} to output the document if path is {@literal null}, missing or
+	 *          array is empty.
+	 * @return
+	 * @since 1.10
+	 */
+	public static UnwindOperation unwind(String field, boolean preserveNullAndEmptyArrays) {
+		return new UnwindOperation(field(field), preserveNullAndEmptyArrays);
+	}
+
+	/**
+	 * Factory method to create a new {@link UnwindOperation} for the field with the given name and to include the index
+	 * field as {@code arrayIndex}. Note that extended unwind is supported in MongoDB version 3.2+.
+	 *
+	 * @param field must not be {@literal null} or empty.
+	 * @param arrayIndex must not be {@literal null} or empty.
+	 * @return
+	 * @since 1.10
+	 */
+	public static UnwindOperation unwind(String field, String arrayIndex) {
+		return new UnwindOperation(field(field), field(arrayIndex), false);
+	}
+
+	/**
+	 * Factory method to create a new {@link UnwindOperation} for the field with the given name, to include the index
+	 * field as {@code arrayIndex} and {@code preserveNullAndEmptyArrays}. Note that extended unwind is supported in
+	 * MongoDB version 3.2+.
+	 *
+	 * @param field must not be {@literal null} or empty.
+	 * @param arrayIndex must not be {@literal null} or empty.
+	 * @param preserveNullAndEmptyArrays {@literal true} to output the document if path is {@literal null}, missing or
+	 *          array is empty.
+	 * @return
+	 * @since 1.10
+	 */
+	public static UnwindOperation unwind(String field, String arrayIndex, boolean preserveNullAndEmptyArrays) {
+		return new UnwindOperation(field(field), field(arrayIndex), preserveNullAndEmptyArrays);
 	}
 
 	/**

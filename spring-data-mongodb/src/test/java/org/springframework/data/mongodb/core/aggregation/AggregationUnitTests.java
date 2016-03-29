@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +40,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class AggregationUnitTests {
 
@@ -92,6 +94,64 @@ public class AggregationUnitTests {
 				unwind("a"), //
 				project("a", "b") // b should still be available
 		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * @see DATAMONGO-1391
+	 */
+	@Test
+	public void unwindOperationWithIndexShouldPreserveFields() {
+
+		newAggregation( //
+				project("a", "b"), //
+				unwind("a", "x"), //
+				project("a", "b") // b should still be available
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * @see DATAMONGO-1391
+	 */
+	@Test
+	public void unwindOperationWithIndexShouldAddIndexField() {
+
+		newAggregation( //
+				project("a", "b"), //
+				unwind("a", "x"), //
+				project("a", "x") // b should still be available
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * @see DATAMONGO-1391
+	 */
+	@Test
+	public void fullUnwindOperationShouldBuildCorrectClause() {
+
+		DBObject agg = newAggregation( //
+				unwind("a", "x", true)).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		@SuppressWarnings("unchecked")
+		DBObject unwind = ((List<DBObject>) agg.get("pipeline")).get(0);
+		assertThat((DBObject) unwind.get("$unwind"),
+				isBsonObject(). //
+						containing("includeArrayIndex", "x").//
+						containing("preserveNullAndEmptyArrays", true));
+	}
+
+	/**
+	 * @see DATAMONGO-1391
+	 */
+	@Test
+	public void unwindOperationWithPreserveNullShouldBuildCorrectClause() {
+
+		DBObject agg = newAggregation( //
+				unwind("a", true)).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		@SuppressWarnings("unchecked")
+		DBObject unwind = ((List<DBObject>) agg.get("pipeline")).get(0);
+		assertThat(unwind,
+				isBsonObject().notContaining("includeArrayIndex").containing("preserveNullAndEmptyArrays", true));
 	}
 
 	/**
