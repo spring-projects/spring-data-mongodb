@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.springframework.util.CompositeIterator;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Mark Paluch
  * @since 1.3
  */
 public final class ExposedFields implements Iterable<ExposedField> {
@@ -203,8 +204,13 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	public Iterator<ExposedField> iterator() {
 
 		CompositeIterator<ExposedField> iterator = new CompositeIterator<ExposedField>();
-		iterator.add(syntheticFields.iterator());
-		iterator.add(originalFields.iterator());
+		if (!syntheticFields.isEmpty()) {
+			iterator.add(syntheticFields.iterator());
+		}
+
+		if (!originalFields.isEmpty()) {
+			iterator.add(originalFields.iterator());
+		}
 
 		return iterator;
 	}

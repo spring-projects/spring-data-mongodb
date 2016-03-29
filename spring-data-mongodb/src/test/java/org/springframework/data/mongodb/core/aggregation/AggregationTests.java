@@ -241,6 +241,64 @@ public class AggregationTests {
 		assertThat(tagCount.size(), is(0));
 	}
 
+	/**
+	 * @see DATAMONGO-1391
+	 */
+	@Test
+	public void shouldUnwindWithIndex() {
+
+		DBCollection coll = mongoTemplate.getCollection(INPUT_COLLECTION);
+
+		coll.insert(createDocument("Doc1", "spring", "mongodb", "nosql"));
+		coll.insert(createDocument("Doc2"));
+
+		Aggregation agg = newAggregation( //
+				project("tags"), //
+				unwind("tags", "n"), //
+				project("n") //
+						.and("tag").previousOperation(), //
+				sort(DESC, "n") //
+		);
+
+		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, TagCount.class);
+
+		assertThat(results, is(notNullValue()));
+
+		List<TagCount> tagCount = results.getMappedResults();
+
+		assertThat(tagCount, is(notNullValue()));
+		assertThat(tagCount.size(), is(3));
+	}
+
+	/**
+	 * @see DATAMONGO-1391
+	 */
+	@Test
+	public void shouldUnwindPreserveEmpty() {
+
+		DBCollection coll = mongoTemplate.getCollection(INPUT_COLLECTION);
+
+		coll.insert(createDocument("Doc1", "spring", "mongodb", "nosql"));
+		coll.insert(createDocument("Doc2"));
+
+		Aggregation agg = newAggregation( //
+				project("tags"), //
+				unwind("tags", "n", true), //
+				sort(DESC, "n") //
+		);
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, DBObject.class);
+
+		assertThat(results, is(notNullValue()));
+
+		List<DBObject> tagCount = results.getMappedResults();
+
+		assertThat(tagCount, is(notNullValue()));
+		assertThat(tagCount.size(), is(4));
+		assertThat(tagCount.get(0), isBsonObject().containing("n", 2L));
+		assertThat(tagCount.get(3), isBsonObject().notContaining("n"));
+	}
+
 	@Test
 	public void shouldDetectResultMismatch() {
 
