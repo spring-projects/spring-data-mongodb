@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -31,12 +32,13 @@ import com.mongodb.DBObject;
 
 /**
  * Test cases for {@link Update}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Risberg
  * @author Becca Gaspard
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Alexey Plotnik
  */
 public class UpdateTests {
 
@@ -114,9 +116,8 @@ public class UpdateTests {
 		Update u = new Update().pushAll("authors", new Object[] { m1, m2 });
 		u.pushAll("books", new Object[] { "Spring in Action" });
 
-		assertThat(
-				u.getUpdateObject().toString(),
-				is("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}] , \"books\" : [ \"Spring in Action\"]}}"));
+		assertThat(u.getUpdateObject().toString(), is(
+				"{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}] , \"books\" : [ \"Spring in Action\"]}}"));
 	}
 
 	@Test
@@ -343,10 +344,11 @@ public class UpdateTests {
 				.set("foo", "bar");
 
 		assertThat(actualUpdate.toString(), is(equalTo(expectedUpdate.toString())));
-		assertThat(actualUpdate.toString(), is("{ \"$inc\" : { \"size\" : 1} ," //
-				+ " \"$set\" : { \"nl\" :  null  , \"directory\" : \"/Users/Test/Desktop\" , \"foo\" : \"bar\"} , " //
-				+ "\"$push\" : { \"authors\" : { \"name\" : \"Sven\"}} " //
-				+ ", \"$pop\" : { \"authors\" : -1}}")); //
+		assertThat(actualUpdate.toString(),
+				is("{ \"$inc\" : { \"size\" : 1} ," //
+						+ " \"$set\" : { \"nl\" :  null  , \"directory\" : \"/Users/Test/Desktop\" , \"foo\" : \"bar\"} , " //
+						+ "\"$push\" : { \"authors\" : { \"name\" : \"Sven\"}} " //
+						+ ", \"$pop\" : { \"authors\" : -1}}")); //
 	}
 
 	/**
@@ -367,9 +369,8 @@ public class UpdateTests {
 	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForMultipleFieldsWhenUsingDate() {
 
 		Update update = new Update().currentDate("foo").currentDate("bar");
-		assertThat(update.getUpdateObject(),
-				equalTo(new BasicDBObjectBuilder().add("$currentDate", new BasicDBObject("foo", true).append("bar", true))
-						.get()));
+		assertThat(update.getUpdateObject(), equalTo(
+				new BasicDBObjectBuilder().add("$currentDate", new BasicDBObject("foo", true).append("bar", true)).get()));
 	}
 
 	/**
@@ -379,10 +380,8 @@ public class UpdateTests {
 	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForSingleFieldWhenUsingTimestamp() {
 
 		Update update = new Update().currentTimestamp("foo");
-		assertThat(
-				update.getUpdateObject(),
-				equalTo(new BasicDBObjectBuilder().add("$currentDate",
-						new BasicDBObject("foo", new BasicDBObject("$type", "timestamp"))).get()));
+		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder()
+				.add("$currentDate", new BasicDBObject("foo", new BasicDBObject("$type", "timestamp"))).get()));
 	}
 
 	/**
@@ -392,12 +391,11 @@ public class UpdateTests {
 	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForMultipleFieldsWhenUsingTimestamp() {
 
 		Update update = new Update().currentTimestamp("foo").currentTimestamp("bar");
-		assertThat(
-				update.getUpdateObject(),
-				equalTo(new BasicDBObjectBuilder().add(
-						"$currentDate",
-						new BasicDBObject("foo", new BasicDBObject("$type", "timestamp")).append("bar", new BasicDBObject("$type",
-								"timestamp"))).get()));
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder()
+						.add("$currentDate", new BasicDBObject("foo", new BasicDBObject("$type", "timestamp")).append("bar",
+								new BasicDBObject("$type", "timestamp")))
+						.get()));
 	}
 
 	/**
@@ -407,10 +405,10 @@ public class UpdateTests {
 	public void getUpdateObjectShouldReturnCurrentDateCorrectlyWhenUsingMixedDateAndTimestamp() {
 
 		Update update = new Update().currentDate("foo").currentTimestamp("bar");
-		assertThat(
-				update.getUpdateObject(),
-				equalTo(new BasicDBObjectBuilder().add("$currentDate",
-						new BasicDBObject("foo", true).append("bar", new BasicDBObject("$type", "timestamp"))).get()));
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder()
+						.add("$currentDate", new BasicDBObject("foo", true).append("bar", new BasicDBObject("$type", "timestamp")))
+						.get()));
 	}
 
 	/**
@@ -439,8 +437,8 @@ public class UpdateTests {
 
 		Update update = new Update().multiply("key", 10);
 
-		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder().add("$mul", new BasicDBObject("key", 10D))
-				.get()));
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$mul", new BasicDBObject("key", 10D)).get()));
 	}
 
 	/**
@@ -505,7 +503,6 @@ public class UpdateTests {
 		assertThat(pullAll.get("field2"), is(notNullValue()));
 	}
 
-
 	/**
 	 * @see DATAMONGO-1404
 	 */
@@ -530,8 +527,8 @@ public class UpdateTests {
 
 		Update update = new Update().max("key", 10);
 
-		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder().add("$max", new BasicDBObject("key", 10))
-				.get()));
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$max", new BasicDBObject("key", 10)).get()));
 	}
 
 	/**
@@ -542,8 +539,8 @@ public class UpdateTests {
 
 		Update update = new Update().min("key", 10);
 
-		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder().add("$min", new BasicDBObject("key", 10))
-				.get()));
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$min", new BasicDBObject("key", 10)).get()));
 	}
 
 	/**
@@ -553,11 +550,10 @@ public class UpdateTests {
 	public void shouldSuppressPreviousValueForMax() {
 
 		Update update = new Update().max("key", 10);
-
 		update.max("key", 99);
 
-		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder().add("$max", new BasicDBObject("key", 99))
-				.get()));
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$max", new BasicDBObject("key", 99)).get()));
 	}
 
 	/**
@@ -567,11 +563,10 @@ public class UpdateTests {
 	public void shouldSuppressPreviousValueForMin() {
 
 		Update update = new Update().min("key", 10);
+		update.min("key", 99);
 
-		update.max("key", 99);
-
-		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder().add("$min9", new BasicDBObject("key", 99))
-				.get()));
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$min", new BasicDBObject("key", 99)).get()));
 	}
 
 	/**
@@ -580,12 +575,11 @@ public class UpdateTests {
 	@Test
 	public void getUpdateObjectShouldReturnCorrectDateRepresentationForMax() {
 
-		final java.util.Date date = new java.util.Date();
-
+		Date date = new Date();
 		Update update = new Update().max("key", date);
 
-		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder().add("$max", new BasicDBObject("key", date))
-				.get()));
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$max", new BasicDBObject("key", date)).get()));
 	}
 
 	/**
@@ -594,11 +588,10 @@ public class UpdateTests {
 	@Test
 	public void getUpdateObjectShouldReturnCorrectDateRepresentationForMin() {
 
-		final java.util.Date date = new java.util.Date();
-
+		Date date = new Date();
 		Update update = new Update().min("key", date);
 
-		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder().add("$min", new BasicDBObject("key", date))
-				.get()));
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$min", new BasicDBObject("key", date)).get()));
 	}
 }

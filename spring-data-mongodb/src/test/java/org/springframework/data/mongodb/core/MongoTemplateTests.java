@@ -24,14 +24,17 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
@@ -94,7 +97,7 @@ import com.mongodb.WriteResult;
 
 /**
  * Integration test for {@link MongoTemplate}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Risberg
  * @author Amol Nayak
@@ -102,6 +105,7 @@ import com.mongodb.WriteResult;
  * @author Thomas Darimont
  * @author Komi Innocent
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -3164,6 +3168,194 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query(where("id").is(wgj.id)), WithGeoJson.class).point, is(equalTo(wgj.point)));
 	}
 
+	/**
+	 * @see DATAMONGO-1404
+	 */
+	@Test
+	public void updatesDateValueCorrectlyWhenUsingMinOperator() {
+
+		Calendar cal = Calendar.getInstance(Locale.US);
+		cal.set(2013, 10, 13, 0, 0, 0);
+
+		TypeWithDate twd = new TypeWithDate();
+		twd.date = new Date();
+		template.save(twd);
+		template.updateFirst(query(where("id").is(twd.id)), new Update().min("date", cal.getTime()), TypeWithDate.class);
+
+		TypeWithDate loaded = template.find(query(where("id").is(twd.id)), TypeWithDate.class).get(0);
+		assertThat(loaded.date, equalTo(cal.getTime()));
+	}
+
+	/**
+	 * @see DATAMONGO-1404
+	 */
+	@Test
+	public void updatesNumericValueCorrectlyWhenUsingMinOperator() {
+
+		TypeWithNumbers twn = new TypeWithNumbers();
+		twn.byteVal = 100;
+		twn.doubleVal = 200D;
+		twn.floatVal = 300F;
+		twn.intVal = 400;
+		twn.longVal = 500L;
+
+		// Note that $min operator uses String comparison for BigDecimal/BigInteger comparison according to BSON sort rules.
+		twn.bigIntegerVal = new BigInteger("600");
+		twn.bigDeciamVal = new BigDecimal("700.0");
+
+		template.save(twn);
+
+		byte byteVal = 90;
+		Update update = new Update()//
+				.min("byteVal", byteVal) //
+				.min("doubleVal", 190D) //
+				.min("floatVal", 290F) //
+				.min("intVal", 390) //
+				.min("longVal", 490) //
+				.min("bigIntegerVal", new BigInteger("590")) //
+				.min("bigDeciamVal", new BigDecimal("690")) //
+				;
+
+		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
+
+		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
+		assertThat(loaded.byteVal, equalTo(byteVal));
+		assertThat(loaded.doubleVal, equalTo(190D));
+		assertThat(loaded.floatVal, equalTo(290F));
+		assertThat(loaded.intVal, equalTo(390));
+		assertThat(loaded.longVal, equalTo(490L));
+		assertThat(loaded.bigIntegerVal, equalTo(new BigInteger("590")));
+		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("690")));
+	}
+
+	/**
+	 * @see DATAMONGO-1404
+	 */
+	@Test
+	public void updatesDateValueCorrectlyWhenUsingMaxOperator() {
+
+		Calendar cal = Calendar.getInstance(Locale.US);
+		cal.set(2013, 10, 13, 0, 0, 0);
+
+		TypeWithDate twd = new TypeWithDate();
+		twd.date = cal.getTime();
+		template.save(twd);
+
+		cal.set(2019, 10, 13, 0, 0, 0);
+		template.updateFirst(query(where("id").is(twd.id)), new Update().max("date", cal.getTime()), TypeWithDate.class);
+
+		TypeWithDate loaded = template.find(query(where("id").is(twd.id)), TypeWithDate.class).get(0);
+		assertThat(loaded.date, equalTo(cal.getTime()));
+	}
+
+	/**
+	 * @see DATAMONGO-1404
+	 */
+	@Test
+	public void updatesNumericValueCorrectlyWhenUsingMaxOperator() {
+
+		TypeWithNumbers twn = new TypeWithNumbers();
+		twn.byteVal = 100;
+		twn.doubleVal = 200D;
+		twn.floatVal = 300F;
+		twn.intVal = 400;
+		twn.longVal = 500L;
+
+		// Note that $max operator uses String comparison for BigDecimal/BigInteger comparison according to BSON sort rules.
+		twn.bigIntegerVal = new BigInteger("600");
+		twn.bigDeciamVal = new BigDecimal("700.0");
+
+		template.save(twn);
+
+		byte byteVal = 101;
+		Update update = new Update()//
+				.max("byteVal", byteVal) //
+				.max("doubleVal", 290D) //
+				.max("floatVal", 390F) //
+				.max("intVal", 490) //
+				.max("longVal", 590) //
+				.max("bigIntegerVal", new BigInteger("690")) //
+				.max("bigDeciamVal", new BigDecimal("790")) //
+				;
+
+		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
+
+		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
+		assertThat(loaded.byteVal, equalTo(byteVal));
+		assertThat(loaded.doubleVal, equalTo(290D));
+		assertThat(loaded.floatVal, equalTo(390F));
+		assertThat(loaded.intVal, equalTo(490));
+		assertThat(loaded.longVal, equalTo(590L));
+		assertThat(loaded.bigIntegerVal, equalTo(new BigInteger("690")));
+		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("790")));
+	}
+
+	/**
+	 * @see DATAMONGO-1404
+	 */
+	@Test
+	public void updatesBigNumberValueUsingStringComparisonWhenUsingMaxOperator() {
+
+		TypeWithNumbers twn = new TypeWithNumbers();
+
+		// Note that $max operator uses String comparison for BigDecimal/BigInteger comparison according to BSON sort rules.
+		// Therefore "80" is considered greater than "700"
+		twn.bigIntegerVal = new BigInteger("600");
+		twn.bigDeciamVal = new BigDecimal("700.0");
+
+		template.save(twn);
+
+		Update update = new Update()//
+				.max("bigIntegerVal", new BigInteger("70")) //
+				.max("bigDeciamVal", new BigDecimal("80")) //
+				;
+
+		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
+
+		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
+		assertThat(loaded.bigIntegerVal, equalTo(new BigInteger("70")));
+		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("80")));
+	}
+
+	/**
+	 * @see DATAMONGO-1404
+	 */
+	@Test
+	public void updatesBigNumberValueUsingStringComparisonWhenUsingMinOperator() {
+
+		TypeWithNumbers twn = new TypeWithNumbers();
+
+		// Note that $max operator uses String comparison for BigDecimal/BigInteger comparison according to BSON sort rules.
+		// Therefore "80" is considered greater than "700"
+		twn.bigIntegerVal = new BigInteger("80");
+		twn.bigDeciamVal = new BigDecimal("90.0");
+
+		template.save(twn);
+
+		Update update = new Update()//
+				.min("bigIntegerVal", new BigInteger("700")) //
+				.min("bigDeciamVal", new BigDecimal("800")) //
+				;
+
+		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
+
+		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
+		assertThat(loaded.bigIntegerVal, equalTo(new BigInteger("700")));
+		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("800")));
+	}
+
+	static class TypeWithNumbers {
+
+		@Id String id;
+		Integer intVal;
+		Float floatVal;
+		Long longVal;
+		Double doubleVal;
+		BigDecimal bigDeciamVal;
+		BigInteger bigIntegerVal;
+		Byte byteVal;
+	}
+
 	static class DoucmentWithNamedIdField {
 
 		@Id String someIdKey;
@@ -3215,11 +3407,11 @@ public class MongoTemplateTests {
 
 		@Id public String id;
 
-		@Field("db_ref_list")/** @see DATAMONGO-1058 */
-		@org.springframework.data.mongodb.core.mapping.DBRef//
+		@Field("db_ref_list") /** @see DATAMONGO-1058 */
+		@org.springframework.data.mongodb.core.mapping.DBRef //
 		public List<Sample> dbRefAnnotatedList;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef//
+		@org.springframework.data.mongodb.core.mapping.DBRef //
 		public Sample dbRefProperty;
 	}
 
