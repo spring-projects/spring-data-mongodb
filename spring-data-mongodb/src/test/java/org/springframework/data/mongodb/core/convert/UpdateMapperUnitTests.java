@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,10 +63,11 @@ import com.mongodb.DBRef;
 
 /**
  * Unit tests for {@link UpdateMapper}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateMapperUnitTests {
@@ -687,10 +688,8 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes.class));
 
 		assertThat(mappedUpdate, isBsonObject().notContaining("$set.concreteTypeWithListAttributeOfInterfaceType._class"));
-		assertThat(
-				mappedUpdate,
-				isBsonObject().containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class",
-						ModelImpl.class.getName()));
+		assertThat(mappedUpdate, isBsonObject()
+				.containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class", ModelImpl.class.getName()));
 	}
 
 	/**
@@ -757,8 +756,8 @@ public class UpdateMapperUnitTests {
 	@Test
 	public void mappingShouldNotContainTypeInformationWhenValueTypeOfMapMatchesDeclaration() {
 
-		Map<Object, NestedDocument> map = Collections.<Object, NestedDocument> singletonMap("jasnah", new NestedDocument(
-				"kholin"));
+		Map<Object, NestedDocument> map = Collections.<Object, NestedDocument> singletonMap("jasnah",
+				new NestedDocument("kholin"));
 
 		Update update = new Update().set("concreteMap", map);
 		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -885,6 +884,32 @@ public class UpdateMapperUnitTests {
 
 		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$set");
 		assertThat($set.get("primIntValue"), Is.<Object> is(10));
+	}
+
+	/**
+	 * @see DATAMONGO-1404
+	 */
+	@Test
+	public void mapsMinCorrectly() {
+
+		Update update = new Update().min("minfield", 10);
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(SimpleValueHolder.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$min", new BasicDBObject("minfield", 10)));
+	}
+
+	/**
+	 * @see DATAMONGO-1404
+	 */
+	@Test
+	public void mapsMaxCorrectly() {
+
+		Update update = new Update().max("maxfield", 999);
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(SimpleValueHolder.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$max", new BasicDBObject("maxfield", 999)));
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {

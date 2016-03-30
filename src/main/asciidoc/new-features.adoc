@@ -1,6 +1,10 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.1-10-0]]
+== What's new in Spring Data MongoDB 1.10
+* Support for `$min` and `$max` operators to `Update`.
+
 [[new-features.1-9-0]]
 == What's new in Spring Data MongoDB 1.9
 * The following annotations have been enabled to build own, composed annotations: `@Document`, `@Id`, `@Field`, `@Indexed`, `@CompoundIndex`, `@GeoSpatialIndexed`, `@TextIndexed`, `@Query`, `@Meta`.

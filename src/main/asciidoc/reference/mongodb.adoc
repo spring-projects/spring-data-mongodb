@@ -862,15 +862,21 @@ The Update class can be used with a little 'syntax sugar' as its methods are mea
 
 Here is a listing of methods on the Update class
 
-* `Update` *addToSet* `(String key, Object value) ` Update using the `$addToSet` update modifier
+* `Update` *addToSet* `(String key, Object value)` Update using the `$addToSet` update modifier
+* `Update` *currentDate* `(String key)` Update using the `$currentDate` update modifier
+* `Update` *currentTimestamp* `(String key)` Update using the `$currentDate` update modifier with `$type` `timestamp`
 * `Update` *inc* `(String key, Number inc)` Update using the `$inc` update modifier
+* `Update` *max* `(String key, Object max)` Update using the `$max` update modifier
+* `Update` *min* `(String key, Object min)` Update using the `$min` update modifier
+* `Update` *multiply* `(String key, Number multiplier)` Update using the `$mul` update modifier
 * `Update` *pop* `(String key, Update.Position pos)` Update using the `$pop` update modifier
 * `Update` *pull* `(String key, Object value)` Update using the `$pull` update modifier
 * `Update` *pullAll* `(String key, Object[] values)` Update using the `$pullAll` update modifier
-* `Update` *push* `(String key, Object value) ` Update using the `$push` update modifier
+* `Update` *push* `(String key, Object value)` Update using the `$push` update modifier
 * `Update` *pushAll* `(String key, Object[] values)` Update using the `$pushAll` update modifier
 * `Update` *rename* `(String oldName, String newName)` Update using the `$rename` update modifier
 * `Update` *set* `(String key, Object value)` Update using the `$set` update modifier
+* `Update` *setOnInsert* `(String key, Object value)` Update using the `$setOnInsert` update modifier
 * `Update` *unset* `(String key)` Update using the `$unset` update modifier
 
 [[mongo-template.upserts]]
