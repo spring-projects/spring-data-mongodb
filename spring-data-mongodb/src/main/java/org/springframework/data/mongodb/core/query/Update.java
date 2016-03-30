@@ -324,6 +324,7 @@ public class Update {
 	 * @return
 	 */
 	public Update max(String key, Object value) {
+		Assert.notNull(value, "Value must not be 'null'.");
 		addMultiFieldOperation("$max", key, value);
 		return this;
 	}
@@ -337,6 +338,7 @@ public class Update {
 	 * @return
 	 */
 	public Update min(String key, Object value) {
+		Assert.notNull(value, "Value must not be 'null'.");
 		addMultiFieldOperation("$min", key, value);
 		return this;
 	}
