@@ -21,6 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.QueryAnnotation;
 
 /**
@@ -36,28 +37,41 @@ public @interface Meta {
 
 	/**
 	 * Set the maximum time limit in milliseconds for processing operations.
-	 * 
+	 *
+	 * @deprecated because of spelling issues. Please use {@link #maxExecutionTimeMs()} instead.
 	 * @return
 	 */
+	@AliasFor("maxExecutionTimeMs")
+	@Deprecated
 	long maxExcecutionTime() default -1;
 
 	/**
+	 * Set the maximum time limit in milliseconds for processing operations.
+	 * This is an alias for {@link #maxExcecutionTime()}
+	 *
+	 * @return
+	 * @since 1.10
+	 */
+	@AliasFor("maxExcecutionTime")
+	long maxExecutionTimeMs() default -1;
+
+	/**
 	 * Only scan the specified number of documents.
-	 * 
+	 *
 	 * @return
 	 */
 	long maxScanDocuments() default -1;
 
 	/**
 	 * Add a comment to the query.
-	 * 
+	 *
 	 * @return
 	 */
 	String comment() default "";
 
 	/**
 	 * Using snapshot prevents the cursor from returning a document more than once.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean snapshot() default false;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,9 +43,10 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 
 /**
  * Unit test for {@link MongoQueryMethod}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MongoQueryMethodUnitTests {
 
@@ -151,6 +152,19 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
 	}
 
+
+	/**
+	 * @see DATAMONGO-1403
+	 */
+	@Test
+	public void createsMongoQueryMethodWithSpellFixedMaxExecutionTimeCorrectly() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithSpellFixedMaxExecutionTime");
+
+		assertThat(method.hasQueryMetaAttributes(), is(true));
+		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
+	}
+
 	/**
 	 * @see DATAMONGO-957
 	 */
@@ -223,6 +237,9 @@ public class MongoQueryMethodUnitTests {
 
 		@Meta(maxExcecutionTime = 100)
 		List<User> metaWithMaxExecutionTime();
+
+		@Meta(maxExecutionTimeMs = 100)
+		List<User> metaWithSpellFixedMaxExecutionTime();
 
 		@Meta(maxScanDocuments = 10)
 		List<User> metaWithMaxScan();
