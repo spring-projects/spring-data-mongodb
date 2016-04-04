@@ -22,12 +22,16 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.hamcrest.core.Is;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -60,18 +64,17 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.CommandResult;
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MapReduceCommand;
-import com.mongodb.MapReduceOutput;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.UpdateOptions;
 
 /**
  * Unit tests for {@link MongoTemplate}.
@@ -86,9 +89,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	@Mock MongoDbFactory factory;
 	@Mock Mongo mongo;
-	@Mock DB db;
-	@Mock DBCollection collection;
-	@Mock DBCursor cursor;
+	@Mock MongoDatabase db;
+	@Mock MongoCollection<Document> collection;
+	@Mock MongoCursor<Document> cursor;
+	@Mock FindIterable<Document> findIterable;
 
 	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	MappingMongoConverter converter;
@@ -97,14 +101,15 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Before
 	public void setUp() {
 
-		when(cursor.copy()).thenReturn(cursor);
+		// when(cursor.copy()).thenReturn(cursor);
+		when(findIterable.iterator()).thenReturn(cursor);
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
-		when(db.getCollection(Mockito.any(String.class))).thenReturn(collection);
-		when(collection.find(Mockito.any(DBObject.class))).thenReturn(cursor);
-		when(cursor.limit(anyInt())).thenReturn(cursor);
-		when(cursor.sort(Mockito.any(DBObject.class))).thenReturn(cursor);
-		when(cursor.hint(anyString())).thenReturn(cursor);
+		when(db.getCollection(Mockito.any(String.class), eq(Document.class))).thenReturn(collection);
+		when(collection.find(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
+		when(findIterable.limit(anyInt())).thenReturn(findIterable);
+		when(findIterable.sort(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
+		when(findIterable.modifiers(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
@@ -175,7 +180,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		this.converter.afterPropertiesSet();
 
 		MongoTemplate template = spy(this.template);
-		doReturn(new ObjectId()).when(template).saveDBObject(Mockito.any(String.class), Mockito.any(DBObject.class),
+		doReturn(new ObjectId()).when(template).saveDocument(Mockito.any(String.class), Mockito.any(Document.class),
 				Mockito.any(Class.class));
 
 		AutogenerateableId entity = new AutogenerateableId();
@@ -200,9 +205,11 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.updateFirst(query, update, Wrapper.class);
 
 		QueryMapper queryMapper = new QueryMapper(converter);
-		DBObject reference = queryMapper.getMappedObject(update.getUpdateObject(), null);
+		Document reference = queryMapper.getMappedObject(update.getUpdateObject(), null);
 
-		verify(collection, times(1)).update(Mockito.any(DBObject.class), eq(reference), anyBoolean(), anyBoolean());
+		verify(collection, times(1)).updateOne(Mockito.any(org.bson.Document.class), eq(reference),
+				Mockito.any(UpdateOptions.class)); // .update(Mockito.any(Document.class), eq(reference), anyBoolean(),
+																						// anyBoolean());
 	}
 
 	/**
@@ -240,14 +247,16 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		v.id = 1;
 		v.version = 0;
 
-		ArgumentCaptor<DBObject> captor = ArgumentCaptor.forClass(DBObject.class);
+		ArgumentCaptor<org.bson.Document> captor = ArgumentCaptor.forClass(org.bson.Document.class);
 
 		template.findAndModify(new Query(), new Update().set("id", "10"), VersionedEntity.class);
-		verify(collection, times(1)).findAndModify(Matchers.any(DBObject.class),
-				org.mockito.Matchers.isNull(DBObject.class), org.mockito.Matchers.isNull(DBObject.class), eq(false),
-				captor.capture(), eq(false), eq(false));
+		// verify(collection, times(1)).findAndModify(Matchers.any(Document.class),
+		// org.mockito.Matchers.isNull(Document.class), org.mockito.Matchers.isNull(Document.class), eq(false),
+		// captor.capture(), eq(false), eq(false));
 
-		Assert.assertThat(captor.getValue().get("$inc"), Is.<Object> is(new BasicDBObject("version", 1L)));
+		verify(collection, times(1)).findOneAndUpdate(Matchers.any(org.bson.Document.class), captor.capture(),
+				Matchers.any(FindOneAndUpdateOptions.class));
+		Assert.assertThat(captor.getValue().get("$inc"), Is.<Object> is(new org.bson.Document("version", 1L)));
 	}
 
 	/**
@@ -260,13 +269,17 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		v.id = 1;
 		v.version = 0;
 
-		ArgumentCaptor<DBObject> captor = ArgumentCaptor.forClass(DBObject.class);
+		ArgumentCaptor<org.bson.Document> captor = ArgumentCaptor.forClass(org.bson.Document.class);
 
 		template.findAndModify(new Query(), new Update().set("version", 100), VersionedEntity.class);
-		verify(collection, times(1)).findAndModify(Matchers.any(DBObject.class), isNull(DBObject.class),
-				isNull(DBObject.class), eq(false), captor.capture(), eq(false), eq(false));
 
-		Assert.assertThat(captor.getValue().get("$set"), Is.<Object> is(new BasicDBObject("version", 100)));
+		verify(collection, times(1)).findOneAndUpdate(Matchers.any(org.bson.Document.class), captor.capture(),
+				Matchers.any(FindOneAndUpdateOptions.class));
+
+		// verify(collection, times(1)).findAndModify(Matchers.any(Document.class), isNull(Document.class),
+		// isNull(Document.class), eq(false), captor.capture(), eq(false), eq(false));
+
+		Assert.assertThat(captor.getValue().get("$set"), Is.<Object> is(new org.bson.Document("version", 100)));
 		Assert.assertThat(captor.getValue().get("$inc"), nullValue());
 	}
 
@@ -318,17 +331,18 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void findAllAndRemoveShouldRemoveDocumentsReturedByFindQuery() {
 
 		Mockito.when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-		Mockito.when(cursor.next()).thenReturn(new BasicDBObject("_id", Integer.valueOf(0)))
-				.thenReturn(new BasicDBObject("_id", Integer.valueOf(1)));
+		Mockito.when(cursor.next()).thenReturn(new org.bson.Document("_id", Integer.valueOf(0)))
+				.thenReturn(new org.bson.Document("_id", Integer.valueOf(1)));
 
-		ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
+		ArgumentCaptor<org.bson.Document> queryCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
 		BasicQuery query = new BasicQuery("{'foo':'bar'}");
 		template.findAllAndRemove(query, VersionedEntity.class);
 
-		verify(collection, times(1)).remove(queryCaptor.capture());
+		verify(collection, times(1)).deleteMany(queryCaptor.capture());
 
-		DBObject idField = DBObjectTestUtils.getAsDBObject(queryCaptor.getValue(), "_id");
-		assertThat((Object[]) idField.get("$in"), is(new Object[] { Integer.valueOf(0), Integer.valueOf(1) }));
+		Document idField = DBObjectTestUtils.getAsDocument(queryCaptor.getValue(), "_id");
+		assertThat((List<Object>) idField.get("$in"),
+				IsIterableContainingInOrder.<Object> contains(Integer.valueOf(0), Integer.valueOf(1)));
 	}
 
 	/**
@@ -338,7 +352,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void findAllAndRemoveShouldNotTriggerRemoveIfFindResultIsEmpty() {
 
 		template.findAllAndRemove(new BasicQuery("{'foo':'bar'}"), VersionedEntity.class);
-		verify(collection, never()).remove(Mockito.any(DBObject.class));
+		verify(collection, never()).deleteMany(Mockito.any(org.bson.Document.class));
 	}
 
 	/**
@@ -351,14 +365,15 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.executeQuery(query, "collection1", new DocumentCallbackHandler() {
 
 			@Override
-			public void processDocument(DBObject dbObject) throws MongoException, DataAccessException {
+			public void processDocument(Document dbObject) throws MongoException, DataAccessException {
 				// nothing to do - just a test
 			}
 		});
 
-		ArgumentCaptor<DBObject> captor = ArgumentCaptor.forClass(DBObject.class);
-		verify(cursor, times(1)).sort(captor.capture());
-		assertThat(captor.getValue(), equalTo(new BasicDBObjectBuilder().add("foo", 1).get()));
+		ArgumentCaptor<org.bson.Document> captor = ArgumentCaptor.forClass(org.bson.Document.class);
+
+		verify(findIterable, times(1)).sort(captor.capture());
+		assertThat(captor.getValue(), equalTo(new org.bson.Document("foo", 1)));
 	}
 
 	/**
@@ -367,14 +382,16 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void aggregateShouldHonorReadPreferenceWhenSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
-		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
+		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(Document.class));
+		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class), eq(Document.class)))
+				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
 
 		template.aggregate(Aggregation.newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
 
-		verify(this.db, times(1)).command(Mockito.any(DBObject.class), eq(ReadPreference.secondary()));
+		verify(this.db, times(1)).runCommand(Mockito.any(org.bson.Document.class), eq(ReadPreference.secondary()),
+				eq(Document.class));
 	}
 
 	/**
@@ -383,13 +400,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void aggregateShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
-		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
+		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(Document.class));
+		when(db.runCommand(Mockito.any(org.bson.Document.class), eq(org.bson.Document.class)))
+				.thenReturn(mock(Document.class));
 
 		template.aggregate(Aggregation.newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
 
-		verify(this.db, times(1)).command(Mockito.any(DBObject.class));
+		verify(this.db, times(1)).runCommand(Mockito.any(org.bson.Document.class), eq(org.bson.Document.class));
 	}
 
 	/**
@@ -398,15 +416,17 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void geoNearShouldHonorReadPreferenceWhenSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
-		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
+		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(Document.class));
+		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class), eq(Document.class)))
+				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		template.geoNear(query, Wrapper.class);
 
-		verify(this.db, times(1)).command(Mockito.any(DBObject.class), eq(ReadPreference.secondary()));
+		verify(this.db, times(1)).runCommand(Mockito.any(org.bson.Document.class), eq(ReadPreference.secondary()),
+				eq(Document.class));
 	}
 
 	/**
@@ -415,35 +435,38 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
-		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
+		when(db.runCommand(Mockito.any(Document.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(Document.class));
+		when(db.runCommand(Mockito.any(Document.class), eq(Document.class))).thenReturn(mock(Document.class));
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		template.geoNear(query, Wrapper.class);
 
-		verify(this.db, times(1)).command(Mockito.any(DBObject.class));
+		verify(this.db, times(1)).runCommand(Mockito.any(Document.class), eq(Document.class));
 	}
 
 	/**
 	 * @see DATAMONGO-1334
 	 */
 	@Test
+	@Ignore("TODO: mongo3 - a bit hard to tests with the immutable object stuff")
 	public void mapReduceShouldUseZeroAsDefaultLimit() {
 
-		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+		MongoCursor cursor = mock(MongoCursor.class);
+		MapReduceIterable output = mock(MapReduceIterable.class);
+		when(output.limit(anyInt())).thenReturn(output);
+		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
+		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
+		when(output.iterator()).thenReturn(cursor);
+		when(cursor.hasNext()).thenReturn(false);
 
-		MapReduceOutput output = mock(MapReduceOutput.class);
-		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
-		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
 
 		Query query = new BasicQuery("{'foo':'bar'}");
 
 		template.mapReduce(query, "collection", "function(){}", "function(key,values){}", Wrapper.class);
 
-		verify(collection).mapReduce(captor.capture());
-
-		assertThat(captor.getValue().getLimit(), is(0));
+		verify(output, times(1)).limit(1);
 	}
 
 	/**
@@ -452,20 +475,22 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void mapReduceShouldPickUpLimitFromQuery() {
 
-		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+		MongoCursor cursor = mock(MongoCursor.class);
+		MapReduceIterable output = mock(MapReduceIterable.class);
+		when(output.limit(anyInt())).thenReturn(output);
+		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
+		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
+		when(output.iterator()).thenReturn(cursor);
+		when(cursor.hasNext()).thenReturn(false);
 
-		MapReduceOutput output = mock(MapReduceOutput.class);
-		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
-		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
 
 		Query query = new BasicQuery("{'foo':'bar'}");
 		query.limit(100);
 
 		template.mapReduce(query, "collection", "function(){}", "function(key,values){}", Wrapper.class);
 
-		verify(collection).mapReduce(captor.capture());
-
-		assertThat(captor.getValue().getLimit(), is(100));
+		verify(output, times(1)).limit(100);
 	}
 
 	/**
@@ -474,19 +499,22 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void mapReduceShouldPickUpLimitFromOptions() {
 
-		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+		MongoCursor cursor = mock(MongoCursor.class);
+		MapReduceIterable output = mock(MapReduceIterable.class);
+		when(output.limit(anyInt())).thenReturn(output);
+		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
+		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
+		when(output.iterator()).thenReturn(cursor);
+		when(cursor.hasNext()).thenReturn(false);
 
-		MapReduceOutput output = mock(MapReduceOutput.class);
-		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
-		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
 
 		Query query = new BasicQuery("{'foo':'bar'}");
 
 		template.mapReduce(query, "collection", "function(){}", "function(key,values){}",
 				new MapReduceOptions().limit(1000), Wrapper.class);
 
-		verify(collection).mapReduce(captor.capture());
-		assertThat(captor.getValue().getLimit(), is(1000));
+		verify(output, times(1)).limit(1000);
 	}
 
 	/**
@@ -495,17 +523,20 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void mapReduceShouldPickUpLimitFromOptionsWhenQueryIsNotPresent() {
 
-		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+		MongoCursor cursor = mock(MongoCursor.class);
+		MapReduceIterable output = mock(MapReduceIterable.class);
+		when(output.limit(anyInt())).thenReturn(output);
+		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
+		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
+		when(output.iterator()).thenReturn(cursor);
+		when(cursor.hasNext()).thenReturn(false);
 
-		MapReduceOutput output = mock(MapReduceOutput.class);
-		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
-		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
 
 		template.mapReduce("collection", "function(){}", "function(key,values){}", new MapReduceOptions().limit(1000),
 				Wrapper.class);
 
-		verify(collection).mapReduce(captor.capture());
-		assertThat(captor.getValue().getLimit(), is(1000));
+		verify(output, times(1)).limit(1000);
 	}
 
 	/**
@@ -514,11 +545,15 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void mapReduceShouldPickUpLimitFromOptionsEvenWhenQueryDefinesItDifferently() {
 
-		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+		MongoCursor cursor = mock(MongoCursor.class);
+		MapReduceIterable output = mock(MapReduceIterable.class);
+		when(output.limit(anyInt())).thenReturn(output);
+		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
+		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
+		when(output.iterator()).thenReturn(cursor);
+		when(cursor.hasNext()).thenReturn(false);
 
-		MapReduceOutput output = mock(MapReduceOutput.class);
-		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
-		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
 
 		Query query = new BasicQuery("{'foo':'bar'}");
 		query.limit(100);
@@ -526,9 +561,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.mapReduce(query, "collection", "function(){}", "function(key,values){}",
 				new MapReduceOptions().limit(1000), Wrapper.class);
 
-		verify(collection).mapReduce(captor.capture());
-
-		assertThat(captor.getValue().getLimit(), is(1000));
+		verify(output, times(1)).limit(1000);
 	}
 
 	class AutogenerateableId {

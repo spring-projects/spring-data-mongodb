@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-
-import com.mongodb.DBObject;
 
 /**
  * The context for an {@link AggregationOperation}.
@@ -28,12 +27,12 @@ import com.mongodb.DBObject;
 public interface AggregationOperationContext {
 
 	/**
-	 * Returns the mapped {@link DBObject}, potentially converting the source considering mapping metadata etc.
+	 * Returns the mapped {@link Document}, potentially converting the source considering mapping metadata etc.
 	 * 
 	 * @param dbObject will never be {@literal null}.
 	 * @return must not be {@literal null}.
 	 */
-	DBObject getMappedObject(DBObject dbObject);
+	Document getMappedObject(Document dbObject);
 
 	/**
 	 * Returns a {@link FieldReference} for the given field or {@literal null} if the context does not expose the given

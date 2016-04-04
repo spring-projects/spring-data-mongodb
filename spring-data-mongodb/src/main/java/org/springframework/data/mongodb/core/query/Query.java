@@ -27,14 +27,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.bson.Document;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * @author Thomas Risberg
@@ -96,7 +94,7 @@ public class Query {
 			this.criteria.put(key, criteriaDefinition);
 		} else {
 			throw new InvalidMongoDbApiUsageException(
-					"Due to limitations of the com.mongodb.BasicDBObject, " + "you can't add a second '" + key + "' criteria. "
+					"Due to limitations of the com.mongodb.BasicDocument, " + "you can't add a second '" + key + "' criteria. "
 							+ "Query already contains '" + existing.getCriteriaObject() + "'.");
 		}
 
@@ -218,9 +216,9 @@ public class Query {
 		return this;
 	}
 
-	public DBObject getQueryObject() {
+	public Document getQueryObject() {
 
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 
 		for (CriteriaDefinition definition : criteria.values()) {
 			dbo.putAll(definition.getCriteriaObject());
@@ -233,17 +231,17 @@ public class Query {
 		return dbo;
 	}
 
-	public DBObject getFieldsObject() {
+	public Document getFieldsObject() {
 		return this.fieldSpec == null ? null : fieldSpec.getFieldsObject();
 	}
 
-	public DBObject getSortObject() {
+	public Document getSortObject() {
 
 		if (this.sort == null) {
 			return null;
 		}
 
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 
 		for (org.springframework.data.domain.Sort.Order order : this.sort) {
 			dbo.put(order.getProperty(), order.isAscending() ? 1 : -1);

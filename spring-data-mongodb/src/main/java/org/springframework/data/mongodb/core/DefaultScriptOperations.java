@@ -20,11 +20,13 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
@@ -34,8 +36,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.DB;
+import com.mongodb.BasicDBList;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Default implementation of {@link ScriptOperations} capable of saving and executing {@link ServerSideJavaScript}.
@@ -97,8 +100,13 @@ class DefaultScriptOperations implements ScriptOperations {
 		return mongoOperations.execute(new DbCallback<Object>() {
 
 			@Override
-			public Object doInDB(DB db) throws MongoException, DataAccessException {
-				return db.eval(script.getCode(), convertScriptArgs(false, args));
+			public Object doInDB(MongoDatabase db) throws MongoException, DataAccessException {
+
+				Document command = new Document("$eval", script.getCode());
+				BasicDBList commandArgs = new BasicDBList();
+				commandArgs.addAll(Arrays.asList(convertScriptArgs(false, args)));
+				command.append("args", commandArgs);
+				return db.runCommand(command).get("retval");
 			}
 		});
 	}
@@ -115,8 +123,10 @@ class DefaultScriptOperations implements ScriptOperations {
 		return mongoOperations.execute(new DbCallback<Object>() {
 
 			@Override
-			public Object doInDB(DB db) throws MongoException, DataAccessException {
-				return db.eval(String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(args)));
+			public Object doInDB(MongoDatabase db) throws MongoException, DataAccessException {
+
+				return db.runCommand(new Document("eval", String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(args))))
+						.get("retval");
 			}
 		});
 	}

@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
@@ -41,6 +43,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -63,7 +66,7 @@ import com.mongodb.DBRef;
 public class QueryMapper {
 
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
-	private static final DBObject META_TEXT_SCORE = new BasicDBObject("$meta", "textScore");
+	private static final Document META_TEXT_SCORE = new Document("$meta", "textScore");
 	static final ClassTypeInformation<?> NESTED_DOCUMENT = ClassTypeInformation.from(NestedDocument.class);
 
 	private enum MetaMapping {
@@ -91,7 +94,7 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
+	 * Replaces the property keys used in the given {@link Document} with the appropriate keys by using the
 	 * {@link PersistentEntity} metadata.
 	 * 
 	 * @param query must not be {@literal null}.
@@ -99,21 +102,21 @@ public class QueryMapper {
 	 * @return
 	 */
 	@SuppressWarnings("deprecation")
-	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
+	public Document getMappedObject(Bson query, MongoPersistentEntity<?> entity) {
 
 		if (isNestedKeyword(query)) {
 			return getMappedKeyword(new Keyword(query), entity);
 		}
 
-		DBObject result = new BasicDBObject();
+		Document result = new Document();
 
-		for (String key : query.keySet()) {
+		for (String key : BsonUtils.asMap(query).keySet()) {
 
 			// TODO: remove one once QueryMapper can work with Query instances directly
 			if (Query.isRestrictedTypeKey(key)) {
 
 				@SuppressWarnings("unchecked")
-				Set<Class<?>> restrictedTypes = (Set<Class<?>>) query.get(key);
+				Set<Class<?>> restrictedTypes = (Set<Class<?>>) BsonUtils.get(query, key);
 				this.converter.getTypeMapper().writeTypeRestrictions(result, restrictedTypes);
 
 				continue;
@@ -127,16 +130,16 @@ public class QueryMapper {
 			try {
 
 				Field field = createPropertyField(entity, key, mappingContext);
-				Entry<String, Object> entry = getMappedObjectForField(field, query.get(key));
+				Entry<String, Object> entry = getMappedObjectForField(field, BsonUtils.get(query, key));
+
 				result.put(entry.getKey(), entry.getValue());
 			} catch (InvalidPersistentPropertyPath invalidPathException) {
 
 				// in case the object has not already been mapped
-				if (!(query.get(key) instanceof DBObject)) {
+				if (!(BsonUtils.get(query, key) instanceof Document)) {
 					throw invalidPathException;
 				}
-
-				result.put(key, query.get(key));
+				result.put(key, BsonUtils.get(query, key));
 			}
 		}
 
@@ -152,13 +155,13 @@ public class QueryMapper {
 	 * @return
 	 * @since 1.6
 	 */
-	public DBObject getMappedSort(DBObject sortObject, MongoPersistentEntity<?> entity) {
+	public Document getMappedSort(Document sortObject, MongoPersistentEntity<?> entity) {
 
 		if (sortObject == null) {
 			return null;
 		}
 
-		DBObject mappedSort = getMappedObject(sortObject, entity);
+		Document mappedSort = getMappedObject(sortObject, entity);
 		mapMetaAttributes(mappedSort, entity, MetaMapping.WHEN_PRESENT);
 		return mappedSort;
 	}
@@ -172,14 +175,14 @@ public class QueryMapper {
 	 * @return
 	 * @since 1.6
 	 */
-	public DBObject getMappedFields(DBObject fieldsObject, MongoPersistentEntity<?> entity) {
+	public Document getMappedFields(Document fieldsObject, MongoPersistentEntity<?> entity) {
 
-		DBObject mappedFields = fieldsObject != null ? getMappedObject(fieldsObject, entity) : new BasicDBObject();
+		Document mappedFields = fieldsObject != null ? getMappedObject(fieldsObject, entity) : new Document();
 		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
 		return mappedFields.keySet().isEmpty() ? null : mappedFields;
 	}
 
-	private void mapMetaAttributes(DBObject source, MongoPersistentEntity<?> entity, MetaMapping metaMapping) {
+	private void mapMetaAttributes(Document source, MongoPersistentEntity<?> entity, MetaMapping metaMapping) {
 
 		if (entity == null || source == null) {
 			return;
@@ -188,14 +191,14 @@ public class QueryMapper {
 		if (entity.hasTextScoreProperty() && !MetaMapping.IGNORE.equals(metaMapping)) {
 			MongoPersistentProperty textScoreProperty = entity.getTextScoreProperty();
 			if (MetaMapping.FORCE.equals(metaMapping)
-					|| (MetaMapping.WHEN_PRESENT.equals(metaMapping) && source.containsField(textScoreProperty.getFieldName()))) {
+					|| (MetaMapping.WHEN_PRESENT.equals(metaMapping) && source.containsKey(textScoreProperty.getFieldName()))) {
 				source.putAll(getMappedTextScoreField(textScoreProperty));
 			}
 		}
 	}
 
-	private DBObject getMappedTextScoreField(MongoPersistentProperty property) {
-		return new BasicDBObject(property.getFieldName(), META_TEXT_SCORE);
+	private Document getMappedTextScoreField(MongoPersistentProperty property) {
+		return new Document(property.getFieldName(), META_TEXT_SCORE);
 	}
 
 	/**
@@ -211,7 +214,7 @@ public class QueryMapper {
 		Object value;
 
 		if (isNestedKeyword(rawValue) && !field.isIdField()) {
-			Keyword keyword = new Keyword((DBObject) rawValue);
+			Keyword keyword = new Keyword((Document) rawValue);
 			value = getMappedKeyword(field, keyword);
 		} else {
 			value = getMappedValue(field, rawValue);
@@ -232,33 +235,33 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Returns the given {@link DBObject} representing a keyword by mapping the keyword's value.
+	 * Returns the given {@link Document} representing a keyword by mapping the keyword's value.
 	 * 
-	 * @param keyword the {@link DBObject} representing a keyword (e.g. {@code $ne : … } )
+	 * @param keyword the {@link Document} representing a keyword (e.g. {@code $ne : … } )
 	 * @param entity
 	 * @return
 	 */
-	protected DBObject getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity) {
+	protected Document getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity) {
 
 		// $or/$nor
 		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
 
 			Iterable<?> conditions = keyword.getValue();
-			BasicDBList newConditions = new BasicDBList();
+			List newConditions = new ArrayList();
 
 			for (Object condition : conditions) {
-				newConditions.add(isDBObject(condition) ? getMappedObject((DBObject) condition, entity)
-						: convertSimpleOrDBObject(condition, entity));
+				newConditions.add(isDocument(condition) ? getMappedObject((Document) condition, entity)
+						: convertSimpleOrDocument(condition, entity));
 			}
 
-			return new BasicDBObject(keyword.getKey(), newConditions);
+			return new Document(keyword.getKey(), newConditions);
 		}
 
 		if (keyword.isSample()) {
 			return exampleMapper.getMappedExample(keyword.<Example<?>> getValue(), entity);
 		}
 
-		return new BasicDBObject(keyword.getKey(), convertSimpleOrDBObject(keyword.getValue(), entity));
+		return new Document(keyword.getKey(), convertSimpleOrDocument(keyword.getValue(), entity));
 	}
 
 	/**
@@ -268,7 +271,7 @@ public class QueryMapper {
 	 * @param keyword
 	 * @return
 	 */
-	protected DBObject getMappedKeyword(Field property, Keyword keyword) {
+	protected Document getMappedKeyword(Field property, Keyword keyword) {
 
 		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
 		Object value = keyword.getValue();
@@ -276,7 +279,7 @@ public class QueryMapper {
 		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
 				: getMappedValue(property.with(keyword.getKey()), value);
 
-		return new BasicDBObject(keyword.key, convertedValue);
+		return new Document(keyword.key, convertedValue);
 	}
 
 	/**
@@ -294,7 +297,7 @@ public class QueryMapper {
 
 			if (isDBObject(value)) {
 				DBObject valueDbo = (DBObject) value;
-				DBObject resultDbo = new BasicDBObject(valueDbo.toMap());
+				Document resultDbo = new Document(valueDbo.toMap());
 
 				if (valueDbo.containsField("$in") || valueDbo.containsField("$nin")) {
 					String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
@@ -302,13 +305,31 @@ public class QueryMapper {
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
 						ids.add(convertId(id));
 					}
-					resultDbo.put(inKey, ids.toArray(new Object[ids.size()]));
+					resultDbo.put(inKey, ids);
 				} else if (valueDbo.containsField("$ne")) {
 					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
 				} else {
 					return getMappedObject(resultDbo, null);
 				}
+				return resultDbo;
+			}
 
+			else if (isDocument(value)) {
+				Document valueDbo = (Document) value;
+				Document resultDbo = new Document(valueDbo);
+
+				if (valueDbo.containsKey("$in") || valueDbo.containsKey("$nin")) {
+					String inKey = valueDbo.containsKey("$in") ? "$in" : "$nin";
+					List<Object> ids = new ArrayList<Object>();
+					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
+						ids.add(convertId(id));
+					}
+					resultDbo.put(inKey, ids);
+				} else if (valueDbo.containsKey("$ne")) {
+					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
+				} else {
+					return getMappedObject(resultDbo, null);
+				}
 				return resultDbo;
 
 			} else {
@@ -317,14 +338,14 @@ public class QueryMapper {
 		}
 
 		if (isNestedKeyword(value)) {
-			return getMappedKeyword(new Keyword((DBObject) value), documentField.getPropertyEntity());
+			return getMappedKeyword(new Keyword((Bson) value), documentField.getPropertyEntity());
 		}
 
 		if (isAssociationConversionNecessary(documentField, value)) {
 			return convertAssociation(value, documentField);
 		}
 
-		return convertSimpleOrDBObject(value, documentField.getPropertyEntity());
+		return convertSimpleOrDocument(value, documentField.getPropertyEntity());
 	}
 
 	/**
@@ -362,20 +383,28 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Retriggers mapping if the given source is a {@link DBObject} or simply invokes the
+	 * Retriggers mapping if the given source is a {@link Document} or simply invokes the
 	 * 
 	 * @param source
 	 * @param entity
 	 * @return
 	 */
-	protected Object convertSimpleOrDBObject(Object source, MongoPersistentEntity<?> entity) {
+	protected Object convertSimpleOrDocument(Object source, MongoPersistentEntity<?> entity) {
+
+		if (source instanceof List) {
+			return delegateConvertToMongoType(source, entity);
+		}
+
+		if (isDocument(source)) {
+			return getMappedObject((Document) source, entity);
+		}
 
 		if (source instanceof BasicDBList) {
 			return delegateConvertToMongoType(source, entity);
 		}
 
 		if (isDBObject(source)) {
-			return getMappedObject((DBObject) source, entity);
+			return getMappedObject((BasicDBObject) source, entity);
 		}
 
 		return delegateConvertToMongoType(source, entity);
@@ -406,7 +435,7 @@ public class QueryMapper {
 	 */
 	protected Object convertAssociation(Object source, MongoPersistentProperty property) {
 
-		if (property == null || source == null || source instanceof DBObject) {
+		if (property == null || source == null || source instanceof Document || source instanceof DBObject) {
 			return source;
 		}
 
@@ -425,8 +454,8 @@ public class QueryMapper {
 		}
 
 		if (property.isMap()) {
-			BasicDBObject result = new BasicDBObject();
-			DBObject dbObject = (DBObject) source;
+			Document result = new Document();
+			Document dbObject = (Document) source;
 			for (String key : dbObject.keySet()) {
 				result.put(key, createDbRefFor(dbObject.get(key), property));
 			}
@@ -437,11 +466,15 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Checks whether the given value is a {@link DBObject}.
+	 * Checks whether the given value is a {@link Document}.
 	 * 
 	 * @param value can be {@literal null}.
 	 * @return
 	 */
+	protected final boolean isDocument(Object value) {
+		return value instanceof Document;
+	}
+
 	protected final boolean isDBObject(Object value) {
 		return value instanceof DBObject;
 	}
@@ -504,19 +537,18 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Returns whether the given {@link Object} is a keyword, i.e. if it's a {@link DBObject} with a keyword key.
+	 * Returns whether the given {@link Object} is a keyword, i.e. if it's a {@link Document} with a keyword key.
 	 * 
 	 * @param candidate
 	 * @return
 	 */
 	protected boolean isNestedKeyword(Object candidate) {
 
-		if (!(candidate instanceof BasicDBObject)) {
+		if (!(candidate instanceof Document)) {
 			return false;
 		}
 
-		BasicDBObject dbObject = (BasicDBObject) candidate;
-		Set<String> keys = dbObject.keySet();
+		Set<String> keys = BsonUtils.asMap((Bson) candidate).keySet();
 
 		if (keys.size() != 1) {
 			return false;
@@ -548,18 +580,18 @@ public class QueryMapper {
 		private final String key;
 		private final Object value;
 
-		public Keyword(DBObject source, String key) {
+		public Keyword(Bson source, String key) {
 			this.key = key;
-			this.value = source.get(key);
+			this.value = BsonUtils.get(source, key);
 		}
 
-		public Keyword(DBObject dbObject) {
+		public Keyword(Bson dbObject) {
 
-			Set<String> keys = dbObject.keySet();
-			Assert.isTrue(keys.size() == 1, "Can only use a single value DBObject!");
+			Set<String> keys = BsonUtils.asMap(dbObject).keySet();
+			Assert.isTrue(keys.size() == 1, "Can only use a single value Document!");
 
 			this.key = keys.iterator().next();
-			this.value = dbObject.get(key);
+			this.value = BsonUtils.get(dbObject, key);
 		}
 
 		/**

@@ -19,9 +19,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
-
-import com.mongodb.DBObject;
 
 /**
  * Collects the results of executing an aggregation operation.
@@ -35,7 +34,7 @@ import com.mongodb.DBObject;
 public class AggregationResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;
-	private final DBObject rawResults;
+	private final Document rawResults;
 	private final String serverUsed;
 
 	/**
@@ -44,7 +43,7 @@ public class AggregationResults<T> implements Iterable<T> {
 	 * @param mappedResults must not be {@literal null}.
 	 * @param rawResults must not be {@literal null}.
 	 */
-	public AggregationResults(List<T> mappedResults, DBObject rawResults) {
+	public AggregationResults(List<T> mappedResults, Document rawResults) {
 
 		Assert.notNull(mappedResults);
 		Assert.notNull(rawResults);
@@ -97,7 +96,7 @@ public class AggregationResults<T> implements Iterable<T> {
 	 * @return
 	 * @since 1.6
 	 */
-	public DBObject getRawResults() {
+	public Document getRawResults() {
 		return rawResults;
 	}
 

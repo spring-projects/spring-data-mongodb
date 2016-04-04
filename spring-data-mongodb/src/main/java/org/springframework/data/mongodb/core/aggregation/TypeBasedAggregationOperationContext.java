@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
+import org.bson.Document;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
@@ -26,8 +27,6 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
-
-import com.mongodb.DBObject;
 
 /**
  * {@link AggregationOperationContext} aware of a particular type and a {@link MappingContext} to potentially translate
@@ -64,10 +63,10 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.Document)
 	 */
 	@Override
-	public DBObject getMappedObject(DBObject dbObject) {
+	public Document getMappedObject(Document dbObject) {
 		return mapper.getMappedObject(dbObject, mappingContext.getPersistentEntity(type));
 	}
 
@@ -93,8 +92,8 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 
 	private FieldReference getReferenceFor(Field field) {
 
-		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(
-				field.getTarget(), type);
+		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext
+				.getPersistentPropertyPath(field.getTarget(), type);
 		Field mappedField = field(propertyPath.getLeafProperty().getName(),
 				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
 

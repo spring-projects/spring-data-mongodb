@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.mockito.Mockito.*;
 
+import org.bson.conversions.Bson;
 import org.junit.Test;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -27,7 +28,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -68,12 +68,12 @@ public class AbstractMongoConverterUnitTests {
 		}
 
 		@Override
-		public <R> R read(Class<R> type, DBObject source) {
+		public <R> R read(Class<R> type, Bson source) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void write(Object source, DBObject sink) {
+		public void write(Object source, Bson sink) {
 			throw new UnsupportedOperationException();
 		}
 

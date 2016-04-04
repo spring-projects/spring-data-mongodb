@@ -22,12 +22,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.bson.BsonObjectId;
 import org.bson.types.Binary;
 import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -49,8 +49,9 @@ public abstract class MongoSimpleTypes {
 		Set<Class<?>> simpleTypes = new HashSet<Class<?>>();
 		simpleTypes.add(DBRef.class);
 		simpleTypes.add(ObjectId.class);
+		simpleTypes.add(BsonObjectId.class);
 		simpleTypes.add(CodeWScope.class);
-		simpleTypes.add(DBObject.class);
+		simpleTypes.add(org.bson.Document.class);
 		simpleTypes.add(Pattern.class);
 		simpleTypes.add(Binary.class);
 		simpleTypes.add(UUID.class);
@@ -60,6 +61,5 @@ public abstract class MongoSimpleTypes {
 	private static final Set<Class<?>> MONGO_SIMPLE_TYPES;
 	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(MONGO_SIMPLE_TYPES, true);
 
-	private MongoSimpleTypes() {
-	}
+	private MongoSimpleTypes() {}
 }

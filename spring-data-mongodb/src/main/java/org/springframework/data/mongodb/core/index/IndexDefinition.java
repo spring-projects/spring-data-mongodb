@@ -16,7 +16,7 @@
 
 package org.springframework.data.mongodb.core.index;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -24,7 +24,7 @@ import com.mongodb.DBObject;
  */
 public interface IndexDefinition {
 
-	DBObject getIndexKeys();
+	Document getIndexKeys();
 
-	DBObject getIndexOptions();
+	Document getIndexOptions();
 }

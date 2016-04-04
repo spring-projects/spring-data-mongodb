@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -32,13 +33,13 @@ public class SortTests {
 	@Test
 	public void testWithSortAscending() {
 		Query s = new Query().with(new Sort(Direction.ASC, "name"));
-		assertEquals("{ \"name\" : 1}", s.getSortObject().toString());
+		assertEquals(Document.parse("{ \"name\" : 1}"), s.getSortObject());
 	}
 
 	@Test
 	public void testWithSortDescending() {
 		Query s = new Query().with(new Sort(Direction.DESC, "name"));
-		assertEquals("{ \"name\" : -1}", s.getSortObject().toString());
+		assertEquals(Document.parse("{ \"name\" : -1}"), s.getSortObject());
 	}
 
 	/**
@@ -48,6 +49,6 @@ public class SortTests {
 	public void preservesOrderKeysOnMultipleSorts() {
 
 		Query sort = new Query().with(new Sort(Direction.DESC, "foo").and(new Sort(Direction.DESC, "bar")));
-		assertThat(sort.getSortObject().toString(), is("{ \"foo\" : -1 , \"bar\" : -1}"));
+		assertThat(sort.getSortObject(), is(Document.parse("{ \"foo\" : -1 , \"bar\" : -1}")));
 	}
 }

@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.bson.Document;
 import org.hamcrest.core.IsNull;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
@@ -96,8 +97,8 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { "spring", TextCriteria.forDefaultLanguage().matching("data") });
-		assertThat(accessor.getFullText().getCriteriaObject().toString(),
-				equalTo("{ \"$text\" : { \"$search\" : \"data\"}}"));
+		assertThat(accessor.getFullText().getCriteriaObject().toJson(),
+				equalTo(Document.parse("{ \"$text\" : { \"$search\" : \"data\"}}").toJson()));
 	}
 
 	/**

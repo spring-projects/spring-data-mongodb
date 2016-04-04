@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * Represents one single operation in an aggregation pipeline.
@@ -28,10 +28,10 @@ import com.mongodb.DBObject;
 public interface AggregationOperation {
 
 	/**
-	 * Turns the {@link AggregationOperation} into a {@link DBObject} by using the given
+	 * Turns the {@link AggregationOperation} into a {@link Document} by using the given
 	 * {@link AggregationOperationContext}.
 	 * 
-	 * @return the DBObject
+	 * @return the Document
 	 */
-	DBObject toDBObject(AggregationOperationContext context);
+	Document toDocument(AggregationOperationContext context);
 }

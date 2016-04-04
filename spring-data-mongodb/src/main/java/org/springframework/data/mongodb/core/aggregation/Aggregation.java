@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -31,9 +32,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * An {@code Aggregation} is a representation of a list of aggregation steps to be performed by the MongoDB Aggregation
@@ -480,19 +478,19 @@ public class Aggregation {
 	}
 
 	/**
-	 * Converts this {@link Aggregation} specification to a {@link DBObject}.
+	 * Converts this {@link Aggregation} specification to a {@link Document}.
 	 *
 	 * @param inputCollectionName the name of the input collection
-	 * @return the {@code DBObject} representing this aggregation
+	 * @return the {@code Document} representing this aggregation
 	 */
-	public DBObject toDbObject(String inputCollectionName, AggregationOperationContext rootContext) {
+	public Document toDbObject(String inputCollectionName, AggregationOperationContext rootContext) {
 
 		AggregationOperationContext context = rootContext;
-		List<DBObject> operationDocuments = new ArrayList<DBObject>(operations.size());
+		List<Document> operationDocuments = new ArrayList<Document>(operations.size());
 
 		for (AggregationOperation operation : operations) {
 
-			operationDocuments.add(operation.toDBObject(context));
+			operationDocuments.add(operation.toDocument(context));
 
 			if (operation instanceof FieldsExposingAggregationOperation) {
 
@@ -506,7 +504,7 @@ public class Aggregation {
 			}
 		}
 
-		DBObject command = new BasicDBObject("aggregate", inputCollectionName);
+		Document command = new Document("aggregate", inputCollectionName);
 		command.put("pipeline", operationDocuments);
 
 		command = options.applyAndReturnPotentiallyChangedCommand(command);
@@ -533,10 +531,10 @@ public class Aggregation {
 
 		/* 
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.DBObject)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.Document)
 		 */
 		@Override
-		public DBObject getMappedObject(DBObject dbObject) {
+		public Document getMappedObject(Document dbObject) {
 			return dbObject;
 		}
 

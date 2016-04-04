@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -35,11 +35,9 @@ import org.springframework.data.util.Pair;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BulkWriteResult;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import com.mongodb.MongoBulkWriteException;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoCollection;
 
 /**
  * Integration tests for {@link DefaultBulkOperations}.
@@ -55,13 +53,13 @@ public class DefaultBulkOperationsIntegrationTests {
 
 	@Autowired MongoOperations operations;
 
-	DBCollection collection;
+	MongoCollection<Document> collection;
 
 	@Before
 	public void setUp() {
 
 		this.collection = this.operations.getCollection(COLLECTION_NAME);
-		this.collection.remove(new BasicDBObject());
+		this.collection.deleteMany(new Document());
 	}
 
 	/**
@@ -110,10 +108,10 @@ public class DefaultBulkOperationsIntegrationTests {
 		try {
 			createBulkOps(BulkMode.ORDERED).insert(documents).execute();
 			fail();
-		} catch (BulkOperationException e) {
-			assertThat(e.getResult().getInsertedCount(), is(1)); // fails after first error
-			assertThat(e.getErrors(), notNullValue());
-			assertThat(e.getErrors().size(), is(1));
+		} catch (MongoBulkWriteException e) {
+			assertThat(e.getWriteResult().getInsertedCount(), is(1)); // fails after first error
+			assertThat(e.getWriteErrors(), notNullValue());
+			assertThat(e.getWriteErrors().size(), is(1));
 		}
 	}
 
@@ -139,10 +137,10 @@ public class DefaultBulkOperationsIntegrationTests {
 		try {
 			createBulkOps(BulkMode.UNORDERED).insert(documents).execute();
 			fail();
-		} catch (BulkOperationException e) {
-			assertThat(e.getResult().getInsertedCount(), is(2)); // two docs were inserted
-			assertThat(e.getErrors(), notNullValue());
-			assertThat(e.getErrors().size(), is(1));
+		} catch (MongoBulkWriteException e) {
+			assertThat(e.getWriteResult().getInsertedCount(), is(2)); // two docs were inserted
+			assertThat(e.getWriteErrors(), notNullValue());
+			assertThat(e.getWriteErrors().size(), is(1));
 		}
 	}
 
@@ -154,7 +152,7 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		insertSomeDocuments();
 
-		BulkWriteResult result = createBulkOps(BulkMode.ORDERED).//
+		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED).//
 				upsert(where("value", "value1"), set("value", "value2")).//
 				execute();
 
@@ -172,7 +170,7 @@ public class DefaultBulkOperationsIntegrationTests {
 	@Test
 	public void upsertDoesInsert() {
 
-		BulkWriteResult result = createBulkOps(BulkMode.ORDERED).//
+		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED).//
 				upsert(where("_id", "1"), set("value", "v1")).//
 				execute();
 
@@ -239,7 +237,7 @@ public class DefaultBulkOperationsIntegrationTests {
 	@Test
 	public void mixedBulkOrdered() {
 
-		BulkWriteResult result = createBulkOps(BulkMode.ORDERED).insert(newDoc("1", "v1")).//
+		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED).insert(newDoc("1", "v1")).//
 				updateOne(where("_id", "1"), set("value", "v2")).//
 				remove(where("value", "v2")).//
 				execute();
@@ -247,7 +245,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(result, notNullValue());
 		assertThat(result.getInsertedCount(), is(1));
 		assertThat(result.getModifiedCount(), is(1));
-		assertThat(result.getRemovedCount(), is(1));
+		assertThat(result.getDeletedCount(), is(1));
 	}
 
 	/**
@@ -261,13 +259,13 @@ public class DefaultBulkOperationsIntegrationTests {
 		List<Pair<Query, Update>> updates = Arrays.asList(Pair.of(where("value", "v2"), set("value", "v3")));
 		List<Query> removes = Arrays.asList(where("_id", "1"));
 
-		BulkWriteResult result = createBulkOps(BulkMode.ORDERED).insert(inserts).updateMulti(updates).remove(removes)
-				.execute();
+		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED).insert(inserts).updateMulti(updates)
+				.remove(removes).execute();
 
 		assertThat(result, notNullValue());
 		assertThat(result.getInsertedCount(), is(3));
 		assertThat(result.getModifiedCount(), is(2));
-		assertThat(result.getRemovedCount(), is(1));
+		assertThat(result.getDeletedCount(), is(1));
 	}
 
 	private void testUpdate(BulkMode mode, boolean multi, int expectedUpdates) {
@@ -292,7 +290,7 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		List<Query> removes = Arrays.asList(where("_id", "1"), where("value", "value2"));
 
-		assertThat(createBulkOps(mode).remove(removes).execute().getRemovedCount(), is(3));
+		assertThat(createBulkOps(mode).remove(removes).execute().getDeletedCount(), is(3));
 	}
 
 	private BulkOperations createBulkOps(BulkMode mode) {
@@ -305,12 +303,12 @@ public class DefaultBulkOperationsIntegrationTests {
 
 	private void insertSomeDocuments() {
 
-		final DBCollection coll = operations.getCollection(COLLECTION_NAME);
+		final MongoCollection<Document> coll = operations.getCollection(COLLECTION_NAME);
 
-		coll.insert(rawDoc("1", "value1"));
-		coll.insert(rawDoc("2", "value1"));
-		coll.insert(rawDoc("3", "value2"));
-		coll.insert(rawDoc("4", "value2"));
+		coll.insertOne(rawDoc("1", "value1"));
+		coll.insertOne(rawDoc("2", "value1"));
+		coll.insertOne(rawDoc("3", "value2"));
+		coll.insertOne(rawDoc("4", "value2"));
 	}
 
 	private static BaseDoc newDoc(String id) {
@@ -337,7 +335,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		return new Update().set(field, value);
 	}
 
-	private static DBObject rawDoc(String id, String value) {
-		return new BasicDBObject("_id", id).append("value", value);
+	private static Document rawDoc(String id, String value) {
+		return new Document("_id", id).append("value", value);
 	}
 }

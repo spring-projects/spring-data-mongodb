@@ -17,8 +17,7 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.Locale;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * {@link Query} implementation to be used to for performing full text searches.
@@ -29,7 +28,7 @@ import com.mongodb.DBObject;
 public class TextQuery extends Query {
 
 	private final String DEFAULT_SCORE_FIELD_FIELDNAME = "score";
-	private final DBObject META_TEXT_SCORE = new BasicDBObject("$meta", "textScore");
+	private final Document META_TEXT_SCORE = new Document("$meta", "textScore");
 
 	private String scoreFieldName = DEFAULT_SCORE_FIELD_FIELDNAME;
 	private boolean includeScore = false;
@@ -47,8 +46,8 @@ public class TextQuery extends Query {
 
 	/**
 	 * Creates new {@link TextQuery} in {@code language}. <br />
-	 * For a full list of supported languages see the mongdodb reference manual for <a
-	 * href="http://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
+	 * For a full list of supported languages see the mongdodb reference manual for
+	 * <a href="http://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
 	 * 
 	 * @param wordsAndPhrases
 	 * @param language
@@ -61,8 +60,8 @@ public class TextQuery extends Query {
 
 	/**
 	 * Creates new {@link TextQuery} using the {@code locale}s language.<br />
-	 * For a full list of supported languages see the mongdodb reference manual for <a
-	 * href="http://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
+	 * For a full list of supported languages see the mongdodb reference manual for
+	 * <a href="http://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
 	 * 
 	 * @param wordsAndPhrases
 	 * @param locale
@@ -150,16 +149,16 @@ public class TextQuery extends Query {
 	 * @see org.springframework.data.mongodb.core.query.Query#getFieldsObject()
 	 */
 	@Override
-	public DBObject getFieldsObject() {
+	public Document getFieldsObject() {
 
 		if (!this.includeScore) {
 			return super.getFieldsObject();
 		}
 
-		DBObject fields = super.getFieldsObject();
+		Document fields = super.getFieldsObject();
 
 		if (fields == null) {
-			fields = new BasicDBObject();
+			fields = new Document();
 		}
 
 		fields.put(getScoreFieldName(), META_TEXT_SCORE);
@@ -171,9 +170,9 @@ public class TextQuery extends Query {
 	 * @see org.springframework.data.mongodb.core.query.Query#getSortObject()
 	 */
 	@Override
-	public DBObject getSortObject() {
+	public Document getSortObject() {
 
-		DBObject sort = new BasicDBObject();
+		Document sort = new Document();
 
 		if (this.sortByScore) {
 			sort.put(getScoreFieldName(), META_TEXT_SCORE);

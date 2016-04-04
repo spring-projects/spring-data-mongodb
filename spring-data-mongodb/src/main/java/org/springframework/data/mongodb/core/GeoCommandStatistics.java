@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Value object to mitigate different representations of geo command execution results in MongoDB.
@@ -28,16 +26,16 @@ import com.mongodb.DBObject;
  */
 class GeoCommandStatistics {
 
-	private static final GeoCommandStatistics NONE = new GeoCommandStatistics(new BasicDBObject());
+	private static final GeoCommandStatistics NONE = new GeoCommandStatistics(new Document());
 
-	private final DBObject source;
+	private final Document source;
 
 	/**
 	 * Creates a new {@link GeoCommandStatistics} instance with the given source document.
 	 * 
 	 * @param source must not be {@literal null}.
 	 */
-	private GeoCommandStatistics(DBObject source) {
+	private GeoCommandStatistics(Document source) {
 
 		Assert.notNull(source, "Source document must not be null!");
 		this.source = source;
@@ -49,12 +47,12 @@ class GeoCommandStatistics {
 	 * @param commandResult must not be {@literal null}.
 	 * @return
 	 */
-	public static GeoCommandStatistics from(DBObject commandResult) {
+	public static GeoCommandStatistics from(Document commandResult) {
 
 		Assert.notNull(commandResult, "Command result must not be null!");
 
 		Object stats = commandResult.get("stats");
-		return stats == null ? NONE : new GeoCommandStatistics((DBObject) stats);
+		return stats == null ? NONE : new GeoCommandStatistics((Document) stats);
 	}
 
 	/**

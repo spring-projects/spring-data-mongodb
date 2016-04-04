@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -36,44 +37,44 @@ public class IndexUnitTests {
 	@Test
 	public void testWithAscendingIndex() {
 		Index i = new Index().on("name", Direction.ASC);
-		assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
+		assertEquals(Document.parse("{ \"name\" : 1}"), i.getIndexKeys());
 	}
 
 	@Test
 	public void testWithDescendingIndex() {
 		Index i = new Index().on("name", Direction.DESC);
-		assertEquals("{ \"name\" : -1}", i.getIndexKeys().toString());
+		assertEquals(Document.parse("{ \"name\" : -1}"), i.getIndexKeys());
 	}
 
 	@Test
 	public void testNamedMultiFieldUniqueIndex() {
 		Index i = new Index().on("name", Direction.ASC).on("age", Direction.DESC);
 		i.named("test").unique();
-		assertEquals("{ \"name\" : 1 , \"age\" : -1}", i.getIndexKeys().toString());
-		assertEquals("{ \"name\" : \"test\" , \"unique\" : true}", i.getIndexOptions().toString());
+		assertEquals(Document.parse("{ \"name\" : 1 , \"age\" : -1}"), i.getIndexKeys());
+		assertEquals(Document.parse("{ \"name\" : \"test\" , \"unique\" : true}"), i.getIndexOptions());
 	}
 
 	@Test
 	public void testWithDropDuplicates() {
 		Index i = new Index().on("name", Direction.ASC);
 		i.unique(Duplicates.DROP);
-		assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
-		assertEquals("{ \"unique\" : true , \"dropDups\" : true}", i.getIndexOptions().toString());
+		assertEquals(Document.parse("{ \"name\" : 1}"), i.getIndexKeys());
+		assertEquals(Document.parse("{ \"unique\" : true , \"dropDups\" : true}"), i.getIndexOptions());
 	}
 
 	@Test
 	public void testWithSparse() {
 		Index i = new Index().on("name", Direction.ASC);
 		i.sparse().unique();
-		assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
-		assertEquals("{ \"unique\" : true , \"sparse\" : true}", i.getIndexOptions().toString());
+		assertEquals(Document.parse("{ \"name\" : 1}"), i.getIndexKeys());
+		assertEquals(Document.parse("{ \"unique\" : true , \"sparse\" : true}"), i.getIndexOptions());
 	}
 
 	@Test
 	public void testGeospatialIndex() {
 		GeospatialIndex i = new GeospatialIndex("location").withMin(0);
-		assertEquals("{ \"location\" : \"2d\"}", i.getIndexKeys().toString());
-		assertEquals("{ \"min\" : 0}", i.getIndexOptions().toString());
+		assertEquals(Document.parse("{ \"location\" : \"2d\"}"), i.getIndexKeys());
+		assertEquals(Document.parse("{ \"min\" : 0}"), i.getIndexOptions());
 	}
 
 	/**
@@ -83,8 +84,8 @@ public class IndexUnitTests {
 	public void testGeospatialIndex2DSphere() {
 
 		GeospatialIndex i = new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE);
-		assertEquals("{ \"location\" : \"2dsphere\"}", i.getIndexKeys().toString());
-		assertEquals("{ }", i.getIndexOptions().toString());
+		assertEquals(Document.parse("{ \"location\" : \"2dsphere\"}"), i.getIndexKeys());
+		assertEquals(Document.parse("{ }"), i.getIndexOptions());
 	}
 
 	/**
@@ -95,14 +96,14 @@ public class IndexUnitTests {
 
 		GeospatialIndex i = new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_HAYSTACK)
 				.withAdditionalField("name").withBucketSize(40);
-		assertEquals("{ \"location\" : \"geoHaystack\" , \"name\" : 1}", i.getIndexKeys().toString());
-		assertEquals("{ \"bucketSize\" : 40.0}", i.getIndexOptions().toString());
+		assertEquals(Document.parse("{ \"location\" : \"geoHaystack\" , \"name\" : 1}"), i.getIndexKeys());
+		assertEquals(Document.parse("{ \"bucketSize\" : 40.0}"), i.getIndexOptions());
 	}
 
 	@Test
 	public void ensuresPropertyOrder() {
 
 		Index on = new Index("foo", Direction.ASC).on("bar", Direction.ASC);
-		assertThat(on.getIndexKeys().toString(), is("{ \"foo\" : 1 , \"bar\" : 1}"));
+		assertThat(on.getIndexKeys(), is(Document.parse("{ \"foo\" : 1 , \"bar\" : 1}")));
 	}
 }

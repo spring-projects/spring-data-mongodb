@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -112,10 +113,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		String queryString = parameterBinder.bind(this.query, accessor, new BindingContext(getQueryMethod()
-				.getParameters(), queryParameterBindings));
-		String fieldsString = parameterBinder.bind(this.fieldSpec, accessor, new BindingContext(getQueryMethod()
-				.getParameters(), fieldSpecParameterBindings));
+		String queryString = parameterBinder.bind(this.query, accessor,
+				new BindingContext(getQueryMethod().getParameters(), queryParameterBindings));
+		String fieldsString = parameterBinder.bind(this.fieldSpec, accessor,
+				new BindingContext(getQueryMethod().getParameters(), fieldSpecParameterBindings));
 
 		Query query = new BasicQuery(queryString, fieldsString).with(accessor.getSort());
 
@@ -279,6 +280,14 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 				potentiallyAddBinding(dbref.getCollectionName(), bindings);
 				potentiallyAddBinding(dbref.getId().toString(), bindings);
 
+			} else if (value instanceof Document) {
+
+				Document dbo = (Document) value;
+
+				for (String field : dbo.keySet()) {
+					collectParameterReferencesIntoBindings(bindings, field);
+					collectParameterReferencesIntoBindings(bindings, dbo.get(field));
+				}
 			} else if (value instanceof DBObject) {
 
 				DBObject dbo = (DBObject) value;

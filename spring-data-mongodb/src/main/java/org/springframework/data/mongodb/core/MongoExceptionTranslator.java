@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.bson.BsonInvalidOperationException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,7 +34,10 @@ import org.springframework.data.mongodb.util.MongoDbErrorCodes;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.BulkWriteException;
+import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoException;
+import com.mongodb.MongoServerException;
+import com.mongodb.bulk.BulkWriteError;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Mongo. Convert the given runtime exception to an appropriate
@@ -57,7 +61,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			Arrays.asList("MongoInternalException"));
 
 	private static final Set<String> DATA_INTEGRETY_EXCEPTIONS = new HashSet<String>(
-			Arrays.asList("WriteConcernException"));
+			Arrays.asList("WriteConcernException", "MongoWriteException", "MongoBulkWriteException"));
 
 	/*
 	 * (non-Javadoc)
@@ -66,6 +70,10 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
 		// Check for well-known MongoException subclasses.
+
+		if (ex instanceof BsonInvalidOperationException) {
+			throw new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
+		}
 
 		String exception = ClassUtils.getShortName(ClassUtils.getUserClass(ex.getClass()));
 
@@ -82,6 +90,20 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 		}
 
 		if (DATA_INTEGRETY_EXCEPTIONS.contains(exception)) {
+
+			if (ex instanceof MongoServerException) {
+				if (((MongoServerException) ex).getCode() == 11000) {
+					return new DuplicateKeyException(ex.getMessage(), ex);
+				}
+				if (ex instanceof MongoBulkWriteException) {
+					for (BulkWriteError x : ((MongoBulkWriteException) ex).getWriteErrors()) {
+						if (x.getCode() == 11000) {
+							return new DuplicateKeyException(ex.getMessage(), ex);
+						}
+					}
+				}
+			}
+
 			return new DataIntegrityViolationException(ex.getMessage(), ex);
 		}
 

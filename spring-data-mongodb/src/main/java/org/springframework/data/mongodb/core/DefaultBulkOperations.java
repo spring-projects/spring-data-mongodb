@@ -15,9 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.query.Query;
@@ -26,12 +28,15 @@ import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 
 import com.mongodb.BulkWriteException;
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.BulkWriteRequestBuilder;
-import com.mongodb.BulkWriteResult;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.BulkWriteOptions;
+import com.mongodb.client.model.DeleteManyModel;
+import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.UpdateManyModel;
+import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.WriteModel;
 
 /**
  * Default implementation for {@link BulkOperations}.
@@ -51,7 +56,9 @@ class DefaultBulkOperations implements BulkOperations {
 	private WriteConcernResolver writeConcernResolver;
 	private WriteConcern defaultWriteConcern;
 
-	private BulkWriteOperation bulk;
+	private BulkWriteOptions bulkOptions;
+
+	List<WriteModel<Document>> models = new ArrayList<WriteModel<Document>>();
 
 	/**
 	 * Creates a new {@link DefaultBulkOperations} for the given {@link MongoOperations}, {@link BulkMode}, collection
@@ -77,7 +84,7 @@ class DefaultBulkOperations implements BulkOperations {
 		this.exceptionTranslator = new MongoExceptionTranslator();
 		this.writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
 
-		this.bulk = initBulkOperation();
+		this.bulkOptions = initBulkOperation();
 	}
 
 	/**
@@ -117,7 +124,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 		Assert.notNull(document, "Document must not be null!");
 
-		bulk.insert((DBObject) mongoOperations.getConverter().convertToMongoType(document));
+		models.add(new InsertOneModel<Document>((Document) mongoOperations.getConverter().convertToMongoType(document)));
 		return this;
 	}
 
@@ -229,7 +236,8 @@ class DefaultBulkOperations implements BulkOperations {
 
 		Assert.notNull(query, "Query must not be null!");
 
-		bulk.find(query.getQueryObject()).remove();
+		models.add(new DeleteManyModel<Document>(query.getQueryObject()));
+		// bulk.find(query.getQueryObject()).remove();
 
 		return this;
 	}
@@ -255,15 +263,16 @@ class DefaultBulkOperations implements BulkOperations {
 	 * @see org.springframework.data.mongodb.core.BulkOperations#executeBulk()
 	 */
 	@Override
-	public BulkWriteResult execute() {
-
-		MongoAction action = new MongoAction(defaultWriteConcern, MongoActionOperation.BULK, collectionName, entityType,
-				null, null);
-		WriteConcern writeConcern = writeConcernResolver.resolve(action);
+	public com.mongodb.bulk.BulkWriteResult execute() {
 
 		try {
 
-			return writeConcern == null ? bulk.execute() : bulk.execute(writeConcern);
+			MongoCollection<Document> collection = mongoOperations.getCollection(collectionName);
+			if (defaultWriteConcern != null) {
+				collection = collection.withWriteConcern(defaultWriteConcern);
+			}
+
+			return collection.bulkWrite(models, bulkOptions);
 
 		} catch (BulkWriteException o_O) {
 
@@ -271,7 +280,7 @@ class DefaultBulkOperations implements BulkOperations {
 			throw toThrow == null ? o_O : toThrow;
 
 		} finally {
-			this.bulk = initBulkOperation();
+			this.bulkOptions = initBulkOperation();
 		}
 	}
 
@@ -289,39 +298,26 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
-		BulkWriteRequestBuilder builder = bulk.find(query.getQueryObject());
+		UpdateOptions options = new UpdateOptions();
+		options.upsert(upsert);
 
-		if (upsert) {
-
-			if (multi) {
-				builder.upsert().update(update.getUpdateObject());
-			} else {
-				builder.upsert().updateOne(update.getUpdateObject());
-			}
-
+		if (multi) {
+			models.add(new UpdateManyModel<Document>(query.getQueryObject(), update.getUpdateObject(), options));
 		} else {
-
-			if (multi) {
-				builder.update(update.getUpdateObject());
-			} else {
-				builder.updateOne(update.getUpdateObject());
-			}
+			models.add(new UpdateOneModel<Document>(query.getQueryObject(), update.getUpdateObject(), options));
 		}
-
 		return this;
 	}
 
-	private final BulkWriteOperation initBulkOperation() {
+	private final BulkWriteOptions initBulkOperation() {
 
-		DBCollection collection = mongoOperations.getCollection(collectionName);
-
+		BulkWriteOptions options = new BulkWriteOptions();
 		switch (bulkMode) {
 			case ORDERED:
-				return collection.initializeOrderedBulkOperation();
+				return options.ordered(true);
 			case UNORDERED:
-				return collection.initializeUnorderedBulkOperation();
+				return options.ordered(false);
 		}
-
 		throw new IllegalStateException("BulkMode was null!");
 	}
 }

@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.bson.Document;
 import java.util.List;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -66,7 +66,7 @@ public interface DbRefResolver {
 	 * @return
 	 * @since 1.7
 	 */
-	DBObject fetch(DBRef dbRef);
+	Document fetch(DBRef dbRef);
 
 	/**
 	 * Loads a given {@link List} of {@link DBRef}s from the datasource in one batch. The resulting {@link List} of
@@ -78,5 +78,5 @@ public interface DbRefResolver {
 	 * @throws InvalidDataAccessApiUsageException in case not all {@link DBRef} target the same collection.
 	 * @since 1.10
 	 */
-	List<DBObject> bulkFetch(List<DBRef> dbRefs);
+	List<Document> bulkFetch(List<DBRef> dbRefs);
 }

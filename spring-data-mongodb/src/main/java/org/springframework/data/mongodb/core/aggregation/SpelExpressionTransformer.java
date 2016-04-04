@@ -15,12 +15,12 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.springframework.data.mongodb.util.DBObjectUtils.*;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.mongodb.core.spel.ExpressionNode;
 import org.springframework.data.mongodb.core.spel.ExpressionTransformationContextSupport;
@@ -39,10 +39,6 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
-
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Renders the AST of a SpEL expression as a MongoDB Aggregation Framework projection expression.
@@ -131,8 +127,8 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
-	private static abstract class ExpressionNodeConversion<T extends ExpressionNode> implements
-			AggregationExpressionTransformer {
+	private static abstract class ExpressionNodeConversion<T extends ExpressionNode>
+			implements AggregationExpressionTransformer {
 
 		private final AggregationExpressionTransformer transformer;
 		private final Class<? extends ExpressionNode> nodeType;
@@ -188,7 +184,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 * @param context must not be {@literal null}.
 		 * @return
 		 */
-		protected Object transform(ExpressionNode node, ExpressionNode parent, DBObject operation,
+		protected Object transform(ExpressionNode node, ExpressionNode parent, Document operation,
 				AggregationExpressionTransformationContext<?> context) {
 
 			Assert.notNull(node, "ExpressionNode must not be null!");
@@ -236,7 +232,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 			OperatorNode currentNode = context.getCurrentNode();
 
-			DBObject operationObject = createOperationObjectAndAddToPreviousArgumentsIfNecessary(context, currentNode);
+			Document operationObject = createOperationObjectAndAddToPreviousArgumentsIfNecessary(context, currentNode);
 			Object leftResult = transform(currentNode.getLeft(), currentNode, operationObject, context);
 
 			if (currentNode.isUnaryMinus()) {
@@ -249,10 +245,10 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return operationObject;
 		}
 
-		private DBObject createOperationObjectAndAddToPreviousArgumentsIfNecessary(
+		private Document createOperationObjectAndAddToPreviousArgumentsIfNecessary(
 				AggregationExpressionTransformationContext<OperatorNode> context, OperatorNode currentNode) {
 
-			DBObject nextDbObject = new BasicDBObject(currentNode.getMongoOperator(), new BasicDBList());
+			Document nextDbObject = new Document(currentNode.getMongoOperator(), new ArrayList<Object>());
 
 			if (!context.hasPreviousOperation()) {
 				return nextDbObject;
@@ -271,10 +267,11 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return nextDbObject;
 		}
 
-		private Object convertUnaryMinusOp(ExpressionTransformationContextSupport<OperatorNode> context, Object leftResult) {
+		private Object convertUnaryMinusOp(ExpressionTransformationContextSupport<OperatorNode> context,
+				Object leftResult) {
 
 			Object result = leftResult instanceof Number ? leftResult
-					: new BasicDBObject("$multiply", dbList(-1, leftResult));
+					: new Document("$multiply", Arrays.<Object> asList(Integer.valueOf(-1), leftResult));
 
 			if (leftResult != null && context.hasPreviousOperation()) {
 				context.addToPreviousOperation(result);
@@ -468,7 +465,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 				args.add(transform(childNode, context));
 			}
 
-			return context.addToPreviousOrReturn(new BasicDBObject(node.getMethodName(), dbList(args.toArray())));
+			return context.addToPreviousOrReturn(new Document(node.getMethodName(), args));
 		}
 	}
 

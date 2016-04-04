@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.util.Collections;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,9 +30,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for testing the mapping works with generic types.
@@ -63,14 +61,14 @@ public class GenericMappingTests {
 		wrapper.container = new Container<String>();
 		wrapper.container.content = "Foo!";
 
-		DBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 		converter.write(wrapper, dbObject);
 
 		Object container = dbObject.get("container");
 		assertThat(container, is(notNullValue()));
-		assertTrue(container instanceof DBObject);
+		assertTrue(container instanceof Document);
 
-		Object content = ((DBObject) container).get("content");
+		Object content = ((Document) container).get("content");
 		assertTrue(content instanceof String);
 		assertThat((String) content, is("Foo!"));
 	}
@@ -78,8 +76,8 @@ public class GenericMappingTests {
 	@Test
 	public void readsGenericTypeCorrectly() {
 
-		DBObject content = new BasicDBObject("content", "Foo!");
-		BasicDBObject container = new BasicDBObject("container", content);
+		Document content = new Document("content", "Foo!");
+		Document container = new Document("container", content);
 
 		StringWrapper result = converter.read(StringWrapper.class, container);
 		assertThat(result.container, is(notNullValue()));

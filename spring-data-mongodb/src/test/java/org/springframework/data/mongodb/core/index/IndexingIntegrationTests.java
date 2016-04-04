@@ -22,6 +22,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Test;
@@ -38,9 +40,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
 
 /**
  * Integration tests for index handling.
@@ -109,8 +110,13 @@ public class IndexingIntegrationTests {
 	private boolean hasIndex(final String indexName, Class<?> entityType) {
 
 		return operations.execute(entityType, new CollectionCallback<Boolean>() {
-			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				for (DBObject indexInfo : collection.getIndexInfo()) {
+			public Boolean doInCollection(MongoCollection<org.bson.Document> collection)
+					throws MongoException, DataAccessException {
+
+				List<org.bson.Document> indexes = new ArrayList<org.bson.Document>();
+				collection.listIndexes(org.bson.Document.class).into(indexes);
+
+				for (org.bson.Document indexInfo : indexes) {
 					if (indexName.equals(indexInfo.get("name"))) {
 						return true;
 					}

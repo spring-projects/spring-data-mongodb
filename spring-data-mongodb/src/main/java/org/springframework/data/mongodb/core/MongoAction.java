@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
 
 /**
@@ -38,8 +38,8 @@ public class MongoAction {
 	private final WriteConcern defaultWriteConcern;
 	private final Class<?> entityType;
 	private final MongoActionOperation mongoActionOperation;
-	private final DBObject query;
-	private final DBObject document;
+	private final Document query;
+	private final Document document;
 
 	/**
 	 * Create an instance of a {@link MongoAction}.
@@ -48,11 +48,11 @@ public class MongoAction {
 	 * @param mongoActionOperation action being taken against the collection
 	 * @param collectionName the collection name, must not be {@literal null} or empty.
 	 * @param entityType the POJO that is being operated against
-	 * @param document the converted DBObject from the POJO or Spring Update object
-	 * @param query the converted DBObject from the Spring Query object
+	 * @param document the converted Document from the POJO or Spring Update object
+	 * @param query the converted Document from the Spring Query object
 	 */
-	public MongoAction(WriteConcern defaultWriteConcern, MongoActionOperation mongoActionOperation,
-			String collectionName, Class<?> entityType, DBObject document, DBObject query) {
+	public MongoAction(WriteConcern defaultWriteConcern, MongoActionOperation mongoActionOperation, String collectionName,
+			Class<?> entityType, Document document, Document query) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
@@ -88,11 +88,11 @@ public class MongoAction {
 		return mongoActionOperation;
 	}
 
-	public DBObject getQuery() {
+	public Document getQuery() {
 		return query;
 	}
 
-	public DBObject getDocument() {
+	public Document getDocument() {
 		return document;
 	}
 

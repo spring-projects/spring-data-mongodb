@@ -38,12 +38,12 @@ import org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvokerTestUt
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Integration tests for {@link MongoDbFactoryParser}.
@@ -100,7 +100,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		AbstractApplicationContext ctx = new ClassPathXmlApplicationContext(
 				"namespace/db-factory-bean-custom-write-concern.xml");
 		MongoDbFactory factory = ctx.getBean("second", MongoDbFactory.class);
-		DB db = factory.getDb();
+		MongoDatabase db = factory.getDb();
 
 		assertThat(db.getWriteConcern(), is(WriteConcern.REPLICAS_SAFE));
 		ctx.close();
@@ -164,7 +164,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(argument, is(notNullValue()));
 
 		MongoDbFactory dbFactory = factory.getBean("mongoDbFactory", MongoDbFactory.class);
-		DB db = dbFactory.getDb();
+		MongoDatabase db = dbFactory.getDb();
 		assertThat(db.getName(), is("database"));
 	}
 
@@ -248,7 +248,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	private static void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
 
 		SimpleMongoDbFactory dbFactory = ctx.getBean("first", SimpleMongoDbFactory.class);
-		DB db = dbFactory.getDb();
+		MongoDatabase db = dbFactory.getDb();
 		assertThat(db.getName(), is("db"));
 
 		WriteConcern configuredConcern = (WriteConcern) ReflectionTestUtils.getField(dbFactory, "writeConcern");

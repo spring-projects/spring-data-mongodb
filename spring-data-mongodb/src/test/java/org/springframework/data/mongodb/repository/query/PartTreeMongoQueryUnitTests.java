@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.query.IsTextQuery.*;
 
 import java.lang.reflect.Method;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,8 +46,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
 import com.mongodb.util.JSONParseException;
 
 /**
@@ -96,7 +95,7 @@ public class PartTreeMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstname",
 				new Object[] { "foo" });
 
-		assertThat(query.getFieldsObject(), is(new BasicDBObjectBuilder().add("firstname", 1).get()));
+		assertThat(query.getFieldsObject(), is(new Document().append("firstname", 1)));
 	}
 
 	/**
@@ -108,7 +107,7 @@ public class PartTreeMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstnameAndLastname",
 				new Object[] { "foo", "bar" });
 
-		assertThat(query.getFieldsObject(), is(new BasicDBObjectBuilder().add("firstname", 1).add("lastname", 1).get()));
+		assertThat(query.getFieldsObject(), is(new Document().append("firstname", 1).append("lastname", 1)));
 	}
 
 	/**
@@ -120,7 +119,7 @@ public class PartTreeMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstnameAndLastname",
 				new Object[] { "foo", "bar" });
 
-		assertThat(query.getFieldsObject(), is(new BasicDBObjectBuilder().add("firstname", 0).add("lastname", 0).get()));
+		assertThat(query.getFieldsObject(), is(new Document().append("firstname", 0).append("lastname", 0)));
 	}
 
 	/**
@@ -161,7 +160,7 @@ public class PartTreeMongoQueryUnitTests {
 	@Test
 	public void restrictsQueryToFieldsRequiredForProjection() {
 
-		DBObject fieldsObject = deriveQueryFromMethod("findPersonProjectedBy", new Object[0]).getFieldsObject();
+		Document fieldsObject = deriveQueryFromMethod("findPersonProjectedBy", new Object[0]).getFieldsObject();
 
 		assertThat(fieldsObject.get("firstname"), is((Object) 1));
 		assertThat(fieldsObject.get("lastname"), is((Object) 1));
@@ -173,7 +172,7 @@ public class PartTreeMongoQueryUnitTests {
 	@Test
 	public void restrictsQueryToFieldsRequiredForDto() {
 
-		DBObject fieldsObject = deriveQueryFromMethod("findPersonDtoByAge", new Object[] { 42 }).getFieldsObject();
+		Document fieldsObject = deriveQueryFromMethod("findPersonDtoByAge", new Object[] { 42 }).getFieldsObject();
 
 		assertThat(fieldsObject.get("firstname"), is((Object) 1));
 		assertThat(fieldsObject.get("lastname"), is((Object) 1));
@@ -185,7 +184,7 @@ public class PartTreeMongoQueryUnitTests {
 	@Test
 	public void usesDynamicProjection() {
 
-		DBObject fields = deriveQueryFromMethod("findDynamicallyProjectedBy", ExtendedProjection.class).getFieldsObject();
+		Document fields = deriveQueryFromMethod("findDynamicallyProjectedBy", ExtendedProjection.class).getFieldsObject();
 
 		assertThat(fields.get("firstname"), is((Object) 1));
 		assertThat(fields.get("lastname"), is((Object) 1));

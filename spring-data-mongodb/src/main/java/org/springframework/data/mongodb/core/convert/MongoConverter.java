@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-
-import com.mongodb.DBObject;
 
 /**
  * Central Mongo specific converter interface which combines {@link MongoWriter} and {@link MongoReader}.
@@ -29,12 +29,12 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public interface MongoConverter extends
-		EntityConverter<MongoPersistentEntity<?>, MongoPersistentProperty, Object, DBObject>, MongoWriter<Object>,
-		EntityReader<Object, DBObject> {
+public interface MongoConverter
+		extends EntityConverter<MongoPersistentEntity<?>, MongoPersistentProperty, Object, Bson>, MongoWriter<Object>,
+		EntityReader<Object, Bson> {
 
 	/**
-	 * Returns thw {@link TypeMapper} being used to write type information into {@link DBObject}s created with that
+	 * Returns thw {@link TypeMapper} being used to write type information into {@link Document}s created with that
 	 * converter.
 	 * 
 	 * @return will never be {@literal null}.

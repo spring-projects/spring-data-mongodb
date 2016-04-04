@@ -15,14 +15,9 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import org.bson.Document;
 import org.hamcrest.TypeSafeMatcher;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.TextQuery;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * A {@link TypeSafeMatcher} that tests whether a given {@link TextQuery} matches a query specification.
@@ -33,7 +28,7 @@ import com.mongodb.DBObject;
 public class IsTextQuery<T extends Query> extends IsQuery<T> {
 
 	private final String SCORE_DEFAULT_FIELDNAME = "score";
-	private final DBObject META_TEXT_SCORE = new BasicDBObject("$meta", "textScore");
+	private final Document META_TEXT_SCORE = new Document("$meta", "textScore");
 
 	private String scoreFieldName = SCORE_DEFAULT_FIELDNAME;
 
@@ -58,7 +53,7 @@ public class IsTextQuery<T extends Query> extends IsQuery<T> {
 	public IsTextQuery<T> returningScore() {
 
 		if (fields == null) {
-			fields = new BasicDBObject();
+			fields = new Document();
 		}
 		fields.put(scoreFieldName, META_TEXT_SCORE);
 
@@ -116,15 +111,15 @@ public class IsTextQuery<T extends Query> extends IsQuery<T> {
 
 	private void appendLanguage(String language) {
 
-		DBObject dbo = getOrCreateTextDbo();
+		Document dbo = getOrCreateTextDbo();
 		dbo.put("$language", language);
 	}
 
-	private DBObject getOrCreateTextDbo() {
+	private Document getOrCreateTextDbo() {
 
-		DBObject dbo = (DBObject) query.get("$text");
+		Document dbo = (Document) query.get("$text");
 		if (dbo == null) {
-			dbo = new BasicDBObject();
+			dbo = new Document();
 		}
 
 		return dbo;
@@ -132,7 +127,7 @@ public class IsTextQuery<T extends Query> extends IsQuery<T> {
 
 	private void appendTerm(String term) {
 
-		DBObject dbo = getOrCreateTextDbo();
+		Document dbo = getOrCreateTextDbo();
 		String searchString = (String) dbo.get("$search");
 		if (StringUtils.hasText(searchString)) {
 			searchString += (" " + term);

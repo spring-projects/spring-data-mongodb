@@ -19,7 +19,9 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.List;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -41,8 +43,6 @@ import org.springframework.data.mongodb.core.convert.GeoConverters.SphereToDbObj
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
 
-import com.mongodb.DBObject;
-
 /**
  * Unit tests for {@link GeoConverters}.
  * 
@@ -60,7 +60,7 @@ public class GeoConvertersUnitTests {
 
 		Box box = new Box(new Point(1, 2), new Point(3, 4));
 
-		DBObject dbo = BoxToDbObjectConverter.INSTANCE.convert(box);
+		Document dbo = BoxToDbObjectConverter.INSTANCE.convert(box);
 		Box result = DbObjectToBoxConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(box));
@@ -75,7 +75,7 @@ public class GeoConvertersUnitTests {
 
 		Circle circle = new Circle(new Point(1, 2), 3);
 
-		DBObject dbo = CircleToDbObjectConverter.INSTANCE.convert(circle);
+		Document dbo = CircleToDbObjectConverter.INSTANCE.convert(circle);
 		Circle result = DbObjectToCircleConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(circle));
@@ -90,7 +90,7 @@ public class GeoConvertersUnitTests {
 		Distance radius = new Distance(3, Metrics.MILES);
 		Circle circle = new Circle(new Point(1, 2), radius);
 
-		DBObject dbo = CircleToDbObjectConverter.INSTANCE.convert(circle);
+		Document dbo = CircleToDbObjectConverter.INSTANCE.convert(circle);
 		Circle result = DbObjectToCircleConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(circle));
@@ -105,7 +105,7 @@ public class GeoConvertersUnitTests {
 
 		Polygon polygon = new Polygon(new Point(1, 2), new Point(2, 3), new Point(3, 4), new Point(5, 6));
 
-		DBObject dbo = PolygonToDbObjectConverter.INSTANCE.convert(polygon);
+		Document dbo = PolygonToDbObjectConverter.INSTANCE.convert(polygon);
 		Polygon result = DbObjectToPolygonConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(polygon));
@@ -120,7 +120,7 @@ public class GeoConvertersUnitTests {
 
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
 
-		DBObject dbo = SphereToDbObjectConverter.INSTANCE.convert(sphere);
+		Document dbo = SphereToDbObjectConverter.INSTANCE.convert(sphere);
 		Sphere result = DbObjectToSphereConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(sphere));
@@ -136,7 +136,7 @@ public class GeoConvertersUnitTests {
 		Distance radius = new Distance(3, Metrics.KILOMETERS);
 		Sphere sphere = new Sphere(new Point(1, 2), radius);
 
-		DBObject dbo = SphereToDbObjectConverter.INSTANCE.convert(sphere);
+		Document dbo = SphereToDbObjectConverter.INSTANCE.convert(sphere);
 		Sphere result = DbObjectToSphereConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(sphere));
@@ -152,7 +152,7 @@ public class GeoConvertersUnitTests {
 
 		Point point = new Point(1, 2);
 
-		DBObject dbo = PointToDbObjectConverter.INSTANCE.convert(point);
+		Document dbo = PointToDbObjectConverter.INSTANCE.convert(point);
 		Point result = DbObjectToPointConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(point));
@@ -168,11 +168,11 @@ public class GeoConvertersUnitTests {
 		Box box = new Box(new double[] { 1, 2 }, new double[] { 3, 4 });
 		GeoCommand cmd = new GeoCommand(box);
 
-		DBObject dbo = GeoCommandToDbObjectConverter.INSTANCE.convert(cmd);
+		Document dbo = GeoCommandToDbObjectConverter.INSTANCE.convert(cmd);
 
 		assertThat(dbo, is(notNullValue()));
 
-		DBObject boxObject = (DBObject) dbo.get("$box");
+		List<Object> boxObject = (List<Object>) dbo.get("$box");
 
 		assertThat(boxObject,
 				is((Object) Arrays.asList(GeoConverters.toList(box.getFirst()), GeoConverters.toList(box.getSecond()))));

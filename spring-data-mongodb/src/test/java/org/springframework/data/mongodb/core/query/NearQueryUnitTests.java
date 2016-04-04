@@ -93,7 +93,7 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new Point(1, 1)).with(pageable);
 
 		assertThat(query.getSkip(), is(pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat((Integer) query.toDBObject().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
+		assertThat((Integer) query.toDocument().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
 	}
 
 	/**
@@ -104,11 +104,11 @@ public class NearQueryUnitTests {
 
 		int limit = 10;
 		int skip = 5;
-		NearQuery query = NearQuery.near(new Point(1, 1)).query(
-				Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip));
+		NearQuery query = NearQuery.near(new Point(1, 1))
+				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip));
 
 		assertThat(query.getSkip(), is(skip));
-		assertThat((Integer) query.toDBObject().get("num"), is(limit));
+		assertThat((Integer) query.toDocument().get("num"), is(limit));
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class NearQueryUnitTests {
 				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip)).with(pageable);
 
 		assertThat(query.getSkip(), is(pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat((Integer) query.toDBObject().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
+		assertThat((Integer) query.toDocument().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
 	}
 
 	/**
@@ -134,7 +134,7 @@ public class NearQueryUnitTests {
 	public void nearQueryShouldInoreZeroLimitFromQuery() {
 
 		NearQuery query = NearQuery.near(new Point(1, 2)).query(Query.query(Criteria.where("foo").is("bar")));
-		assertThat(query.toDBObject().get("num"), nullValue());
+		assertThat(query.toDocument().get("num"), nullValue());
 	}
 
 	/**
@@ -156,6 +156,6 @@ public class NearQueryUnitTests {
 		query.num(num);
 		query.query(Query.query(Criteria.where("foo").is("bar")));
 
-		assertThat(DBObjectTestUtils.getTypedValue(query.toDBObject(), "num", Integer.class), is(num));
+		assertThat(DBObjectTestUtils.getTypedValue(query.toDocument(), "num", Integer.class), is(num));
 	}
 }

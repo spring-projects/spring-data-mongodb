@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -45,7 +46,10 @@ import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Set of classes to contain query execution strategies. Depending (mostly) on the return type of a
@@ -263,7 +267,7 @@ interface MongoQueryExecution {
 			this.mongoQuery = query;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution.GeoNearExecution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
@@ -314,8 +318,8 @@ interface MongoQueryExecution {
 				return operations.findAllAndRemove(query, type, collection);
 			}
 
-			WriteResult writeResult = operations.remove(query, type, collection);
-			return writeResult != null ? writeResult.getN() : 0L;
+			DeleteResult writeResult = operations.remove(query, type, collection);
+			return writeResult != null ? writeResult.getDeletedCount() : 0L;
 		}
 	}
 

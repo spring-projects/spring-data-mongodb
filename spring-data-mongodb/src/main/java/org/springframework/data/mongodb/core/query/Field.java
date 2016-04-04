@@ -19,11 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * @author Thomas Risberg
@@ -81,16 +79,16 @@ public class Field {
 		return this;
 	}
 
-	public DBObject getFieldsObject() {
+	public Document getFieldsObject() {
 
-		DBObject dbo = new BasicDBObject(criteria);
+		Document dbo = new Document((Map) criteria);
 
 		for (Entry<String, Object> entry : slices.entrySet()) {
-			dbo.put(entry.getKey(), new BasicDBObject("$slice", entry.getValue()));
+			dbo.put(entry.getKey(), new Document("$slice", entry.getValue()));
 		}
 
 		for (Entry<String, Criteria> entry : elemMatchs.entrySet()) {
-			DBObject dbObject = new BasicDBObject("$elemMatch", entry.getValue().getCriteriaObject());
+			Document dbObject = new Document("$elemMatch", entry.getValue().getCriteriaObject());
 			dbo.put(entry.getKey(), dbObject);
 		}
 

@@ -20,6 +20,7 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
 import com.mongodb.DB;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Interface for factories creating {@link DB} instances.
@@ -35,7 +36,7 @@ public interface MongoDbFactory {
 	 * @return
 	 * @throws DataAccessException
 	 */
-	DB getDb() throws DataAccessException;
+	MongoDatabase getDb() throws DataAccessException;
 
 	/**
 	 * Creates a {@link DB} instance to access the database with the given name.
@@ -44,7 +45,7 @@ public interface MongoDbFactory {
 	 * @return
 	 * @throws DataAccessException
 	 */
-	DB getDb(String dbName) throws DataAccessException;
+	MongoDatabase getDb(String dbName) throws DataAccessException;
 
 	/**
 	 * Exposes a shared {@link MongoExceptionTranslator}.
@@ -52,4 +53,6 @@ public interface MongoDbFactory {
 	 * @return will never be {@literal null}.
 	 */
 	PersistenceExceptionTranslator getExceptionTranslator();
+
+	DB getLegacyDb();
 }

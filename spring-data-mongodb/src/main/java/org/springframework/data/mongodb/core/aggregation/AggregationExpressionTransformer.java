@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressionTransformer.AggregationExpressionTransformationContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.spel.ExpressionNode;
@@ -22,16 +23,14 @@ import org.springframework.data.mongodb.core.spel.ExpressionTransformationContex
 import org.springframework.data.mongodb.core.spel.ExpressionTransformer;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBObject;
-
 /**
  * Interface to type an {@link ExpressionTransformer} to the contained
  * {@link AggregationExpressionTransformationContext}.
  * 
  * @author Oliver Gierke
  */
-interface AggregationExpressionTransformer extends
-		ExpressionTransformer<AggregationExpressionTransformationContext<ExpressionNode>> {
+interface AggregationExpressionTransformer
+		extends ExpressionTransformer<AggregationExpressionTransformationContext<ExpressionNode>> {
 
 	/**
 	 * A special {@link ExpressionTransformationContextSupport} to be aware of the {@link AggregationOperationContext}.
@@ -39,8 +38,8 @@ interface AggregationExpressionTransformer extends
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
-	public static class AggregationExpressionTransformationContext<T extends ExpressionNode> extends
-			ExpressionTransformationContextSupport<T> {
+	public static class AggregationExpressionTransformationContext<T extends ExpressionNode>
+			extends ExpressionTransformationContextSupport<T> {
 
 		private final AggregationOperationContext aggregationContext;
 
@@ -53,7 +52,7 @@ interface AggregationExpressionTransformer extends
 		 * @param aggregationContext must not be {@literal null}.
 		 */
 		public AggregationExpressionTransformationContext(T currentNode, ExpressionNode parentNode,
-				DBObject previousOperationObject, AggregationOperationContext context) {
+				Document previousOperationObject, AggregationOperationContext context) {
 
 			super(currentNode, parentNode, previousOperationObject);
 

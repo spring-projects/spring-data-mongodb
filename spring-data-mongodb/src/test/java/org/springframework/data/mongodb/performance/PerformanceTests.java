@@ -33,6 +33,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -125,10 +126,10 @@ public class PerformanceTests {
 	@Test
 	public void plainConversion() throws InterruptedException {
 
-		Statistics statistics = new Statistics("Plain conversion of " + NUMBER_OF_PERSONS * 100
-				+ " persons - After %s iterations");
+		Statistics statistics = new Statistics(
+				"Plain conversion of " + NUMBER_OF_PERSONS * 100 + " persons - After %s iterations");
 
-		List<DBObject> dbObjects = getPersonDBObjects(NUMBER_OF_PERSONS * 100);
+		List<Document> dbObjects = getPersonDocuments(NUMBER_OF_PERSONS * 100);
 
 		for (int i = 0; i < ITERATIONS; i++) {
 			statistics.registerTime(Api.DIRECT, Mode.READ, convertDirectly(dbObjects));
@@ -138,7 +139,7 @@ public class PerformanceTests {
 		statistics.printResults(ITERATIONS);
 	}
 
-	private long convertDirectly(final List<DBObject> dbObjects) {
+	private long convertDirectly(final List<Document> dbObjects) {
 
 		executeWatched(new WatchCallback<List<Person>>() {
 
@@ -147,8 +148,8 @@ public class PerformanceTests {
 
 				List<Person> persons = new ArrayList<PerformanceTests.Person>();
 
-				for (DBObject dbObject : dbObjects) {
-					persons.add(Person.from(dbObject));
+				for (Document dbObject : dbObjects) {
+					persons.add(Person.from(new BasicDBObject(dbObject)));
 				}
 
 				return persons;
@@ -158,7 +159,7 @@ public class PerformanceTests {
 		return watch.getLastTaskTimeMillis();
 	}
 
-	private long convertUsingConverter(final List<DBObject> dbObjects) {
+	private long convertUsingConverter(final List<Document> dbObjects) {
 
 		executeWatched(new WatchCallback<List<Person>>() {
 
@@ -167,7 +168,7 @@ public class PerformanceTests {
 
 				List<Person> persons = new ArrayList<PerformanceTests.Person>();
 
-				for (DBObject dbObject : dbObjects) {
+				for (Document dbObject : dbObjects) {
 					persons.add(converter.read(Person.class, dbObject));
 				}
 
@@ -277,7 +278,7 @@ public class PerformanceTests {
 	}
 
 	private DBObject getCreateCollectionCommand(String name) {
-		BasicDBObject dbObject = new BasicDBObject();
+		DBObject dbObject = new BasicDBObject();
 		dbObject.put("createCollection", name);
 		dbObject.put("capped", false);
 		dbObject.put("size", COLLECTION_SIZE);
@@ -292,7 +293,7 @@ public class PerformanceTests {
 		executeWatched(new WatchCallback<Void>() {
 			public Void doInWatch() {
 				for (Person person : persons) {
-					collection.save(person.toDBObject());
+					collection.save(new BasicDBObject(person.toDocument()));
 				}
 				return null;
 			}
@@ -369,8 +370,8 @@ public class PerformanceTests {
 
 				DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
 
-				DBObject regex = new BasicDBObject("$regex", Pattern.compile(".*1.*"));
-				DBObject query = new BasicDBObject("addresses.zipCode", regex);
+				BasicDBObject regex = new BasicDBObject("$regex", Pattern.compile(".*1.*"));
+				BasicDBObject query = new BasicDBObject("addresses.zipCode", regex);
 				return toPersons(collection.find(query));
 			}
 		});
@@ -402,12 +403,12 @@ public class PerformanceTests {
 		return result;
 	}
 
-	private List<DBObject> getPersonDBObjects(int numberOfPersons) {
+	private List<Document> getPersonDocuments(int numberOfPersons) {
 
-		List<DBObject> dbObjects = new ArrayList<DBObject>(numberOfPersons);
+		List<Document> dbObjects = new ArrayList<Document>(numberOfPersons);
 
 		for (Person person : getPersonObjects(numberOfPersons)) {
-			dbObjects.add(person.toDBObject());
+			dbObjects.add(person.toDocument());
 		}
 
 		return dbObjects;
@@ -454,13 +455,13 @@ public class PerformanceTests {
 			BasicDBList addressesSource = (BasicDBList) source.get("addresses");
 			List<Address> addresses = new ArrayList<Address>(addressesSource.size());
 			for (Object addressSource : addressesSource) {
-				addresses.add(Address.from((DBObject) addressSource));
+				addresses.add(Address.from((Document) addressSource));
 			}
 
 			BasicDBList ordersSource = (BasicDBList) source.get("orders");
 			Set<Order> orders = new HashSet<Order>(ordersSource.size());
 			for (Object orderSource : ordersSource) {
-				orders.add(Order.from((DBObject) orderSource));
+				orders.add(Order.from((Document) orderSource));
 			}
 
 			Person person = new Person((String) source.get("firstname"), (String) source.get("lastname"), addresses);
@@ -468,9 +469,9 @@ public class PerformanceTests {
 			return person;
 		}
 
-		public DBObject toDBObject() {
+		public Document toDocument() {
 
-			DBObject dbObject = new BasicDBObject();
+			Document dbObject = new Document();
 			dbObject.put("firstname", firstname);
 			dbObject.put("lastname", lastname);
 			dbObject.put("addresses", writeAll(addresses));
@@ -496,7 +497,7 @@ public class PerformanceTests {
 			this.types = types;
 		}
 
-		public static Address from(DBObject source) {
+		public static Address from(Document source) {
 			String zipCode = (String) source.get("zipCode");
 			String city = (String) source.get("city");
 			BasicDBList types = (BasicDBList) source.get("types");
@@ -504,8 +505,8 @@ public class PerformanceTests {
 			return new Address(zipCode, city, new HashSet<AddressType>(readFromBasicDBList(types, AddressType.class)));
 		}
 
-		public DBObject toDBObject() {
-			BasicDBObject dbObject = new BasicDBObject();
+		public Document toDocument() {
+			Document dbObject = new Document();
 			dbObject.put("zipCode", zipCode);
 			dbObject.put("city", city);
 			dbObject.put("types", toBasicDBList(types));
@@ -554,12 +555,12 @@ public class PerformanceTests {
 			this.status = status;
 		}
 
-		public static Order from(DBObject source) {
+		public static Order from(Document source) {
 
 			BasicDBList lineItemsSource = (BasicDBList) source.get("lineItems");
 			List<LineItem> lineItems = new ArrayList<PerformanceTests.LineItem>(lineItemsSource.size());
 			for (Object lineItemSource : lineItemsSource) {
-				lineItems.add(LineItem.from((DBObject) lineItemSource));
+				lineItems.add(LineItem.from((Document) lineItemSource));
 			}
 
 			Date date = (Date) source.get("createdAt");
@@ -571,8 +572,8 @@ public class PerformanceTests {
 			this(lineItems, new Date());
 		}
 
-		public DBObject toDBObject() {
-			DBObject result = new BasicDBObject();
+		public Document toDocument() {
+			Document result = new Document();
 			result.put("createdAt", createdAt);
 			result.put("lineItems", writeAll(lineItems));
 			result.put("status", status.toString());
@@ -601,7 +602,7 @@ public class PerformanceTests {
 			return pickRandomNumerOfItemsFrom(Arrays.asList(iPad, iPhone, macBook));
 		}
 
-		public static LineItem from(DBObject source) {
+		public static LineItem from(Document source) {
 
 			String description = (String) source.get("description");
 			double price = (Double) source.get("price");
@@ -610,9 +611,9 @@ public class PerformanceTests {
 			return new LineItem(description, amount, price);
 		}
 
-		public DBObject toDBObject() {
+		public Document toDocument() {
 
-			BasicDBObject dbObject = new BasicDBObject();
+			Document dbObject = new Document();
 			dbObject.put("description", description);
 			dbObject.put("price", price);
 			dbObject.put("amount", amount);
@@ -659,13 +660,13 @@ public class PerformanceTests {
 
 	private interface Convertible {
 
-		DBObject toDBObject();
+		Document toDocument();
 	}
 
 	private static BasicDBList writeAll(Collection<? extends Convertible> convertibles) {
 		BasicDBList result = new BasicDBList();
 		for (Convertible convertible : convertibles) {
-			result.add(convertible.toDBObject());
+			result.add(convertible.toDocument());
 		}
 		return result;
 	}
@@ -842,8 +843,8 @@ public class PerformanceTests {
 		 */
 		@Override
 		public String toString() {
-			return times.isEmpty() ? "" : String.format("%s, %s: %s", api, mode,
-					StringUtils.collectionToCommaDelimitedString(times)) + '\n';
+			return times.isEmpty() ? ""
+					: String.format("%s, %s: %s", api, mode, StringUtils.collectionToCommaDelimitedString(times)) + '\n';
 		}
 	}
 

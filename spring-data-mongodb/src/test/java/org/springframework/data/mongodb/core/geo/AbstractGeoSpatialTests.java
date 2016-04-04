@@ -182,6 +182,6 @@ public abstract class AbstractGeoSpatialTests {
 	public void mapsQueryContainedInNearQuery() {
 
 		Query query = query(where("openingDate").lt(LocalDate.now()));
-		template.geoNear(NearQuery.near(1.5, 1.7).query(query), Venue.class);
+		template.geoNear(NearQuery.near(1.5, 1.7).spherical(true).query(query), Venue.class);
 	}
 }

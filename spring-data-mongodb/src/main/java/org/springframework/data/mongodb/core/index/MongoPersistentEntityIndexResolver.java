@@ -16,8 +16,10 @@
 package org.springframework.data.mongodb.core.index;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,12 +43,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 
 /**
  * {@link IndexResolver} implementation inspecting {@link MongoPersistentEntity} for {@link MongoPersistentEntity} to be
@@ -203,8 +201,22 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private Collection<? extends IndexDefinitionHolder> potentiallyCreateTextIndexDefinition(
 			MongoPersistentEntity<?> root) {
 
-		TextIndexDefinitionBuilder indexDefinitionBuilder = new TextIndexDefinitionBuilder()
-				.named(root.getType().getSimpleName() + "_TextIndex");
+		String name = root.getType().getSimpleName() + "_TextIndex";
+		if (name.getBytes().length > 127) {
+			String[] args = ClassUtils.getShortNameAsProperty(root.getType()).split("\\.");
+			name = "";
+			Iterator<String> it = Arrays.asList(args).iterator();
+			while (it.hasNext()) {
+
+				if (!it.hasNext()) {
+					name += it.next() + "_TextIndex";
+				} else {
+					name += (it.next().charAt(0) + ".");
+				}
+			}
+
+		}
+		TextIndexDefinitionBuilder indexDefinitionBuilder = new TextIndexDefinitionBuilder().named(name);
 
 		if (StringUtils.hasText(root.getLanguage())) {
 			indexDefinitionBuilder.withDefaultLanguage(root.getLanguage());
@@ -335,27 +347,27 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private DBObject resolveCompoundIndexKeyFromStringDefinition(String dotPath, String keyDefinitionString) {
+	private org.bson.Document resolveCompoundIndexKeyFromStringDefinition(String dotPath, String keyDefinitionString) {
 
 		if (!StringUtils.hasText(dotPath) && !StringUtils.hasText(keyDefinitionString)) {
 			throw new InvalidDataAccessApiUsageException("Cannot create index on root level for empty keys.");
 		}
 
 		if (!StringUtils.hasText(keyDefinitionString)) {
-			return new BasicDBObject(dotPath, 1);
+			return new org.bson.Document(dotPath, 1);
 		}
 
-		DBObject dbo = (DBObject) JSON.parse(keyDefinitionString);
+		org.bson.Document dbo = org.bson.Document.parse(keyDefinitionString);
 		if (!StringUtils.hasText(dotPath)) {
 			return dbo;
 		}
 
-		BasicDBObjectBuilder dboBuilder = new BasicDBObjectBuilder();
+		org.bson.Document document = new org.bson.Document();
 
 		for (String key : dbo.keySet()) {
-			dboBuilder.add(dotPath + "." + key, dbo.get(key));
+			document.put(dotPath + "." + key, dbo.get(key));
 		}
-		return dboBuilder.get();
+		return document;
 	}
 
 	/**
@@ -667,7 +679,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
 		 */
 		@Override
-		public DBObject getIndexKeys() {
+		public org.bson.Document getIndexKeys() {
 			return indexDefinition.getIndexKeys();
 		}
 
@@ -676,7 +688,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexOptions()
 		 */
 		@Override
-		public DBObject getIndexOptions() {
+		public org.bson.Document getIndexOptions() {
 			return indexDefinition.getIndexOptions();
 		}
 	}

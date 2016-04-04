@@ -17,21 +17,20 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.Map;
 
+import org.bson.Document;
 import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.PropertyAccessor;
 import org.springframework.expression.TypedValue;
 
-import com.mongodb.DBObject;
-
 /**
- * {@link PropertyAccessor} to allow entity based field access to {@link DBObject}s.
+ * {@link PropertyAccessor} to allow entity based field access to {@link Document}s.
  * 
  * @author Oliver Gierke
  */
-class DBObjectPropertyAccessor extends MapAccessor {
+class DocumentPropertyAccessor extends MapAccessor {
 
-	static final MapAccessor INSTANCE = new DBObjectPropertyAccessor();
+	static final MapAccessor INSTANCE = new DocumentPropertyAccessor();
 
 	/*
 	 * (non-Javadoc)
@@ -39,7 +38,7 @@ class DBObjectPropertyAccessor extends MapAccessor {
 	 */
 	@Override
 	public Class<?>[] getSpecificTargetClasses() {
-		return new Class[] { DBObject.class };
+		return new Class[] { Document.class };
 	}
 
 	/*

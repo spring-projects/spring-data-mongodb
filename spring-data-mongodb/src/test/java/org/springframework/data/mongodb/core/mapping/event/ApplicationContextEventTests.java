@@ -38,11 +38,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 
 import com.mongodb.DB;
-import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
@@ -123,14 +121,14 @@ public class ApplicationContextEventTests {
 		BeforeSaveEvent<PersonPojoStringId> beforeSaveEvent = (BeforeSaveEvent<PersonPojoStringId>) personBeforeSaveListener.seenEvents
 				.get(0);
 		PersonPojoStringId p2 = beforeSaveEvent.getSource();
-		DBObject dbo = beforeSaveEvent.getDBObject();
+		org.bson.Document dbo = beforeSaveEvent.getDocument();
 
 		comparePersonAndDbo(p, p2, dbo);
 
 		AfterSaveEvent<Object> afterSaveEvent = (AfterSaveEvent<Object>) afterSaveListener.seenEvents.get(0);
 		Assert.assertTrue(afterSaveEvent.getSource() instanceof PersonPojoStringId);
 		p2 = (PersonPojoStringId) afterSaveEvent.getSource();
-		dbo = beforeSaveEvent.getDBObject();
+		dbo = beforeSaveEvent.getDocument();
 
 		comparePersonAndDbo(p, p2, dbo);
 	}
@@ -418,7 +416,7 @@ public class ApplicationContextEventTests {
 				is(equalTo(RELATED_COLLECTION_NAME)));
 	}
 
-	private void comparePersonAndDbo(PersonPojoStringId p, PersonPojoStringId p2, DBObject dbo) {
+	private void comparePersonAndDbo(PersonPojoStringId p, PersonPojoStringId p2, org.bson.Document dbo) {
 
 		assertEquals(p.getId(), p2.getId());
 		assertEquals(p.getText(), p2.getText());
@@ -429,7 +427,7 @@ public class ApplicationContextEventTests {
 	}
 
 	@Data
-	@Document
+	@org.springframework.data.mongodb.core.mapping.Document
 	public static class Root {
 
 		@Id Long id;
@@ -445,7 +443,7 @@ public class ApplicationContextEventTests {
 	}
 
 	@Data
-	@Document
+	@org.springframework.data.mongodb.core.mapping.Document
 	public static class Related {
 
 		final @Id Long id;

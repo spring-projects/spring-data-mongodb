@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * Collects the parameters required to perform a group operation on a collection. The query condition and the input
@@ -27,15 +26,15 @@ import com.mongodb.DBObject;
  */
 public class GroupBy {
 
-	private DBObject dboKeys;
+	private Document dboKeys;
 	private String keyFunction;
 	private String initial;
-	private DBObject initialDbObject;
+	private Document initialDbObject;
 	private String reduce;
 	private String finalize;
 
 	public GroupBy(String... keys) {
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 		for (String key : keys) {
 			dbo.put(key, 1);
 		}
@@ -45,7 +44,7 @@ public class GroupBy {
 	// NOTE GroupByCommand does not handle keyfunction.
 
 	public GroupBy(String key, boolean isKeyFunction) {
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 		if (isKeyFunction) {
 			keyFunction = key;
 		} else {
@@ -67,7 +66,7 @@ public class GroupBy {
 		return this;
 	}
 
-	public GroupBy initialDocument(DBObject initialDocument) {
+	public GroupBy initialDocument(Document initialDocument) {
 		initialDbObject = initialDocument;
 		return this;
 	}
@@ -82,9 +81,9 @@ public class GroupBy {
 		return this;
 	}
 
-	public DBObject getGroupByObject() {
+	public Document getGroupByObject() {
 		// return new GroupCommand(dbCollection, dboKeys, condition, initial, reduce, finalize);
-		BasicDBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 		if (dboKeys != null) {
 			dbo.put("key", dboKeys);
 		}

@@ -19,11 +19,10 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link SortOperation}.
@@ -33,23 +32,23 @@ import com.mongodb.DBObject;
 public class SortOperationUnitTests {
 
 	@Test
-	public void createsDBObjectForAscendingSortCorrectly() {
+	public void createsDocumentForAscendingSortCorrectly() {
 
 		SortOperation operation = new SortOperation(new Sort(Direction.ASC, "foobar"));
-		DBObject result = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		Document result = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		DBObject sortValue = getAsDBObject(result, "$sort");
+		Document sortValue = getAsDocument(result, "$sort");
 		assertThat(sortValue, is(notNullValue()));
 		assertThat(sortValue.get("foobar"), is((Object) 1));
 	}
 
 	@Test
-	public void createsDBObjectForDescendingSortCorrectly() {
+	public void createsDocumentForDescendingSortCorrectly() {
 
 		SortOperation operation = new SortOperation(new Sort(Direction.DESC, "foobar"));
-		DBObject result = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		Document result = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		DBObject sortValue = getAsDBObject(result, "$sort");
+		Document sortValue = getAsDocument(result, "$sort");
 		assertThat(sortValue, is(notNullValue()));
 		assertThat(sortValue.get("foobar"), is((Object) (0 - 1)));
 	}

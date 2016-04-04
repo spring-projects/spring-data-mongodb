@@ -16,9 +16,8 @@
 
 package org.springframework.data.mongodb.core.mapping.event;
 
+import org.bson.Document;
 import org.springframework.context.ApplicationEvent;
-
-import com.mongodb.DBObject;
 
 /**
  * Base {@link ApplicationEvent} triggered by Spring Data MongoDB.
@@ -29,7 +28,7 @@ import com.mongodb.DBObject;
 public class MongoMappingEvent<T> extends ApplicationEvent {
 
 	private static final long serialVersionUID = 1L;
-	private final DBObject dbo;
+	private final Document dbo;
 	private final String collectionName;
 
 	/**
@@ -37,10 +36,10 @@ public class MongoMappingEvent<T> extends ApplicationEvent {
 	 * 
 	 * @param source must not be {@literal null}.
 	 * @param dbo can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #MongoMappingEvent(Object, DBObject, String)}.
+	 * @deprecated since 1.8. Please use {@link #MongoMappingEvent(Object, Document, String)}.
 	 */
 	@Deprecated
-	public MongoMappingEvent(T source, DBObject dbo) {
+	public MongoMappingEvent(T source, Document dbo) {
 		this(source, dbo, null);
 	}
 
@@ -51,7 +50,7 @@ public class MongoMappingEvent<T> extends ApplicationEvent {
 	 * @param dbo can be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 */
-	public MongoMappingEvent(T source, DBObject dbo, String collectionName) {
+	public MongoMappingEvent(T source, Document dbo, String collectionName) {
 
 		super(source);
 		this.dbo = dbo;
@@ -61,7 +60,7 @@ public class MongoMappingEvent<T> extends ApplicationEvent {
 	/**
 	 * @return {@literal null} if not set.
 	 */
-	public DBObject getDBObject() {
+	public Document getDocument() {
 		return dbo;
 	}
 

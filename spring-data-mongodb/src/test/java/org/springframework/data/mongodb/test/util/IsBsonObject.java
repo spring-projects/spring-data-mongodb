@@ -21,24 +21,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.bson.BSONObject;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.hamcrest.core.IsEqual;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.DBObject;
-
 /**
  * @author Christoph Strobl
  * @param <T>
  */
-public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
+public class IsBsonObject<T extends Bson> extends TypeSafeMatcher<T> {
 
 	private List<ExpectedBsonContent> expectations = new ArrayList<ExpectedBsonContent>();;
 
-	public static <T extends BSONObject> IsBsonObject<T> isBsonObject() {
+	public static <T extends Bson> IsBsonObject<T> isBsonObject() {
 		return new IsBsonObject<T>();
 	}
 
@@ -82,16 +81,14 @@ public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
 				return false;
 			}
 
-			if (expectation.type != null && !ClassUtils.isAssignable(expectation.type, o.getClass())) {
+			if (expectation.type != null) {
 
-				if (o instanceof List) {
-					if (!ClassUtils.isAssignable(List.class, expectation.type)) {
-						return false;
-					}
-				} else {
-					return false;
+				if (ClassUtils.isAssignable(List.class, expectation.type)
+						&& ClassUtils.isAssignable(List.class, o.getClass())) {
+					return true;
 				}
 
+				return ClassUtils.isAssignable(expectation.type, o.getClass());
 			}
 
 			if (expectation.value != null && !new IsEqual<Object>(expectation.value).matches(o)) {
@@ -157,12 +154,12 @@ public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
 		boolean not = false;
 	}
 
-	Object getValue(BSONObject source, String path) {
+	Object getValue(Bson source, String path) {
 
 		String[] fragments = path.split("(?<!\\\\)\\.");
 
 		if (fragments.length == 1) {
-			return source.get(path.replace("\\.", "."));
+			return ((Document) source).get(path.replace("\\.", "."));
 		}
 
 		Iterator<String> it = Arrays.asList(fragments).iterator();
@@ -172,7 +169,7 @@ public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
 
 			String key = it.next().replace("\\.", ".");
 
-			if (!(current instanceof BSONObject) && !key.startsWith("[")) {
+			if (!(current instanceof Bson) && !key.startsWith("[")) {
 				return null;
 			}
 
@@ -186,8 +183,8 @@ public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
 				}
 			} else {
 
-				if (current instanceof DBObject) {
-					current = ((DBObject) current).get(key);
+				if (current instanceof Document) {
+					current = ((Document) current).get(key);
 				}
 
 				if (!it.hasNext()) {

@@ -18,21 +18,18 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import org.bson.Document;
 import org.bson.types.Code;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToNamedMongoScriptCoverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.NamedMongoScriptToDBObjectConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.DocumentToNamedMongoScriptCoverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.NamedMongoScriptToDocumentConverter;
 import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.DboToNamedMongoScriptConverterUnitTests;
 import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.NamedMongoScriptToDboConverterUnitTests;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link Converter} implementations for {@link NamedMongoScript}.
@@ -48,22 +45,22 @@ public class NamedMongoScriptConvertsUnitTests {
 	static final String FUNCTION_NAME = "echo";
 	static final String JS_FUNCTION = "function(x) { return x; }";
 	static final NamedMongoScript ECHO_SCRIPT = new NamedMongoScript(FUNCTION_NAME, JS_FUNCTION);
-	static final DBObject FUNCTION = new BasicDBObjectBuilder().add("_id", FUNCTION_NAME)
-			.add("value", new Code(JS_FUNCTION)).get();
+	static final Document FUNCTION = new org.bson.Document().append("_id", FUNCTION_NAME).append("value",
+			new Code(JS_FUNCTION));
 
 	/**
 	 * @author Christoph Strobl
 	 */
 	public static class NamedMongoScriptToDboConverterUnitTests {
 
-		NamedMongoScriptToDBObjectConverter converter = NamedMongoScriptToDBObjectConverter.INSTANCE;
+		NamedMongoScriptToDocumentConverter converter = NamedMongoScriptToDocumentConverter.INSTANCE;
 
 		/**
 		 * @see DATAMONGO-479
 		 */
 		@Test
 		public void convertShouldReturnEmptyDboWhenScriptIsNull() {
-			assertThat(converter.convert(null), is((DBObject) new BasicDBObject()));
+			assertThat(converter.convert(null), is((Document) new Document()));
 		}
 
 		/**
@@ -72,7 +69,7 @@ public class NamedMongoScriptConvertsUnitTests {
 		@Test
 		public void convertShouldConvertScriptNameCorreclty() {
 
-			DBObject dbo = converter.convert(ECHO_SCRIPT);
+			Document dbo = converter.convert(ECHO_SCRIPT);
 
 			Object id = dbo.get("_id");
 			assertThat(id, is(instanceOf(String.class)));
@@ -85,7 +82,7 @@ public class NamedMongoScriptConvertsUnitTests {
 		@Test
 		public void convertShouldConvertScriptCodeCorreclty() {
 
-			DBObject dbo = converter.convert(ECHO_SCRIPT);
+			Document dbo = converter.convert(ECHO_SCRIPT);
 
 			Object code = dbo.get("value");
 			assertThat(code, is(instanceOf(Code.class)));
@@ -98,7 +95,7 @@ public class NamedMongoScriptConvertsUnitTests {
 	 */
 	public static class DboToNamedMongoScriptConverterUnitTests {
 
-		DBObjectToNamedMongoScriptCoverter converter = DBObjectToNamedMongoScriptCoverter.INSTANCE;
+		DocumentToNamedMongoScriptCoverter converter = DocumentToNamedMongoScriptCoverter.INSTANCE;
 
 		/**
 		 * @see DATAMONGO-479

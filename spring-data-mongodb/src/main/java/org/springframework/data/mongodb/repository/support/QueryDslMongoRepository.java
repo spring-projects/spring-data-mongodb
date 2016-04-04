@@ -103,7 +103,8 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate) {
-		return createQueryFor(predicate).fetchResults().getResults();
+		List<T> list = createQueryFor(predicate).fetchResults().getResults();
+		return list;
 	}
 
 	/*

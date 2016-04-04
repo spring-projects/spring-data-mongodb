@@ -27,7 +27,7 @@ public class PersonBeforeSaveListener extends AbstractMongoEventListener<PersonP
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(java.lang.Object, com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(java.lang.Object, com.mongodb.Document)
 	 */
 	@Override
 	public void onBeforeSave(BeforeSaveEvent<PersonPojoStringId> event) {

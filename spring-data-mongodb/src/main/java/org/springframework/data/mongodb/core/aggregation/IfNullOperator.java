@@ -19,6 +19,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -57,14 +58,14 @@ public class IfNullOperator implements AggregationExpression {
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public DBObject toDbObject(AggregationOperationContext context) {
+	public Document toDbObject(AggregationOperationContext context) {
 
 		List<Object> list = new ArrayList<Object>();
 
 		list.add(context.getReference(field).toString());
 		list.add(resolve(value, context));
 
-		return new BasicDBObject("$ifNull", list);
+		return new Document("$ifNull", list);
 	}
 
 	private Object resolve(Object value, AggregationOperationContext context) {
@@ -75,7 +76,7 @@ public class IfNullOperator implements AggregationExpression {
 			return value;
 		}
 
-		return context.getMappedObject(new BasicDBObject("$set", value)).get("$set");
+		return context.getMappedObject(new Document("$set", value)).get("$set");
 	}
 
 	/**

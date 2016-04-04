@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.bson.Document;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
@@ -23,8 +24,6 @@ import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -42,7 +41,8 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	public DefaultDbRefProxyHandler(SpELContext spELContext,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, ValueResolver resolver) {
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+			ValueResolver resolver) {
 
 		this.spELContext = spELContext;
 		this.mappingContext = mappingContext;
@@ -70,7 +70,7 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(proxy, spELContext);
 		PersistentPropertyAccessor accessor = entity.getPropertyAccessor(proxy);
 
-		DBObject object = new BasicDBObject(idProperty.getFieldName(), source.getId());
+		Document object = new Document(idProperty.getFieldName(), source.getId());
 		ObjectPath objectPath = ObjectPath.ROOT.push(proxy, entity, null);
 		accessor.setProperty(idProperty, resolver.getValueInternal(idProperty, object, evaluator, objectPath));
 

@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.index;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +35,9 @@ import org.springframework.data.mongodb.util.MongoDbErrorCodes;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
-import com.mongodb.DBObject;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.IndexOptions;
 
 /**
  * Component that inspects {@link MongoPersistentEntity} instances contained in the given {@link MongoMappingContext}
@@ -139,14 +141,67 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 		try {
 
-			mongoDbFactory.getDb().getCollection(indexDefinition.getCollection()).createIndex(indexDefinition.getIndexKeys(),
-					indexDefinition.getIndexOptions());
+			IndexOptions ops = new IndexOptions();
+
+			if (indexDefinition.getIndexOptions() != null) {
+
+				org.bson.Document indexOptions = indexDefinition.getIndexOptions();
+
+				if (indexOptions.containsKey("name")) {
+					ops = ops.name(indexOptions.get("name").toString());
+				}
+				if (indexOptions.containsKey("unique")) {
+					ops = ops.unique((Boolean) indexOptions.get("unique"));
+				}
+				// if(indexOptions.containsField("dropDuplicates")) {
+				// ops = ops.((boolean)indexOptions.get("dropDuplicates"));
+				// }
+				if (indexOptions.containsKey("sparse")) {
+					ops = ops.sparse((Boolean) indexOptions.get("sparse"));
+				}
+				if (indexOptions.containsKey("background")) {
+					ops = ops.background((Boolean) indexOptions.get("background"));
+				}
+				if (indexOptions.containsKey("expireAfterSeconds")) {
+					ops = ops.expireAfter((Long) indexOptions.get("expireAfterSeconds"), TimeUnit.SECONDS);
+				}
+				if (indexOptions.containsKey("min")) {
+					ops = ops.min(((Number) indexOptions.get("min")).doubleValue());
+				}
+				if (indexOptions.containsKey("max")) {
+					ops = ops.max(((Number) indexOptions.get("max")).doubleValue());
+				}
+				if (indexOptions.containsKey("bits")) {
+					ops = ops.bits((Integer) indexOptions.get("bits"));
+				}
+				if (indexOptions.containsKey("bucketSize")) {
+					ops = ops.bucketSize(((Number) indexOptions.get("bucketSize")).doubleValue());
+				}
+				if (indexOptions.containsKey("default_language")) {
+					ops = ops.defaultLanguage(indexOptions.get("default_language").toString());
+				}
+				if (indexOptions.containsKey("language_override")) {
+					ops = ops.languageOverride(indexOptions.get("language_override").toString());
+				}
+				if (indexOptions.containsKey("weights")) {
+					ops = ops.weights((org.bson.Document) indexOptions.get("weights"));
+				}
+
+				for (String key : indexOptions.keySet()) {
+					if (ObjectUtils.nullSafeEquals("2dsphere", indexOptions.get(key))) {
+						ops = ops.sphereVersion(2);
+					}
+				}
+			}
+
+			mongoDbFactory.getDb().getCollection(indexDefinition.getCollection(), Document.class)
+					.createIndex(indexDefinition.getIndexKeys(), ops);
 
 		} catch (MongoException ex) {
 
 			if (MongoDbErrorCodes.isDataIntegrityViolationCode(ex.getCode())) {
 
-				DBObject existingIndex = fetchIndexInformation(indexDefinition);
+				org.bson.Document existingIndex = fetchIndexInformation(indexDefinition);
 				String message = "Cannot create index for '%s' in collection '%s' with keys '%s' and options '%s'.";
 
 				if (existingIndex != null) {
@@ -175,7 +230,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		return this.mappingContext.equals(context);
 	}
 
-	private DBObject fetchIndexInformation(IndexDefinitionHolder indexDefinition) {
+	private org.bson.Document fetchIndexInformation(IndexDefinitionHolder indexDefinition) {
 
 		if (indexDefinition == null) {
 			return null;
@@ -185,7 +240,12 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 			Object indexNameToLookUp = indexDefinition.getIndexOptions().get("name");
 
-			for (DBObject index : mongoDbFactory.getDb().getCollection(indexDefinition.getCollection()).getIndexInfo()) {
+			MongoCursor<org.bson.Document> cursor = mongoDbFactory.getDb().getCollection(indexDefinition.getCollection())
+					.listIndexes(org.bson.Document.class).iterator();
+
+			while (cursor.hasNext()) {
+
+				org.bson.Document index = cursor.next();
 				if (ObjectUtils.nullSafeEquals(indexNameToLookUp, index.get("name"))) {
 					return index;
 				}

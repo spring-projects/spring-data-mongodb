@@ -57,7 +57,11 @@ public class MongoParserIntegrationTests {
 		BeanDefinition definition = factory.getBeanDefinition("mongo");
 
 		List<PropertyValue> values = definition.getPropertyValues().getPropertyValueList();
-		assertThat(values, hasItem(new PropertyValue("writeConcern", "SAFE")));
+
+		assertThat(values.get(2).getValue(), instanceOf(BeanDefinition.class));
+		BeanDefinition x = (BeanDefinition) values.get(2).getValue();
+
+		assertThat(x.getPropertyValues().getPropertyValueList(), hasItem(new PropertyValue("writeConcern", "SAFE")));
 
 		factory.getBean("mongo");
 	}

@@ -15,12 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Encapsulates the aggregation framework {@code $lookup}-operation. We recommend to use the static factory method
@@ -75,19 +73,19 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public DBObject toDBObject(AggregationOperationContext context) {
+	public Document toDocument(AggregationOperationContext context) {
 
-		BasicDBObject lookupObject = new BasicDBObject();
+		Document lookupObject = new Document();
 
 		lookupObject.append("from", from.getTarget());
 		lookupObject.append("localField", localField.getTarget());
 		lookupObject.append("foreignField", foreignField.getTarget());
 		lookupObject.append("as", as.getTarget());
 
-		return new BasicDBObject("$lookup", lookupObject);
+		return new Document("$lookup", lookupObject);
 	}
 
 	/**

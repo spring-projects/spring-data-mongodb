@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Encapsulates the aggregation framework {@code $skip}-operation.
@@ -48,10 +46,10 @@ public class SkipOperation implements AggregationOperation {
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public DBObject toDBObject(AggregationOperationContext context) {
-		return new BasicDBObject("$skip", skipCount);
+	public Document toDocument(AggregationOperationContext context) {
+		return new Document("$skip", skipCount);
 	}
 }

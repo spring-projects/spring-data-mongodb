@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import com.mongodb.BasicDBObject;
+import org.bson.BsonDocument;
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -25,17 +28,13 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-
 /**
- * Unit tests for {@link DbObjectAccessor}.
+ * Unit tests for {@link DocumentAccessor}.
  * 
  * @see DATAMONGO-766
  * @author Oliver Gierke
  */
-public class DBObjectAccessorUnitTests {
+public class DocumentAccessorUnitTests {
 
 	MongoMappingContext context = new MongoMappingContext();
 	MongoPersistentEntity<?> projectingTypeEntity = context.getPersistentEntity(ProjectingType.class);
@@ -44,39 +43,39 @@ public class DBObjectAccessorUnitTests {
 	@Test
 	public void putsNestedFieldCorrectly() {
 
-		DBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 
-		DBObjectAccessor accessor = new DBObjectAccessor(dbObject);
+		DocumentAccessor accessor = new DocumentAccessor(dbObject);
 		accessor.put(fooProperty, "FooBar");
 
-		DBObject aDbObject = DBObjectTestUtils.getAsDBObject(dbObject, "a");
+		Document aDbObject = DBObjectTestUtils.getAsDocument(dbObject, "a");
 		assertThat(aDbObject.get("b"), is((Object) "FooBar"));
 	}
 
 	@Test
 	public void getsNestedFieldCorrectly() {
 
-		DBObject source = new BasicDBObject("a", new BasicDBObject("b", "FooBar"));
+		Document source = new Document("a", new Document("b", "FooBar"));
 
-		DBObjectAccessor accessor = new DBObjectAccessor(source);
+		DocumentAccessor accessor = new DocumentAccessor(source);
 		assertThat(accessor.get(fooProperty), is((Object) "FooBar"));
 	}
 
 	@Test
 	public void returnsNullForNonExistingFieldPath() {
 
-		DBObjectAccessor accessor = new DBObjectAccessor(new BasicDBObject());
+		DocumentAccessor accessor = new DocumentAccessor(new Document());
 		assertThat(accessor.get(fooProperty), is(nullValue()));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNonBasicDBObjects() {
-		new DBObjectAccessor(new BasicDBList());
+	public void rejectsNonBasicDocuments() {
+		new DocumentAccessor(new BsonDocument());
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullDBObject() {
-		new DBObjectAccessor(null);
+	public void rejectsNullDocument() {
+		new DocumentAccessor(null);
 	}
 
 	/**
@@ -87,14 +86,14 @@ public class DBObjectAccessorUnitTests {
 
 		MongoPersistentEntity<?> entity = context.getPersistentEntity(TypeWithTwoNestings.class);
 
-		BasicDBObject target = new BasicDBObject();
+		Document target = new Document();
 
-		DBObjectAccessor accessor = new DBObjectAccessor(target);
+		DocumentAccessor accessor = new DocumentAccessor(target);
 		accessor.put(entity.getPersistentProperty("id"), "id");
 		accessor.put(entity.getPersistentProperty("b"), "b");
 		accessor.put(entity.getPersistentProperty("c"), "c");
 
-		DBObject nestedA = DBObjectTestUtils.getAsDBObject(target, "a");
+		Document nestedA = DBObjectTestUtils.getAsDocument(target, "a");
 
 		assertThat(nestedA, is(notNullValue()));
 		assertThat(nestedA.get("b"), is((Object) "b"));
@@ -107,7 +106,7 @@ public class DBObjectAccessorUnitTests {
 	@Test
 	public void exposesAvailabilityOfFields() {
 
-		DBObjectAccessor accessor = new DBObjectAccessor(new BasicDBObject("a", new BasicDBObject("c", "d")));
+		DocumentAccessor accessor = new DocumentAccessor(new Document("a", new BasicDBObject("c", "d")));
 		MongoPersistentEntity<?> entity = context.getPersistentEntity(ProjectingType.class);
 
 		assertThat(accessor.hasValue(entity.getPersistentProperty("foo")), is(false));
