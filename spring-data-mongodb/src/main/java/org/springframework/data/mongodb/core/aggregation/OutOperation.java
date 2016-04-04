@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+
+import org.bson.Document;
 import org.springframework.util.Assert;
 
 /**
@@ -42,10 +44,10 @@ public class OutOperation implements AggregationOperation {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public DBObject toDBObject(AggregationOperationContext context) {
-		return new BasicDBObject("$out", collectionName);
+	public Document toDocument(AggregationOperationContext context) {
+		return new Document("$out", collectionName);
 	}
 }

@@ -20,6 +20,7 @@ import java.util.Set;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -52,18 +53,16 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent)
 	 */
-	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
 	public void onBeforeSave(BeforeSaveEvent<Object> event) {
 
-		Object source = event.getSource();
-
-		LOG.debug("Validating object: {}", source);
-		Set violations = validator.validate(source);
+		LOG.debug("Validating object: {}", event.getSource());
+		Set violations = validator.validate(event.getSource());
 
 		if (!violations.isEmpty()) {
 
-			LOG.info("During object: {} validation violations found: {}", source, violations);
+			LOG.info("During object: {} validation violations found: {}", event.getSource(), violations);
 			throw new ConstraintViolationException(violations);
 		}
 	}

@@ -18,9 +18,8 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import org.bson.Document;
 import org.junit.Test;
-
-import com.mongodb.BasicDBObject;
 
 /**
  * Unit tests for {@link GeoCommandStatistics}.
@@ -44,10 +43,10 @@ public class GeoCommandStatisticsUnitTests {
 	@Test
 	public void fallsBackToNanIfNoAverageDistanceIsAvailable() {
 
-		GeoCommandStatistics statistics = GeoCommandStatistics.from(new BasicDBObject("stats", null));
+		GeoCommandStatistics statistics = GeoCommandStatistics.from(new Document("stats", null));
 		assertThat(statistics.getAverageDistance(), is(Double.NaN));
 
-		statistics = GeoCommandStatistics.from(new BasicDBObject("stats", new BasicDBObject()));
+		statistics = GeoCommandStatistics.from(new Document("stats", new Document()));
 		assertThat(statistics.getAverageDistance(), is(Double.NaN));
 	}
 
@@ -58,7 +57,7 @@ public class GeoCommandStatisticsUnitTests {
 	public void returnsAverageDistanceIfPresent() {
 
 		GeoCommandStatistics statistics = GeoCommandStatistics
-				.from(new BasicDBObject("stats", new BasicDBObject("avgDistance", 1.5)));
+				.from(new Document("stats", new Document("avgDistance", 1.5)));
 
 		assertThat(statistics.getAverageDistance(), is(1.5));
 	}

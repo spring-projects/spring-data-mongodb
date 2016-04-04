@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.Arrays;
 
+import org.bson.Document;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,15 +47,15 @@ public class QueryTests {
 	@Test
 	public void testSimpleQuery() {
 		Query q = new Query(where("name").is("Thomas").and("age").lt(80));
-		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document.parse("{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}");
+		Assert.assertEquals(expected, q.getQueryObject());
 	}
 
 	@Test
 	public void testQueryWithNot() {
 		Query q = new Query(where("name").is("Thomas").and("age").not().mod(10, 0));
-		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$not\" : { \"$mod\" : [ 10 , 0]}}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document.parse("{ \"name\" : \"Thomas\" , \"age\" : { \"$not\" : { \"$mod\" : [ 10 , 0]}}}");
+		Assert.assertEquals(expected, q.getQueryObject());
 	}
 
 	@Test
@@ -69,31 +70,34 @@ public class QueryTests {
 	public void testOrQuery() {
 		Query q = new Query(new Criteria().orOperator(where("name").is("Sven").and("age").lt(50), where("age").lt(50),
 				where("name").is("Thomas")));
-		String expected = "{ \"$or\" : [ { \"name\" : \"Sven\" , \"age\" : { \"$lt\" : 50}} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document.parse(
+				"{ \"$or\" : [ { \"name\" : \"Sven\" , \"age\" : { \"$lt\" : 50}} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}");
+		Assert.assertEquals(expected, q.getQueryObject());
 	}
 
 	@Test
 	public void testAndQuery() {
 		Query q = new Query(new Criteria().andOperator(where("name").is("Sven"), where("age").lt(50)));
-		String expected = "{ \"$and\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}}]}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document.parse("{ \"$and\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}}]}");
+		Assert.assertEquals(expected, q.getQueryObject());
 	}
 
 	@Test
 	public void testNorQuery() {
-		Query q = new Query(new Criteria().norOperator(where("name").is("Sven"), where("age").lt(50),
-				where("name").is("Thomas")));
-		String expected = "{ \"$nor\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Query q = new Query(
+				new Criteria().norOperator(where("name").is("Sven"), where("age").lt(50), where("name").is("Thomas")));
+		Document expected = Document
+				.parse("{ \"$nor\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}");
+		Assert.assertEquals(expected, q.getQueryObject());
 	}
 
 	@Test
 	public void testQueryWithLimit() {
 		Query q = new Query(where("name").gte("M").lte("T").and("age").not().gt(22));
 		q.limit(50);
-		String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document
+				.parse("{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}");
+		Assert.assertEquals(expected, q.getQueryObject());
 		Assert.assertEquals(50, q.getLimit());
 	}
 
@@ -102,10 +106,11 @@ public class QueryTests {
 		Query q = new Query(where("name").gte("M").lte("T").and("age").not().gt(22));
 		q.fields().exclude("address").include("name").slice("orders", 10);
 
-		String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
-		String expectedFields = "{ \"address\" : 0 , \"name\" : 1 , \"orders\" : { \"$slice\" : 10}}";
-		Assert.assertEquals(expectedFields, q.getFieldsObject().toString());
+		Document expected = Document
+				.parse("{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}");
+		Assert.assertEquals(expected, q.getQueryObject());
+		Document expectedFields = Document.parse("{ \"address\" : 0 , \"name\" : 1 , \"orders\" : { \"$slice\" : 10}}");
+		Assert.assertEquals(expectedFields, q.getFieldsObject());
 	}
 
 	/**
@@ -117,66 +122,71 @@ public class QueryTests {
 		Query query = query(where("name").gte("M").lte("T").and("age").not().gt(22));
 		query.fields().elemMatch("products", where("name").is("milk")).position("comments", 2);
 
-		String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
-		assertThat(query.getQueryObject().toString(), is(expected));
-		String expectedFields = "{ \"products\" : { \"$elemMatch\" : { \"name\" : \"milk\"}} , \"comments.$\" : 2}";
-		assertThat(query.getFieldsObject().toString(), is(expectedFields));
+		Document expected = Document
+				.parse("{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}");
+		assertThat(query.getQueryObject(), is(expected));
+		Document expectedFields = Document
+				.parse("{ \"products\" : { \"$elemMatch\" : { \"name\" : \"milk\"}} , \"comments.$\" : 2}");
+		assertThat(query.getFieldsObject(), is(expectedFields));
 	}
 
 	@Test
 	public void testSimpleQueryWithChainedCriteria() {
 		Query q = new Query(where("name").is("Thomas").and("age").lt(80));
-		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document.parse("{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}");
+		Assert.assertEquals(expected, q.getQueryObject());
 	}
 
 	@Test
 	public void testComplexQueryWithMultipleChainedCriteria() {
-		Query q = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80).and("city")
-				.in("Stockholm", "London", "New York"));
-		String expected = "{ \"name\" : { \"$regex\" : \"^T.*\"} , \"age\" : { \"$gt\" : 20 , \"$lt\" : 80} , "
-				+ "\"city\" : { \"$in\" : [ \"Stockholm\" , \"London\" , \"New York\"]}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Query q = new Query(
+				where("name").regex("^T.*").and("age").gt(20).lt(80).and("city").in("Stockholm", "London", "New York"));
+		Document expected = Document
+				.parse("{ \"name\" : { \"$regex\" : \"^T.*\"} , \"age\" : { \"$gt\" : 20 , \"$lt\" : 80} , "
+						+ "\"city\" : { \"$in\" : [ \"Stockholm\" , \"London\" , \"New York\"]}}");
+
+		Assert.assertEquals(expected.toJson(), q.getQueryObject().toJson());
 	}
 
 	@Test
 	public void testAddCriteriaWithComplexQueryWithMultipleChainedCriteria() {
-		Query q1 = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80).and("city")
-				.in("Stockholm", "London", "New York"));
-		Query q2 = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80)).addCriteria(where("city").in(
-				"Stockholm", "London", "New York"));
+		Query q1 = new Query(
+				where("name").regex("^T.*").and("age").gt(20).lt(80).and("city").in("Stockholm", "London", "New York"));
+		Query q2 = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80))
+				.addCriteria(where("city").in("Stockholm", "London", "New York"));
 		Assert.assertEquals(q1.getQueryObject().toString(), q2.getQueryObject().toString());
-		Query q3 = new Query(where("name").regex("^T.*")).addCriteria(where("age").gt(20).lt(80)).addCriteria(
-				where("city").in("Stockholm", "London", "New York"));
+		Query q3 = new Query(where("name").regex("^T.*")).addCriteria(where("age").gt(20).lt(80))
+				.addCriteria(where("city").in("Stockholm", "London", "New York"));
 		Assert.assertEquals(q1.getQueryObject().toString(), q3.getQueryObject().toString());
 	}
 
 	@Test
 	public void testQueryWithElemMatch() {
 		Query q = new Query(where("openingHours").elemMatch(where("dayOfWeek").is("Monday").and("open").lte("1800")));
-		String expected = "{ \"openingHours\" : { \"$elemMatch\" : { \"dayOfWeek\" : \"Monday\" , \"open\" : { \"$lte\" : \"1800\"}}}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document.parse(
+				"{ \"openingHours\" : { \"$elemMatch\" : { \"dayOfWeek\" : \"Monday\" , \"open\" : { \"$lte\" : \"1800\"}}}}");
+		Assert.assertEquals(expected, q.getQueryObject());
 	}
 
 	@Test
 	public void testQueryWithIn() {
 		Query q = new Query(where("state").in("NY", "NJ", "PA"));
-		String expected = "{ \"state\" : { \"$in\" : [ \"NY\" , \"NJ\" , \"PA\"]}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document.parse("{ \"state\" : { \"$in\" : [ \"NY\" , \"NJ\" , \"PA\"]}}");
+		Assert.assertEquals(expected, q.getQueryObject());
 	}
 
 	@Test
 	public void testQueryWithRegex() {
 		Query q = new Query(where("name").regex("b.*"));
-		String expected = "{ \"name\" : { \"$regex\" : \"b.*\"}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document.parse("{ \"name\" : { \"$regex\" : \"b.*\"}}");
+		Assert.assertEquals(expected.toJson(), q.getQueryObject().toJson());
 	}
 
 	@Test
 	public void testQueryWithRegexAndOption() {
 		Query q = new Query(where("name").regex("b.*", "i"));
-		String expected = "{ \"name\" : { \"$regex\" : \"b.*\" , \"$options\" : \"i\"}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Document expected = Document.parse("{ \"name\" : { \"$regex\" : \"b.*\" , \"$options\" : \"i\"}}");
+		Assert.assertEquals(expected.toJson(), q.getQueryObject().toJson());
 	}
 
 	/**
@@ -186,7 +196,7 @@ public class QueryTests {
 	public void addsSortCorrectly() {
 
 		Query query = new Query().with(new Sort(Direction.DESC, "foo"));
-		assertThat(query.getSortObject().toString(), is("{ \"foo\" : -1}"));
+		assertThat(query.getSortObject(), is(Document.parse("{ \"foo\" : -1}")));
 	}
 
 	@Test
@@ -206,9 +216,8 @@ public class QueryTests {
 	public void shouldReturnClassHierarchyOfRestrictedTypes() {
 
 		Query query = new Query(where("name").is("foo")).restrict(SpecialDoc.class);
-		assertThat(
-				query.toString(),
-				is("Query: { \"name\" : \"foo\", \"_$RESTRICTED_TYPES\" : [ { $java : class org.springframework.data.mongodb.core.SpecialDoc } ] }, Fields: null, Sort: null"));
+		assertThat(query.toString(), is(
+				"Query: { \"name\" : \"foo\", \"_$RESTRICTED_TYPES\" : [ { $java : class org.springframework.data.mongodb.core.SpecialDoc } ] }, Fields: null, Sort: null"));
 		assertThat(query.getRestrictedTypes(), is(notNullValue()));
 		assertThat(query.getRestrictedTypes().size(), is(1));
 		assertThat(query.getRestrictedTypes(), hasItems(Arrays.asList(SpecialDoc.class).toArray(new Class<?>[0])));

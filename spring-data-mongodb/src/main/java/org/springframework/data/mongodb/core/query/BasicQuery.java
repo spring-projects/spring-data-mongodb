@@ -17,7 +17,8 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.springframework.util.ObjectUtils.*;
 
-import com.mongodb.BasicDBObject;
+import org.bson.Document;
+
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
@@ -32,24 +33,24 @@ import com.mongodb.util.JSON;
  */
 public class BasicQuery extends Query {
 
-	private final DBObject queryObject;
-	private DBObject fieldsObject;
-	private DBObject sortObject;
+	private final Document queryObject;
+	private Document fieldsObject;
+	private Document sortObject;
 
 	public BasicQuery(String query) {
-		this((DBObject) JSON.parse(query));
+		this(query, null);
 	}
 
-	public BasicQuery(DBObject queryObject) {
+	public BasicQuery(Document queryObject) {
 		this(queryObject, null);
 	}
 
 	public BasicQuery(String query, String fields) {
-		this.queryObject = (DBObject) JSON.parse(query);
-		this.fieldsObject = (DBObject) JSON.parse(fields);
+		this.queryObject = query != null ? new Document(((DBObject) JSON.parse(query)).toMap()) : null;
+		this.fieldsObject = fields != null ? new Document(((DBObject) JSON.parse(fields)).toMap()) : null;
 	}
 
-	public BasicQuery(DBObject queryObject, DBObject fieldsObject) {
+	public BasicQuery(Document queryObject, Document fieldsObject) {
 		this.queryObject = queryObject;
 		this.fieldsObject = fieldsObject;
 	}
@@ -65,12 +66,12 @@ public class BasicQuery extends Query {
 	}
 
 	@Override
-	public DBObject getQueryObject() {
+	public Document getQueryObject() {
 		return this.queryObject;
 	}
 
 	@Override
-	public DBObject getFieldsObject() {
+	public Document getFieldsObject() {
 
 		if (fieldsObject == null) {
 			return super.getFieldsObject();
@@ -78,7 +79,7 @@ public class BasicQuery extends Query {
 
 		if (super.getFieldsObject() != null) {
 
-			DBObject combinedFieldsObject = new BasicDBObject();
+			Document combinedFieldsObject = new Document();
 			combinedFieldsObject.putAll(fieldsObject);
 			combinedFieldsObject.putAll(super.getFieldsObject());
 			return combinedFieldsObject;
@@ -88,14 +89,14 @@ public class BasicQuery extends Query {
 	}
 
 	@Override
-	public DBObject getSortObject() {
+	public Document getSortObject() {
 
-		BasicDBObject result = new BasicDBObject();
+		Document result = new Document();
 		if (sortObject != null) {
 			result.putAll(sortObject);
 		}
 
-		DBObject overrides = super.getSortObject();
+		Document overrides = super.getSortObject();
 		if (overrides != null) {
 			result.putAll(overrides);
 		}
@@ -103,7 +104,7 @@ public class BasicQuery extends Query {
 		return result;
 	}
 
-	public void setSortObject(DBObject sortObject) {
+	public void setSortObject(Document sortObject) {
 		this.sortObject = sortObject;
 	}
 
@@ -111,7 +112,7 @@ public class BasicQuery extends Query {
 	 * @since 1.6
 	 * @param fieldsObject
 	 */
-	protected void setFieldsObject(DBObject fieldsObject) {
+	protected void setFieldsObject(Document fieldsObject) {
 		this.fieldsObject = fieldsObject;
 	}
 

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
@@ -44,8 +45,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Wrapper class to contain useful geo structure converters for the usage with Mongo.
@@ -100,7 +99,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToPointConverter implements Converter<DBObject, Point> {
+	static enum DbObjectToPointConverter implements Converter<Document, Point> {
 
 		INSTANCE;
 
@@ -109,7 +108,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public Point convert(DBObject source) {
+		public Point convert(Document source) {
 
 			if (source == null) {
 				return null;
@@ -117,7 +116,7 @@ abstract class GeoConverters {
 
 			Assert.isTrue(source.keySet().size() == 2, "Source must contain 2 elements");
 
-			if (source.containsField("type")) {
+			if (source.containsKey("type")) {
 				return DbObjectToGeoJsonPointConverter.INSTANCE.convert(source);
 			}
 
@@ -131,7 +130,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum PointToDbObjectConverter implements Converter<Point, DBObject> {
+	static enum PointToDbObjectConverter implements Converter<Point, Document> {
 
 		INSTANCE;
 
@@ -140,8 +139,8 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public DBObject convert(Point source) {
-			return source == null ? null : new BasicDBObject("x", source.getX()).append("y", source.getY());
+		public Document convert(Point source) {
+			return source == null ? null : new Document("x", source.getX()).append("y", source.getY());
 		}
 	}
 
@@ -152,7 +151,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@WritingConverter
-	static enum BoxToDbObjectConverter implements Converter<Box, DBObject> {
+	static enum BoxToDbObjectConverter implements Converter<Box, Document> {
 
 		INSTANCE;
 
@@ -161,13 +160,13 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public DBObject convert(Box source) {
+		public Document convert(Box source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			BasicDBObject result = new BasicDBObject();
+			Document result = new Document();
 			result.put("first", PointToDbObjectConverter.INSTANCE.convert(source.getFirst()));
 			result.put("second", PointToDbObjectConverter.INSTANCE.convert(source.getSecond()));
 			return result;
@@ -181,7 +180,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToBoxConverter implements Converter<DBObject, Box> {
+	static enum DbObjectToBoxConverter implements Converter<Document, Box> {
 
 		INSTANCE;
 
@@ -190,14 +189,14 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public Box convert(DBObject source) {
+		public Box convert(Document source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			Point first = DbObjectToPointConverter.INSTANCE.convert((DBObject) source.get("first"));
-			Point second = DbObjectToPointConverter.INSTANCE.convert((DBObject) source.get("second"));
+			Point first = DbObjectToPointConverter.INSTANCE.convert((Document) source.get("first"));
+			Point second = DbObjectToPointConverter.INSTANCE.convert((Document) source.get("second"));
 
 			return new Box(first, second);
 		}
@@ -209,7 +208,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum CircleToDbObjectConverter implements Converter<Circle, DBObject> {
+	static enum CircleToDbObjectConverter implements Converter<Circle, Document> {
 
 		INSTANCE;
 
@@ -218,13 +217,13 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public DBObject convert(Circle source) {
+		public Document convert(Circle source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			DBObject result = new BasicDBObject();
+			Document result = new Document();
 			result.put("center", PointToDbObjectConverter.INSTANCE.convert(source.getCenter()));
 			result.put("radius", source.getRadius().getNormalizedValue());
 			result.put("metric", source.getRadius().getMetric().toString());
@@ -233,13 +232,13 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link DBObject} into a {@link Circle}.
+	 * Converts a {@link Document} into a {@link Circle}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToCircleConverter implements Converter<DBObject, Circle> {
+	static enum DbObjectToCircleConverter implements Converter<Document, Circle> {
 
 		INSTANCE;
 
@@ -248,18 +247,18 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public Circle convert(DBObject source) {
+		public Circle convert(Document source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			DBObject center = (DBObject) source.get("center");
+			Document center = (Document) source.get("center");
 			Double radius = (Double) source.get("radius");
 
 			Distance distance = new Distance(radius);
 
-			if (source.containsField("metric")) {
+			if (source.containsKey("metric")) {
 
 				String metricString = (String) source.get("metric");
 				Assert.notNull(metricString, "Metric must not be null!");
@@ -280,7 +279,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum SphereToDbObjectConverter implements Converter<Sphere, DBObject> {
+	static enum SphereToDbObjectConverter implements Converter<Sphere, Document> {
 
 		INSTANCE;
 
@@ -289,13 +288,13 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public DBObject convert(Sphere source) {
+		public Document convert(Sphere source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			DBObject result = new BasicDBObject();
+			Document result = new Document();
 			result.put("center", PointToDbObjectConverter.INSTANCE.convert(source.getCenter()));
 			result.put("radius", source.getRadius().getNormalizedValue());
 			result.put("metric", source.getRadius().getMetric().toString());
@@ -310,7 +309,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToSphereConverter implements Converter<DBObject, Sphere> {
+	static enum DbObjectToSphereConverter implements Converter<Document, Sphere> {
 
 		INSTANCE;
 
@@ -319,18 +318,18 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public Sphere convert(DBObject source) {
+		public Sphere convert(Document source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			DBObject center = (DBObject) source.get("center");
+			Document center = (Document) source.get("center");
 			Double radius = (Double) source.get("radius");
 
 			Distance distance = new Distance(radius);
 
-			if (source.containsField("metric")) {
+			if (source.containsKey("metric")) {
 
 				String metricString = (String) source.get("metric");
 				Assert.notNull(metricString, "Metric must not be null!");
@@ -351,7 +350,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum PolygonToDbObjectConverter implements Converter<Polygon, DBObject> {
+	static enum PolygonToDbObjectConverter implements Converter<Polygon, Document> {
 
 		INSTANCE;
 
@@ -360,20 +359,20 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public DBObject convert(Polygon source) {
+		public Document convert(Polygon source) {
 
 			if (source == null) {
 				return null;
 			}
 
 			List<Point> points = source.getPoints();
-			List<DBObject> pointTuples = new ArrayList<DBObject>(points.size());
+			List<Document> pointTuples = new ArrayList<Document>(points.size());
 
 			for (Point point : points) {
 				pointTuples.add(PointToDbObjectConverter.INSTANCE.convert(point));
 			}
 
-			DBObject result = new BasicDBObject();
+			Document result = new Document();
 			result.put("points", pointTuples);
 			return result;
 		}
@@ -386,7 +385,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToPolygonConverter implements Converter<DBObject, Polygon> {
+	static enum DbObjectToPolygonConverter implements Converter<Document, Polygon> {
 
 		INSTANCE;
 
@@ -396,16 +395,16 @@ abstract class GeoConverters {
 		 */
 		@Override
 		@SuppressWarnings({ "unchecked" })
-		public Polygon convert(DBObject source) {
+		public Polygon convert(Document source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			List<DBObject> points = (List<DBObject>) source.get("points");
+			List<Document> points = (List<Document>) source.get("points");
 			List<Point> newPoints = new ArrayList<Point>(points.size());
 
-			for (DBObject element : points) {
+			for (Document element : points) {
 
 				Assert.notNull(element, "Point elements of polygon must not be null!");
 				newPoints.add(DbObjectToPointConverter.INSTANCE.convert(element));
@@ -421,7 +420,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum GeoCommandToDbObjectConverter implements Converter<GeoCommand, DBObject> {
+	static enum GeoCommandToDbObjectConverter implements Converter<GeoCommand, Document> {
 
 		INSTANCE;
 
@@ -431,13 +430,13 @@ abstract class GeoConverters {
 		 */
 		@Override
 		@SuppressWarnings("rawtypes")
-		public DBObject convert(GeoCommand source) {
+		public Document convert(GeoCommand source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			BasicDBList argument = new BasicDBList();
+			List argument = new ArrayList();
 
 			Shape shape = source.getShape();
 
@@ -472,7 +471,7 @@ abstract class GeoConverters {
 				argument.add(((Sphere) shape).getRadius().getNormalizedValue());
 			}
 
-			return new BasicDBObject(source.getCommand(), argument);
+			return new Document(source.getCommand(), argument);
 		}
 	}
 
@@ -481,7 +480,7 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	@SuppressWarnings("rawtypes")
-	static enum GeoJsonToDbObjectConverter implements Converter<GeoJson, DBObject> {
+	static enum GeoJsonToDbObjectConverter implements Converter<GeoJson, Document> {
 
 		INSTANCE;
 
@@ -490,17 +489,17 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public DBObject convert(GeoJson source) {
+		public Document convert(GeoJson source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			DBObject dbo = new BasicDBObject("type", source.getType());
+			Document dbo = new Document("type", source.getType());
 
 			if (source instanceof GeoJsonGeometryCollection) {
 
-				BasicDBList dbl = new BasicDBList();
+				List dbl = new ArrayList();
 
 				for (GeoJson geometry : ((GeoJsonGeometryCollection) source).getCoordinates()) {
 					dbl.add(convert(geometry));
@@ -523,7 +522,7 @@ abstract class GeoConverters {
 
 			if (candidate instanceof Iterable) {
 
-				BasicDBList dbl = new BasicDBList();
+				List dbl = new ArrayList();
 
 				for (Object element : (Iterable) candidate) {
 					dbl.add(convertIfNecessarry(element));
@@ -544,7 +543,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum GeoJsonPointToDbObjectConverter implements Converter<GeoJsonPoint, DBObject> {
+	static enum GeoJsonPointToDbObjectConverter implements Converter<GeoJsonPoint, Document> {
 
 		INSTANCE;
 
@@ -553,7 +552,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public DBObject convert(GeoJsonPoint source) {
+		public Document convert(GeoJsonPoint source) {
 			return GeoJsonToDbObjectConverter.INSTANCE.convert(source);
 		}
 	}
@@ -562,7 +561,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum GeoJsonPolygonToDbObjectConverter implements Converter<GeoJsonPolygon, DBObject> {
+	static enum GeoJsonPolygonToDbObjectConverter implements Converter<GeoJsonPolygon, Document> {
 
 		INSTANCE;
 
@@ -571,7 +570,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public DBObject convert(GeoJsonPolygon source) {
+		public Document convert(GeoJsonPolygon source) {
 			return GeoJsonToDbObjectConverter.INSTANCE.convert(source);
 		}
 	}
@@ -580,7 +579,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonPointConverter implements Converter<DBObject, GeoJsonPoint> {
+	static enum DbObjectToGeoJsonPointConverter implements Converter<Document, GeoJsonPoint> {
 
 		INSTANCE;
 
@@ -590,7 +589,7 @@ abstract class GeoConverters {
 		 */
 		@Override
 		@SuppressWarnings("unchecked")
-		public GeoJsonPoint convert(DBObject source) {
+		public GeoJsonPoint convert(Document source) {
 
 			if (source == null) {
 				return null;
@@ -608,7 +607,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonPolygonConverter implements Converter<DBObject, GeoJsonPolygon> {
+	static enum DbObjectToGeoJsonPolygonConverter implements Converter<Document, GeoJsonPolygon> {
 
 		INSTANCE;
 
@@ -617,7 +616,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public GeoJsonPolygon convert(DBObject source) {
+		public GeoJsonPolygon convert(Document source) {
 
 			if (source == null) {
 				return null;
@@ -626,7 +625,7 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "Polygon"),
 					String.format("Cannot convert type '%s' to Polygon.", source.get("type")));
 
-			return toGeoJsonPolygon((BasicDBList) source.get("coordinates"));
+			return toGeoJsonPolygon((List) source.get("coordinates"));
 		}
 	}
 
@@ -634,7 +633,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonMultiPolygonConverter implements Converter<DBObject, GeoJsonMultiPolygon> {
+	static enum DbObjectToGeoJsonMultiPolygonConverter implements Converter<Document, GeoJsonMultiPolygon> {
 
 		INSTANCE;
 
@@ -643,7 +642,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public GeoJsonMultiPolygon convert(DBObject source) {
+		public GeoJsonMultiPolygon convert(Document source) {
 
 			if (source == null) {
 				return null;
@@ -652,11 +651,11 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "MultiPolygon"),
 					String.format("Cannot convert type '%s' to MultiPolygon.", source.get("type")));
 
-			BasicDBList dbl = (BasicDBList) source.get("coordinates");
+			List dbl = (List) source.get("coordinates");
 			List<GeoJsonPolygon> polygones = new ArrayList<GeoJsonPolygon>();
 
 			for (Object polygon : dbl) {
-				polygones.add(toGeoJsonPolygon((BasicDBList) polygon));
+				polygones.add(toGeoJsonPolygon((List) polygon));
 			}
 
 			return new GeoJsonMultiPolygon(polygones);
@@ -667,7 +666,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonLineStringConverter implements Converter<DBObject, GeoJsonLineString> {
+	static enum DbObjectToGeoJsonLineStringConverter implements Converter<Document, GeoJsonLineString> {
 
 		INSTANCE;
 
@@ -676,7 +675,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public GeoJsonLineString convert(DBObject source) {
+		public GeoJsonLineString convert(Document source) {
 
 			if (source == null) {
 				return null;
@@ -685,7 +684,7 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "LineString"),
 					String.format("Cannot convert type '%s' to LineString.", source.get("type")));
 
-			BasicDBList cords = (BasicDBList) source.get("coordinates");
+			List cords = (List) source.get("coordinates");
 
 			return new GeoJsonLineString(toListOfPoint(cords));
 		}
@@ -695,7 +694,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonMultiPointConverter implements Converter<DBObject, GeoJsonMultiPoint> {
+	static enum DbObjectToGeoJsonMultiPointConverter implements Converter<Document, GeoJsonMultiPoint> {
 
 		INSTANCE;
 
@@ -704,7 +703,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public GeoJsonMultiPoint convert(DBObject source) {
+		public GeoJsonMultiPoint convert(Document source) {
 
 			if (source == null) {
 				return null;
@@ -713,7 +712,7 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "MultiPoint"),
 					String.format("Cannot convert type '%s' to MultiPoint.", source.get("type")));
 
-			BasicDBList cords = (BasicDBList) source.get("coordinates");
+			List cords = (List) source.get("coordinates");
 
 			return new GeoJsonMultiPoint(toListOfPoint(cords));
 		}
@@ -723,7 +722,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonMultiLineStringConverter implements Converter<DBObject, GeoJsonMultiLineString> {
+	static enum DbObjectToGeoJsonMultiLineStringConverter implements Converter<Document, GeoJsonMultiLineString> {
 
 		INSTANCE;
 
@@ -732,7 +731,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		public GeoJsonMultiLineString convert(DBObject source) {
+		public GeoJsonMultiLineString convert(Document source) {
 
 			if (source == null) {
 				return null;
@@ -742,10 +741,10 @@ abstract class GeoConverters {
 					String.format("Cannot convert type '%s' to MultiLineString.", source.get("type")));
 
 			List<GeoJsonLineString> lines = new ArrayList<GeoJsonLineString>();
-			BasicDBList cords = (BasicDBList) source.get("coordinates");
+			List cords = (List) source.get("coordinates");
 
 			for (Object line : cords) {
-				lines.add(new GeoJsonLineString(toListOfPoint((BasicDBList) line)));
+				lines.add(new GeoJsonLineString(toListOfPoint((List) line)));
 			}
 			return new GeoJsonMultiLineString(lines);
 		}
@@ -755,7 +754,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonGeometryCollectionConverter implements Converter<DBObject, GeoJsonGeometryCollection> {
+	static enum DbObjectToGeoJsonGeometryCollectionConverter implements Converter<Document, GeoJsonGeometryCollection> {
 
 		INSTANCE;
 
@@ -765,7 +764,7 @@ abstract class GeoConverters {
 		 */
 		@SuppressWarnings("rawtypes")
 		@Override
-		public GeoJsonGeometryCollection convert(DBObject source) {
+		public GeoJsonGeometryCollection convert(Document source) {
 
 			if (source == null) {
 				return null;
@@ -776,13 +775,13 @@ abstract class GeoConverters {
 
 			List<GeoJson<?>> geometries = new ArrayList<GeoJson<?>>();
 			for (Object o : (List) source.get("geometries")) {
-				geometries.add(convertGeometries((DBObject) o));
+				geometries.add(convertGeometries((Document) o));
 			}
 			return new GeoJsonGeometryCollection(geometries);
 
 		}
 
-		private static GeoJson<?> convertGeometries(DBObject source) {
+		private static GeoJson<?> convertGeometries(Document source) {
 
 			Object type = source.get("type");
 			if (ObjectUtils.nullSafeEquals(type, "Point")) {
@@ -824,7 +823,7 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	@SuppressWarnings("unchecked")
-	static List<Point> toListOfPoint(BasicDBList listOfCoordinatePairs) {
+	static List<Point> toListOfPoint(List listOfCoordinatePairs) {
 
 		List<Point> points = new ArrayList<Point>();
 
@@ -846,7 +845,7 @@ abstract class GeoConverters {
 	 * @return
 	 * @since 1.7
 	 */
-	static GeoJsonPolygon toGeoJsonPolygon(BasicDBList dbList) {
-		return new GeoJsonPolygon(toListOfPoint((BasicDBList) dbList.get(0)));
+	static GeoJsonPolygon toGeoJsonPolygon(List dbList) {
+		return new GeoJsonPolygon(toListOfPoint((List) dbList.get(0)));
 	}
 }

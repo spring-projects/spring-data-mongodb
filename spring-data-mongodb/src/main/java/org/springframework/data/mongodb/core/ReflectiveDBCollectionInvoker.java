@@ -20,10 +20,10 @@ import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 
 import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 
 /**
  * {@link ReflectiveDBCollectionInvoker} provides reflective access to {@link DBCollection} API that is not consistently
@@ -40,7 +40,7 @@ class ReflectiveDBCollectionInvoker {
 
 	static {
 
-		GEN_INDEX_NAME_METHOD = findMethod(DBCollection.class, "genIndexName", DBObject.class);
+		GEN_INDEX_NAME_METHOD = findMethod(DBCollection.class, "genIndexName", Document.class);
 		RESET_INDEX_CHACHE_METHOD = findMethod(DBCollection.class, "resetIndexCache");
 	}
 
@@ -53,7 +53,7 @@ class ReflectiveDBCollectionInvoker {
 	 * @param keys the names of the fields used in this index
 	 * @return
 	 */
-	public static String generateIndexName(DBObject keys) {
+	public static String generateIndexName(Document keys) {
 
 		if (isMongo3Driver()) {
 			return genIndexName(keys);
@@ -79,14 +79,14 @@ class ReflectiveDBCollectionInvoker {
 	}
 
 	/**
-	 * Borrowed from MongoDB Java driver version 2. See <a
-	 * href="http://github.com/mongodb/mongo-java-driver/blob/r2.13.0/src/main/com/mongodb/DBCollection.java#L754"
-	 * >http://github.com/mongodb/mongo-java-driver/blob/r2.13.0/src/main/com/mongodb/DBCollection.java#L754</a>
+	 * Borrowed from MongoDB Java driver version 2. See
+	 * <a href="http://github.com/mongodb/mongo-java-driver/blob/r2.13.0/src/main/com/mongodb/DBCollection.java#L754" >
+	 * http://github.com/mongodb/mongo-java-driver/blob/r2.13.0/src/main/com/mongodb/DBCollection.java#L754</a>
 	 * 
 	 * @param keys
 	 * @return
 	 */
-	private static String genIndexName(DBObject keys) {
+	private static String genIndexName(Document keys) {
 
 		StringBuilder name = new StringBuilder();
 

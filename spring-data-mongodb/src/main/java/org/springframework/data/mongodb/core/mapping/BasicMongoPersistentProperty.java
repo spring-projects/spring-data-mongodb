@@ -33,8 +33,6 @@ import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.DBObject;
-
 /**
  * MongoDB specific {@link org.springframework.data.mapping.MongoPersistentProperty} implementation.
  * 
@@ -43,8 +41,8 @@ import com.mongodb.DBObject;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty> implements
-		MongoPersistentProperty {
+public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty>
+		implements MongoPersistentProperty {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BasicMongoPersistentProperty.class);
 
@@ -114,7 +112,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	}
 
 	/**
-	 * Returns the key to be used to store the value of the property inside a Mongo {@link DBObject}.
+	 * Returns the key to be used to store the value of the property inside a Mongo {@link org.bson.Document}.
 	 * 
 	 * @return
 	 */
@@ -160,7 +158,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	private String getAnnotatedFieldName() {
 
-		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(org.springframework.data.mongodb.core.mapping.Field.class);
+		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
+				org.springframework.data.mongodb.core.mapping.Field.class);
 
 		if (annotation != null && StringUtils.hasText(annotation.value())) {
 			return annotation.value();
@@ -174,7 +173,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getFieldOrder()
 	 */
 	public int getFieldOrder() {
-		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(org.springframework.data.mongodb.core.mapping.Field.class);
+		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
+				org.springframework.data.mongodb.core.mapping.Field.class);
 		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
 	}
 

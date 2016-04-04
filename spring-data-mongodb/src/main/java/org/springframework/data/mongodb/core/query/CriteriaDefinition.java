@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * @author Oliver Gierke
@@ -24,11 +24,11 @@ import com.mongodb.DBObject;
 public interface CriteriaDefinition {
 
 	/**
-	 * Get {@link DBObject} representation.
+	 * Get {@link Document} representation.
 	 * 
 	 * @return
 	 */
-	DBObject getCriteriaObject();
+	Document getCriteriaObject();
 
 	/**
 	 * Get the identifying {@literal key}.

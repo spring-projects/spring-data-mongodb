@@ -43,9 +43,9 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
 
 /**
  * @author Jon Brisbin
@@ -209,9 +209,12 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.insert(ccwi);
 
 		assertTrue(template.execute("foobar", new CollectionCallback<Boolean>() {
-			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				List<DBObject> indexes = collection.getIndexInfo();
-				for (DBObject dbo : indexes) {
+			public Boolean doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
+
+				List<Document> indexes = new ArrayList<Document>();
+				collection.listIndexes(Document.class).into(indexes);
+
+				for (Document dbo : indexes) {
 					if (dbo.get("name") != null && dbo.get("name") instanceof String
 							&& ((String) dbo.get("name")).startsWith("name")) {
 						return true;
@@ -226,9 +229,13 @@ public class MappingTests extends AbstractIntegrationTests {
 
 		assertTrue(template.execute(MongoCollectionUtils.getPreferredCollectionName(DetectedCollectionWithIndex.class),
 				new CollectionCallback<Boolean>() {
-					public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-						List<DBObject> indexes = collection.getIndexInfo();
-						for (DBObject dbo : indexes) {
+					public Boolean doInCollection(MongoCollection<Document> collection)
+							throws MongoException, DataAccessException {
+
+						List<Document> indexes = new ArrayList<Document>();
+						collection.listIndexes(Document.class).into(indexes);
+
+						for (Document dbo : indexes) {
 							if (dbo.get("name") != null && dbo.get("name") instanceof String
 									&& ((String) dbo.get("name")).startsWith("name")) {
 								return true;
@@ -347,8 +354,8 @@ public class MappingTests extends AbstractIntegrationTests {
 		PersonWithObjectId p2 = new PersonWithObjectId(2, "second", "");
 		template.save(p2);
 
-		List<PersonWithObjectId> results = template.find(
-				new Query(new Criteria().orOperator(where("ssn").is(1), where("ssn").is(2))), PersonWithObjectId.class);
+		List<PersonWithObjectId> results = template
+				.find(new Query(new Criteria().orOperator(where("ssn").is(1), where("ssn").is(2))), PersonWithObjectId.class);
 
 		assertNotNull(results);
 		assertThat(results.size(), is(2));

@@ -22,8 +22,14 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +37,9 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
@@ -53,9 +61,9 @@ import com.mongodb.DBRef;
 public class DefaultDbRefResolverUnitTests {
 
 	@Mock MongoDbFactory factoryMock;
-	@Mock DB dbMock;
-	@Mock DBCollection collectionMock;
-	@Mock DBCursor cursorMock;
+	@Mock MongoDatabase dbMock;
+	@Mock MongoCollection<Document> collectionMock;
+	@Mock FindIterable<Document> cursorMock;
 	DefaultDbRefResolver resolver;
 
 	@Before
@@ -63,8 +71,7 @@ public class DefaultDbRefResolverUnitTests {
 
 		when(factoryMock.getDb()).thenReturn(dbMock);
 		when(dbMock.getCollection(anyString())).thenReturn(collectionMock);
-		when(collectionMock.find(Mockito.any(DBObject.class))).thenReturn(cursorMock);
-		when(cursorMock.toArray()).thenReturn(Collections.<DBObject>emptyList());
+		when(collectionMock.find(Mockito.any(Document.class))).thenReturn(cursorMock);
 
 		resolver = new DefaultDbRefResolver(factoryMock);
 	}
@@ -81,11 +88,11 @@ public class DefaultDbRefResolverUnitTests {
 
 		resolver.bulkFetch(Arrays.asList(ref1, ref2));
 
-		ArgumentCaptor<DBObject> captor = ArgumentCaptor.forClass(DBObject.class);
+		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
 
 		verify(collectionMock, times(1)).find(captor.capture());
 
-		DBObject _id = DBObjectTestUtils.getAsDBObject(captor.getValue(), "_id");
+		Document _id = DBObjectTestUtils.getAsDocument(captor.getValue(), "_id");
 		Iterable<Object> $in = DBObjectTestUtils.getTypedValue(_id, "$in", Iterable.class);
 
 		assertThat($in, iterableWithSize(2));
@@ -111,7 +118,7 @@ public class DefaultDbRefResolverUnitTests {
 
 		resolver.bulkFetch(Collections.<DBRef>emptyList());
 
-		verify(collectionMock, never()).find(Mockito.any(DBObject.class));
+		verify(collectionMock, never()).find(Mockito.any(Document.class));
 	}
 
 	/**
@@ -120,13 +127,22 @@ public class DefaultDbRefResolverUnitTests {
 	@Test
 	public void bulkFetchShouldRestoreOriginalOrder() {
 
-		DBObject o1 = new BasicDBObject("_id", new ObjectId());
-		DBObject o2 = new BasicDBObject("_id", new ObjectId());
+		Document o1 = new Document("_id", new ObjectId());
+		Document o2 = new Document("_id", new ObjectId());
 
 		DBRef ref1 = new DBRef("collection-1", o1.get("_id"));
 		DBRef ref2 = new DBRef("collection-1", o2.get("_id"));
 
-		when(cursorMock.toArray()).thenReturn(Arrays.asList(o2, o1));
+		when(cursorMock.into(any())).then(new Answer<Object>() {
+			@Override
+			public Object answer(InvocationOnMock invocation) throws Throwable {
+
+				Collection<Document> collection = (Collection<Document>) invocation.getArguments()[0];
+				collection.add(o2);
+				collection.add(o1);
+				return collection;
+			}
+		});
 
 		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2)), contains(o1, o2));
 	}

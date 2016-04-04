@@ -16,44 +16,43 @@
 
 package org.springframework.data.mongodb.core.mapping.event;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBObject;
-
 /**
- * Event to be triggered after loading {@link DBObject}s to be mapped onto a given type.
+ * Event to be triggered after loading {@link Document}s to be mapped onto a given type.
  * 
  * @author Oliver Gierke
  * @author Jon Brisbin
  * @author Christoph Leiter
  * @author Christoph Strobl
  */
-public class AfterLoadEvent<T> extends MongoMappingEvent<DBObject> {
+public class AfterLoadEvent<T> extends MongoMappingEvent<Document> {
 
 	private static final long serialVersionUID = 1L;
 	private final Class<T> type;
 
 	/**
-	 * Creates a new {@link AfterLoadEvent} for the given {@link DBObject} and type.
+	 * Creates a new {@link AfterLoadEvent} for the given {@link Document} and type.
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AfterLoadEvent(DBObject, Class, String)}.
+	 * @deprecated since 1.8. Please use {@link #AfterLoadEvent(Document, Class, String)}.
 	 */
 	@Deprecated
-	public AfterLoadEvent(DBObject dbo, Class<T> type) {
+	public AfterLoadEvent(Document dbo, Class<T> type) {
 		this(dbo, type, null);
 	}
 
 	/**
-	 * Creates a new {@link AfterLoadEvent} for the given {@link DBObject}, type and collectionName.
+	 * Creates a new {@link AfterLoadEvent} for the given {@link Document}, type and collectionName.
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public AfterLoadEvent(DBObject dbo, Class<T> type, String collectionName) {
+	public AfterLoadEvent(Document dbo, Class<T> type, String collectionName) {
 
 		super(dbo, dbo, collectionName);
 

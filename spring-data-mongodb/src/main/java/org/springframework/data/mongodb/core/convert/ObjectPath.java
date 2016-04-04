@@ -23,14 +23,12 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.DBObject;
-
 /**
  * A path of objects nested into each other. The type allows access to all parent objects currently in creation even
  * when resolving more nested objects. This allows to avoid re-resolving object instances that are logically equivalent
  * to already resolved ones.
  * <p>
- * An immutable ordered set of target objects for {@link DBObject} to {@link Object} conversions. Object paths can be
+ * An immutable ordered set of target objects for {@link Document} to {@link Object} conversions. Object paths can be
  * constructed by the {@link #toObjectPath(Object)} method and extended via {@link #push(Object)}.
  * 
  * @author Thomas Darimont

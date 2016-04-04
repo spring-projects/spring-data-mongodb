@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * {@link MongoMappingEvent} thrown after convert of a document.
@@ -32,10 +32,10 @@ public class AfterConvertEvent<E> extends MongoMappingEvent<E> {
 	 * 
 	 * @param dbo can be {@literal null}.
 	 * @param source must not be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AfterConvertEvent(DBObject, Object, String)}.
+	 * @deprecated since 1.8. Please use {@link #AfterConvertEvent(Document, Object, String)}.
 	 */
 	@Deprecated
-	public AfterConvertEvent(DBObject dbo, E source) {
+	public AfterConvertEvent(Document dbo, E source) {
 		this(dbo, source, null);
 	}
 
@@ -47,7 +47,7 @@ public class AfterConvertEvent<E> extends MongoMappingEvent<E> {
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public AfterConvertEvent(DBObject dbo, E source, String collectionName) {
+	public AfterConvertEvent(Document dbo, E source, String collectionName) {
 		super(source, dbo, collectionName);
 	}
 

@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.Map.Entry;
 
+import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
@@ -27,9 +28,6 @@ import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * A subclass of {@link QueryMapper} that retains type information on the mongo types.
@@ -73,8 +71,8 @@ public class UpdateMapper extends QueryMapper {
 	@Override
 	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
 
-		if (isDBObject(rawValue)) {
-			return createMapEntry(field, convertSimpleOrDBObject(rawValue, field.getPropertyEntity()));
+		if (isDocument(rawValue)) {
+			return createMapEntry(field, convertSimpleOrDocument(rawValue, field.getPropertyEntity()));
 		}
 
 		if (isQuery(rawValue)) {
@@ -98,10 +96,10 @@ public class UpdateMapper extends QueryMapper {
 
 		} else if (rawValue instanceof Modifiers) {
 
-			DBObject modificationOperations = new BasicDBObject();
+			Document modificationOperations = new Document();
 
 			for (Modifier modifier : ((Modifiers) rawValue).getModifiers()) {
-				modificationOperations.putAll(getMappedValue(field, modifier).toMap());
+				modificationOperations.putAll(getMappedValue(field, modifier));
 			}
 
 			value = modificationOperations;
@@ -129,12 +127,12 @@ public class UpdateMapper extends QueryMapper {
 		return value instanceof Query;
 	}
 
-	private DBObject getMappedValue(Field field, Modifier modifier) {
+	private Document getMappedValue(Field field, Modifier modifier) {
 
 		TypeInformation<?> typeHint = field == null ? ClassTypeInformation.OBJECT : field.getTypeHint();
 
 		Object value = converter.convertToMongoType(modifier.getValue(), typeHint);
-		return new BasicDBObject(modifier.getKey(), value);
+		return new Document(modifier.getKey(), value);
 	}
 
 	private TypeInformation<?> getTypeHintForEntity(Object source, MongoPersistentEntity<?> entity) {

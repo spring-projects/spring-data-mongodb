@@ -18,9 +18,9 @@ package org.springframework.data.mongodb.core.mapreduce;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBObject;
 import com.mongodb.MapReduceOutput;
 
 /**
@@ -34,7 +34,7 @@ import com.mongodb.MapReduceOutput;
 public class MapReduceResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;
-	private final DBObject rawResults;
+	private final Document rawResults;
 	private final String outputCollection;
 	private final MapReduceTiming mapReduceTiming;
 	private final MapReduceCounts mapReduceCounts;
@@ -47,7 +47,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 	 * @deprecated since 1.7. Please use {@link #MapReduceResults(List, MapReduceOutput)}
 	 */
 	@Deprecated
-	public MapReduceResults(List<T> mappedResults, DBObject rawResults) {
+	public MapReduceResults(List<T> mappedResults, Document rawResults) {
 
 		Assert.notNull(mappedResults);
 		Assert.notNull(rawResults);
@@ -98,13 +98,13 @@ public class MapReduceResults<T> implements Iterable<T> {
 		return outputCollection;
 	}
 
-	public DBObject getRawResults() {
+	public Document getRawResults() {
 		return rawResults;
 	}
 
-	private static MapReduceTiming parseTiming(DBObject rawResults) {
+	private static MapReduceTiming parseTiming(Document rawResults) {
 
-		DBObject timing = (DBObject) rawResults.get("timing");
+		Document timing = (Document) rawResults.get("timing");
 
 		if (timing == null) {
 			return new MapReduceTiming(-1, -1, -1);
@@ -125,7 +125,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 	 * @param key
 	 * @return
 	 */
-	private static Long getAsLong(DBObject source, String key) {
+	private static Long getAsLong(Document source, String key) {
 
 		Object raw = source.get(key);
 
@@ -133,14 +133,14 @@ public class MapReduceResults<T> implements Iterable<T> {
 	}
 
 	/**
-	 * Parses the raw {@link DBObject} result into a {@link MapReduceCounts} value object.
+	 * Parses the raw {@link Document} result into a {@link MapReduceCounts} value object.
 	 * 
 	 * @param rawResults
 	 * @return
 	 */
-	private static MapReduceCounts parseCounts(DBObject rawResults) {
+	private static MapReduceCounts parseCounts(Document rawResults) {
 
-		DBObject counts = (DBObject) rawResults.get("counts");
+		Document counts = (Document) rawResults.get("counts");
 
 		if (counts == null) {
 			return MapReduceCounts.NONE;
@@ -154,12 +154,12 @@ public class MapReduceResults<T> implements Iterable<T> {
 	}
 
 	/**
-	 * Parses the output collection from the raw {@link DBObject} result.
+	 * Parses the output collection from the raw {@link Document} result.
 	 * 
 	 * @param rawResults
 	 * @return
 	 */
-	private static String parseOutputCollection(DBObject rawResults) {
+	private static String parseOutputCollection(Document rawResults) {
 
 		Object resultField = rawResults.get("result");
 
@@ -167,8 +167,8 @@ public class MapReduceResults<T> implements Iterable<T> {
 			return null;
 		}
 
-		return resultField instanceof DBObject ? ((DBObject) resultField).get("collection").toString() : resultField
-				.toString();
+		return resultField instanceof Document ? ((Document) resultField).get("collection").toString()
+				: resultField.toString();
 	}
 
 	private static MapReduceCounts parseCounts(final MapReduceOutput mapReduceOutput) {

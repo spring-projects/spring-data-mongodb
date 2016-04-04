@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.UpdateResult;
 
 /**
  * {@link ReflectiveWriteResultInvoker} provides reflective access to {@link WriteResult} API that is not consistently
@@ -35,6 +36,7 @@ final class ReflectiveWriteResultInvoker {
 
 	private static final Method GET_ERROR_METHOD;
 	private static final Method WAS_ACKNOWLEDGED_METHOD;
+	private static final Method WAS_ACKNOWLEDGED_METHOD_UR;
 
 	private ReflectiveWriteResultInvoker() {}
 
@@ -42,6 +44,7 @@ final class ReflectiveWriteResultInvoker {
 
 		GET_ERROR_METHOD = findMethod(WriteResult.class, "getError");
 		WAS_ACKNOWLEDGED_METHOD = findMethod(WriteResult.class, "wasAcknowledged");
+		WAS_ACKNOWLEDGED_METHOD_UR = findMethod(UpdateResult.class, "wasAcknowledged");
 	}
 
 	/**
@@ -63,5 +66,13 @@ final class ReflectiveWriteResultInvoker {
 	 */
 	public static boolean wasAcknowledged(WriteResult writeResult) {
 		return isMongo3Driver() ? ((Boolean) invokeMethod(WAS_ACKNOWLEDGED_METHOD, writeResult)).booleanValue() : true;
+	}
+
+	/**
+	 * @param writeResult
+	 * @return return in case of MongoDB Java driver version 2.
+	 */
+	public static boolean wasAcknowledged(UpdateResult writeResult) {
+		return isMongo3Driver() ? ((Boolean) invokeMethod(WAS_ACKNOWLEDGED_METHOD_UR, writeResult)).booleanValue() : true;
 	}
 }

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.bson.Document;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionFailedException;
@@ -41,8 +42,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 
 /**
@@ -75,10 +74,10 @@ abstract class MongoConverters {
 		converters.add(StringToBigIntegerConverter.INSTANCE);
 		converters.add(URLToStringConverter.INSTANCE);
 		converters.add(StringToURLConverter.INSTANCE);
-		converters.add(DBObjectToStringConverter.INSTANCE);
+		converters.add(DocumentToStringConverter.INSTANCE);
 		converters.add(TermToStringConverter.INSTANCE);
-		converters.add(NamedMongoScriptToDBObjectConverter.INSTANCE);
-		converters.add(DBObjectToNamedMongoScriptCoverter.INSTANCE);
+		converters.add(NamedMongoScriptToDocumentConverter.INSTANCE);
+		converters.add(DocumentToNamedMongoScriptCoverter.INSTANCE);
 		converters.add(CurrencyToStringConverter.INSTANCE);
 		converters.add(StringToCurrencyConverter.INSTANCE);
 		converters.add(AtomicIntegerToIntegerConverter.INSTANCE);
@@ -198,13 +197,21 @@ abstract class MongoConverters {
 	}
 
 	@ReadingConverter
-	public static enum DBObjectToStringConverter implements Converter<DBObject, String> {
+	public static enum DocumentToStringConverter implements Converter<Document, String> {
 
 		INSTANCE;
 
 		@Override
-		public String convert(DBObject source) {
-			return source == null ? null : source.toString();
+		public String convert(Document source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			if (source instanceof Document) {
+				return ((Document) source).toJson();
+			}
+			return source.toString();
 		}
 	}
 
@@ -227,19 +234,27 @@ abstract class MongoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	public static enum DBObjectToNamedMongoScriptCoverter implements Converter<DBObject, NamedMongoScript> {
+	public static enum DocumentToNamedMongoScriptCoverter implements Converter<Document, NamedMongoScript> {
 
 		INSTANCE;
 
 		@Override
-		public NamedMongoScript convert(DBObject source) {
+		public NamedMongoScript convert(Document source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			String id = source.get("_id").toString();
-			Object rawValue = source.get("value");
+			String id = null;
+			Object rawValue = null;
+
+			if (source instanceof Document) {
+				id = ((Document) source).get("_id").toString();
+				rawValue = ((Document) source).get("value");
+			} else if (source instanceof DBObject) {
+				id = ((DBObject) source).get("_id").toString();
+				rawValue = ((DBObject) source).get("value");
+			}
 
 			return new NamedMongoScript(id, ((Code) rawValue).getCode());
 		}
@@ -249,23 +264,23 @@ abstract class MongoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	public static enum NamedMongoScriptToDBObjectConverter implements Converter<NamedMongoScript, DBObject> {
+	public static enum NamedMongoScriptToDocumentConverter implements Converter<NamedMongoScript, Document> {
 
 		INSTANCE;
 
 		@Override
-		public DBObject convert(NamedMongoScript source) {
+		public Document convert(NamedMongoScript source) {
 
 			if (source == null) {
-				return new BasicDBObject();
+				return new Document();
 			}
 
-			BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
+			Document document = new Document();
 
-			builder.append("_id", source.getName());
-			builder.append("value", new Code(source.getCode()));
+			document.put("_id", source.getName());
+			document.put("value", new Code(source.getCode()));
 
-			return builder.get();
+			return document;
 		}
 	}
 
@@ -320,7 +335,7 @@ abstract class MongoConverters {
 	 * @since 1.9
 	 */
 	@WritingConverter
-	public static enum NumberToNumberConverterFactory implements ConverterFactory<Number, Number>,ConditionalConverter {
+	public static enum NumberToNumberConverterFactory implements ConverterFactory<Number, Number>, ConditionalConverter {
 
 		INSTANCE;
 
@@ -352,9 +367,9 @@ abstract class MongoConverters {
 			 * @param targetType must not be {@literal null}.
 			 */
 			public NumberToNumberConverter(Class<T> targetType) {
-				
+
 				Assert.notNull(targetType, "Target type must not be null!");
-				
+
 				this.targetType = targetType;
 			}
 

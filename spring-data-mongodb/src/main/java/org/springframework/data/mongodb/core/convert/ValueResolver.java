@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-
-import com.mongodb.DBObject;
 
 /**
  * Internal API to trigger the resolution of properties.
@@ -28,7 +28,7 @@ import com.mongodb.DBObject;
 interface ValueResolver {
 
 	/**
-	 * Resolves the value for the given {@link MongoPersistentProperty} within the given {@link DBObject} using the given
+	 * Resolves the value for the given {@link MongoPersistentProperty} within the given {@link Document} using the given
 	 * {@link SpELExpressionEvaluator} and {@link ObjectPath}.
 	 * 
 	 * @param prop
@@ -37,6 +37,5 @@ interface ValueResolver {
 	 * @param parent
 	 * @return
 	 */
-	Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator evaluator,
-			ObjectPath parent);
+	Object getValueInternal(MongoPersistentProperty prop, Bson dbo, SpELExpressionEvaluator evaluator, ObjectPath parent);
 }

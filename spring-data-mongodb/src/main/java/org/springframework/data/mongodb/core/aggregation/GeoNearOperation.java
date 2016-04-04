@@ -15,11 +15,9 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Represents a {@code geoNear} aggregation operation.
@@ -53,14 +51,14 @@ public class GeoNearOperation implements AggregationOperation {
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public DBObject toDBObject(AggregationOperationContext context) {
+	public Document toDocument(AggregationOperationContext context) {
 
-		BasicDBObject command = (BasicDBObject) context.getMappedObject(nearQuery.toDBObject());
+		Document command = context.getMappedObject(nearQuery.toDocument());
 		command.put("distanceField", distanceField);
 
-		return new BasicDBObject("$geoNear", command);
+		return new Document("$geoNear", command);
 	}
 }

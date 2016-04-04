@@ -15,11 +15,12 @@
  */
 package org.springframework.data.mongodb.monitor;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
+
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
 
 /**
  * JMX Metrics for Global Locks

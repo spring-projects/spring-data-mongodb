@@ -26,12 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.bson.Document;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Class to easily construct MongoDB update clauses.
@@ -66,17 +64,17 @@ public class Update {
 	}
 
 	/**
-	 * Creates an {@link Update} instance from the given {@link DBObject}. Allows to explicitly exclude fields from making
+	 * Creates an {@link Update} instance from the given {@link Document}. Allows to explicitly exclude fields from making
 	 * it into the created {@link Update} object. Note, that this will set attributes directly and <em>not</em> use
-	 * {@literal $set}. This means fields not given in the {@link DBObject} will be nulled when executing the update. To
-	 * create an only-updating {@link Update} instance of a {@link DBObject}, call {@link #set(String, Object)} for each
+	 * {@literal $set}. This means fields not given in the {@link Document} will be nulled when executing the update. To
+	 * create an only-updating {@link Update} instance of a {@link Document}, call {@link #set(String, Object)} for each
 	 * value in it.
-	 *
-	 * @param object the source {@link DBObject} to create the update from.
+	 * 
+	 * @param object the source {@link Document} to create the update from.
 	 * @param exclude the fields to exclude.
 	 * @return
 	 */
-	public static Update fromDBObject(DBObject object, String... exclude) {
+	public static Update fromDocument(Document object, String... exclude) {
 
 		Update update = new Update();
 		List<String> excludeList = Arrays.asList(exclude);
@@ -89,8 +87,8 @@ public class Update {
 
 			Object value = object.get(key);
 			update.modifierOps.put(key, value);
-			if (isKeyword(key) && value instanceof DBObject) {
-				update.keysToUpdate.addAll(((DBObject) value).keySet());
+			if (isKeyword(key) && value instanceof Document) {
+				update.keysToUpdate.addAll(((Document) value).keySet());
 			} else {
 				update.keysToUpdate.add(key);
 			}
@@ -192,7 +190,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pushAll(String key, Object[] values) {
-		addMultiFieldOperation("$pushAll", key, Arrays.copyOf(values, values.length));
+		addMultiFieldOperation("$pushAll", key, Arrays.asList(values));
 		return this;
 	}
 
@@ -256,7 +254,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pullAll(String key, Object[] values) {
-		addMultiFieldOperation("$pullAll", key, Arrays.copyOf(values, values.length));
+		addMultiFieldOperation("$pullAll", key, Arrays.asList(values));
 		return this;
 	}
 
@@ -297,7 +295,7 @@ public class Update {
 	 */
 	public Update currentTimestamp(String key) {
 
-		addMultiFieldOperation("$currentDate", key, new BasicDBObject("$type", "timestamp"));
+		addMultiFieldOperation("$currentDate", key, new Document("$type", "timestamp"));
 		return this;
 	}
 
@@ -362,8 +360,8 @@ public class Update {
 		return new BitwiseOperatorBuilder(this, key);
 	}
 
-	public DBObject getUpdateObject() {
-		return new BasicDBObject(modifierOps);
+	public Document getUpdateObject() {
+		return new Document(modifierOps);
 	}
 
 	/**
@@ -379,7 +377,7 @@ public class Update {
 
 		Assert.hasText(key, "Key/Path for update must not be null or blank.");
 
-		modifierOps.put(operator, new BasicDBObject(key, value));
+		modifierOps.put(operator, new Document(key, value));
 		this.keysToUpdate.add(key);
 	}
 
@@ -387,14 +385,14 @@ public class Update {
 
 		Assert.hasText(key, "Key/Path for update must not be null or blank.");
 		Object existingValue = this.modifierOps.get(operator);
-		DBObject keyValueMap;
+		Document keyValueMap;
 
 		if (existingValue == null) {
-			keyValueMap = new BasicDBObject();
+			keyValueMap = new Document();
 			this.modifierOps.put(operator, keyValueMap);
 		} else {
-			if (existingValue instanceof BasicDBObject) {
-				keyValueMap = (BasicDBObject) existingValue;
+			if (existingValue instanceof Document) {
+				keyValueMap = (Document) existingValue;
 			} else {
 				throw new InvalidDataAccessApiUsageException(
 						"Modifier Operations should be a LinkedHashMap but was " + existingValue.getClass());
@@ -904,7 +902,7 @@ public class Update {
 		}
 
 		private void addFieldOperation(BitwiseOperator operator, Number value) {
-			reference.addMultiFieldOperation(BIT_OPERATOR, key, new BasicDBObject(operator.toString(), value));
+			reference.addMultiFieldOperation(BIT_OPERATOR, key, new Document(operator.toString(), value));
 		}
 	}
 }

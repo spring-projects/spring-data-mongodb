@@ -26,6 +26,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.List;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -36,18 +37,12 @@ import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.TextScore;
-import org.springframework.data.mongodb.core.query.TextCriteria;
-import org.springframework.data.mongodb.core.query.TextQuery;
 import org.springframework.data.mongodb.core.query.TextQueryTests.FullTextDoc.FullTextDocBuilder;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * @author Christoph Strobl
@@ -76,8 +71,8 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		indexOps.ensureIndex(new IndexDefinition() {
 
 			@Override
-			public DBObject getIndexOptions() {
-				DBObject options = new BasicDBObject();
+			public Document getIndexOptions() {
+				Document options = new Document();
 				options.put("weights", weights());
 				options.put("name", "TextQueryTests_TextIndex");
 				options.put("language_override", "lang");
@@ -86,16 +81,16 @@ public class TextQueryTests extends AbstractIntegrationTests {
 			}
 
 			@Override
-			public DBObject getIndexKeys() {
-				DBObject keys = new BasicDBObject();
+			public Document getIndexKeys() {
+				Document keys = new Document();
 				keys.put("headline", "text");
 				keys.put("subheadline", "text");
 				keys.put("body", "text");
 				return keys;
 			}
 
-			private DBObject weights() {
-				DBObject weights = new BasicDBObject();
+			private Document weights() {
+				Document weights = new Document();
 				weights.put("headline", 10);
 				weights.put("subheadline", 5);
 				weights.put("body", 1);
@@ -240,8 +235,8 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		initWithDefaultDocuments();
 
 		// page 1
-		List<FullTextDoc> result = template.find(new TextQuery("bake coffee cake").sortByScore()
-				.with(new PageRequest(0, 2)), FullTextDoc.class);
+		List<FullTextDoc> result = template
+				.find(new TextQuery("bake coffee cake").sortByScore().with(new PageRequest(0, 2)), FullTextDoc.class);
 		assertThat(result, hasSize(2));
 		assertThat(result, contains(BAKE, COFFEE));
 
@@ -262,7 +257,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		this.template.save(MILK_AND_SUGAR);
 	}
 
-	@Document(collection = "fullTextDoc")
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "fullTextDoc")
 	static class FullTextDoc {
 
 		@Id String id;

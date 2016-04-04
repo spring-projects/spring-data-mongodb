@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -29,11 +30,10 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
 
 /**
  * @author Oliver Gierke
@@ -66,9 +66,9 @@ public abstract class AbstractIntegrationTests {
 			if (!collectionName.startsWith("system")) {
 				operations.execute(collectionName, new CollectionCallback<Void>() {
 					@Override
-					public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-						collection.remove(new BasicDBObject());
-						assertThat(collection.find().hasNext(), is(false));
+					public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
+						collection.deleteMany(new Document());
+						assertThat(collection.find().iterator().hasNext(), is(false));
 						return null;
 					}
 				});

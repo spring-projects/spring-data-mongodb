@@ -15,11 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
-
-import com.mongodb.DBObject;
 
 /**
  * {@link AggregationOperationContext} that combines the available field references from a given
@@ -54,10 +53,10 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.Document)
 	 */
 	@Override
-	public DBObject getMappedObject(DBObject dbObject) {
+	public Document getMappedObject(Document dbObject) {
 		return rootContext.getMappedObject(dbObject);
 	}
 

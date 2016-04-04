@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
@@ -98,15 +99,15 @@ public class ConditionalOperator implements AggregationExpression {
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public DBObject toDbObject(AggregationOperationContext context) {
+	public Document toDbObject(AggregationOperationContext context) {
 
-		BasicDBObject condObject = new BasicDBObject();
+		Document condObject = new Document();
 
 		condObject.append("if", resolveCriteria(context, condition));
 		condObject.append("then", resolveValue(context, thenValue));
 		condObject.append("else", resolveValue(context, otherwiseValue));
 
-		return new BasicDBObject("$cond", condObject);
+		return new Document("$cond", condObject);
 	}
 
 	private Object resolveValue(AggregationOperationContext context, Object value) {
@@ -119,7 +120,7 @@ public class ConditionalOperator implements AggregationExpression {
 			return ((ConditionalOperator) value).toDbObject(context);
 		}
 
-		return context.getMappedObject(new BasicDBObject("$set", value)).get("$set");
+		return context.getMappedObject(new Document("$set", value)).get("$set");
 	}
 
 	private Object resolveCriteria(AggregationOperationContext context, Object value) {
@@ -130,7 +131,7 @@ public class ConditionalOperator implements AggregationExpression {
 
 		if (value instanceof CriteriaDefinition) {
 
-			DBObject mappedObject = context.getMappedObject(((CriteriaDefinition) value).getCriteriaObject());
+			Document mappedObject = context.getMappedObject(((CriteriaDefinition) value).getCriteriaObject());
 			List<Object> clauses = new ArrayList<Object>();
 
 			clauses.addAll(getClauses(context, mappedObject));
@@ -146,7 +147,7 @@ public class ConditionalOperator implements AggregationExpression {
 				String.format("Invalid value in condition. Supported: DBObject, Field references, Criteria, got: %s", value));
 	}
 
-	private List<Object> getClauses(AggregationOperationContext context, DBObject mappedObject) {
+	private List<Object> getClauses(AggregationOperationContext context, Document mappedObject) {
 
 		List<Object> clauses = new ArrayList<Object>();
 
@@ -167,16 +168,16 @@ public class ConditionalOperator implements AggregationExpression {
 
 			List<Object> args = new ArrayList<Object>();
 			for (Object clause : (List<?>) predicate) {
-				if (clause instanceof DBObject) {
-					args.addAll(getClauses(context, (DBObject) clause));
+				if (clause instanceof Document) {
+					args.addAll(getClauses(context, (Document) clause));
 				}
 			}
 
 			clauses.add(new BasicDBObject(key, args));
 
-		} else if (predicate instanceof DBObject) {
+		} else if (predicate instanceof Document) {
 
-			DBObject nested = (DBObject) predicate;
+			Document nested = (Document) predicate;
 
 			for (String s : nested.keySet()) {
 
@@ -213,8 +214,8 @@ public class ConditionalOperator implements AggregationExpression {
 
 	private Object resolve(AggregationOperationContext context, Object value) {
 
-		if (value instanceof DBObject) {
-			return context.getMappedObject((DBObject) value);
+		if (value instanceof Document) {
+			return context.getMappedObject((Document) value);
 		}
 
 		return context.getReference((Field) value).toString();

@@ -22,6 +22,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.BsonObjectId;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -30,13 +33,12 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBObject;
-import com.mongodb.gridfs.GridFS;
-import com.mongodb.gridfs.GridFSDBFile;
-import com.mongodb.gridfs.GridFSFile;
-import com.mongodb.gridfs.GridFSInputFile;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.GridFSFindIterable;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 /**
  * {@link GridFsOperations} implementation to store content into MongoDB GridFS.
@@ -87,7 +89,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String)
 	 */
-	public GridFSFile store(InputStream content, String filename) {
+	public ObjectId store(InputStream content, String filename) {
 		return store(content, filename, (Object) null);
 	}
 
@@ -97,16 +99,16 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 */
 
 	@Override
-	public GridFSFile store(InputStream content, Object metadata) {
+	public ObjectId store(InputStream content, Object metadata) {
 		return store(content, null, metadata);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, com.mongodb.Document)
 	 */
 	@Override
-	public GridFSFile store(InputStream content, DBObject metadata) {
+	public ObjectId store(InputStream content, Document metadata) {
 		return store(content, null, metadata);
 	}
 
@@ -114,7 +116,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String)
 	 */
-	public GridFSFile store(InputStream content, String filename, String contentType) {
+	public ObjectId store(InputStream content, String filename, String contentType) {
 		return store(content, filename, contentType, (Object) null);
 	}
 
@@ -122,7 +124,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.Object)
 	 */
-	public GridFSFile store(InputStream content, String filename, Object metadata) {
+	public ObjectId store(InputStream content, String filename, Object metadata) {
 		return store(content, filename, null, metadata);
 	}
 
@@ -130,12 +132,12 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String, java.lang.Object)
 	 */
-	public GridFSFile store(InputStream content, String filename, String contentType, Object metadata) {
+	public ObjectId store(InputStream content, String filename, String contentType, Object metadata) {
 
-		DBObject dbObject = null;
+		Document dbObject = null;
 
 		if (metadata != null) {
-			dbObject = new BasicDBObject();
+			dbObject = new Document();
 			converter.write(metadata, dbObject);
 		}
 
@@ -144,60 +146,58 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.Document)
 	 */
-	public GridFSFile store(InputStream content, String filename, DBObject metadata) {
+	public ObjectId store(InputStream content, String filename, Document metadata) {
 		return this.store(content, filename, null, metadata);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.Document)
 	 */
-	public GridFSFile store(InputStream content, String filename, String contentType, DBObject metadata) {
+	public ObjectId store(InputStream content, String filename, String contentType, Document metadata) {
 
 		Assert.notNull(content);
 
-		GridFSInputFile file = getGridFs().createFile(content);
+		GridFSUploadOptions opts = new GridFSUploadOptions();
 
-		if (filename != null) {
-			file.setFilename(filename);
+		Document mData = new Document();
+		if (StringUtils.hasText(contentType)) {
+			mData.put("type", contentType);
 		}
 
 		if (metadata != null) {
-			file.setMetaData(metadata);
+			mData.putAll(metadata);
 		}
 
-		if (contentType != null) {
-			file.setContentType(contentType);
-		}
+		opts.metadata(mData);
 
-		file.save();
-		return file;
+		return getGridFs().uploadFromStream(filename, content, opts);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#find(com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#find(com.mongodb.Document)
 	 */
-	public List<GridFSDBFile> find(Query query) {
+	public GridFSFindIterable find(Query query) {
 
 		if (query == null) {
-			return getGridFs().find(new BasicDBObject());
+			return getGridFs().find(new Document());
 		}
 
-		DBObject queryObject = getMappedQuery(query.getQueryObject());
-		DBObject sortObject = getMappedQuery(query.getSortObject());
+		Document queryObject = getMappedQuery(query.getQueryObject());
+		Document sortObject = getMappedQuery(query.getSortObject());
 
-		return getGridFs().find(queryObject, sortObject);
+		return getGridFs().find(queryObject).sort(sortObject);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#findOne(com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#findOne(com.mongodb.Document)
 	 */
-	public GridFSDBFile findOne(Query query) {
-		return getGridFs().findOne(getMappedQuery(query));
+	public GridFSFile findOne(Query query) {
+		return find(query).first();
 	}
 
 	/*
@@ -205,7 +205,10 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#delete(org.springframework.data.mongodb.core.query.Query)
 	 */
 	public void delete(Query query) {
-		getGridFs().remove(getMappedQuery(query));
+
+		for (GridFSFile x : find(query)) {
+			getGridFs().delete(((BsonObjectId) x.getId()).getValue());
+		}
 	}
 
 	/*
@@ -222,8 +225,8 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 */
 	public GridFsResource getResource(String location) {
 
-		GridFSDBFile file = findOne(query(whereFilename().is(location)));
-		return file != null ? new GridFsResource(file) : null;
+		GridFSFile file = findOne(query(whereFilename().is(location)));
+		return file != null ? new GridFsResource(file, getGridFs().openDownloadStreamByName(location)) : null;
 	}
 
 	/*
@@ -240,11 +243,11 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 		if (path.isPattern()) {
 
-			List<GridFSDBFile> files = find(query(whereFilename().regex(path.toRegex())));
-			List<GridFsResource> resources = new ArrayList<GridFsResource>(files.size());
+			GridFSFindIterable files = find(query(whereFilename().regex(path.toRegex())));
+			List<GridFsResource> resources = new ArrayList<GridFsResource>();
 
-			for (GridFSDBFile file : files) {
-				resources.add(new GridFsResource(file));
+			for (GridFSFile file : files) {
+				resources.add(new GridFsResource(file, getGridFs().openDownloadStreamByName(file.getFilename())));
 			}
 
 			return resources.toArray(new GridFsResource[resources.size()]);
@@ -253,16 +256,17 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		return new GridFsResource[] { getResource(locationPattern) };
 	}
 
-	private DBObject getMappedQuery(Query query) {
+	private Document getMappedQuery(Query query) {
 		return query == null ? new Query().getQueryObject() : getMappedQuery(query.getQueryObject());
 	}
 
-	private DBObject getMappedQuery(DBObject query) {
+	private Document getMappedQuery(Document query) {
 		return query == null ? null : queryMapper.getMappedObject(query, null);
 	}
 
-	private GridFS getGridFs() {
-		DB db = dbFactory.getDb();
-		return bucket == null ? new GridFS(db) : new GridFS(db, bucket);
+	private GridFSBucket getGridFs() {
+
+		MongoDatabase db = dbFactory.getDb();
+		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
 	}
 }

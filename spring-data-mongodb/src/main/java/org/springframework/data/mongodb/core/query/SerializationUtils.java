@@ -22,10 +22,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
 /**
@@ -41,7 +40,7 @@ public abstract class SerializationUtils {
 	}
 
 	/**
-	 * Flattens out a given {@link DBObject}.
+	 * Flattens out a given {@link Document}.
 	 * 
 	 * <pre>
 	 * <code>
@@ -63,7 +62,7 @@ public abstract class SerializationUtils {
 	 * @return {@link Collections#emptyMap()} when source is {@literal null}
 	 * @since 1.8
 	 */
-	public static Map<String, Object> flattenMap(DBObject source) {
+	public static Map<String, Object> flattenMap(Document source) {
 
 		if (source == null) {
 			return Collections.emptyMap();
@@ -76,9 +75,9 @@ public abstract class SerializationUtils {
 
 	private static void toFlatMap(String currentPath, Object source, Map<String, Object> map) {
 
-		if (source instanceof BasicDBObject) {
+		if (source instanceof Document) {
 
-			BasicDBObject dbo = (BasicDBObject) source;
+			Document dbo = (Document) source;
 			Iterator<Map.Entry<String, Object>> iter = dbo.entrySet().iterator();
 			String pathPrefix = currentPath.isEmpty() ? "" : currentPath + ".";
 
@@ -88,9 +87,9 @@ public abstract class SerializationUtils {
 
 				if (entry.getKey().startsWith("$")) {
 					if (map.containsKey(currentPath)) {
-						((BasicDBObject) map.get(currentPath)).put(entry.getKey(), entry.getValue());
+						((Document) map.get(currentPath)).put(entry.getKey(), entry.getValue());
 					} else {
-						map.put(currentPath, new BasicDBObject(entry.getKey(), entry.getValue()));
+						map.put(currentPath, new Document(entry.getKey(), entry.getValue()));
 					}
 				} else {
 
@@ -105,7 +104,7 @@ public abstract class SerializationUtils {
 	/**
 	 * Serializes the given object into pseudo-JSON meaning it's trying to create a JSON representation as far as possible
 	 * but falling back to the given object's {@link Object#toString()} method if it's not serializable. Useful for
-	 * printing raw {@link DBObject}s containing complex values before actually converting them into Mongo native types.
+	 * printing raw {@link Document}s containing complex values before actually converting them into Mongo native types.
 	 * 
 	 * @param value
 	 * @return
@@ -123,8 +122,8 @@ public abstract class SerializationUtils {
 				return toString((Collection<?>) value);
 			} else if (value instanceof Map) {
 				return toString((Map<?, ?>) value);
-			} else if (value instanceof DBObject) {
-				return toString(((DBObject) value).toMap());
+			} else if (value instanceof Document) {
+				return toString(((Document) value));
 			} else {
 				return String.format("{ $java : %s }", value.toString());
 			}

@@ -33,6 +33,7 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Factory to create {@link DB} instances from a {@link Mongo} instance.
@@ -187,7 +188,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.MongoDbFactory#getDb()
 	 */
-	public DB getDb() throws DataAccessException {
+	public MongoDatabase getDb() throws DataAccessException {
 		return getDb(databaseName);
 	}
 
@@ -195,18 +196,17 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.MongoDbFactory#getDb(java.lang.String)
 	 */
-	@SuppressWarnings("deprecation")
-	public DB getDb(String dbName) throws DataAccessException {
+	public MongoDatabase getDb(String dbName) throws DataAccessException {
 
 		Assert.hasText(dbName, "Database name must not be empty.");
 
-		DB db = MongoDbUtils.getDB(mongo, dbName, credentials, authenticationDatabaseName);
+		MongoDatabase db = ((MongoClient) mongo).getDatabase(dbName);
 
-		if (writeConcern != null) {
-			db.setWriteConcern(writeConcern);
+		if (writeConcern == null) {
+			return db;
 		}
 
-		return db;
+		return db.withWriteConcern(writeConcern);
 	}
 
 	/**
@@ -231,5 +231,11 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	@Override
 	public PersistenceExceptionTranslator getExceptionTranslator() {
 		return this.exceptionTranslator;
+	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public DB getLegacyDb() {
+		return mongo.getDB(databaseName);
 	}
 }

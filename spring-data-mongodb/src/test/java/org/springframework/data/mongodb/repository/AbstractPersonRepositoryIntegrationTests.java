@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1000,12 +999,9 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	/**
-	 * Ignored for now as this requires Querydsl 3.4.1 to succeed.
-	 * 
 	 * @see DATAMONGO-972
 	 */
 	@Test
-	@Ignore
 	public void shouldExecuteFindOnDbRefCorrectly() {
 
 		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);

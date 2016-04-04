@@ -19,13 +19,11 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.bson.Document;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * {@link IndexDefinition} to span multiple keys for text search.
@@ -90,9 +88,9 @@ public class TextIndexDefinition implements IndexDefinition {
 	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
 	 */
 	@Override
-	public DBObject getIndexKeys() {
+	public Document getIndexKeys() {
 
-		DBObject keys = new BasicDBObject();
+		Document keys = new Document();
 		for (TextIndexedFieldSpec fieldSpec : fieldSpecs) {
 			keys.put(fieldSpec.fieldname, "text");
 		}
@@ -105,9 +103,9 @@ public class TextIndexDefinition implements IndexDefinition {
 	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexOptions()
 	 */
 	@Override
-	public DBObject getIndexOptions() {
+	public Document getIndexOptions() {
 
-		DBObject options = new BasicDBObject();
+		Document options = new Document();
 		if (StringUtils.hasText(name)) {
 			options.put("name", name);
 		}
@@ -115,7 +113,7 @@ public class TextIndexDefinition implements IndexDefinition {
 			options.put("default_language", defaultLanguage);
 		}
 
-		BasicDBObject weightsDbo = new BasicDBObject();
+		Document weightsDbo = new Document();
 		for (TextIndexedFieldSpec fieldSpec : fieldSpecs) {
 			if (fieldSpec.isWeighted()) {
 				weightsDbo.put(fieldSpec.getFieldname(), fieldSpec.getWeight());
@@ -288,8 +286,8 @@ public class TextIndexDefinition implements IndexDefinition {
 		public TextIndexDefinitionBuilder onField(String fieldname, Float weight) {
 
 			if (this.instance.fieldSpecs.contains(ALL_FIELDS)) {
-				throw new InvalidDataAccessApiUsageException(String.format("Cannot add %s to field spec for all fields.",
-						fieldname));
+				throw new InvalidDataAccessApiUsageException(
+						String.format("Cannot add %s to field spec for all fields.", fieldname));
 			}
 
 			this.instance.fieldSpecs.add(new TextIndexedFieldSpec(fieldname, weight));
@@ -318,9 +316,9 @@ public class TextIndexDefinition implements IndexDefinition {
 		public TextIndexDefinitionBuilder withLanguageOverride(String fieldname) {
 
 			if (StringUtils.hasText(this.instance.languageOverride)) {
-				throw new InvalidDataAccessApiUsageException(String.format(
-						"Cannot set language override on %s as it is already defined on %s.", fieldname,
-						this.instance.languageOverride));
+				throw new InvalidDataAccessApiUsageException(
+						String.format("Cannot set language override on %s as it is already defined on %s.", fieldname,
+								this.instance.languageOverride));
 			}
 
 			this.instance.languageOverride = fieldname;

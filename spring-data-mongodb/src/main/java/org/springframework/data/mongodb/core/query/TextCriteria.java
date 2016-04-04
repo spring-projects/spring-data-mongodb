@@ -18,12 +18,9 @@ package org.springframework.data.mongodb.core.query;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
 
 /**
  * Implementation of {@link CriteriaDefinition} to be used for full text search.
@@ -209,27 +206,27 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getCriteriaObject()
 	 */
 	@Override
-	public DBObject getCriteriaObject() {
+	public Document getCriteriaObject() {
 
-		BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
+		Document document = new Document();
 
 		if (StringUtils.hasText(language)) {
-			builder.add("$language", language);
+			document.put("$language", language);
 		}
 
 		if (!terms.isEmpty()) {
-			builder.add("$search", join(terms));
+			document.put("$search", join(terms));
 		}
 
 		if (caseSensitive != null) {
-			builder.add("$caseSensitive", caseSensitive);
+			document.put("$caseSensitive", caseSensitive);
 		}
 
 		if (diacriticSensitive != null) {
-			builder.add("$diacriticSensitive", diacriticSensitive);
+			document.put("$diacriticSensitive", diacriticSensitive);
 		}
 
-		return new BasicDBObject("$text", builder.get());
+		return new Document("$text", document);
 	}
 
 	private String join(Iterable<Term> terms) {

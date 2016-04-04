@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.xml.bind.DatatypeConverter;
 
 import org.bson.BSON;
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,9 +51,6 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -100,15 +98,15 @@ public class StringBasedMongoQueryUnitTests {
 		Address address = new Address("Foo", "0123", "Bar");
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, address);
 
-		DBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 		converter.write(address, dbObject);
-		dbObject.removeField(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
+		dbObject.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
-		BasicDBObject queryObject = new BasicDBObject("address", dbObject);
+		Document queryObject = new Document("address", dbObject);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
 
 	@Test
@@ -119,15 +117,15 @@ public class StringBasedMongoQueryUnitTests {
 		Address address = new Address("Foo", "0123", "Bar");
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews", address);
 
-		DBObject addressDbObject = new BasicDBObject();
+		Document addressDbObject = new Document();
 		converter.write(address, addressDbObject);
-		addressDbObject.removeField(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
+		addressDbObject.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
 
-		DBObject reference = new BasicDBObject("address", addressDbObject);
-		reference.put("lastname", "Matthews");
+		Document reference = new Document("lastname", "Matthews");
+		reference.append("address", addressDbObject);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
-		assertThat(query.getQueryObject(), is(reference));
+		assertThat(query.getQueryObject().toJson(), is(reference.toJson()));
 	}
 
 	@Test
@@ -137,7 +135,7 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { null });
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject().containsField("address"), is(true));
+		assertThat(query.getQueryObject().containsKey("address"), is(true));
 		assertThat(query.getQueryObject().get("address"), is(nullValue()));
 	}
 
@@ -179,8 +177,8 @@ public class StringBasedMongoQueryUnitTests {
 	public void shouldSupportFindByParameterizedCriteriaAndFields() throws Exception {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] {
-				new BasicDBObject("firstname", "first").append("lastname", "last"), Collections.singletonMap("lastname", 1) });
-		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields", DBObject.class,
+				new Document("firstname", "first").append("lastname", "last"), Collections.singletonMap("lastname", 1) });
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields", Document.class,
 				Map.class);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
@@ -201,7 +199,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject(), is(new BasicQuery("{title: {$regex: '^fun', $options: 'i'}}").getQueryObject()));
+		assertThat(query.getQueryObject().toJson(),
+				is(new BasicQuery("{title: {$regex: '^fun', $options: 'i'}}").getQueryObject().toJson()));
 	}
 
 	/**
@@ -294,7 +293,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
 
-		assertThat(query.getQueryObject(), is(new BasicDBObjectBuilder().add("key", "value").get()));
+		assertThat(query.getQueryObject(), is(new Document().append("key", "value")));
 	}
 
 	/**
@@ -359,7 +358,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
 				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : " + BSON.B_GENERAL + "}}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
 
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
@@ -398,13 +397,13 @@ public class StringBasedMongoQueryUnitTests {
 		void invalidMethod(String lastname);
 
 		@Query(value = "?0", fields = "?1")
-		DBObject findByParameterizedCriteriaAndFields(DBObject criteria, Map<String, Integer> fields);
+		Document findByParameterizedCriteriaAndFields(Document criteria, Map<String, Integer> fields);
 
 		@Query("{'title': { $regex : '^?0', $options : 'i'}}")
-		List<DBObject> findByTitleBeginsWithExplicitQuoting(String title);
+		List<Document> findByTitleBeginsWithExplicitQuoting(String title);
 
 		@Query("{$where: 'return this.date.getUTCMonth() == ?2 && this.date.getUTCDay() == ?3;'}")
-		List<DBObject> findByQueryWithParametersInExpression(int param1, int param2, int param3, int param4);
+		List<Document> findByQueryWithParametersInExpression(int param1, int param2, int param3, int param4);
 
 		@Query("{ 'reference' : { $ref : 'reference', $id : ?0 }}")
 		Object methodWithManuallyDefinedDbRef(String id);

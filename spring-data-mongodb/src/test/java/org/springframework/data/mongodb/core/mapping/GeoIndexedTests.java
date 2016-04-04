@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 import static org.junit.Assert.*;
 
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.After;
@@ -33,11 +34,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
 
 /**
  * @author Jon Brisbin
@@ -79,9 +80,12 @@ public class GeoIndexedTests {
 		template.insert(geo);
 
 		boolean hasIndex = template.execute("geolocation", new CollectionCallback<Boolean>() {
-			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				List<DBObject> indexes = collection.getIndexInfo();
-				for (DBObject dbo : indexes) {
+			public Boolean doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
+
+				List<Document> indexes = new ArrayList<Document>();
+				collection.listIndexes(Document.class).into(indexes);
+
+				for (Document dbo : indexes) {
 					if ("location".equals(dbo.get("name"))) {
 						return true;
 					}

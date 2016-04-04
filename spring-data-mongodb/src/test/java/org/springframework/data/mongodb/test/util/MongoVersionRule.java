@@ -24,7 +24,7 @@ import org.junit.runners.model.Statement;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
@@ -81,8 +81,9 @@ public class MongoVersionRule implements TestRule {
 			public void evaluate() throws Throwable {
 				if (currentVersion != null) {
 					if (currentVersion.isLessThan(minVersion) || currentVersion.isGreaterThan(maxVersion)) {
-						throw new AssumptionViolatedException(String.format(
-								"Expected mongodb server to be in range %s to %s but found %s", minVersion, maxVersion, currentVersion));
+						throw new AssumptionViolatedException(
+								String.format("Expected mongodb server to be in range %s to %s but found %s", minVersion, maxVersion,
+										currentVersion));
 					}
 				}
 				base.evaluate();
@@ -97,7 +98,7 @@ public class MongoVersionRule implements TestRule {
 				MongoClient client;
 				client = new MongoClient(host, port);
 				DB db = client.getDB("test");
-				CommandResult result = db.command(new BasicDBObjectBuilder().add("buildInfo", 1).get());
+				CommandResult result = db.command(new BasicDBObject().append("buildInfo", 1));
 				this.currentVersion = Version.parse(result.get("version").toString());
 			} catch (Exception e) {
 				e.printStackTrace();

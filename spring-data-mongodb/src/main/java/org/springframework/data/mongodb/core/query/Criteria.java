@@ -26,6 +26,8 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.bson.BSON;
+import org.bson.BsonRegularExpression;
+import org.bson.Document;
 import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -39,8 +41,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Central class for creating queries. It follows a fluent API style so that you can easily chain together multiple
@@ -216,8 +216,8 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria in(Object... o) {
 		if (o.length > 1 && o[1] instanceof Collection) {
-			throw new InvalidMongoDbApiUsageException("You can only pass in one argument of type "
-					+ o[1].getClass().getName());
+			throw new InvalidMongoDbApiUsageException(
+					"You can only pass in one argument of type " + o[1].getClass().getName());
 		}
 		criteria.put("$in", Arrays.asList(o));
 		return this;
@@ -394,6 +394,16 @@ public class Criteria implements CriteriaDefinition {
 		}
 
 		this.isValue = pattern;
+		return this;
+	}
+
+	public Criteria regex(BsonRegularExpression regex) {
+
+		if (lastOperatorWasNot()) {
+			return not(regex);
+		}
+
+		this.isValue = regex;
 		return this;
 	}
 
@@ -582,8 +592,8 @@ public class Criteria implements CriteriaDefinition {
 	private Criteria registerCriteriaChainElement(Criteria criteria) {
 
 		if (lastOperatorWasNot()) {
-			throw new IllegalArgumentException("operator $not is not allowed around criteria chain element: "
-					+ criteria.getCriteriaObject());
+			throw new IllegalArgumentException(
+					"operator $not is not allowed around criteria chain element: " + criteria.getCriteriaObject());
 		} else {
 			criteriaChain.add(criteria);
 		}
@@ -598,16 +608,16 @@ public class Criteria implements CriteriaDefinition {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getCriteriaObject()
 	 */
-	public DBObject getCriteriaObject() {
+	public Document getCriteriaObject() {
 
 		if (this.criteriaChain.size() == 1) {
 			return criteriaChain.get(0).getSingleCriteriaObject();
 		} else if (CollectionUtils.isEmpty(this.criteriaChain) && !CollectionUtils.isEmpty(this.criteria)) {
 			return getSingleCriteriaObject();
 		} else {
-			DBObject criteriaObject = new BasicDBObject();
+			Document criteriaObject = new Document();
 			for (Criteria c : this.criteriaChain) {
-				DBObject dbo = c.getSingleCriteriaObject();
+				Document dbo = c.getSingleCriteriaObject();
 				for (String k : dbo.keySet()) {
 					setValue(criteriaObject, k, dbo.get(k));
 				}
@@ -616,9 +626,9 @@ public class Criteria implements CriteriaDefinition {
 		}
 	}
 
-	protected DBObject getSingleCriteriaObject() {
+	protected Document getSingleCriteriaObject() {
 
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 		boolean not = false;
 
 		for (Entry<String, Object> entry : criteria.entrySet()) {
@@ -627,11 +637,11 @@ public class Criteria implements CriteriaDefinition {
 			Object value = entry.getValue();
 
 			if (requiresGeoJsonFormat(value)) {
-				value = new BasicDBObject("$geometry", value);
+				value = new Document("$geometry", value);
 			}
 
 			if (not) {
-				DBObject notDbo = new BasicDBObject();
+				Document notDbo = new Document();
 				notDbo.put(key, value);
 				dbo.put("$not", notDbo);
 				not = false;
@@ -646,12 +656,12 @@ public class Criteria implements CriteriaDefinition {
 
 		if (!StringUtils.hasText(this.key)) {
 			if (not) {
-				return new BasicDBObject("$not", dbo);
+				return new Document("$not", dbo);
 			}
 			return dbo;
 		}
 
-		DBObject queryCriteria = new BasicDBObject();
+		Document queryCriteria = new Document();
 
 		if (!NOT_SET.equals(isValue)) {
 			queryCriteria.put(this.key, this.isValue);
@@ -671,12 +681,12 @@ public class Criteria implements CriteriaDefinition {
 		return bsonList;
 	}
 
-	private void setValue(DBObject dbo, String key, Object value) {
+	private void setValue(Document dbo, String key, Object value) {
 		Object existing = dbo.get(key);
 		if (existing == null) {
 			dbo.put(key, value);
 		} else {
-			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, "
+			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDocument, "
 					+ "you can't add a second '" + key + "' expression specified as '" + key + " : " + value + "'. "
 					+ "Criteria already contains '" + key + " : " + existing + "'.");
 		}
@@ -690,15 +700,15 @@ public class Criteria implements CriteriaDefinition {
 
 		Object existingNearOperationValue = criteria.get(command);
 
-		if (existingNearOperationValue instanceof DBObject) {
+		if (existingNearOperationValue instanceof Document) {
 
-			((DBObject) existingNearOperationValue).put(operation, maxDistance);
+			((Document) existingNearOperationValue).put(operation, maxDistance);
 
 			return true;
 
 		} else if (existingNearOperationValue instanceof GeoJson) {
 
-			BasicDBObject dbo = new BasicDBObject("$geometry", existingNearOperationValue).append(operation, maxDistance);
+			Document dbo = new Document("$geometry", existingNearOperationValue).append(operation, maxDistance);
 			criteria.put(command, dbo);
 
 			return true;

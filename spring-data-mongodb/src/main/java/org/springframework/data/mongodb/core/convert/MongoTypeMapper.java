@@ -17,16 +17,16 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.Set;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.data.convert.TypeMapper;
 
-import com.mongodb.DBObject;
-
 /**
- * Mongo-specific {@link TypeMapper} exposing that {@link DBObject}s might contain a type key.
+ * Mongo-specific {@link TypeMapper} exposing that {@link Document}s might contain a type key.
  * 
  * @author Oliver Gierke
  */
-public interface MongoTypeMapper extends TypeMapper<DBObject> {
+public interface MongoTypeMapper extends TypeMapper<Bson> {
 
 	/**
 	 * Returns whether the given key is the type key.
@@ -36,12 +36,12 @@ public interface MongoTypeMapper extends TypeMapper<DBObject> {
 	boolean isTypeKey(String key);
 
 	/**
-	 * Writes type restrictions to the given {@link DBObject}. This usually results in an {@code $in}-clause to be
+	 * Writes type restrictions to the given {@link Document}. This usually results in an {@code $in}-clause to be
 	 * generated that restricts the type-key (e.g. {@code _class}) to be in the set of type aliases for the given
 	 * {@code restrictedTypes}.
 	 * 
 	 * @param result must not be {@literal null}
 	 * @param restrictedTypes must not be {@literal null}
 	 */
-	void writeTypeRestrictions(DBObject result, Set<Class<?>> restrictedTypes);
+	void writeTypeRestrictions(Document result, Set<Class<?>> restrictedTypes);
 }

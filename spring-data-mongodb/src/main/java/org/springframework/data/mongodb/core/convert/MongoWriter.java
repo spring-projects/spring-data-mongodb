@@ -15,22 +15,22 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.bson.conversions.Bson;
 import org.springframework.data.convert.EntityWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
- * A MongoWriter is responsible for converting an object of type T to the native MongoDB representation DBObject.
+ * A MongoWriter is responsible for converting an object of type T to the native MongoDB representation Document.
  * 
- * @param <T> the type of the object to convert to a DBObject
+ * @param <T> the type of the object to convert to a Document
  * @author Mark Pollack
  * @author Thomas Risberg
  * @author Oliver Gierke
  */
-public interface MongoWriter<T> extends EntityWriter<T, DBObject> {
+public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 
 	/**
 	 * Converts the given object into one Mongo will be able to store natively. If the given object can already be stored

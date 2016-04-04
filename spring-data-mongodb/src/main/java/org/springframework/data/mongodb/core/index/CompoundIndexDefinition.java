@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Index definition to span multiple keys.
@@ -28,14 +26,14 @@ import com.mongodb.DBObject;
  */
 public class CompoundIndexDefinition extends Index {
 
-	private DBObject keys;
+	private Document keys;
 
 	/**
 	 * Creates a new {@link CompoundIndexDefinition} for the given keys.
 	 * 
 	 * @param keys must not be {@literal null}.
 	 */
-	public CompoundIndexDefinition(DBObject keys) {
+	public CompoundIndexDefinition(Document keys) {
 
 		Assert.notNull(keys, "Keys must not be null!");
 		this.keys = keys;
@@ -46,9 +44,9 @@ public class CompoundIndexDefinition extends Index {
 	 * @see org.springframework.data.mongodb.core.index.Index#getIndexKeys()
 	 */
 	@Override
-	public DBObject getIndexKeys() {
+	public Document getIndexKeys() {
 
-		BasicDBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 		dbo.putAll(this.keys);
 		dbo.putAll(super.getIndexKeys());
 		return dbo;

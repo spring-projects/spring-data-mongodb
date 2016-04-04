@@ -20,7 +20,7 @@
   <mongo:mapping-converter/>
   
   <!--  Mongo config -->
-  <bean id="mongo" class="org.springframework.data.mongodb.core.MongoFactoryBean">
+  <bean id="mongo" class="org.springframework.data.mongodb.core.MongoClientFactoryBean">
     <property name="host" value="localhost"/>
     <property name="port" value="27017"/>
   </bean>

@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
- * Event being thrown after a single or a set of documents has/have been deleted. The {@link DBObject} held in the event
+ * Event being thrown after a single or a set of documents has/have been deleted. The {@link Document} held in the event
  * will be the query document <em>after</am> it has been mapped onto the domain type handled.
  * 
  * @author Martin Baumgartner
@@ -29,26 +29,26 @@ public class AfterDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * Creates a new {@link AfterDeleteEvent} for the given {@link DBObject} and type.
+	 * Creates a new {@link AfterDeleteEvent} for the given {@link Document} and type.
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AfterDeleteEvent(DBObject, Class, String)}.
+	 * @deprecated since 1.8. Please use {@link #AfterDeleteEvent(Document, Class, String)}.
 	 */
 	@Deprecated
-	public AfterDeleteEvent(DBObject dbo, Class<T> type) {
+	public AfterDeleteEvent(Document dbo, Class<T> type) {
 		this(dbo, type, null);
 	}
 
 	/**
-	 * Creates a new {@link AfterDeleteEvent} for the given {@link DBObject}, type and collectionName.
+	 * Creates a new {@link AfterDeleteEvent} for the given {@link Document}, type and collectionName.
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public AfterDeleteEvent(DBObject dbo, Class<T> type, String collectionName) {
+	public AfterDeleteEvent(Document dbo, Class<T> type, String collectionName) {
 		super(dbo, type, collectionName);
 	}
 }

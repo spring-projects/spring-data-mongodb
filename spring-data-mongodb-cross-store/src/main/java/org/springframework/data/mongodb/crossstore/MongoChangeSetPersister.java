@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.crossstore;
 
 import javax.persistence.EntityManagerFactory;
 
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -29,10 +30,10 @@ import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.result.DeleteResult;
 
 /**
  * @author Thomas Risberg
@@ -74,15 +75,15 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 
 		String collName = getCollectionNameForEntity(entityClass);
 
-		final DBObject dbk = new BasicDBObject();
+		final Document dbk = new Document();
 		dbk.put(ENTITY_ID, id);
 		dbk.put(ENTITY_CLASS, entityClass.getName());
 		if (log.isDebugEnabled()) {
 			log.debug("Loading MongoDB data for {}", dbk);
 		}
 		mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				for (DBObject dbo : collection.find(dbk)) {
+			public Object doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
+				for (Document dbo : collection.find(dbk)) {
 					String key = (String) dbo.get(ENTITY_FIELD_NAME);
 					if (log.isDebugEnabled()) {
 						log.debug("Processing key: {}", key);
@@ -143,27 +144,31 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		for (String key : cs.getValues().keySet()) {
 			if (key != null && !key.startsWith("_") && !key.equals(ChangeSetPersister.ID_KEY)) {
 				Object value = cs.getValues().get(key);
-				final DBObject dbQuery = new BasicDBObject();
+				final Document dbQuery = new Document();
 				dbQuery.put(ENTITY_ID, getPersistentId(entity, cs));
 				dbQuery.put(ENTITY_CLASS, entity.getClass().getName());
 				dbQuery.put(ENTITY_FIELD_NAME, key);
-				DBObject dbId = mongoTemplate.execute(collName, new CollectionCallback<DBObject>() {
-					public DBObject doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-						return collection.findOne(dbQuery);
+				final Document dbId = mongoTemplate.execute(collName, new CollectionCallback<Document>() {
+					public Document doInCollection(MongoCollection<Document> collection)
+							throws MongoException, DataAccessException {
+						Document id = collection.find(dbQuery).first();
+						return id;
 					}
 				});
+
 				if (value == null) {
 					if (log.isDebugEnabled()) {
 						log.debug("Flush: removing: {}", dbQuery);
 					}
 					mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-						public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-							collection.remove(dbQuery);
+						public Object doInCollection(MongoCollection<Document> collection)
+								throws MongoException, DataAccessException {
+							DeleteResult dr = collection.deleteMany(dbQuery);
 							return null;
 						}
 					});
 				} else {
-					final DBObject dbDoc = new BasicDBObject();
+					final Document dbDoc = new Document();
 					dbDoc.putAll(dbQuery);
 					if (log.isDebugEnabled()) {
 						log.debug("Flush: saving: {}", dbQuery);
@@ -174,8 +179,18 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 						dbDoc.put("_id", dbId.get("_id"));
 					}
 					mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-						public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-							collection.save(dbDoc);
+						public Object doInCollection(MongoCollection<Document> collection)
+								throws MongoException, DataAccessException {
+
+							if (dbId != null) {
+								collection.replaceOne(Filters.eq("_id", dbId.get("_id")), dbDoc);
+							} else {
+
+								if (dbDoc.containsKey("_id") && dbDoc.get("_id") == null) {
+									dbDoc.remove("_id");
+								}
+								collection.insertOne(dbDoc);
+							}
 							return null;
 						}
 					});

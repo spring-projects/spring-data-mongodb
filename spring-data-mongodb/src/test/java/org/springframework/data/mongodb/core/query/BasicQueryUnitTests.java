@@ -20,11 +20,9 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.domain.Sort.Direction;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
@@ -41,15 +39,15 @@ public class BasicQueryUnitTests {
 	@Test
 	public void createsQueryFromPlainJson() {
 		Query q = new BasicQuery("{ \"name\" : \"Thomas\"}");
-		DBObject reference = new BasicDBObject("name", "Thomas");
+		Document reference = new Document("name", "Thomas");
 		assertThat(q.getQueryObject(), is(reference));
 	}
 
 	@Test
 	public void addsCriteriaCorrectly() {
 		Query q = new BasicQuery("{ \"name\" : \"Thomas\"}").addCriteria(where("age").lt(80));
-		DBObject reference = new BasicDBObject("name", "Thomas");
-		reference.put("age", new BasicDBObject("$lt", 80));
+		Document reference = new Document("name", "Thomas");
+		reference.put("age", new Document("$lt", 80));
 		assertThat(q.getQueryObject(), is(reference));
 	}
 
@@ -57,10 +55,10 @@ public class BasicQueryUnitTests {
 	public void overridesSortCorrectly() {
 
 		BasicQuery query = new BasicQuery("{}");
-		query.setSortObject(new BasicDBObject("name", -1));
+		query.setSortObject(new Document("name", -1));
 		query.with(new org.springframework.data.domain.Sort(Direction.ASC, "lastname"));
 
-		DBObject sortReference = new BasicDBObject("name", -1);
+		Document sortReference = new Document("name", -1);
 		sortReference.put("lastname", 1);
 		assertThat(query.getSortObject(), is(sortReference));
 	}
@@ -72,10 +70,10 @@ public class BasicQueryUnitTests {
 	public void equalsContract() {
 
 		BasicQuery query1 = new BasicQuery("{ \"name\" : \"Thomas\"}", "{\"name\":1, \"age\":1}");
-		query1.setSortObject(new BasicDBObject("name", -1));
+		query1.setSortObject(new Document("name", -1));
 
 		BasicQuery query2 = new BasicQuery("{ \"name\" : \"Oliver\"}", "{\"name\":1, \"address\":1}");
-		query2.setSortObject(new BasicDBObject("name", 1));
+		query2.setSortObject(new Document("name", 1));
 
 		EqualsVerifier.forExamples(query1, query2) //
 				.withRedefinedSuperclass() //
@@ -93,10 +91,10 @@ public class BasicQueryUnitTests {
 		String fields = "{\"name\":1, \"age\":1}";
 
 		BasicQuery query1 = new BasicQuery(qry, fields);
-		query1.setSortObject(new BasicDBObject("name", -1));
+		query1.setSortObject(new Document("name", -1));
 
 		BasicQuery query2 = new BasicQuery(qry, fields);
-		query2.setSortObject(new BasicDBObject("name", -1));
+		query2.setSortObject(new Document("name", -1));
 
 		assertThat(query1, is(equalTo(query1)));
 		assertThat(query1, is(equalTo(query2)));
@@ -113,10 +111,10 @@ public class BasicQueryUnitTests {
 		String fields = "{\"name\":1, \"age\":1}";
 
 		BasicQuery query1 = new BasicQuery(qry, fields);
-		query1.setSortObject(new BasicDBObject("name", -1));
+		query1.setSortObject(new Document("name", -1));
 
 		BasicQuery query2 = new BasicQuery(qry, fields);
-		query2.setSortObject(new BasicDBObject("name", 1));
+		query2.setSortObject(new Document("name", 1));
 
 		assertThat(query1, is(not(equalTo(query2))));
 		assertThat(query1.hashCode(), is(not(query2.hashCode())));

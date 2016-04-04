@@ -32,7 +32,7 @@ import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
-import org.springframework.data.mongodb.core.MongoFactoryBean;
+import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
@@ -131,7 +131,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	 */
 	private BeanDefinition registerMongoBeanDefinition(Element element, ParserContext parserContext) {
 
-		BeanDefinitionBuilder mongoBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoFactoryBean.class);
+		BeanDefinitionBuilder mongoBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoClientFactoryBean.class);
 		setPropertyValue(mongoBuilder, element, "host");
 		setPropertyValue(mongoBuilder, element, "port");
 

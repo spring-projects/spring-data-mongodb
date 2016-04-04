@@ -18,12 +18,10 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.query.NearQuery;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link GeoNearOperation}.
@@ -41,11 +39,11 @@ public class GeoNearOperationUnitTests {
 
 		NearQuery query = NearQuery.near(10.0, 10.0);
 		GeoNearOperation operation = new GeoNearOperation(query, "distance");
-		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		DBObject nearClause = DBObjectTestUtils.getAsDBObject(dbObject, "$geoNear");
+		Document nearClause = DBObjectTestUtils.getAsDocument(dbObject, "$geoNear");
 
-		DBObject expected = (DBObject) new BasicDBObject(query.toDBObject().toMap()).append("distanceField", "distance");
+		Document expected = new Document(query.toDocument()).append("distanceField", "distance");
 		assertThat(nearClause, is(expected));
 	}
 }

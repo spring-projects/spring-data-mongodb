@@ -18,20 +18,18 @@ package org.springframework.data.mongodb.core.query;
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
+import org.bson.Document;
 
 public class BasicUpdate extends Update {
 
-	private DBObject updateObject = null;
+	private Document updateObject = null;
 
 	public BasicUpdate(String updateString) {
 		super();
-		this.updateObject = (DBObject) JSON.parse(updateString);
+		this.updateObject = Document.parse(updateString);
 	}
 
-	public BasicUpdate(DBObject updateObject) {
+	public BasicUpdate(Document updateObject) {
 		super();
 		this.updateObject = updateObject;
 	}
@@ -62,7 +60,7 @@ public class BasicUpdate extends Update {
 
 	@Override
 	public Update pushAll(String key, Object[] values) {
-		DBObject keyValue = new BasicDBObject();
+		Document keyValue = new Document();
 		keyValue.put(key, values);
 		updateObject.put("$pushAll", keyValue);
 		return this;
@@ -88,7 +86,7 @@ public class BasicUpdate extends Update {
 
 	@Override
 	public Update pullAll(String key, Object[] values) {
-		DBObject keyValue = new BasicDBObject();
+		Document keyValue = new Document();
 		keyValue.put(key, Arrays.copyOf(values, values.length));
 		updateObject.put("$pullAll", keyValue);
 		return this;
@@ -101,7 +99,7 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
-	public DBObject getUpdateObject() {
+	public Document getUpdateObject() {
 		return updateObject;
 	}
 

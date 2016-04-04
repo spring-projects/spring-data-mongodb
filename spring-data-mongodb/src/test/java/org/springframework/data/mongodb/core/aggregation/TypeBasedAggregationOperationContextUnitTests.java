@@ -24,6 +24,8 @@ import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 import java.util.Arrays;
 import java.util.List;
 
+import com.mongodb.DBObject;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,12 +44,8 @@ import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link TypeBasedAggregationOperationContext}.
@@ -123,10 +121,11 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		MatchOperation matchStage = match(Criteria.where("age").is(new Age(10)));
 		ProjectionOperation projectStage = project("age", "name");
 
-		DBObject agg = newAggregation(matchStage, projectStage).toDbObject("test", context);
+		org.bson.Document agg = newAggregation(matchStage, projectStage).toDbObject("test", context);
 
-		DBObject age = getValue((DBObject) getValue(getPipelineElementFromAggregationAt(agg, 0), "$match"), "age");
-		assertThat(age, is((DBObject) new BasicDBObject("v", 10)));
+		org.bson.Document age = getValue(
+				(org.bson.Document) getValue(getPipelineElementFromAggregationAt(agg, 0), "$match"), "age");
+		assertThat(age, is(new org.bson.Document("v", 10)));
 	}
 
 	/**
@@ -144,10 +143,11 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		MatchOperation matchStage = match(Criteria.where("age").is(new Age(10)));
 		ProjectionOperation projectStage = project("age", "name");
 
-		DBObject agg = newAggregation(projectStage, matchStage).toDbObject("test", context);
+		org.bson.Document agg = newAggregation(projectStage, matchStage).toDbObject("test", context);
 
-		DBObject age = getValue((DBObject) getValue(getPipelineElementFromAggregationAt(agg, 1), "$match"), "age");
-		assertThat(age, is((DBObject) new BasicDBObject("v", 10)));
+		org.bson.Document age = getValue(
+				(org.bson.Document) getValue(getPipelineElementFromAggregationAt(agg, 1), "$match"), "age");
+		assertThat(age, is(new org.bson.Document("v", 10)));
 	}
 
 	/**
@@ -159,18 +159,18 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		AggregationOperationContext context = getContext(FooPerson.class);
 		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class, project("name", "age")) //
 				.withOptions(
-						newAggregationOptions().allowDiskUse(true).explain(true).cursor(new BasicDBObject("foo", 1)).build());
+						newAggregationOptions().allowDiskUse(true).explain(true).cursor(new org.bson.Document("foo", 1)).build());
 
-		DBObject dbo = agg.toDbObject("person", context);
+		org.bson.Document dbo = agg.toDbObject("person", context);
 
-		DBObject projection = getPipelineElementFromAggregationAt(dbo, 0);
-		assertThat(projection.containsField("$project"), is(true));
+		org.bson.Document projection = getPipelineElementFromAggregationAt(dbo, 0);
+		assertThat(projection.containsKey("$project"), is(true));
 
-		assertThat(projection.get("$project"), is((Object) new BasicDBObject("name", 1).append("age", 1)));
+		assertThat(projection.get("$project"), is((Object) new org.bson.Document("name", 1).append("age", 1)));
 
 		assertThat(dbo.get("allowDiskUse"), is((Object) true));
 		assertThat(dbo.get("explain"), is((Object) true));
-		assertThat(dbo.get("cursor"), is((Object) new BasicDBObject("foo", 1)));
+		assertThat(dbo.get("cursor"), is((Object) new org.bson.Document("foo", 1)));
 	}
 
 	/**
@@ -183,10 +183,10 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
 				group("counterName").sum("counterVolume").as("totalCounterVolume"));
 
-		DBObject dbo = agg.toDbObject("meterData", context);
-		DBObject group = getPipelineElementFromAggregationAt(dbo, 0);
+		org.bson.Document dbo = agg.toDbObject("meterData", context);
+		org.bson.Document group = getPipelineElementFromAggregationAt(dbo, 0);
 
-		DBObject definition = (DBObject) group.get("$group");
+		org.bson.Document definition = (org.bson.Document) group.get("$group");
 
 		assertThat(definition.get("_id"), is(equalTo((Object) "$counter_name")));
 	}
@@ -201,10 +201,10 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
 				lookup("OtherCollection", "resourceId", "otherId", "lookup"), sort(Direction.ASC, "resourceId"));
 
-		DBObject dbo = agg.toDbObject("meterData", context);
-		DBObject sort = getPipelineElementFromAggregationAt(dbo, 1);
+		org.bson.Document dbo = agg.toDbObject("meterData", context);
+		org.bson.Document sort = getPipelineElementFromAggregationAt(dbo, 1);
 
-		DBObject definition = (DBObject) sort.get("$sort");
+		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
 		assertThat(definition.get("resourceId"), is(equalTo((Object) 1)));
 	}
@@ -219,10 +219,10 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<MeterData> agg = newAggregation(MeterData.class, group().min("resourceId").as("foreignKey"),
 				lookup("OtherCollection", "foreignKey", "otherId", "lookup"), sort(Direction.ASC, "foreignKey"));
 
-		DBObject dbo = agg.toDbObject("meterData", context);
-		DBObject sort = getPipelineElementFromAggregationAt(dbo, 2);
+		org.bson.Document dbo = agg.toDbObject("meterData", context);
+		org.bson.Document sort = getPipelineElementFromAggregationAt(dbo, 2);
 
-		DBObject definition = (DBObject) sort.get("$sort");
+		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
 		assertThat(definition.get("foreignKey"), is(equalTo((Object) 1)));
 	}
@@ -238,11 +238,11 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				lookup("OtherCollection", "resourceId", "otherId", "lookup"),
 				group().min("lookup.otherkey").as("something_totally_different"));
 
-		DBObject dbo = agg.toDbObject("meterData", context);
-		DBObject group = getPipelineElementFromAggregationAt(dbo, 1);
+		org.bson.Document dbo = agg.toDbObject("meterData", context);
+		org.bson.Document group = getPipelineElementFromAggregationAt(dbo, 1);
 
-		DBObject definition = (DBObject) group.get("$group");
-		DBObject field = (DBObject) definition.get("something_totally_different");
+		org.bson.Document definition = (org.bson.Document) group.get("$group");
+		org.bson.Document field = (org.bson.Document) definition.get("something_totally_different");
 
 		assertThat(field.get("$min"), is(equalTo((Object) "$lookup.otherkey")));
 	}
@@ -259,10 +259,10 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				group().min("lookup.otherkey").as("something_totally_different"),
 				sort(Direction.ASC, "something_totally_different"));
 
-		DBObject dbo = agg.toDbObject("meterData", context);
-		DBObject sort = getPipelineElementFromAggregationAt(dbo, 2);
+		org.bson.Document dbo = agg.toDbObject("meterData", context);
+		org.bson.Document sort = getPipelineElementFromAggregationAt(dbo, 2);
 
-		DBObject definition = (DBObject) sort.get("$sort");
+		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
 		assertThat(definition.get("something_totally_different"), is(equalTo((Object) 1)));
 	}
@@ -294,17 +294,17 @@ public class TypeBasedAggregationOperationContextUnitTests {
 						.applyCondition(conditional(Criteria.where("age.value").lt(10), new Age(0), field("age"))) //
 		);
 
-		DBObject dbo = agg.toDbObject("person", context);
+		Document dbo = agg.toDbObject("person", context);
 
-		DBObject projection = getPipelineElementFromAggregationAt(dbo, 0);
-		assertThat(projection.containsField("$project"), is(true));
+		Document projection = getPipelineElementFromAggregationAt(dbo, 0);
+		assertThat(projection.containsKey("$project"), is(true));
 
-		DBObject project = getValue(projection, "$project");
-		DBObject age = getValue(project, "age");
+		Document project = getValue(projection, "$project");
+		Document age = getValue(project, "age");
 
-		assertThat((DBObject) getValue(age, "$cond"), isBsonObject().containing("then.value", 0));
-		assertThat((DBObject) getValue(age, "$cond"), isBsonObject().containing("then._class", Age.class.getName()));
-		assertThat((DBObject) getValue(age, "$cond"), isBsonObject().containing("else", "$age"));
+		assertThat(getValue(age, "$cond"), isBsonObject().containing("then.value", 0));
+		assertThat(getValue(age, "$cond"), isBsonObject().containing("then._class", Age.class.getName()));
+		assertThat(getValue(age, "$cond"), isBsonObject().containing("else", "$age"));
 	}
 
 	/**
@@ -320,20 +320,20 @@ public class TypeBasedAggregationOperationContextUnitTests {
 						.applyCondition(ifNull("age", new Age(0))) //
 		);
 
-		DBObject dbo = agg.toDbObject("person", context);
+		Document dbo = agg.toDbObject("person", context);
 
-		DBObject projection = getPipelineElementFromAggregationAt(dbo, 0);
-		assertThat(projection.containsField("$project"), is(true));
+		Document projection = getPipelineElementFromAggregationAt(dbo, 0);
+		assertThat(projection.containsKey("$project"), is(true));
 
-		DBObject project = getValue(projection, "$project");
-		DBObject age = getValue(project, "age");
+		Document project = getValue(projection, "$project");
+		Document age = getValue(project, "age");
 
 		assertThat(age, isBsonObject().containing("$ifNull.[0]", "$age"));
 		assertThat(age, isBsonObject().containing("$ifNull.[1].value", 0));
 		assertThat(age, isBsonObject().containing("$ifNull.[1]._class", Age.class.getName()));
 	}
 
-	@Document(collection = "person")
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "person")
 	public static class FooPerson {
 
 		final ObjectId id;
@@ -361,31 +361,31 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		return new CustomConversions(Arrays.<Converter<?, ?>> asList(ageWriteConverter(), ageReadConverter()));
 	}
 
-	Converter<Age, DBObject> ageWriteConverter() {
-		return new Converter<Age, DBObject>() {
+	Converter<Age, org.bson.Document> ageWriteConverter() {
+		return new Converter<Age, org.bson.Document>() {
 			@Override
-			public DBObject convert(Age age) {
-				return new BasicDBObject("v", age.value);
+			public org.bson.Document convert(Age age) {
+				return new org.bson.Document("v", age.value);
 			}
 		};
 	}
 
-	Converter<DBObject, Age> ageReadConverter() {
-		return new Converter<DBObject, Age>() {
+	Converter<org.bson.Document, Age> ageReadConverter() {
+		return new Converter<org.bson.Document, Age>() {
 			@Override
-			public Age convert(DBObject dbObject) {
+			public Age convert(org.bson.Document dbObject) {
 				return new Age(((Integer) dbObject.get("v")));
 			}
 		};
 	}
 
 	@SuppressWarnings("unchecked")
-	static DBObject getPipelineElementFromAggregationAt(DBObject agg, int index) {
-		return ((List<DBObject>) agg.get("pipeline")).get(index);
+	static org.bson.Document getPipelineElementFromAggregationAt(org.bson.Document agg, int index) {
+		return ((List<org.bson.Document>) agg.get("pipeline")).get(index);
 	}
 
 	@SuppressWarnings("unchecked")
-	static <T> T getValue(DBObject o, String key) {
+	static <T> T getValue(org.bson.Document o, String key) {
 		return (T) o.get(key);
 	}
 
