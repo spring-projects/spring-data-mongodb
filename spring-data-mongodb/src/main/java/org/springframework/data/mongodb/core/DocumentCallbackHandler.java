@@ -15,24 +15,21 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.bson.Document;
 import org.springframework.dao.DataAccessException;
 
-import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 
 /**
  * An interface used by {@link MongoTemplate} for processing documents returned from a MongoDB query on a per-document
  * basis. Implementations of this interface perform the actual work of prcoessing each document but don't need to worry
- * about exception handling. {@MongoException}s will be caught and translated by the calling
- * MongoTemplate
- * 
- * An DocumentCallbackHandler is typically stateful: It keeps the result state within the object, to be available later
- * for later inspection.
+ * about exception handling. {@MongoException}s will be caught and translated by the calling MongoTemplate An
+ * DocumentCallbackHandler is typically stateful: It keeps the result state within the object, to be available later for
+ * later inspection.
  * 
  * @author Mark Pollack
- * 
  */
 public interface DocumentCallbackHandler {
 
-	void processDocument(DBObject dbObject) throws MongoException, DataAccessException;
+	void processDocument(Document dbObject) throws MongoException, DataAccessException;
 }

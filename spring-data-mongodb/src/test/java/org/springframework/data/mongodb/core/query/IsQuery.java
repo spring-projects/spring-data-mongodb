@@ -15,14 +15,12 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import org.bson.Document;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.hamcrest.core.IsEqual;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * A {@link TypeSafeMatcher} that tests whether a given {@link Query} matches a query specification.
@@ -32,17 +30,17 @@ import com.mongodb.DBObject;
  */
 public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 
-	protected DBObject query;
-	protected DBObject sort;
-	protected DBObject fields;
+	protected Document query;
+	protected Document sort;
+	protected Document fields;
 
 	private int skip;
 	private int limit;
 	private String hint;
 
 	protected IsQuery() {
-		query = new BasicDBObject();
-		sort = new BasicDBObject();
+		query = new Document();
+		sort = new Document();
 	}
 
 	public static <T extends BasicQuery> IsQuery<T> isQuery() {
@@ -67,7 +65,7 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 	public IsQuery<T> includingField(String fieldname) {
 
 		if (fields == null) {
-			fields = new BasicDBObject();
+			fields = new Document();
 		}
 		fields.put(fieldname, 1);
 
@@ -77,7 +75,7 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 	public IsQuery<T> excludingField(String fieldname) {
 
 		if (fields == null) {
-			fields = new BasicDBObject();
+			fields = new Document();
 		}
 		fields.put(fieldname, -1);
 
@@ -119,17 +117,17 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 			return false;
 		}
 
-		if (!new IsEqual<DBObject>(query).matches(item.getQueryObject())) {
+		if (!new IsEqual<Document>(query).matches(item.getQueryObject())) {
 			return false;
 		}
 
-		if (item.getSortObject() == null && !sort.toMap().isEmpty()) {
-			if (!new IsEqual<DBObject>(sort).matches(item.getSortObject())) {
+		if (item.getSortObject() == null && !sort.isEmpty()) {
+			if (!new IsEqual<Document>(sort).matches(item.getSortObject())) {
 				return false;
 			}
 		}
 
-		if (!new IsEqual<DBObject>(fields).matches(item.getFieldsObject())) {
+		if (!new IsEqual<Document>(fields).matches(item.getFieldsObject())) {
 			return false;
 		}
 

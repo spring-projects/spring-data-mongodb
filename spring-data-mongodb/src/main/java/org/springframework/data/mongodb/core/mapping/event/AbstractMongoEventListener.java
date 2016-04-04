@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
@@ -115,7 +116,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onBeforeSave(BeforeSaveEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeSave({}, {})", event.getSource(), event.getDBObject());
+			LOG.debug("onBeforeSave({}, {})", event.getSource(), event.getDocument());
 		}
 	}
 
@@ -128,7 +129,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterSave(AfterSaveEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterSave({}, {})", event.getSource(), event.getDBObject());
+			LOG.debug("onAfterSave({}, {})", event.getSource(), event.getDocument());
 		}
 	}
 
@@ -141,7 +142,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterLoad(AfterLoadEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterLoad({})", event.getDBObject());
+			LOG.debug("onAfterLoad({})", event.getDocument());
 		}
 	}
 
@@ -154,7 +155,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterConvert(AfterConvertEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterConvert({}, {})", event.getDBObject(), event.getSource());
+			LOG.debug("onAfterConvert({}, {})", event.getDocument(), event.getSource());
 		}
 	}
 
@@ -167,7 +168,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterDelete(AfterDeleteEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterDelete({})", event.getDBObject());
+			LOG.debug("onAfterDelete({})", event.getDocument());
 		}
 	}
 
@@ -180,7 +181,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onBeforeDelete(BeforeDeleteEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeDelete({})", event.getDBObject());
+			LOG.debug("onBeforeDelete({})", event.getDocument());
 		}
 	}
 }

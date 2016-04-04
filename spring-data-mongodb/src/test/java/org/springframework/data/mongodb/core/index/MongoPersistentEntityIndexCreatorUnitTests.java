@@ -17,12 +17,15 @@ package org.springframework.data.mongodb.core.index;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import org.hamcrest.core.IsEqual;
+import org.hamcrest.number.IsCloseTo;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,11 +45,10 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.IndexOptions;
 
 /**
  * Unit tests for {@link MongoPersistentEntityIndexCreator}.
@@ -62,24 +64,24 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 	private @Mock MongoDbFactory factory;
 	private @Mock ApplicationContext context;
-	private @Mock DB db;
-	private @Mock DBCollection collection;
+	private @Mock MongoDatabase db;
+	private @Mock MongoCollection<Document> collection;
 
-	ArgumentCaptor<DBObject> keysCaptor;
-	ArgumentCaptor<DBObject> optionsCaptor;
+	ArgumentCaptor<org.bson.Document> keysCaptor;
+	ArgumentCaptor<IndexOptions> optionsCaptor;
 	ArgumentCaptor<String> collectionCaptor;
 
 	@Before
 	public void setUp() {
 
-		keysCaptor = ArgumentCaptor.forClass(DBObject.class);
-		optionsCaptor = ArgumentCaptor.forClass(DBObject.class);
+		keysCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+		optionsCaptor = ArgumentCaptor.forClass(IndexOptions.class);
 		collectionCaptor = ArgumentCaptor.forClass(String.class);
 
 		when(factory.getDb()).thenReturn(db);
-		when(db.getCollection(collectionCaptor.capture())).thenReturn(collection);
+		when(db.getCollection(collectionCaptor.capture(), eq(Document.class))).thenReturn(collection);
 
-		doNothing().when(collection).createIndex(keysCaptor.capture(), optionsCaptor.capture());
+		when(collection.createIndex(keysCaptor.capture(), optionsCaptor.capture())).thenReturn("OK");
 	}
 
 	@Test
@@ -91,9 +93,9 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		assertThat(keysCaptor.getValue(), is(notNullValue()));
 		assertThat(keysCaptor.getValue().keySet(), hasItem("fieldname"));
-		assertThat(optionsCaptor.getValue().get("name").toString(), is("indexName"));
-		assertThat(optionsCaptor.getValue().get("background"), nullValue());
-		assertThat(optionsCaptor.getValue().get("expireAfterSeconds"), nullValue());
+		assertThat(optionsCaptor.getValue().getName(), is("indexName"));
+		assertThat(optionsCaptor.getValue().isBackground(), is(false));
+		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS), nullValue());
 	}
 
 	@Test
@@ -138,9 +140,9 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		assertThat(keysCaptor.getValue(), is(notNullValue()));
 		assertThat(keysCaptor.getValue().keySet(), hasItem("lastname"));
-		assertThat(optionsCaptor.getValue().get("name").toString(), is("lastname"));
-		assertThat(optionsCaptor.getValue().get("background"), IsEqual.<Object> equalTo(true));
-		assertThat(optionsCaptor.getValue().get("expireAfterSeconds"), nullValue());
+		assertThat(optionsCaptor.getValue().getName(), is("lastname"));
+		assertThat(optionsCaptor.getValue().isBackground(), IsEqual.<Object> equalTo(true));
+		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS), nullValue());
 	}
 
 	/**
@@ -154,7 +156,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		assertThat(keysCaptor.getValue(), is(notNullValue()));
 		assertThat(keysCaptor.getValue().keySet(), hasItem("expiry"));
-		assertThat(optionsCaptor.getValue().get("expireAfterSeconds"), IsEqual.<Object> equalTo(60L));
+		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS), IsEqual.<Object> equalTo(60L));
 	}
 
 	/**
@@ -166,9 +168,13 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(Wrapper.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, factory);
 
-		assertThat(keysCaptor.getValue(), equalTo(new BasicDBObjectBuilder().add("company.address.location", "2d").get()));
-		assertThat(optionsCaptor.getValue(), equalTo(new BasicDBObjectBuilder().add("name", "company.address.location")
-				.add("min", -180).add("max", 180).add("bits", 26).get()));
+		assertThat(keysCaptor.getValue(), equalTo(new org.bson.Document().append("company.address.location", "2d")));
+
+		IndexOptions opts = optionsCaptor.getValue();
+		assertThat(opts.getName(), is(equalTo("company.address.location")));
+		assertThat(opts.getMin(), IsCloseTo.closeTo(-180, 0));
+		assertThat(opts.getMax(), IsCloseTo.closeTo(180, 0));
+		assertThat(opts.getBits(), is(26));
 	}
 
 	/**
@@ -180,9 +186,10 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(EntityWithGeneratedIndexName.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, factory);
 
-		assertThat(keysCaptor.getValue().containsField("name"), is(false));
+		assertThat(keysCaptor.getValue().containsKey("name"), is(false));
 		assertThat(keysCaptor.getValue().keySet(), hasItem("lastname"));
-		assertThat(optionsCaptor.getValue(), is(new BasicDBObjectBuilder().get()));
+
+		assertThat(optionsCaptor.getValue().getName(), nullValue());
 	}
 
 	/**
@@ -196,7 +203,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
 
-		verify(db, times(1)).getCollection(collectionNameCapturer.capture());
+		verify(db, times(1)).getCollection(collectionNameCapturer.capture(), eq(Document.class));
 		assertThat(collectionNameCapturer.getValue(), equalTo("wrapper"));
 	}
 
@@ -211,7 +218,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
 
-		verify(db, times(1)).getCollection(collectionNameCapturer.capture());
+		verify(db, times(1)).getCollection(collectionNameCapturer.capture(), eq(Document.class));
 		assertThat(collectionNameCapturer.getValue(), equalTo("indexedDocumentWrapper"));
 	}
 
@@ -222,8 +229,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	public void createIndexShouldUsePersistenceExceptionTranslatorForNonDataIntegrityConcerns() {
 
 		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
-		doThrow(new MongoException(6, "HostUnreachable")).when(collection).createIndex(Mockito.any(DBObject.class),
-				Mockito.any(DBObject.class));
+		doThrow(new MongoException(6, "HostUnreachable")).when(collection).createIndex(Mockito.any(org.bson.Document.class),
+				Mockito.any(IndexOptions.class));
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
 
@@ -237,8 +244,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	public void createIndexShouldNotConvertUnknownExceptionTypes() {
 
 		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
-		doThrow(new ClassCastException("o_O")).when(collection).createIndex(Mockito.any(DBObject.class),
-				Mockito.any(DBObject.class));
+		doThrow(new ClassCastException("o_O")).when(collection).createIndex(Mockito.any(org.bson.Document.class),
+				Mockito.any(IndexOptions.class));
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
 
@@ -257,8 +264,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	@Document
 	static class Person {
 
-		@Indexed(name = "indexName")//
-		@Field("fieldname")//
+		@Indexed(name = "indexName") //
+		@Field("fieldname") //
 		String field;
 
 	}

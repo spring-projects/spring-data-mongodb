@@ -15,14 +15,12 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Encapsulates the aggregation framework {@code $sort}-operation.
@@ -60,12 +58,12 @@ public class SortOperation implements AggregationOperation {
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public DBObject toDBObject(AggregationOperationContext context) {
+	public Document toDocument(AggregationOperationContext context) {
 
-		BasicDBObject object = new BasicDBObject();
+		Document object = new Document();
 
 		for (Order order : sort) {
 
@@ -74,6 +72,6 @@ public class SortOperation implements AggregationOperation {
 			object.put(reference.getRaw(), order.isAscending() ? 1 : -1);
 		}
 
-		return new BasicDBObject("$sort", object);
+		return new Document("$sort", object);
 	}
 }

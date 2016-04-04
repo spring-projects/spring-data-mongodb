@@ -19,10 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * An enum of supported {@link AggregationExpression}s in aggregation pipeline stages.
@@ -79,7 +77,7 @@ public enum AggregationFunctionExpressions {
 		 * @see org.springframework.data.mongodb.core.aggregation.Expression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
-		public DBObject toDbObject(AggregationOperationContext context) {
+		public Document toDbObject(AggregationOperationContext context) {
 
 			List<Object> args = new ArrayList<Object>(values.size());
 
@@ -87,7 +85,7 @@ public enum AggregationFunctionExpressions {
 				args.add(unpack(value, context));
 			}
 
-			return new BasicDBObject("$" + name, args);
+			return new Document("$" + name, args);
 		}
 
 		private static Object unpack(Object value, AggregationOperationContext context) {

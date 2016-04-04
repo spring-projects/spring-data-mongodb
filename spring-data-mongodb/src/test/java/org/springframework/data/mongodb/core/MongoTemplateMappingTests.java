@@ -15,9 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,14 +27,11 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.mongodb.core.CollectionCallback;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -45,16 +43,11 @@ import com.mongodb.MongoException;
 @ContextConfiguration("classpath:template-mapping.xml")
 public class MongoTemplateMappingTests {
 
-	@Autowired
-	@Qualifier("mongoTemplate1")
-	MongoTemplate template1;
+	@Autowired @Qualifier("mongoTemplate1") MongoTemplate template1;
 
-	@Autowired
-	@Qualifier("mongoTemplate2")
-	MongoTemplate template2;
+	@Autowired @Qualifier("mongoTemplate2") MongoTemplate template2;
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+	@Rule public ExpectedException thrown = ExpectedException.none();
 
 	@Before
 	public void setUp() {
@@ -89,8 +82,8 @@ public class MongoTemplateMappingTests {
 
 	private void checkPersonPersisted(MongoTemplate template) {
 		template.execute(Person.class, new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject dbo = collection.findOne();
+			public Object doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
+				Document dbo = collection.find(new Document()).first();
 				assertThat((String) dbo.get("name"), is("Oliver"));
 				return null;
 			}

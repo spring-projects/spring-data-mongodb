@@ -20,13 +20,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import org.bson.Document;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * @author Oliver Gierke
@@ -180,9 +178,9 @@ public class Index implements IndexDefinition {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
 	 */
-	public DBObject getIndexKeys() {
+	public Document getIndexKeys() {
 
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 
 		for (Entry<String, Direction> entry : fieldSpec.entrySet()) {
 			dbo.put(entry.getKey(), Direction.ASC.equals(entry.getValue()) ? 1 : -1);
@@ -191,9 +189,9 @@ public class Index implements IndexDefinition {
 		return dbo;
 	}
 
-	public DBObject getIndexOptions() {
+	public Document getIndexOptions() {
 
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 		if (StringUtils.hasText(name)) {
 			dbo.put("name", name);
 		}

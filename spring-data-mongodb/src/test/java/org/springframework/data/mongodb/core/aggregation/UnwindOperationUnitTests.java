@@ -19,10 +19,9 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
-
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link UnwindOperation}.
@@ -40,7 +39,7 @@ public class UnwindOperationUnitTests {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a");
 
-		DBObject pipeline = unwindOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		Document pipeline = unwindOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(pipeline, isBsonObject().containing("$unwind", "$a"));
 	}
@@ -53,7 +52,7 @@ public class UnwindOperationUnitTests {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a", "index");
 
-		DBObject unwindClause = extractDbObjectFromUnwindOperation(unwindOperation);
+		Document unwindClause = extractDbObjectFromUnwindOperation(unwindOperation);
 
 		assertThat(unwindClause,
 				isBsonObject().containing("path", "$a").//
@@ -91,7 +90,7 @@ public class UnwindOperationUnitTests {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a", true);
 
-		DBObject unwindClause = extractDbObjectFromUnwindOperation(unwindOperation);
+		Document unwindClause = extractDbObjectFromUnwindOperation(unwindOperation);
 
 		assertThat(unwindClause,
 				isBsonObject().containing("path", "$a").//
@@ -106,7 +105,7 @@ public class UnwindOperationUnitTests {
 	public void lookupBuilderBuildsCorrectClause() {
 
 		UnwindOperation unwindOperation = UnwindOperation.newUnwind().path("$foo").noArrayIndex().skipNullAndEmptyArrays();
-		DBObject pipeline = unwindOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		Document pipeline = unwindOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(pipeline, isBsonObject().containing("$unwind", "$foo"));
 	}
@@ -120,7 +119,7 @@ public class UnwindOperationUnitTests {
 		UnwindOperation unwindOperation = UnwindOperation.newUnwind().path("$foo").arrayIndex("myindex")
 				.preserveNullAndEmptyArrays();
 
-		DBObject unwindClause = extractDbObjectFromUnwindOperation(unwindOperation);
+		Document unwindClause = extractDbObjectFromUnwindOperation(unwindOperation);
 
 		assertThat(unwindClause,
 				isBsonObject().containing("path", "$foo").//
@@ -128,10 +127,10 @@ public class UnwindOperationUnitTests {
 						containing("includeArrayIndex", "myindex"));
 	}
 
-	private DBObject extractDbObjectFromUnwindOperation(UnwindOperation unwindOperation) {
+	private Document extractDbObjectFromUnwindOperation(UnwindOperation unwindOperation) {
 
-		DBObject dbObject = unwindOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject unwindClause = DBObjectTestUtils.getAsDBObject(dbObject, "$unwind");
+		Document dbObject = unwindOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document unwindClause = DBObjectTestUtils.getAsDocument(dbObject, "$unwind");
 		return unwindClause;
 	}
 }

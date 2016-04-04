@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.bson.Document;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -28,11 +29,13 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.querydsl.core.types.Constant;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Operation;
+import com.mongodb.util.JSON;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.PathMetadata;
 import com.querydsl.core.types.PathType;
@@ -110,15 +113,27 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#asDBObject(java.lang.String, java.lang.Object)
+	 * @see com.querydsl.mongodb.MongodbSerializer#asDocument(java.lang.String, java.lang.Object)
 	 */
 	@Override
 	protected DBObject asDBObject(String key, Object value) {
 
 		if (ID_KEY.equals(key)) {
-			return mapper.getMappedObject(super.asDBObject(key, value), null);
+			DBObject superIdValue = super.asDBObject(key, value);
+			Document mappedIdValue = mapper.getMappedObject((BasicDBObject) superIdValue, null);
+			DBObject parsedId = (DBObject) JSON.parse(mappedIdValue.toJson());
+			return parsedId;
+			// return new BasicDBObject(mapper.getMappedObject((BasicDBObject)super.asDBObject(key, value)), null));
 		}
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
+		// Object mapped = value;
+		// if (value instanceof DBObject) {
+		// mapped = converter.convertToMongoType(new Document(((DBObject) value).toMap()));
+		// } else {
+		// mapped = super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
+		// }
+		//
+		// return mapped instanceof Document ? new BasicDBObject((Document) mapped) : (DBObject) mapped;
 	}
 
 	/*

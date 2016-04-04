@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -43,9 +44,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
+import com.mongodb.client.MongoCollection;
 
 /**
  * Integration test for {@link MongoTemplate}'s Map-Reduce operations
@@ -95,6 +95,7 @@ public class MapReduceTests {
 		template.dropCollection("jmr2_out");
 		template.dropCollection("jmr1_out");
 		template.dropCollection("jmr1");
+		template.dropCollection("jmrWithGeo");
 	}
 
 	@Test
@@ -190,7 +191,7 @@ public class MapReduceTests {
 		{ "_id" : 3, "document_id" : "Resume", "author" : "Author", "content" : "...", "version" : 6 }
 		{ "_id" : 4, "document_id" : "Schema", "author" : "Someone Else", "content" : "...", "version" : 0.9 }
 		{ "_id" : 5, "document_id" : "Schema", "author" : "Someone Else", "content" : "...", "version" : 1 }
-
+		
 		 */
 		ContentAndVersion cv1 = new ContentAndVersion();
 		cv1.setDocumentId("mongoDB How-To");
@@ -284,11 +285,11 @@ public class MapReduceTests {
 	@Test
 	public void mapReduceShouldUseQueryMapper() {
 
-		DBCollection c = mongoTemplate.getDb().getCollection("jmrWithGeo");
+		MongoCollection<Document> c = mongoTemplate.getDb().getCollection("jmrWithGeo", Document.class);
 
-		c.save(new BasicDBObject("x", new String[] { "a", "b" }).append("loc", new double[] { 0, 0 }));
-		c.save(new BasicDBObject("x", new String[] { "b", "c" }).append("loc", new double[] { 0, 0 }));
-		c.save(new BasicDBObject("x", new String[] { "c", "d" }).append("loc", new double[] { 0, 0 }));
+		c.insertOne(new Document("x", Arrays.asList("a", "b")).append("loc", Arrays.<Double> asList(0D, 0D)));
+		c.insertOne(new Document("x", Arrays.asList("b", "c")).append("loc", Arrays.<Double> asList(0D, 0D)));
+		c.insertOne(new Document("x", Arrays.asList("c", "d")).append("loc", Arrays.<Double> asList(0D, 0D)));
 
 		Query query = new Query(where("x").ne(new String[] { "a", "b" }).and("loc")
 				.within(new Box(new double[] { 0, 0 }, new double[] { 1, 1 })));
@@ -327,10 +328,10 @@ public class MapReduceTests {
 	}
 
 	private void createMapReduceData() {
-		DBCollection c = mongoTemplate.getDb().getCollection("jmr1");
-		c.save(new BasicDBObject("x", new String[] { "a", "b" }));
-		c.save(new BasicDBObject("x", new String[] { "b", "c" }));
-		c.save(new BasicDBObject("x", new String[] { "c", "d" }));
+		MongoCollection<Document> c = mongoTemplate.getDb().getCollection("jmr1", Document.class);
+		c.insertOne(new Document("x", Arrays.asList("a", "b")));
+		c.insertOne(new Document("x", Arrays.asList("b", "c")));
+		c.insertOne(new Document("x", Arrays.asList("c", "d")));
 	}
 
 	private Map<String, Float> copyToMap(MapReduceResults<ValueObject> results) {

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.hamcrest.core.IsEqual.*;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
@@ -22,9 +24,11 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.concurrent.TimeUnit;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -32,8 +36,7 @@ import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.mongodb.Bytes;
-import com.mongodb.DBCursor;
+import com.mongodb.client.FindIterable;
 
 /**
  * Unit tests for {@link QueryCursorPreparer}.
@@ -46,13 +49,19 @@ import com.mongodb.DBCursor;
 public class QueryCursorPreparerUnitTests {
 
 	@Mock MongoDbFactory factory;
-	@Mock DBCursor cursor;
+	@Mock FindIterable<Document> cursor;
 
-	@Mock DBCursor cursorToUse;
+	@Mock FindIterable<Document> cursorToUse;
 
 	@Before
 	public void setUp() {
-		when(cursor.copy()).thenReturn(cursorToUse);
+
+		when(cursor.batchSize(anyInt())).thenReturn(cursor);
+		when(cursor.filter(any(Document.class))).thenReturn(cursor);
+		when(cursor.limit(anyInt())).thenReturn(cursor);
+		when(cursor.modifiers(any(Document.class))).thenReturn(cursor);
+		when(cursor.noCursorTimeout(anyBoolean())).thenReturn(cursor);
+		when(cursor.partial(anyBoolean())).thenReturn(cursor);
 	}
 
 	/**
@@ -65,7 +74,9 @@ public class QueryCursorPreparerUnitTests {
 
 		prepare(query);
 
-		verify(cursorToUse).hint("hint");
+		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
+		verify(cursor).modifiers(captor.capture());
+		assertThat(captor.getValue(), equalTo(new Document("$hint", "hint")));
 	}
 
 	/**
@@ -79,8 +90,7 @@ public class QueryCursorPreparerUnitTests {
 
 		prepare(query);
 
-		verify(cursor, never()).copy();
-		verify(cursorToUse, never()).addSpecial(any(String.class), anyObject());
+		verify(cursorToUse, never()).modifiers(any(Document.class));
 	}
 
 	/**
@@ -93,7 +103,9 @@ public class QueryCursorPreparerUnitTests {
 
 		prepare(query);
 
-		verify(cursorToUse).addSpecial(eq("$maxScan"), eq(100L));
+		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
+		verify(cursor).modifiers(captor.capture());
+		assertThat(captor.getValue(), equalTo(new Document("$maxScan", 100L)));
 	}
 
 	/**
@@ -106,7 +118,9 @@ public class QueryCursorPreparerUnitTests {
 
 		prepare(query);
 
-		verify(cursorToUse).addSpecial(eq("$maxTimeMS"), eq(1000L));
+		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
+		verify(cursor).modifiers(captor.capture());
+		assertThat(captor.getValue(), equalTo(new Document("$maxTimeMS", 1000L)));
 	}
 
 	/**
@@ -119,7 +133,9 @@ public class QueryCursorPreparerUnitTests {
 
 		prepare(query);
 
-		verify(cursorToUse).addSpecial(eq("$comment"), eq("spring data"));
+		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
+		verify(cursor).modifiers(captor.capture());
+		assertThat(captor.getValue(), equalTo(new Document("$comment", "spring data")));
 	}
 
 	/**
@@ -132,8 +148,11 @@ public class QueryCursorPreparerUnitTests {
 
 		prepare(query);
 
-		verify(cursorToUse).addSpecial(eq("$snapshot"), eq(true));
+		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
+		verify(cursor).modifiers(captor.capture());
+		assertThat(captor.getValue(), equalTo(new Document("$snapshot", true)));
 	}
+
 
 	/**
 	 * @see DATAMONGO-1480
@@ -145,10 +164,10 @@ public class QueryCursorPreparerUnitTests {
 
 		prepare(query);
 
-		verify(cursorToUse).addOption(Bytes.QUERYOPTION_NOTIMEOUT);
+		verify(cursor).noCursorTimeout(eq(true));
 	}
 
-	private DBCursor prepare(Query query) {
+	private FindIterable<Document> prepare(Query query) {
 
 		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query, null);
 		return preparer.prepare(cursor);

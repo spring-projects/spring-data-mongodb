@@ -21,13 +21,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Encapsulates the aggregation framework {@code $group}-operation.
@@ -194,7 +192,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $last}-expression for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $last}-expression for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -214,7 +213,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for a {@code $first}-expression for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for a {@code $first}-expression for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -234,7 +234,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $avg}-expression for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $avg}-expression for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -278,7 +279,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $min}-expression that for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $min}-expression that for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -298,7 +300,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $max}-expression that for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $max}-expression that for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -329,12 +332,12 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public com.mongodb.DBObject toDBObject(AggregationOperationContext context) {
+	public Document toDocument(AggregationOperationContext context) {
 
-		BasicDBObject operationObject = new BasicDBObject();
+		Document operationObject = new Document();
 
 		if (idFields.exposesNoNonSyntheticFields()) {
 
@@ -347,7 +350,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 		} else {
 
-			BasicDBObject inner = new BasicDBObject();
+			Document inner = new Document();
 
 			for (ExposedField field : idFields) {
 				FieldReference reference = context.getReference(field);
@@ -358,10 +361,10 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		}
 
 		for (Operation operation : operations) {
-			operationObject.putAll(operation.toDBObject(context));
+			operationObject.putAll(operation.toDocument(context));
 		}
 
-		return new BasicDBObject("$group", operationObject);
+		return new Document("$group", operationObject);
 	}
 
 	interface Keyword {
@@ -412,8 +415,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 			return new ExposedField(key, true);
 		}
 
-		public DBObject toDBObject(AggregationOperationContext context) {
-			return new BasicDBObject(key, new BasicDBObject(op.toString(), getValue(context)));
+		public Document toDocument(AggregationOperationContext context) {
+			return new Document(key, new Document(op.toString(), getValue(context)));
 		}
 
 		public Object getValue(AggregationOperationContext context) {

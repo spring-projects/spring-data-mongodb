@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.spel;
 
-import org.springframework.util.Assert;
+import java.util.List;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.DBObject;
+import org.bson.Document;
+import org.springframework.util.Assert;
 
 /**
  * The context for an {@link ExpressionNode} transformation.
@@ -30,7 +30,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 
 	private final T currentNode;
 	private final ExpressionNode parentNode;
-	private final DBObject previousOperationObject;
+	private final Document previousOperationObject;
 
 	/**
 	 * Creates a new {@link ExpressionTransformationContextSupport} for the given {@link ExpressionNode}s and an optional
@@ -41,7 +41,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 * @param previousOperationObject
 	 */
 	public ExpressionTransformationContextSupport(T currentNode, ExpressionNode parentNode,
-			DBObject previousOperationObject) {
+			Document previousOperationObject) {
 
 		Assert.notNull(currentNode, "currentNode must not be null!");
 
@@ -77,7 +77,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 * @see #addToPreviousOrReturn(Object)
 	 * @return
 	 */
-	public DBObject getPreviousOperationObject() {
+	public Document getPreviousOperationObject() {
 		return previousOperationObject;
 	}
 
@@ -105,7 +105,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 * @param value
 	 * @return
 	 */
-	public DBObject addToPreviousOperation(Object value) {
+	public Document addToPreviousOperation(Object value) {
 		extractArgumentListFrom(previousOperationObject).add(value);
 		return previousOperationObject;
 	}
@@ -120,7 +120,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 		return hasPreviousOperation() ? addToPreviousOperation(value) : value;
 	}
 
-	private BasicDBList extractArgumentListFrom(DBObject context) {
-		return (BasicDBList) context.get(context.keySet().iterator().next());
+	private List<Object> extractArgumentListFrom(Document context) {
+		return (List<Object>) context.get(context.keySet().iterator().next());
 	}
 }

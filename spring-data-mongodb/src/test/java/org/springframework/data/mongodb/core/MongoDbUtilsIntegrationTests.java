@@ -36,6 +36,7 @@ import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Integration tests for {@link MongoDbUtils}.
@@ -82,8 +83,8 @@ public class MongoDbUtilsIntegrationTests {
 		// Remove test database
 
 		template.execute(new DbCallback<Void>() {
-			public Void doInDB(DB db) throws MongoException, DataAccessException {
-				db.dropDatabase();
+			public Void doInDB(MongoDatabase db) throws MongoException, DataAccessException {
+				db.drop();
 				return null;
 			}
 		});
@@ -97,9 +98,9 @@ public class MongoDbUtilsIntegrationTests {
 
 		// Create sample user
 		template.execute(new DbCallback<Void>() {
-			public Void doInDB(DB db) throws MongoException, DataAccessException {
+			public Void doInDB(MongoDatabase db) throws MongoException, DataAccessException {
 
-				ReflectiveDbInvoker.addUser(db, "admin", "admin".toCharArray());
+				// ReflectiveDbInvoker.addUser(db, "admin", "admin".toCharArray());
 				return null;
 			}
 		});
@@ -139,9 +140,9 @@ public class MongoDbUtilsIntegrationTests {
 
 		// Create sample user
 		template.execute(new DbCallback<Void>() {
-			public Void doInDB(DB db) throws MongoException, DataAccessException {
+			public Void doInDB(MongoDatabase db) throws MongoException, DataAccessException {
 
-				ReflectiveDbInvoker.addUser(db.getSisterDB("admin"), "admin", "admin".toCharArray());
+				// ReflectiveDbInvoker.addUser(db.getSisterDB("admin"), "admin", "admin".toCharArray());
 				return null;
 			}
 		});

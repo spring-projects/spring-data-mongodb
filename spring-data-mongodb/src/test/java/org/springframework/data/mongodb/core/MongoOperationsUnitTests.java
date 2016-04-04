@@ -20,6 +20,8 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,8 +38,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.util.TypeInformation;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -65,12 +65,12 @@ public abstract class MongoOperationsUnitTests {
 
 		converter = new AbstractMongoConverter(null) {
 
-			public void write(Object t, DBObject dbo) {
-				dbo.put("firstName", person.getFirstName());
+			public void write(Object t, Bson dbo) {
+				((Document) dbo).put("firstName", person.getFirstName());
 			}
 
 			@SuppressWarnings("unchecked")
-			public <S extends Object> S read(Class<S> clazz, DBObject dbo) {
+			public <S extends Object> S read(Class<S> clazz, Bson dbo) {
 				return (S) person;
 			}
 
@@ -187,7 +187,7 @@ public abstract class MongoOperationsUnitTests {
 		new Execution() {
 			@Override
 			public void doWith(MongoOperations operations) {
-				operations.executeCommand(new BasicDBObject());
+				operations.executeCommand(new Document());
 			}
 		}.assertDataAccessException();
 	}

@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.bson.Document;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,9 +35,6 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-
 /**
  * Test case to verify correct usage of custom {@link Converter} implementations to be used.
  * 
@@ -48,8 +46,8 @@ public class CustomConvertersUnitTests {
 
 	MappingMongoConverter converter;
 
-	@Mock BarToDBObjectConverter barToDBObjectConverter;
-	@Mock DBObjectToBarConverter dbObjectToBarConverter;
+	@Mock BarToDocumentConverter barToDocumentConverter;
+	@Mock DocumentToBarConverter dbObjectToBarConverter;
 	@Mock MongoDbFactory mongoDbFactory;
 
 	MongoMappingContext context;
@@ -60,10 +58,11 @@ public class CustomConvertersUnitTests {
 	@SuppressWarnings("unchecked")
 	public void setUp() throws Exception {
 
-		when(barToDBObjectConverter.convert(any(Bar.class))).thenReturn(new BasicDBObject());
-		when(dbObjectToBarConverter.convert(any(DBObject.class))).thenReturn(new Bar());
+		when(barToDocumentConverter.convert(any(Bar.class))).thenReturn(new Document());
+		when(dbObjectToBarConverter.convert(any(Document.class))).thenReturn(new Bar());
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(barToDBObjectConverter, dbObjectToBarConverter));
+		CustomConversions conversions = new CustomConversions(
+				Arrays.asList(barToDocumentConverter, dbObjectToBarConverter));
 
 		context = new MongoMappingContext();
 		context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
@@ -76,45 +75,45 @@ public class CustomConvertersUnitTests {
 	}
 
 	@Test
-	public void nestedToDBObjectConverterGetsInvoked() {
+	public void nestedToDocumentConverterGetsInvoked() {
 
 		Foo foo = new Foo();
 		foo.bar = new Bar();
 
-		converter.write(foo, new BasicDBObject());
-		verify(barToDBObjectConverter).convert(any(Bar.class));
+		converter.write(foo, new Document());
+		verify(barToDocumentConverter).convert(any(Bar.class));
 	}
 
 	@Test
-	public void nestedFromDBObjectConverterGetsInvoked() {
+	public void nestedFromDocumentConverterGetsInvoked() {
 
-		BasicDBObject dbObject = new BasicDBObject();
-		dbObject.put("bar", new BasicDBObject());
+		Document dbObject = new Document();
+		dbObject.put("bar", new Document());
 
 		converter.read(Foo.class, dbObject);
-		verify(dbObjectToBarConverter).convert(any(DBObject.class));
+		verify(dbObjectToBarConverter).convert(any(Document.class));
 	}
 
 	@Test
-	public void toDBObjectConverterGetsInvoked() {
+	public void toDocumentConverterGetsInvoked() {
 
-		converter.write(new Bar(), new BasicDBObject());
-		verify(barToDBObjectConverter).convert(any(Bar.class));
+		converter.write(new Bar(), new Document());
+		verify(barToDocumentConverter).convert(any(Bar.class));
 	}
 
 	@Test
-	public void fromDBObjectConverterGetsInvoked() {
+	public void fromDocumentConverterGetsInvoked() {
 
-		converter.read(Bar.class, new BasicDBObject());
-		verify(dbObjectToBarConverter).convert(any(DBObject.class));
+		converter.read(Bar.class, new Document());
+		verify(dbObjectToBarConverter).convert(any(Document.class));
 	}
 
 	@Test
 	public void foo() {
-		DBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 		dbObject.put("foo", null);
 
-		Assert.assertThat(dbObject.containsField("foo"), CoreMatchers.is(true));
+		Assert.assertThat(dbObject.containsKey("foo"), CoreMatchers.is(true));
 	}
 
 	public static class Foo {
@@ -127,11 +126,11 @@ public class CustomConvertersUnitTests {
 		public String foo;
 	}
 
-	private interface BarToDBObjectConverter extends Converter<Bar, DBObject> {
+	private interface BarToDocumentConverter extends Converter<Bar, Document> {
 
 	}
 
-	private interface DBObjectToBarConverter extends Converter<DBObject, Bar> {
+	private interface DocumentToBarConverter extends Converter<Document, Bar> {
 
 	}
 }

@@ -19,10 +19,12 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
+import java.util.List;
 import java.util.Collections;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.hamcrest.Matchers;
+import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -97,7 +99,7 @@ public class SpringDataMongodbSerializerUnitTests {
 
 		Object value = dbObject.get("foo");
 		assertThat(value, is(notNullValue()));
-		assertThat(value, is(instanceOf(BasicDBObject.class)));
+		assertThat(value, is(instanceOf(Document.class)));
 
 		Object reference = converter.convertToMongoType(address);
 		assertThat(value, is(reference));
@@ -150,10 +152,10 @@ public class SpringDataMongodbSerializerUnitTests {
 	public void shouldConvertObjectIdEvenWhenNestedInOperatorDbObject() {
 
 		ObjectId value = new ObjectId("53bb9fd14438765b29c2d56e");
-		DBObject serialized = serializer.asDBObject("_id", new BasicDBObject("$ne", value.toString()));
+		DBObject serialized = serializer.asDBObject("_id", new Document("$ne", value.toString()));
 
-		DBObject _id = getAsDBObject(serialized, "_id");
-		ObjectId $ne = getTypedValue(_id, "$ne", ObjectId.class);
+		DBObject _id = getTypedValue(new Document(serialized.toMap()), "_id", DBObject.class);
+		ObjectId $ne = getTypedValue(new Document(_id.toMap()), "$ne", ObjectId.class);
 		assertThat($ne, is(value));
 	}
 
@@ -170,12 +172,12 @@ public class SpringDataMongodbSerializerUnitTests {
 		objectIds.add(firstId.toString());
 		objectIds.add(secondId.toString());
 
-		DBObject serialized = serializer.asDBObject("_id", new BasicDBObject("$in", objectIds));
+		DBObject serialized = serializer.asDBObject("_id", new Document("$in", objectIds));
 
-		DBObject _id = getAsDBObject(serialized, "_id");
-		Object[] $in = getTypedValue(_id, "$in", Object[].class);
+		DBObject _id = getTypedValue(new Document(serialized.toMap()), "_id", DBObject.class);
+		List<Object> $in = getTypedValue(new Document(_id.toMap()), "$in", List.class);
 
-		assertThat($in, Matchers.<Object> arrayContaining(firstId, secondId));
+		assertThat($in, IsIterableContainingInOrder.<Object> contains(firstId, secondId));
 	}
 
 	/**

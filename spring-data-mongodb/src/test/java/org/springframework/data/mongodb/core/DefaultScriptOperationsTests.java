@@ -21,6 +21,7 @@ import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,7 +35,6 @@ import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
@@ -78,7 +78,7 @@ public class DefaultScriptOperationsTests {
 	@Before
 	public void setUp() {
 
-		template.getCollection(JAVASCRIPT_COLLECTION_NAME).remove(new BasicDBObject());
+		template.getCollection(JAVASCRIPT_COLLECTION_NAME).deleteMany(new Document());
 		this.scriptOps = new DefaultScriptOperations(template);
 	}
 

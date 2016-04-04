@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,9 +32,9 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
 
 /**
  * Integration test for index creation for query methods.
@@ -44,19 +45,20 @@ import com.mongodb.MongoException;
 @ContextConfiguration
 public class RepositoryIndexCreationIntegrationTests {
 
-	@Autowired
-	MongoOperations operations;
+	@Autowired MongoOperations operations;
 
-	@Autowired
-	PersonRepository repository;
+	@Autowired PersonRepository repository;
 
 	@After
 	public void tearDown() {
 		operations.execute(Person.class, new CollectionCallback<Void>() {
 
-			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+			public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
-				for (DBObject index : collection.getIndexInfo()) {
+				List<Document> indexes = new ArrayList<Document>();
+				collection.listIndexes(Document.class).into(indexes);
+
+				for (Document index : indexes) {
 					String indexName = index.get("name").toString();
 					if (indexName.startsWith("find")) {
 						collection.dropIndex(indexName);

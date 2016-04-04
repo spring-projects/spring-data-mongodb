@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.mockito.Mockito.*;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +28,7 @@ import org.springframework.data.mongodb.core.MongoTemplate.CloseableIterableCurs
 import org.springframework.data.mongodb.core.MongoTemplate.DbObjectCallback;
 import org.springframework.data.util.CloseableIterator;
 
-import com.mongodb.Cursor;
+import com.mongodb.client.MongoCursor;
 
 /**
  * Unit tests for {@link CloseableIterableCursorAdapter}.
@@ -41,13 +42,13 @@ public class CloseableIterableCursorAdapterUnitTests {
 	@Mock PersistenceExceptionTranslator exceptionTranslator;
 	@Mock DbObjectCallback<Object> callback;
 
-	Cursor cursor;
+	MongoCursor<Document> cursor;
 	CloseableIterator<Object> adapter;
 
 	@Before
 	public void setUp() {
 
-		this.cursor = doThrow(IllegalArgumentException.class).when(mock(Cursor.class));
+		this.cursor = doThrow(IllegalArgumentException.class).when(mock(MongoCursor.class));
 		this.adapter = new CloseableIterableCursorAdapter<Object>(cursor, exceptionTranslator, callback);
 	}
 

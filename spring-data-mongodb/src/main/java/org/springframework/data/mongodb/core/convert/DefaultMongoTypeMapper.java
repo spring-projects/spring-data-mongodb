@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.data.convert.DefaultTypeMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.convert.TypeAliasAccessor;
@@ -30,19 +32,18 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
  * Default implementation of {@link MongoTypeMapper} allowing configuration of the key to lookup and store type
- * information in {@link DBObject}. The key defaults to {@link #DEFAULT_TYPE_KEY}. Actual type-to-{@link String}
+ * information in {@link Document}. The key defaults to {@link #DEFAULT_TYPE_KEY}. Actual type-to-{@link String}
  * conversion and back is done in {@link #getTypeString(TypeInformation)} or {@link #getTypeInformation(String)}
  * respectively.
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implements MongoTypeMapper {
+public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements MongoTypeMapper {
 
 	public static final String DEFAULT_TYPE_KEY = "_class";
 	@SuppressWarnings("rawtypes") //
@@ -50,7 +51,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 	@SuppressWarnings("rawtypes") //
 	private static final TypeInformation<Map> MAP_TYPE_INFO = ClassTypeInformation.from(Map.class);
 
-	private final TypeAliasAccessor<DBObject> accessor;
+	private final TypeAliasAccessor<Bson> accessor;
 	private final String typeKey;
 
 	public DefaultMongoTypeMapper() {
@@ -62,15 +63,15 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 	}
 
 	public DefaultMongoTypeMapper(String typeKey, MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
-		this(typeKey, new DBObjectTypeAliasAccessor(typeKey), mappingContext,
+		this(typeKey, new DocumentTypeAliasAccessor(typeKey), mappingContext,
 				Arrays.asList(new SimpleTypeInformationMapper()));
 	}
 
 	public DefaultMongoTypeMapper(String typeKey, List<? extends TypeInformationMapper> mappers) {
-		this(typeKey, new DBObjectTypeAliasAccessor(typeKey), null, mappers);
+		this(typeKey, new DocumentTypeAliasAccessor(typeKey), null, mappers);
 	}
 
-	private DefaultMongoTypeMapper(String typeKey, TypeAliasAccessor<DBObject> accessor,
+	private DefaultMongoTypeMapper(String typeKey, TypeAliasAccessor<Bson> accessor,
 			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext,
 			List<? extends TypeInformationMapper> mappers) {
 
@@ -93,7 +94,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#writeTypeRestrictions(java.util.Set)
 	 */
 	@Override
-	public void writeTypeRestrictions(DBObject result, Set<Class<?>> restrictedTypes) {
+	public void writeTypeRestrictions(Document result, Set<Class<?>> restrictedTypes) {
 
 		if (restrictedTypes == null || restrictedTypes.isEmpty()) {
 			return;
@@ -110,27 +111,28 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 			}
 		}
 
-		accessor.writeTypeTo(result, new BasicDBObject("$in", restrictedMappedTypes));
+		accessor.writeTypeTo(result, new Document("$in", restrictedMappedTypes));
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.convert.DefaultTypeMapper#getFallbackTypeFor(java.lang.Object)
 	 */
 	@Override
-	protected TypeInformation<?> getFallbackTypeFor(DBObject source) {
+	protected TypeInformation<?> getFallbackTypeFor(Bson source) {
+
 		return source instanceof BasicDBList ? LIST_TYPE_INFO : MAP_TYPE_INFO;
 	}
 
 	/**
-	 * {@link TypeAliasAccessor} to store aliases in a {@link DBObject}.
+	 * {@link TypeAliasAccessor} to store aliases in a {@link Document}.
 	 * 
 	 * @author Oliver Gierke
 	 */
-	public static final class DBObjectTypeAliasAccessor implements TypeAliasAccessor<DBObject> {
+	public static final class DocumentTypeAliasAccessor implements TypeAliasAccessor<Bson> {
 
 		private final String typeKey;
 
-		public DBObjectTypeAliasAccessor(String typeKey) {
+		public DocumentTypeAliasAccessor(String typeKey) {
 			this.typeKey = typeKey;
 		}
 
@@ -138,22 +140,35 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.TypeAliasAccessor#readAliasFrom(java.lang.Object)
 		 */
-		public Object readAliasFrom(DBObject source) {
+		public Object readAliasFrom(Bson source) {
 
-			if (source instanceof BasicDBList) {
+			if (source instanceof List) {
 				return null;
 			}
 
-			return source.get(typeKey);
+			if (source instanceof Document) {
+				return ((Document) source).get(typeKey);
+			} else if (source instanceof DBObject) {
+				return ((DBObject) source).get(typeKey);
+			}
+
+			throw new IllegalArgumentException("Cannot read alias from " + source.getClass());
 		}
 
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.TypeAliasAccessor#writeTypeTo(java.lang.Object, java.lang.Object)
 		 */
-		public void writeTypeTo(DBObject sink, Object alias) {
+		public void writeTypeTo(Bson sink, Object alias) {
+
 			if (typeKey != null) {
-				sink.put(typeKey, alias);
+
+				if (sink instanceof Document) {
+					((Document) sink).put(typeKey, alias);
+				} else if (sink instanceof DBObject) {
+					((DBObject) sink).put(typeKey, alias);
+				}
+
 			}
 		}
 	}

@@ -112,7 +112,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 		try {
 
-			BasicQuery result = new BasicQuery(query.getQueryObject(), (DBObject) JSON.parse(fieldSpec));
+			BasicQuery result = new BasicQuery(query.getQueryObject().toJson(), fieldSpec);
 			result.setSortObject(query.getSortObject());
 
 			return result;

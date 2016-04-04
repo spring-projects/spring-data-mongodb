@@ -19,10 +19,9 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
-
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link LookupOperation}.
@@ -73,7 +72,7 @@ public class LookupOperationUnitTests {
 
 		LookupOperation lookupOperation = Aggregation.lookup("a", "b", "c", "d");
 
-		DBObject lookupClause = extractDbObjectFromLookupOperation(lookupOperation);
+		Document lookupClause = extractDbObjectFromLookupOperation(lookupOperation);
 
 		assertThat(lookupClause,
 				isBsonObject().containing("from", "a") //
@@ -95,10 +94,10 @@ public class LookupOperationUnitTests {
 		assertThat(lookupOperation.getFields().getField("d"), notNullValue());
 	}
 
-	private DBObject extractDbObjectFromLookupOperation(LookupOperation lookupOperation) {
+	private Document extractDbObjectFromLookupOperation(LookupOperation lookupOperation) {
 
-		DBObject dbObject = lookupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject lookupClause = DBObjectTestUtils.getAsDBObject(dbObject, "$lookup");
+		Document dbObject = lookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document lookupClause = DBObjectTestUtils.getAsDocument(dbObject, "$lookup");
 		return lookupClause;
 	}
 
@@ -142,7 +141,7 @@ public class LookupOperationUnitTests {
 
 		LookupOperation lookupOperation = LookupOperation.newLookup().from("a").localField("b").foreignField("c").as("d");
 
-		DBObject lookupClause = extractDbObjectFromLookupOperation(lookupOperation);
+		Document lookupClause = extractDbObjectFromLookupOperation(lookupOperation);
 
 		assertThat(lookupClause,
 				isBsonObject().containing("from", "a") //

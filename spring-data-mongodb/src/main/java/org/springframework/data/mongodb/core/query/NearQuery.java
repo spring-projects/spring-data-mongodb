@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.Arrays;
 
+import org.bson.Document;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.CustomMetric;
 import org.springframework.data.geo.Distance;
@@ -24,9 +25,6 @@ import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Builder class to build near-queries.
@@ -407,13 +405,13 @@ public final class NearQuery {
 	}
 
 	/**
-	 * Returns the {@link DBObject} built by the {@link NearQuery}.
+	 * Returns the {@link Document} built by the {@link NearQuery}.
 	 * 
 	 * @return
 	 */
-	public DBObject toDBObject() {
+	public Document toDocument() {
 
-		BasicDBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 
 		if (query != null) {
 			dbObject.put("query", query.getQueryObject());

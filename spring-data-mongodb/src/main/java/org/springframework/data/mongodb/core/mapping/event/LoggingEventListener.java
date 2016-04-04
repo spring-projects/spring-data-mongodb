@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
@@ -45,7 +46,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onBeforeSave(BeforeSaveEvent<Object> event) {
-		LOGGER.info("onBeforeSave: {}, {}", event.getSource(), event.getDBObject());
+		LOGGER.info("onBeforeSave: {}, {}", event.getSource(), event.getDocument());
 	}
 
 	/* 
@@ -54,7 +55,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterSave(AfterSaveEvent<Object> event) {
-		LOGGER.info("onAfterSave: {}, {}", event.getSource(), event.getDBObject());
+		LOGGER.info("onAfterSave: {}, {}", event.getSource(), event.getDocument());
 	}
 
 	/* 
@@ -63,7 +64,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterLoad(AfterLoadEvent<Object> event) {
-		LOGGER.info("onAfterLoad: {}", event.getDBObject());
+		LOGGER.info("onAfterLoad: {}", event.getDocument());
 	}
 
 	/* 
@@ -72,7 +73,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterConvert(AfterConvertEvent<Object> event) {
-		LOGGER.info("onAfterConvert: {}, {}", event.getDBObject(), event.getSource());
+		LOGGER.info("onAfterConvert: {}, {}", event.getDocument(), event.getSource());
 	}
 
 	/* 
@@ -81,7 +82,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterDelete(AfterDeleteEvent<Object> event) {
-		LOGGER.info("onAfterDelete: {}", event.getDBObject());
+		LOGGER.info("onAfterDelete: {}", event.getDocument());
 	}
 
 	/* 
@@ -90,6 +91,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onBeforeDelete(BeforeDeleteEvent<Object> event) {
-		LOGGER.info("onBeforeDelete: {}", event.getDBObject());
+		LOGGER.info("onBeforeDelete: {}", event.getDocument());
 	}
 }

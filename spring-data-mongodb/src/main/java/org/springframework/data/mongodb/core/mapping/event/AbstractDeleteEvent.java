@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * Base class for delete events.
@@ -23,32 +23,32 @@ import com.mongodb.DBObject;
  * @author Martin Baumgartner
  * @author Christoph Strobl
  */
-public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<DBObject> {
+public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<Document> {
 
 	private static final long serialVersionUID = 1L;
 	private final Class<T> type;
 
 	/**
-	 * Creates a new {@link AbstractDeleteEvent} for the given {@link DBObject} and type.
+	 * Creates a new {@link AbstractDeleteEvent} for the given {@link Document} and type.
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AbstractDeleteEvent(DBObject, Class, String)}.
+	 * @deprecated since 1.8. Please use {@link #AbstractDeleteEvent(Document, Class, String)}.
 	 */
 	@Deprecated
-	public AbstractDeleteEvent(DBObject dbo, Class<T> type) {
+	public AbstractDeleteEvent(Document dbo, Class<T> type) {
 		this(dbo, type, null);
 	}
 
 	/**
-	 * Creates a new {@link AbstractDeleteEvent} for the given {@link DBObject} and type.
+	 * Creates a new {@link AbstractDeleteEvent} for the given {@link Document} and type.
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public AbstractDeleteEvent(DBObject dbo, Class<T> type, String collectionName) {
+	public AbstractDeleteEvent(Document dbo, Class<T> type, String collectionName) {
 
 		super(dbo, dbo, collectionName);
 		this.type = type;

@@ -19,40 +19,46 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Wrapper value object for a {@link BasicDBObject} to be able to access raw values by {@link MongoPersistentProperty}
+ * Wrapper value object for a {@link BasicDocument} to be able to access raw values by {@link MongoPersistentProperty}
  * references. The accessors will transparently resolve nested document values that a {@link MongoPersistentProperty}
  * might refer to through a path expression in field names.
  * 
  * @author Oliver Gierke
  */
-class DBObjectAccessor {
+class DocumentAccessor {
 
-	private final BasicDBObject dbObject;
+	private final Bson dbObject;
 
 	/**
-	 * Creates a new {@link DBObjectAccessor} for the given {@link DBObject}.
+	 * Creates a new {@link DocumentAccessor} for the given {@link Document}.
 	 * 
-	 * @param dbObject must be a {@link BasicDBObject} effectively, must not be {@literal null}.
+	 * @param dbObject must be a {@link BasicDocument} effectively, must not be {@literal null}.
 	 */
-	public DBObjectAccessor(DBObject dbObject) {
+	public DocumentAccessor(Bson dbObject) {
 
-		Assert.notNull(dbObject, "DBObject must not be null!");
-		Assert.isInstanceOf(BasicDBObject.class, dbObject, "Given DBObject must be a BasicDBObject!");
+		Assert.notNull(dbObject, "Document must not be null!");
 
-		this.dbObject = (BasicDBObject) dbObject;
+		if (!(dbObject instanceof Document) && !(dbObject instanceof DBObject)) {
+			Assert.isInstanceOf(Document.class, dbObject, "Given Document must be a Document or BasicDBObject!");
+		}
+
+		this.dbObject = dbObject;
 	}
 
 	/**
-	 * Puts the given value into the backing {@link DBObject} based on the coordinates defined through the given
+	 * Puts the given value into the backing {@link Document} based on the coordinates defined through the given
 	 * {@link MongoPersistentProperty}. By default this will be the plain field name. But field names might also consist
-	 * of path traversals so we might need to create intermediate {@link BasicDBObject}s.
+	 * of path traversals so we might need to create intermediate {@link BasicDocument}s.
 	 * 
 	 * @param prop must not be {@literal null}.
 	 * @param value
@@ -63,12 +69,12 @@ class DBObjectAccessor {
 		String fieldName = prop.getFieldName();
 
 		if (!fieldName.contains(".")) {
-			dbObject.put(fieldName, value);
+			BsonUtils.addToMap(dbObject, fieldName, value);
 			return;
 		}
 
 		Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
-		DBObject dbObject = this.dbObject;
+		Bson dbObject = this.dbObject;
 
 		while (parts.hasNext()) {
 
@@ -77,7 +83,7 @@ class DBObjectAccessor {
 			if (parts.hasNext()) {
 				dbObject = getOrCreateNestedDbObject(part, dbObject);
 			} else {
-				dbObject.put(part, value);
+				BsonUtils.addToMap(dbObject, part, value);
 			}
 		}
 	}
@@ -95,11 +101,11 @@ class DBObjectAccessor {
 		String fieldName = property.getFieldName();
 
 		if (!fieldName.contains(".")) {
-			return this.dbObject.get(fieldName);
+			return BsonUtils.asMap(this.dbObject).get(fieldName);
 		}
 
 		Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
-		Map<String, Object> source = this.dbObject;
+		Map<String, Object> source = BsonUtils.asMap(this.dbObject);
 		Object result = null;
 
 		while (source != null && parts.hasNext()) {
@@ -117,7 +123,7 @@ class DBObjectAccessor {
 	/**
 	 * Returns whether the underlying {@link DBObject} has a value ({@literal null} or non-{@literal null}) for the given
 	 * {@link MongoPersistentProperty}.
-	 * 
+	 *
 	 * @param property must not be {@literal null}.
 	 * @return
 	 */
@@ -128,11 +134,25 @@ class DBObjectAccessor {
 		String fieldName = property.getFieldName();
 
 		if (!fieldName.contains(".")) {
-			return this.dbObject.containsField(fieldName);
+
+			if (this.dbObject instanceof Document) {
+				return ((Document) this.dbObject).containsKey(fieldName);
+			}
+
+			if (this.dbObject instanceof DBObject) {
+				return ((DBObject) this.dbObject).containsField(fieldName);
+			}
 		}
 
 		String[] parts = fieldName.split("\\.");
-		Map<String, Object> source = this.dbObject;
+		Map<String, Object> source;
+
+		if (this.dbObject instanceof Document) {
+			source = ((Document) this.dbObject);
+		}else {
+			source = ((DBObject) this.dbObject).toMap();
+		}
+
 		Object result = null;
 
 		for (int i = 1; i < parts.length; i++) {
@@ -149,13 +169,17 @@ class DBObjectAccessor {
 	}
 
 	/**
-	 * Returns the given source object as map, i.e. {@link BasicDBObject}s and maps as is or {@literal null} otherwise.
+	 * Returns the given source object as map, i.e. {@link BasicDocument}s and maps as is or {@literal null} otherwise.
 	 * 
 	 * @param source can be {@literal null}.
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	private static Map<String, Object> getAsMap(Object source) {
+
+		if (source instanceof Document) {
+			return (Document) source;
+		}
 
 		if (source instanceof BasicDBObject) {
 			return (BasicDBObject) source;
@@ -169,23 +193,23 @@ class DBObjectAccessor {
 	}
 
 	/**
-	 * Returns the {@link DBObject} which either already exists in the given source under the given key, or creates a new
+	 * Returns the {@link Document} which either already exists in the given source under the given key, or creates a new
 	 * nested one, registers it with the source and returns it.
 	 * 
 	 * @param key must not be {@literal null} or empty.
 	 * @param source must not be {@literal null}.
 	 * @return
 	 */
-	private static DBObject getOrCreateNestedDbObject(String key, DBObject source) {
+	private static Document getOrCreateNestedDbObject(String key, Bson source) {
 
-		Object existing = source.get(key);
+		Object existing = BsonUtils.asMap(source).get(key);
 
-		if (existing instanceof BasicDBObject) {
-			return (BasicDBObject) existing;
+		if (existing instanceof Document) {
+			return (Document) existing;
 		}
 
-		DBObject nested = new BasicDBObject();
-		source.put(key, nested);
+		Document nested = new Document();
+		BsonUtils.addToMap(source, key, nested);
 
 		return nested;
 	}

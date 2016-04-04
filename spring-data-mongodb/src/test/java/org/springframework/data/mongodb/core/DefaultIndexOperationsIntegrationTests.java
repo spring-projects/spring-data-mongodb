@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.ReflectiveDBCollectionInvoker.*;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,9 +29,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import com.mongodb.client.MongoCollection;
 
 /**
  * Integration tests for {@link DefaultIndexOperations}.
@@ -42,18 +41,18 @@ import com.mongodb.DBObject;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class DefaultIndexOperationsIntegrationTests {
 
-	static final DBObject GEO_SPHERE_2D = new BasicDBObject("loaction", "2dsphere");
+	static final Document GEO_SPHERE_2D = new Document("loaction", "2dsphere");
 
 	@Autowired MongoTemplate template;
 	DefaultIndexOperations indexOps;
-	DBCollection collection;
+	MongoCollection<Document> collection;
 
 	@Before
 	public void setUp() {
 
 		String collectionName = this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
 
-		this.collection = this.template.getDb().getCollection(collectionName);
+		this.collection = this.template.getDb().getCollection(collectionName, Document.class);
 		this.collection.dropIndexes();
 
 		this.indexOps = new DefaultIndexOperations(template, collectionName);
@@ -71,11 +70,11 @@ public class DefaultIndexOperationsIntegrationTests {
 		assertThat(info.getIndexFields().get(0).isGeo(), is(true));
 	}
 
-	private IndexInfo findAndReturnIndexInfo(DBObject keys) {
+	private IndexInfo findAndReturnIndexInfo(Document keys) {
 		return findAndReturnIndexInfo(indexOps.getIndexInfo(), keys);
 	}
 
-	private static IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, DBObject keys) {
+	private static IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, Document keys) {
 		return findAndReturnIndexInfo(candidates, generateIndexName(keys));
 	}
 

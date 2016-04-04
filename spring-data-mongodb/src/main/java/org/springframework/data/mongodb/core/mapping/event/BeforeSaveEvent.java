@@ -16,7 +16,7 @@
 
 package org.springframework.data.mongodb.core.mapping.event;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * {@link MongoMappingEvent} triggered before save of a document.
@@ -33,10 +33,10 @@ public class BeforeSaveEvent<E> extends MongoMappingEvent<E> {
 	 * 
 	 * @param source must not be {@literal null}.
 	 * @param dbo can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #BeforeSaveEvent(Object, DBObject, String)}.
+	 * @deprecated since 1.8. Please use {@link #BeforeSaveEvent(Object, Document, String)}.
 	 */
 	@Deprecated
-	public BeforeSaveEvent(E source, DBObject dbo) {
+	public BeforeSaveEvent(E source, Document dbo) {
 		super(source, dbo);
 	}
 
@@ -48,7 +48,7 @@ public class BeforeSaveEvent<E> extends MongoMappingEvent<E> {
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public BeforeSaveEvent(E source, DBObject dbo, String collectionName) {
+	public BeforeSaveEvent(E source, Document dbo, String collectionName) {
 		super(source, dbo, collectionName);
 	}
 

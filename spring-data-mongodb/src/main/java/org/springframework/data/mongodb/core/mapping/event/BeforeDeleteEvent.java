@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
- * Event being thrown before a document is deleted. The {@link DBObject} held in the event will represent the query
+ * Event being thrown before a document is deleted. The {@link Document} held in the event will represent the query
  * document <em>before</em> being mapped based on the domain class handled.
  * 
  * @author Martin Baumgartner
@@ -29,26 +29,26 @@ public class BeforeDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	private static final long serialVersionUID = -2627547705679734497L;
 
 	/**
-	 * Creates a new {@link BeforeDeleteEvent} for the given {@link DBObject} and type.
+	 * Creates a new {@link BeforeDeleteEvent} for the given {@link Document} and type.
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #BeforeDeleteEvent(DBObject, Class, String)}.
+	 * @deprecated since 1.8. Please use {@link #BeforeDeleteEvent(Document, Class, String)}.
 	 */
 	@Deprecated
-	public BeforeDeleteEvent(DBObject dbo, Class<T> type) {
+	public BeforeDeleteEvent(Document dbo, Class<T> type) {
 		this(dbo, type, null);
 	}
 
 	/**
-	 * Creates a new {@link BeforeDeleteEvent} for the given {@link DBObject}, type and collectionName.
+	 * Creates a new {@link BeforeDeleteEvent} for the given {@link Document}, type and collectionName.
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public BeforeDeleteEvent(DBObject dbo, Class<T> type, String collectionName) {
+	public BeforeDeleteEvent(Document dbo, Class<T> type, String collectionName) {
 		super(dbo, type, collectionName);
 	}
 }

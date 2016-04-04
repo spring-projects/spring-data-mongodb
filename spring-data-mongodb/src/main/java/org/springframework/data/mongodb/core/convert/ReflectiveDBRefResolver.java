@@ -20,12 +20,13 @@ import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.client.model.Filters;
 
 /**
  * {@link ReflectiveDBRefResolver} provides reflective access to {@link DBRef} API that is not consistently available
@@ -51,16 +52,18 @@ class ReflectiveDBRefResolver {
 	 * @param ref must not be {@literal null}.
 	 * @return the document that this references.
 	 */
-	public static DBObject fetch(MongoDbFactory factory, DBRef ref) {
+	public static Document fetch(MongoDbFactory factory, DBRef ref) {
 
 		Assert.notNull(ref, "DBRef to fetch must not be null!");
 
 		if (isMongo3Driver()) {
 
 			Assert.notNull(factory, "DbFactory to fetch DB from must not be null!");
-			return factory.getDb().getCollection(ref.getCollectionName()).findOne(ref.getId());
+
+			return factory.getDb().getCollection(ref.getCollectionName(), Document.class).find(Filters.eq("_id", ref.getId()))
+					.first();
 		}
 
-		return (DBObject) invokeMethod(FETCH_METHOD, ref);
+		return (Document) invokeMethod(FETCH_METHOD, ref);
 	}
 }

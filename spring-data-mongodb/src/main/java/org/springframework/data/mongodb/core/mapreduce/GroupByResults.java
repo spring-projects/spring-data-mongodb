@@ -18,9 +18,8 @@ package org.springframework.data.mongodb.core.mapreduce;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
-
-import com.mongodb.DBObject;
 
 /**
  * Collects the results of executing a group operation.
@@ -32,13 +31,13 @@ import com.mongodb.DBObject;
 public class GroupByResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;
-	private final DBObject rawResults;
+	private final Document rawResults;
 
 	private double count;
 	private int keys;
 	private String serverUsed;
 
-	public GroupByResults(List<T> mappedResults, DBObject rawResults) {
+	public GroupByResults(List<T> mappedResults, Document rawResults) {
 
 		Assert.notNull(mappedResults);
 		Assert.notNull(rawResults);
@@ -65,7 +64,7 @@ public class GroupByResults<T> implements Iterable<T> {
 		return mappedResults.iterator();
 	}
 
-	public DBObject getRawResults() {
+	public Document getRawResults() {
 		return rawResults;
 	}
 

@@ -18,11 +18,14 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.List;
+
+import org.bson.Document;
+
 import com.mongodb.BasicDBList;
-import com.mongodb.DBObject;
 
 /**
- * Helper classes to ease assertions on {@link DBObject}s.
+ * Helper classes to ease assertions on {@link Document}s.
  * 
  * @author Oliver Gierke
  */
@@ -33,44 +36,44 @@ public abstract class DBObjectTestUtils {
 	}
 
 	/**
-	 * Expects the field with the given key to be not {@literal null} and a {@link DBObject} in turn and returns it.
+	 * Expects the field with the given key to be not {@literal null} and a {@link Document} in turn and returns it.
 	 * 
-	 * @param source the {@link DBObject} to lookup the nested one
-	 * @param key the key of the field to lokup the nested {@link DBObject}
+	 * @param source the {@link Document} to lookup the nested one
+	 * @param key the key of the field to lokup the nested {@link Document}
 	 * @return
 	 */
-	public static DBObject getAsDBObject(DBObject source, String key) {
-		return getTypedValue(source, key, DBObject.class);
+	public static Document getAsDocument(Document source, String key) {
+		return getTypedValue(source, key, Document.class);
 	}
 
 	/**
 	 * Expects the field with the given key to be not {@literal null} and a {@link BasicDBList}.
 	 * 
-	 * @param source the {@link DBObject} to lookup the {@link BasicDBList} in
+	 * @param source the {@link Document} to lookup the {@link BasicDBList} in
 	 * @param key the key of the field to find the {@link BasicDBList} in
 	 * @return
 	 */
-	public static BasicDBList getAsDBList(DBObject source, String key) {
-		return getTypedValue(source, key, BasicDBList.class);
+	public static List<Object> getAsDBList(Document source, String key) {
+		return getTypedValue(source, key, List.class);
 	}
 
 	/**
-	 * Expects the list element with the given index to be a non-{@literal null} {@link DBObject} and returns it.
+	 * Expects the list element with the given index to be a non-{@literal null} {@link Document} and returns it.
 	 * 
-	 * @param source the {@link BasicDBList} to look up the {@link DBObject} element in
-	 * @param index the index of the element expected to contain a {@link DBObject}
+	 * @param source the {@link BasicDBList} to look up the {@link Document} element in
+	 * @param index the index of the element expected to contain a {@link Document}
 	 * @return
 	 */
-	public static DBObject getAsDBObject(BasicDBList source, int index) {
+	public static Document getAsDocument(List<?> source, int index) {
 
 		assertThat(source.size(), greaterThanOrEqualTo(index + 1));
 		Object value = source.get(index);
-		assertThat(value, is(instanceOf(DBObject.class)));
-		return (DBObject) value;
+		assertThat(value, is(instanceOf(Document.class)));
+		return (Document) value;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T getTypedValue(DBObject source, String key, Class<T> type) {
+	public static <T> T getTypedValue(Document source, String key, Class<T> type) {
 
 		Object value = source.get(key);
 		assertThat(value, is(notNullValue()));

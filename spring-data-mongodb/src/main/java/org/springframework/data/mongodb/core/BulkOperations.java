@@ -21,8 +21,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.Pair;
 
-import com.mongodb.BulkWriteResult;
-
 /**
  * Bulk operations for insert/update/remove actions on a collection. These bulks operation are available since MongoDB
  * 2.6 and make use of low level bulk commands on the protocol level. This interface defines a fluent API to add
@@ -141,5 +139,5 @@ public interface BulkOperations {
 	 * @return Result of the bulk operation providing counters for inserts/updates etc.
 	 * @throws {@link BulkOperationException} if an error occurred during bulk processing.
 	 */
-	BulkWriteResult execute();
+	com.mongodb.bulk.BulkWriteResult execute();
 }

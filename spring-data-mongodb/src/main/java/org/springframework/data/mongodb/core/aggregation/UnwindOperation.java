@@ -15,11 +15,9 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Encapsulates the aggregation framework {@code $unwind}-operation.
@@ -87,25 +85,25 @@ public class UnwindOperation
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public DBObject toDBObject(AggregationOperationContext context) {
+	public Document toDocument(AggregationOperationContext context) {
 
 		String path = context.getReference(field).toString();
 
 		if (!preserveNullAndEmptyArrays && arrayIndex == null) {
-			return new BasicDBObject("$unwind", path);
+			return new Document("$unwind", path);
 		}
 
-		DBObject unwindArgs = new BasicDBObject();
+		Document unwindArgs = new Document();
 		unwindArgs.put("path", path);
 		if (arrayIndex != null) {
 			unwindArgs.put("includeArrayIndex", arrayIndex.getName());
 		}
 		unwindArgs.put("preserveNullAndEmptyArrays", preserveNullAndEmptyArrays);
 
-		return new BasicDBObject("$unwind", unwindArgs);
+		return new Document("$unwind", unwindArgs);
 	}
 
 	/*

@@ -68,6 +68,6 @@ public class GridFsCriteria extends Criteria {
 	 * @return
 	 */
 	public static GridFsCriteria whereContentType() {
-		return new GridFsCriteria("contentType");
+		return new GridFsCriteria("metadata.type");
 	}
 }

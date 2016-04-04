@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Set;
 
+import org.bson.Document;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -41,8 +42,6 @@ import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.Account;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.stereotype.Component;
-
-import com.mongodb.DBObject;
 
 /**
  * Integration tests for {@link MappingMongoConverterParser}.
@@ -180,8 +179,8 @@ public class MappingMongoConverterParserIntegrationTests {
 	}
 
 	@Component
-	public static class SampleConverter implements Converter<Person, DBObject> {
-		public DBObject convert(Person source) {
+	public static class SampleConverter implements Converter<Person, Document> {
+		public Document convert(Person source) {
 			return null;
 		}
 	}
@@ -190,7 +189,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	public static class SampleConverterFactory implements GenericConverter {
 
 		public Set<ConvertiblePair> getConvertibleTypes() {
-			return Collections.singleton(new ConvertiblePair(Account.class, DBObject.class));
+			return Collections.singleton(new ConvertiblePair(Account.class, Document.class));
 		}
 
 		public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {

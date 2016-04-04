@@ -15,11 +15,9 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import org.bson.Document;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Value object to capture data to create a geo index.
@@ -119,9 +117,9 @@ public class GeospatialIndex implements IndexDefinition {
 		return this;
 	}
 
-	public DBObject getIndexKeys() {
+	public Document getIndexKeys() {
 
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 
 		switch (type) {
 
@@ -148,13 +146,13 @@ public class GeospatialIndex implements IndexDefinition {
 		return dbo;
 	}
 
-	public DBObject getIndexOptions() {
+	public Document getIndexOptions() {
 
 		if (!StringUtils.hasText(name) && min == null && max == null && bucketSize == null) {
 			return null;
 		}
 
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 		if (StringUtils.hasText(name)) {
 			dbo.put("name", name);
 		}

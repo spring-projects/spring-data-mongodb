@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.crossstore;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,8 +37,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.mongodb.DBObject;
-
 /**
  * Integration tests for MongoDB cross-store persistence (mainly {@link MongoChangeSetPersister}).
  * 
@@ -48,14 +47,11 @@ import com.mongodb.DBObject;
 @ContextConfiguration("classpath:/META-INF/spring/applicationContext.xml")
 public class CrossStoreMongoTests {
 
-	@Autowired
-	MongoTemplate mongoTemplate;
+	@Autowired MongoTemplate mongoTemplate;
 
-	@PersistenceContext
-	EntityManager entityManager;
+	@PersistenceContext EntityManager entityManager;
 
-	@Autowired
-	PlatformTransactionManager transactionManager;
+	@Autowired PlatformTransactionManager transactionManager;
 	TransactionTemplate txTemplate;
 
 	@Before
@@ -187,7 +183,7 @@ public class CrossStoreMongoTests {
 
 		boolean weFound3 = false;
 
-		for (DBObject dbo : this.mongoTemplate.getCollection(mongoTemplate.getCollectionName(Person.class)).find()) {
+		for (Document dbo : this.mongoTemplate.getCollection(mongoTemplate.getCollectionName(Person.class)).find()) {
 			Assert.assertTrue(!dbo.get("_entity_id").equals(2L));
 			if (dbo.get("_entity_id").equals(3L)) {
 				weFound3 = true;

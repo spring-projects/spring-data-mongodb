@@ -19,15 +19,12 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
 
 /**
  * @author Oliver Gierke
@@ -39,19 +36,19 @@ public class CriteriaTests {
 	@Test
 	public void testSimpleCriteria() {
 		Criteria c = new Criteria("name").is("Bubba");
-		assertEquals("{ \"name\" : \"Bubba\"}", c.getCriteriaObject().toString());
+		assertEquals(Document.parse("{ \"name\" : \"Bubba\"}"), c.getCriteriaObject());
 	}
 
 	@Test
 	public void testNotEqualCriteria() {
 		Criteria c = new Criteria("name").ne("Bubba");
-		assertEquals("{ \"name\" : { \"$ne\" : \"Bubba\"}}", c.getCriteriaObject().toString());
+		assertEquals(Document.parse("{ \"name\" : { \"$ne\" : \"Bubba\"}}"), c.getCriteriaObject());
 	}
 
 	@Test
 	public void buildsIsNullCriteriaCorrectly() {
 
-		DBObject reference = new BasicDBObject("name", null);
+		Document reference = new Document("name", null);
 
 		Criteria criteria = new Criteria("name").is(null);
 		assertThat(criteria.getCriteriaObject(), is(reference));
@@ -60,7 +57,7 @@ public class CriteriaTests {
 	@Test
 	public void testChainedCriteria() {
 		Criteria c = new Criteria("name").is("Bubba").and("age").lt(21);
-		assertEquals("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}", c.getCriteriaObject().toString());
+		assertEquals(Document.parse("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}"), c.getCriteriaObject());
 	}
 
 	@Test(expected = InvalidMongoDbApiUsageException.class)
@@ -119,10 +116,10 @@ public class CriteriaTests {
 	public void shouldNegateFollowingSimpleExpression() {
 
 		Criteria c = Criteria.where("age").not().gt(18).and("status").is("student");
-		DBObject co = c.getCriteriaObject();
+		Document co = c.getCriteriaObject();
 
 		assertThat(co, is(notNullValue()));
-		assertThat(co.toString(), is("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}"));
+		assertThat(co, is(Document.parse("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}")));
 	}
 
 	/**
@@ -131,9 +128,9 @@ public class CriteriaTests {
 	@Test
 	public void getCriteriaObjectShouldReturnEmptyDBOWhenNoCriteriaSpecified() {
 
-		DBObject dbo = new Criteria().getCriteriaObject();
+		Document dbo = new Criteria().getCriteriaObject();
 
-		assertThat(dbo, equalTo(new BasicDBObjectBuilder().get()));
+		assertThat(dbo, equalTo(new Document()));
 	}
 
 	/**
@@ -142,9 +139,9 @@ public class CriteriaTests {
 	@Test
 	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresent() {
 
-		DBObject dbo = new Criteria().lt("foo").getCriteriaObject();
+		Document dbo = new Criteria().lt("foo").getCriteriaObject();
 
-		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$lt", "foo").get()));
+		assertThat(dbo, equalTo(new Document().append("$lt", "foo")));
 	}
 
 	/**
@@ -153,9 +150,9 @@ public class CriteriaTests {
 	@Test
 	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresentButMultipleCriteriasPresent() {
 
-		DBObject dbo = new Criteria().lt("foo").gt("bar").getCriteriaObject();
+		Document dbo = new Criteria().lt("foo").gt("bar").getCriteriaObject();
 
-		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$lt", "foo").add("$gt", "bar").get()));
+		assertThat(dbo, equalTo(new Document().append("$lt", "foo").append("$gt", "bar")));
 	}
 
 	/**
@@ -164,9 +161,9 @@ public class CriteriaTests {
 	@Test
 	public void getCriteriaObjectShouldRespectNotWhenNoKeyPresent() {
 
-		DBObject dbo = new Criteria().lt("foo").not().getCriteriaObject();
+		Document dbo = new Criteria().lt("foo").not().getCriteriaObject();
 
-		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$not", new BasicDBObject("$lt", "foo")).get()));
+		assertThat(dbo, equalTo(new Document().append("$not", new Document("$lt", "foo"))));
 	}
 
 	/**
@@ -175,7 +172,7 @@ public class CriteriaTests {
 	@Test
 	public void geoJsonTypesShouldBeWrappedInGeometry() {
 
-		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).getCriteriaObject();
+		Document dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).getCriteriaObject();
 
 		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry", new GeoJsonPoint(100, 200)));
 	}
@@ -186,7 +183,7 @@ public class CriteriaTests {
 	@Test
 	public void legacyCoordinateTypesShouldNotBeWrappedInGeometry() {
 
-		DBObject dbo = new Criteria("foo").near(new Point(100, 200)).getCriteriaObject();
+		Document dbo = new Criteria("foo").near(new Point(100, 200)).getCriteriaObject();
 
 		assertThat(dbo, isBsonObject().notContaining("foo.$near.$geometry"));
 	}
@@ -197,7 +194,7 @@ public class CriteriaTests {
 	@Test
 	public void maxDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
 
-		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
+		Document dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
 		assertThat(dbo, isBsonObject().containing("foo.$near.$maxDistance", 50D));
 	}
@@ -208,7 +205,7 @@ public class CriteriaTests {
 	@Test
 	public void maxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
-		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
+		Document dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
 		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$maxDistance", 50D));
 	}
@@ -219,7 +216,7 @@ public class CriteriaTests {
 	@Test
 	public void minDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
 
-		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
+		Document dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
 		assertThat(dbo, isBsonObject().containing("foo.$near.$minDistance", 50D));
 	}
@@ -230,7 +227,7 @@ public class CriteriaTests {
 	@Test
 	public void minDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
-		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
+		Document dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
 		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
 	}
@@ -241,7 +238,7 @@ public class CriteriaTests {
 	@Test
 	public void minAndMaxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
-		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).maxDistance(100D)
+		Document dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).maxDistance(100D)
 				.getCriteriaObject();
 
 		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
@@ -263,7 +260,7 @@ public class CriteriaTests {
 	public void intersectsShouldWrapGeoJsonTypeInGeometryCorrectly() {
 
 		GeoJsonLineString lineString = new GeoJsonLineString(new Point(0, 0), new Point(10, 10));
-		DBObject dbo = new Criteria("foo").intersects(lineString).getCriteriaObject();
+		Document dbo = new Criteria("foo").intersects(lineString).getCriteriaObject();
 
 		assertThat(dbo, isBsonObject().containing("foo.$geoIntersects.$geometry", lineString));
 	}

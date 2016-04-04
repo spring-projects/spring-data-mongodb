@@ -19,11 +19,9 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link AggregationOptions}.
@@ -37,7 +35,7 @@ public class AggregationOptionsTests {
 
 	@Before
 	public void setup() {
-		aggregationOptions = newAggregationOptions().explain(true).cursor(new BasicDBObject("foo", 1)).allowDiskUse(true)
+		aggregationOptions = newAggregationOptions().explain(true).cursor(new Document("foo", 1)).allowDiskUse(true)
 				.build();
 
 	}
@@ -50,7 +48,7 @@ public class AggregationOptionsTests {
 
 		assertThat(aggregationOptions.isAllowDiskUse(), is(true));
 		assertThat(aggregationOptions.isExplain(), is(true));
-		assertThat(aggregationOptions.getCursor(), is((DBObject) new BasicDBObject("foo", 1)));
+		assertThat(aggregationOptions.getCursor(), is(new Document("foo", 1)));
 	}
 
 	/**
@@ -58,7 +56,7 @@ public class AggregationOptionsTests {
 	 */
 	@Test
 	public void aggregationOptionsToString() {
-		assertThat(aggregationOptions.toString(),
-				is("{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"foo\" : 1}}"));
+		assertThat(aggregationOptions.toDbObject(),
+				is(Document.parse("{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"foo\" : 1}}")));
 	}
 }

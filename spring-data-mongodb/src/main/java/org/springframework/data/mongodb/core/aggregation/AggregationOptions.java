@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * Holds a set of configurable aggregation options that can be used within an aggregation pipeline. A list of support
@@ -37,7 +36,7 @@ public class AggregationOptions {
 
 	private final boolean allowDiskUse;
 	private final boolean explain;
-	private final DBObject cursor;
+	private final Document cursor;
 
 	/**
 	 * Creates a new {@link AggregationOptions}.
@@ -46,7 +45,7 @@ public class AggregationOptions {
 	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
 	 * @param cursor can be {@literal null}, used to pass additional options to the aggregation.
 	 */
-	public AggregationOptions(boolean allowDiskUse, boolean explain, DBObject cursor) {
+	public AggregationOptions(boolean allowDiskUse, boolean explain, Document cursor) {
 
 		this.allowDiskUse = allowDiskUse;
 		this.explain = explain;
@@ -77,7 +76,7 @@ public class AggregationOptions {
 	 * 
 	 * @return
 	 */
-	public DBObject getCursor() {
+	public Document getCursor() {
 		return cursor;
 	}
 
@@ -88,19 +87,19 @@ public class AggregationOptions {
 	 * @param command the aggregation command.
 	 * @return
 	 */
-	DBObject applyAndReturnPotentiallyChangedCommand(DBObject command) {
+	Document applyAndReturnPotentiallyChangedCommand(Document command) {
 
-		DBObject result = new BasicDBObject(command.toMap());
+		Document result = new Document(command);
 
-		if (allowDiskUse && !result.containsField(ALLOW_DISK_USE)) {
+		if (allowDiskUse && !result.containsKey(ALLOW_DISK_USE)) {
 			result.put(ALLOW_DISK_USE, allowDiskUse);
 		}
 
-		if (explain && !result.containsField(EXPLAIN)) {
+		if (explain && !result.containsKey(EXPLAIN)) {
 			result.put(EXPLAIN, explain);
 		}
 
-		if (cursor != null && !result.containsField(CURSOR)) {
+		if (cursor != null && !result.containsKey(CURSOR)) {
 			result.put("cursor", cursor);
 		}
 
@@ -108,13 +107,13 @@ public class AggregationOptions {
 	}
 
 	/**
-	 * Returns a {@link DBObject} representation of this {@link AggregationOptions}.
+	 * Returns a {@link Document} representation of this {@link AggregationOptions}.
 	 * 
 	 * @return
 	 */
-	public DBObject toDbObject() {
+	public Document toDbObject() {
 
-		DBObject dbo = new BasicDBObject();
+		Document dbo = new Document();
 		dbo.put(ALLOW_DISK_USE, allowDiskUse);
 		dbo.put(EXPLAIN, explain);
 		dbo.put(CURSOR, cursor);
@@ -127,7 +126,7 @@ public class AggregationOptions {
 	 */
 	@Override
 	public String toString() {
-		return toDbObject().toString();
+		return toDbObject().toJson();
 	}
 
 	/**
@@ -139,7 +138,7 @@ public class AggregationOptions {
 
 		private boolean allowDiskUse;
 		private boolean explain;
-		private DBObject cursor;
+		private Document cursor;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
@@ -171,7 +170,7 @@ public class AggregationOptions {
 		 * @param cursor
 		 * @return
 		 */
-		public Builder cursor(DBObject cursor) {
+		public Builder cursor(Document cursor) {
 
 			this.cursor = cursor;
 			return this;

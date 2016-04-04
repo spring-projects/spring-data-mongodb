@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.Arrays;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -98,9 +99,9 @@ public class ConditionalOperatorUnitTests {
 	public void simpleBuilderShouldRenderCorrectly() {
 
 		ConditionalOperator operator = newBuilder().when("isYellow").then("bright").otherwise("dark");
-		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
-		DBObject expectedCondition = new BasicDBObject() //
+		Document expectedCondition = new Document() //
 				.append("if", "$isYellow") //
 				.append("then", "bright") //
 				.append("else", "dark");
@@ -116,10 +117,10 @@ public class ConditionalOperatorUnitTests {
 
 		ConditionalOperator operator = newBuilder().when(Criteria.where("luminosity").gte(100)).then("bright")
 				.otherwise("dark");
-		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
-		DBObject expectedCondition = new BasicDBObject() //
-				.append("if", new BasicDBObject("$gte", Arrays.<Object> asList("$luminosity", 100))) //
+		Document expectedCondition = new Document () //
+				.append("if", new Document ("$gte", Arrays.<Object> asList("$luminosity", 100))) //
 				.append("then", "bright") //
 				.append("else", "dark");
 
@@ -138,14 +139,14 @@ public class ConditionalOperatorUnitTests {
 								Criteria.where("saturation").lt(11)))
 				.then("bright").otherwise("dark");
 
-		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
-		BasicDBObject luminosity = new BasicDBObject("$gte", Arrays.<Object> asList("$luminosity", 100));
-		BasicDBObject hue = new BasicDBObject("$eq", Arrays.<Object> asList("$hue", 50));
-		BasicDBObject saturation = new BasicDBObject("$lt", Arrays.<Object> asList("$saturation", 11));
+		Document luminosity = new Document ("$gte", Arrays.<Object> asList("$luminosity", 100));
+		Document hue = new Document ("$eq", Arrays.<Object> asList("$hue", 50));
+		Document saturation = new Document ("$lt", Arrays.<Object> asList("$saturation", 11));
 
-		DBObject expectedCondition = new BasicDBObject() //
-				.append("if", Arrays.<Object> asList(luminosity, new BasicDBObject("$and", Arrays.asList(hue, saturation)))) //
+		Document expectedCondition = new Document () //
+				.append("if", Arrays.<Object> asList(luminosity, new Document ("$and", Arrays.asList(hue, saturation)))) //
 				.append("then", "bright") //
 				.append("else", "dark");
 
@@ -162,12 +163,12 @@ public class ConditionalOperatorUnitTests {
 				.and("saturation").and("chroma").is(200);
 		ConditionalOperator operator = newBuilder().when(criteria).then("bright").otherwise("dark");
 
-		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
-		BasicDBObject gte = new BasicDBObject("$gte", Arrays.<Object> asList("$luminosity", 100));
-		BasicDBObject is = new BasicDBObject("$eq", Arrays.<Object> asList("$chroma", 200));
+		Document gte = new Document ("$gte", Arrays.<Object> asList("$luminosity", 100));
+		Document is = new Document ("$eq", Arrays.<Object> asList("$chroma", 200));
 
-		DBObject expectedCondition = new BasicDBObject() //
+		Document expectedCondition = new Document () //
 				.append("if", Arrays.asList(gte, is)) //
 				.append("then", "bright") //
 				.append("else", "dark");
@@ -192,15 +193,15 @@ public class ConditionalOperatorUnitTests {
 						.then("very-dark") //
 						.otherwise("not-so-dark"));
 
-		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
-		DBObject trueCondition = new BasicDBObject() //
-				.append("if", new BasicDBObject("$gte", Arrays.<Object> asList("$luminosity", 200))) //
+		Document trueCondition = new Document () //
+				.append("if", new Document ("$gte", Arrays.<Object> asList("$luminosity", 200))) //
 				.append("then", "verybright") //
 				.append("else", "not-so-bright");
 
-		DBObject falseCondition = new BasicDBObject() //
-				.append("if", new BasicDBObject("$lt", Arrays.<Object> asList("$luminosity", 50))) //
+		Document falseCondition = new Document () //
+				.append("if", new Document ("$lt", Arrays.<Object> asList("$luminosity", 50))) //
 				.append("then", "very-dark") //
 				.append("else", "not-so-dark");
 

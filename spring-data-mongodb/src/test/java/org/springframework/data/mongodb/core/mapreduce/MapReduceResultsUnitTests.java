@@ -20,10 +20,8 @@ import static org.junit.Assert.*;
 
 import java.util.Collections;
 
+import org.bson.Document;
 import org.junit.Test;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link MapReduceResults}.
@@ -38,7 +36,7 @@ public class MapReduceResultsUnitTests {
 	@Test
 	public void resolvesOutputCollectionForPlainResult() {
 
-		DBObject rawResult = new BasicDBObject("result", "FOO");
+		Document rawResult = new Document("result", "FOO");
 		MapReduceResults<Object> results = new MapReduceResults<Object>(Collections.emptyList(), rawResult);
 
 		assertThat(results.getOutputCollection(), is("FOO"));
@@ -48,9 +46,9 @@ public class MapReduceResultsUnitTests {
 	 * @see DATAMONGO-428
 	 */
 	@Test
-	public void resolvesOutputCollectionForDBObjectResult() {
+	public void resolvesOutputCollectionForDocumentResult() {
 
-		DBObject rawResult = new BasicDBObject("result", new BasicDBObject("collection", "FOO"));
+		Document rawResult = new Document("result", new Document("collection", "FOO"));
 		MapReduceResults<Object> results = new MapReduceResults<Object>(Collections.emptyList(), rawResult);
 
 		assertThat(results.getOutputCollection(), is("FOO"));
@@ -62,11 +60,11 @@ public class MapReduceResultsUnitTests {
 	@Test
 	public void handlesLongTotalInResult() {
 
-		DBObject inner = new BasicDBObject("total", 1L);
+		Document inner = new Document("total", 1L);
 		inner.put("mapTime", 1L);
 		inner.put("emitLoop", 1);
 
-		DBObject source = new BasicDBObject("timing", inner);
+		Document source = new Document("timing", inner);
 		new MapReduceResults<Object>(Collections.emptyList(), source);
 	}
 
@@ -76,11 +74,11 @@ public class MapReduceResultsUnitTests {
 	@Test
 	public void handlesLongResultsForCounts() {
 
-		DBObject inner = new BasicDBObject("input", 1L);
+		Document inner = new Document("input", 1L);
 		inner.put("emit", 1L);
 		inner.put("output", 1);
 
-		DBObject source = new BasicDBObject("counts", inner);
+		Document source = new Document("counts", inner);
 		new MapReduceResults<Object>(Collections.emptyList(), source);
 	}
 }

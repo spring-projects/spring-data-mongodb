@@ -4013,7 +4013,6 @@
 {"city": "MONTICELLO", "loc": [-83.892454, 30.519681], "pop": 9578, "state": "FL", "_id": "32344"}
 {"city": "PANACEA", "loc": [-84.391212, 30.015322], "pop": 1292, "state": "FL", "_id": "32346"}
 {"city": "PERRY", "loc": [-83.585021, 30.097489], "pop": 15401, "state": "FL", "_id": "32347"}
-{"city": "PINETTA", "loc": [-83.340463, 30.599703], "pop": 642, "state": "FL", "_id": "32350"}
 {"city": "QUINCY", "loc": [-84.60945, 30.586675], "pop": 25013, "state": "FL", "_id": "32351"}
 {"city": "SALEM", "loc": [-83.385828, 29.823815], "pop": 264, "state": "FL", "_id": "32356"}
 {"city": "SOPCHOPPY", "loc": [-84.454877, 30.071353], "pop": 3335, "state": "FL", "_id": "32358"}
@@ -6913,7 +6912,6 @@
 {"city": "WILLISVILLE", "loc": [-89.578487, 37.982142], "pop": 912, "state": "IL", "_id": "62997"}
 {"city": "WOLF LAKE", "loc": [-89.440761, 37.511985], "pop": 533, "state": "IL", "_id": "62998"}
 {"city": "ZEIGLER", "loc": [-89.06026, 37.906923], "pop": 2502, "state": "IL", "_id": "62999"}
-{"city": "SAINT MARY", "loc": [-89.929268, 37.914034], "pop": 130, "state": "IL", "_id": "63673"}
 {"city": "ALEXANDRIA", "loc": [-85.668148, 40.256081], "pop": 11011, "state": "IN", "_id": "46001"}
 {"city": "ANDERSON", "loc": [-85.725305, 40.114577], "pop": 17280, "state": "IN", "_id": "46011"}
 {"city": "ANDERSON", "loc": [-85.653591, 40.130947], "pop": 20949, "state": "IN", "_id": "46012"}
@@ -9906,7 +9904,6 @@
 {"city": "CERULEAN", "loc": [-87.664848, 36.949619], "pop": 1654, "state": "KY", "_id": "42215"}
 {"city": "CROFTON", "loc": [-87.489072, 37.034387], "pop": 3531, "state": "KY", "_id": "42217"}
 {"city": "ELKTON", "loc": [-87.167833, 36.909403], "pop": 7207, "state": "KY", "_id": "42220"}
-{"city": "FORT CAMPBELL", "loc": [-87.459706, 36.653584], "pop": 18861, "state": "KY", "_id": "42223"}
 {"city": "GRACEY", "loc": [-87.6545, 36.856393], "pop": 92, "state": "KY", "_id": "42232"}
 {"city": "TINY TOWN", "loc": [-87.170931, 36.664268], "pop": 2307, "state": "KY", "_id": "42234"}
 {"city": "HERNDON", "loc": [-87.608215, 36.708469], "pop": 810, "state": "KY", "_id": "42236"}

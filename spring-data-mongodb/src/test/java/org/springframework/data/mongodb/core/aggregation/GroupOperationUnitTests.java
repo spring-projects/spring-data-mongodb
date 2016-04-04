@@ -22,11 +22,9 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 import java.util.Arrays;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link GroupOperation}.
@@ -49,7 +47,7 @@ public class GroupOperationUnitTests {
 
 		GroupOperation operation = new GroupOperation(Fields.from());
 		ExposedFields fields = operation.getFields();
-		DBObject groupClause = extractDbObjectFromGroupOperation(operation);
+		Document groupClause = extractDbObjectFromGroupOperation(operation);
 
 		assertThat(fields.exposesSingleFieldOnly(), is(true));
 		assertThat(fields.exposesNoFields(), is(false));
@@ -64,13 +62,13 @@ public class GroupOperationUnitTests {
 
 		GroupOperation operation = new GroupOperation(Fields.from()).count().as("cnt").last("foo").as("foo");
 		ExposedFields fields = operation.getFields();
-		DBObject groupClause = extractDbObjectFromGroupOperation(operation);
+		Document groupClause = extractDbObjectFromGroupOperation(operation);
 
 		assertThat(fields.exposesSingleFieldOnly(), is(false));
 		assertThat(fields.exposesNoFields(), is(false));
 		assertThat(groupClause.get(UNDERSCORE_ID), is(nullValue()));
-		assertThat((BasicDBObject) groupClause.get("cnt"), is(new BasicDBObject("$sum", 1)));
-		assertThat((BasicDBObject) groupClause.get("foo"), is(new BasicDBObject("$last", "$foo")));
+		assertThat((Document) groupClause.get("cnt"), is(new Document("$sum", 1)));
+		assertThat((Document) groupClause.get("foo"), is(new Document("$last", "$foo")));
 	}
 
 	@Test
@@ -78,7 +76,7 @@ public class GroupOperationUnitTests {
 
 		GroupOperation operation = new GroupOperation(fields("a"));
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(operation);
+		Document groupClause = extractDbObjectFromGroupOperation(operation);
 
 		assertThat(groupClause.get(UNDERSCORE_ID), is((Object) "$a"));
 	}
@@ -88,8 +86,8 @@ public class GroupOperationUnitTests {
 
 		GroupOperation operation = new GroupOperation(fields("a").and("b", "c"));
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(operation);
-		DBObject idClause = DBObjectTestUtils.getAsDBObject(groupClause, UNDERSCORE_ID);
+		Document groupClause = extractDbObjectFromGroupOperation(operation);
+		Document idClause = DBObjectTestUtils.getAsDocument(groupClause, UNDERSCORE_ID);
 
 		assertThat(idClause.get("a"), is((Object) "$a"));
 		assertThat(idClause.get("b"), is((Object) "$c"));
@@ -101,9 +99,9 @@ public class GroupOperationUnitTests {
 		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
 				.sum("e").as("e");
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject eOp = DBObjectTestUtils.getAsDBObject(groupClause, "e");
-		assertThat(eOp, is((DBObject) new BasicDBObject("$sum", "$e")));
+		Document groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		Document eOp = DBObjectTestUtils.getAsDocument(groupClause, "e");
+		assertThat(eOp, is((Document) new Document("$sum", "$e")));
 	}
 
 	@Test
@@ -112,9 +110,9 @@ public class GroupOperationUnitTests {
 		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
 				.sum("e").as("ee");
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject eOp = DBObjectTestUtils.getAsDBObject(groupClause, "ee");
-		assertThat(eOp, is((DBObject) new BasicDBObject("$sum", "$e")));
+		Document groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		Document eOp = DBObjectTestUtils.getAsDocument(groupClause, "ee");
+		assertThat(eOp, is((Document) new Document("$sum", "$e")));
 	}
 
 	@Test
@@ -123,9 +121,9 @@ public class GroupOperationUnitTests {
 		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
 				.count().as("count");
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject eOp = DBObjectTestUtils.getAsDBObject(groupClause, "count");
-		assertThat(eOp, is((DBObject) new BasicDBObject("$sum", 1)));
+		Document groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		Document eOp = DBObjectTestUtils.getAsDocument(groupClause, "count");
+		assertThat(eOp, is((Document) new Document("$sum", 1)));
 	}
 
 	@Test
@@ -135,12 +133,12 @@ public class GroupOperationUnitTests {
 				.sum("e").as("sum") //
 				.min("e").as("min"); //
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject sum = DBObjectTestUtils.getAsDBObject(groupClause, "sum");
-		assertThat(sum, is((DBObject) new BasicDBObject("$sum", "$e")));
+		Document groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		Document sum = DBObjectTestUtils.getAsDocument(groupClause, "sum");
+		assertThat(sum, is((Document) new Document("$sum", "$e")));
 
-		DBObject min = DBObjectTestUtils.getAsDBObject(groupClause, "min");
-		assertThat(min, is((DBObject) new BasicDBObject("$min", "$e")));
+		Document min = DBObjectTestUtils.getAsDocument(groupClause, "min");
+		assertThat(min, is((Document) new Document("$min", "$e")));
 	}
 
 	@Test
@@ -148,10 +146,10 @@ public class GroupOperationUnitTests {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").push(1).as("x");
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "x");
+		Document groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		Document push = DBObjectTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push, is((DBObject) new BasicDBObject("$push", 1)));
+		assertThat(push, is((Document) new Document("$push", 1)));
 	}
 
 	@Test
@@ -159,10 +157,10 @@ public class GroupOperationUnitTests {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").push("ref").as("x");
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "x");
+		Document groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		Document push = DBObjectTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push, is((DBObject) new BasicDBObject("$push", "$ref")));
+		assertThat(push, is((Document) new Document("$push", "$ref")));
 	}
 
 	@Test
@@ -170,10 +168,10 @@ public class GroupOperationUnitTests {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").addToSet("ref").as("x");
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "x");
+		Document groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		Document push = DBObjectTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push, is((DBObject) new BasicDBObject("$addToSet", "$ref")));
+		assertThat(push, is((Document) new Document("$addToSet", "$ref")));
 	}
 
 	@Test
@@ -181,10 +179,10 @@ public class GroupOperationUnitTests {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").addToSet(42).as("x");
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "x");
+		Document groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		Document push = DBObjectTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push, is((DBObject) new BasicDBObject("$addToSet", 42)));
+		assertThat(push, is((Document) new Document("$addToSet", 42)));
 	}
 
 	/**
@@ -198,15 +196,15 @@ public class GroupOperationUnitTests {
 				.first(SIZE.of(field("tags"))) //
 				.as("tags_count");
 
-		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject tagsCount = DBObjectTestUtils.getAsDBObject(groupClause, "tags_count");
+		Document groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		Document tagsCount = DBObjectTestUtils.getAsDocument(groupClause, "tags_count");
 
-		assertThat(tagsCount.get("$first"), is((Object) new BasicDBObject("$size", Arrays.asList("$tags"))));
+		assertThat(tagsCount.get("$first"), is((Object) new Document("$size", Arrays.asList("$tags"))));
 	}
 
-	private DBObject extractDbObjectFromGroupOperation(GroupOperation groupOperation) {
-		DBObject dbObject = groupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject groupClause = DBObjectTestUtils.getAsDBObject(dbObject, "$group");
+	private Document extractDbObjectFromGroupOperation(GroupOperation groupOperation) {
+		Document dbObject = groupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document groupClause = DBObjectTestUtils.getAsDocument(dbObject, "$group");
 		return groupClause;
 	}
 }

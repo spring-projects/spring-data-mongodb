@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
+import org.bson.Document;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -46,7 +47,6 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 
@@ -89,7 +89,7 @@ public class GeoJsonConverterUnitTests {
 	static final GeoJsonGeometryCollection GEOMETRY_COLLECTION = new GeoJsonGeometryCollection(
 			Arrays.<GeoJson<?>> asList(SINGLE_POINT, POLYGON));
 	/*
-	 * -- GeoJson DBObjects
+	 * -- GeoJson Documents
 	 */
 
 	// Point
@@ -97,10 +97,9 @@ public class GeoJsonConverterUnitTests {
 			.add(SINGLE_POINT.getX()) //
 			.add(SINGLE_POINT.getY()) //
 			.get(); //
-	static final DBObject SINGLE_POINT_DBO = new BasicDBObjectBuilder() //
-			.add("type", "Point") //
-			.add("coordinates", SINGE_POINT_CORDS)//
-			.get();
+	static final Document SINGLE_POINT_DBO = new Document() //
+			.append("type", "Point") //
+			.append("coordinates", SINGE_POINT_CORDS);//
 
 	// MultiPoint
 	static final BasicDBList MULTI_POINT_CORDS = new BasicDbListBuilder() //
@@ -108,10 +107,9 @@ public class GeoJsonConverterUnitTests {
 			.add(new BasicDbListBuilder().add(POINT_2.getX()).add(POINT_2.getY()).get()) //
 			.add(new BasicDbListBuilder().add(POINT_3.getX()).add(POINT_3.getY()).get()) //
 			.get();
-	static final DBObject MULTI_POINT_DBO = new BasicDBObjectBuilder() //
-			.add("type", "MultiPoint")//
-			.add("coordinates", MULTI_POINT_CORDS)//
-			.get();
+	static final Document MULTI_POINT_DBO = new Document() //
+			.append("type", "MultiPoint")//
+			.append("coordinates", MULTI_POINT_CORDS);//
 
 	// Polygon
 	static final BasicDBList POLYGON_OUTER_CORDS = new BasicDbListBuilder() //
@@ -131,17 +129,15 @@ public class GeoJsonConverterUnitTests {
 			.get();
 
 	static final BasicDBList POLYGON_CORDS = new BasicDbListBuilder().add(POLYGON_OUTER_CORDS).get();
-	static final DBObject POLYGON_DBO = new BasicDBObjectBuilder() //
-			.add("type", "Polygon") //
-			.add("coordinates", POLYGON_CORDS) //
-			.get();
+	static final Document POLYGON_DBO = new Document() //
+			.append("type", "Polygon") //
+			.append("coordinates", POLYGON_CORDS); //
 
 	static final BasicDBList POLYGON_WITH_2_RINGS_CORDS = new BasicDbListBuilder().add(POLYGON_OUTER_CORDS)
 			.add(POLYGON_INNER_CORDS).get();
-	static final DBObject POLYGON_WITH_2_RINGS_DBO = new BasicDBObjectBuilder() //
-			.add("type", "Polygon") //
-			.add("coordinates", POLYGON_WITH_2_RINGS_CORDS) //
-			.get();
+	static final Document POLYGON_WITH_2_RINGS_DBO = new Document() //
+			.append("type", "Polygon") //
+			.append("coordinates", POLYGON_WITH_2_RINGS_CORDS);
 
 	// LineString
 	static final BasicDBList LINE_STRING_CORDS_0 = new BasicDbListBuilder() //
@@ -153,29 +149,29 @@ public class GeoJsonConverterUnitTests {
 			.add(new BasicDbListBuilder().add(POINT_3.getX()).add(POINT_3.getY()).get()) //
 			.add(new BasicDbListBuilder().add(POINT_0.getX()).add(POINT_0.getY()).get()) //
 			.get();
-	static final DBObject LINE_STRING_DBO = new BasicDBObjectBuilder().add("type", "LineString")
-			.add("coordinates", LINE_STRING_CORDS_0).get();
+	static final Document LINE_STRING_DBO = new Document().append("type", "LineString").append("coordinates",
+			LINE_STRING_CORDS_0);
 
 	// MultiLineString
 	static final BasicDBList MUILT_LINE_STRING_CORDS = new BasicDbListBuilder() //
 			.add(LINE_STRING_CORDS_0) //
 			.add(LINE_STRING_CORDS_1) //
 			.get();
-	static final DBObject MULTI_LINE_STRING_DBO = new BasicDBObjectBuilder().add("type", "MultiLineString")
-			.add("coordinates", MUILT_LINE_STRING_CORDS).get();
+	static final Document MULTI_LINE_STRING_DBO = new Document().append("type", "MultiLineString").append("coordinates",
+			MUILT_LINE_STRING_CORDS);
 
 	// MultiPolygoin
 	static final BasicDBList MULTI_POLYGON_CORDS = new BasicDbListBuilder().add(POLYGON_CORDS).get();
-	static final DBObject MULTI_POLYGON_DBO = new BasicDBObjectBuilder().add("type", "MultiPolygon")
-			.add("coordinates", MULTI_POLYGON_CORDS).get();
+	static final Document MULTI_POLYGON_DBO = new Document().append("type", "MultiPolygon").append("coordinates",
+			MULTI_POLYGON_CORDS);
 
 	// GeometryCollection
 	static final BasicDBList GEOMETRY_COLLECTION_GEOMETRIES = new BasicDbListBuilder() //
 			.add(SINGLE_POINT_DBO)//
 			.add(POLYGON_DBO)//
 			.get();
-	static final DBObject GEOMETRY_COLLECTION_DBO = new BasicDBObjectBuilder().add("type", "GeometryCollection")
-			.add("geometries", GEOMETRY_COLLECTION_GEOMETRIES).get();
+	static final Document GEOMETRY_COLLECTION_DBO = new Document().append("type", "GeometryCollection")
+			.append("geometries", GEOMETRY_COLLECTION_GEOMETRIES);
 
 	/**
 	 * @author Christoph Strobl
@@ -210,7 +206,7 @@ public class GeoJsonConverterUnitTests {
 			expectedException.expect(IllegalArgumentException.class);
 			expectedException.expectMessage("'YouDontKonwMe' to Polygon");
 
-			converter.convert(new BasicDBObject("type", "YouDontKonwMe"));
+			converter.convert(new Document("type", "YouDontKonwMe"));
 		}
 
 		/**
@@ -256,7 +252,7 @@ public class GeoJsonConverterUnitTests {
 			expectedException.expect(IllegalArgumentException.class);
 			expectedException.expectMessage("'YouDontKonwMe' to Point");
 
-			converter.convert(new BasicDBObject("type", "YouDontKonwMe"));
+			converter.convert(new Document("type", "YouDontKonwMe"));
 		}
 	}
 
@@ -293,7 +289,7 @@ public class GeoJsonConverterUnitTests {
 			expectedException.expect(IllegalArgumentException.class);
 			expectedException.expectMessage("'YouDontKonwMe' to LineString");
 
-			converter.convert(new BasicDBObject("type", "YouDontKonwMe"));
+			converter.convert(new Document("type", "YouDontKonwMe"));
 		}
 	}
 
@@ -330,7 +326,7 @@ public class GeoJsonConverterUnitTests {
 			expectedException.expect(IllegalArgumentException.class);
 			expectedException.expectMessage("'YouDontKonwMe' to MultiLineString");
 
-			converter.convert(new BasicDBObject("type", "YouDontKonwMe"));
+			converter.convert(new Document("type", "YouDontKonwMe"));
 		}
 	}
 
@@ -367,7 +363,7 @@ public class GeoJsonConverterUnitTests {
 			expectedException.expect(IllegalArgumentException.class);
 			expectedException.expectMessage("'YouDontKonwMe' to MultiPoint");
 
-			converter.convert(new BasicDBObject("type", "YouDontKonwMe"));
+			converter.convert(new Document("type", "YouDontKonwMe"));
 		}
 	}
 
@@ -404,7 +400,7 @@ public class GeoJsonConverterUnitTests {
 			expectedException.expect(IllegalArgumentException.class);
 			expectedException.expectMessage("'YouDontKonwMe' to MultiPolygon");
 
-			converter.convert(new BasicDBObject("type", "YouDontKonwMe"));
+			converter.convert(new Document("type", "YouDontKonwMe"));
 		}
 	}
 

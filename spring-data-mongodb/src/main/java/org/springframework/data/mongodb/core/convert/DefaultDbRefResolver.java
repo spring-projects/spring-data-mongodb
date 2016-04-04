@@ -27,8 +27,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DB;
+import com.mongodb.DBObject;
+import com.mongodb.client.MongoDatabase;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.bson.Document;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
@@ -45,10 +51,6 @@ import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DB;
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -113,7 +115,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#fetch(com.mongodb.DBRef)
 	 */
 	@Override
-	public DBObject fetch(DBRef dbRef) {
+	public Document fetch(DBRef dbRef) {
 		return ReflectiveDBRefResolver.fetch(mongoDbFactory, dbRef);
 	}
 
@@ -122,7 +124,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#bulkFetch(java.util.List)
 	 */
 	@Override
-	public List<DBObject> bulkFetch(List<DBRef> refs) {
+	public List<Document> bulkFetch(List<DBRef> refs) {
 
 		Assert.notNull(mongoDbFactory, "Factory must not be null!");
 		Assert.notNull(refs, "DBRef to fetch must not be null!");
@@ -144,9 +146,10 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			ids.add(ref.getId());
 		}
 
-		DB db = mongoDbFactory.getDb();
-		List<DBObject> result = db.getCollection(collection)
-				.find(new BasicDBObjectBuilder().add("_id", new BasicDBObject("$in", ids)).get()).toArray();
+		MongoDatabase db = mongoDbFactory.getDb();
+		List<Document> result = new ArrayList<>();
+		db.getCollection(collection)
+				.find(new Document("_id", new Document("$in", ids))).into(result);
 		Collections.sort(result, new DbRefByReferencePositionComparator(ids));
 		return result;
 	}
@@ -446,13 +449,13 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @author Oliver Gierke
 	 * @since 1.10
 	 */
-	private static class DbRefByReferencePositionComparator implements Comparator<DBObject> {
+	private static class DbRefByReferencePositionComparator implements Comparator<Document> {
 
 		private final List<Object> reference;
 
 		/**
 		 * Creates a new {@link DbRefByReferencePositionComparator} for the given list of reference identifiers.
-		 * 
+		 *
 		 * @param referenceIds must not be {@literal null}.
 		 */
 		public DbRefByReferencePositionComparator(List<Object> referenceIds) {
@@ -466,7 +469,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
 		@Override
-		public int compare(DBObject o1, DBObject o2) {
+		public int compare(Document o1, Document o2) {
 			return Integer.compare(reference.indexOf(o1.get("_id")), reference.indexOf(o2.get("_id")));
 		}
 	}

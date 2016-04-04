@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-
-import com.mongodb.DBObject;
 
 /**
  * Default implementation of {@link DbRefResolverCallback}.
@@ -27,13 +27,13 @@ import com.mongodb.DBObject;
  */
 class DefaultDbRefResolverCallback implements DbRefResolverCallback {
 
-	private final DBObject surroundingObject;
+	private final Bson surroundingObject;
 	private final ObjectPath path;
 	private final ValueResolver resolver;
 	private final SpELExpressionEvaluator evaluator;
 
 	/**
-	 * Creates a new {@link DefaultDbRefResolverCallback} using the given {@link DBObject}, {@link ObjectPath},
+	 * Creates a new {@link DefaultDbRefResolverCallback} using the given {@link Document}, {@link ObjectPath},
 	 * {@link ValueResolver} and {@link SpELExpressionEvaluator}.
 	 * 
 	 * @param surroundingObject must not be {@literal null}.
@@ -41,7 +41,7 @@ class DefaultDbRefResolverCallback implements DbRefResolverCallback {
 	 * @param evaluator must not be {@literal null}.
 	 * @param resolver must not be {@literal null}.
 	 */
-	public DefaultDbRefResolverCallback(DBObject surroundingObject, ObjectPath path, SpELExpressionEvaluator evaluator,
+	public DefaultDbRefResolverCallback(Bson surroundingObject, ObjectPath path, SpELExpressionEvaluator evaluator,
 			ValueResolver resolver) {
 
 		this.surroundingObject = surroundingObject;

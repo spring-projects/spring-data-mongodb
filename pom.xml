@@ -29,7 +29,7 @@
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>2.0.0.BUILD-SNAPSHOT</springdata.commons>
-		<mongo>2.14.0</mongo>
+		<mongo>3.2.2</mongo>
 	</properties>
 
 	<developers>

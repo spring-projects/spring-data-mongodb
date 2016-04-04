@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,8 +29,6 @@ import org.springframework.data.mongodb.core.MongoTemplate.UnwrapAndReadDbObject
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-
-import com.mongodb.BasicDBObject;
 
 /**
  * Unit tests for {@link UnwrapAndReadDbObjectCallback}.
@@ -56,16 +55,16 @@ public class UnwrapAndReadDbObjectCallbackUnitTests {
 	@Test
 	public void usesFirstLevelValues() {
 
-		Target target = callback.doWith(new BasicDBObject("foo", "bar"));
+		Target target = callback.doWith(new Document("foo", "bar"));
 
 		assertThat(target.id, is(nullValue()));
 		assertThat(target.foo, is("bar"));
 	}
 
 	@Test
-	public void unwrapsUnderscoreIdIfBasicDBObject() {
+	public void unwrapsUnderscoreIdIfBasicDocument() {
 
-		Target target = callback.doWith(new BasicDBObject("_id", new BasicDBObject("foo", "bar")));
+		Target target = callback.doWith(new Document("_id", new Document("foo", "bar")));
 
 		assertThat(target.id, is(nullValue()));
 		assertThat(target.foo, is("bar"));
@@ -74,7 +73,7 @@ public class UnwrapAndReadDbObjectCallbackUnitTests {
 	@Test
 	public void firstLevelPropertiesTrumpNestedOnes() {
 
-		Target target = callback.doWith(new BasicDBObject("_id", new BasicDBObject("foo", "bar")).append("foo", "foobar"));
+		Target target = callback.doWith(new Document("_id", new Document("foo", "bar")).append("foo", "foobar"));
 
 		assertThat(target.id, is(nullValue()));
 		assertThat(target.foo, is("foobar"));
@@ -83,7 +82,7 @@ public class UnwrapAndReadDbObjectCallbackUnitTests {
 	@Test
 	public void keepsUnderscoreIdIfScalarValue() {
 
-		Target target = callback.doWith(new BasicDBObject("_id", "bar").append("foo", "foo"));
+		Target target = callback.doWith(new Document("_id", "bar").append("foo", "foo"));
 
 		assertThat(target.id, is("bar"));
 		assertThat(target.foo, is("foo"));

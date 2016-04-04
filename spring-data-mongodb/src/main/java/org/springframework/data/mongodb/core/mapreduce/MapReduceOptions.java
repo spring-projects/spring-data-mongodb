@@ -18,8 +18,8 @@ package org.springframework.data.mongodb.core.mapreduce;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
 import com.mongodb.MapReduceCommand;
 
 /**
@@ -260,8 +260,8 @@ public class MapReduceOptions {
 		return limit;
 	}
 
-	public DBObject getOptionsObject() {
-		BasicDBObject cmd = new BasicDBObject();
+	public Document getOptionsObject() {
+		Document cmd = new Document();
 
 		if (verbose != null) {
 			cmd.put("verbose", verbose);
@@ -288,8 +288,8 @@ public class MapReduceOptions {
 		return cmd;
 	}
 
-	protected BasicDBObject createOutObject() {
-		BasicDBObject out = new BasicDBObject();
+	protected Document createOutObject() {
+		Document out = new Document();
 
 		switch (outputType) {
 			case INLINE:

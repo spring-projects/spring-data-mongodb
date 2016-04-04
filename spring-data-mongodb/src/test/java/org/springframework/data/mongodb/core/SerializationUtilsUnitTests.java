@@ -22,14 +22,12 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.bson.Document;
 import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 
 import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link SerializationUtils}.
@@ -40,16 +38,16 @@ import com.mongodb.DBObject;
 public class SerializationUtilsUnitTests {
 
 	@Test
-	public void writesSimpleDBObject() {
+	public void writesSimpleDocument() {
 
-		DBObject dbObject = new BasicDBObject("foo", "bar");
+		Document dbObject = new Document("foo", "bar");
 		assertThat(serializeToJsonSafely(dbObject), is("{ \"foo\" : \"bar\"}"));
 	}
 
 	@Test
 	public void writesComplexObjectAsPlainToString() {
 
-		DBObject dbObject = new BasicDBObject("foo", new Complex());
+		Document dbObject = new Document("foo", new Complex());
 		assertThat(serializeToJsonSafely(dbObject),
 				startsWith("{ \"foo\" : { $java : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"));
 	}
@@ -57,9 +55,10 @@ public class SerializationUtilsUnitTests {
 	@Test
 	public void writesCollection() {
 
-		DBObject dbObject = new BasicDBObject("foo", Arrays.asList("bar", new Complex()));
+		Document dbObject = new Document("foo", Arrays.asList("bar", new Complex()));
 		Matcher<String> expectedOutput = allOf(
-				startsWith("{ \"foo\" : [ \"bar\", { $java : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"),
+				startsWith(
+						"{ \"foo\" : [ \"bar\", { $java : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"),
 				endsWith(" } ] }"));
 		assertThat(serializeToJsonSafely(dbObject), is(expectedOutput));
 	}
@@ -70,7 +69,9 @@ public class SerializationUtilsUnitTests {
 	@Test
 	public void flattenMapShouldFlatOutNestedStructureCorrectly() {
 
-		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1).add("nested", new BasicDBObject("value", "conflux")).get();
+		Document dbo = new Document();
+		dbo.put("_id", 1);
+		dbo.put("nested", new Document("value", "conflux"));
 
 		assertThat(flattenMap(dbo), hasEntry("_id", (Object) 1));
 		assertThat(flattenMap(dbo), hasEntry("nested.value", (Object) "conflux"));
@@ -85,7 +86,9 @@ public class SerializationUtilsUnitTests {
 		BasicDBList dbl = new BasicDBList();
 		dbl.addAll(Arrays.asList("nightwielder", "calamity"));
 
-		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1).add("nested", new BasicDBObject("value", dbl)).get();
+		Document dbo = new Document();
+		dbo.put("_id", 1);
+		dbo.put("nested", new Document("value", dbl));
 
 		assertThat(flattenMap(dbo), hasEntry("_id", (Object) 1));
 		assertThat(flattenMap(dbo), hasEntry("nested.value", (Object) dbl));
@@ -97,8 +100,9 @@ public class SerializationUtilsUnitTests {
 	@Test
 	public void flattenMapShouldLeaveKeywordsUntouched() {
 
-		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1).add("nested", new BasicDBObject("$regex", "^conflux$"))
-				.get();
+		Document dbo = new Document();
+		dbo.put("_id", 1);
+		dbo.put("nested", new Document("$regex", "^conflux$"));
 
 		Map<String, Object> map = flattenMap(dbo);
 
@@ -113,8 +117,12 @@ public class SerializationUtilsUnitTests {
 	@Test
 	public void flattenMapShouldAppendCommandsCorrectly() {
 
-		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1)
-				.add("nested", new BasicDBObjectBuilder().add("$regex", "^conflux$").add("$options", "i").get()).get();
+		Document dbo = new Document();
+		Document nested = new Document();
+		nested.put("$regex", "^conflux$");
+		nested.put("$options", "i");
+		dbo.put("_id", 1);
+		dbo.put("nested", nested);
 
 		Map<String, Object> map = flattenMap(dbo);
 
