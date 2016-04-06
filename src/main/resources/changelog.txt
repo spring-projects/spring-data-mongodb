@@ -1,6 +1,15 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.9.0.RELEASE (2016-04-06)
+---------------------------------------------
+* DATAMONGO-1407 - Add pull request template.
+* DATAMONGO-1405 - Release 1.9 GA (Hopper).
+* DATAMONGO-1401 - GeoJsonPoint error on update.
+* DATAMONGO-1398 - Update documentation for Spring Data MongoDB 1.9.
+* DATAMONGO-1396 - Exception when creating geo within Criteria using Aggregation.
+
+
 Changes in version 1.9.0.RC1 (2016-03-18)
 -----------------------------------------
 * DATAMONGO-1400 - Adapt to rename of Spring Data Commons' Tuple to Pair.
