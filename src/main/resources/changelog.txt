@@ -1,6 +1,11 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.9.1.RELEASE (2016-04-06)
+---------------------------------------------
+* DATAMONGO-1408 - Release 1.9.1 (Hopper SR1).
+
+
 Changes in version 1.9.0.RELEASE (2016-04-06)
 ---------------------------------------------
 * DATAMONGO-1407 - Add pull request template.
