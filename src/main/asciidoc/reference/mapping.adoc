@@ -59,6 +59,190 @@ The following outlines what type conversion, if any, will be done on the propert
 
 When querying and updating `MongoTemplate` will use the converter to handle conversions of the `Query` and `Update` objects that correspond to the above rules for saving documents so field names and types used in your queries will be able to match what is in your domain classes.
 
+[[mapping-conversion]]
+== Data mapping and type conversion
+
+This section explain how types are mapped to a MongoDB representation and vice versa. Spring Data MongoDB supports all types that can be represented as BSON, MongoDB's internal document format.
+In addition to these types, Spring Data MongoDB provides a set of built-in converters to map additional types. You can provide your own converters to adjust type conversion, see <<mapping-explicit-converters>> for further details.
+
+[cols="3,1,6", options="header"]
+.Type
+|===
+| Type
+| Type conversion
+| Sample
+
+| `String`
+| native
+| `{"firstname" : "Dave"}`
+
+| `double`, `Double`, `float`, `Float`
+| native
+| `{"weight" : 42.5}`
+
+| `int`, `Integer`, `short`, `Short`
+| native +
+32-bit integer
+| `{"height" : 42}`
+
+| `long`, `Long`
+| native +
+64-bit integer
+| `{"height" : 42}`
+
+| `Date`, `Timestamp`
+| native
+| `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
+
+| `byte[]`
+| native
+| `{"bin" : { "$binary" : "AQIDBA==", "$type" : "00" }}`
+
+| `java.util.UUID` (Legacy UUID)
+| native
+| `{"uuid" : { "$binary" : "MEaf1CFQ6lSphaa3b9AtlA==", "$type" : "03" }}`
+
+| `Date`
+| native
+| `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
+
+| `ObjectId`
+| native
+| `{"_id" : ObjectId("5707a2690364aba3136ab870")}`
+
+| Array, `List`, `BasicDBList`
+| native
+| `{"cookies" : [ … ]}`
+
+| `boolean`, `Boolean`
+| native
+| `{"active" : true}`
+
+| `null`
+| native
+| `{"value" : null}`
+
+| `DBObject`
+| native
+| `{"value" : { … }}`
+
+| `AtomicInteger` +
+calling `get()` before the actual conversion
+| converter +
+32-bit integer
+| `{"value" : "741" }`
+
+| `AtomicLong` +
+calling `get()` before the actual conversion
+| converter +
+64-bit integer
+| `{"value" : "741" }`
+
+| `BigInteger`
+| converter +
+`String`
+| `{"value" : "741" }`
+
+| `BigDecimal`
+| converter +
+`String`
+| `{"value" : "741.99" }`
+
+| `URL`
+| converter
+| `{"website" : "http://projects.spring.io/spring-data-mongodb/" }`
+
+| `Locale`
+| converter
+| `{"locale : "en_US" }`
+
+| `char`, `Character`
+| converter
+| `{"char" : "a" }`
+
+| `NamedMongoScript`
+| converter +
+`Code`
+| `{"_id" : "script name", value: (some javascript code)`}
+
+| `java.util.Currency`
+| converter
+| `{"currencyCode" : "EUR"}`
+
+| `LocalDate` +
+(Joda, Java 8, JSR310-BackPort)
+| converter
+| `{"date" : ISODate("2019-11-12T00:00:00.000Z")}`
+
+| `LocalDateTime`, `LocalTime`, `Instant` +
+(Joda, Java 8, JSR310-BackPort)
+| converter
+| `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
+
+| `DateTime` (Joda)
+| converter
+| `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
+
+| `DateMidnight` (Joda)
+| converter
+| `{"date" : ISODate("2019-11-12T00:00:00.000Z")}`
+
+| `ZoneId` (Java 8, JSR310-BackPort)
+| converter
+| `{"zoneId" : "ECT - Europe/Paris"}`
+
+| `Box`
+| converter
+| `{"box" : { "first" : { "x" : 1.0 , "y" : 2.0} , "second" : { "x" : 3.0 , "y" : 4.0}}`
+
+| `Polygon`
+| converter
+| `{"polygon" : { "points" : [ { "x" : 1.0 , "y" : 2.0} , { "x" : 3.0 , "y" : 4.0} , { "x" : 4.0 , "y" : 5.0}]}}`
+
+| `Circle`
+| converter
+| `{"circle" : { "center" : { "x" : 1.0 , "y" : 2.0} , "radius" : 3.0 , "metric" : "NEUTRAL"}}`
+
+| `Point`
+| converter
+| `{"point" : { "x" : 1.0 , "y" : 2.0}}`
+
+| `GeoJsonPoint`
+| converter
+| `{"point" : { "type" : "Point" , "coordinates" : [3.0 , 4.0] }}`
+
+| `GeoJsonMultiPoint`
+| converter
+| `{"geoJsonLineString" : {"type":"MultiPoint", "coordinates": [ [ 0 , 0 ], [ 0 , 1 ], [ 1 , 1 ] ] }}`
+
+| `Sphere`
+| converter
+| `{"sphere" : { "center" : { "x" : 1.0 , "y" : 2.0} , "radius" : 3.0 , "metric" : "NEUTRAL"}}`
+
+| `GeoJsonPolygon`
+| converter
+| `{"polygon" : { "type" : "Polygon", "coordinates" : [[ [ 0 , 0 ], [ 3 , 6 ], [ 6 , 1 ], [ 0 , 0  ] ]] }}`
+
+| `GeoJsonMultiPolygon`
+| converter
+| `{"geoJsonMultiPolygon" : { "type" : "MultiPolygon", "coordinates" : [
+     [ [ [ -73.958 , 40.8003 ] , [ -73.9498 , 40.7968 ] ] ],
+     [ [ [ -73.973 , 40.7648 ] , [ -73.9588 , 40.8003 ] ] ]
+  ] }}`
+
+| `GeoJsonLineString`
+| converter
+| `{ "geoJsonLineString" : { "type" : "LineString", "coordinates" : [ [ 40 , 5 ], [ 41 , 6 ] ] }}`
+
+| `GeoJsonMultiLineString`
+| converter
+| `{"geoJsonLineString" : { "type" : "MultiLineString", coordinates: [
+     [ [ -73.97162 , 40.78205 ], [ -73.96374 , 40.77715 ] ],
+     [ [ -73.97880 , 40.77247 ], [ -73.97036 , 40.76811 ] ]
+  ] }}`
+|===
+
+
 [[mapping-configuration]]
 == Mapping Configuration
 
