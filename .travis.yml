@@ -3,13 +3,28 @@ language: java
 jdk:
   - oraclejdk8
 
-services:
-  - mongodb
+before_script:
+  - mongod --version
 
 env:
   matrix:
     - PROFILE=ci
     - PROFILE=mongo-next
+    - PROFILE=mongo3
+    - PROFILE=mongo3-next
+    - PROFILE=mongo31
+    - PROFILE=mongo32
+    - PROFILE=mongo33-next
+
+# Current MongoDB version is 2.4.2 as of 2016-04, see https://github.com/travis-ci/travis-ci/issues/3694
+# apt-get starts a MongoDB instance so it's not started using before_script
+addons:
+  apt:
+    sources:
+    - mongodb-3.2-precise
+    packages:
+    - mongodb-org-server
+    - mongodb-org-shell
 
 sudo: false
 
