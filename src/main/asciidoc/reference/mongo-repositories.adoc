@@ -28,7 +28,7 @@ public class Person {
 ----
 ====
 
-We have a quite simple domain object here. Note that it has a property named `id` of type`ObjectId`. The default serialization mechanism used in `MongoTemplate` (which is backing the repository support) regards properties named id as document id. Currently we support`String`, `ObjectId` and `BigInteger` as id-types.
+We have a quite simple domain object here. Note that it has a property named `id` of type `ObjectId`. The default serialization mechanism used in `MongoTemplate` (which is backing the repository support) regards properties named id as document id. Currently we support `String`, `ObjectId` and `BigInteger` as id-types.
 
 .Basic repository interface to persist Person entities
 ====
@@ -99,7 +99,7 @@ class ApplicationConfig extends AbstractMongoConfiguration {
 ----
 ====
 
-As our domain repository extends `PagingAndSortingRepository` it provides you with CRUD operations as well as methods for paginated and sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client. So accessing the second page of `Person`s at a page size of 10 would simply look something like this:
+As our domain repository extends `PagingAndSortingRepository` it provides you with CRUD operations as well as methods for paginated and sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client. So accessing the second page of `Person` s at a page size of 10 would simply look something like this:
 
 .Paging access to Person entities
 ====
@@ -139,17 +139,17 @@ public interface PersonRepository extends PagingAndSortingRepository<Person, Str
     Page<Person> findByFirstname(String firstname, Pageable pageable); <2>
 
     Person findByShippingAddresses(Address address);                   <3>
-    
+
     Stream<Person> findAllBy();                                        <4>
 }
 ----
 <1> The method shows a query for all people with the given lastname. The query will be derived parsing the method name for constraints which can be concatenated with `And` and `Or`. Thus the method name will result in a query expression of `{"lastname" : lastname}`.
 <2> Applies pagination to a query. Just equip your method signature with a `Pageable` parameter and let the method return a `Page` instance and we will automatically page the query accordingly.
-<3> Shows that you can query based on properties which are not a primitive type. 
+<3> Shows that you can query based on properties which are not a primitive type.
 <4> Uses a Java 8 `Stream` which reads and converts individual elements while iterating the stream.
 ====
 
- 
+
 
 NOTE: Note that for version 1.0 we currently don't support referring to parameters that are mapped as `DBRef` in the domain class.
 
@@ -328,7 +328,7 @@ public interface PersonRepository extends MongoRepository<Person, String>
   // Metric: {'geoNear' : 'person', 'near' : [x, y], 'maxDistance' : distance,
   //          'distanceMultiplier' : metric.multiplier, 'spherical' : true }
   GeoResults<Person> findByLocationNear(Point location, Distance distance);
-  
+
   // Metric: {'geoNear' : 'person', 'near' : [x, y], 'minDistance' : min,
   //          'maxDistance' : max, 'distanceMultiplier' : metric.multiplier,
   //          'spherical' : true }
