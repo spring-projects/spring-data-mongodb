@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -37,6 +38,13 @@ import com.mongodb.CommandResult;
 import com.mongodb.Mongo;
 import com.mongodb.ServerAddress;
 
+/**
+ *
+ * @author Mark Pollack
+ * @author Oliver Gierke
+ * @author Thomas Darimont
+ * @author Mark Paluch
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class MongoNamespaceReplicaSetTests {
@@ -70,10 +78,13 @@ public class MongoNamespaceReplicaSetTests {
 
 		assertThat(replicaSetSeeds, is(notNullValue()));
 		assertThat(replicaSetSeeds, hasSize(3));
-		assertThat(
-				replicaSetSeeds,
-				hasItems(new ServerAddress("192.168.174.130", 27017), new ServerAddress("192.168.174.130", 27018),
-						new ServerAddress("192.168.174.130", 27019)));
+
+		List<Integer> ports = new ArrayList<Integer>();
+		for (ServerAddress replicaSetSeed : replicaSetSeeds) {
+			ports.add(replicaSetSeed.getPort());
+		}
+
+		assertThat(ports, hasItems(27017, 27018, 27019));
 	}
 
 	@Test

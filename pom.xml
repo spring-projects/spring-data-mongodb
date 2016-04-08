@@ -107,7 +107,7 @@
 
 			<id>mongo-next</id>
 			<properties>
-				<mongo>2.14.0-SNAPSHOT</mongo>
+				<mongo>2.15.0-SNAPSHOT</mongo>
 			</properties>
 
 			<repositories>
@@ -148,16 +148,25 @@
 
 			<id>mongo31</id>
 			<properties>
-				<mongo>3.1.0</mongo>
+				<mongo>3.1.1</mongo>
 			</properties>
 
 		</profile>
 
 		<profile>
 
-			<id>mongo32-next</id>
+			<id>mongo32</id>
 			<properties>
-				<mongo>3.2.0-SNAPSHOT</mongo>
+				<mongo>3.2.2</mongo>
+			</properties>
+
+		</profile>
+
+		<profile>
+
+			<id>mongo33-next</id>
+			<properties>
+				<mongo>3.3.0-SNAPSHOT</mongo>
 			</properties>
 
 			<repositories>
