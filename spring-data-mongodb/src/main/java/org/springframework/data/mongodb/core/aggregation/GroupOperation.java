@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import com.mongodb.DBObject;
  * @author Sebastian Herold
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Gustavo de Geus
  * @since 1.3
  */
 public class GroupOperation implements FieldsExposingAggregationOperation {
@@ -307,6 +308,27 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return newBuilder(GroupOps.MAX, null, expr);
 	}
 
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevSamp}-expression that for the given
+	 * field-reference.
+	 *
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder stdDevSamp(String reference) {
+		return newBuilder(GroupOps.STD_DEV_SAMP, reference, null);
+	}
+
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevPop}-expression that for the given field-reference.
+	 *
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder stdDevPop(String reference) {
+		return newBuilder(GroupOps.STD_DEV_POP, reference, null);
+	}
+
 	private GroupOperationBuilder newBuilder(Keyword keyword, String reference, Object value) {
 		return new GroupOperationBuilder(this, new Operation(keyword, null, reference, value));
 	}
@@ -371,7 +393,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	private static enum GroupOps implements Keyword {
 
-		SUM, LAST, FIRST, PUSH, AVG, MIN, MAX, ADD_TO_SET, COUNT;
+		SUM, LAST, FIRST, PUSH, AVG, MIN, MAX, ADD_TO_SET, COUNT, STD_DEV_SAMP, STD_DEV_POP;
 
 		@Override
 		public String toString() {
