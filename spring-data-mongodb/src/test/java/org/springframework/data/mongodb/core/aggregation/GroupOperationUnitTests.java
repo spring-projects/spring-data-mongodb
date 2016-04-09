@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.DocumentTestUtils;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Gustavo de Geus
  */
 public class GroupOperationUnitTests {
 
@@ -200,6 +201,34 @@ public class GroupOperationUnitTests {
 		Document tagsCount = DocumentTestUtils.getAsDocument(groupClause, "tags_count");
 
 		assertThat(tagsCount.get("$first"), is((Object) new Document("$size", Arrays.asList("$tags"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1327
+	 */
+	@Test
+	public void groupOperationStdDevSampWithValue() {
+
+		GroupOperation groupOperation = Aggregation.group("a", "b").stdDevSamp("field").as("fieldStdDevSamp");
+
+		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
+		Document push = DocumentTestUtils.getAsDocument(groupClause, "fieldStdDevSamp");
+
+		assertThat(push, is(new Document("$stdDevSamp", "$field")));
+	}
+
+	/**
+	 * @see DATAMONGO-1327
+	 */
+	@Test
+	public void groupOperationStdDevPopWithValue() {
+
+		GroupOperation groupOperation = Aggregation.group("a", "b").stdDevPop("field").as("fieldStdDevPop");
+
+		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
+		Document push = DocumentTestUtils.getAsDocument(groupClause, "fieldStdDevPop");
+
+		assertThat(push, is(new Document("$stdDevPop", "$field")));
 	}
 
 	private Document extractDocumentFromGroupOperation(GroupOperation groupOperation) {
