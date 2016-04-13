@@ -1,4 +1,5 @@
 /*
+/*
  * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,6 +45,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Alessio Fachechi
+ * @author Nikolay Bogdanov
  * @since 1.3
  */
 public class Aggregation {
@@ -159,6 +161,13 @@ public class Aggregation {
 		Assert.isTrue(!aggregationOperations.isEmpty(), "At least one AggregationOperation has to be provided");
 		Assert.notNull(options, "AggregationOptions must not be null!");
 
+		//check $out is the last operation if exist
+		for (int i = 0; i < aggregationOperations.size(); i++) {
+			if (aggregationOperations.get(i) instanceof OutOperation && i != aggregationOperations.size() - 1) {
+				throw new IllegalArgumentException("The $out operator must be the last stage in the pipeline.");
+			}
+		}
+
 		this.operations = aggregationOperations;
 		this.options = options;
 	}
@@ -271,6 +280,20 @@ public class Aggregation {
 	 */
 	public static MatchOperation match(Criteria criteria) {
 		return new MatchOperation(criteria);
+	}
+
+	/**
+	 * Creates a new {@link OutOperation} using the given collection name. This operation must be the last operation
+	 * in the pipeline.
+	 *
+	 * @param outCollectionName collection name to export aggregation results. The {@link OutOperation} creates a new
+	 * collection in the current database if one does not already exist. The collection is
+	 * not visible until the aggregation completes. If the aggregation fails, MongoDB does
+	 * not create the collection. Must not be {@literal null}.
+	 * @return
+	 */
+	public static OutOperation out(String outCollectionName) {
+		return new OutOperation(outCollectionName);
 	}
 
 	/**
