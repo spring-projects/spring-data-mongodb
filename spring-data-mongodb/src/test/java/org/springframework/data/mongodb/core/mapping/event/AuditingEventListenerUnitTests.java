@@ -15,7 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.mockito.Matchers.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -27,6 +28,7 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.core.Ordered;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.mapping.context.PersistentEntities;
@@ -81,7 +83,7 @@ public class AuditingEventListenerUnitTests {
 		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample, "collection-1"));
 
 		verify(handler, times(1)).markCreated(sample);
-		verify(handler, times(0)).markModified(any(Sample.class));
+		verify(handler, times(0)).markModified(Mockito.any(Sample.class));
 	}
 
 	/**
@@ -94,8 +96,15 @@ public class AuditingEventListenerUnitTests {
 		sample.id = "id";
 		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample, "collection-1"));
 
-		verify(handler, times(0)).markCreated(any(Sample.class));
+		verify(handler, times(0)).markCreated(Mockito.any(Sample.class));
 		verify(handler, times(1)).markModified(sample);
+	}
+
+	@Test
+	public void hasExplicitOrder() {
+
+		assertThat(listener, is(instanceOf(Ordered.class)));
+		assertThat(listener.getOrder(), is(100));
 	}
 
 	static class Sample {

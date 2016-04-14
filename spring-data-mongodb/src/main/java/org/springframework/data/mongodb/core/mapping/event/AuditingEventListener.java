@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.context.ApplicationListener;
+import org.springframework.core.Ordered;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.mapping.context.MappingContext;
@@ -28,7 +29,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public class AuditingEventListener implements ApplicationListener<BeforeConvertEvent<Object>> {
+public class AuditingEventListener implements ApplicationListener<BeforeConvertEvent<Object>>, Ordered {
 
 	private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
 
@@ -52,5 +53,14 @@ public class AuditingEventListener implements ApplicationListener<BeforeConvertE
 
 		Object entity = event.getSource();
 		auditingHandlerFactory.getObject().markAudited(entity);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.core.Ordered#getOrder()
+	 */
+	@Override
+	public int getOrder() {
+		return 100;
 	}
 }
