@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,78 +19,77 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 
-import com.mongodb.DBObject;
-
 /**
  * {@link ApplicationListener} for Mongo mapping events logging the events.
  * 
  * @author Jon Brisbin
  * @author Martin Baumgartner
+ * @author Oliver Gierke
  */
 public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LoggingEventListener.class);
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeConvert(java.lang.Object)
+	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeConvert(org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent)
 	 */
 	@Override
-	public void onBeforeConvert(Object source) {
-		LOGGER.info("onBeforeConvert: {}", source);
+	public void onBeforeConvert(BeforeConvertEvent<Object> event) {
+		LOGGER.info("onBeforeConvert: {}", event.getSource());
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(java.lang.Object, com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent)
 	 */
 	@Override
-	public void onBeforeSave(Object source, DBObject dbo) {
-		LOGGER.info("onBeforeSave: {}, {}", source, dbo);
+	public void onBeforeSave(BeforeSaveEvent<Object> event) {
+		LOGGER.info("onBeforeSave: {}, {}", event.getSource(), event.getDBObject());
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterSave(java.lang.Object, com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterSave(org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent)
 	 */
 	@Override
-	public void onAfterSave(Object source, DBObject dbo) {
-		LOGGER.info("onAfterSave: {}, {}", source, dbo);
+	public void onAfterSave(AfterSaveEvent<Object> event) {
+		LOGGER.info("onAfterSave: {}, {}", event.getSource(), event.getDBObject());
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterLoad(com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterLoad(org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent)
 	 */
 	@Override
-	public void onAfterLoad(DBObject dbo) {
-		LOGGER.info("onAfterLoad: {}", dbo);
+	public void onAfterLoad(AfterLoadEvent<Object> event) {
+		LOGGER.info("onAfterLoad: {}", event.getDBObject());
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterConvert(com.mongodb.DBObject, java.lang.Object)
+	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterConvert(org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent)
 	 */
 	@Override
-	public void onAfterConvert(DBObject dbo, Object source) {
-		LOGGER.info("onAfterConvert: {}, {}", dbo, source);
+	public void onAfterConvert(AfterConvertEvent<Object> event) {
+		LOGGER.info("onAfterConvert: {}, {}", event.getDBObject(), event.getSource());
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterDelete(com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterDelete(org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent)
 	 */
 	@Override
-	public void onAfterDelete(DBObject dbo) {
-		LOGGER.info("onAfterDelete: {}", dbo);
+	public void onAfterDelete(AfterDeleteEvent<Object> event) {
+		LOGGER.info("onAfterDelete: {}", event.getDBObject());
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeDelete(com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeDelete(org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent)
 	 */
 	@Override
-	public void onBeforeDelete(DBObject dbo) {
-		LOGGER.info("onBeforeDelete: {}", dbo);
+	public void onBeforeDelete(BeforeDeleteEvent<Object> event) {
+		LOGGER.info("onBeforeDelete: {}", event.getDBObject());
 	}
 }

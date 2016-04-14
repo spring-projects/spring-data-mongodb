@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBObject;
-
 /**
  * javax.validation dependant entities validator. When it is registered as Spring component its automatically invoked
  * before entities are saved in database.
  * 
  * @author Maciej Walkowiak
+ * @author Oliver Gierke
  */
 public class ValidatingMongoEventListener extends AbstractMongoEventListener<Object> {
 
@@ -44,17 +43,20 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 	 * @param validator must not be {@literal null}.
 	 */
 	public ValidatingMongoEventListener(Validator validator) {
-		Assert.notNull(validator);
+
+		Assert.notNull(validator, "Validator must not be null!");
 		this.validator = validator;
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(java.lang.Object, com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent)
 	 */
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void onBeforeSave(Object source, DBObject dbo) {
+	public void onBeforeSave(BeforeSaveEvent<Object> event) {
+
+		Object source = event.getSource();
 
 		LOG.debug("Validating object: {}", source);
 		Set violations = validator.validate(source);
