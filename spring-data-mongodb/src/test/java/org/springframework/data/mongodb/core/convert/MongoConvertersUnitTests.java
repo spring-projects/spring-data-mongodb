@@ -20,15 +20,22 @@ import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.hamcrest.core.IsInstanceOf;
 import org.junit.Test;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
+import org.springframework.data.mongodb.core.convert.MongoConverters.AtomicIntegerToIntegerConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.AtomicLongToLongConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.CurrencyToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.IntegerToAtomicIntegerConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.LongToAtomicLongConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToCurrencyConverter;
 import org.springframework.data.mongodb.core.geo.Sphere;
@@ -139,5 +146,37 @@ public class MongoConvertersUnitTests {
 	@Test
 	public void convertsStringToCurrencyCorrectly() {
 		assertThat(StringToCurrencyConverter.INSTANCE.convert("USD"), is(Currency.getInstance("USD")));
+	}
+
+	/**
+	 * @see DATAMONGO-1416
+	 */
+	@Test
+	public void convertsAtomicLongToLongCorrectly() {
+		assertThat(AtomicLongToLongConverter.INSTANCE.convert(new AtomicLong(100L)), is(100L));
+	}
+
+	/**
+	 * @see DATAMONGO-1416
+	 */
+	@Test
+	public void convertsAtomicIntegerToIntegerCorrectly() {
+		assertThat(AtomicIntegerToIntegerConverter.INSTANCE.convert(new AtomicInteger(100)), is(100));
+	}
+
+	/**
+	 * @see DATAMONGO-1416
+	 */
+	@Test
+	public void convertsLongToAtomicLongCorrectly() {
+		assertThat(LongToAtomicLongConverter.INSTANCE.convert(100L), IsInstanceOf.instanceOf(AtomicLong.class));
+	}
+
+	/**
+	 * @see DATAMONGO-1416
+	 */
+	@Test
+	public void convertsIntegerToAtomicIntegerCorrectly() {
+		assertThat(IntegerToAtomicIntegerConverter.INSTANCE.convert(100), IsInstanceOf.instanceOf(AtomicInteger.class));
 	}
 }

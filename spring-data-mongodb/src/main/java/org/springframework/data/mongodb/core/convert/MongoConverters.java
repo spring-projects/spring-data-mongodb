@@ -81,7 +81,10 @@ abstract class MongoConverters {
 		converters.add(DBObjectToNamedMongoScriptCoverter.INSTANCE);
 		converters.add(CurrencyToStringConverter.INSTANCE);
 		converters.add(StringToCurrencyConverter.INSTANCE);
-		converters.add(NumberToNumberConverterFactory.INSTANCE);
+		converters.add(AtomicIntegerToIntegerConverter.INSTANCE);
+		converters.add(AtomicLongToLongConverter.INSTANCE);
+		converters.add(LongToAtomicLongConverter.INSTANCE);
+		converters.add(IntegerToAtomicIntegerConverter.INSTANCE);
 
 		return converters;
 	}
@@ -372,6 +375,70 @@ abstract class MongoConverters {
 
 				return NumberUtils.convertNumberToTargetClass(source, this.targetType);
 			}
+		}
+	}
+
+	/**
+	 * {@link ConverterFactory} implementation converting {@link AtomicLong} into {@link Long}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	@WritingConverter
+	public static enum AtomicLongToLongConverter implements Converter<AtomicLong, Long> {
+		INSTANCE;
+
+		@Override
+		public Long convert(AtomicLong source) {
+			return NumberUtils.convertNumberToTargetClass(source, Long.class);
+		}
+	}
+
+	/**
+	 * {@link ConverterFactory} implementation converting {@link AtomicInteger} into {@link Integer}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	@WritingConverter
+	public static enum AtomicIntegerToIntegerConverter implements Converter<AtomicInteger, Integer> {
+		INSTANCE;
+
+		@Override
+		public Integer convert(AtomicInteger source) {
+			return NumberUtils.convertNumberToTargetClass(source, Integer.class);
+		}
+	}
+
+	/**
+	 * {@link ConverterFactory} implementation converting {@link Long} into {@link AtomicLong}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	@ReadingConverter
+	public static enum LongToAtomicLongConverter implements Converter<Long, AtomicLong> {
+		INSTANCE;
+
+		@Override
+		public AtomicLong convert(Long source) {
+			return source != null ? new AtomicLong(source) : null;
+		}
+	}
+
+	/**
+	 * {@link ConverterFactory} implementation converting {@link Integer} into {@link AtomicInteger}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	@ReadingConverter
+	public static enum IntegerToAtomicIntegerConverter implements Converter<Integer, AtomicInteger> {
+		INSTANCE;
+
+		@Override
+		public AtomicInteger convert(Integer source) {
+			return source != null ? new AtomicInteger(source) : null;
 		}
 	}
 }
