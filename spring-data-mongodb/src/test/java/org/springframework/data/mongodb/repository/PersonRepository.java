@@ -89,6 +89,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	List<Person> findByFirstnameLike(String firstname);
 
+	List<Person> findByFirstnameNotContains(String firstname);
+
 	List<Person> findByFirstnameLikeOrderByLastnameAsc(String firstname, Sort sort);
 
 	@Query("{'age' : { '$lt' : ?0 } }")
@@ -309,7 +311,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @see DATAMONGO-745
 	 */
 	@Query("{lastname:?0, address.street:{$in:?1}}")
-	Page<Person> findByCustomQueryLastnameAndAddressStreetInList(String lastname, List<String> streetNames, Pageable page);
+	Page<Person> findByCustomQueryLastnameAndAddressStreetInList(String lastname, List<String> streetNames,
+			Pageable page);
 
 	/**
 	 * @see DATAMONGO-950
@@ -334,19 +337,19 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@Query("{ firstname : { $in : ?0 }}")
 	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
-	
+
 	/**
 	 * @see DATAMONGO-990
 	 */
 	@Query("{ firstname : ?#{[0]}}")
 	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly(String firstname);
-	
+
 	/**
 	 * @see DATAMONGO-990
 	 */
 	@Query("{ firstname : ?#{[0]}, email: ?#{principal.email} }")
 	List<Person> findWithSpelByFirstnameAndCurrentUserWithCustomQuery(String firstname);
-	
+
 	/**
 	 * @see DATAMONGO-990
 	 */

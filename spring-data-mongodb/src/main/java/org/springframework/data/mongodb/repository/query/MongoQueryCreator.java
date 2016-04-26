@@ -200,7 +200,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case CONTAINING:
 				return createContainingCriteria(part, property, criteria, parameters);
 			case NOT_CONTAINING:
-				return createContainingCriteria(part, property, criteria, parameters).not();
+				return createContainingCriteria(part, property, criteria.not(), parameters);
 			case REGEX:
 				return criteria.regex(parameters.next().toString());
 			case EXISTS:
