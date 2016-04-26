@@ -72,7 +72,7 @@ public enum MongoRegexCreator {
 			return source;
 		}
 
-		if (!ObjectUtils.nullSafeEquals(Type.LIKE, type)) {
+		if (!ObjectUtils.nullSafeEquals(Type.LIKE, type) && !ObjectUtils.nullSafeEquals(Type.NOT_LIKE, type)) {
 			return PUNCTATION_PATTERN.matcher(source).find() ? Pattern.quote(source) : source;
 		}
 
