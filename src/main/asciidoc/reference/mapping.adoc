@@ -98,6 +98,10 @@ In addition to these types, Spring Data MongoDB provides a set of built-in conve
 | native
 | `{"bin" : { "$binary" : "AQIDBA==", "$type" : "00" }}`
 
+| `java.util.UUID` (Legacy UUID)
+| native
+| `{"uuid" : { "$binary" : "MEaf1CFQ6lSphaa3b9AtlA==", "$type" : "03" }}`
+
 | `Date`
 | native
 | `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
