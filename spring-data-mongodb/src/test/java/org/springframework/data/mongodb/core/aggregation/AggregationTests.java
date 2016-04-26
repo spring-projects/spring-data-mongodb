@@ -78,6 +78,7 @@ import com.mongodb.util.JSON;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Nikolay Bogdanov
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -1118,6 +1119,40 @@ public class AggregationTests {
 
 		assertThat(firstItem, isBsonObject().containing("foreignKey", "u1"));
 		assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
+	}
+
+	/**
+	 * @see DATAMONGO-1418
+	 */
+	@Test
+	public void shouldCreateOutputCollection() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
+		mongoTemplate.save(new Person("Anna", "Ivanova", 21, Person.Sex.FEMALE));
+		mongoTemplate.save(new Person("Pavel", "Sidorov", 36, Person.Sex.MALE));
+		mongoTemplate.save(new Person("Anastasia", "Volochkova", 29, Person.Sex.FEMALE));
+		mongoTemplate.save(new Person("Igor", "Stepanov", 31, Person.Sex.MALE));
+		mongoTemplate.save(new Person("Leoniv", "Yakubov", 55, Person.Sex.MALE));
+
+		String tempOutCollection = "personQueryTemp";
+		TypedAggregation<Person> agg = newAggregation(Person.class,
+				group("sex")
+						.count().as("count"),
+				sort(DESC, "count"),
+				out(tempOutCollection));
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
+		assertTrue(results.getMappedResults().isEmpty());
+
+		List<DBObject> list = mongoTemplate.findAll(DBObject.class, tempOutCollection);
+		assertEquals("Size incorrect in temp collection", 2, list.size());
+		DBObject first = list.get(0);
+		DBObject second = list.get(1);
+		assertThat(first, isBsonObject().containing("_id", "MALE")
+				.containing("count", 3));
+		assertThat(second, isBsonObject().containing("_id", "FEMALE")
+				.containing("count", 2));
+		mongoTemplate.dropCollection(tempOutCollection);
 	}
 
 	private void createUsersWithReferencedPersons() {
