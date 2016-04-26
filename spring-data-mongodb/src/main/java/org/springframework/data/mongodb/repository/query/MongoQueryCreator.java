@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -199,6 +199,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case ENDING_WITH:
 			case CONTAINING:
 				return createContainingCriteria(part, property, criteria, parameters);
+			case NOT_LIKE:
+				return createContainingCriteria(part, property, criteria.not(), parameters);
 			case NOT_CONTAINING:
 				return createContainingCriteria(part, property, criteria.not(), parameters);
 			case REGEX:

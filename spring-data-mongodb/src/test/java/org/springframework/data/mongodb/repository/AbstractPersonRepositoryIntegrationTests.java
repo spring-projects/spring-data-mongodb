@@ -1296,4 +1296,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, not(hasItem(carter)));
 	}
 
+	/*
+	 * @see DATAMONGO-1424
+	 */
+	@Test
+	public void findsPersonsByFirstnameNotLike() throws Exception {
+
+		List<Person> result = repository.findByFirstnameNotLike("Bo*");
+		assertThat(result.size(), is((int) (repository.count() - 1)));
+		assertThat(result, not(hasItem(boyd)));
+	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -667,6 +667,62 @@ public class MongoQueryCreatorUnitTests {
 		Query query = new MongoQueryCreator(partTree, accessor, context).createQuery();
 
 		assertThat(query, is(query(where("emailAddresses").in((Object) null))));
+	}
+
+	/**
+	 * @see DATAMONGO-1424
+	 */
+	@Test
+	public void notLikeShouldEscapeSourceWhenUsedWithLeadingAndTrailingWildcard() {
+
+		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "*fire.fight+*");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+
+		assertThat(query.getQueryObject(),
+				is(query(where("username").not().regex(".*\\Qfire.fight+\\E.*")).getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-1424
+	 */
+	@Test
+	public void notLikeShouldEscapeSourceWhenUsedWithLeadingWildcard() {
+
+		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "*steel.heart+");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+
+		assertThat(query.getQueryObject(),
+				is(query(where("username").not().regex(".*\\Qsteel.heart+\\E")).getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-1424
+	 */
+	@Test
+	public void notLikeShouldEscapeSourceWhenUsedWithTrailingWildcard() {
+
+		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "cala.mity+*"), context);
+		Query query = creator.createQuery();
+
+		assertThat(query.getQueryObject(), is(query(where("username").not().regex("\\Qcala.mity+\\E.*")).getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-1424
+	 */
+	@Test
+	public void notLikeShouldBeTreatedCorrectlyWhenUsedWithWildcardOnly() {
+
+		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "*");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+		assertThat(query.getQueryObject(), is(query(where("username").not().regex(".*")).getQueryObject()));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {

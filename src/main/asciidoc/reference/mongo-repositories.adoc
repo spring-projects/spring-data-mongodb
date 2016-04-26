@@ -208,6 +208,10 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 | `findByFirstnameLike(String name)`
 | `{"firstname" : name} ( name as regex)`
 
+| `NotLike`, `IsNotLike`, `EndingWith`
+| `findByFirstnameNotLike(String name)`
+| `{"firstname" : { "$not" : name }} ( name as regex)`
+
 | `Containing` on String
 | `findByFirstnameContaining(String name)`
 | `{"firstname" : name} (name as regex)`
