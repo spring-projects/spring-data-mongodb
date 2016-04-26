@@ -461,6 +461,7 @@ public class MongoQueryCreatorUnitTests {
 
 	/**
 	 * @see DATAMONGO-1075
+	 * @see DATAMONGO-1425
 	 */
 	@Test
 	public void shouldCreateRegexWhenUsingNotContainsOnStringProperty() {
@@ -469,7 +470,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "thew"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("username").regex(".*thew.*").not())));
+		assertThat(query.getQueryObject(), is(query(where("username").not().regex(".*thew.*")).getQueryObject()));
 	}
 
 	/**

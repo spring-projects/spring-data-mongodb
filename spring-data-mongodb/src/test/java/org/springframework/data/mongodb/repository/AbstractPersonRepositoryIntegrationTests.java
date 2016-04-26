@@ -1211,14 +1211,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	/**
-	 * @see DATAMONGO-990
+	 * @see DATAMONGO-1425
 	 */
 	@Test
-	public void shouldFindByFirstnameForSpELExpressionWithParameterVariableOnly() {
+	public void findsPersonsByFirstnameNotContains() throws Exception {
 
-		List<Person> users = repository.findWithSpelByFirstnameForSpELExpressionWithParameterVariableOnly("Dave");
-
-		assertThat(users, hasSize(1));
-		assertThat(users.get(0), is(dave));
+		List<Person> result = repository.findByFirstnameNotContains("Boyd");
+		assertThat(result.size(), is((int) (repository.count() - 1)));
+		assertThat(result, not(hasItem(boyd)));
 	}
+
 }
