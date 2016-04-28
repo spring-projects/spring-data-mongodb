@@ -912,6 +912,32 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().containing("$max", new BasicDBObject("maxfield", 999)));
 	}
 
+	/**
+	 * @see DATAMONGO-1423
+	 */
+	@Test
+	public void mappingShouldConsiderCustomConvertersForEnumMapKeys() {
+
+		CustomConversions conversions = new CustomConversions(
+				Arrays.asList(AllocationToStringConverter.INSTANCE, StringToAllocationConverter.INSTANCE));
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		mappingContext.afterPropertiesSet();
+
+		MappingMongoConverter converter = new MappingMongoConverter(mock(DbRefResolver.class), mappingContext);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		UpdateMapper mapper = new UpdateMapper(converter);
+
+		Update update = new Update().set("enumAsMapKey", Collections.singletonMap(Allocation.AVAILABLE, 100));
+		DBObject result = mapper.getMappedObject(update.getUpdateObject(),
+				mappingContext.getPersistentEntity(ClassWithEnum.class));
+
+		assertThat(result, isBsonObject().containing("$set.enumAsMapKey.V", 100));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1138,6 +1164,7 @@ public class UpdateMapperUnitTests {
 	static class ClassWithEnum {
 
 		Allocation allocation;
+		Map<Allocation, String> enumAsMapKey;
 
 		static enum Allocation {
 

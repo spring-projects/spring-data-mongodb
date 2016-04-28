@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 by the original author(s).
+ * Copyright 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -1001,11 +1002,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (obj instanceof Map) {
-			DBObject result = new BasicDBObject();
+			Map<Object, Object> converted = new LinkedHashMap<Object, Object>();
+
 			for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj).entrySet()) {
-				result.put(entry.getKey().toString(), convertToMongoType(entry.getValue(), typeHint));
+				converted.put(convertToMongoType(entry.getKey()), convertToMongoType(entry.getValue(),
+						typeHint != null && typeHint.getMapValueType() != null ? typeHint.getMapValueType() : typeHint));
 			}
-			return result;
+			return new BasicDBObject(converted);
 		}
 
 		if (obj.getClass().isArray()) {
