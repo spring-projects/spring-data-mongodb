@@ -28,7 +28,7 @@ import org.springframework.util.Assert;
 /**
  * {@link GeoJson} representation of {@link Polygon}. Unlike {@link Polygon} the {@link GeoJsonPolygon} requires a
  * closed border. Which means that the first and last {@link Point} have to have same coordinate pairs.
- * 
+ *
  * @author Christoph Strobl
  * @since 1.7
  * @see http://geojson.org/geojson-spec.html#polygon
@@ -42,7 +42,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 
 	/**
 	 * Creates new {@link GeoJsonPolygon} from the given {@link Point}s.
-	 * 
+	 *
 	 * @param first must not be {@literal null}.
 	 * @param second must not be {@literal null}.
 	 * @param third must not be {@literal null}.
@@ -55,7 +55,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 
 	/**
 	 * Creates new {@link GeoJsonPolygon} from the given {@link Point}s.
-	 * 
+	 *
 	 * @param points must not be {@literal null}.
 	 */
 	public GeoJsonPolygon(List<Point> points) {
@@ -73,7 +73,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 	 * @param fourth must not be {@literal null}.
 	 * @param others can be {@literal null}.
 	 * @return new {@link GeoJsonPolygon}.
-	 * @since 1.9
+	 * @since 1.10
 	 */
 	public GeoJsonPolygon withInnerRing(Point first, Point second, Point third, Point fourth, final Point... others) {
 		return withInnerRing(asList(first, second, third, fourth, others));
@@ -94,7 +94,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 	 *
 	 * @param lineString must not be {@literal null}.
 	 * @return new {@link GeoJsonPolygon}.
-	 * @since 1.9
+	 * @since 1.10
 	 */
 	public GeoJsonPolygon withInnerRing(GeoJsonLineString lineString) {
 
