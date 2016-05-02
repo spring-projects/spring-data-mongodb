@@ -70,7 +70,7 @@ In addition to these types, Spring Data MongoDB provides a set of built-in conve
 |===
 | Type
 | Type conversion
-| MongoDB representation
+| Sample
 
 | `String`
 | native
@@ -205,7 +205,7 @@ calling `get()` before the actual conversion
 
 | `Point`
 | converter
-| `{ "x" : 1.0 , "y" : 2.0}`
+| `{"point" : { "x" : 1.0 , "y" : 2.0}}`
 
 | `GeoJsonPoint`
 | converter
@@ -213,7 +213,7 @@ calling `get()` before the actual conversion
 
 | `GeoJsonMultiPoint`
 | converter
-| `{"geoJsonLineString":{"type":"MultiPoint", "coordinates": [ [0,0],[0,1],[1,1] ] }}`
+| `{"geoJsonLineString" : {"type":"MultiPoint", "coordinates": [ [ 0 , 0 ], [ 0 , 1 ], [ 1 , 1 ] ] }}`
 
 | `Sphere`
 | converter
@@ -221,24 +221,24 @@ calling `get()` before the actual conversion
 
 | `GeoJsonPolygon`
 | converter
-| `{"polygon" : { "type" : "Polygon", "coordinates" : [[ [ 0 , 0 ] , [ 3 , 6 ] , [ 6 , 1 ] , [ 0 , 0  ] ]] }}`
+| `{"polygon" : { "type" : "Polygon", "coordinates" : [[ [ 0 , 0 ], [ 3 , 6 ], [ 6 , 1 ], [ 0 , 0  ] ]] }}`
 
 | `GeoJsonMultiPolygon`
 | converter
 | `{"geoJsonMultiPolygon" : { "type" : "MultiPolygon", "coordinates" : [
-     [ [ [ -73.958, 40.8003 ], [ -73.9498, 40.7968 ],  ] ],
-     [ [ [ -73.9737, 40.7648 ], [ -73.958, 40.8003 ] ] ]
+     [ [ [ -73.958 , 40.8003 ] , [ -73.9498 , 40.7968 ] ] ],
+     [ [ [ -73.973 , 40.7648 ] , [ -73.9588 , 40.8003 ] ] ]
   ] }}`
 
 | `GeoJsonLineString`
 | converter
-| `{ "geoJsonLineString" : {"type" : "LineString", "coordinates" : [ [ 40, 5 ], [ 41, 6 ] ]}}`
+| `{ "geoJsonLineString" : { "type" : "LineString", "coordinates" : [ [ 40 , 5 ], [ 41 , 6 ] ] }}`
 
 | `GeoJsonMultiLineString`
 | converter
-| `{"geoJsonLineString" : {"type": "MultiLineString", coordinates: [
-     [ [ -73.97162, 40.78205 ], [ -73.96374, 40.77715 ] ],
-     [ [ -73.97880, 40.77247 ], [ -73.97036, 40.76811 ] ]
+| `{"geoJsonLineString" : { "type" : "MultiLineString", coordinates: [
+     [ [ -73.97162 , 40.78205 ], [ -73.96374 , 40.77715 ] ],
+     [ [ -73.97880 , 40.77247 ], [ -73.97036 , 40.76811 ] ]
   ] }}`
 |===
 
