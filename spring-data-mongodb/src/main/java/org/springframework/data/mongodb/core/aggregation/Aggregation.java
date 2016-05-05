@@ -307,7 +307,13 @@ public class Aggregation {
 	public static LimitOperation limit(long maxElements) {
 		return new LimitOperation(maxElements);
 	}
-
+	/**
+	 * Creates a new {@link OutOperation} creating new collection.
+	 *
+	 * @param out collection name must not null.
+	 * @return
+	 */
+	public static OutOperation out(String out){return  new OutOperation(out);}
 	/**
 	 * Creates a new {@link MatchOperation} using the given {@link Criteria}.
 	 *
