@@ -196,21 +196,21 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 | `findByAgeNotIn(Collection ages)`
 | `{"age" : {"$nin" : [ages...]}}`
 
-| `IsNotNull, NotNull`
+| `IsNotNull`, `NotNull`
 | `findByFirstnameNotNull()`
 | `{"firstname" : {"$ne" : null}}`
 
-| `IsNull, Null`
+| `IsNull`, `Null`
 | `findByFirstnameNull()`
 | `{"firstname" : null}`
 
 | `Like`, `StartingWith`, `EndingWith`
 | `findByFirstnameLike(String name)`
-| `{"firstname" : name} ( name as regex)`
+| `{"firstname" : name} (name as regex)`
 
-| `NotLike`, `IsNotLike`, `EndingWith`
+| `NotLike`, `IsNotLike`
 | `findByFirstnameNotLike(String name)`
-| `{"firstname" : { "$not" : name }} ( name as regex)`
+| `{"firstname" : { "$not" : name }} (name as regex)`
 
 | `Containing` on String
 | `findByFirstnameContaining(String name)`
@@ -260,11 +260,11 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 | `findByLocationWithin(Box box)`
 | `{"location" : {"$geoWithin" : {"$box" : [ [x1, y1], x2, y2]}}}`
 
-| `IsTrue, True`
+| `IsTrue`, `True`
 | `findByActiveIsTrue()`
 | `{"active" : true}`
 
-| `IsFalse, False`
+| `IsFalse`,  `False`
 | `findByActiveIsFalse()`
 | `{"active" : false}`
 
