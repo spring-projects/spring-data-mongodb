@@ -86,8 +86,10 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		dave = new Person("Dave", "Matthews", 42);
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
+		carter.setSkills(Arrays.asList("Drums", "percussion", "vocals"));
 		Thread.sleep(10);
 		boyd = new Person("Boyd", "Tinsley", 45);
+		boyd.setSkills(Arrays.asList("Violin", "Electric Violin", "Viola", "Mandolin", "Vocals", "Guitar"));
 		stefan = new Person("Stefan", "Lessard", 34);
 		leroi = new Person("Leroi", "Moore", 41);
 
@@ -1270,6 +1272,28 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = repository.findByFirstnameNotContains("Boyd");
 		assertThat(result.size(), is((int) (repository.count() - 1)));
 		assertThat(result, not(hasItem(boyd)));
+	}
+
+	/**
+	 * @see DATAMONGO-1425
+	 */
+	@Test
+	public void findBySkillsContains() throws Exception {
+
+		List<Person> result = repository.findBySkillsContains(Arrays.asList("Drums"));
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(carter));
+	}
+
+	/**
+	 * @see DATAMONGO-1425
+	 */
+	@Test
+	public void findBySkillsNotContains() throws Exception {
+
+		List<Person> result = repository.findBySkillsNotContains(Arrays.asList("Drums"));
+		assertThat(result.size(), is((int) (repository.count() - 1)));
+		assertThat(result, not(hasItem(carter)));
 	}
 
 }

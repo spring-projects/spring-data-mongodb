@@ -93,6 +93,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	List<Person> findByFirstnameLikeOrderByLastnameAsc(String firstname, Sort sort);
 
+	List<Person> findBySkillsContains(List<String> skills);
+
+	List<Person> findBySkillsNotContains(List<String> skills);
+
 	@Query("{'age' : { '$lt' : ?0 } }")
 	List<Person> findByAgeLessThan(int age, Sort sort);
 
