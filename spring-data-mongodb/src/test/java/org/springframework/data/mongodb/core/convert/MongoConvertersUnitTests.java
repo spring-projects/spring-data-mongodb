@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
@@ -23,7 +23,6 @@ import java.util.Currency;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.hamcrest.core.IsInstanceOf;
 import org.junit.Test;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -169,7 +168,7 @@ public class MongoConvertersUnitTests {
 	 */
 	@Test
 	public void convertsLongToAtomicLongCorrectly() {
-		assertThat(LongToAtomicLongConverter.INSTANCE.convert(100L), IsInstanceOf.instanceOf(AtomicLong.class));
+		assertThat(LongToAtomicLongConverter.INSTANCE.convert(100L), is(instanceOf(AtomicLong.class)));
 	}
 
 	/**
@@ -177,6 +176,6 @@ public class MongoConvertersUnitTests {
 	 */
 	@Test
 	public void convertsIntegerToAtomicIntegerCorrectly() {
-		assertThat(IntegerToAtomicIntegerConverter.INSTANCE.convert(100), IsInstanceOf.instanceOf(AtomicInteger.class));
+		assertThat(IntegerToAtomicIntegerConverter.INSTANCE.convert(100), is(instanceOf(AtomicInteger.class)));
 	}
 }
