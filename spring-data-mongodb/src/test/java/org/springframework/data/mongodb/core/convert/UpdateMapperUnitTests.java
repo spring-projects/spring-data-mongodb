@@ -891,6 +891,7 @@ public class UpdateMapperUnitTests {
 	 * @see DATAMONGO-1423
 	 */
 	@Test
+	@SuppressWarnings("unchecked")
 	public void mappingShouldConsiderCustomConvertersForEnumMapKeys() {
 
 		CustomConversions conversions = new CustomConversions(
