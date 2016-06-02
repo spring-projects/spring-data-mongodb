@@ -33,8 +33,13 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 import com.mongodb.DBRef;
 
+/**
+ * Unit tests for {@link LazyLoadingInterceptor}.
+ *
+ * @author Christoph Strobl
+ */
 @RunWith(MockitoJUnitRunner.class)
-public class LazyLoadingInterceptorUntiTests {
+public class LazyLoadingInterceptorUnitTests {
 
 	public @Rule ExpectedException exception = ExpectedException.none();
 
@@ -46,8 +51,7 @@ public class LazyLoadingInterceptorUntiTests {
 	 * @see DATAMONGO-1437
 	 */
 	@Test
-	public void shouldPreserveCauseForNonTranslatableExceptions()
-			throws NoSuchMethodException, SecurityException, Throwable {
+	public void shouldPreserveCauseForNonTranslatableExceptions() throws Throwable {
 
 		NullPointerException npe = new NullPointerException("Some Exception we did not think about.");
 		when(callbackMock.resolve(propertyMock)).thenThrow(npe);
