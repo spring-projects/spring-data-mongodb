@@ -177,16 +177,16 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		switch (type) {
 			case AFTER:
 			case GREATER_THAN:
-				return criteria.gt(parameters.nextConverted(property));
+				return criteria.gt(parameters.next());
 			case GREATER_THAN_EQUAL:
-				return criteria.gte(parameters.nextConverted(property));
+				return criteria.gte(parameters.next());
 			case BEFORE:
 			case LESS_THAN:
-				return criteria.lt(parameters.nextConverted(property));
+				return criteria.lt(parameters.next());
 			case LESS_THAN_EQUAL:
-				return criteria.lte(parameters.nextConverted(property));
+				return criteria.lte(parameters.next());
 			case BETWEEN:
-				return criteria.gt(parameters.nextConverted(property)).lt(parameters.nextConverted(property));
+				return criteria.gt(parameters.next()).lt(parameters.next());
 			case IS_NOT_NULL:
 				return criteria.ne(null);
 			case IS_NULL:
@@ -241,12 +241,12 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return criteria.within((Shape) parameter);
 			case SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.is(parameters.nextConverted(property))
+				return isSimpleComparisionPossible(part) ? criteria.is(parameters.next())
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, false);
 
 			case NEGATING_SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.ne(parameters.nextConverted(property))
+				return isSimpleComparisionPossible(part) ? criteria.ne(parameters.next())
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, true);
 			default:
 				throw new IllegalArgumentException("Unsupported keyword!");

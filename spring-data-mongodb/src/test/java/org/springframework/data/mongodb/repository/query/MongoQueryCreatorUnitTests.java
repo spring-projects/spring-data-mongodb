@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,47 +17,42 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.repository.query.StubParameterAccessor.*;
 
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.util.List;
 
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.Venue;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Unit test for {@link MongoQueryCreator}.
@@ -71,22 +66,20 @@ public class MongoQueryCreatorUnitTests {
 
 	Method findByFirstname, findByFirstnameAndFriend, findByFirstnameNotNull;
 
-	@Mock MongoConverter converter;
+	@Mock DbRefResolver resolver;
 
-	MappingContext<?, MongoPersistentProperty> context;
+	MongoMappingContext context;
+	MappingMongoConverter converter;
 
 	@Rule public ExpectedException expection = ExpectedException.none();
 
 	@Before
 	public void setUp() throws SecurityException, NoSuchMethodException {
 
-		context = new MongoMappingContext();
+		this.context = new MongoMappingContext();
 
-		doAnswer(new Answer<Object>() {
-			public Object answer(InvocationOnMock invocation) throws Throwable {
-				return invocation.getArguments()[0];
-			}
-		}).when(converter).convertToMongoType(any(), Mockito.any(TypeInformation.class));
+		this.converter = new MappingMongoConverter(resolver, context);
+		this.converter.afterPropertiesSet();
 	}
 
 	@Test
@@ -137,8 +130,8 @@ public class MongoQueryCreatorUnitTests {
 		Point point = new Point(10, 20);
 		Distance distance = new Distance(2.5, Metrics.KILOMETERS);
 
-		Query query = query(where("location").nearSphere(point).maxDistance(distance.getNormalizedValue()).and("firstname")
-				.is("Dave"));
+		Query query = query(
+				where("location").nearSphere(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
 		assertBindsDistanceToQuery(point, distance, query);
 	}
 
@@ -148,8 +141,8 @@ public class MongoQueryCreatorUnitTests {
 		Point point = new Point(10, 20);
 		Distance distance = new Distance(2.5);
 
-		Query query = query(where("location").near(point).maxDistance(distance.getNormalizedValue()).and("firstname")
-				.is("Dave"));
+		Query query = query(
+				where("location").near(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
 		assertBindsDistanceToQuery(point, distance, query);
 	}
 
@@ -235,23 +228,6 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-347
-	 */
-	@Test
-	public void createsQueryReferencingADBRefCorrectly() {
-
-		User user = new User();
-		com.mongodb.DBRef dbref = new com.mongodb.DBRef("user", "id");
-		when(converter.toDBRef(eq(user), Mockito.any(MongoPersistentProperty.class))).thenReturn(dbref);
-
-		PartTree tree = new PartTree("findByCreator", User.class);
-		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, user), context);
-		Query query = creator.createQuery();
-
-		assertThat(query, is(query(where("creator").is(dbref))));
-	}
-
-	/**
 	 * @see DATAMONGO-418
 	 */
 	@Test
@@ -292,16 +268,14 @@ public class MongoQueryCreatorUnitTests {
 
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
 
-		when(converter.convertToMongoType("Dave")).thenReturn("Dave");
-
 		PartTree tree = new PartTree("findByLocationNearAndFirstname",
 				org.springframework.data.mongodb.repository.Person.class);
 		Method method = PersonRepository.class.getMethod("findByLocationNearAndFirstname", Point.class, Distance.class,
 				String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class),
 				new MongoMappingContext());
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] { point, distance,
-				"Dave" });
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { point, distance, "Dave" });
 
 		Query query = new MongoQueryCreator(tree, new ConvertingParameterAccessor(converter, accessor), context)
 				.createQuery();
@@ -676,6 +650,21 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("emailAddresses").in((Object) null))));
 	}
 
+	/**
+	 * @see DATAMONGO-1445
+	 */
+	@Test
+	public void doesNotPreConvertValues() {
+
+		PartTree tree = new PartTree("id", WithBigIntegerId.class);
+		BigInteger id = new BigInteger(new ObjectId().toString(), 16);
+		ConvertingParameterAccessor accessor = getAccessor(converter, new Object[] { id });
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+
+		assertThat(query, is(query(where("id").is(id))));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
@@ -703,5 +692,9 @@ public class MongoQueryCreatorUnitTests {
 	static class Address2dSphere {
 		String street;
 		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE) Point geo;
+	}
+
+	static class WithBigIntegerId {
+		BigInteger id;
 	}
 }
