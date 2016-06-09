@@ -5,7 +5,7 @@
 
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-mongodb-parent</artifactId>
-	<version>1.10.0.BUILD-SNAPSHOT</version>
+	<version>2.0.0.BUILD-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Spring Data MongoDB</name>
@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>1.9.0.BUILD-SNAPSHOT</version>
+		<version>2.0.0.BUILD-SNAPSHOT</version>
 	</parent>
 
 	<modules>
@@ -28,9 +28,8 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>1.13.0.BUILD-SNAPSHOT</springdata.commons>
-		<mongo>2.14.3</mongo>
-		<mongo.osgi>2.13.0</mongo.osgi>
+		<springdata.commons>2.0.0.BUILD-SNAPSHOT</springdata.commons>
+		<mongo>2.14.0</mongo>
 	</properties>
 
 	<developers>
@@ -95,6 +94,17 @@
 			<email>cstrobl at gopivotal.com</email>
 			<organization>Pivotal</organization>
 			<organizationUrl>http://www.gopivotal.com</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+		<developer>
+			<id>mpaluch</id>
+			<name>Mark Paluch</name>
+			<email>mpaluch at pivotal.io</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>http://www.pivotal.io</organizationUrl>
 			<roles>
 				<role>Developer</role>
 			</roles>
