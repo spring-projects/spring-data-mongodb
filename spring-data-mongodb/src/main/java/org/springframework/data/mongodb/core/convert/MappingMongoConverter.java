@@ -901,9 +901,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>()
 				: CollectionFactory.createCollection(collectionType, rawComponentType, sourceValue.size());
 
-		for (int i = 0; i < sourceValue.size(); i++) {
-
-			Object dbObjItem = sourceValue.get(i);
+		for (Object dbObjItem : sourceValue) {
 
 			if (dbObjItem instanceof DBRef) {
 				items.add(DBRef.class.equals(rawComponentType) ? dbObjItem
