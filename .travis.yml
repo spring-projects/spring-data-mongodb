@@ -9,7 +9,6 @@ before_script:
 env:
   matrix:
     - PROFILE=ci
-    - PROFILE=mongo-next
     - PROFILE=mongo3
     - PROFILE=mongo3-next
     - PROFILE=mongo31
