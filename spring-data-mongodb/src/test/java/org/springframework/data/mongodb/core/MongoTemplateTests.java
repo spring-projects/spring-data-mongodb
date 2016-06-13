@@ -354,18 +354,12 @@ public class MongoTemplateTests {
 		assertThat(indexInfo.size(), is(2));
 		Object indexKey = null;
 		boolean unique = false;
-		boolean dropDupes = false;
 		for (org.bson.Document ix : indexInfo) {
 
 			if ("age_-1".equals(ix.get("name"))) {
 				indexKey = ix.get("key");
 				unique = (Boolean) ix.get("unique");
-				if (mongoVersion.isLessThan(TWO_DOT_EIGHT)) {
-					dropDupes = (Boolean) ix.get("dropDups");
-					assertThat(dropDupes, is(true));
-				} else {
-					assertThat(ix.get("dropDups"), is(nullValue()));
-				}
+				assertThat(ix.get("dropDups"), is(nullValue()));
 			}
 		}
 		assertThat(((org.bson.Document) indexKey), IsMapContaining.<String, Object> hasEntry("age", -1));
@@ -376,13 +370,7 @@ public class MongoTemplateTests {
 		assertThat(indexInfoList.size(), is(2));
 		IndexInfo ii = indexInfoList.get(1);
 		assertThat(ii.isUnique(), is(true));
-
-		if (mongoVersion.isLessThan(TWO_DOT_EIGHT)) {
-			assertThat(ii.isDropDuplicates(), is(true));
-		} else {
-			assertThat(ii.isDropDuplicates(), is(false));
-		}
-
+		assertThat(ii.isDropDuplicates(), is(false));
 		assertThat(ii.isSparse(), is(false));
 
 		List<IndexField> indexFields = ii.getIndexFields();

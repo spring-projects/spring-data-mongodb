@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.Map.Entry;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
@@ -35,6 +36,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class UpdateMapper extends QueryMapper {
 
@@ -49,6 +51,70 @@ public class UpdateMapper extends QueryMapper {
 
 		super(converter);
 		this.converter = converter;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#getMappedObject(Bson, MongoPersistentEntity)
+	 */
+	@Override
+	public Document getMappedObject(Bson query, MongoPersistentEntity<?> entity) {
+
+		Document document = super.getMappedObject(query, entity);
+
+		boolean hasOperators = false;
+		boolean hasFields = false;
+
+		Document set = null;
+		for (String s : document.keySet()) {
+			if (s.startsWith("$")) {
+
+				if(s.equals("$set")){
+					set = document.get(s, Document.class);
+				}
+				hasOperators = true;
+			} else {
+				hasFields = true;
+			}
+		}
+
+		if (hasOperators && hasFields) {
+
+			Document updateObject = new Document();
+			Document fieldsToSet = set == null ? new Document() : set;
+
+			for (String s : document.keySet()) {
+				if (s.startsWith("$")) {
+					updateObject.put(s, document.get(s));
+				} else {
+					fieldsToSet.put(s, document.get(s));
+				}
+			}
+			updateObject.put("$set", fieldsToSet);
+
+			return updateObject;
+		}
+		return document;
+	}
+
+	/**
+	 * Returns {@literal true} if the given {@link Document} is an update object that uses update operators.
+	 * @param updateObj
+	 * @return {@literal true} if the given {@link Document} is an update object.
+	 */
+	public static boolean isUpdateObject(Document updateObj) {
+
+		if (updateObj == null) {
+			return false;
+		}
+
+		for (String s : updateObj.keySet()) {
+			if (s.startsWith("$")) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

@@ -1114,7 +1114,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (obj instanceof Map) {
-			
+
 			Document result = new Document();
 			for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj).entrySet()) {
 				result.put(entry.getKey().toString(), convertToMongoType(entry.getValue(), typeHint));
