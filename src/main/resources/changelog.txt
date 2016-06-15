@@ -1,6 +1,18 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.9.2.RELEASE (2016-06-15)
+---------------------------------------------
+* DATAMONGO-1449 - Replace legacy for loop with foreach in MappingMongoConverter.
+* DATAMONGO-1437 - DefaultDbRefResolver swallows cause of non DataAccessException translatable Exception.
+* DATAMONGO-1425 - NOT_CONTAINS keyword issues CONTAINS query.
+* DATAMONGO-1423 - Nested document update doesn't apply converters on embedded maps.
+* DATAMONGO-1416 - Standard bootstrap issues warning in converter registration.
+* DATAMONGO-1412 - Document mapping rules for Java types to MongoDB representation.
+* DATAMONGO-1411 - Enable MongoDB build on TravisCI.
+* DATAMONGO-1410 - Release 1.9.2 (Hopper SR2).
+
+
 Changes in version 1.9.1.RELEASE (2016-04-06)
 ---------------------------------------------
 * DATAMONGO-1408 - Release 1.9.1 (Hopper SR1).
