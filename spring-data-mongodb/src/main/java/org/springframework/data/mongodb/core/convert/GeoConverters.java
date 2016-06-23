@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -599,7 +599,7 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "Point"),
 					String.format("Cannot convert type '%s' to Point.", source.get("type")));
 
-			List<Double> dbl = (List<Double>) source.get("coordinates");
+			List<Number> dbl = (List<Number>) source.get("coordinates");
 			return new GeoJsonPoint(dbl.get(0).doubleValue(), dbl.get(1).doubleValue());
 		}
 	}
@@ -832,7 +832,7 @@ abstract class GeoConverters {
 
 			Assert.isInstanceOf(List.class, point);
 
-			List<Double> coordinatesList = (List<Double>) point;
+			List<Number> coordinatesList = (List<Number>) point;
 
 			points.add(new GeoJsonPoint(coordinatesList.get(0).doubleValue(), coordinatesList.get(1).doubleValue()));
 		}
