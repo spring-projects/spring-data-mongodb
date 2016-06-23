@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.geo.GeoResults;
@@ -36,6 +37,7 @@ import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
@@ -43,11 +45,15 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 
 /**
@@ -315,6 +321,66 @@ public class GeoJsonTests {
 		Query query = query(where("location").near(point).minDistance(0.01).maxDistance(100));
 		List<Venue2DSphere> venues = template.find(query, Venue2DSphere.class);
 		assertThat(venues.size(), is(2));
+	}
+
+	/**
+	 * @see DATAMONGO-1453
+	 */
+	@Test
+	public void shouldConvertPointRepresentationCorrectlyWhenSourceCoordinatesUsesInteger() {
+
+		this.template.execute(template.getCollectionName(DocumentWithPropertyUsingGeoJsonType.class),
+				new CollectionCallback<Object>() {
+
+					@Override
+					public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+						BasicDBObject pointRepresentation = new BasicDBObject();
+						pointRepresentation.put("type", "Point");
+						pointRepresentation.put("coordinates", new BasicDbListBuilder().add(0).add(0).get());
+
+						BasicDBObject document = new BasicDBObject();
+						document.append("_id", "datamongo-1453");
+						document.append("geoJsonPoint", pointRepresentation);
+
+						return collection.save(document);
+					}
+				});
+
+		assertThat(template.findOne(query(where("id").is("datamongo-1453")),
+				DocumentWithPropertyUsingGeoJsonType.class).geoJsonPoint, is(equalTo(new GeoJsonPoint(0D, 0D))));
+	}
+
+	/**
+	 * @see DATAMONGO-1453
+	 */
+	@Test
+	public void shouldConvertLineStringRepresentationCorrectlyWhenSourceCoordinatesUsesInteger() {
+
+		this.template.execute(template.getCollectionName(DocumentWithPropertyUsingGeoJsonType.class),
+				new CollectionCallback<Object>() {
+
+					@Override
+					public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+						BasicDBObject lineStringRepresentation = new BasicDBObject();
+						lineStringRepresentation.put("type", "LineString");
+						lineStringRepresentation.put("coordinates",
+								new BasicDbListBuilder().add(new BasicDbListBuilder().add(0).add(0).get())
+										.add(new BasicDbListBuilder().add(1).add(1).get()).get());
+
+						BasicDBObject document = new BasicDBObject();
+						document.append("_id", "datamongo-1453");
+						document.append("geoJsonLineString", lineStringRepresentation);
+
+						return collection.save(document);
+					}
+				});
+
+		assertThat(
+				template.findOne(query(where("id").is("datamongo-1453")),
+						DocumentWithPropertyUsingGeoJsonType.class).geoJsonLineString,
+				is(equalTo(new GeoJsonLineString(new Point(0D, 0D), new Point(1, 1)))));
 	}
 
 	private void addVenues() {
