@@ -25,7 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
+import org.springframework.data.mongodb.core.aggregation.Fields.*;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -161,15 +161,19 @@ public class Aggregation {
 		Assert.isTrue(!aggregationOperations.isEmpty(), "At least one AggregationOperation has to be provided");
 		Assert.notNull(options, "AggregationOptions must not be null!");
 
-		//check $out is the last operation if exist
-		for (int i = 0; i < aggregationOperations.size(); i++) {
-			if (aggregationOperations.get(i) instanceof OutOperation && i != aggregationOperations.size() - 1) {
+		// check $out is the last operation if it exists
+		for (AggregationOperation aggregationOperation : aggregationOperations) {
+			if (aggregationOperation instanceof OutOperation && !isLast(aggregationOperation, aggregationOperations)) {
 				throw new IllegalArgumentException("The $out operator must be the last stage in the pipeline.");
 			}
 		}
 
 		this.operations = aggregationOperations;
 		this.options = options;
+	}
+
+	private boolean isLast(AggregationOperation aggregationOperation, List<AggregationOperation> aggregationOperations) {
+		return aggregationOperations.indexOf(aggregationOperation) == aggregationOperations.size() - 1;
 	}
 
 	/**

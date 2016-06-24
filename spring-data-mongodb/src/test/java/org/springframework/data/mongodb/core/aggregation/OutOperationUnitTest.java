@@ -24,6 +24,9 @@ import org.junit.Test;
  */
 public class OutOperationUnitTest {
 
+	/**
+	 * @see DATAMONGO-1418
+	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldCheckNPEInCreation() {
 		new OutOperation(null);
