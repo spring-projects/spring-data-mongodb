@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
+import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -34,6 +35,7 @@ import org.springframework.util.ClassUtils;
 
 import com.mongodb.BulkWriteException;
 import com.mongodb.MongoException;
+import com.mongodb.WriteConcernException;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Mongo. Convert the given runtime exception to an appropriate
@@ -43,6 +45,7 @@ import com.mongodb.MongoException;
  * @author Oliver Gierke
  * @author Michal Vich
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
@@ -64,6 +67,12 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	 * @see org.springframework.dao.support.PersistenceExceptionTranslator#translateExceptionIfPossible(java.lang.RuntimeException)
 	 */
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+
+		// Check for a timeout exception
+
+		if (ex instanceof WriteConcernException && ReflectiveWriteResultInvoker.wasTimeout((WriteConcernException) ex)) {
+			return new TransientDataAccessResourceException(ex.getMessage(), ex);
+		}
 
 		// Check for well-known MongoException subclasses.
 

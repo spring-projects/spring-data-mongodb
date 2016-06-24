@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,10 @@ import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import com.mongodb.MongoException;
+import com.mongodb.WriteConcernException;
 import com.mongodb.WriteResult;
 
 /**
@@ -29,12 +31,15 @@ import com.mongodb.WriteResult;
  * 
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 1.7
  */
 final class ReflectiveWriteResultInvoker {
 
 	private static final Method GET_ERROR_METHOD;
 	private static final Method WAS_ACKNOWLEDGED_METHOD;
+	private static final Method GET_RESPONSE;
+	private static final Method GET_COMMAND_RESULT;
 
 	private ReflectiveWriteResultInvoker() {}
 
@@ -42,6 +47,8 @@ final class ReflectiveWriteResultInvoker {
 
 		GET_ERROR_METHOD = findMethod(WriteResult.class, "getError");
 		WAS_ACKNOWLEDGED_METHOD = findMethod(WriteResult.class, "wasAcknowledged");
+		GET_RESPONSE = findMethod(WriteConcernException.class, "getResponse");
+		GET_COMMAND_RESULT = findMethod(WriteConcernException.class, "getCommandResult");
 	}
 
 	/**
@@ -63,5 +70,30 @@ final class ReflectiveWriteResultInvoker {
 	 */
 	public static boolean wasAcknowledged(WriteResult writeResult) {
 		return isMongo3Driver() ? ((Boolean) invokeMethod(WAS_ACKNOWLEDGED_METHOD, writeResult)).booleanValue() : true;
+	}
+
+	/**
+	 * @param writeConcernException
+	 * @return return {@literal true} if the {@link WriteConcernException} indicates a write concern timeout as reason
+	 * @since 1.10
+	 */
+	@SuppressWarnings("unchecked")
+	public static boolean wasTimeout(WriteConcernException writeConcernException) {
+
+		Map<Object, Object> response;
+		if (isMongo3Driver()) {
+			response = (Map<Object, Object>) invokeMethod(GET_RESPONSE, writeConcernException);
+		} else {
+			response = (Map<Object, Object>) invokeMethod(GET_COMMAND_RESULT, writeConcernException);
+		}
+
+		if (response != null && response.containsKey("wtimeout")) {
+			Object wtimeout = response.get("wtimeout");
+			if (wtimeout != null && wtimeout.toString().contains("true")) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

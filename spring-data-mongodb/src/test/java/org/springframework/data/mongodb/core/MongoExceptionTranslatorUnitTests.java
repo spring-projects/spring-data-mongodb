@@ -17,10 +17,15 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.UnknownHostException;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -33,20 +38,25 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
+import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.MongoCursorNotFoundException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoInternalException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.ServerAddress;
+import com.mongodb.WriteConcernException;
 
 /**
  * Unit tests for {@link MongoExceptionTranslator}.
- * 
+ *
  * @author Michal Vich
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoExceptionTranslatorUnitTests {
@@ -131,6 +141,56 @@ public class MongoExceptionTranslatorUnitTests {
 		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
 
 		expectExceptionWithCauseMessage(translatedException, InvalidDataAccessResourceUsageException.class);
+	}
+
+	@Test // DATAMONGO-1451
+	@SuppressWarnings("unchecked")
+	public void translateTimeoutToTransientDataAccessResourceExceptionWith2xDriver() throws Exception {
+
+		assumeThat(MongoClientVersion.isMongo3Driver(), is(false));
+
+		Constructor<?> constructor = Class.forName("com.mongodb.CommandResult").getDeclaredConstructor(ServerAddress.class);
+		constructor.setAccessible(true);
+
+		Map<String, Object> commandResult = (Map<String, Object>) constructor.newInstance(new ServerAddress("localhost"));
+		commandResult.put("wtimeout", true);
+		commandResult.put("ok", 1);
+		commandResult.put("n", 0);
+		commandResult.put("err", "waiting for replication timed out");
+		commandResult.put("code", 64);
+
+		DataAccessException translatedException = translator.translateExceptionIfPossible(
+				(RuntimeException) ReflectionTestUtils.invokeMethod(commandResult, "getException"));
+
+		expectExceptionWithCauseMessage(translatedException, TransientDataAccessResourceException.class);
+	}
+
+	@Test // DATAMONGO-1451
+	public void translateTimeoutToTransientDataAccessResourceExceptionWith3xDriver() throws Exception {
+
+		assumeThat(MongoClientVersion.isMongo3Driver(), is(true));
+
+		Class<?> bsonDocumentClass = Class.forName("org.bson.BsonDocument");
+
+		Method getWriteResult = Class.forName("com.mongodb.connection.ProtocolHelper").getDeclaredMethod("getWriteResult",
+				bsonDocumentClass, ServerAddress.class);
+
+		String response = "{ \"serverUsed\" : \"10.10.17.35:27017\" , \"ok\" : 1 , \"n\" : 0 , \"wtimeout\" : true , \"err\" : \"waiting for replication timed out\" , \"code\" : 64}";
+		Object bsonDocument = bsonDocumentClass.getDeclaredMethod("parse", String.class).invoke(null, response);
+
+		try {
+			getWriteResult.setAccessible(true);
+			getWriteResult.invoke(null, bsonDocument, new ServerAddress("localhost"));
+			fail("Missing Exception");
+		} catch (InvocationTargetException e) {
+
+			assertThat(e.getTargetException(), is(instanceOf(WriteConcernException.class)));
+
+			DataAccessException translatedException = translator
+					.translateExceptionIfPossible((RuntimeException) e.getTargetException());
+			expectExceptionWithCauseMessage(translatedException, TransientDataAccessResourceException.class);
+		}
+
 	}
 
 	@Test
