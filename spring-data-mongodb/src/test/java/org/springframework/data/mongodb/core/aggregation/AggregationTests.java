@@ -853,6 +853,43 @@ public class AggregationTests {
 		assertThat(String.valueOf(firstItem.get("_id")), is("u1"));
 	}
 
+
+
+	/**
+	 * @see DATAMONGO-1358
+	 */
+	@Test
+	public void shouldSupportOutAggregation() {
+
+		mongoTemplate.dropCollection(User.class);
+
+		LocalDateTime now = new LocalDateTime();
+
+		User user1 = new User("u1", new PushMessage("1", "aaa", now.toDate()));
+		User user2 = new User("u2", new PushMessage("2", "bbb", now.minusDays(2).toDate()));
+		User user3 = new User("u3", new PushMessage("3", "ccc", now.minusDays(1).toDate()));
+
+		mongoTemplate.save(user1);
+		mongoTemplate.save(user2);
+		mongoTemplate.save(user3);
+
+		Aggregation agg = newAggregation( //
+				project("id", "msgs"), //
+				unwind("msgs"), //
+				match(where("msgs.createDate").gt(now.minusDays(1).toDate())), //
+				group("id").push("msgs").as("msgs"),out("userDetails") //
+		);
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, User.class, DBObject.class);
+		System.out.println(results.getRawResults());
+
+		List<DBObject> mappedResults = mongoTemplate.findAll(DBObject.class,"userDetails");
+
+		DBObject firstItem = mappedResults.get(0);
+	assertThat(firstItem.get("_id"), is(notNullValue()));
+	assertThat(String.valueOf(firstItem.get("_id")), is("u1"));
+}
+
 	/**
 	 * @see DATAMONGO-840
 	 */
