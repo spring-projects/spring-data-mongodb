@@ -43,16 +43,18 @@ import com.mongodb.util.JSON;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public class StringBasedMongoQuery extends AbstractMongoQuery {
 
-	private static final String COUND_AND_DELETE = "Manually defined query for %s cannot be both a count and delete query at the same time!";
+	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time!";
 	private static final Logger LOG = LoggerFactory.getLogger(StringBasedMongoQuery.class);
 	private static final ParameterBindingParser BINDING_PARSER = ParameterBindingParser.INSTANCE;
 
 	private final String query;
 	private final String fieldSpec;
 	private final boolean isCountQuery;
+	private final boolean isExistsQuery;
 	private final boolean isDeleteQuery;
 	private final List<ParameterBinding> queryParameterBindings;
 	private final List<ParameterBinding> fieldSpecParameterBindings;
@@ -96,14 +98,26 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		this.fieldSpec = BINDING_PARSER.parseAndCollectParameterBindingsFromQueryIntoBindings(
 				method.getFieldSpecification(), this.fieldSpecParameterBindings);
 
-		this.isCountQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().count() : false;
-		this.isDeleteQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().delete() : false;
-
-		if (isCountQuery && isDeleteQuery) {
-			throw new IllegalArgumentException(String.format(COUND_AND_DELETE, method));
-		}
-
 		this.parameterBinder = new ExpressionEvaluatingParameterBinder(expressionParser, evaluationContextProvider);
+
+		if (method.hasAnnotatedQuery()) {
+
+			org.springframework.data.mongodb.repository.Query queryAnnotation = method.getQueryAnnotation();
+
+			this.isCountQuery = queryAnnotation.count();
+			this.isExistsQuery = queryAnnotation.exists();
+			this.isDeleteQuery = queryAnnotation.delete();
+
+			if (hasAmbiguousProjectionFlags(this.isCountQuery, this.isExistsQuery, this.isDeleteQuery)) {
+				throw new IllegalArgumentException(String.format(COUNT_EXISTS_AND_DELETE, method));
+			}
+
+		} else {
+
+			this.isCountQuery = false;
+			this.isExistsQuery = false;
+			this.isDeleteQuery = false;
+		}
 	}
 
 	/*
@@ -138,6 +152,15 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isExistsQuery()
+	 */
+	@Override
+	protected boolean isExistsQuery() {
+		return isExistsQuery;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isDeleteQuery()
 	 */
 	@Override
@@ -145,12 +168,30 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return this.isDeleteQuery;
 	}
 
+	private static boolean hasAmbiguousProjectionFlags(boolean isCountQuery, boolean isExistsQuery, boolean isDeleteQuery) {
+		return countBooleanValues(isCountQuery, isExistsQuery, isDeleteQuery) > 1;
+	}
+
+	private static int countBooleanValues(boolean... values) {
+
+		int count = 0;
+
+		for (boolean value : values) {
+
+			if (value) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+
 	/**
 	 * A parser that extracts the parameter bindings from a given query string.
 	 *
 	 * @author Thomas Darimont
 	 */
-	static enum ParameterBindingParser {
+	enum ParameterBindingParser {
 
 		INSTANCE;
 
@@ -257,7 +298,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 			} else if (value instanceof Pattern) {
 
-				String string = ((Pattern) value).toString().trim();
+				String string = value.toString().trim();
 				Matcher valueMatcher = PARSEABLE_BINDING_PATTERN.matcher(string);
 
 				while (valueMatcher.find()) {

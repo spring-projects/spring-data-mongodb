@@ -313,6 +313,7 @@ public class AbstractMongoQueryUnitTests {
 	private static class MongoQueryFake extends AbstractMongoQuery {
 
 		private boolean isCountQuery;
+		private boolean isExistsQuery;
 		private boolean isDeleteQuery;
 
 		public MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
@@ -327,6 +328,11 @@ public class AbstractMongoQueryUnitTests {
 		@Override
 		protected boolean isCountQuery() {
 			return isCountQuery;
+		}
+
+		@Override
+		protected boolean isExistsQuery() {
+			return false;
 		}
 
 		@Override

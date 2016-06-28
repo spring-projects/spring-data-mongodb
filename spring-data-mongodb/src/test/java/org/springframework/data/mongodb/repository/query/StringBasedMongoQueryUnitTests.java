@@ -59,6 +59,7 @@ import com.mongodb.DBRef;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class StringBasedMongoQueryUnitTests {
@@ -146,7 +147,7 @@ public class StringBasedMongoQueryUnitTests {
 	public void bindsDbrefCorrectly() throws Exception {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByHavingSizeFansNotZero");
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] {});
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		assertThat(query.getQueryObject(), is(new BasicQuery("{ fans : { $not : { $size : 0 } } }").getQueryObject()));
@@ -176,8 +177,11 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void shouldSupportFindByParameterizedCriteriaAndFields() throws Exception {
 
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] {
-				new Document("firstname", "first").append("lastname", "last"), Collections.singletonMap("lastname", 1) });
+		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(converter,
+				StubParameterAccessor.getAccessor(converter, //
+						new Document("firstname", "first").append("lastname", "last"), //
+						Collections.singletonMap("lastname", 1)));
+
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields", Document.class,
 				Map.class);
 
@@ -194,7 +198,7 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void shouldSupportRespectExistingQuotingInFindByTitleBeginsWithExplicitQuoting() throws Exception {
 
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { "fun" });
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "fun");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByTitleBeginsWithExplicitQuoting", String.class);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
@@ -209,7 +213,7 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void shouldParseQueryWithParametersInExpression() throws Exception {
 
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { 1, 2, 3, 4 });
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, 1, 2, 3, 4);
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithParametersInExpression", int.class,
 				int.class, int.class, int.class);
 
@@ -361,6 +365,17 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
 
+	/**
+	 * @see DATAMONGO-1454
+	 */
+	@Test
+	public void shouldSupportExistsProjection() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("existsByLastname", String.class);
+
+		assertThat(mongoQuery.isExistsQuery(), is(true));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -419,5 +434,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{'id':?#{ [0] ? { $exists :true} : [1] }, 'foo':42, 'bar': ?#{ [0] ? { $exists :false} : [1] }}")
 		List<Person> findByQueryWithExpressionAndMultipleNestedObjects(boolean param0, String param1, String param2);
+
+		@Query(value = "{ 'lastname' : ?0 }", exists = true)
+		boolean existsByLastname(String lastname);
 	}
 }
