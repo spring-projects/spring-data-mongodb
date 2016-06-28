@@ -590,6 +590,23 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1454
+	 */
+	@Test
+	public void executesDerivedExistsProjectionToBoolean() {
+		assertThat(repository.existsByFirstname("Oliver August"), is(true));
+		assertThat(repository.existsByFirstname("Hans Peter"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-1454
+	 */
+	@Test
+	public void executesAnnotatedExistProjection() {
+		assertThat(repository.someExistQuery("Matthews"), is(true));
+	}
+
+	/**
 	 * @see DATAMONGO-701
 	 */
 	@Test
