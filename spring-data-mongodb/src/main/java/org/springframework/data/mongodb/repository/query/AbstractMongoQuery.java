@@ -20,7 +20,9 @@ import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.CollectionExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.CountExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.ExistsExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.GeoNearExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagingGeoNearExecution;
@@ -40,6 +42,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 
@@ -123,8 +126,12 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			return new CollectionExecution(operations, accessor.getPageable());
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(operations, accessor.getPageable());
+		} else if (isCountQuery()) {
+			return new CountExecution(operations);
+		} else if (isExistsQuery()) {
+			return new ExistsExecution(operations);
 		} else {
-			return new SingleEntityExecution(operations, isCountQuery());
+			return new SingleEntityExecution(operations);
 		}
 	}
 
@@ -163,6 +170,14 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @return
 	 */
 	protected abstract boolean isCountQuery();
+
+	/**
+	 * Returns whether the query should get an exists projection applied.
+	 *
+	 * @return
+	 * @since 1.10
+	 */
+	protected abstract boolean isExistsQuery();
 
 	/**
 	 * Return weather the query should delete matching documents.

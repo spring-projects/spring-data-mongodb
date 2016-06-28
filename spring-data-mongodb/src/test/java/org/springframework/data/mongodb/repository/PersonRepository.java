@@ -43,6 +43,7 @@ import org.springframework.data.repository.query.Param;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Fırat KÜÇÜK
+ * @author Mark Paluch
  */
 public interface PersonRepository extends MongoRepository<Person, String>, QueryDslPredicateExecutor<Person> {
 
@@ -250,6 +251,17 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@Query(value = "{ 'lastname' : ?0 }", count = true)
 	long someCountQuery(String lastname);
+
+	/**
+	 * @see DATAMONGO-1454
+	 */
+	boolean existsByFirstname(String firstname);
+
+	/**
+	 * @see DATAMONGO-1454
+	 */
+	@ExistsQuery(value = "{ 'lastname' : ?0 }")
+	boolean someExistQuery(String lastname);
 
 	/**
 	 * @see DATAMONGO-770

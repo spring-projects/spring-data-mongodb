@@ -163,7 +163,6 @@ interface MongoQueryExecution {
 	static final class SingleEntityExecution implements MongoQueryExecution {
 
 		private final MongoOperations operations;
-		private final boolean countProjection;
 
 		/*
 		 * (non-Javadoc)
@@ -171,7 +170,50 @@ interface MongoQueryExecution {
 		 */
 		@Override
 		public Object execute(Query query, Class<?> type, String collection) {
-			return countProjection ? operations.count(query, type, collection) : operations.findOne(query, type, collection);
+			return operations.findOne(query, type, collection);
+		}
+	}
+
+	/**
+	 * {@link MongoQueryExecution} to perform a count projection.
+	 *
+	 * @author Oliver Gierke
+	 * @author Mark Paluch
+	 * @since 1.10
+	 */
+	@RequiredArgsConstructor
+	static final class CountExecution implements MongoQueryExecution {
+
+		private final MongoOperations operations;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 */
+		@Override
+		public Object execute(Query query, Class<?> type, String collection) {
+			return operations.count(query, type, collection);
+		}
+	}
+
+	/**
+	 * {@link MongoQueryExecution} to perform an exists projection.
+	 *
+	 * @author Mark Paluch
+	 * @since 1.10
+	 */
+	@RequiredArgsConstructor
+	static final class ExistsExecution implements MongoQueryExecution {
+
+		private final MongoOperations operations;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 */
+		@Override
+		public Object execute(Query query, Class<?> type, String collection) {
+			return operations.exists(query, type, collection);
 		}
 	}
 

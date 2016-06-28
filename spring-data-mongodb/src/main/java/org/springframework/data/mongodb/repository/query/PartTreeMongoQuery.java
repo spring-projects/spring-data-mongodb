@@ -40,6 +40,7 @@ import com.mongodb.util.JSONParseException;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public class PartTreeMongoQuery extends AbstractMongoQuery {
 
@@ -139,6 +140,15 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected boolean isCountQuery() {
 		return tree.isCountProjection();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isExistsQuery()
+	 */
+	@Override
+	protected boolean isExistsQuery() {
+		return tree.isExistsProjection();
 	}
 
 	/*
