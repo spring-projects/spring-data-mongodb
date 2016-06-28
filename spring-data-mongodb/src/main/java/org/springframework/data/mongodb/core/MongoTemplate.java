@@ -1192,6 +1192,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				Document updateObj = update == null ? new Document()
 						: updateMapper.getMappedObject(update.getUpdateObject(), entity);
 
+				if (multi && update.isIsolated() && !queryObj.containsKey("$isolated")) {
+					queryObj.put("$isolated", 1);
+				}
+
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Calling update using query: {} and update: {} in collection: {}",
 							serializeToJsonSafely(queryObj), serializeToJsonSafely(updateObj), collectionName);

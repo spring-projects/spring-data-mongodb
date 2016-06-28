@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,8 @@ import org.springframework.util.ClassUtils;
  */
 public class IsBsonObject<T extends Bson> extends TypeSafeMatcher<T> {
 
-	private List<ExpectedBsonContent> expectations = new ArrayList<ExpectedBsonContent>();;
+	private List<ExpectedBsonContent> expectations = new ArrayList<>();
+	private Integer expectedSize;
 
 	public static <T extends Bson> IsBsonObject<T> isBsonObject() {
 		return new IsBsonObject<T>();
@@ -49,21 +50,32 @@ public class IsBsonObject<T extends Bson> extends TypeSafeMatcher<T> {
 	@Override
 	public void describeTo(Description description) {
 
+		if (expectedSize != null) {
+			description.appendText(String.format("Expected to contain %s  fields. ", expectedSize));
+		}
+
 		for (ExpectedBsonContent expectation : expectations) {
 
 			if (expectation.not) {
-				description.appendText(String.format("Path %s should not be present.", expectation.path));
+				description.appendText(String.format("Path %s should not be present. ", expectation.path));
 			} else if (expectation.value == null) {
-				description.appendText(String.format("Expected to find path %s.", expectation.path));
+				description.appendText(String.format("Expected to find path %s. ", expectation.path));
 			} else {
-				description.appendText(String.format("Expected to find %s for path %s.", expectation.value, expectation.path));
+				description.appendText(String.format("Expected to find %s for path %s. ", expectation.value, expectation.path));
 			}
 		}
-
 	}
 
 	@Override
 	protected boolean matchesSafely(T item) {
+
+		if (expectedSize != null && item instanceof Document) {
+
+			Document document = (Document) item;
+			if (expectedSize != document.keySet().size()) {
+				return false;
+			}
+		}
 
 		if (expectations.isEmpty()) {
 			return true;
@@ -144,6 +156,12 @@ public class IsBsonObject<T extends Bson> extends TypeSafeMatcher<T> {
 		expected.not = true;
 
 		this.expectations.add(expected);
+		return this;
+	}
+
+	public IsBsonObject<T> withSize(int size) {
+
+		this.expectedSize = Integer.valueOf(size);
 		return this;
 	}
 
