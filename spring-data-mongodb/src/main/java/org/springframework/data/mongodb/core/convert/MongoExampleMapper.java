@@ -92,7 +92,6 @@ public class MongoExampleMapper {
 	 * @param entity must not be {@literal null}.
 	 * @return
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public DBObject getMappedExample(Example<?> example, MongoPersistentEntity<?> entity) {
 
 		Assert.notNull(example, "Example must not be null!");
@@ -108,10 +107,24 @@ public class MongoExampleMapper {
 
 		applyPropertySpecs("", reference, example.getProbeType(), matcherAccessor);
 
-		this.converter.getTypeMapper().writeTypeRestrictions(reference, getTypesToMatch(example));
-
-		return ObjectUtils.nullSafeEquals(NullHandler.INCLUDE, matcherAccessor.getNullHandler()) ? reference
+		DBObject flattened = ObjectUtils.nullSafeEquals(NullHandler.INCLUDE, matcherAccessor.getNullHandler()) ? reference
 				: new BasicDBObject(SerializationUtils.flattenMap(reference));
+		DBObject result = example.getMatcher().isAllMatching() ? flattened : orConcatenate(flattened);
+
+		this.converter.getTypeMapper().writeTypeRestrictions(result, getTypesToMatch(example));
+
+		return result;
+	}
+
+	private static DBObject orConcatenate(DBObject source) {
+
+		List<DBObject> foo = new ArrayList<DBObject>(source.keySet().size());
+
+		for (String key : source.keySet()) {
+			foo.add(new BasicDBObject(key, source.get(key)));
+		}
+
+		return new BasicDBObject("$or", foo);
 	}
 
 	private Set<Class<?>> getTypesToMatch(Example<?> example) {

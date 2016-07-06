@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.geo.Point;
@@ -332,7 +333,7 @@ public class MongoExampleMapperUnitTests {
 		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
 		com.mongodb.DBRef reference = getTypedValue(dbo, "referenceDocument", com.mongodb.DBRef.class);
 
-		assertThat(reference.getId(), Is.<Object> is("200"));
+		assertThat(reference.getId(), Is.<Object>is("200"));
 		assertThat(reference.getCollectionName(), is("refDoc"));
 	}
 
@@ -361,8 +362,8 @@ public class MongoExampleMapperUnitTests {
 
 		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
 
-		assertThat(dbo.get("legacyPoint.x"), Is.<Object> is(10D));
-		assertThat(dbo.get("legacyPoint.y"), Is.<Object> is(20D));
+		assertThat(dbo.get("legacyPoint.x"), Is.<Object>is(10D));
+		assertThat(dbo.get("legacyPoint.y"), Is.<Object>is(20D));
 	}
 
 	/**
@@ -480,6 +481,21 @@ public class MongoExampleMapperUnitTests {
 		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
 		assertThat(dbo, isBsonObject().containing("anotherStringValue", "calamity"));
+	}
+
+	/**
+	 * @see DATAMONGO-1459
+	 */
+	@Test
+	public void mapsAnyMatchingExampleCorrectly() {
+
+		FlatDocument probe = new FlatDocument();
+		probe.stringValue = "firefight";
+		probe.customNamedField = "steelheart";
+
+		Example<FlatDocument> example = Example.of(probe, ExampleMatcher.matchingAny());
+
+		assertThat(mapper.getMappedExample(example), isBsonObject().containing("$or").containing("_class"));
 	}
 
 	static class FlatDocument {

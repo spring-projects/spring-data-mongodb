@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.temp;
+package org.springframework.data.mongodb.core;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.net.UnknownHostException;
 import java.util.List;
 
-import org.hamcrest.core.Is;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -33,18 +37,39 @@ import org.springframework.data.mongodb.core.query.Query;
 import com.mongodb.MongoClient;
 
 /**
+ * Integration tests for Query-by-example.
+ * 
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Oliver Gierke
  */
 public class QueryByExampleTests {
 
-	MongoTemplate template;
+	MongoOperations operations;
+	Person p1, p2, p3;
 
 	@Before
 	public void setUp() throws UnknownHostException {
 
-		template = new MongoTemplate(new MongoClient(), "query-by-example");
-		template.remove(new Query(), Person.class);
+		operations = new MongoTemplate(new MongoClient(), "query-by-example");
+		operations.remove(new Query(), Person.class);
+
+		p1 = new Person();
+		p1.firstname = "bran";
+		p1.middlename = "a";
+		p1.lastname = "stark";
+
+		p2 = new Person();
+		p2.firstname = "jon";
+		p2.lastname = "snow";
+
+		p3 = new Person();
+		p3.firstname = "arya";
+		p3.lastname = "stark";
+
+		operations.save(p1);
+		operations.save(p2);
+		operations.save(p3);
 	}
 
 	/**
@@ -53,15 +78,14 @@ public class QueryByExampleTests {
 	@Test
 	public void findByExampleShouldWorkForSimpleProperty() {
 
-		init();
-
 		Person sample = new Person();
 		sample.lastname = "stark";
 
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
+		List<Person> result = operations.find(query, Person.class);
 
-		List<Person> result = template.find(query, Person.class);
-		Assert.assertThat(result.size(), Is.is(2));
+		assertThat(result, hasSize(2));
+		assertThat(result, hasItems(p1, p3));
 	}
 
 	/**
@@ -70,16 +94,15 @@ public class QueryByExampleTests {
 	@Test
 	public void findByExampleShouldWorkForMultipleProperties() {
 
-		init();
-
 		Person sample = new Person();
 		sample.lastname = "stark";
 		sample.firstname = "arya";
 
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
+		List<Person> result = operations.find(query, Person.class);
 
-		List<Person> result = template.find(query, Person.class);
-		Assert.assertThat(result.size(), Is.is(1));
+		assertThat(result, hasSize(1));
+		assertThat(result, hasItem(p3));
 	}
 
 	/**
@@ -88,18 +111,17 @@ public class QueryByExampleTests {
 	@Test
 	public void findByExampleShouldWorkForIdProperty() {
 
-		init();
-
 		Person p4 = new Person();
-		template.save(p4);
+		operations.save(p4);
 
 		Person sample = new Person();
 		sample.id = p4.id;
 
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
+		List<Person> result = operations.find(query, Person.class);
 
-		List<Person> result = template.find(query, Person.class);
-		Assert.assertThat(result.size(), Is.is(1));
+		assertThat(result, hasSize(1));
+		assertThat(result, hasItem(p4));
 	}
 
 	/**
@@ -108,17 +130,14 @@ public class QueryByExampleTests {
 	@Test
 	public void findByExampleShouldReturnEmptyListIfNotMatching() {
 
-		init();
-
 		Person sample = new Person();
 		sample.firstname = "jon";
 		sample.firstname = "stark";
 
-
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
+		List<Person> result = operations.find(query, Person.class);
 
-		List<Person> result = template.find(query, Person.class);
-		Assert.assertThat(result.size(), Is.is(0));
+		assertThat(result, is(empty()));
 	}
 
 	/**
@@ -127,14 +146,13 @@ public class QueryByExampleTests {
 	@Test
 	public void findByExampleShouldReturnEverythingWhenSampleIsEmpty() {
 
-		init();
-
 		Person sample = new Person();
 
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
+		List<Person> result = operations.find(query, Person.class);
 
-		List<Person> result = template.find(query, Person.class);
-		Assert.assertThat(result.size(), Is.is(3));
+		assertThat(result, hasSize(3));
+		assertThat(result, hasItems(p1, p2, p3));
 	}
 
 	/**
@@ -143,47 +161,39 @@ public class QueryByExampleTests {
 	@Test
 	public void findByExampleWithCriteria() {
 
-		init();
-
 		Person sample = new Person();
 		sample.lastname = "stark";
 
 		Query query = new Query(new Criteria().alike(Example.of(sample)).and("firstname").regex("^ary*"));
 
-		List<Person> result = template.find(query, Person.class);
-		Assert.assertThat(result.size(), Is.is(1));
+		List<Person> result = operations.find(query, Person.class);
+		assertThat(result.size(), is(1));
 	}
 
-	public void init() {
+	/**
+	 * @see DATAMONGO-1459
+	 */
+	@Test
+	public void findsExampleUsingAnyMatch() {
 
-		Person p1 = new Person();
-		p1.firstname = "bran";
-		p1.lastname = "stark";
+		Person probe = new Person();
+		probe.lastname = "snow";
+		probe.middlename = "a";
 
-		Person p2 = new Person();
-		p2.firstname = "jon";
-		p2.lastname = "snow";
+		Query query = Query.query(Criteria.byExample(Example.of(probe, ExampleMatcher.matchingAny())));
+		List<Person> result = operations.find(query, Person.class);
 
-		Person p3 = new Person();
-		p3.firstname = "arya";
-		p3.lastname = "stark";
-
-		template.save(p1);
-		template.save(p2);
-		template.save(p3);
+		assertThat(result, hasSize(2));
+		assertThat(result, hasItems(p1, p2));
 	}
 
 	@Document(collection = "dramatis-personae")
+	@EqualsAndHashCode
+	@ToString
 	static class Person {
 
 		@Id String id;
-		String firstname;
-
+		String firstname, middlename;
 		@Field("last_name") String lastname;
-
-		@Override
-		public String toString() {
-			return "Person [id=" + id + ", firstname=" + firstname + ", lastname=" + lastname + "]";
-		}
 	}
 }
