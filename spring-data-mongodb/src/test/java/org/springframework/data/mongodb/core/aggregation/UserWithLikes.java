@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,15 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
+@Data
+@NoArgsConstructor
 public class UserWithLikes {
 
 	String id;
@@ -30,6 +36,7 @@ public class UserWithLikes {
 	Set<String> likes = new HashSet<String>();
 
 	public UserWithLikes(String id, Date joined, String... likes) {
+
 		this.id = id;
 		this.joined = joined;
 		this.likes = new HashSet<String>(Arrays.asList(likes));

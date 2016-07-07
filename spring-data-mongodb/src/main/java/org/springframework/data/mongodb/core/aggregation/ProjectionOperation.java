@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -352,6 +352,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 * 
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
+	 * @author Christoph Strobl
 	 */
 	public static class ProjectionOperationBuilder extends AbstractProjectionOperationBuilder {
 
@@ -564,6 +565,31 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		public ProjectionOperationBuilder size() {
 			return project("size");
+		}
+
+		/**
+		 * Generates a {@code $slice} expression that returns a subset of the array held by the given field. <br />
+		 * If {@literal n} is positive, $slice returns up to the first n elements in the array. <br />
+		 * If {@literal n} is negative, $slice returns up to the last n elements in the array.
+		 *
+		 * @param count max number of elements.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder slice(int count) {
+			return project("slice", count);
+		}
+
+		/**
+		 * Generates a {@code $slice} expression that returns a subset of the array held by the given field. <br />
+		 *
+		 * @param count max number of elements. Must not be negative.
+		 * @param offset the offset within the array to start from.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder slice(int count, int offset) {
+			return project("slice", offset, count);
 		}
 
 		/* 
