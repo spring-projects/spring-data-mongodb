@@ -40,18 +40,21 @@ public interface MongoRepository<T, ID extends Serializable>
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Iterable)
 	 */
+	@Override
 	<S extends T> List<S> save(Iterable<S> entites);
 
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findAll()
 	 */
+	@Override
 	List<T> findAll();
 
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
 	 */
+	@Override
 	List<T> findAll(Sort sort);
 
 	/**
@@ -76,14 +79,17 @@ public interface MongoRepository<T, ID extends Serializable>
 	 */
 	<S extends T> List<S> insert(Iterable<S> entities);
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example)
 	 */
+	@Override
 	<S extends T> List<S> findAll(Example<S> example);
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
 	 */
+	@Override
 	<S extends T> List<S> findAll(Example<S> example, Sort sort);
-
 }
