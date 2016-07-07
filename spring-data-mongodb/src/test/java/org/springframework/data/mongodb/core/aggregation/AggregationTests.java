@@ -1228,6 +1228,27 @@ public class AggregationTests {
 				skip(100));
 	}
 
+	/**
+	 * @see DATAMONGO-1457
+	 */
+	@Test
+	public void sliceShouldBeAppliedCorrectly() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
+
+		createUserWithLikesDocuments();
+
+		TypedAggregation<UserWithLikes> agg = newAggregation(UserWithLikes.class, match(new Criteria()),
+				project().and("likes").slice(2));
+
+		AggregationResults<UserWithLikes> result = mongoTemplate.aggregate(agg, UserWithLikes.class);
+
+		assertThat(result.getMappedResults(), hasSize(9));
+		for (UserWithLikes user : result) {
+			assertThat(user.likes.size() <= 2, is(true));
+		}
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);

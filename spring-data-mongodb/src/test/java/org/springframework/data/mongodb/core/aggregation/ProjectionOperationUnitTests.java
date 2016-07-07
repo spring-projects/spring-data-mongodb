@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class ProjectionOperationUnitTests {
 
@@ -369,6 +370,36 @@ public class ProjectionOperationUnitTests {
 
 		DBObject projected = exctractOperation("$project", dbObject);
 		assertThat(projected.get("tags_count"), is((Object) new BasicDBObject("$size", Arrays.asList("$tags"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1457
+	 */
+	@Test
+	public void shouldRenderSliceCorrectly() throws Exception {
+
+		ProjectionOperation operation = Aggregation.project().and("field").slice(10).as("renamed");
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projected = exctractOperation("$project", dbObject);
+
+		assertThat(projected.get("renamed"),
+				is((Object) new BasicDBObject("$slice", Arrays.<Object> asList("$field", 10))));
+	}
+
+	/**
+	 * @see DATAMONGO-1457
+	 */
+	@Test
+	public void shouldRenderSliceWithPositionCorrectly() throws Exception {
+
+		ProjectionOperation operation = Aggregation.project().and("field").slice(10, 5).as("renamed");
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projected = exctractOperation("$project", dbObject);
+
+		assertThat(projected.get("renamed"),
+				is((Object) new BasicDBObject("$slice", Arrays.<Object> asList("$field", 5, 10))));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
