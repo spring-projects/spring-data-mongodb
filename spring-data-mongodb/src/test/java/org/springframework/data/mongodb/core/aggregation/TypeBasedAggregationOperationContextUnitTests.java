@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.aggregation.Fields.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -89,7 +91,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		AggregationOperationContext context = getContext(Foo.class);
 
-		Field field = Fields.field("bar.name");
+		Field field = field("bar.name");
 
 		assertThat(context.getReference("bar.name"), is(notNullValue()));
 		assertThat(context.getReference(field), is(notNullValue()));
@@ -103,7 +105,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	public void aliasesIdFieldCorrectly() {
 
 		AggregationOperationContext context = getContext(Foo.class);
-		assertThat(context.getReference("id"), is(new FieldReference(new ExposedField(Fields.field("id", "_id"), true))));
+		assertThat(context.getReference("id"), is(new FieldReference(new ExposedField(field("id", "_id"), true))));
 	}
 
 	/**
@@ -277,6 +279,58 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				group().min("lookup.otherkey").as("something_totally_different"), sort(Direction.ASC, "resourceId"));
 
 		agg.toDbObject("meterData", context);
+	}
+
+	/**
+	 * @see DATAMONGO-861
+	 */
+	@Test
+	public void rendersAggregationConditionalInTypedAggregationContextCorrectly() {
+
+		AggregationOperationContext context = getContext(FooPerson.class);
+		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class,
+				project("name") //
+						.and("age") //
+						.transform(conditional(Criteria.where("age.value").lt(10), new Age(0), field("age"))) //
+		);
+
+		DBObject dbo = agg.toDbObject("person", context);
+
+		DBObject projection = getPipelineElementFromAggregationAt(dbo, 0);
+		assertThat(projection.containsField("$project"), is(true));
+
+		DBObject project = getValue(projection, "$project");
+		DBObject age = getValue(project, "age");
+
+		assertThat((DBObject) getValue(age, "$cond"), isBsonObject().containing("then.value", 0));
+		assertThat((DBObject) getValue(age, "$cond"), isBsonObject().containing("then._class", Age.class.getName()));
+		assertThat((DBObject) getValue(age, "$cond"), isBsonObject().containing("else", "$age"));
+	}
+
+	/**
+	 * @see DATAMONGO-861
+	 */
+	@Test
+	public void rendersAggregationIfNullInTypedAggregationContextCorrectly() {
+
+		AggregationOperationContext context = getContext(FooPerson.class);
+		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class,
+				project("name") //
+						.and("age") //
+						.transform(ifNull("age", new Age(0))) //
+		);
+
+		DBObject dbo = agg.toDbObject("person", context);
+
+		DBObject projection = getPipelineElementFromAggregationAt(dbo, 0);
+		assertThat(projection.containsField("$project"), is(true));
+
+		DBObject project = getValue(projection, "$project");
+		DBObject age = getValue(project, "age");
+
+		assertThat(age, isBsonObject().containing("$ifNull.[0]", "$age"));
+		assertThat(age, isBsonObject().containing("$ifNull.[1].value", 0));
+		assertThat(age, isBsonObject().containing("$ifNull.[1]._class", Age.class.getName()));
 	}
 
 	@Document(collection = "person")
