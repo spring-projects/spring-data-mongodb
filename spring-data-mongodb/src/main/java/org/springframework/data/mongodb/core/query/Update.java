@@ -20,7 +20,6 @@ import static org.springframework.util.ObjectUtils.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,6 +43,7 @@ import com.mongodb.DBObject;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Alexey Plotnik
+ * @author Mark Paluch
  */
 public class Update {
 
@@ -604,6 +604,39 @@ public class Update {
 	}
 
 	/**
+	 * Implementation of {@link Modifier} representing {@code $slice}.
+	 *
+	 * @author Mark Paluch
+	 * @since 1.10
+	 */
+	private static class Slice implements Modifier {
+
+		private int count;
+
+		public Slice(int count) {
+			this.count = count;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getKey()
+		 */
+		@Override
+		public String getKey() {
+			return "$slice";
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getValue()
+		 */
+		@Override
+		public Object getValue() {
+			return this.count;
+		}
+	}
+
+	/**
 	 * {@link Modifier} implementation used to propagate {@code $position}.
 	 *
 	 * @author Christoph Strobl
@@ -654,6 +687,23 @@ public class Update {
 
 			this.modifiers.addModifier(new Each(values));
 			return Update.this.push(key, this.modifiers);
+		}
+
+		/**
+		 * Propagates {@code $slice} to {@code $push}. {@code $slice} requires the {@code $each operator}. <br />
+		 * If {@literal count} is zero, {@code $slice} updates the array to an empty array. <br />
+		 * If {@literal count} is negative, {@code $slice} updates the array to contain only the last {@code count}
+		 * elements. <br />
+		 * If {@literal count} is positive, {@code $slice} updates the array to contain only the first {@code count}
+		 * elements. <br />
+		 *
+		 * @param count
+		 * @return
+		 */
+		public PushOperatorBuilder slice(int count) {
+
+			this.modifiers.addModifier(new Slice(count));
+			return this;
 		}
 
 		/**
