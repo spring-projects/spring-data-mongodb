@@ -383,7 +383,7 @@ IMPORTANT: Automatic index creation is only done for types annotated with `@Docu
 
 The MappingMongoConverter can use metadata to drive the mapping of objects to documents. An overview of the annotations is provided below
 
-* `@Id` - applied at the field level to mark the field used for identiy purpose.
+* `@Id` - applied at the field level to mark the field used for identity purpose.
 * `@Document` - applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the database will be stored.
 * `@DBRef` - applied at the field to indicate it is to be stored using a com.mongodb.DBRef.
 * `@Indexed` - applied at the field level to describe how to index the field.
@@ -397,7 +397,7 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 * `@Field` - applied at the field level and described the name of the field as it will be represented in the MongoDB BSON document thus allowing the name to be different than the fieldname of the class.
 * `@Version` - applied at field level is used for optimistic locking and checked for modification on save operations. The initial value is `zero` which is bumped automatically on every update.
 
-The mapping metadata infrastructure is defined in a seperate spring-data-commons project that is technology agnostic. Specific subclasses are using in the MongoDB support to support annotation based metadata. Other strategies are also possible to put in place if there is demand.
+The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic. Specific subclasses are using in the MongoDB support to support annotation based metadata. Other strategies are also possible to put in place if there is demand.
 
 Here is an example of a more complex mapping.
 

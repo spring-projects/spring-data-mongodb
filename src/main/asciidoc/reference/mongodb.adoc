@@ -1642,6 +1642,7 @@ The MongoDB Aggregation Framework provides the following types of Aggregation Op
 * Arithmetic Aggregation Operators
 * String Aggregation Operators
 * Date Aggregation Operators
+* Array Aggregation Operators
 * Conditional Aggregation Operators
 * Lookup Aggregation Operators
 
@@ -1661,6 +1662,10 @@ At the time of this writing we provide support for the following Aggregation Ope
 
 | Comparison Aggregation Operators
 | eq (*via: is), gt, gte, lt, lte, ne
+
+| Array Aggregation Operators
+| size, slice
+
 |===
 
 Note that the aggregation operations not listed here are currently not supported by Spring Data MongoDB. Comparison aggregation operators are expressed as `Criteria` expressions.
@@ -1994,7 +1999,7 @@ public class PersonWriteConverter implements Converter<Person, DBObject> {
 [[mongo.custom-converters.reader]]
 === Reading using a Spring Converter
 
-An example implementation of a Converter that converts from a DBObject ot a Person object is shownn below
+An example implementation of a Converter that converts from a DBObject ot a Person object is shown below
 
 [source,java]
 ----

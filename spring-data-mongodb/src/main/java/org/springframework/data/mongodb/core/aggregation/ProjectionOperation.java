@@ -563,6 +563,12 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return project("mod", Fields.field(fieldReference));
 		}
 
+		/**
+		 * Generates a {@code $size} expression that returns the size of the array held by the given field. <br />
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.7
+		 */
 		public ProjectionOperationBuilder size() {
 			return project("size");
 		}
