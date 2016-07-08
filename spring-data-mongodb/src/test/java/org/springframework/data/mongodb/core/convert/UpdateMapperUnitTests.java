@@ -374,6 +374,24 @@ public class UpdateMapperUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-832
+	 */
+	@Test
+	public void updatePushEachWithSliceShouldRenderCorrectly() {
+
+		Update update = new Update().push("key").slice(5).each(Arrays.asList("Arya", "Arry", "Weasel"));
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key = getAsDBObject(push, "key");
+
+		assertThat(key.containsField("$slice"), is(true));
+		assertThat((Integer) key.get("$slice"), is(5));
+		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
+	}
+
+	/**
 	 * @see DATAMONGO-410
 	 */
 	@Test
