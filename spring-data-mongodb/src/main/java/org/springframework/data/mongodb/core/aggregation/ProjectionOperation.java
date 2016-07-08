@@ -104,8 +104,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	private ProjectionOperation andReplaceLastOneWith(Projection projection) {
 
-		List<Projection> projections = this.projections.isEmpty() ? Collections.<Projection> emptyList() : this.projections
-				.subList(0, this.projections.size() - 1);
+		List<Projection> projections = this.projections.isEmpty() ? Collections.<Projection> emptyList()
+				: this.projections.subList(0, this.projections.size() - 1);
 		return new ProjectionOperation(projections, Arrays.asList(projection));
 	}
 
@@ -240,6 +240,24 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @return
 		 */
 		public abstract ProjectionOperation as(String alias);
+
+		/**
+		 * Apply a conditional projection using {@link ConditionalOperator}.
+		 *
+		 * @param conditional must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public abstract ProjectionOperation transform(ConditionalOperator conditional);
+
+		/**
+		 * Apply a conditional value replacement for {@literal null} values using {@link IfNullOperator}.
+		 *
+		 * @param ifNull must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public abstract ProjectionOperation transform(IfNullOperator ifNull);
 	}
 
 	/**
@@ -370,7 +388,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @param operation must not be {@literal null}.
 		 * @param previousProjection the previous operation projection, may be {@literal null}.
 		 */
-		public ProjectionOperationBuilder(String name, ProjectionOperation operation, OperationProjection previousProjection) {
+		public ProjectionOperationBuilder(String name, ProjectionOperation operation,
+				OperationProjection previousProjection) {
 			super(name, operation);
 
 			this.name = name;
@@ -419,7 +438,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Allows to specify an alias for the previous projection operation.
 		 * 
-		 * @param string
+		 * @param alias
 		 * @return
 		 */
 		@Override
@@ -434,6 +453,24 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			}
 
 			return this.operation.and(new FieldProjection(Fields.field(alias, name), null));
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.AbstractProjectionOperationBuilder#transform(org.springframework.data.mongodb.core.aggregation.ConditionalOperator)
+		 */
+		@Override
+		public ProjectionOperation transform(ConditionalOperator conditional) {
+			return this.operation.and(new ExpressionProjection(Fields.field(name), conditional));
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.AbstractProjectionOperationBuilder#transform(org.springframework.data.mongodb.core.aggregation.IfNullOperator)
+		 */
+		@Override
+		public ProjectionOperation transform(IfNullOperator ifNull) {
+			return this.operation.and(new ExpressionProjection(Fields.field(name), ifNull));
 		}
 
 		/**
@@ -764,7 +801,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				this.values = Arrays.asList(values);
 			}
 
-			/* 
+			/*
 			 * (non-Javadoc)
 			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 			 */
