@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ public class TextCriteria implements CriteriaDefinition {
 
 	private final List<Term> terms;
 	private String language;
+	private Boolean caseSensitive;
+	private Boolean diacriticSensitive;
 
 	/**
 	 * Creates a new {@link TextCriteria}.
@@ -63,8 +65,8 @@ public class TextCriteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * For a full list of supported languages see the mongodb reference manual for <a
-	 * href="http://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
+	 * For a full list of supported languages see the mongodb reference manual for
+	 * <a href="http://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
 	 * 
 	 * @param language
 	 * @return
@@ -167,6 +169,32 @@ public class TextCriteria implements CriteriaDefinition {
 		return this;
 	}
 
+	/**
+	 * Optionally enable or disable case sensitive search.
+	 *
+	 * @param caseSensitive boolean flag endable/disable.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public TextCriteria caseSensitive(boolean caseSensitive) {
+
+		this.caseSensitive = caseSensitive;
+		return this;
+	}
+
+	/**
+	 * Optionallly enable or disable diacritic sensitive search against version 3 text indexes.
+	 *
+	 * @param diacriticSensitive boolean flag endable/disable.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public TextCriteria diacriticSensitive(boolean diacriticSensitive) {
+
+		this.diacriticSensitive = diacriticSensitive;
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getKey()
@@ -191,6 +219,14 @@ public class TextCriteria implements CriteriaDefinition {
 
 		if (!terms.isEmpty()) {
 			builder.add("$search", join(terms));
+		}
+
+		if (caseSensitive != null) {
+			builder.add("$caseSensitive", caseSensitive);
+		}
+
+		if (diacriticSensitive != null) {
+			builder.add("$diacriticSensitive", diacriticSensitive);
 		}
 
 		return new BasicDBObject("$text", builder.get());

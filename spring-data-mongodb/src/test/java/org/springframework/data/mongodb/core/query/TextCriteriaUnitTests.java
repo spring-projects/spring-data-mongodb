@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
@@ -113,6 +114,29 @@ public class TextCriteriaUnitTests {
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().notMatchingPhrase("coffee cake");
 		Assert.assertThat(DBObjectTestUtils.getAsDBObject(criteria.getCriteriaObject(), "$text"),
 				IsEqual.<DBObject> equalTo(new BasicDBObject("$search", "-\"coffee cake\"")));
+	}
+
+	/**
+	 * @see DATAMONGO-1455
+	 */
+	@Test
+	public void caseSensitiveOperatorShouldBeSetCorrectly() {
+
+		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("coffee").caseSensitive(true);
+		Assert.assertThat(DBObjectTestUtils.getAsDBObject(criteria.getCriteriaObject(), "$text"), IsEqual
+				.<DBObject> equalTo(new BasicDBObjectBuilder().add("$search", "coffee").add("$caseSensitive", true).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1456
+	 */
+	@Test
+	public void diacriticSensitiveOperatorShouldBeSetCorrectly() {
+
+		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("coffee").diacriticSensitive(true);
+		Assert.assertThat(DBObjectTestUtils.getAsDBObject(criteria.getCriteriaObject(), "$text"),
+				IsEqual.<DBObject> equalTo(
+						new BasicDBObjectBuilder().add("$search", "coffee").add("$diacriticSensitive", true).get()));
 	}
 
 	private DBObject searchObject(String json) {
