@@ -22,6 +22,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -31,6 +35,7 @@ import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -40,6 +45,9 @@ import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
@@ -107,6 +115,40 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	@Override
 	public DBObject fetch(DBRef dbRef) {
 		return ReflectiveDBRefResolver.fetch(mongoDbFactory, dbRef);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#bulkFetch(java.util.List)
+	 */
+	@Override
+	public List<DBObject> bulkFetch(List<DBRef> refs) {
+
+		Assert.notNull(mongoDbFactory, "Factory must not be null!");
+		Assert.notNull(refs, "DBRef to fetch must not be null!");
+
+		if (refs.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		String collection = refs.iterator().next().getCollectionName();
+
+		List<Object> ids = new ArrayList<Object>(refs.size());
+		for (DBRef ref : refs) {
+
+			if (!collection.equals(ref.getCollectionName())) {
+				throw new InvalidDataAccessApiUsageException(
+						"DBRefs must all target the same collection for bulk fetch operation.");
+			}
+
+			ids.add(ref.getId());
+		}
+
+		DB db = mongoDbFactory.getDb();
+		List<DBObject> result = db.getCollection(collection)
+				.find(new BasicDBObjectBuilder().add("_id", new BasicDBObject("$in", ids)).get()).toArray();
+		Collections.sort(result, new DbRefByReferencePositionComperator(ids));
+		return result;
 	}
 
 	/**
@@ -393,6 +435,27 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			}
 
 			return result;
+		}
+	}
+
+	/**
+	 * {@link Comparator} for sorting {@link DBObject} that have been loaded in random order by a predefined list of
+	 * reference ids.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	private static class DbRefByReferencePositionComperator implements Comparator<DBObject> {
+
+		List<Object> reference;
+
+		public DbRefByReferencePositionComperator(List<Object> referenceIds) {
+			reference = new ArrayList<Object>(referenceIds);
+		}
+
+		@Override
+		public int compare(DBObject o1, DBObject o2) {
+			return Integer.compare(reference.indexOf(o1.get("_id")), reference.indexOf(o2.get("_id")));
 		}
 	}
 }

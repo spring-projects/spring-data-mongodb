@@ -95,6 +95,10 @@ import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
 /**
  * Integration test for {@link MongoTemplate}.
  *
@@ -3368,6 +3372,50 @@ public class MongoTemplateTests {
 		assertThat(stream.hasNext(), is(false));
 	}
 
+	/**
+	 * @see DATAMONGO-1194
+	 */
+	@Test
+	public void shouldFetchListOfReferencesCorrectly() {
+
+		Sample one = new Sample("1", "jon snow");
+		Sample two = new Sample("2", "tyrion lannister");
+
+		template.save(one);
+		template.save(two);
+
+		DocumentWithDBRefCollection source = new DocumentWithDBRefCollection();
+		source.dbRefAnnotatedList = Arrays.asList(two, one);
+
+		template.save(source);
+
+		assertThat(template.findOne(query(where("id").is(source.id)), DocumentWithDBRefCollection.class), is(source));
+	}
+
+	/**
+	 * @see DATAMONGO-1194
+	 */
+	@Test
+	public void shouldFetchListOfLazyReferencesCorrectly() {
+
+		Sample one = new Sample("1", "jon snow");
+		Sample two = new Sample("2", "tyrion lannister");
+
+		template.save(one);
+		template.save(two);
+
+		DocumentWithDBRefCollection source = new DocumentWithDBRefCollection();
+		source.lazyDbRefAnnotatedList = Arrays.asList(two, one);
+
+		template.save(source);
+
+		DocumentWithDBRefCollection target = template.findOne(query(where("id").is(source.id)),
+				DocumentWithDBRefCollection.class);
+
+		assertThat(target.lazyDbRefAnnotatedList, instanceOf(LazyLoadingProxy.class));
+		assertThat(target.getLazyDbRefAnnotatedList(), contains(two, one));
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;
@@ -3427,6 +3475,7 @@ public class MongoTemplateTests {
 
 	}
 
+	@Data
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;
@@ -3437,6 +3486,10 @@ public class MongoTemplateTests {
 
 		@org.springframework.data.mongodb.core.mapping.DBRef //
 		public Sample dbRefProperty;
+
+		@Field("lazy_db_ref_list") /** @see DATAMONGO-1194 */
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
+		public List<Sample> lazyDbRefAnnotatedList;
 	}
 
 	static class DocumentWithCollection {
@@ -3528,12 +3581,12 @@ public class MongoTemplateTests {
 		@Id MyId id;
 	}
 
+	@EqualsAndHashCode
+	@NoArgsConstructor
 	static class Sample {
 
 		@Id String id;
 		String field;
-
-		public Sample() {}
 
 		public Sample(String id, String field) {
 			this.id = id;
@@ -3729,5 +3782,4 @@ public class MongoTemplateTests {
 		String description;
 		GeoJsonPoint point;
 	}
-
 }
