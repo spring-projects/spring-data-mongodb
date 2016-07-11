@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
 
@@ -35,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.AccessType.Type;
@@ -575,6 +577,68 @@ public class DbRefMappingMongoConverterUnitTests {
 		ReflectionTestUtils.invokeMethod(result.dbRefToPlainObject, "finalize");
 
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
+	}
+
+	/**
+	 * @see DATAMONGO-1194
+	 */
+	@Test
+	public void shouldBulkFetchListOfReferences() {
+
+		String id1 = "1";
+		String id2 = "2";
+		String value = "val";
+
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(Arrays.asList(new BasicDBObject("_id", id1).append("value", value),
+				new BasicDBObject("_id", id2).append("value", value))).when(converterSpy).bulkReadRefs(anyListOf(DBRef.class));
+
+		BasicDBObject dbo = new BasicDBObject();
+		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
+		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<LazyDbRefTarget>(
+				Arrays.asList(new LazyDbRefTarget(id1, value), new LazyDbRefTarget(id2, value)));
+		converterSpy.write(lazyDbRefs, dbo);
+
+		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, dbo);
+
+		assertProxyIsResolved(result.dbRefToConcreteCollection, false);
+		assertThat(result.dbRefToConcreteCollection.get(0).getId(), is(id1));
+		assertProxyIsResolved(result.dbRefToConcreteCollection, true);
+		assertThat(result.dbRefToConcreteCollection.get(1).getId(), is(id2));
+
+		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
+	}
+
+	/**
+	 * @see DATAMONGO-1194
+	 */
+	@Test
+	public void shouldFallbackToOneByOneFetchingWhenElementsInListOfReferencesPointToDifferentCollections() {
+
+		String id1 = "1";
+		String id2 = "2";
+		String value = "val";
+
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(new BasicDBObject("_id", id1).append("value", value))
+				.doReturn(new BasicDBObject("_id", id2).append("value", value)).when(converterSpy)
+				.readRef(Mockito.any(DBRef.class));
+
+		BasicDBObject dbo = new BasicDBObject();
+		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
+		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<LazyDbRefTarget>(
+				Arrays.asList(new LazyDbRefTarget(id1, value), new SerializableLazyDbRefTarget(id2, value)));
+		converterSpy.write(lazyDbRefs, dbo);
+
+		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, dbo);
+
+		assertProxyIsResolved(result.dbRefToConcreteCollection, false);
+		assertThat(result.dbRefToConcreteCollection.get(0).getId(), is(id1));
+		assertProxyIsResolved(result.dbRefToConcreteCollection, true);
+		assertThat(result.dbRefToConcreteCollection.get(1).getId(), is(id2));
+
+		verify(converterSpy, times(2)).readRef(Mockito.any(DBRef.class));
+		verify(converterSpy, never()).bulkReadRefs(anyListOf(DBRef.class));
 	}
 
 	private Object transport(Object result) {
