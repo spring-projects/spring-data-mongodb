@@ -1356,6 +1356,8 @@ TextQuery.searching(new TextCriteria().matching("\"coffee cake\""));
 TextQuery.searching(new TextCriteria().phrase("coffee cake"));
 ----
 
+The flags for `$caseSensitive` and `$diacriticSensitive` can be set via the according methods on `TextCriteria`. Please note that these two optional flags have been introduced in MongoDB 3.2 and will not be included in the query unless explicitly set.
+
 include::../{spring-data-commons-docs}/query-by-example.adoc[leveloffset=+1]
 include::query-by-example.adoc[leveloffset=+1]
 
