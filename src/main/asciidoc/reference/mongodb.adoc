@@ -879,6 +879,26 @@ Here is a listing of methods on the Update class
 * `Update` *setOnInsert* `(String key, Object value)` Update using the `$setOnInsert` update modifier
 * `Update` *unset* `(String key)` Update using the `$unset` update modifier
 
+Some update modifiers like `$push` and `$addToSet` allow nesting of additional operators.
+
+[source]
+----
+// { $push : { "category" : { "$each" : [ "spring" , "data" ] } } }
+new Update().push("category").each("spring", "data")
+
+// { $push : { "key" : { "$position" : 0 , "$each" : [ "Arya" , "Arry" , "Weasel" ] } } }
+new Update().push("key").atPosition(Position.FIRST).each(Arrays.asList("Arya", "Arry", "Weasel"));
+
+// { $push : { "key" : { "$slice" : 5 , "$each" : [ "Arya" , "Arry" , "Weasel" ] } } }
+new Update().push("key").slice(5).each(Arrays.asList("Arya", "Arry", "Weasel"));
+----
+
+[source]
+----
+// { $addToSet : { "values" : { "$each" : [ "spring" , "data" , "mongodb" ] } } }
+new Update().addToSet("values").each("spring", "data", "mongodb");
+----
+
 [[mongo-template.upserts]]
 === Upserting documents in a collection
 

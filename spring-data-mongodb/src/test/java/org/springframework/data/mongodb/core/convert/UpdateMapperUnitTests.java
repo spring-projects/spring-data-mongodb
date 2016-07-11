@@ -388,7 +388,32 @@ public class UpdateMapperUnitTests {
 
 		assertThat(key.containsField("$slice"), is(true));
 		assertThat((Integer) key.get("$slice"), is(5));
-		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
+		assertThat(key.containsField("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-832
+	 */
+	@Test
+	public void updatePushEachWithSliceShouldRenderWhenUsingMultiplePushCorrectly() {
+
+		Update update = new Update().push("key").slice(5).each(Arrays.asList("Arya", "Arry", "Weasel")).push("key-2")
+				.slice(-2).each("The Beggar King", "Viserys III Targaryen");
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key = getAsDBObject(push, "key");
+
+		assertThat(key.containsField("$slice"), is(true));
+		assertThat((Integer) key.get("$slice"), is(5));
+		assertThat(key.containsField("$each"), is(true));
+
+		DBObject key2 = getAsDBObject(push, "key-2");
+
+		assertThat(key2.containsField("$slice"), is(true));
+		assertThat((Integer) key2.get("$slice"), is(-2));
+		assertThat(key2.containsField("$each"), is(true));
 	}
 
 	/**
