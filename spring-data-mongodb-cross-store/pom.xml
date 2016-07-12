@@ -14,8 +14,8 @@
 	<name>Spring Data MongoDB - Cross-Store Support</name>
 
 	<properties>
-		<jpa>2.0.0</jpa>
-		<hibernate>3.6.10.Final</hibernate>
+		<jpa>2.1.1</jpa>
+		<hibernate>5.2.1.Final</hibernate>
 	</properties>
 
 	<dependencies>
@@ -87,7 +87,7 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>
-			<version>4.0.2.GA</version>
+			<version>5.2.4.Final</version>
 			<scope>test</scope>
 		</dependency>
 
