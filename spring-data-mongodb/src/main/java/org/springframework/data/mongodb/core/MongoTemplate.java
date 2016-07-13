@@ -326,7 +326,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	@Override
 	public <T> CloseableIterator<T> stream(final Query query, final Class<T> entityType) {
 
-		return execute(entityType, new CollectionCallback<CloseableIterator<T>>() {
+		return stream(query, entityType, determineCollectionName(entityType));
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#stream(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+	 */
+	@Override
+	public <T> CloseableIterator<T> stream(final Query query, final Class<T> entityType, String collectionName) {
+
+		Assert.notNull(query, "Query must not be null!");
+		Assert.notNull(entityType, "Entity type must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+
+		return execute(collectionName, new CollectionCallback<CloseableIterator<T>>() {
 
 			@Override
 			public CloseableIterator<T> doInCollection(DBCollection collection) throws MongoException, DataAccessException {

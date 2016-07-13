@@ -3344,6 +3344,30 @@ public class MongoTemplateTests {
 		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("800")));
 	}
 
+	/**
+	 * @see DATAMONGO-1431
+	 */
+	@Test
+	public void streamExecutionUsesExplicitCollectionName() {
+
+		template.remove(new Query(), "some_special_collection");
+		template.remove(new Query(), Document.class);
+
+		Document document = new Document();
+
+		template.insert(document, "some_special_collection");
+
+		CloseableIterator<Document> stream = template.stream(new Query(), Document.class);
+
+		assertThat(stream.hasNext(), is(false));
+
+		stream = template.stream(new Query(), Document.class, "some_special_collection");
+
+		assertThat(stream.hasNext(), is(true));
+		assertThat(stream.next().id, is(document.id));
+		assertThat(stream.hasNext(), is(false));
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;

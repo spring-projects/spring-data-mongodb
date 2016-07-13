@@ -175,12 +175,27 @@ public interface MongoOperations {
 	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
 	 * 
 	 * @param <T> element return type
-	 * @param query
-	 * @param entityType
-	 * @return
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @return will never be {@literal null}.
 	 * @since 1.7
 	 */
 	<T> CloseableIterator<T> stream(Query query, Class<T> entityType);
+
+	/**
+	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} and collection backed
+	 * by a Mongo DB {@link Cursor}.
+	 * <p>
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
+	 * 
+	 * @param <T> element return type
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @return will never be {@literal null}.
+	 * @since 1.10
+	 */
+	<T> CloseableIterator<T> stream(Query query, Class<T> entityType, String collectionName);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.
@@ -1031,5 +1046,4 @@ public interface MongoOperations {
 	 * @return
 	 */
 	MongoConverter getConverter();
-
 }
