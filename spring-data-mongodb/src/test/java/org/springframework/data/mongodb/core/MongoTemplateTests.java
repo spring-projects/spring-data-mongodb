@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -3392,6 +3393,31 @@ public class MongoTemplateTests {
 		assertThat(target.getLazyDbRefAnnotatedList(), contains(two, one));
 	}
 
+	/**
+	 * @see DATAMONGO-1194
+	 */
+	@Test
+	public void shouldFetchMapOfLazyReferencesCorrectly() {
+
+		Sample one = new Sample("1", "jon snow");
+		Sample two = new Sample("2", "tyrion lannister");
+
+		template.save(one);
+		template.save(two);
+
+		DocumentWithDBRefCollection source = new DocumentWithDBRefCollection();
+		source.lazyDbRefAnnotatedMap = new LinkedHashMap<String, Sample>();
+		source.lazyDbRefAnnotatedMap.put("tyrion", two);
+		source.lazyDbRefAnnotatedMap.put("jon", one);
+		template.save(source);
+
+		DocumentWithDBRefCollection target = template.findOne(query(where("id").is(source.id)),
+				DocumentWithDBRefCollection.class);
+
+		assertThat(target.lazyDbRefAnnotatedMap, instanceOf(LazyLoadingProxy.class));
+		assertThat(target.lazyDbRefAnnotatedMap.values(), contains(two, one));
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;
@@ -3466,6 +3492,9 @@ public class MongoTemplateTests {
 		@Field("lazy_db_ref_list") /** @see DATAMONGO-1194 */
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
 		public List<Sample> lazyDbRefAnnotatedList;
+
+		@Field("lazy_db_ref_map") /** @see DATAMONGO-1194 */
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
 	}
 
 	static class DocumentWithCollection {
