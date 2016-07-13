@@ -883,6 +883,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param path must not be {@literal null}.
 	 * @return the converted {@link Collection} or array, will never be {@literal null}.
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue, ObjectPath path) {
 
 		Assert.notNull(targetType, "Target type must not be null!");
@@ -901,8 +902,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>()
 				: CollectionFactory.createCollection(collectionType, rawComponentType, sourceValue.size());
 
-		if (isCollectionOfDbRefWhereBulkFetchIsPossible(sourceValue) && !DBRef.class.equals(rawComponentType)) {
-			return bulkReadAndConvertDBRefs((List<DBRef>) (ArrayList) sourceValue, componentType, path, rawComponentType);
+		if (!DBRef.class.equals(rawComponentType) && isCollectionOfDbRefWhereBulkFetchIsPossible(sourceValue)) {
+			return bulkReadAndConvertDBRefs((List<DBRef>) (List) (sourceValue), componentType, path, rawComponentType);
 		}
 
 		for (Object dbObjItem : sourceValue) {
@@ -919,27 +920,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return getPotentiallyConvertedSimpleRead(items, targetType.getType());
-	}
-
-	private boolean isCollectionOfDbRefWhereBulkFetchIsPossible(Collection<Object> source) {
-
-		String collection = null;
-
-		for (Object dbObjItem : source) {
-
-			if (!(dbObjItem instanceof DBRef)) {
-				return false;
-			}
-
-			DBRef ref = (DBRef) dbObjItem;
-
-			if (collection != null && !collection.equals(ref.getCollectionName())) {
-				return false;
-			}
-			collection = ref.getCollectionName();
-		}
-
-		return true;
 	}
 
 	/**
@@ -966,6 +946,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Map<Object, Object> map = CollectionFactory.createMap(mapType, rawKeyType, dbObject.keySet().size());
 		Map<String, Object> sourceMap = dbObject.toMap();
+
+		if (!DBRef.class.equals(rawValueType) && isCollectionOfDbRefWhereBulkFetchIsPossible(sourceMap.values())) {
+			bulkReadAndConvertDBRefMapIntoTarget(valueType, rawValueType, sourceMap, map);
+			return map;
+		}
 
 		for (Entry<String, Object> entry : sourceMap.entrySet()) {
 			if (typeMapper.isTypeKey(entry.getKey())) {
@@ -1247,6 +1232,21 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return CollectionUtils.isEmpty(result) ? null : result.iterator().next();
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private void bulkReadAndConvertDBRefMapIntoTarget(TypeInformation<?> valueType, Class<?> rawValueType,
+			Map<String, Object> sourceMap, Map<Object, Object> targetMap) {
+
+		LinkedHashMap<String, Object> referenceMap = new LinkedHashMap<String, Object>(sourceMap);
+		List<Object> convertedObjects = bulkReadAndConvertDBRefs((List<DBRef>) new ArrayList(referenceMap.values()),
+				valueType, ObjectPath.ROOT, rawValueType);
+
+		int index = 0;
+		for (String key : referenceMap.keySet()) {
+			targetMap.put(key, convertedObjects.get(index));
+			index++;
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	private <T> List<T> bulkReadAndConvertDBRefs(List<DBRef> dbrefs, TypeInformation<?> type, ObjectPath path,
 			final Class<?> rawType) {
@@ -1276,6 +1276,27 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return targeList;
+	}
+
+	private boolean isCollectionOfDbRefWhereBulkFetchIsPossible(Collection<Object> source) {
+
+		String collection = null;
+
+		for (Object dbObjItem : source) {
+
+			if (!(dbObjItem instanceof DBRef)) {
+				return false;
+			}
+
+			DBRef ref = (DBRef) dbObjItem;
+
+			if (collection != null && !collection.equals(ref.getCollectionName())) {
+				return false;
+			}
+			collection = ref.getCollectionName();
+		}
+
+		return true;
 	}
 
 	private void maybeEmitEvent(MongoMappingEvent<?> event) {

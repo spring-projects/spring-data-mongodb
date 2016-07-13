@@ -27,6 +27,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -641,12 +642,83 @@ public class DbRefMappingMongoConverterUnitTests {
 		verify(converterSpy, never()).bulkReadRefs(anyListOf(DBRef.class));
 	}
 
+	/**
+	 * @see DATAMONGO-1194
+	 */
+	@Test
+	public void shouldBulkFetchMapOfReferences() {
+
+		MapDBRefVal val1 = new MapDBRefVal();
+		val1.id = BigInteger.ONE;
+
+		MapDBRefVal val2 = new MapDBRefVal();
+		val2.id = BigInteger.ZERO;
+
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(Arrays.asList(new BasicDBObject("_id", val1.id), new BasicDBObject("_id", val2.id))).when(converterSpy)
+				.bulkReadRefs(anyListOf(DBRef.class));
+
+		BasicDBObject dbo = new BasicDBObject();
+		MapDBRef mapDBRef = new MapDBRef();
+		mapDBRef.map = new LinkedHashMap<String, MapDBRefVal>();
+		mapDBRef.map.put("one", val1);
+		mapDBRef.map.put("two", val2);
+
+		converterSpy.write(mapDBRef, dbo);
+
+		MapDBRef result = converterSpy.read(MapDBRef.class, dbo);
+
+		// assertProxyIsResolved(result.map, false);
+		assertThat(result.map.get("one").id, is(val1.id));
+		// assertProxyIsResolved(result.map, true);
+		assertThat(result.map.get("two").id, is(val2.id));
+
+		verify(converterSpy, times(1)).bulkReadRefs(anyListOf(DBRef.class));
+		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
+	}
+
+	/**
+	 * @see DATAMONGO-1194
+	 */
+	@Test
+	public void shouldBulkFetchLazyMapOfReferences() {
+
+		MapDBRefVal val1 = new MapDBRefVal();
+		val1.id = BigInteger.ONE;
+
+		MapDBRefVal val2 = new MapDBRefVal();
+		val2.id = BigInteger.ZERO;
+
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(Arrays.asList(new BasicDBObject("_id", val1.id), new BasicDBObject("_id", val2.id))).when(converterSpy)
+				.bulkReadRefs(anyListOf(DBRef.class));
+
+		BasicDBObject dbo = new BasicDBObject();
+		MapDBRef mapDBRef = new MapDBRef();
+		mapDBRef.lazyMap = new LinkedHashMap<String, MapDBRefVal>();
+		mapDBRef.lazyMap.put("one", val1);
+		mapDBRef.lazyMap.put("two", val2);
+
+		converterSpy.write(mapDBRef, dbo);
+
+		MapDBRef result = converterSpy.read(MapDBRef.class, dbo);
+
+		assertProxyIsResolved(result.lazyMap, false);
+		assertThat(result.lazyMap.get("one").id, is(val1.id));
+		assertProxyIsResolved(result.lazyMap, true);
+		assertThat(result.lazyMap.get("two").id, is(val2.id));
+
+		verify(converterSpy, times(1)).bulkReadRefs(anyListOf(DBRef.class));
+		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
+	}
+
 	private Object transport(Object result) {
 		return SerializationUtils.deserialize(SerializationUtils.serialize(result));
 	}
 
 	class MapDBRef {
 		@org.springframework.data.mongodb.core.mapping.DBRef Map<String, MapDBRefVal> map;
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) Map<String, MapDBRefVal> lazyMap;
 	}
 
 	class MapDBRefVal {

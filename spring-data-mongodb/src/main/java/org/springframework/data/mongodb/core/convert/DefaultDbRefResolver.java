@@ -147,7 +147,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		DB db = mongoDbFactory.getDb();
 		List<DBObject> result = db.getCollection(collection)
 				.find(new BasicDBObjectBuilder().add("_id", new BasicDBObject("$in", ids)).get()).toArray();
-		Collections.sort(result, new DbRefByReferencePositionComperator(ids));
+		Collections.sort(result, new DbRefByReferencePositionComparator(ids));
 		return result;
 	}
 
@@ -445,11 +445,11 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @author Christoph Strobl
 	 * @since 1.10
 	 */
-	private static class DbRefByReferencePositionComperator implements Comparator<DBObject> {
+	private static class DbRefByReferencePositionComparator implements Comparator<DBObject> {
 
 		List<Object> reference;
 
-		public DbRefByReferencePositionComperator(List<Object> referenceIds) {
+		public DbRefByReferencePositionComparator(List<Object> referenceIds) {
 			reference = new ArrayList<Object>(referenceIds);
 		}
 
