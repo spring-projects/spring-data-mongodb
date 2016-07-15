@@ -16,7 +16,6 @@
 	</parent>
 
 	<properties>
-		<validation>1.0.0.GA</validation>
 		<objenesis>1.3</objenesis>
 		<equalsverifier>1.5</equalsverifier>
 	</properties>
