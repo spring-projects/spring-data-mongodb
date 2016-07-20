@@ -29,7 +29,7 @@
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>1.12.3.BUILD-SNAPSHOT</springdata.commons>
-		<mongo>2.14.0</mongo>
+		<mongo>2.14.3</mongo>
 		<mongo.osgi>2.13.0</mongo.osgi>
 	</properties>
 
@@ -164,9 +164,9 @@
 
 		<profile>
 
-			<id>mongo33-next</id>
+			<id>mongo33</id>
 			<properties>
-				<mongo>3.3.0-SNAPSHOT</mongo>
+				<mongo>3.3.0</mongo>
 			</properties>
 
 			<repositories>
