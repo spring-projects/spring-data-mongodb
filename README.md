@@ -1,3 +1,6 @@
+[![Spring Data MongoDB](https://spring.io/badges/spring-data-mongodb/ga.svg)](http://projects.spring.io/spring-data-mongodb#quick-start)
+[![Spring Data MongoDB](https://spring.io/badges/spring-data-mongodb/snapshot.svg)](http://projects.spring.io/spring-data-mongodb#quick-start)
+
 # Spring Data MongoDB
 
 The primary goal of the [Spring Data](http://projects.spring.io/spring-data) project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
@@ -26,7 +29,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>1.9.1.RELEASE</version>
+  <version>${version}.RELEASE</version>
 </dependency>
 ```
 
@@ -36,7 +39,7 @@ If you'd rather like the latest snapshots of the upcoming major version, use our
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>1.10.0.BUILD-SNAPSHOT</version>
+  <version>${version}.BUILD-SNAPSHOT</version>
 </dependency>
 
 <repository>
