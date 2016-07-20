@@ -14,7 +14,7 @@ env:
     - PROFILE=mongo3-next
     - PROFILE=mongo31
     - PROFILE=mongo32
-    - PROFILE=mongo33-next
+    - PROFILE=mongo33
 
 # Current MongoDB version is 2.4.2 as of 2016-04, see https://github.com/travis-ci/travis-ci/issues/3694
 # apt-get starts a MongoDB instance so it's not started using before_script
