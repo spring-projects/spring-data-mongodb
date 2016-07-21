@@ -47,6 +47,14 @@ import org.springframework.util.ClassUtils;
 
 import com.mongodb.WriteResult;
 
+/**
+ * Set of classes to contain query execution strategies. Depending (mostly) on the return type of a
+ * {@link org.springframework.data.repository.query.QueryMethod} a {@link AbstractMongoQuery} can be executed in various
+ * flavors.
+ *
+ * @author Oliver Gierke
+ * @author Mark Paluch
+ */
 interface MongoQueryExecution {
 
 	Object execute(Query query, Class<?> type, String collection);
@@ -229,7 +237,7 @@ interface MongoQueryExecution {
 			}
 
 			TypeInformation<?> componentType = returnType.getComponentType();
-			return componentType == null ? false : GeoResult.class.equals(componentType.getType());
+			return componentType != null && GeoResult.class.equals(componentType.getType());
 		}
 	}
 
@@ -255,12 +263,9 @@ interface MongoQueryExecution {
 			this.mongoQuery = query;
 		}
 
-		/**
-		 * Executes the given {@link Query} to return a page.
-		 * 
-		 * @param query must not be {@literal null}.
-		 * @param countQuery must not be {@literal null}.
-		 * @return
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution.GeoNearExecution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
 		@Override
 		public Object execute(Query query, Class<?> type, final String collection) {
