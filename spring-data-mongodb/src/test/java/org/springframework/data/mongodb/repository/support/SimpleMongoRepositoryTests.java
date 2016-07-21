@@ -33,17 +33,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.ExampleMatcher.*;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
-import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.User;
+import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -174,7 +174,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	/**
-	 * @see DATAMONGO-1245
+	 * @see DATAMONGO-1245, DATAMONGO-1464
 	 */
 	@Test
 	public void findByExampleShouldLookUpEntriesCorrectly() {
@@ -187,6 +187,23 @@ public class SimpleMongoRepositoryTests {
 
 		assertThat(result.getContent(), hasItems(dave, oliver));
 		assertThat(result.getContent(), hasSize(2));
+		assertThat(result.getTotalPages(), is(1));
+	}
+
+	/**
+	 * @see DATAMONGO-1464
+	 */
+	@Test
+	public void findByExampleMultiplePagesShouldLookUpEntriesCorrectly() {
+
+		Person sample = new Person();
+		sample.setLastname("Matthews");
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		Page<Person> result = repository.findAll(Example.of(sample), new PageRequest(0, 1));
+
+		assertThat(result.getContent(), hasSize(1));
+		assertThat(result.getTotalPages(), is(2));
 	}
 
 	/**

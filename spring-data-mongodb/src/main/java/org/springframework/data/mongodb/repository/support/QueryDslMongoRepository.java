@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -32,6 +31,8 @@ import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.EntityMetadata;
+import org.springframework.data.repository.support.PageableExecutionUtils;
+import org.springframework.data.repository.support.PageableExecutionUtils.TotalSupplier;
 import org.springframework.util.Assert;
 
 import com.querydsl.core.types.EntityPath;
@@ -46,6 +47,7 @@ import com.querydsl.mongodb.AbstractMongodbQuery;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID>
 		implements QueryDslPredicateExecutor<T> {
@@ -136,13 +138,17 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, org.springframework.data.domain.Pageable)
 	 */
 	@Override
-	public Page<T> findAll(Predicate predicate, Pageable pageable) {
+	public Page<T> findAll(final Predicate predicate, Pageable pageable) {
 
-		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> countQuery = createQueryFor(predicate);
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQueryFor(predicate);
 
-		return new PageImpl<T>(applyPagination(query, pageable).fetchResults().getResults(), pageable,
-				countQuery.fetchCount());
+		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, new TotalSupplier() {
+
+			@Override
+			public long get() {
+				return createQueryFor(predicate).fetchCount();
+			}
+		});
 	}
 
 	/*
@@ -152,11 +158,15 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 
-		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> countQuery = createQuery();
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQuery();
 
-		return new PageImpl<T>(applyPagination(query, pageable).fetchResults().getResults(), pageable,
-				countQuery.fetchCount());
+		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, new TotalSupplier() {
+
+			@Override
+			public long get() {
+				return createQuery().fetchCount();
+			}
+		});
 	}
 
 	/*

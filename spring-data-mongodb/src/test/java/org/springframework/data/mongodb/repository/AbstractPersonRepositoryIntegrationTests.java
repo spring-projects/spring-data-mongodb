@@ -321,6 +321,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(page.isFirst(), is(true));
 		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
+		assertThat(page.getTotalElements(), is(4L));
 		assertThat(page, hasItems(carter, stefan));
 	}
 
@@ -947,7 +948,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	/**
-	 * @see DATAMONGO-950
+	 * @see DATAMONGO-950, DATAMONGO-1464
 	 */
 	@Test
 	public void shouldNotLimitPagedQueryWhenPageRequestWithinBounds() {
@@ -956,6 +957,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(0, 2));
 		assertThat(result.getContent().size(), is(2));
+		assertThat(result.getTotalElements(), is(3L));
 	}
 
 	/**
@@ -971,19 +973,20 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	/**
-	 * @see DATAMONGO-950
+	 * @see DATAMONGO-950, DATAMONGO-1464
 	 */
 	@Test
 	public void shouldReturnEmptyWhenPageRequestedPageIsTotallyOutOfScopeForLimit() {
 
 		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
 				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
-		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(2, 2));
+		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(100, 2));
 		assertThat(result.getContent().size(), is(0));
+		assertThat(result.getTotalElements(), is(3L));
 	}
 
 	/**
-	 * @see DATAMONGO-996, DATAMONGO-950
+	 * @see DATAMONGO-996, DATAMONGO-950, DATAMONGO-1464
 	 */
 	@Test
 	public void gettingNonFirstPageWorksWithoutLimitBeingSet() {
@@ -993,6 +996,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(slice.getContent(), hasSize(1));
 		assertThat(slice.hasPrevious(), is(true));
 		assertThat(slice.hasNext(), is(false));
+		assertThat(slice.getTotalElements(), is(2L));
 	}
 
 	/**

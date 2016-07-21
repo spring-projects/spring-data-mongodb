@@ -36,6 +36,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.repository.support.PageableExecutionUtils;
+import org.springframework.data.repository.support.PageableExecutionUtils.TotalSupplier;
 import org.springframework.util.Assert;
 
 /**
@@ -266,20 +268,20 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example, org.springframework.data.domain.Pageable)
 	 */
 	@Override
-	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
+	public <S extends T> Page<S> findAll(final Example<S> example, Pageable pageable) {
 
 		Assert.notNull(example, "Sample must not be null!");
 
-		Query q = new Query(new Criteria().alike(example)).with(pageable);
+		final Query q = new Query(new Criteria().alike(example)).with(pageable);
 
-		long count = mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName());
+		List<S> list = mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName());
+		return PageableExecutionUtils.getPage(list, pageable, new TotalSupplier() {
 
-		if (count == 0) {
-			return new PageImpl<S>(Collections.<S> emptyList());
-		}
-
-		return new PageImpl<S>(mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName()),
-				pageable, count);
+			@Override
+			public long get() {
+				return mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName());
+			}
+		});
 	}
 
 	/*

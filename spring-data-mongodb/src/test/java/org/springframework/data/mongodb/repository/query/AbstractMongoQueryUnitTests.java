@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,6 +67,7 @@ import com.mongodb.WriteResult;
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class AbstractMongoQueryUnitTests {
@@ -188,7 +189,7 @@ public class AbstractMongoQueryUnitTests {
 	public void metadataShouldBeAddedToCountQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
-		query.execute(new Object[] { "fake", new PageRequest(0, 10) });
+		query.execute(new Object[] { "fake", new PageRequest(1, 10) });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
