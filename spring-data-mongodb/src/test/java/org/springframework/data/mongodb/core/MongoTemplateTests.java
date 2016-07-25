@@ -38,6 +38,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
+import org.hamcrest.core.IsNull;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
@@ -418,6 +419,23 @@ public class MongoTemplateTests {
 		IndexField field = indexFields.get(0);
 
 		assertThat(field, is(IndexField.create("age", Direction.DESC)));
+	}
+
+	/**
+	 * @see DATAMONGO-1467
+	 */
+	@Test
+	public void testReadIndexInfoHavingAPartialFilterExpression() throws Exception {
+
+		String command = "db." + template.getCollectionName(Person.class)
+				+ ".createIndex({'age':-1}, {'partialFilterExpression': { 'age' : { '$exists' : true}}})";
+		template.indexOps(Person.class).dropAllIndexes();
+
+		assertThat(template.indexOps(Person.class).getIndexInfo().isEmpty(), is(true));
+		factory.getDb().eval(command);
+
+		IndexInfo info = template.indexOps(Person.class).getIndexInfo().get(1);
+		assertThat(info.getPartialFilter(), is("{ \"age\" : { \"$exists\" : true}}"));
 	}
 
 	@Test

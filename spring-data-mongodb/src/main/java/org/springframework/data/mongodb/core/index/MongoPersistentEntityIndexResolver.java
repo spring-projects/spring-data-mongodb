@@ -396,6 +396,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
 		}
 
+		if (index.partialFilter() != null) {
+			indexDefinition.partialFilter(index.partialFilter());
+		}
+
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 

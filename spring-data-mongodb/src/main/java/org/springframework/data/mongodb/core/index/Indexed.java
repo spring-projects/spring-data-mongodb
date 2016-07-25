@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Jordi Llach
+ * @author Christian Schneider
  */
 @Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -134,4 +135,12 @@ public @interface Indexed {
 	 * @return
 	 */
 	int expireAfterSeconds() default -1;
+
+	/**
+	 * Takes a MongoDB JSON string as filter. If set the index will be applied to documents matching the filter only.
+	 * 
+	 * @see https://docs.mongodb.com/manual/core/index-partial/
+	 * @return
+	 */
+	String partialFilter() default "";
 }
