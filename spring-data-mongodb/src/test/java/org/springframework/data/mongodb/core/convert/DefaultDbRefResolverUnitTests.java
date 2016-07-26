@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.collection.IsIterableWithSize.*;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -43,7 +44,10 @@ import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
+ * Unit tests for {@link DefaultDbRefResolver}.
+ * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultDbRefResolverUnitTests {
@@ -59,8 +63,8 @@ public class DefaultDbRefResolverUnitTests {
 
 		when(factoryMock.getDb()).thenReturn(dbMock);
 		when(dbMock.getCollection(anyString())).thenReturn(collectionMock);
-		when(collectionMock.find(any(DBObject.class))).thenReturn(cursorMock);
-		when(cursorMock.toArray()).thenReturn(Collections.<DBObject> emptyList());
+		when(collectionMock.find(Mockito.any(DBObject.class))).thenReturn(cursorMock);
+		when(cursorMock.toArray()).thenReturn(Collections.<DBObject>emptyList());
 
 		resolver = new DefaultDbRefResolver(factoryMock);
 	}
@@ -105,9 +109,9 @@ public class DefaultDbRefResolverUnitTests {
 	@Test
 	public void bulkFetchShouldReturnEarlyForEmptyLists() {
 
-		resolver.bulkFetch(Collections.<DBRef> emptyList());
+		resolver.bulkFetch(Collections.<DBRef>emptyList());
 
-		verify(collectionMock, never()).find(any(DBObject.class));
+		verify(collectionMock, never()).find(Mockito.any(DBObject.class));
 	}
 
 	/**

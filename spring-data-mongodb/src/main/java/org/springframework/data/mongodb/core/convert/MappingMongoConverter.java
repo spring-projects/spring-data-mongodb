@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1239,8 +1240,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		LinkedHashMap<String, Object> referenceMap = new LinkedHashMap<String, Object>(sourceMap);
 		List<Object> convertedObjects = bulkReadAndConvertDBRefs((List<DBRef>) new ArrayList(referenceMap.values()),
 				valueType, ObjectPath.ROOT, rawValueType);
-
 		int index = 0;
+
 		for (String key : referenceMap.keySet()) {
 			targetMap.put(key, convertedObjects.get(index));
 			index++;
@@ -1255,9 +1256,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return Collections.emptyList();
 		}
 
-		final List<DBObject> referencedRawDocuments = dbrefs.size() == 1
+		List<DBObject> referencedRawDocuments = dbrefs.size() == 1
 				? Collections.singletonList(readRef(dbrefs.iterator().next())) : bulkReadRefs(dbrefs);
-		final String collectionName = dbrefs.iterator().next().getCollectionName();
+		String collectionName = dbrefs.iterator().next().getCollectionName();
 
 		List<T> targeList = new ArrayList<T>(dbrefs.size());
 
@@ -1276,27 +1277,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return targeList;
-	}
-
-	private boolean isCollectionOfDbRefWhereBulkFetchIsPossible(Collection<Object> source) {
-
-		String collection = null;
-
-		for (Object dbObjItem : source) {
-
-			if (!(dbObjItem instanceof DBRef)) {
-				return false;
-			}
-
-			DBRef ref = (DBRef) dbObjItem;
-
-			if (collection != null && !collection.equals(ref.getCollectionName())) {
-				return false;
-			}
-			collection = ref.getCollectionName();
-		}
-
-		return true;
 	}
 
 	private void maybeEmitEvent(MongoMappingEvent<?> event) {
@@ -1329,6 +1309,34 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	List<DBObject> bulkReadRefs(List<DBRef> references) {
 		return dbRefResolver.bulkFetch(references);
+	}
+
+	/**
+	 * Returns whether the given {@link Iterable} contains {@link DBRef} instances all pointing to the same collection.
+	 * 
+	 * @param source must not be {@literal null}.
+	 * @return
+	 */
+	private static boolean isCollectionOfDbRefWhereBulkFetchIsPossible(Iterable<Object> source) {
+
+		Assert.notNull(source, "Iterable of DBRefs must not be null!");
+
+		Set<String> collectionsFound = new HashSet<String>();
+
+		for (Object dbObjItem : source) {
+
+			if (!(dbObjItem instanceof DBRef)) {
+				return false;
+			}
+
+			collectionsFound.add(((DBRef) dbObjItem).getCollectionName());
+
+			if (collectionsFound.size() > 1) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

@@ -440,19 +440,31 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 	/**
 	 * {@link Comparator} for sorting {@link DBObject} that have been loaded in random order by a predefined list of
-	 * reference ids.
+	 * reference identifiers.
 	 *
 	 * @author Christoph Strobl
+	 * @author Oliver Gierke
 	 * @since 1.10
 	 */
 	private static class DbRefByReferencePositionComparator implements Comparator<DBObject> {
 
-		List<Object> reference;
+		private final List<Object> reference;
 
+		/**
+		 * Creates a new {@link DbRefByReferencePositionComparator} for the given list of reference identifiers.
+		 * 
+		 * @param referenceIds must not be {@literal null}.
+		 */
 		public DbRefByReferencePositionComparator(List<Object> referenceIds) {
-			reference = new ArrayList<Object>(referenceIds);
+
+			Assert.notNull(referenceIds, "Reference identifiers must not be null!");
+			this.reference = new ArrayList<Object>(referenceIds);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+		 */
 		@Override
 		public int compare(DBObject o1, DBObject o2) {
 			return Integer.compare(reference.indexOf(o1.get("_id")), reference.indexOf(o2.get("_id")));
