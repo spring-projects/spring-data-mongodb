@@ -103,5 +103,4 @@ public class QuerydslRepositorySupportTests {
 		assertThat(queryUsingIdField.fetchOne(), equalTo(person));
 		assertThat(queryUsingIdField.fetchOne(), equalTo(queryUsingRefObject.fetchOne()));
 	}
-
 }

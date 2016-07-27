@@ -130,23 +130,29 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		return converter.toDBRef(constant, getPropertyForPotentialDbRef(path));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see com.querydsl.mongodb.MongodbSerializer#asDBKey(com.querydsl.core.types.Operation, int)
+	 */
 	@Override
 	protected String asDBKey(Operation<?> expr, int index) {
 
 		Expression<?> arg = expr.getArg(index);
-		if (arg instanceof Path) {
+		String key = super.asDBKey(expr, index);
 
-			Path<?> path = (Path<?>) arg;
-			if (isReference(path)) {
-
-				MongoPersistentProperty property = getPropertyFor(path);
-				if (property.isIdProperty()) {
-					return super.asDBKey(expr, index).replaceAll("." + ID_KEY + "$", "");
-				}
-			}
-
+		if (!(arg instanceof Path)) {
+			return key;
 		}
-		return super.asDBKey(expr, index);
+
+		Path<?> path = (Path<?>) arg;
+
+		if (!isReference(path)) {
+			return key;
+		}
+
+		MongoPersistentProperty property = getPropertyFor(path);
+
+		return property.isIdProperty() ? key.replaceAll("." + ID_KEY + "$", "") : key;
 	}
 
 	/*
@@ -155,18 +161,14 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 */
 	protected Object convert(Path<?> path, Constant<?> constant) {
 
-		if (isReference(path)) {
-
-			MongoPersistentProperty property = getPropertyFor(path);
-
-			if (property.isIdProperty()) {
-				return asReference(constant.getConstant(), path.getMetadata().getParent());
-			}
-
-			return asReference(constant.getConstant(), path);
+		if (!isReference(path)) {
+			return super.convert(path, constant);
 		}
 
-		return super.convert(path, constant);
+		MongoPersistentProperty property = getPropertyFor(path);
+
+		return property.isIdProperty() ? asReference(constant.getConstant(), path.getMetadata().getParent())
+				: asReference(constant.getConstant(), path);
 	}
 
 	private MongoPersistentProperty getPropertyFor(Path<?> path) {
@@ -196,10 +198,12 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		}
 
 		MongoPersistentProperty property = getPropertyFor(path);
-		if (property != null && property.isIdProperty() && path.getMetadata() != null
-				&& path.getMetadata().getParent() != null) {
-			return getPropertyFor(path.getMetadata().getParent());
+		PathMetadata metadata = path.getMetadata();
+
+		if (property != null && property.isIdProperty() && metadata != null && metadata.getParent() != null) {
+			return getPropertyFor(metadata.getParent());
 		}
+
 		return property;
 	}
 }
