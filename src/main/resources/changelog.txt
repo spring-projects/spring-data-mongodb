@@ -1,6 +1,40 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.0.M1 (2016-07-27)
+-----------------------------------------
+* DATAMONGO-1464 - Pagination - Optimize out the count query for paging.
+* DATAMONGO-1463 - Upgrade to MongoDB Java driver 2.14.3.
+* DATAMONGO-1462 - Integrate version badge from spring.io.
+* DATAMONGO-1460 - User placeholder property for JSR-303 API.
+* DATAMONGO-1459 - Add support for any-match mode in query-by-example.
+* DATAMONGO-1457 - Add support for $slice in projection stage of aggregation.
+* DATAMONGO-1456 - Add support for $diacriticInsensitivity to text search.
+* DATAMONGO-1455 - Add support for $caseSensitive to text search.
+* DATAMONGO-1453 - Parse error into GeoJsonPoint if coordinates are "integers".
+* DATAMONGO-1449 - Replace legacy for loop with foreach in MappingMongoConverter.
+* DATAMONGO-1437 - DefaultDbRefResolver swallows cause of non DataAccessException translatable Exception.
+* DATAMONGO-1431 - Add overload of MongoOperations.stream(…) to take an explicit collection name.
+* DATAMONGO-1425 - NOT_CONTAINS keyword issues CONTAINS query.
+* DATAMONGO-1424 - Add support for "notLike" keyword in derived queries.
+* DATAMONGO-1423 - Nested document update doesn't apply converters on embedded maps.
+* DATAMONGO-1420 - Update Spring Data MongoDB version in Github readme.
+* DATAMONGO-1419 - Remove deprecations in AbstractMongoEventListener.
+* DATAMONGO-1418 - Add support for $out operand for Aggregation.
+* DATAMONGO-1416 - Standard bootstrap issues warning in converter registration.
+* DATAMONGO-1412 - Document mapping rules for Java types to MongoDB representation.
+* DATAMONGO-1411 - Enable MongoDB build on TravisCI.
+* DATAMONGO-1409 - Release 1.10 M1 (Ingalls).
+* DATAMONGO-1404 - Add support of $max and $min update operations.
+* DATAMONGO-1403 - Add maxExecutionTimeMs alias for @Meta(maxExcecutionTime).
+* DATAMONGO-1399 - Allow adding hole to GeoJson Polygon.
+* DATAMONGO-1394 - References not handled correctly when using QueryDSL.
+* DATAMONGO-1391 - Support Mongo 3.2 syntax for $unwind in aggregation.
+* DATAMONGO-1271 - Provide read lifecycle events when loading DBRefs.
+* DATAMONGO-1194 - Improve DBRef resolution for collections.
+* DATAMONGO-832 - Add support for $slice in Update.push.
+
+
 Changes in version 1.9.2.RELEASE (2016-06-15)
 ---------------------------------------------
 * DATAMONGO-1449 - Replace legacy for loop with foreach in MappingMongoConverter.
