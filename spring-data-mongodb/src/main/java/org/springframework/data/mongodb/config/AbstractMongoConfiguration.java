@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -118,15 +119,31 @@ public abstract class AbstractMongoConfiguration {
 	 * Return the base package to scan for mapped {@link Document}s. Will return the package name of the configuration
 	 * class' (the concrete class, not this one here) by default. So if you have a {@code com.acme.AppConfig} extending
 	 * {@link AbstractMongoConfiguration} the base package will be considered {@code com.acme} unless the method is
-	 * overriden to implement alternate behaviour.
+	 * overridden to implement alternate behavior.
 	 * 
 	 * @return the base package to scan for mapped {@link Document} classes or {@literal null} to not enable scanning for
 	 *         entities.
+	 * @deprecated use {@link #getMappingBasePackages()} instead.
 	 */
+	@Deprecated
 	protected String getMappingBasePackage() {
 
 		Package mappingBasePackage = getClass().getPackage();
 		return mappingBasePackage == null ? null : mappingBasePackage.getName();
+	}
+
+	/**
+	 * Returns the base packages to scan for MongoDB mapped entities at startup. Will return the package name of the
+	 * configuration class' (the concrete class, not this one here) by default. So if you have a
+	 * {@code com.acme.AppConfig} extending {@link AbstractMongoConfiguration} the base package will be considered
+	 * {@code com.acme} unless the method is overridden to implement alternate behavior.
+	 * 
+	 * @return the base packages to scan for mapped {@link Document} classes or an empty collection to not enable scanning
+	 *         for entities.
+	 * @since 1.10
+	 */
+	protected Collection<String> getMappingBasePackages() {
+		return Collections.singleton(getMappingBasePackage());
 	}
 
 	/**
@@ -204,26 +221,52 @@ public abstract class AbstractMongoConfiguration {
 	}
 
 	/**
-	 * Scans the mapping base package for classes annotated with {@link Document}.
+	 * Scans the mapping base package for classes annotated with {@link Document}. By default, it scans for entities in
+	 * all packages returned by {@link #getMappingBasePackages()}.
 	 * 
-	 * @see #getMappingBasePackage()
+	 * @see #getMappingBasePackages()
 	 * @return
 	 * @throws ClassNotFoundException
 	 */
 	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
 
-		String basePackage = getMappingBasePackage();
+		Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
+
+		for (String basePackage : getMappingBasePackages()) {
+			initialEntitySet.addAll(scanForEntities(basePackage));
+		}
+
+		return initialEntitySet;
+	}
+
+	/**
+	 * Scans the given base package for entities, i.e. MongoDB specific types annotated with {@link Document} and
+	 * {@link Persistent}.
+	 * 
+	 * @param basePackage must not be {@literal null}.
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @since 1.10
+	 */
+	protected Set<Class<?>> scanForEntities(String basePackage) throws ClassNotFoundException {
+
+		if (!StringUtils.hasText(basePackage)) {
+			return Collections.emptySet();
+		}
+
 		Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
 
 		if (StringUtils.hasText(basePackage)) {
+
 			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
 					false);
 			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
 			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
 
 			for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
-				initialEntitySet.add(ClassUtils.forName(candidate.getBeanClassName(),
-						AbstractMongoConfiguration.class.getClassLoader()));
+
+				initialEntitySet
+						.add(ClassUtils.forName(candidate.getBeanClassName(), AbstractMongoConfiguration.class.getClassLoader()));
 			}
 		}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,13 @@ package org.springframework.data.mongodb.config;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+
+import example.first.First;
+import example.second.Second;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Set;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -144,6 +151,20 @@ public class AbstractMongoConfigurationUnitTests {
 		assertThat(new SampleMongoConfiguration().getAuthenticationDatabaseName(), is(nullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-1470
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void allowsMultipleEntityBasePackages() throws ClassNotFoundException {
+
+		ConfigurationWithMultipleBasePackages config = new ConfigurationWithMultipleBasePackages();
+		Set<Class<?>> entities = config.getInitialEntitySet();
+
+		assertThat(entities, hasSize(2));
+		assertThat(entities, hasItems(First.class, Second.class));
+	}
+
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
 
 		AbstractMongoConfiguration configuration = new SampleMongoConfiguration() {
@@ -173,9 +194,11 @@ public class AbstractMongoConfigurationUnitTests {
 		@Bean
 		@Override
 		public MappingMongoConverter mappingMongoConverter() throws Exception {
-			MappingMongoConverter mmc = super.mappingMongoConverter();
-			mmc.setTypeMapper(typeMapper());
-			return mmc;
+
+			MappingMongoConverter converter = super.mappingMongoConverter();
+			converter.setTypeMapper(typeMapper());
+
+			return converter;
 		}
 
 		@Bean
@@ -184,8 +207,24 @@ public class AbstractMongoConfigurationUnitTests {
 		}
 	}
 
-	@Document
-	static class Entity {
+	static class ConfigurationWithMultipleBasePackages extends AbstractMongoConfiguration {
 
+		@Override
+		protected String getDatabaseName() {
+			return "test";
+		}
+
+		@Override
+		public Mongo mongo() throws Exception {
+			return new MongoClient();
+		}
+
+		@Override
+		protected Collection<String> getMappingBasePackages() {
+			return Arrays.asList("example.first", "example.second");
+		}
 	}
+
+	@Document
+	static class Entity {}
 }
