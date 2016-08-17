@@ -115,6 +115,40 @@ class DBObjectAccessor {
 	}
 
 	/**
+	 * Returns whether the underlying {@link DBObject} has a value ({@literal null} or non-{@literal null}) for the given
+	 * {@link MongoPersistentProperty}.
+	 * 
+	 * @param property must not be {@literal null}.
+	 * @return
+	 */
+	public boolean hasValue(MongoPersistentProperty property) {
+
+		Assert.notNull(property, "Property must not be null!");
+
+		String fieldName = property.getFieldName();
+
+		if (!fieldName.contains(".")) {
+			return this.dbObject.containsField(fieldName);
+		}
+
+		String[] parts = fieldName.split("\\.");
+		Map<String, Object> source = this.dbObject;
+		Object result = null;
+
+		for (int i = 1; i < parts.length; i++) {
+
+			result = source.get(parts[i - 1]);
+			source = getAsMap(result);
+
+			if (source == null) {
+				return false;
+			}
+		}
+
+		return source.containsKey(parts[parts.length - 1]);
+	}
+
+	/**
 	 * Returns the given source object as map, i.e. {@link BasicDBObject}s and maps as is or {@literal null} otherwise.
 	 * 
 	 * @param source can be {@literal null}.
