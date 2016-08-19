@@ -138,6 +138,7 @@ import com.mongodb.util.JSONParseException;
  * @author Chuong Ngo
  * @author Christoph Strobl
  * @author Doménique Tilleuil
+ * @author Niko Schmuck
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -334,7 +335,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @see org.springframework.data.mongodb.core.MongoOperations#stream(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
 	@Override
-	public <T> CloseableIterator<T> stream(final Query query, final Class<T> entityType, String collectionName) {
+	public <T> CloseableIterator<T> stream(final Query query, final Class<T> entityType, final String collectionName) {
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(entityType, "Entity type must not be null!");
@@ -353,8 +354,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				DBCursor cursor = collection.find(mappedQuery, mappedFields);
 				QueryCursorPreparer cursorPreparer = new QueryCursorPreparer(query, entityType);
 
-				ReadDbObjectCallback<T> readCallback = new ReadDbObjectCallback<T>(mongoConverter, entityType,
-						collection.getName());
+				ReadDbObjectCallback<T> readCallback = new ReadDbObjectCallback<T>(mongoConverter, entityType, collectionName);
 
 				return new CloseableIterableCursorAdapter<T>(cursorPreparer.prepare(cursor), exceptionTranslator, readCallback);
 			}
