@@ -265,7 +265,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// make sure id property is set before all other properties
 		Object idValue = null;
 
-		if (idProperty != null) {
+		if (idProperty != null && new DBObjectAccessor(dbo).hasValue(idProperty)) {
 			idValue = getValueInternal(idProperty, dbo, evaluator, path);
 			accessor.setProperty(idProperty, idValue);
 		}

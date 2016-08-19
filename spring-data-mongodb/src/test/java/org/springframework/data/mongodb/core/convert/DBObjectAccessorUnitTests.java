@@ -101,6 +101,20 @@ public class DBObjectAccessorUnitTests {
 		assertThat(nestedA.get("c"), is((Object) "c"));
 	}
 
+	/**
+	 * @see DATAMONGO-1471
+	 */
+	@Test
+	public void exposesAvailabilityOfFields() {
+
+		DBObjectAccessor accessor = new DBObjectAccessor(new BasicDBObject("a", new BasicDBObject("c", "d")));
+		MongoPersistentEntity<?> entity = context.getPersistentEntity(ProjectingType.class);
+
+		assertThat(accessor.hasValue(entity.getPersistentProperty("foo")), is(false));
+		assertThat(accessor.hasValue(entity.getPersistentProperty("a")), is(true));
+		assertThat(accessor.hasValue(entity.getPersistentProperty("name")), is(false));
+	}
+
 	static class ProjectingType {
 
 		String name;

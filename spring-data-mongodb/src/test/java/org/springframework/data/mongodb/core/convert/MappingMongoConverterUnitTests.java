@@ -2066,6 +2066,14 @@ public class MappingMongoConverterUnitTests {
 		assertThat(target.map.get(FooBarEnum.FOO), is("spring"));
 	}
 
+	/**
+	 * @see DATAMONGO-1471
+	 */
+	@Test
+	public void readsDocumentWithPrimitiveIdButNoValue() {
+		assertThat(converter.read(ClassWithIntId.class, new BasicDBObject()), is(notNullValue()));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
