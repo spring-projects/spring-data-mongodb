@@ -58,6 +58,7 @@ import com.mongodb.DBRef;
  * @author Patryk Wasik
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class QueryMapper {
 
@@ -66,7 +67,7 @@ public class QueryMapper {
 	static final ClassTypeInformation<?> NESTED_DOCUMENT = ClassTypeInformation.from(NestedDocument.class);
 
 	private enum MetaMapping {
-		FORCE, WHEN_PRESENT, IGNORE;
+		FORCE, WHEN_PRESENT, IGNORE
 	}
 
 	private final ConversionService conversionService;
@@ -316,7 +317,7 @@ public class QueryMapper {
 		}
 
 		if (isNestedKeyword(value)) {
-			return getMappedKeyword(new Keyword((DBObject) value), null);
+			return getMappedKeyword(new Keyword((DBObject) value), documentField.getPropertyEntity());
 		}
 
 		if (isAssociationConversionNecessary(documentField, value)) {
