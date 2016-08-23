@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -67,6 +68,7 @@ import com.mongodb.QueryBuilder;
  * @author Patryk Wasik
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class QueryMapperUnitTests {
@@ -595,6 +597,28 @@ public class QueryMapperUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1406
+	 */
+	@Test
+	public void shouldMapQueryForNestedCustomizedPropertiesUsingConfiguredFieldNames() {
+
+		EmbeddedClass embeddedClass = new EmbeddedClass();
+		embeddedClass.customizedField = "hello";
+
+		Foo foo = new Foo();
+		foo.listOfItems = Arrays.asList(embeddedClass);
+
+		Query query = new Query(Criteria.where("listOfItems") //
+				.elemMatch(new Criteria(). //
+						andOperator(Criteria.where("customizedField").is(embeddedClass.customizedField))));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
+
+		assertThat(dbo, isBsonObject().containing("my_items.$elemMatch.$and",
+				new BasicDbListBuilder().add(new BasicDBObject("fancy_custom_name", embeddedClass.customizedField)).get()));
+	}
+
+	/**
 	 * @see DATAMONGO-647
 	 */
 	@Test
@@ -822,10 +846,14 @@ public class QueryMapperUnitTests {
 	public class Foo {
 		@Id private ObjectId id;
 		EmbeddedClass embedded;
+
+		@Field("my_items") List<EmbeddedClass> listOfItems;
 	}
 
 	public class EmbeddedClass {
 		public String id;
+
+		@Field("fancy_custom_name") public String customizedField;
 	}
 
 	class IdWrapper {
