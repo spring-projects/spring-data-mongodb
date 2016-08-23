@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -189,5 +189,13 @@ public class DefaultScriptOperationsTests {
 	@Test
 	public void scriptNamesShouldReturnEmptySetWhenNoScriptRegistered() {
 		assertThat(scriptOps.getScriptNames(), is(empty()));
+	}
+
+	/**
+	 * @see DATAMONGO-1465
+	 */
+	@Test
+	public void executeShouldNotQuoteStrings() {
+		assertThat(scriptOps.execute(EXECUTABLE_SCRIPT, "spring-data"), is((Object) "spring-data"));
 	}
 }
