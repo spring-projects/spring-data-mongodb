@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ class DefaultScriptOperations implements ScriptOperations {
 
 			@Override
 			public Object doInDB(DB db) throws MongoException, DataAccessException {
-				return db.eval(script.getCode(), convertScriptArgs(args));
+				return db.eval(script.getCode(), convertScriptArgs(false, args));
 			}
 		});
 	}
@@ -116,7 +116,7 @@ class DefaultScriptOperations implements ScriptOperations {
 
 			@Override
 			public Object doInDB(DB db) throws MongoException, DataAccessException {
-				return db.eval(String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(args)));
+				return db.eval(String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(true, args)));
 			}
 		});
 	}
@@ -155,7 +155,7 @@ class DefaultScriptOperations implements ScriptOperations {
 		return scriptNames;
 	}
 
-	private Object[] convertScriptArgs(Object... args) {
+	private Object[] convertScriptArgs(boolean quote, Object... args) {
 
 		if (ObjectUtils.isEmpty(args)) {
 			return args;
@@ -164,15 +164,15 @@ class DefaultScriptOperations implements ScriptOperations {
 		List<Object> convertedValues = new ArrayList<Object>(args.length);
 
 		for (Object arg : args) {
-			convertedValues.add(arg instanceof String ? String.format("'%s'", arg) : this.mongoOperations.getConverter()
-					.convertToMongoType(arg));
+			convertedValues.add(arg instanceof String && quote ? String.format("'%s'", arg)
+					: this.mongoOperations.getConverter().convertToMongoType(arg));
 		}
 
 		return convertedValues.toArray();
 	}
 
-	private String convertAndJoinScriptArgs(Object... args) {
-		return ObjectUtils.isEmpty(args) ? "" : StringUtils.arrayToCommaDelimitedString(convertScriptArgs(args));
+	private String convertAndJoinScriptArgs(boolean quote, Object... args) {
+		return ObjectUtils.isEmpty(args) ? "" : StringUtils.arrayToCommaDelimitedString(convertScriptArgs(quote, args));
 	}
 
 	/**
