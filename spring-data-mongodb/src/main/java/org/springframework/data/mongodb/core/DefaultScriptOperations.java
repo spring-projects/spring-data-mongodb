@@ -116,7 +116,7 @@ class DefaultScriptOperations implements ScriptOperations {
 
 			@Override
 			public Object doInDB(DB db) throws MongoException, DataAccessException {
-				return db.eval(String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(true, args)));
+				return db.eval(String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(args)));
 			}
 		});
 	}
@@ -171,8 +171,8 @@ class DefaultScriptOperations implements ScriptOperations {
 		return convertedValues.toArray();
 	}
 
-	private String convertAndJoinScriptArgs(boolean quote, Object... args) {
-		return ObjectUtils.isEmpty(args) ? "" : StringUtils.arrayToCommaDelimitedString(convertScriptArgs(quote, args));
+	private String convertAndJoinScriptArgs(Object... args) {
+		return ObjectUtils.isEmpty(args) ? "" : StringUtils.arrayToCommaDelimitedString(convertScriptArgs(true, args));
 	}
 
 	/**
