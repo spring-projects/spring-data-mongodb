@@ -519,7 +519,7 @@ public class AggregationTests {
 		TypedAggregation<InventoryItem> aggregation = newAggregation(InventoryItem.class, //
 				project("item") //
 						.and("discount")//
-						.transform(ConditionalOperator.newBuilder().when(Criteria.where("qty").gte(250)) //
+						.applyCondition(ConditionalOperator.newBuilder().when(Criteria.where("qty").gte(250)) //
 								.then(30) //
 								.otherwise(20)));
 
@@ -594,7 +594,7 @@ public class AggregationTests {
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
 				project() //
 						.and("largePopulation")//
-						.transform(ConditionalOperator.newBuilder().when(Criteria.where("population").gte(20000)) //
+						.applyCondition(ConditionalOperator.newBuilder().when(Criteria.where("population").gte(20000)) //
 								.then(true) //
 								.otherwise(false)) //
 						.and("population").as("population"));
@@ -619,7 +619,7 @@ public class AggregationTests {
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
 				project() //
 						.and("size")//
-						.transform(ConditionalOperator.newBuilder().when(Criteria.where("population").gte(20000)) //
+						.applyCondition(ConditionalOperator.newBuilder().when(Criteria.where("population").gte(20000)) //
 								.then(ConditionalOperator.newBuilder().when(Criteria.where("population").gte(200000)).then("huge")
 										.otherwise("small")) //
 								.otherwise("small")) //
@@ -648,7 +648,7 @@ public class AggregationTests {
 		TypedAggregation<LineItem> aggregation = newAggregation(LineItem.class, //
 				project("id") //
 						.and("caption")//
-						.transform(ifNull(field("caption"), "unknown")),
+						.applyCondition(ifNull(field("caption"), "unknown")),
 				sort(ASC, "id"));
 
 		assertThat(aggregation.toString(), is(notNullValue()));
@@ -675,7 +675,7 @@ public class AggregationTests {
 		TypedAggregation<LineItem> aggregation = newAggregation(LineItem.class, //
 				project("id") //
 						.and("caption")//
-						.transform(ifNull(field("caption"), field("id"))),
+						.applyCondition(ifNull(field("caption"), field("id"))),
 				sort(ASC, "id"));
 
 		assertThat(aggregation.toString(), is(notNullValue()));
@@ -798,11 +798,12 @@ public class AggregationTests {
 		assertThat((Double) resultList.get(0).get("netPriceMul2"), is(product.netPrice * 2));
 		assertThat((Double) resultList.get(0).get("netPriceDiv119"), is(product.netPrice / 1.19));
 		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(product.spaceUnits % 2));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsPlusSpaceUnits"), is(product.spaceUnits + product.spaceUnits));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsPlusSpaceUnits"),
+				is(product.spaceUnits + product.spaceUnits));
 		assertThat((Integer) resultList.get(0).get("spaceUnitsMinusSpaceUnits"),
 				is(product.spaceUnits - product.spaceUnits));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsMultiplySpaceUnits"), is(product.spaceUnits
-				* product.spaceUnits));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMultiplySpaceUnits"),
+				is(product.spaceUnits * product.spaceUnits));
 		assertThat((Double) resultList.get(0).get("spaceUnitsDivideSpaceUnits"),
 				is((double) (product.spaceUnits / product.spaceUnits)));
 		assertThat((Integer) resultList.get(0).get("spaceUnitsModSpaceUnits"), is(product.spaceUnits % product.spaceUnits));
@@ -891,8 +892,8 @@ public class AggregationTests {
 		DBObject firstItem = resultList.get(0);
 		assertThat((String) firstItem.get("_id"), is(product.id));
 		assertThat((String) firstItem.get("name"), is(product.name));
-		assertThat((Double) firstItem.get("salesPrice"), is((product.netPrice * (1 - product.discountRate) + shippingCosts)
-				* (1 + product.taxRate)));
+		assertThat((Double) firstItem.get("salesPrice"),
+				is((product.netPrice * (1 - product.discountRate) + shippingCosts) * (1 + product.taxRate)));
 	}
 
 	@Test
@@ -914,7 +915,7 @@ public class AggregationTests {
 
 	/**
 	 * @see DATAMONGO-753
-	 * @see http 
+	 * @see http
 	 *      ://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group
 	 *      -operati
 	 */
@@ -944,7 +945,7 @@ public class AggregationTests {
 
 	/**
 	 * @see DATAMONGO-753
-	 * @see http 
+	 * @see http
 	 *      ://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group
 	 *      -operati
 	 */
@@ -979,12 +980,13 @@ public class AggregationTests {
 		data.stringValue = "ABC";
 		mongoTemplate.insert(data);
 
-		TypedAggregation<Data> agg = newAggregation(Data.class, project() //
-				.andExpression("concat(stringValue, 'DE')").as("concat") //
-				.andExpression("strcasecmp(stringValue,'XYZ')").as("strcasecmp") //
-				.andExpression("substr(stringValue,1,1)").as("substr") //
-				.andExpression("toLower(stringValue)").as("toLower") //
-				.andExpression("toUpper(toLower(stringValue))").as("toUpper") //
+		TypedAggregation<Data> agg = newAggregation(Data.class,
+				project() //
+						.andExpression("concat(stringValue, 'DE')").as("concat") //
+						.andExpression("strcasecmp(stringValue,'XYZ')").as("strcasecmp") //
+						.andExpression("substr(stringValue,1,1)").as("substr") //
+						.andExpression("toLower(stringValue)").as("toLower") //
+						.andExpression("toUpper(toLower(stringValue))").as("toUpper") //
 		);
 
 		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
@@ -1010,17 +1012,18 @@ public class AggregationTests {
 		data.dateValue = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSSZ").parse("29.08.1983 12:34:56.789+0000");
 		mongoTemplate.insert(data);
 
-		TypedAggregation<Data> agg = newAggregation(Data.class, project() //
-				.andExpression("dayOfYear(dateValue)").as("dayOfYear") //
-				.andExpression("dayOfMonth(dateValue)").as("dayOfMonth") //
-				.andExpression("dayOfWeek(dateValue)").as("dayOfWeek") //
-				.andExpression("year(dateValue)").as("year") //
-				.andExpression("month(dateValue)").as("month") //
-				.andExpression("week(dateValue)").as("week") //
-				.andExpression("hour(dateValue)").as("hour") //
-				.andExpression("minute(dateValue)").as("minute") //
-				.andExpression("second(dateValue)").as("second") //
-				.andExpression("millisecond(dateValue)").as("millisecond") //
+		TypedAggregation<Data> agg = newAggregation(Data.class,
+				project() //
+						.andExpression("dayOfYear(dateValue)").as("dayOfYear") //
+						.andExpression("dayOfMonth(dateValue)").as("dayOfMonth") //
+						.andExpression("dayOfWeek(dateValue)").as("dayOfWeek") //
+						.andExpression("year(dateValue)").as("year") //
+						.andExpression("month(dateValue)").as("month") //
+						.andExpression("week(dateValue)").as("week") //
+						.andExpression("hour(dateValue)").as("hour") //
+						.andExpression("minute(dateValue)").as("minute") //
+						.andExpression("second(dateValue)").as("second") //
+						.andExpression("millisecond(dateValue)").as("millisecond") //
 		);
 
 		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
@@ -1132,7 +1135,7 @@ public class AggregationTests {
 						.and("orderId").previousOperation() //
 						.andExpression("netAmount * [0]", taxRate).as("taxAmount") //
 						.andExpression("netAmount * (1 + [0])", taxRate).as("totalAmount") //
-				), Invoice.class);
+		), Invoice.class);
 
 		Invoice invoice = results.getUniqueMappedResult();
 
@@ -1723,12 +1726,14 @@ public class AggregationTests {
 		public InventoryItem() {}
 
 		public InventoryItem(int id, String item, int qty) {
+
 			this.id = id;
 			this.item = item;
 			this.qty = qty;
 		}
 
 		public InventoryItem(int id, String item, String description, int qty) {
+
 			this.id = id;
 			this.item = item;
 			this.description = description;

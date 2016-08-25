@@ -15,12 +15,14 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -32,6 +34,7 @@ import com.mongodb.DBObject;
  * 
  * @see http://docs.mongodb.com/manual/reference/operator/aggregation/cond/
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.10
  */
 public class ConditionalOperator implements AggregationExpression {
@@ -42,7 +45,7 @@ public class ConditionalOperator implements AggregationExpression {
 
 	/**
 	 * Creates a new {@link ConditionalOperator} for a given {@link Field} and {@code then}/{@code otherwise} values.
-	 * 
+	 *
 	 * @param condition must not be {@literal null}.
 	 * @param thenValue must not be {@literal null}.
 	 * @param otherwiseValue must not be {@literal null}.
@@ -116,8 +119,7 @@ public class ConditionalOperator implements AggregationExpression {
 			return ((ConditionalOperator) value).toDbObject(context);
 		}
 
-		DBObject toMap = context.getMappedObject(new BasicDBObject("$set", value));
-		return toMap.get("$set");
+		return context.getMappedObject(new BasicDBObject("$set", value)).get("$set");
 	}
 
 	private Object resolveCriteria(AggregationOperationContext context, Object value) {
@@ -129,7 +131,7 @@ public class ConditionalOperator implements AggregationExpression {
 		if (value instanceof CriteriaDefinition) {
 
 			DBObject mappedObject = context.getMappedObject(((CriteriaDefinition) value).getCriteriaObject());
-			BasicDBList clauses = new BasicDBList();
+			List<Object> clauses = new ArrayList<Object>();
 
 			clauses.addAll(getClauses(context, mappedObject));
 
@@ -144,9 +146,9 @@ public class ConditionalOperator implements AggregationExpression {
 				String.format("Invalid value in condition. Supported: DBObject, Field references, Criteria, got: %s", value));
 	}
 
-	private BasicDBList getClauses(AggregationOperationContext context, DBObject mappedObject) {
+	private List<Object> getClauses(AggregationOperationContext context, DBObject mappedObject) {
 
-		BasicDBList clauses = new BasicDBList();
+		List<Object> clauses = new ArrayList<Object>();
 
 		for (String key : mappedObject.keySet()) {
 
@@ -157,15 +159,17 @@ public class ConditionalOperator implements AggregationExpression {
 		return clauses;
 	}
 
-	private BasicDBList getClauses(AggregationOperationContext context, String key, Object predicate) {
+	private List<Object> getClauses(AggregationOperationContext context, String key, Object predicate) {
 
-		BasicDBList clauses = new BasicDBList();
+		List<Object> clauses = new ArrayList<Object>();
 
-		if (predicate instanceof BasicDBList) {
+		if (predicate instanceof List) {
 
-			BasicDBList args = new BasicDBList();
-			for (Object clause : (BasicDBList) predicate) {
-				args.addAll(getClauses(context, (BasicDBObject) clause));
+			List<Object> args = new ArrayList<Object>();
+			for (Object clause : (List<?>) predicate) {
+				if (clause instanceof DBObject) {
+					args.addAll(getClauses(context, (DBObject) clause));
+				}
 			}
 
 			clauses.add(new BasicDBObject(key, args));
@@ -180,7 +184,7 @@ public class ConditionalOperator implements AggregationExpression {
 					continue;
 				}
 
-				BasicDBList args = new BasicDBList();
+				List<Object> args = new ArrayList<Object>();
 				args.add("$" + key);
 				args.add(nested.get(s));
 				clauses.add(new BasicDBObject(s, args));
@@ -188,7 +192,7 @@ public class ConditionalOperator implements AggregationExpression {
 
 		} else if (!isKeyword(key)) {
 
-			BasicDBList args = new BasicDBList();
+			List<Object> args = new ArrayList<Object>();
 			args.add("$" + key);
 			args.add(predicate);
 			clauses.add(new BasicDBObject("$eq", args));
@@ -230,6 +234,9 @@ public class ConditionalOperator implements AggregationExpression {
 		return ConditionalExpressionBuilder.newBuilder();
 	}
 
+	/**
+	 * @since 1.10
+	 */
 	public static interface WhenBuilder {
 
 		/**
@@ -257,6 +264,9 @@ public class ConditionalOperator implements AggregationExpression {
 		ThenBuilder when(CriteriaDefinition criteria);
 	}
 
+	/**
+	 * @since 1.10
+	 */
 	public static interface ThenBuilder {
 
 		/**
@@ -268,6 +278,9 @@ public class ConditionalOperator implements AggregationExpression {
 		OtherwiseBuilder then(Object value);
 	}
 
+	/**
+	 * @since 1.10
+	 */
 	public static interface OtherwiseBuilder {
 
 		/**
@@ -314,7 +327,7 @@ public class ConditionalOperator implements AggregationExpression {
 			return this;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperator.WhenBuilder#when(org.springframework.data.mongodb.core.query.CriteriaDefinition)
 		 */
@@ -327,7 +340,7 @@ public class ConditionalOperator implements AggregationExpression {
 			return this;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperator.WhenBuilder#when(org.springframework.data.mongodb.core.aggregation.Field)
 		 */
@@ -340,7 +353,7 @@ public class ConditionalOperator implements AggregationExpression {
 			return this;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperator.WhenBuilder#when(java.lang.String)
 		 */
@@ -353,7 +366,7 @@ public class ConditionalOperator implements AggregationExpression {
 			return this;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperator.ThenBuilder#then(java.lang.Object)
 		 */
@@ -366,7 +379,7 @@ public class ConditionalOperator implements AggregationExpression {
 			return this;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperator.OtherwiseBuilder#otherwise(java.lang.Object)
 		 */

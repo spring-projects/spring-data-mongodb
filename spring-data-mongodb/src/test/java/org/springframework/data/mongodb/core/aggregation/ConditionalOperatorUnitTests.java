@@ -19,9 +19,10 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.ConditionalOperator.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -30,6 +31,7 @@ import com.mongodb.DBObject;
  * Unit tests for {@link ConditionalOperator}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class ConditionalOperatorUnitTests {
 
@@ -117,7 +119,7 @@ public class ConditionalOperatorUnitTests {
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
 		DBObject expectedCondition = new BasicDBObject() //
-				.append("if", new BasicDBObject("$gte", new BasicDbListBuilder().add("$luminosity").add(100).get())) //
+				.append("if", new BasicDBObject("$gte", Arrays.<Object> asList("$luminosity", 100))) //
 				.append("then", "bright") //
 				.append("else", "dark");
 
@@ -138,14 +140,12 @@ public class ConditionalOperatorUnitTests {
 
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
-		BasicDBObject luminosity = new BasicDBObject("$gte", new BasicDbListBuilder().add("$luminosity").add(100).get());
-		BasicDBObject hue = new BasicDBObject("$eq", new BasicDbListBuilder().add("$hue").add(50).get());
-		BasicDBObject saturation = new BasicDBObject("$lt", new BasicDbListBuilder().add("$saturation").add(11).get());
+		BasicDBObject luminosity = new BasicDBObject("$gte", Arrays.<Object> asList("$luminosity", 100));
+		BasicDBObject hue = new BasicDBObject("$eq", Arrays.<Object> asList("$hue", 50));
+		BasicDBObject saturation = new BasicDBObject("$lt", Arrays.<Object> asList("$saturation", 11));
 
 		DBObject expectedCondition = new BasicDBObject() //
-				.append("if",
-						new BasicDbListBuilder().add(luminosity)
-								.add(new BasicDBObject("$and", new BasicDbListBuilder().add(hue).add(saturation).get())).get()) //
+				.append("if", Arrays.<Object> asList(luminosity, new BasicDBObject("$and", Arrays.asList(hue, saturation)))) //
 				.append("then", "bright") //
 				.append("else", "dark");
 
@@ -164,11 +164,11 @@ public class ConditionalOperatorUnitTests {
 
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
-		BasicDBObject gte = new BasicDBObject("$gte", new BasicDbListBuilder().add("$luminosity").add(100).get());
-		BasicDBObject is = new BasicDBObject("$eq", new BasicDbListBuilder().add("$chroma").add(200).get());
+		BasicDBObject gte = new BasicDBObject("$gte", Arrays.<Object> asList("$luminosity", 100));
+		BasicDBObject is = new BasicDBObject("$eq", Arrays.<Object> asList("$chroma", 200));
 
 		DBObject expectedCondition = new BasicDBObject() //
-				.append("if", new BasicDbListBuilder().add(gte).add(is).get()) //
+				.append("if", Arrays.asList(gte, is)) //
 				.append("then", "bright") //
 				.append("else", "dark");
 
@@ -195,12 +195,12 @@ public class ConditionalOperatorUnitTests {
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
 		DBObject trueCondition = new BasicDBObject() //
-				.append("if", new BasicDBObject("$gte", new BasicDbListBuilder().add("$luminosity").add(200).get())) //
+				.append("if", new BasicDBObject("$gte", Arrays.<Object> asList("$luminosity", 200))) //
 				.append("then", "verybright") //
 				.append("else", "not-so-bright");
 
 		DBObject falseCondition = new BasicDBObject() //
-				.append("if", new BasicDBObject("$lt", new BasicDbListBuilder().add("$luminosity").add(50).get())) //
+				.append("if", new BasicDBObject("$lt", Arrays.<Object> asList("$luminosity", 50))) //
 				.append("then", "very-dark") //
 				.append("else", "not-so-dark");
 

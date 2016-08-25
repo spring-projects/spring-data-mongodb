@@ -83,7 +83,15 @@ public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
 			}
 
 			if (expectation.type != null && !ClassUtils.isAssignable(expectation.type, o.getClass())) {
-				return false;
+
+				if (o instanceof List) {
+					if (!ClassUtils.isAssignable(List.class, expectation.type)) {
+						return false;
+					}
+				} else {
+					return false;
+				}
+
 			}
 
 			if (expectation.value != null && !new IsEqual<Object>(expectation.value).matches(o)) {
