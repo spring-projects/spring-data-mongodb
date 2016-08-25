@@ -25,7 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-import org.springframework.data.mongodb.core.aggregation.Fields.*;
+import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -331,13 +331,13 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link OutOperation} using the given collection name. This operation must be the last operation
-	 * in the pipeline.
+	 * Creates a new {@link OutOperation} using the given collection name. This operation must be the last operation in
+	 * the pipeline.
 	 *
 	 * @param outCollectionName collection name to export aggregation results. The {@link OutOperation} creates a new
-	 * collection in the current database if one does not already exist. The collection is
-	 * not visible until the aggregation completes. If the aggregation fails, MongoDB does
-	 * not create the collection. Must not be {@literal null}.
+	 *          collection in the current database if one does not already exist. The collection is not visible until the
+	 *          aggregation completes. If the aggregation fails, MongoDB does not create the collection. Must not be
+	 *          {@literal null}.
 	 * @return
 	 */
 	public static OutOperation out(String outCollectionName) {

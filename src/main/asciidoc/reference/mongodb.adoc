@@ -1988,8 +1988,8 @@ List<DBObject> resultList = result.getMappedResults();
 
 Note that we can also refer to other fields of the document within the SpEL expression.
 
-[[mongo.aggregation.examples.example6]]
-.Aggregation Framework Example 6
+[[mongo.aggregation.examples.example7]]
+.Aggregation Framework Example 7
 
 This example uses conditional projection. It's derived from the https://docs.mongodb.com/manual/reference/operator/aggregation/cond/[$cond reference documentation].
 
@@ -2019,7 +2019,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 TypedAggregation<InventoryItem> agg = newAggregation(InventoryItem.class,
   project("item").and("discount")
-    .transform(ConditionalOperator.newBuilder().when(Criteria.where("qty").gte(250))
+    .applyCondition(ConditionalOperator.newBuilder().when(Criteria.where("qty").gte(250))
       .then(30)
       .otherwise(20))
     .and(ifNull("description", "Unspecified")).as("description")
@@ -2029,7 +2029,7 @@ AggregationResults<InventoryItemProjection> result = mongoTemplate.aggregate(agg
 List<InventoryItemProjection> stateStatsList = result.getMappedResults();
 ----
 
-* This one-step aggregation uses a projection operation with the `inventory` collection. We project the `discount` field using a conditional transformation for all inventory items that have a `qty` greater or equal to `250`. An second conditional projection is performed for the `description` field. We apply the description `Unspecified` to all items that either do not have a `description` field of items that have a `null` description.
+* This one-step aggregation uses a projection operation with the `inventory` collection. We project the `discount` field using a conditional operation for all inventory items that have a `qty` greater or equal to `250`. An second conditional projection is performed for the `description` field. We apply the description `Unspecified` to all items that either do not have a `description` field of items that have a `null` description.
 
 
 [[mongo.custom-converters]]

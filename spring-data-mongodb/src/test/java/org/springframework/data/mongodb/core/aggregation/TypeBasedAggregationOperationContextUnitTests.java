@@ -291,7 +291,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class,
 				project("name") //
 						.and("age") //
-						.transform(conditional(Criteria.where("age.value").lt(10), new Age(0), field("age"))) //
+						.applyCondition(conditional(Criteria.where("age.value").lt(10), new Age(0), field("age"))) //
 		);
 
 		DBObject dbo = agg.toDbObject("person", context);
@@ -317,7 +317,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class,
 				project("name") //
 						.and("age") //
-						.transform(ifNull("age", new Age(0))) //
+						.applyCondition(ifNull("age", new Age(0))) //
 		);
 
 		DBObject dbo = agg.toDbObject("person", context);

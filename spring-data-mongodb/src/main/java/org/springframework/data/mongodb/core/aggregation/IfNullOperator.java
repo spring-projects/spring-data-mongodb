@@ -16,16 +16,18 @@
 
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.util.Assert;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
  * Encapsulates the aggregation framework {@code $ifNull} operator. Replacement values can be either {@link Field field
  * references}, values of simple MongoDB types or values that can be converted to a simple MongoDB type.
- * 
+ *
  * @see http://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/
  * @author Mark Paluch
  * @since 1.10
@@ -37,7 +39,7 @@ public class IfNullOperator implements AggregationExpression {
 
 	/**
 	 * Creates a new {@link IfNullOperator} for the given {@link Field} and replacement {@code value}.
-	 * 
+	 *
 	 * @param field must not be {@literal null}.
 	 * @param value must not be {@literal null}.
 	 */
@@ -50,26 +52,30 @@ public class IfNullOperator implements AggregationExpression {
 		this.value = value;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
 	public DBObject toDbObject(AggregationOperationContext context) {
 
-		BasicDBList list = new BasicDBList();
+		List<Object> list = new ArrayList<Object>();
 
 		list.add(context.getReference(field).toString());
-
-		if (value instanceof Field) {
-			list.add(context.getReference((Field) value).toString());
-		} else {
-
-			DBObject toMap = context.getMappedObject(new BasicDBObject("$set", value));
-			list.add(toMap.get("$set"));
-		}
+		list.add(resolve(value, context));
 
 		return new BasicDBObject("$ifNull", list);
+	}
+
+	private Object resolve(Object value, AggregationOperationContext context) {
+
+		if (value instanceof Field) {
+			return context.getReference((Field) value).toString();
+		} else if (value instanceof DBObject) {
+			return value;
+		}
+
+		return context.getMappedObject(new BasicDBObject("$set", value)).get("$set");
 	}
 
 	/**
@@ -81,6 +87,9 @@ public class IfNullOperator implements AggregationExpression {
 		return IfNullOperatorBuilder.newBuilder();
 	}
 
+	/**
+	 * @since 1.10
+	 */
 	public static interface IfNullBuilder {
 
 		/**
@@ -96,6 +105,9 @@ public class IfNullOperator implements AggregationExpression {
 		ThenBuilder ifNull(String field);
 	}
 
+	/**
+	 * @since 1.10
+	 */
 	public static interface ThenBuilder {
 
 		/**
@@ -134,11 +146,10 @@ public class IfNullOperator implements AggregationExpression {
 			return new IfNullOperatorBuilder();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.IfNullOperator.IfNullBuilder#ifNull(org.springframework.data.mongodb.core.aggregation.Field)
 		 */
-
 		public ThenBuilder ifNull(Field field) {
 
 			Assert.notNull(field, "Field must not be null!");
@@ -147,7 +158,7 @@ public class IfNullOperator implements AggregationExpression {
 			return this;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.IfNullOperator.IfNullBuilder#ifNull(java.lang.String)
 		 */
@@ -159,7 +170,7 @@ public class IfNullOperator implements AggregationExpression {
 			return this;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.IfNullOperator.ThenReplaceBuilder#thenReplaceWith(org.springframework.data.mongodb.core.aggregation.Field)
 		 */
@@ -171,7 +182,7 @@ public class IfNullOperator implements AggregationExpression {
 			return new IfNullOperator(this.field, replacementField);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.IfNullOperator.ThenReplaceBuilder#thenReplaceWith(java.lang.Object)
 		 */

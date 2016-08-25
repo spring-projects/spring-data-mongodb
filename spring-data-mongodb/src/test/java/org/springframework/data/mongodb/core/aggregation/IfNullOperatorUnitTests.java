@@ -19,16 +19,17 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
-import org.junit.Test;
-import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
+import java.util.Arrays;
 
-import com.mongodb.BasicDBList;
+import org.junit.Test;
+
 import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link IfNullOperator}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class IfNullOperatorUnitTests {
 
@@ -60,12 +61,8 @@ public class IfNullOperatorUnitTests {
 
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
-		BasicDBList expected = new BasicDbListBuilder() //
-				.add("$optional") //
-				.add("a more sophisticated value")//
-				.get();
-
-		assertThat(dbObject, isBsonObject().containing("$ifNull", expected));
+		assertThat(dbObject,
+				isBsonObject().containing("$ifNull", Arrays.<Object> asList("$optional", "a more sophisticated value")));
 	}
 
 	/**
@@ -80,11 +77,6 @@ public class IfNullOperatorUnitTests {
 
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
-		BasicDBList expected = new BasicDbListBuilder() //
-				.add("$optional") //
-				.add("$never-null")//
-				.get();
-
-		assertThat(dbObject, isBsonObject().containing("$ifNull", expected));
+		assertThat(dbObject, isBsonObject().containing("$ifNull", Arrays.<Object> asList("$optional", "$never-null")));
 	}
 }
