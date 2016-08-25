@@ -373,6 +373,68 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link IfNullOperator} for the given {@code field} and {@code replacement} value.
+	 *
+	 * @param field must not be {@literal null}.
+	 * @param replacement must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public static IfNullOperator ifNull(String field, Object replacement) {
+		return IfNullOperator.newBuilder().ifNull(field).thenReplaceWith(replacement);
+	}
+
+	/**
+	 * Creates a new {@link IfNullOperator} for the given {@link Field} and {@link Field} to obtain a value from.
+	 *
+	 * @param field must not be {@literal null}.
+	 * @param replacement must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public static IfNullOperator ifNull(Field field, Field replacement) {
+		return IfNullOperator.newBuilder().ifNull(field).thenReplaceWith(replacement);
+	}
+
+	/**
+	 * Creates a new {@link IfNullOperator} for the given {@link Field} and {@code replacement} value.
+	 *
+	 * @param field must not be {@literal null}.
+	 * @param replacement must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public static IfNullOperator ifNull(Field field, Object replacement) {
+		return IfNullOperator.newBuilder().ifNull(field).thenReplaceWith(replacement);
+	}
+
+	/**
+	 * Creates a new {@link ConditionalOperator} for the given {@link Field} that holds a {@literal boolean} value.
+	 *
+	 * @param booleanField must not be {@literal null}.
+	 * @param then must not be {@literal null}.
+	 * @param otherwise must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public static ConditionalOperator conditional(Field booleanField, Object then, Object otherwise) {
+		return ConditionalOperator.newBuilder().when(booleanField).then(then).otherwise(otherwise);
+	}
+
+	/**
+	 * Creates a new {@link ConditionalOperator} for the given {@link Criteria}.
+	 *
+	 * @param criteria must not be {@literal null}.
+	 * @param then must not be {@literal null}.
+	 * @param otherwise must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public static ConditionalOperator conditional(Criteria criteria, Object then, Object otherwise) {
+		return ConditionalOperator.newBuilder().when(criteria).then(then).otherwise(otherwise);
+	}
+
+	/**
 	 * Creates a new {@link Fields} instance for the given field names.
 	 *
 	 * @param fields must not be {@literal null}.
