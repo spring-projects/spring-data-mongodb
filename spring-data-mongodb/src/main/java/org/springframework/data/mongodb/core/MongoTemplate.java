@@ -806,9 +806,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param collection
 	 */
 	protected void prepareCollection(DBCollection collection) {
-		if (this.readPreference != null) {
-			collection.setReadPreference(readPreference);
-		}
+		collection.setReadPreference(readPreference);
 	}
 
 	/**

@@ -13,8 +13,13 @@
 		<constructor-arg name="databaseName" value="database"/>
 	</bean>
 
-	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate" primary="true">
 		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
+	</bean>
+
+	<bean id="mongoTemplateReadFromSecondary" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
+		<property name="readPreference" value="#{T(com.mongodb.ReadPreference).secondary()}" />
 	</bean>
 
 </beans>

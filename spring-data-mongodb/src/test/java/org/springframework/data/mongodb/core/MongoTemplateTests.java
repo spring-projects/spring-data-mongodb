@@ -47,6 +47,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -122,6 +123,9 @@ public class MongoTemplateTests {
 			.parse("2.8");
 
 	@Autowired MongoTemplate template;
+	@Autowired @Qualifier("mongoTemplateReadFromSecondary") MongoTemplate mongoTemplateReadFromSecondary;
+
+
 	@Autowired MongoDbFactory factory;
 
 	MongoTemplate mappingTemplate;
@@ -3440,6 +3444,23 @@ public class MongoTemplateTests {
 
 		assertThat(target.lazyDbRefAnnotatedMap, instanceOf(LazyLoadingProxy.class));
 		assertThat(target.lazyDbRefAnnotatedMap.values(), contains(two, one));
+	}
+
+	/**
+	 * @see DATAMONGO-1061
+	 */
+	@Test
+	public void multipleTemplates() throws Exception {
+
+		Person person = new Person("Bogdan Apetrei");
+		person.setAge(31);
+		template.insert(person);
+
+		mongoTemplateReadFromSecondary.find(new Query(Criteria.where("_id").is(person.getId())), Person.class);
+		assertThat(mongoTemplateReadFromSecondary.getDb().getCollection("person").getReadPreference(),is(ReadPreference.secondary()));
+
+		template.find(new Query(Criteria.where("_id").is(person.getId())), Person.class);
+		assertThat(template.getDb().getCollection("person").getReadPreference(), is(ReadPreference.primary()));
 	}
 
 	static class TypeWithNumbers {
