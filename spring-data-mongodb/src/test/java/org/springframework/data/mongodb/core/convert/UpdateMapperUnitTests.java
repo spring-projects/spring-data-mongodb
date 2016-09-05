@@ -924,11 +924,10 @@ public class UpdateMapperUnitTests {
 		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithObjectMap.class));
 
-		DBObject $set = getAsDBObject(mappedUpdate, "$set");
-		DBObject mapToSet = getAsDBObject($set, "map");
+		DBObject mapToSet = getAsDBObject(getAsDBObject(mappedUpdate, "$set"), "map");
 
 		for (Object key : mapToSet.keySet()) {
-			assertThat(key, instanceOf(String.class));
+			assertThat(key, is(instanceOf(String.class)));
 		}
 	}
 
