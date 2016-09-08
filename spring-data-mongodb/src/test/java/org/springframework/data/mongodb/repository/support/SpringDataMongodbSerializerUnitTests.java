@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
+import java.util.Collections;
+
 import org.bson.types.ObjectId;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -26,11 +28,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.QAddress;
 import org.springframework.data.mongodb.repository.QPerson;
 
@@ -172,10 +178,52 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat($in, Matchers.<Object> arrayContaining(firstId, secondId));
 	}
 
+	/**
+	 * @see DATAMONGO-1485
+	 */
+	@Test
+	public void takesCustomConversionForEnumsIntoAccount() {
+
+		MongoMappingContext context = new MongoMappingContext();
+
+		MappingMongoConverter converter = new MappingMongoConverter(dbFactory, context);
+		converter.setCustomConversions(new CustomConversions(Collections.singletonList(new SexTypeWriteConverter())));
+		converter.afterPropertiesSet();
+
+		this.converter = converter;
+		this.serializer = new SpringDataMongodbSerializer(this.converter);
+
+		Object mappedPredicate = this.serializer.handle(QPerson.person.sex.eq(Sex.FEMALE));
+
+		assertThat(mappedPredicate, is(instanceOf(DBObject.class)));
+		assertThat(((DBObject) mappedPredicate).get("sex"), is((Object) "f"));
+	}
+
 	class Address {
 		String id;
 		String street;
 		@Field("zip_code") String zipCode;
 		@Field("bar") String[] foo;
+	}
+
+	@WritingConverter
+	public class SexTypeWriteConverter implements Converter<Sex, String> {
+
+		@Override
+		public String convert(Sex source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			switch (source) {
+				case MALE:
+					return "m";
+				case FEMALE:
+					return "f";
+				default:
+					throw new IllegalArgumentException("o_O");
+			}
+		}
 	}
 }
