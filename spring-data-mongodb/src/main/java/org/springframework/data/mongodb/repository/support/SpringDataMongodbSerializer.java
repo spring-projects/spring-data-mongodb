@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
@@ -72,6 +73,20 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		this.mappingContext = converter.getMappingContext();
 		this.converter = converter;
 		this.mapper = new QueryMapper(converter);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.querydsl.mongodb.MongodbSerializer#visit(com.querydsl.core.types.Constant, java.lang.Void)
+	 */
+	@Override
+	public Object visit(Constant<?> expr, Void context) {
+
+		if (!ClassUtils.isAssignable(Enum.class, expr.getType())) {
+			return super.visit(expr, context);
+		}
+
+		return converter.convertToMongoType(expr.getConstant());
 	}
 
 	/*
