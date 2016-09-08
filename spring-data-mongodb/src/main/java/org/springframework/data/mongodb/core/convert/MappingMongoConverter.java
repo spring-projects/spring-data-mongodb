@@ -1012,7 +1012,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				TypeInformation<? extends Object> valueTypeHint = typeHint != null && typeHint.getMapValueType() != null
 						? typeHint.getMapValueType() : typeHint;
 
-				converted.put(convertToMongoType(entry.getKey()), convertToMongoType(entry.getValue(), valueTypeHint));
+				converted.put(getPotentiallyConvertedSimpleWrite(entry.getKey()).toString(),
+						convertToMongoType(entry.getValue(), valueTypeHint));
 			}
 
 			return new BasicDBObject(converted);

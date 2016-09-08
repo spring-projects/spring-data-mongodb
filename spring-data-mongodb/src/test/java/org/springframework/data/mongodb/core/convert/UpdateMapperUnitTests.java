@@ -914,6 +914,24 @@ public class UpdateMapperUnitTests {
 		assertThat(result, isBsonObject().containing("$set.enumAsMapKey.V", 100));
 	}
 
+	/**
+	 * @see DATAMONGO-1486
+	 */
+	@Test
+	public void mappingShouldConvertMapKeysToString() {
+
+		Update update = new Update().set("map", Collections.singletonMap(25, "#StarTrek50"));
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObjectMap.class));
+
+		DBObject $set = getAsDBObject(mappedUpdate, "$set");
+		DBObject mapToSet = getAsDBObject($set, "map");
+
+		for (Object key : mapToSet.keySet()) {
+			assertThat(key, instanceOf(String.class));
+		}
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
