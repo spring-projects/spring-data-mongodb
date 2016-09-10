@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.springframework.util.StringUtils;
  * 
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 1.6
  */
 public class Meta {
@@ -39,12 +40,13 @@ public class Meta {
 
 		private String key;
 
-		private MetaKey(String key) {
+		MetaKey(String key) {
 			this.key = key;
 		}
 	}
 
 	private final Map<String, Object> values = new LinkedHashMap<String, Object>(2);
+	private Boolean noCursorTimeout;
 
 	/**
 	 * @return {@literal null} if not set.
@@ -121,10 +123,28 @@ public class Meta {
 	}
 
 	/**
+	 * @return {@literal null} if not set.
+	 * @since 1.10
+	 */
+	public Boolean isNoCursorTimeout() {
+		return this.noCursorTimeout;
+	}
+
+	/**
+	 * Instructs the server to avoid closing a cursor automatically after a period of inactivity.
+	 *
+	 * @param noCursorTimeout
+	 * @since 1.10
+	 */
+	public void setNoCursorTimeout(boolean noCursorTimeout) {
+		this.noCursorTimeout = noCursorTimeout;
+	}
+
+	/**
 	 * @return
 	 */
 	public boolean hasValues() {
-		return !this.values.isEmpty();
+		return !this.values.isEmpty() || this.noCursorTimeout != null;
 	}
 
 	/**

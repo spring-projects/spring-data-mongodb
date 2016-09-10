@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.Bytes;
 import com.mongodb.DBCursor;
 
 /**
@@ -39,6 +40,7 @@ import com.mongodb.DBCursor;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class QueryCursorPreparerUnitTests {
@@ -61,7 +63,7 @@ public class QueryCursorPreparerUnitTests {
 
 		Query query = query(where("foo").is("bar")).withHint("hint");
 
-		pepare(query);
+		prepare(query);
 
 		verify(cursorToUse).hint("hint");
 	}
@@ -75,7 +77,7 @@ public class QueryCursorPreparerUnitTests {
 		Query query = query(where("foo").is("bar"));
 		query.setMeta(new Meta());
 
-		pepare(query);
+		prepare(query);
 
 		verify(cursor, never()).copy();
 		verify(cursorToUse, never()).addSpecial(any(String.class), anyObject());
@@ -89,7 +91,7 @@ public class QueryCursorPreparerUnitTests {
 
 		Query query = query(where("foo").is("bar")).maxScan(100);
 
-		pepare(query);
+		prepare(query);
 
 		verify(cursorToUse).addSpecial(eq("$maxScan"), eq(100L));
 	}
@@ -102,7 +104,7 @@ public class QueryCursorPreparerUnitTests {
 
 		Query query = query(where("foo").is("bar")).maxTime(1, TimeUnit.SECONDS);
 
-		pepare(query);
+		prepare(query);
 
 		verify(cursorToUse).addSpecial(eq("$maxTimeMS"), eq(1000L));
 	}
@@ -115,7 +117,7 @@ public class QueryCursorPreparerUnitTests {
 
 		Query query = query(where("foo").is("bar")).comment("spring data");
 
-		pepare(query);
+		prepare(query);
 
 		verify(cursorToUse).addSpecial(eq("$comment"), eq("spring data"));
 	}
@@ -128,12 +130,25 @@ public class QueryCursorPreparerUnitTests {
 
 		Query query = query(where("foo").is("bar")).useSnapshot();
 
-		pepare(query);
+		prepare(query);
 
 		verify(cursorToUse).addSpecial(eq("$snapshot"), eq(true));
 	}
 
-	private DBCursor pepare(Query query) {
+	/**
+	 * @see DATAMONGO-1480
+	 */
+	@Test
+	public void appliesNoCursorTimeoutCorrectly() {
+
+		Query query = query(where("foo").is("bar")).noCursorTimeout();
+
+		prepare(query);
+
+		verify(cursorToUse).addOption(Bytes.QUERYOPTION_NOTIMEOUT);
+	}
+
+	private DBCursor prepare(Query query) {
 
 		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query, null);
 		return preparer.prepare(cursor);

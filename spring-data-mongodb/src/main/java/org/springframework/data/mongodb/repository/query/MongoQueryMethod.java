@@ -248,6 +248,10 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setSnapshot(meta.snapshot());
 		}
 
+		if (meta.noCursorTimeout()) {
+			metaAttributes.setNoCursorTimeout(meta.noCursorTimeout());
+		}
+
 		return metaAttributes;
 	}
 }

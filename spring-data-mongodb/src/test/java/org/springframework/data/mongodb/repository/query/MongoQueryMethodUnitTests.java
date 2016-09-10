@@ -202,6 +202,18 @@ public class MongoQueryMethodUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1480
+	 */
+	@Test
+	public void createsMongoQueryMethodWithNoCursorTimeoutCorrectly() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithNoCursorTimeout");
+
+		assertThat(method.hasQueryMetaAttributes(), is(true));
+		assertThat(method.getQueryMetaAttributes().isNoCursorTimeout(), is(true));
+	}
+
+	/**
 	 * @see DATAMONGO-1266
 	 */
 	@Test
@@ -249,6 +261,9 @@ public class MongoQueryMethodUnitTests {
 
 		@Meta(snapshot = true)
 		List<User> metaWithSnapshotUsage();
+
+		@Meta(noCursorTimeout = true)
+		List<User> metaWithNoCursorTimeout();
 
 		/**
 		 * @see DATAMONGO-1266
