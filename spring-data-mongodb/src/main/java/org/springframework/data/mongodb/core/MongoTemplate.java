@@ -139,6 +139,7 @@ import com.mongodb.util.JSONParseException;
  * @author Christoph Strobl
  * @author Doménique Tilleuil
  * @author Niko Schmuck
+ * @author Mark Paluch
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -2249,7 +2250,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @author Thomas Darimont
 	 */
 
-	static interface DbObjectCallback<T> {
+	interface DbObjectCallback<T> {
 
 		T doWith(DBObject object);
 	}
@@ -2347,22 +2348,32 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			DBCursor cursorToUse = cursor.copy();
 
 			try {
+
 				if (query.getSkip() > 0) {
 					cursorToUse = cursorToUse.skip(query.getSkip());
 				}
+
 				if (query.getLimit() > 0) {
 					cursorToUse = cursorToUse.limit(query.getLimit());
 				}
+
 				if (query.getSortObject() != null) {
 					DBObject sortDbo = type != null ? getMappedSortObject(query, type) : query.getSortObject();
 					cursorToUse = cursorToUse.sort(sortDbo);
 				}
+
 				if (StringUtils.hasText(query.getHint())) {
 					cursorToUse = cursorToUse.hint(query.getHint());
 				}
+
 				if (query.getMeta().hasValues()) {
+
 					for (Entry<String, Object> entry : query.getMeta().values()) {
 						cursorToUse = cursorToUse.addSpecial(entry.getKey(), entry.getValue());
+					}
+
+					if (query.getMeta().isNoCursorTimeout() != null && query.getMeta().isNoCursorTimeout().booleanValue()) {
+						cursorToUse = cursorToUse.addOption(Bytes.QUERYOPTION_NOTIMEOUT);
 					}
 				}
 

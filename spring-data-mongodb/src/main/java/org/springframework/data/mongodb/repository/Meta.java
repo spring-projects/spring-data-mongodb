@@ -75,4 +75,12 @@ public @interface Meta {
 	 */
 	boolean snapshot() default false;
 
+	/**
+	 * Instructs the server to avoid closing a cursor automatically after a period of inactivity.
+	 *
+	 * @return
+	 * @since 1.10
+	 */
+	boolean noCursorTimeout() default false;
+
 }
