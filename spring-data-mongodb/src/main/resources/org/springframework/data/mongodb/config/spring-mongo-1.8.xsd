@@ -37,8 +37,8 @@ Defines a MongoClient instance used for accessing MongoDB.
 				<tool:annotation>
 					<tool:exports type="com.mongodb.MongoClient"/>
 				</tool:annotation>
-			</xsd:appinfo>	  
-	  </xsd:annotation>
+			</xsd:appinfo>
+		</xsd:annotation>
 	</xsd:element>
 
 	<xsd:element name="db-factory">
@@ -170,8 +170,8 @@ The MongoClientURI string.]]></xsd:documentation>
 				<xsd:element name="custom-converters" minOccurs="0">
 					<xsd:annotation>
 						<xsd:documentation><![CDATA[
-        Top-level element that contains one or more custom converters to be used for mapping
-        domain objects to and from Mongo's DBObject]]>
+		Top-level element that contains one or more custom converters to be used for mapping
+		domain objects to and from Mongo's DBObject]]>
 						</xsd:documentation>
 					</xsd:annotation>
 					<xsd:complexType>
@@ -389,10 +389,10 @@ The name of the Mongo object that determines what server to monitor. (by default
 	-->
 	<xsd:complexType name="mongoType">
 		<xsd:annotation>
-	    	<xsd:documentation><![CDATA[
-Deprecated since 1.7.    	
-	    	]]></xsd:documentation>
-	    </xsd:annotation>
+			<xsd:documentation><![CDATA[
+Deprecated since 1.7.
+			]]></xsd:documentation>
+		</xsd:annotation>
 		<xsd:sequence minOccurs="0" maxOccurs="1">
 			<xsd:element name="options" type="optionsType">
 				<xsd:annotation>
@@ -451,14 +451,14 @@ The comma delimited list of host:port entries to use for replica set/pairs.
 
 	<xsd:complexType name="optionsType">
 		<xsd:annotation>
-	    	<xsd:documentation><![CDATA[
-Deprecated since 1.7.    	
-	    	]]></xsd:documentation>
-	    </xsd:annotation>
+			<xsd:documentation><![CDATA[
+Deprecated since 1.7.
+			]]></xsd:documentation>
+		</xsd:annotation>
 		<xsd:attribute name="connections-per-host" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The number of connections allowed per host.  Will block if run out.	 Default is 10.  System property MONGO.POOLSIZE can override	
+The number of connections allowed per host.  Will block if run out.	 Default is 10.  System property MONGO.POOLSIZE can override
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -559,10 +559,10 @@ The SSLSocketFactory to use for the SSL connection. If none is configured here, 
 	
 	<xsd:complexType name="mongoClientType">
 		<xsd:annotation>
-	    	<xsd:documentation><![CDATA[
-Configuration options for 'MongoClient' - @since 1.7	    	
-	    	]]></xsd:documentation>
-	    </xsd:annotation>
+			<xsd:documentation><![CDATA[
+Configuration options for 'MongoClient' - @since 1.7
+			]]></xsd:documentation>
+		</xsd:annotation>
 		<xsd:sequence minOccurs="0" maxOccurs="1">
 			<xsd:element name="client-options" type="clientOptionsType">
 				<xsd:annotation>
@@ -614,11 +614,11 @@ The comma delimited list of username:password@database entries to use for authen
 	</xsd:complexType>
 	
 	<xsd:complexType name="clientOptionsType">
-	    <xsd:annotation>
-	    	<xsd:documentation><![CDATA[
-Configuration options for 'MongoClientOptions' - @since 1.7	    	
-	    	]]></xsd:documentation>
-	    </xsd:annotation>
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+Configuration options for 'MongoClientOptions' - @since 1.7
+			]]></xsd:documentation>
+		</xsd:annotation>
 		<xsd:attribute name="description" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
@@ -752,7 +752,7 @@ This controls if the driver should us an SSL connection.  Defaults to false.
 The SSLSocketFactory to use for the SSL connection. If none is configured here, SSLSocketFactory#getDefault() will be used.
 				]]></xsd:documentation>
 			</xsd:annotation>
-		</xsd:attribute>									
+		</xsd:attribute>
 	</xsd:complexType>
 
 	<xsd:group name="beanElementGroup">
@@ -765,8 +765,8 @@ The SSLSocketFactory to use for the SSL connection. If none is configured here, 
 	<xsd:complexType name="customConverterType">
 		<xsd:annotation>
 			<xsd:documentation><![CDATA[
-  Element defining a custom converterr.
-      ]]></xsd:documentation>
+	Element defining a custom converter.
+	]]></xsd:documentation>
 		</xsd:annotation>
 		<xsd:group ref="beanElementGroup" minOccurs="0" maxOccurs="1"/>
 		<xsd:attribute name="ref" type="xsd:string">
