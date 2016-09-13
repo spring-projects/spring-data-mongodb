@@ -137,7 +137,7 @@ The MongoClientURI string.]]></xsd:documentation>
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="create-query-indexes" type="xsd:boolean" default="false">
+		<xsd:attribute name="create-query-indexes" type="xsd:string" default="false">
 			<xsd:annotation>
 				<xsd:documentation>
 					Enables creation of indexes for queries that get derived from the method name
@@ -541,7 +541,7 @@ This controls if the driver is allowed to read from secondaries or slaves.  Defa
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>				
-		<xsd:attribute name="ssl" type="xsd:boolean">
+		<xsd:attribute name="ssl" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 This controls if the driver should us an SSL connection.  Defaults to false.
@@ -739,7 +739,7 @@ The socket timeout for connections used for the cluster heartbeat.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>	
-		<xsd:attribute name="ssl" type="xsd:boolean">
+		<xsd:attribute name="ssl" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 This controls if the driver should us an SSL connection.  Defaults to false.

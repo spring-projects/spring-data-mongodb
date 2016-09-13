@@ -29,8 +29,10 @@
 	
 	<mongo:db-factory dbname="database" mongo-ref="mongo"/>
 
+	<mongo:mongo-client id="mongoClientSsl">
+		<mongo:client-options ssl="${mongoSsl.ssl}" />
+	</mongo:mongo-client>
 
-	
 	<mongo:db-factory id="secondMongoDbFactory"
 					  host="localhost"
 					  port="27017"
@@ -49,7 +51,7 @@
 	<mongo:mongo id="defaultMongo" host="localhost" port="27017"/>
 
 	<mongo:mongo id="mongoSsl" host="localhost" port="27017">
-		<mongo:options ssl="true"/>
+		<mongo:options ssl="${mongoSsl.ssl}"/>
 	</mongo:mongo>
 
 	<mongo:mongo id="mongoSslWithCustomSslFactory" host="localhost" port="27017">
