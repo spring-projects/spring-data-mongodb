@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvokerTestUtil;
@@ -38,6 +39,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoOptions;
 import com.mongodb.WriteConcern;
 
@@ -98,6 +100,19 @@ public class MongoNamespaceTests {
 		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&mongoSsl");
 
 		MongoOptions options = (MongoOptions) getField(mfb, "mongoOptions");
+		assertTrue("socketFactory should be a SSLSocketFactory", options.getSocketFactory() instanceof SSLSocketFactory);
+	}
+
+	/**
+	 * @see DATAMONGO-1490
+	 */
+	@Test
+	public void testMongoClientSingletonWithSslEnabled() {
+
+		assertTrue(ctx.containsBean("mongoClientSsl"));
+		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoClientSsl");
+
+		MongoClientOptions options = (MongoClientOptions) getField(mfb, "mongoClientOptions");
 		assertTrue("socketFactory should be a SSLSocketFactory", options.getSocketFactory() instanceof SSLSocketFactory);
 	}
 
