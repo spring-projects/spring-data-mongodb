@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,17 @@ import com.mongodb.DBObject;
 /**
  * An {@link AggregationExpression} can be used with field expressions in aggregation pipeline stages like
  * {@code project} and {@code group}.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
-interface AggregationExpression {
+public interface AggregationExpression {
 
 	/**
 	 * Turns the {@link AggregationExpression} into a {@link DBObject} within the given
 	 * {@link AggregationOperationContext}.
-	 * 
+	 *
 	 * @param context
 	 * @return
 	 */
