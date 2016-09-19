@@ -12,11 +12,11 @@ The MongoDB support contains a wide range of features which are summarized below
 * Java based Query, Criteria, and Update DSLs
 * Automatic implementation of Repository interfaces including support for custom finder methods.
 * QueryDSL integration to support type-safe queries.
-* Cross-store persistance - support for JPA Entities with fields transparently persisted/retrieved using MongoDB
+* Cross-store persistence - support for JPA Entities with fields transparently persisted/retrieved using MongoDB
 * Log4j log appender
 * GeoSpatial integration
 
-For most tasks you will find yourself using `MongoTemplate` or the Repository support that both leverage the rich mapping functionality. MongoTemplate is the place to look for accessing functionality such as incrementing counters or ad-hoc CRUD operations. MongoTemplate also provides callback methods so that it is easy for you to get a hold of the low level API artifacts such as `org.mongo.DB` to communicate directly with MongoDB. The goal with naming conventions on various API artifacts is to copy those in the base MongoDB Java driver so you can easily map your existing knowledge onto the Spring APIs.
+For most tasks you will find yourself using `MongoTemplate` or the Repository support that both leverage the rich mapping functionality. `MongoTemplate` is the place to look for accessing functionality such as incrementing counters or ad-hoc CRUD operations. `MongoTemplate` also provides callback methods so that it is easy for you to get a hold of the low level API artifacts such as `com.mongo.DB` to communicate directly with MongoDB. The goal with naming conventions on various API artifacts is to copy those in the base MongoDB Java driver so you can easily map your existing knowledge onto the Spring APIs.
 
 [[mongodb-getting-started]]
 == Getting Started
@@ -51,7 +51,7 @@ Also change the version of Spring in the pom.xml to be
 <spring.framework.version>{springVersion}</spring.framework.version>
 ----
 
-You will also need to add the location of the Spring Milestone repository for maven to your pom.xml which is at the same level of your <dependencies/> element
+You will also need to add the location of the Spring Milestone repository for maven to your `pom.xml` which is at the same level of your `<dependencies/>` element
 
 [source,xml]
 ----
@@ -66,11 +66,11 @@ You will also need to add the location of the Spring Milestone repository for ma
 
 The repository is also http://repo.spring.io/milestone/org/springframework/data/[browseable here].
 
-You may also want to set the logging level to `DEBUG` to see some additional information, edit the log4j.properties file to have
+You may also want to set the logging level to `DEBUG` to see some additional information, edit the `log4j.properties` file to have
 
 [source]
 ----
-log4j.category.org.springframework.data.document.mongodb=DEBUG
+log4j.category.org.springframework.data.mongodb=DEBUG
 log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %40.40c:%4L - %m%n
 ----
 
@@ -155,7 +155,7 @@ Even in this simple example, there are few things to take notice of
 
 * You can instantiate the central helper class of Spring Mongo, <<mongo-template,`MongoTemplate`>>, using the standard `com.mongodb.Mongo` object and the name of the database to use.
 * The mapper works against standard POJO objects without the need for any additional metadata (though you can optionally provide that information. See <<mongo.mapping,here>>.).
-* Conventions are used for handling the id field, converting it to be a ObjectId when stored in the database.
+* Conventions are used for handling the id field, converting it to be a `ObjectId` when stored in the database.
 * Mapping conventions can use field access. Notice the Person class has only getters.
 * If the constructor argument names match the field names of the stored document, they will be used to instantiate the object
 
@@ -195,7 +195,7 @@ public class AppConfig {
 
 This approach allows you to use the standard `com.mongodb.Mongo` API that you may already be used to using but also pollutes the code with the UnknownHostException checked exception. The use of the checked exception is not desirable as Java based bean metadata uses methods as a means to set object dependencies, making the calling code cluttered.
 
-An alternative is to register an instance of `com.mongodb.Mongo` instance with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.Mongo` instance directly, the FactoryBean approach does not throw a checked exception and has the added advantage of also providing the container with an ExceptionTranslator implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annoated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html[Spring's DAO support features].
+An alternative is to register an instance of `com.mongodb.Mongo` instance with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.Mongo` instance directly, the FactoryBean approach does not throw a checked exception and has the added advantage of also providing the container with an ExceptionTranslator implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html[Spring's DAO support features].
 
 An example of a Java based bean metadata that supports exception translation on `@Repository` annotated classes is shown below:
 
@@ -223,7 +223,7 @@ To access the `com.mongodb.Mongo` object created by the `MongoClientFactoryBean`
 [[mongo.mongo-xml-config]]
 === Registering a Mongo instance using XML based metadata
 
-While you can use Spring's traditional `<beans/>` XML namespace to register an instance of `com.mongodb.Mongo` with the container, the XML can be quite verbose as it is general purpose. XML namespaces are a better alternative to configuring commonly used objects such as the Mongo instance. The mongo namespace alows you to create a Mongo instance server location, replica-sets, and options.
+While you can use Spring's traditional `<beans/>` XML namespace to register an instance of `com.mongodb.Mongo` with the container, the XML can be quite verbose as it is general purpose. XML namespaces are a better alternative to configuring commonly used objects such as the Mongo instance. The mongo namespace allows you to create a Mongo instance server location, replica-sets, and options.
 
 To use the Mongo namespace elements you will need to reference the Mongo schema:
 
@@ -250,7 +250,7 @@ To use the Mongo namespace elements you will need to reference the Mongo schema:
 ----
 ====
 
-A more advanced configuration with MongoOptions is shown below (note these are not recommended values)
+A more advanced configuration with `MongoOptions` is shown below (note these are not recommended values)
 
 .XML schema to configure a com.mongodb.Mongo object with MongoOptions
 ====
@@ -301,9 +301,9 @@ public interface MongoDbFactory {
 }
 ----
 
-The following sections show how you can use the container with either Java or the XML based metadata to configure an instance of the `MongoDbFactory` interface. In turn, you can use the `MongoDbFactory` instance to configure MongoTemplate.
+The following sections show how you can use the container with either Java or the XML based metadata to configure an instance of the `MongoDbFactory` interface. In turn, you can use the `MongoDbFactory` instance to configure `MongoTemplate`.
 
-The class `org.springframework.data.mongodb.core.SimpleMongoDbFactory` provides implements the MongoDbFactory interface and is created with a standard `com.mongodb.Mongo` instance, the database name and an optional `org.springframework.data.authentication.UserCredentials` constructor argument.
+The class `org.springframework.data.mongodb.core.SimpleMongoDbFactory` provides implements the `MongoDbFactory` interface and is created with a standard `com.mongodb.Mongo` instance, the database name and an optional `org.springframework.data.authentication.UserCredentials` constructor argument.
 
 Instead of using the IoC container to create an instance of MongoTemplate, you can just use them in standard Java code as shown below.
 
@@ -366,7 +366,7 @@ public class MongoConfiguration {
 [[mongo.mongo-db-factory-xml]]
 === Registering a MongoDbFactory instance using XML based metadata
 
-The mongo namespace provides a convient way to create a `SimpleMongoDbFactory` as compared to using the `<beans/>` namespace. Simple usage is shown below
+The mongo namespace provides a convenient way to create a `SimpleMongoDbFactory` as compared to using the `<beans/>` namespace. Simple usage is shown below
 
 [source,xml]
 ----
@@ -387,7 +387,7 @@ You can also provide the host and port for the underlying `com.mongodb.Mongo` in
                   password="secret"/>
 ----
 
-If you need to configure additional options on the `com.mongodb.Mongo` instance that is used to create a `SimpleMongoDbFactory` you can refer to an existing bean using the `mongo-ref` attribute as shown below. To show another common usage pattern, this listing show the use of a property placeholder to parameterise the configuration and creating `MongoTemplate`.
+If you need to configure additional options on the `com.mongodb.Mongo` instance that is used to create a `SimpleMongoDbFactory` you can refer to an existing bean using the `mongo-ref` attribute as shown below. To show another common usage pattern, this listing shows the use of a property placeholder to parametrise the configuration and creating `MongoTemplate`.
 
 [source,xml]
 ----
@@ -418,30 +418,30 @@ If you need to configure additional options on the `com.mongodb.Mongo` instance 
 [[mongo-template]]
 == Introduction to MongoTemplate
 
-The class `MongoTemplate`, located in the package `org.springframework.data.document.mongodb`, is the central class of the Spring's MongoDB support providing a rich feature set to interact with the database. The template offers convenience operations to create, update, delete and query for MongoDB documents and provides a mapping between your domain objects and MongoDB documents.
+The class `MongoTemplate`, located in the package `org.springframework.data.mongodb.core`, is the central class of the Spring's MongoDB support providing a rich feature set to interact with the database. The template offers convenience operations to create, update, delete and query for MongoDB documents and provides a mapping between your domain objects and MongoDB documents.
 
 NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across multiple instances.
 
 The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the interface `MongoConverter`. Spring provides two implementations, `SimpleMappingConverter` and `MongoMappingConverter`, but you can also write your own converter. Please refer to the section on MongoConverters for more detailed information.
 
-The `MongoTemplate` class implements the interface `MongoOperations`. In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object as as to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you will find methods such as "find", "findAndModify", "findOne", "insert", "remove", "save", "update" and "updateMulti". The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`. A major difference in between the two APIs is that MongoOperations can be passed domain objects instead of `DBObject` and there are fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `DBObject` to specify the parameters for those operations.
+The `MongoTemplate` class implements the interface `MongoOperations`. In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you will find methods such as "find", "findAndModify", "findOne", "insert", "remove", "save", "update" and "updateMulti". The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`. A major difference in between the two APIs is that MongoOperations can be passed domain objects instead of `DBObject` and there are fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `DBObject` to specify the parameters for those operations.
 
 NOTE: The preferred way to reference the operations on `MongoTemplate` instance is via its interface `MongoOperations`.
 
 The default converter implementation used by `MongoTemplate` is MongoMappingConverter. While the `MongoMappingConverter` can make use of additional metadata to specify the mapping of objects to documents it is also capable of converting objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions as well as the use of mapping annotations is explained in the <<mongo.mapping,Mapping chapter>>.
 
-NOTE: In the M2 release `SimpleMappingConverter`, was the default and this class is now deprecated as its functionality has been subsumed by the MongoMappingConverter.
+NOTE: In the M2 release `SimpleMappingConverter`, was the default and this class is now deprecated as its functionality has been subsumed by the `MongoMappingConverter`.
 
 Another central feature of MongoTemplate is exception translation of exceptions thrown in the MongoDB Java driver into Spring's portable Data Access Exception hierarchy. Refer to the section on <<mongo.exception,exception translation>> for more information.
 
 While there are many convenience methods on `MongoTemplate` to help you easily perform common tasks if you should need to access the MongoDB driver API directly to access functionality not explicitly exposed by the MongoTemplate you can use one of several Execute callback methods to access underlying driver APIs. The execute callbacks will give you a reference to either a `com.mongodb.Collection` or a `com.mongodb.DB` object. Please see the section mongo.executioncallback[Execution Callbacks] for more information.
 
-Now let's look at a examples of how to work with the `MongoTemplate` in the context of the Spring container.
+Now let's look at an example of how to work with the `MongoTemplate` in the context of the Spring container.
 
 [[mongo-template.instantiating]]
 === Instantiating MongoTemplate
 
-You can use Java to create and register an instance of MongoTemplate as shown below.
+You can use Java to create and register an instance of `MongoTemplate` as shown below.
 
 .Registering a com.mongodb.Mongo object and enabling Spring's exception translation support
 ====
@@ -487,7 +487,7 @@ NOTE: The preferred way to reference the operations on `MongoTemplate` instance 
 [[mongo-template.writeresultchecking]]
 === WriteResultChecking Policy
 
-When in development it is very handy to either log or throw an exception if the `com.mongodb.WriteResult` returned from any MongoDB operation contains an error. It is quite common to forget to do this during development and then end up with an application that looks like it runs successfully but in fact the database was not modified according to your expectations. Set MongoTemplate's  property to an enum with the following values, LOG, EXCEPTION, or NONE to either log the error, throw and exception or do nothing. The default is to use a `WriteResultChecking` value of NONE.
+When in development it is very handy to either log or throw an exception if the `com.mongodb.WriteResult` returned from any MongoDB operation contains an error. It is quite common to forget to do this during development and then end up with an application that looks like it runs successfully but in fact the database was not modified according to your expectations. Set MongoTemplate's  property to an enum with the following values, `LOG`, `EXCEPTION`, or `NONE` to either log the error, throw and exception or do nothing. The default is to use a `WriteResultChecking` value of `NONE`.
 
 [[mongo-template.writeconcern]]
 === WriteConcern
@@ -666,7 +666,7 @@ When querying and updating `MongoTemplate` will use the converter to handle conv
 
 As MongoDB collections can contain documents that represent instances of a variety of types. A great example here is if you store a hierarchy of classes or simply have a class with a property of type `Object`. In the latter case the values held inside that property have to be read in correctly when retrieving the object. Thus we need a mechanism to store type information alongside the actual document.
 
-To achieve that the `MappingMongoConverter` uses a `MongoTypeMapper` abstraction with `DefaultMongoTypeMapper` as it's main implementation. It's default behaviour is storing the fully qualified classname under `_class` inside the document for the top-level document as well as for every value if it's a complex type and a subtype of the property type declared.
+To achieve that the `MappingMongoConverter` uses a `MongoTypeMapper` abstraction with `DefaultMongoTypeMapper` as it's main implementation. Its default behavior is storing the fully qualified classname under `_class` inside the document for the top-level document as well as for every value if it's a complex type and a subtype of the property type declared.
 
 .Type mapping
 ====
@@ -769,11 +769,11 @@ Note that we are extending the `AbstractMongoConfiguration` class and override t
 [[mongo-template.save-insert]]
 === Methods for saving and inserting documents
 
-There are several convenient methods on `MongoTemplate` for saving and inserting your objects. To have more fine grained control over the conversion process you can register Spring converters with the `MappingMongoConverter`, for example  `Converter<Person, DBObject>` and `Converter<DBObject, Person>`.
+There are several convenient methods on `MongoTemplate` for saving and inserting your objects. To have more fine-grained control over the conversion process you can register Spring converters with the `MappingMongoConverter`, for example  `Converter<Person, DBObject>` and `Converter<DBObject, Person>`.
 
 NOTE: The difference between insert and save operations is that a save operation will perform an insert if the object is not already present.
 
-The simple case of using the save operation is to save a POJO. In this case the collection name will be determined by name (not fully qualfied) of the class. You may also call the save operation with a specific collection name. The collection to store the object can be overriden using mapping metadata.
+The simple case of using the save operation is to save a POJO. In this case the collection name will be determined by name (not fully qualified) of the class. You may also call the save operation with a specific collection name. The collection to store the object can be overridden using mapping metadata.
 
 When inserting or saving, if the Id property is not set, the assumption is that its value will be auto-generated by the database. As such, for auto-generation of an ObjectId to succeed the type of the Id property/field in your class must be either a `String`, `ObjectId`, or `BigInteger`.
 
@@ -828,7 +828,7 @@ The MongoDB driver supports inserting a collection of documents in one operation
 [[mongodb-template-update]]
 === Updating documents in a collection
 
-For updates we can elect to update the first document found using `MongoOperation` 's method `updateFirst` or we can update all documents that were found to match the query using the method `updateMulti`. Here is an example of an update of all SAVINGS accounts where we are adding a one time $50.00 bonus to the balance using the `$inc` operator.
+For updates we can elect to update the first document found using `MongoOperation` 's method `updateFirst` or we can update all documents that were found to match the query using the method `updateMulti`. Here is an example of an update of all SAVINGS accounts where we are adding a one-time $50.00 bonus to the balance using the `$inc` operator.
 
 .Updating documents using the MongoTemplate
 ====
@@ -921,7 +921,7 @@ p = template.findAndModify(query, update, new FindAndModifyOptions().returnNew(t
 assertThat(p.getAge(), is(25));
 ----
 
-The `FindAndModifyOptions` lets you set the options of returnNew, upsert, and remove. An example extending off the previous code snippit is shown below
+The `FindAndModifyOptions` lets you set the options of returnNew, upsert, and remove. An example extending off the previous code snippet is shown below
 
 [source,java]
 ----
@@ -975,7 +975,7 @@ IMPORTANT: Using MongoDB driver version 3 requires to set the `WriteConcern` to 
 [[mongo.query]]
 == Querying Documents
 
-You can express your queries using the `Query` and `Criteria` classes which have method names that mirror the native MongoDB operator names such as `lt`, `lte`, `is`, and others. The `Query` and `Criteria` classes follow a fluent API style so that you can easily chain together multiple method criteria and queries while having easy to understand code. Static imports in Java are used to help remove the need to see the 'new' keyword for creating `Query` and `Criteria` instances so as to improve readability. If you like to create `Query` instances from a plain JSON String use `BasicQuery`.
+You can express your queries using the `Query` and `Criteria` classes which have method names that mirror the native MongoDB operator names such as `lt`, `lte`, `is`, and others. The `Query` and `Criteria` classes follow a fluent API style so that you can easily chain together multiple method criteria and queries while having easy to understand the code. Static imports in Java are used to help remove the need to see the 'new' keyword for creating `Query` and `Criteria` instances so as to improve readability. If you like to create `Query` instances from a plain JSON String use `BasicQuery`.
 
 .Creating a Query instance from a plain JSON String
 ====
@@ -1077,7 +1077,7 @@ The query methods need to specify the target type T that will be returned and th
 
 MongoDB supports GeoSpatial queries through the use of operators such as `$near`, `$within`, `geoWithin` and `$nearSphere`. Methods specific to geospatial queries are available on the `Criteria` class. There are also a few shape classes, `Box`, `Circle`, and `Point` that are used in conjunction with geospatial related `Criteria` methods.
 
-To understand how to perform GeoSpatial queries we will use the following Venue class taken from the integration tests.which relies on using the rich `MappingMongoConverter`.
+To understand how to perform GeoSpatial queries we will use the following Venue class taken from the integration tests which relies on using the rich `MappingMongoConverter`.
 
 [source,java]
 ----
@@ -1162,7 +1162,7 @@ List<Venue> venues =
     template.find(new Query(Criteria.where("location").near(point).minDistance(0.01).maxDistance(100)), Venue.class);
 ----
 
-To find venues near a `Point` using spherical coordines the following query can be used
+To find venues near a `Point` using spherical coordinates the following query can be used
 
 [source,java]
 ----
@@ -1188,7 +1188,7 @@ GeoResults<Restaurant> = operations.geoNear(query, Restaurant.class);
 
 As you can see we use the `NearQuery` builder API to set up a query to return all `Restaurant` instances surrounding the given `Point` by 10 miles maximum. The `Metrics` enum used here actually implements an interface so that other metrics could be plugged into a distance as well. A `Metric` is backed by a multiplier to transform the distance value of the given metric into native distances. The sample shown here would consider the 10 to be miles. Using one of the pre-built in metrics (miles and kilometers) will automatically trigger the spherical flag to be set on the query. If you want to avoid that, simply hand in plain `double` values into `maxDistance(…)`. For more information see the JavaDoc of `NearQuery` and `Distance`.
 
-The geo near operations return a `GeoResults` wrapper object that encapsulates `GeoResult` instances. The wrapping `GeoResults` allows to access the average distance of all results. A single `GeoResult` object simply carries the entity found plus its distance from the origin.
+The geo near operations return a `GeoResults` wrapper object that encapsulates `GeoResult` instances. The wrapping `GeoResults` allows accessing the average distance of all results. A single `GeoResult` object simply carries the entity found plus its distance from the origin.
 
 [[mongo.geo-json]]
 === GeoJSON Support
@@ -1463,7 +1463,7 @@ Note that you can specify additional limit and sort values as well on the query 
 [[mongo.server-side-scripts]]
 == Script Operations
 
-MongoDB allows to execute JavaScript functions on the server by either directly sending the script or calling a stored one. `ScriptOperations` can be accessed via `MongoTemplate` and provides basic abstraction for `JavaScript` usage.
+MongoDB allows executing JavaScript functions on the server by either directly sending the script or calling a stored one. `ScriptOperations` can be accessed via `MongoTemplate` and provides basic abstraction for `JavaScript` usage.
 
 === Example Usage
 
@@ -1486,7 +1486,7 @@ scriptOps.call("echo", "execute script via name");            <3>
 [[mongo.group]]
 == Group Operations
 
-As an alternative to using Map-Reduce to perform data aggregation, you can use the http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Group[`group` operation] which feels similar to using SQL's group by query style, so it may feel more approachable vs. using Map-Reduce. Using the group operations does have some limitations, for example it is not supported in a shareded environment and it returns the full result set in a single BSON object, so the result should be small, less than 10,000 keys.
+As an alternative to using Map-Reduce to perform data aggregation, you can use the http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Group[`group` operation] which feels similar to using SQL's group by query style, so it may feel more approachable vs. using Map-Reduce. Using the group operations does have some limitations, for example it is not supported in a shared environment and it returns the full result set in a single BSON object, so the result should be small, less than 10,000 keys.
 
 Spring provides integration with MongoDB's group operation by providing methods on MongoOperations to simplify the creation and execution of group operations. It can convert the results of the group operation to a POJO and also integrates with Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/resources.html[Resource abstraction] abstraction. This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing JavaScript code in files if often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
 
@@ -1594,7 +1594,7 @@ The Aggregation Framework support in Spring Data MongoDB is based on the followi
 
 * `Aggregation`
 +
-An Aggregation represents a MongoDB `aggregate` operation and holds the description of the aggregation pipline instructions. Aggregations are created by inoking the appropriate `newAggregation(…)` static factory Method of the `Aggregation` class which takes the list of `AggregateOperation` as a parameter next to the optional input class.
+An Aggregation represents a MongoDB `aggregate` operation and holds the description of the aggregation pipeline instructions. Aggregations are created by invoking the appropriate `newAggregation(…)` static factory Method of the `Aggregation` class which takes the list of `AggregateOperation` as a parameter next to the optional input class.
 +
 The actual aggregate operation is executed by the `aggregate` method of the `MongoTemplate` which also takes the desired output class as parameter.
 +
@@ -1749,7 +1749,7 @@ List<TagCount> tagCount = results.getMappedResults();
 * In the forth step we use the `group` operation to define a group for each `"tags"`-value for which we aggregate the occurrence count via the `count` aggregation operator and collect the result in a new field called `"n"`.
 * As a fifth step we select the field `"n"` and create an alias for the id-field generated from the previous group operation (hence the call to `previousOperation()`) with the name `"tag"`.
 * As the sixth step we sort the resulting list of tags by their occurrence count in descending order via the `sort` operation.
-* Finally we call the `aggregate` Method on the MongoTemplate in order to let MongoDB perform the acutal aggregation operation with the created `Aggregation` as an argument.
+* Finally we call the `aggregate` Method on the MongoTemplate in order to let MongoDB perform the actual aggregation operation with the created `Aggregation` as an argument.
 
 Note that the input collection is explicitly specified as the `"tags"` parameter to the `aggregate` Method. If the name of the input collection is not specified explicitly, it is derived from the input-class passed as first parameter to the `newAggreation` Method.
 
@@ -1811,7 +1811,7 @@ ZipInfoStats firstZipInfoStats = result.getMappedResults().get(0);
 * As a first step we use the `group` operation to define a group from the input-collection. The grouping criteria is the combination of the fields `"state"` and `"city"` which forms the id structure of the group. We aggregate the value of the `"population"` property from the grouped elements with by using the `sum` operator saving the result in the field `"pop"`.
 * In a second step we use the `sort` operation to sort the intermediate-result by the fields `"pop"`, `"state"` and `"city"` in ascending order, such that the smallest city is at the top and the biggest city is at the bottom of the result. Note that the sorting on "state" and `"city"` is implicitly performed against the group id fields which Spring Data MongoDB took care of.
 * In the third step we use a `group` operation again to group the intermediate result by `"state"`. Note that `"state"` again implicitly references an group-id field. We select the name and the population count of the biggest and smallest city with calls to the `last(…)` and `first(...)` operator respectively via the `project` operation.
-* As the forth step we select the `"state"` field from the previous `group` operation. Note that `"state"` again implicitly references an group-id field. As we do not want an implicit generated id to appear, we exclude the id from the previous operation via `and(previousOperation()).exclude()`. As we want to populate the nested `City` structures in our output-class accordingly we have to emit appropriate sub-documents with the nested method.
+* As the forth step we select the `"state"` field from the previous `group` operation. Note that `"state"` again implicitly references an group-id field. As we do not want an implicitly generated id to appear, we exclude the id from the previous operation via `and(previousOperation()).exclude()`. As we want to populate the nested `City` structures in our output-class accordingly we have to emit appropriate sub-documents with the nested method.
 * Finally as the fifth step we sort the resulting list of `StateStats` by their state name in ascending order via the `sort` operation.
 
 Note that we derive the name of the input-collection from the `ZipInfo`-class passed as first parameter to the `newAggregation`-Method.
@@ -1923,7 +1923,7 @@ List<DBObject> resultList = result.getMappedResults();
 
 This example demonstrates the use of complex arithmetic operations derived from SpEL Expressions in the projection operation.
 
-Note: The additional parameters passed to the `addExpression` Method can be referenced via indexer expressions according to their position. In this example we reference the parameter  which is the first parameter of the parameters array via `[0]`. External parameter expressions are replaced with their respective values when the SpEL expression is transformed into a MongoDB aggregation framework expression.
+Note: The additional parameters passed to the `addExpression` Method can be referenced via indexer expressions according to their position. In this example we reference the parameter which is the first parameter of the parameters array via `[0]`. External parameter expressions are replaced with their respective values when the SpEL expression is transformed into a MongoDB aggregation framework expression.
 
 [source,java]
 ----
@@ -1955,7 +1955,7 @@ Note that we can also refer to other fields of the document within the SpEL expr
 [[mongo.custom-converters]]
 == Overriding default mapping with custom converters
 
-In order to have more fine grained control over the mapping process you can register Spring converters with the `MongoConverter` implementations such as the `MappingMongoConverter`.
+In order to have more fine-grained control over the mapping process you can register Spring converters with the `MongoConverter` implementations such as the `MappingMongoConverter`.
 
 The `MappingMongoConverter` checks to see if there are any Spring converters that can handle a specific class before attempting to map the object itself. To 'hijack' the normal mapping strategies of the `MappingMongoConverter`, perhaps for increased performance or other custom mapping needs, you first need to create an implementation of the Spring `Converter` interface and then register it with the MappingConverter.
 
@@ -1988,7 +1988,7 @@ public class PersonWriteConverter implements Converter<Person, DBObject> {
 [[mongo.custom-converters.reader]]
 === Reading using a Spring Converter
 
-An example implementation of a Converter that converts from a DBObject ot a Person object is shownn below
+An example implementation of a Converter that converts from a DBObject to a Person object is shown below.
 
 [source,java]
 ----
@@ -2051,7 +2051,7 @@ class MyConverter implements Converter<Person, String> { … }
 class MyConverter implements Converter<String, Person> { … }
 ----
 
-In case you write a `Converter` whose source and target type are native Mongo types there's no way for us to determine whether we should consider it as reading or writing converter. Registering the converter instance as both might lead to unwanted results then. E.g. a `Converter<String, Long>` is ambiguous although it probably does not make sense to try to convert all `String` instances into `Long` instances when writing. To be generally able to force the infrastructure to register a converter for one way only we provide `@ReadingConverter` as well as `@WritingConverter` to be used at the converter implementation.
+In case you write a `Converter` whose source and target type are native Mongo types there's no way for us to determine whether we should consider it as reading or writing converter. Registering the converter instance as both might lead to unwanted results then. E.g. a `Converter<String, Long>` is ambiguous although it probably does not make sense to try to convert all `String` instances into `Long` instances when writing. To be generally able to force the infrastructure to register a converter for one way only we provide `@ReadingConverter` as well as `@WritingConverter` to be used in the converter implementation.
 
 [[mongo-template.index-and-collections]]
 == Index and Collection management
@@ -2100,7 +2100,7 @@ mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"))
 [[mongo-template.index-and-collections.access]]
 === Accessing index information
 
-The IndexOperations interface has the method getIndexInfo that returns a list of IndexInfo objects. This contains all the indexes defined on the collectcion. Here is an example that defines an index on the Person class that has age property.
+The IndexOperations interface has the method getIndexInfo that returns a list of IndexInfo objects. This contains all the indexes defined on the collection. Here is an example that defines an index on the Person class that has age property.
 
 [source,java]
 ----
@@ -2151,7 +2151,7 @@ You can also get at the MongoDB driver's `DB.command( )` method using the `execu
 [[mongodb.mapping-usage.events]]
 == Lifecycle Events
 
-Built into the MongoDB mapping framework are several `org.springframework.context.ApplicationEvent` events that your application can respond to by registering special beans in the `ApplicationContext`. By being based off Spring's ApplicationContext event infastructure this enables other products, such as Spring Integration, to easily receive these events as they are a well known eventing mechanism in Spring based applications.
+Built into the MongoDB mapping framework are several `org.springframework.context.ApplicationEvent` events that your application can respond to by registering special beans in the `ApplicationContext`. By being based off Spring's ApplicationContext event infrastructure this enables other products, such as Spring Integration, to easily receive these events as they are a well known eventing mechanism in Spring based applications.
 
 To intercept an object before it goes through the conversion process (which turns your domain object into a `com.mongodb.DBObject`), you'd register a subclass of `AbstractMongoEventListener` that overrides the `onBeforeConvert` method. When the event is dispatched, your listener will be called and passed the domain object before it goes into the converter.
 
@@ -2203,7 +2203,7 @@ Some of the mappings performed by the `MongoExceptionTranslator` are: com.mongod
 [[mongo.executioncallback]]
 == Execution callbacks
 
-One common design feature of all Spring template classes is that all functionality is routed into one of the templates execute callback methods. This helps ensure that exceptions and any resource management that maybe required are performed consistency. While this was of much greater need in the case of JDBC and JMS than with MongoDB, it still offers a single spot for exception translation and logging to occur. As such, using thexe execute callback is the preferred way to access the MongoDB driver's `DB` and `DBCollection` objects to perform uncommon operations that were not exposed as methods on `MongoTemplate`.
+One common design feature of all Spring template classes is that all functionality is routed into one of the templates execute callback methods. This helps ensure that exceptions and any resource management that maybe required are performed consistency. While this was of much greater need in the case of JDBC and JMS than with MongoDB, it still offers a single spot for exception translation and logging to occur. As such, using these execute callback is the preferred way to access the MongoDB driver's `DB` and `DBCollection` objects to perform uncommon operations that were not exposed as methods on `MongoTemplate`.
 
 Here is a list of execute callback methods.
 
@@ -2306,7 +2306,7 @@ class GridFsClient {
 ----
 ====
 
-The `store(…)` operations take an `InputStream`, a filename and optionally metadata information about the file to store. The metadata can be an arbitrary object which will be marshalled by the `MongoConverter` configured with the `GridFsTemplate`. Alternatively you can also provide a `DBObject` as well.
+The `store(…)` operations take an `InputStream`, a filename and optionally metadata information about the file to store. The metadata can be an arbitrary object which will be marshaled by the `MongoConverter` configured with the `GridFsTemplate`. Alternatively you can also provide a `DBObject` as well.
 
 Reading files from the filesystem can either be achieved through the `find(…)` or `getResources(…)` methods. Let's have a look at the `find(…)` methods first. You can either find a single file matching a `Query` or multiple ones. To easily define file queries we provide the `GridFsCriteria` helper class. It provides static factory methods to encapsulate default metadata fields (e.g. `whereFilename()`, `whereContentType()`) or the custom one through `whereMetaData()`.
 

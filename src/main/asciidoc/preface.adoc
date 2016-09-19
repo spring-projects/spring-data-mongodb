@@ -3,7 +3,7 @@
 
 The Spring Data MongoDB project applies core Spring concepts to the development of solutions using the MongoDB document style data store. We provide a "template" as a high-level abstraction for storing and querying documents. You will notice similarities to the JDBC support in the Spring Framework.
 
-This document is the reference guide for Spring Data - Document Support. It explains Document module concepts and semantics and the syntax for various stores namespaces.
+This document is the reference guide for Spring Data - Document Support. It explains Document module concepts and semantics and the syntax for various store namespaces.
 
 This section provides some basic introduction to Spring and Document database. The rest of the document refers only to Spring Data Document features and assumes the user is familiar with document databases such as MongoDB and CouchDB as well as Spring concepts.
 
@@ -56,4 +56,4 @@ Professional, from-the-source support, with guaranteed response time, is availab
 [[get-started:up-to-date]]
 === Following Development
 
-For information on the Spring Data Mongo source code repository, nightly builds and snapshot artifacts please see the http://projects.spring.io/spring-data-mongodb/[Spring Data Mongo homepage]. You can help make Spring Data best serve the needs of the Spring community by interacting with developers through the Community on http://stackoverflow.com/questions/tagged/spring-data[Stackoverflow]. To follow developer activity look for the mailing list information on the Spring Data Mongo homepage. If you encounter a bug or want to suggest an improvement, please create a ticket on the Spring Data issue https://jira.spring.io/browse/DATAMONGO[tracker]. To stay up to date with the latest news and announcements in the Spring eco system, subscribe to the Spring Community http://spring.io[Portal]. Lastly, you can follow the SpringSource Data http://spring.io/blog[blog ]or the project team on Twitter (http://twitter.com/SpringData[SpringData]).
+For information on the Spring Data Mongo source code repository, nightly builds and snapshot artifacts please see the http://projects.spring.io/spring-data-mongodb/[Spring Data Mongo homepage]. You can help make Spring Data best serve the needs of the Spring community by interacting with developers through the Community on http://stackoverflow.com/questions/tagged/spring-data[Stackoverflow]. To follow developer activity look for the mailing list information on the Spring Data Mongo homepage. If you encounter a bug or want to suggest an improvement, please create a ticket on the Spring Data issue https://jira.spring.io/browse/DATAMONGO[tracker]. To stay up to date with the latest news and announcements in the Spring eco system, subscribe to the Spring Community http://spring.io[Portal]. Lastly, you can follow the Spring http://spring.io/blog[blog ]or the project team on Twitter (http://twitter.com/SpringData[SpringData]).

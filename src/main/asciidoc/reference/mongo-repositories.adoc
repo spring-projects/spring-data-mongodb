@@ -272,7 +272,7 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 [[mongodb.repositories.queries.delete]]
 === Repository delete queries
 
-The above keywords can be used in conjunciton with `delete…By` or `remove…By` to create queries deleting matching documents.
+The above keywords can be used in conjunction with `delete…By` or `remove…By` to create queries deleting matching documents.
 
 .`Delete…By` Query
 ====
@@ -292,7 +292,7 @@ Using return type `List` will retrieve and return all matching documents before 
 [[mongodb.repositories.queries.geo-spatial]]
 === Geo-spatial repository queries
 
-As you've just seen there are a few keywords triggering geo-spatial operations within a MongoDB query. The `Near` keyword allows some further modification. Let's have look at some examples:
+As you've just seen there are a few keywords triggering geo-spatial operations within a MongoDB query. The `Near` keyword allows some further modification. Let's have a look at some examples:
 
 .Advanced `Near` queries
 ====
@@ -436,9 +436,9 @@ We think you will find this an extremely powerful tool for writing MongoDB queri
 
 [[mongodb.repositories.queries.full-text]]
 === Full-text search queries
-MongoDBs full text search feature is very store specic and therefore can rather be found on `MongoRepository` than on the more general `CrudRepository`. What we need is a document with a full-text index defined for (Please see section <<mapping-usage-indexes.text-index>> for creating).
+MongoDBs full text search feature is very store specific and therefore can rather be found on `MongoRepository` than on the more general `CrudRepository`. What we need is a document with a full-text index defined for (Please see section <<mapping-usage-indexes.text-index>> for creating).
 
-Additional methods on `MongoRepository` take `TextCriteria` as input parameter. In addition to those explicit methods, it is also possible to add a `TextCriteria` derived repository method. The criteria will added as an additional `AND` criteria. Once the entity contains a `@TextScore` annotated property the documents full-text score will be retrieved. Furthermore the `@TextScore` annotated property will also make it possible to sort by the documents score.
+Additional methods on `MongoRepository` take `TextCriteria` as input parameter. In addition to those explicit methods, it is also possible to add a `TextCriteria` derived repository method. The criteria will be added as an additional `AND` criteria. Once the entity contains a `@TextScore` annotated property the documents full-text score will be retrieved. Furthermore the `@TextScore` annotated property will also make it possible to sort by the documents score.
 
 [source, java]
 ----
@@ -497,7 +497,7 @@ class MongoTemplateProducer {
 }
 ----
 
-The Spring Data MongoDB CDI extension will pick up the `MongoTemplate` available as CDI bean and create a proxy for a Spring Data repository whenever an bean of a repository type is requested by the container. Thus obtaining an instance of a Spring Data repository is a matter of declaring an `@Inject`-ed property:
+The Spring Data MongoDB CDI extension will pick up the `MongoTemplate` available as CDI bean and create a proxy for a Spring Data repository whenever a bean of a repository type is requested by the container. Thus obtaining an instance of a Spring Data repository is a matter of declaring an `@Inject`-ed property:
 
 [source,java]
 ----

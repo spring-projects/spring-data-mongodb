@@ -455,7 +455,7 @@ public class Person<T extends Address> {
     return ssn;
   }
 
-// other getters/setters ommitted
+// other getters/setters omitted
 ----
 
 [[mapping-custom-object-construction]]
@@ -465,7 +465,7 @@ The mapping subsystem allows the customization of the object construction by ann
 
 * If a parameter is annotated with the `@Value` annotation, the given expression is evaluated and the result is used as the parameter value.
 * If the Java type has a property whose name matches the given field of the input document, then it's property information is used to select the appropriate constructor parameter to pass the input field value to. This works only if the parameter name information is present in the java `.class` files which can be achieved by compiling the source with debug information or using the new `-parameters` command-line switch for javac in Java 8.
-* Otherwise an `MappingException` will be thrown indicating that the given constructor parameter could not be bound.
+* Otherwise a `MappingException` will be thrown indicating that the given constructor parameter could not be bound.
 
 [source,java]
 ----
@@ -497,7 +497,7 @@ Additional examples for using the `@PersistenceConstructor` annotation can be fo
 [[mapping-usage-indexes.compound-index]]
 === Compound Indexes
 
-Compound indexes are also supported. They are defined at the class level, rather than on indidividual properties.
+Compound indexes are also supported. They are defined at the class level, rather than on individual properties.
 
 NOTE: Compound indexes are very important to improve the performance of queries that involve criteria on multiple fields
 
@@ -530,7 +530,7 @@ public class Person {
 
 NOTE: The text index feature is disabled by default for mongodb v.2.4.
 
-Creating a text index allows to accumulate several fields into a searchable full text index. It is only possible to have one text index per collection so all fields marked with `@TextIndexed` are combined into this index. Properties can be weighted to influence document score for ranking results. The default language for the text index is english, to change the default language set `@Document(language="spanish")` to any language you want. Using a property called `language` or `@Language` allows to define a language override on a per document base.
+Creating a text index allows accumulating several fields into a searchable full text index. It is only possible to have one text index per collection so all fields marked with `@TextIndexed` are combined into this index. Properties can be weighted to influence document score for ranking results. The default language for the text index is english, to change the default language set `@Document(language="spanish")` to any language you want. Using a property called `language` or `@Language` allows to define a language override on a per document base.
 
 .Example Text Index Usage
 ====
@@ -585,7 +585,7 @@ public class Person {
 ----
 ====
 
-There's no need to use something like `@OneToMany` because the mapping framework sees that you're wanting a one-to-many relationship because there is a List of objects. When the object is stored in MongoDB, there will be a list of DBRefs rather than the `Account` objects themselves.
+There's no need to use something like `@OneToMany` because the mapping framework sees that you want a one-to-many relationship because there is a List of objects. When the object is stored in MongoDB, there will be a list of DBRefs rather than the `Account` objects themselves.
 
 IMPORTANT: The mapping framework does not handle cascading saves. If you change an `Account` object that is referenced by a `Person` object, you must save the Account object separately. Calling `save` on the `Person` object will not automatically save the `Account` objects in the property `accounts`.
 
