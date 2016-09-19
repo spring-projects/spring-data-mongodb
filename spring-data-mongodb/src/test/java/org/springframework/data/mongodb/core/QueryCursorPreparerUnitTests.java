@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.DBCursor;
+import com.mongodb.ReadPreference;
 
 /**
  * Unit tests for {@link QueryCursorPreparer}.
@@ -131,6 +132,19 @@ public class QueryCursorPreparerUnitTests {
 		pepare(query);
 
 		verify(cursorToUse).addSpecial(eq("$snapshot"), eq(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1061
+	 */
+	@Test
+	public void appliesTemplateReadPreferenceToCursor() {
+
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setReadPreference(ReadPreference.secondary());
+		template.new QueryCursorPreparer(query(where("foo").is("bar")), getClass()).prepare(cursor);
+
+		verify(cursorToUse).setReadPreference(ReadPreference.secondary());
 	}
 
 	private DBCursor pepare(Query query) {

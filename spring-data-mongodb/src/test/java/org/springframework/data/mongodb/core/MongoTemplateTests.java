@@ -92,7 +92,6 @@ import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 
@@ -1113,26 +1112,6 @@ public class MongoTemplateTests {
 		q2.with(new Sort(Direction.DESC, "age"));
 		PersonWithAList p5 = template.findOne(q2, PersonWithAList.class);
 		assertThat(p5.getFirstName(), is("Mark"));
-	}
-
-	@Test
-	public void testUsingReadPreference() throws Exception {
-		this.template.execute("readPref", new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				assertThat(collection.getOptions(), is(0));
-				assertThat(collection.getDB().getOptions(), is(0));
-				return null;
-			}
-		});
-		MongoTemplate slaveTemplate = new MongoTemplate(factory);
-		slaveTemplate.setReadPreference(ReadPreference.secondary());
-		slaveTemplate.execute("readPref", new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				assertThat(collection.getReadPreference(), is(ReadPreference.secondary()));
-				assertThat(collection.getDB().getOptions(), is(0));
-				return null;
-			}
-		});
 	}
 
 	/**

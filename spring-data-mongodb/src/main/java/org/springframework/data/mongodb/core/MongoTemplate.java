@@ -805,11 +805,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * 
 	 * @param collection
 	 */
-	protected void prepareCollection(DBCollection collection) {
-		if (this.readPreference != null) {
-			collection.setReadPreference(readPreference);
-		}
-	}
+	protected void prepareCollection(DBCollection collection) {}
 
 	/**
 	 * Prepare the WriteConcern before any processing is done using it. This allows a convenient way to apply custom
@@ -2340,30 +2336,39 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && query.getSortObject() == null
-					&& !StringUtils.hasText(query.getHint()) && !query.getMeta().hasValues()) {
+					&& !StringUtils.hasText(query.getHint()) && !query.getMeta().hasValues() && readPreference == null) {
 				return cursor;
 			}
 
 			DBCursor cursorToUse = cursor.copy();
 
 			try {
+
 				if (query.getSkip() > 0) {
 					cursorToUse = cursorToUse.skip(query.getSkip());
 				}
+
 				if (query.getLimit() > 0) {
 					cursorToUse = cursorToUse.limit(query.getLimit());
 				}
+
 				if (query.getSortObject() != null) {
 					DBObject sortDbo = type != null ? getMappedSortObject(query, type) : query.getSortObject();
 					cursorToUse = cursorToUse.sort(sortDbo);
 				}
+
 				if (StringUtils.hasText(query.getHint())) {
 					cursorToUse = cursorToUse.hint(query.getHint());
 				}
+
 				if (query.getMeta().hasValues()) {
 					for (Entry<String, Object> entry : query.getMeta().values()) {
 						cursorToUse = cursorToUse.addSpecial(entry.getKey(), entry.getValue());
 					}
+				}
+
+				if (readPreference != null) {
+					cursorToUse.setReadPreference(readPreference);
 				}
 
 			} catch (RuntimeException e) {
