@@ -1,6 +1,25 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.8.5.RELEASE (2016-09-20)
+---------------------------------------------
+* DATAMONGO-1494 - Release 1.8.5 (Gosling SR5).
+* DATAMONGO-1492 - Interface AggregationExpression in package org.springframework.data.mongodb.core.aggregation should be public.
+* DATAMONGO-1485 - Querydsl MongodbSerializer does not take registered converters for Enums into account.
+* DATAMONGO-1479 - MappingMongoConverter.convertToMongoType causes StackOverflowError for parameterized map value types.
+* DATAMONGO-1471 - MappingMongoConverter attempts to set null value on potentially primitive identifier.
+* DATAMONGO-1465 - String arguments passed to DefaultScriptOperations.execute() appear quoted in script.
+* DATAMONGO-1453 - Parse error into GeoJsonPoint if coordinates are "integers".
+* DATAMONGO-1449 - Replace legacy for loop with foreach in MappingMongoConverter.
+* DATAMONGO-1445 - @Id annotated attribute of type BigInteger does not work with query methods.
+* DATAMONGO-1437 - DefaultDbRefResolver swallows cause of non DataAccessException translatable Exception.
+* DATAMONGO-1425 - NOT_CONTAINS keyword issues CONTAINS query.
+* DATAMONGO-1423 - Nested document update doesn't apply converters on embedded maps.
+* DATAMONGO-1412 - Document mapping rules for Java types to MongoDB representation.
+* DATAMONGO-1406 - Query mapper does not use @Field field name when querying nested fields in combination with nested keywords.
+* DATAMONGO-1401 - GeoJsonPoint error on update.
+
+
 Changes in version 1.9.3.RELEASE (2016-09-20)
 ---------------------------------------------
 * DATAMONGO-1493 - Typos in reference documentation.
