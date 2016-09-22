@@ -2074,6 +2074,18 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(ClassWithIntId.class, new BasicDBObject()), is(notNullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-1497
+	 */
+	@Test
+	public void readsPropertyFromNestedFieldCorrectly() {
+
+		DBObject source = new BasicDBObject("nested", new BasicDBObject("sample", "value"));
+		TypeWithPropertyInNestedField result = converter.read(TypeWithPropertyInNestedField.class, source);
+
+		assertThat(result.sample, is("value"));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2419,5 +2431,9 @@ public class MappingMongoConverterUnitTests {
 
 			throw new ConversionNotSupportedException(source, String.class, null);
 		}
+	}
+
+	static class TypeWithPropertyInNestedField {
+		@Field("nested.sample") String sample;
 	}
 }

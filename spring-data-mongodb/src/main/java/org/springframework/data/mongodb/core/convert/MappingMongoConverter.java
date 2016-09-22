@@ -259,14 +259,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		// make sure id property is set before all other properties
 		Object idValue = null;
+		final DBObjectAccessor dbObjectAccessor = new DBObjectAccessor(dbo);
 
-		if (idProperty != null && new DBObjectAccessor(dbo).hasValue(idProperty)) {
+		if (idProperty != null && dbObjectAccessor.hasValue(idProperty)) {
 			idValue = getValueInternal(idProperty, dbo, evaluator, path);
 			accessor.setProperty(idProperty, idValue);
 		}
 
-		final ObjectPath currentPath = path.push(result, entity,
-				idValue != null ? dbo.get(idProperty.getFieldName()) : null);
+		final ObjectPath currentPath = path.push(result, entity, idValue != null ? dbObjectAccessor.get(idProperty) : null);
 
 		// Set properties not already set in the constructor
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
@@ -277,7 +277,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return;
 				}
 
-				if (!dbo.containsField(prop.getFieldName()) || entity.isConstructorArgument(prop)) {
+				if (entity.isConstructorArgument(prop) || !dbObjectAccessor.hasValue(prop)) {
 					return;
 				}
 
@@ -290,7 +290,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 
 				final MongoPersistentProperty property = association.getInverse();
-				Object value = dbo.get(property.getFieldName());
+				Object value = dbObjectAccessor.get(property);
 
 				if (value == null || entity.isConstructorArgument(property)) {
 					return;
