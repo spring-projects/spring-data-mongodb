@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.net.UnknownHostException;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,8 +28,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.core.AuditablePerson;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.stereotype.Repository;
@@ -123,22 +119,20 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 	@Configuration
 	@EnableMongoRepositories
-	@EnableMongoAuditing
-	static class SimpleConfigWithRepositories {
-
-		@Bean
-		public MongoTemplate mongoTemplate() throws UnknownHostException {
-			return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
-		}
-	}
+	static class SimpleConfigWithRepositories extends SimpleConfig {}
 
 	@Configuration
 	@EnableMongoAuditing
-	static class SimpleConfig {
+	static class SimpleConfig extends AbstractMongoConfiguration {
 
-		@Bean
-		public MongoTemplate mongoTemplate() throws UnknownHostException {
-			return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
+		@Override
+		public Mongo mongo() throws Exception {
+			return new MongoClient();
+		}
+
+		@Override
+		protected String getDatabaseName() {
+			return "database";
 		}
 	}
 }

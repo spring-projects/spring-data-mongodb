@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,24 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.springframework.beans.factory.config.BeanDefinition.*;
-import static org.springframework.data.mongodb.config.BeanNames.*;
-
 import java.lang.annotation.Annotation;
 
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
-import org.springframework.data.support.IsNewStrategyFactory;
 import org.springframework.util.Assert;
 
 /**
@@ -71,7 +71,6 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		Assert.notNull(annotationMetadata, "AnnotationMetadata must not be null!");
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
-		defaultDependenciesIfNecessary(registry, annotationMetadata);
 		super.registerBeanDefinitions(annotationMetadata, registry);
 	}
 
@@ -85,7 +84,11 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		Assert.notNull(configuration, "AuditingConfiguration must not be null!");
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class);
-		builder.addConstructorArgReference(MAPPING_CONTEXT_BEAN_NAME);
+
+		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(MongoMappingContextLookup.class);
+		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
+
+		builder.addConstructorArgValue(definition.getBeanDefinition());
 		return configureDefaultAuditHandlerAttributes(configuration, builder);
 	}
 
@@ -102,29 +105,58 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
 		BeanDefinitionBuilder listenerBeanDefinitionBuilder = BeanDefinitionBuilder
 				.rootBeanDefinition(AuditingEventListener.class);
-		listenerBeanDefinitionBuilder.addConstructorArgValue(ParsingUtils.getObjectFactoryBeanDefinition(
-				getAuditingHandlerBeanName(), registry));
+		listenerBeanDefinitionBuilder
+				.addConstructorArgValue(ParsingUtils.getObjectFactoryBeanDefinition(getAuditingHandlerBeanName(), registry));
 
 		registerInfrastructureBeanWithId(listenerBeanDefinitionBuilder.getBeanDefinition(),
 				AuditingEventListener.class.getName(), registry);
 	}
 
 	/**
-	 * Register default bean definitions for a {@link MongoMappingContext} and an {@link IsNewStrategyFactory} in case we
-	 * don't find beans with the assumed names in the registry.
-	 * 
-	 * @param registry the {@link BeanDefinitionRegistry} to use to register the components into.
-	 * @param source the source which the registered components shall be registered with
+	 * Simple helper to be able to wire the {@link MappingContext} from a {@link MappingMongoConverter} bean available in
+	 * the application context.
+	 *
+	 * @author Oliver Gierke
 	 */
-	private void defaultDependenciesIfNecessary(BeanDefinitionRegistry registry, Object source) {
+	static class MongoMappingContextLookup
+			implements FactoryBean<MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty>> {
 
-		if (!registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)) {
+		private final MappingMongoConverter converter;
 
-			RootBeanDefinition definition = new RootBeanDefinition(MongoMappingContext.class);
-			definition.setRole(ROLE_INFRASTRUCTURE);
-			definition.setSource(source);
+		/**
+		 * Creates a new {@link MongoMappingContextLookup} for the given {@link MappingMongoConverter}.
+		 * 
+		 * @param converter must not be {@literal null}.
+		 */
+		public MongoMappingContextLookup(MappingMongoConverter converter) {
+			this.converter = converter;
+		}
 
-			registry.registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME, definition);
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.beans.factory.FactoryBean#getObject()
+		 */
+		@Override
+		public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getObject() throws Exception {
+			return converter.getMappingContext();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.beans.factory.FactoryBean#getObjectType()
+		 */
+		@Override
+		public Class<?> getObjectType() {
+			return MappingContext.class;
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.beans.factory.FactoryBean#isSingleton()
+		 */
+		@Override
+		public boolean isSingleton() {
+			return true;
 		}
 	}
 }
