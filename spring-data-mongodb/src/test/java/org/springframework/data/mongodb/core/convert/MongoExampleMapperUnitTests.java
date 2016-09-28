@@ -80,7 +80,8 @@ public class MongoExampleMapperUnitTests {
 
 		IsBsonObject<Bson> expected = isBsonObject().containing("_id", "steelheart");
 
-		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
+				is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -96,7 +97,8 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue", "firefight").//
 				containing("intValue", 100);
 
-		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
+				is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -110,7 +112,8 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue", "firefight").//
 				containing("intValue", 100);
 
-		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
+				is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -124,7 +127,8 @@ public class MongoExampleMapperUnitTests {
 		IsBsonObject<Bson> expected = isBsonObject().//
 				containing("listOfString", list);
 
-		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
+				is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -135,7 +139,8 @@ public class MongoExampleMapperUnitTests {
 
 		IsBsonObject<Bson> expected = isBsonObject().containing("custom_field_name", "Mitosis");
 
-		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
+				is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -146,7 +151,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc.stringValue = "conflux";
 
 		org.bson.Document document = mapper.getMappedExample(Example.of(probe),
-				context.getPersistentEntity(WrapperDocument.class));
+				context.getRequiredPersistentEntity(WrapperDocument.class));
 
 		assertThat(document,
 				isBsonObject().containing("_class", new org.bson.Document("$in", new String[] { probe.getClass().getName() })));
@@ -161,7 +166,8 @@ public class MongoExampleMapperUnitTests {
 
 		IsBsonObject<Bson> expected = isBsonObject().containing("flatDoc\\.stringValue", "conflux");
 
-		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(WrapperDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(WrapperDocument.class)),
+				is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -173,7 +179,7 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withIncludeNullValues());
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class)), //
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(WrapperDocument.class)), //
 				isBsonObject().containing("flatDoc.stringValue", "conflux"));
 	}
 
@@ -190,7 +196,7 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue.$regex", "^firefight").//
 				containing("intValue", 100);
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -206,7 +212,7 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue.$regex", "^" + Pattern.quote("fire.ight")).//
 				containing("intValue", 100);
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -222,7 +228,7 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue.$regex", "firefight$").//
 				containing("intValue", 100);
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -238,7 +244,7 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue.$regex", "firefight").//
 				containing("custom_field_name.$regex", "^(cat|dog).*shelter\\d?");
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -254,7 +260,7 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue", new org.bson.Document("$regex", "firefight$").append("$options", "i")).//
 				containing("intValue", 100);
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -270,7 +276,7 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue", new org.bson.Document("$regex", Pattern.quote("firefight")).append("$options", "i")).//
 				containing("intValue", 100);
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -281,10 +287,11 @@ public class MongoExampleMapperUnitTests {
 		probe.referenceDocument = new ReferenceDocument();
 		probe.referenceDocument.id = "200";
 
-		org.bson.Document document = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
+		org.bson.Document document = mapper.getMappedExample(of(probe),
+				context.getRequiredPersistentEntity(WithDBRef.class));
 		com.mongodb.DBRef reference = getTypedValue(document, "referenceDocument", com.mongodb.DBRef.class);
 
-		assertThat(reference.getId(), Is.<Object>is("200"));
+		assertThat(reference.getId(), Is.<Object> is("200"));
 		assertThat(reference.getCollectionName(), is("refDoc"));
 	}
 
@@ -294,7 +301,8 @@ public class MongoExampleMapperUnitTests {
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "steelheart";
 
-		org.bson.Document document = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
+		org.bson.Document document = mapper.getMappedExample(of(probe),
+				context.getRequiredPersistentEntity(FlatDocument.class));
 
 		assertThat(document, isBsonObject().containing("stringValue", "steelheart"));
 	}
@@ -305,10 +313,11 @@ public class MongoExampleMapperUnitTests {
 		ClassWithGeoTypes probe = new ClassWithGeoTypes();
 		probe.legacyPoint = new Point(10D, 20D);
 
-		org.bson.Document document = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
+		org.bson.Document document = mapper.getMappedExample(of(probe),
+				context.getRequiredPersistentEntity(WithDBRef.class));
 
-		assertThat(document.get("legacyPoint.x"), Is.<Object>is(10D));
-		assertThat(document.get("legacyPoint.y"), Is.<Object>is(20D));
+		assertThat(document.get("legacyPoint.x"), Is.<Object> is(10D));
+		assertThat(document.get("legacyPoint.y"), Is.<Object> is(20D));
 	}
 
 	@Test // DATAMONGO-1245
@@ -325,7 +334,7 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue", "string").//
 				containing("intValue", 10);
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -342,7 +351,7 @@ public class MongoExampleMapperUnitTests {
 				containing("custom_field_name", "foo").//
 				containing("intValue", 10);
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -360,7 +369,8 @@ public class MongoExampleMapperUnitTests {
 				containing("flatDoc\\.custom_field_name", "foo").//
 				containing("flatDoc\\.intValue", 10);
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(WrapperDocument.class)),
+				is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -378,7 +388,8 @@ public class MongoExampleMapperUnitTests {
 				containing("flatDoc\\.stringValue", "string").//
 				containing("flatDoc\\.intValue", 10);
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(WrapperDocument.class)),
+				is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -394,7 +405,7 @@ public class MongoExampleMapperUnitTests {
 				containing("stringValue.$regex", ".*firefight.*").//
 				containing("custom_field_name", "steelheart");
 
-		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
 	@Test // DATAMONGO-1245
@@ -405,7 +416,8 @@ public class MongoExampleMapperUnitTests {
 		probe.customNamedField = "steelheart";
 		probe.anotherStringValue = "calamity";
 
-		org.bson.Document document = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
+		org.bson.Document document = mapper.getMappedExample(of(probe),
+				context.getRequiredPersistentEntity(FlatDocument.class));
 
 		assertThat(document, isBsonObject().containing("anotherStringValue", "calamity"));
 	}

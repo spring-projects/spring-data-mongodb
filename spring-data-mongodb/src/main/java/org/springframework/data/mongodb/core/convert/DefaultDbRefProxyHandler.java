@@ -61,8 +61,9 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 			return proxy;
 		}
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(property);
-		MongoPersistentProperty idProperty = entity.getIdProperty();
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(property);
+		MongoPersistentProperty idProperty = entity.getIdProperty()
+				.orElseThrow(() -> new IllegalStateException("Couldn't find identifier property!"));
 
 		if (idProperty.usePropertyAccess()) {
 			return proxy;

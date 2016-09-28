@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -84,17 +85,17 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
 	 */
 	@Override
-	public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+	public Optional<Object> resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler handler) {
 
 		Assert.notNull(property, "Property must not be null!");
 		Assert.notNull(callback, "Callback must not be null!");
 
 		if (isLazyDbRef(property)) {
-			return createLazyLoadingProxy(property, dbref, callback, handler);
+			return Optional.of(createLazyLoadingProxy(property, dbref, callback, handler));
 		}
 
-		return callback.resolve(property);
+		return Optional.ofNullable(callback.resolve(property));
 	}
 
 	/* 

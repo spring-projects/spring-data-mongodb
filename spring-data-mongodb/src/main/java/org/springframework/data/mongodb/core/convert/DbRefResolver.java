@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.bson.Document;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -45,7 +46,7 @@ public interface DbRefResolver {
 	 * @param callback will never be {@literal null}.
 	 * @return
 	 */
-	Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+	Optional<Object> resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler proxyHandler);
 
 	/**

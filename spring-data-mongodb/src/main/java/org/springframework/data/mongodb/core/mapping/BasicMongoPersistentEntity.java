@@ -20,6 +20,7 @@ import java.lang.reflect.Modifier;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -53,8 +54,8 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
-		MongoPersistentEntity<T>, ApplicationContextAware {
+public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty>
+		implements MongoPersistentEntity<T>, ApplicationContextAware {
 
 	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @Field annotation!";
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -73,24 +74,18 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 */
 	public BasicMongoPersistentEntity(TypeInformation<T> typeInformation) {
 
-		super(typeInformation, MongoPersistentPropertyComparator.INSTANCE);
+		super(typeInformation, Optional.of(MongoPersistentPropertyComparator.INSTANCE));
 
 		Class<?> rawType = typeInformation.getType();
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
 
-		Document document = this.findAnnotation(Document.class);
+		Optional<Document> document = this.findAnnotation(Document.class);
 
-		this.expression = detectExpression(document);
+		this.expression = document.map(it -> detectExpression(it)).orElse(null);
 		this.context = new StandardEvaluationContext();
-
-		if (document != null) {
-
-			this.collection = StringUtils.hasText(document.collection()) ? document.collection() : fallback;
-			this.language = StringUtils.hasText(document.language()) ? document.language() : "";
-		} else {
-			this.collection = fallback;
-			this.language = "";
-		}
+		this.collection = document.filter(it -> StringUtils.hasText(it.collection())).map(it -> it.collection())
+				.orElse(fallback);
+		this.language = document.filter(it -> StringUtils.hasText(it.language())).map(it -> it.language()).orElse("");
 	}
 
 	/*
@@ -127,7 +122,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 */
 	@Override
 	public MongoPersistentProperty getTextScoreProperty() {
-		return getPersistentProperty(TextScore.class);
+		return getPersistentProperty(TextScore.class).orElse(null);
 	}
 
 	/*
@@ -207,40 +202,38 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			return null;
 		}
 
-		MongoPersistentProperty currentIdProperty = getIdProperty();
+		Optional<MongoPersistentProperty> currentIdProperty = getIdProperty();
 
-		boolean currentIdPropertyIsSet = currentIdProperty != null;
-		@SuppressWarnings("null")
-		boolean currentIdPropertyIsExplicit = currentIdPropertyIsSet ? currentIdProperty.isExplicitIdProperty() : false;
-		boolean newIdPropertyIsExplicit = property.isExplicitIdProperty();
+		return currentIdProperty.map(it -> {
 
-		if (!currentIdPropertyIsSet) {
-			return property;
+			boolean currentIdPropertyIsExplicit = it.isExplicitIdProperty();
+			boolean newIdPropertyIsExplicit = property.isExplicitIdProperty();
+			Optional<Field> currentIdPropertyField = it.getField();
 
-		}
+			if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
+				throw new MappingException(
+						String.format(
+								"Attempt to add explicit id property %s but already have an property %s registered "
+										+ "as explicit id. Check your mapping configuration!",
+								property.getField(), currentIdPropertyField));
 
-		@SuppressWarnings("null")
-		Field currentIdPropertyField = currentIdProperty.getField();
+			} else if (newIdPropertyIsExplicit && !currentIdPropertyIsExplicit) {
+				// explicit id property takes precedence over implicit id property
+				return property;
 
-		if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
-			throw new MappingException(String.format(
-					"Attempt to add explicit id property %s but already have an property %s registered "
-							+ "as explicit id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
+			} else if (!newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
+				// no id property override - current property is explicitly defined
 
-		} else if (newIdPropertyIsExplicit && !currentIdPropertyIsExplicit) {
-			// explicit id property takes precedence over implicit id property
-			return property;
+			} else {
+				throw new MappingException(
+						String.format("Attempt to add id property %s but already have an property %s registered "
+								+ "as id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
+			}
 
-		} else if (!newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
-			// no id property override - current property is explicitly defined
+			return null;
 
-		} else {
-			throw new MappingException(String.format(
-					"Attempt to add id property %s but already have an property %s registered "
-							+ "as id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
-		}
+		}).orElse(property);
 
-		return null;
 	}
 
 	/**
@@ -274,8 +267,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * 
 	 * @author Oliver Gierke
 	 */
-	private static class AssertFieldNameUniquenessHandler implements PropertyHandler<MongoPersistentProperty>,
-			AssociationHandler<MongoPersistentProperty> {
+	private static class AssertFieldNameUniquenessHandler
+			implements PropertyHandler<MongoPersistentProperty>, AssociationHandler<MongoPersistentProperty> {
 
 		private final Map<String, MongoPersistentProperty> properties = new HashMap<String, MongoPersistentProperty>();
 
@@ -293,8 +286,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			MongoPersistentProperty existingProperty = properties.get(fieldName);
 
 			if (existingProperty != null) {
-				throw new MappingException(String.format(AMBIGUOUS_FIELD_MAPPING, property.toString(),
-						existingProperty.toString(), fieldName));
+				throw new MappingException(
+						String.format(AMBIGUOUS_FIELD_MAPPING, property.toString(), existingProperty.toString(), fieldName));
 			}
 
 			properties.put(fieldName, property);

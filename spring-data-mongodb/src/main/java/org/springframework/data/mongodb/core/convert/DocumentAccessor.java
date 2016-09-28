@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -87,6 +89,15 @@ class DocumentAccessor {
 				BsonUtils.addToMap(document, part, value);
 			}
 		}
+	}
+
+	public void computeIfAbsent(MongoPersistentProperty prop, Supplier<Optional<Object>> supplier) {
+
+		if (hasValue(prop)) {
+			return;
+		}
+
+		supplier.get().ifPresent(it -> put(prop, it));
 	}
 
 	/**

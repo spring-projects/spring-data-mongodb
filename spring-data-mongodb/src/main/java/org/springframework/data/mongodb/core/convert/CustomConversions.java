@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -43,7 +44,6 @@ import org.springframework.data.convert.ThreeTenBackPortConverters;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
-import org.springframework.data.util.CacheValue;
 import org.springframework.util.Assert;
 
 /**
@@ -71,9 +71,9 @@ public class CustomConversions {
 
 	private final List<Object> converters;
 
-	private final Map<ConvertiblePair, CacheValue<Class<?>>> customReadTargetTypes;
-	private final Map<ConvertiblePair, CacheValue<Class<?>>> customWriteTargetTypes;
-	private final Map<Class<?>, CacheValue<Class<?>>> rawWriteTargetTypes;
+	private final Map<ConvertiblePair, Optional<Class<?>>> customReadTargetTypes;
+	private final Map<ConvertiblePair, Optional<Class<?>>> customWriteTargetTypes;
+	private final Map<Class<?>, Optional<Class<?>>> rawWriteTargetTypes;
 
 	/**
 	 * Creates an empty {@link CustomConversions} object.
@@ -91,12 +91,12 @@ public class CustomConversions {
 
 		Assert.notNull(converters, "List of converters must not be null!");
 
-		this.readingPairs = new LinkedHashSet<ConvertiblePair>();
-		this.writingPairs = new LinkedHashSet<ConvertiblePair>();
-		this.customSimpleTypes = new HashSet<Class<?>>();
-		this.customReadTargetTypes = new ConcurrentHashMap<ConvertiblePair, CacheValue<Class<?>>>();
-		this.customWriteTargetTypes = new ConcurrentHashMap<ConvertiblePair, CacheValue<Class<?>>>();
-		this.rawWriteTargetTypes = new ConcurrentHashMap<Class<?>, CacheValue<Class<?>>>();
+		this.readingPairs = new LinkedHashSet<>();
+		this.writingPairs = new LinkedHashSet<>();
+		this.customSimpleTypes = new HashSet<>();
+		this.customReadTargetTypes = new ConcurrentHashMap<>();
+		this.customWriteTargetTypes = new ConcurrentHashMap<>();
+		this.rawWriteTargetTypes = new ConcurrentHashMap<>();
 
 		List<Object> toRegister = new ArrayList<Object>();
 
@@ -241,13 +241,8 @@ public class CustomConversions {
 	 */
 	public Class<?> getCustomWriteTarget(final Class<?> sourceType) {
 
-		return getOrCreateAndCache(sourceType, rawWriteTargetTypes, new Producer() {
-
-			@Override
-			public Class<?> get() {
-				return getCustomTarget(sourceType, null, writingPairs);
-			}
-		});
+		return rawWriteTargetTypes.computeIfAbsent(sourceType, it -> getCustomTarget(sourceType, null, writingPairs))
+				.orElse(null);
 	}
 
 	/**
@@ -265,14 +260,8 @@ public class CustomConversions {
 			return getCustomWriteTarget(sourceType);
 		}
 
-		return getOrCreateAndCache(new ConvertiblePair(sourceType, requestedTargetType), customWriteTargetTypes,
-				new Producer() {
-
-					@Override
-					public Class<?> get() {
-						return getCustomTarget(sourceType, requestedTargetType, writingPairs);
-					}
-				});
+		return customWriteTargetTypes.computeIfAbsent(new ConvertiblePair(sourceType, requestedTargetType),
+				it -> getCustomTarget(sourceType, requestedTargetType, writingPairs)).orElse(null);
 	}
 
 	/**
@@ -324,14 +313,8 @@ public class CustomConversions {
 			return null;
 		}
 
-		return getOrCreateAndCache(new ConvertiblePair(sourceType, requestedTargetType), customReadTargetTypes,
-				new Producer() {
-
-					@Override
-					public Class<?> get() {
-						return getCustomTarget(sourceType, requestedTargetType, readingPairs);
-					}
-				});
+		return customReadTargetTypes.computeIfAbsent(new ConvertiblePair(sourceType, requestedTargetType),
+				it -> getCustomTarget(sourceType, requestedTargetType, readingPairs)).orElse(null);
 	}
 
 	/**
@@ -343,54 +326,26 @@ public class CustomConversions {
 	 * @param pairs must not be {@literal null}.
 	 * @return
 	 */
-	private static Class<?> getCustomTarget(Class<?> sourceType, Class<?> requestedTargetType,
+	private static Optional<Class<?>> getCustomTarget(Class<?> sourceType, Class<?> requestedTargetType,
 			Collection<ConvertiblePair> pairs) {
 
 		Assert.notNull(sourceType, "Source Class must not be null!");
 		Assert.notNull(pairs, "Collection of ConvertiblePair must not be null!");
 
 		if (requestedTargetType != null && pairs.contains(new ConvertiblePair(sourceType, requestedTargetType))) {
-			return requestedTargetType;
+			return Optional.of(requestedTargetType);
 		}
 
 		for (ConvertiblePair typePair : pairs) {
 			if (typePair.getSourceType().isAssignableFrom(sourceType)) {
 				Class<?> targetType = typePair.getTargetType();
 				if (requestedTargetType == null || targetType.isAssignableFrom(requestedTargetType)) {
-					return targetType;
+					return Optional.of(targetType);
 				}
 			}
 		}
 
-		return null;
-	}
-
-	/**
-	 * Will try to find a value for the given key in the given cache or produce one using the given {@link Producer} and
-	 * store it in the cache.
-	 * 
-	 * @param key the key to lookup a potentially existing value, must not be {@literal null}.
-	 * @param cache the cache to find the value in, must not be {@literal null}.
-	 * @param producer the {@link Producer} to create values to cache, must not be {@literal null}.
-	 * @return
-	 */
-	private static <T> Class<?> getOrCreateAndCache(T key, Map<T, CacheValue<Class<?>>> cache, Producer producer) {
-
-		CacheValue<Class<?>> cacheValue = cache.get(key);
-
-		if (cacheValue != null) {
-			return cacheValue.getValue();
-		}
-
-		Class<?> type = producer.get();
-		cache.put(key, CacheValue.<Class<?>> ofNullable(type));
-
-		return type;
-	}
-
-	private interface Producer {
-
-		Class<?> get();
+		return Optional.empty();
 	}
 
 	@WritingConverter

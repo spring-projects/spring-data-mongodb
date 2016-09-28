@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.repository.core.support.ExampleMatcherAccessor;
 import org.springframework.data.repository.query.parser.Part.Type;
+import org.springframework.data.util.Optionals;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -79,7 +80,7 @@ public class MongoExampleMapper {
 
 		Assert.notNull(example, "Example must not be null!");
 
-		return getMappedExample(example, mappingContext.getPersistentEntity(example.getProbeType()));
+		return getMappedExample(example, mappingContext.getRequiredPersistentEntity(example.getProbeType()));
 	}
 
 	/**
@@ -90,7 +91,6 @@ public class MongoExampleMapper {
 	 * @param entity must not be {@literal null}.
 	 * @return
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Document getMappedExample(Example<?> example, MongoPersistentEntity<?> entity) {
 
 		Assert.notNull(example, "Example must not be null!");
@@ -98,9 +98,9 @@ public class MongoExampleMapper {
 
 		Document reference = (Document) converter.convertToMongoType(example.getProbe());
 
-		if (entity.hasIdProperty() && entity.getIdentifierAccessor(example.getProbe()).getIdentifier() == null) {
-			reference.remove(entity.getIdProperty().getFieldName());
-		}
+		Optionals.ifAllPresent(entity.getIdProperty(), //
+				entity.getIdentifierAccessor(example.getProbe()).getIdentifier(), //
+				(property, identifier) -> reference.remove(property.getFieldName()));
 
 		ExampleMatcherAccessor matcherAccessor = new ExampleMatcherAccessor(example.getMatcher());
 
@@ -141,7 +141,7 @@ public class MongoExampleMapper {
 
 	private String getMappedPropertyPath(String path, Class<?> probeType) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(probeType);
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(probeType);
 
 		Iterator<String> parts = Arrays.asList(path.split("\\.")).iterator();
 
@@ -151,39 +151,34 @@ public class MongoExampleMapper {
 
 		while (parts.hasNext()) {
 
-			final String part = parts.next();
-			MongoPersistentProperty prop = entity.getPersistentProperty(part);
+			String part = parts.next();
+			MongoPersistentProperty prop = entity.getPersistentProperty(part).orElse(null);
 
 			if (prop == null) {
 
-				entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
-
-					@Override
-					public void doWithPersistentProperty(MongoPersistentProperty property) {
-
-						if (property.getFieldName().equals(part)) {
-							stack.push(property);
-						}
+				entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> {
+					if (property.getFieldName().equals(part)) {
+						stack.push(property);
 					}
 				});
 
 				if (stack.isEmpty()) {
 					return "";
 				}
+
 				prop = stack.pop();
 			}
 
 			resultParts.add(prop.getName());
 
 			if (prop.isEntity() && mappingContext.hasPersistentEntityFor(prop.getActualType())) {
-				entity = mappingContext.getPersistentEntity(prop.getActualType());
+				entity = mappingContext.getRequiredPersistentEntity(prop.getActualType());
 			} else {
 				break;
 			}
 		}
 
 		return StringUtils.collectionToDelimitedString(resultParts, ".");
-
 	}
 
 	private void applyPropertySpecs(String path, Document source, Class<?> probeType,

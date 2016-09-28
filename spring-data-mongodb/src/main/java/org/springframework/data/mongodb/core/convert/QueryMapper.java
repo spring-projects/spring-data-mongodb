@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import org.bson.BsonValue;
@@ -92,6 +93,10 @@ public class QueryMapper {
 		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
 		this.exampleMapper = new MongoExampleMapper(converter);
+	}
+
+	public Document getMappedObject(Bson query, Optional<? extends MongoPersistentEntity<?>> entity) {
+		return getMappedObject(query, entity.orElse(null));
 	}
 
 	/**
@@ -167,6 +172,10 @@ public class QueryMapper {
 		return mappedSort;
 	}
 
+	public Document getMappedSort(Document sortObject, Optional<? extends MongoPersistentEntity<?>> entity) {
+		return getMappedSort(sortObject, entity.orElse(null));
+	}
+
 	/**
 	 * Maps fields to retrieve to the {@link MongoPersistentEntity}s properties. <br />
 	 * Also onverts and potentially adds missing property {@code $meta} representation.
@@ -181,6 +190,10 @@ public class QueryMapper {
 		Document mappedFields = fieldsObject != null ? getMappedObject(fieldsObject, entity) : new Document();
 		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
 		return mappedFields.keySet().isEmpty() ? null : mappedFields;
+	}
+
+	public Document getMappedFields(Document fieldsObject, Optional<? extends MongoPersistentEntity<?>> entity) {
+		return getMappedFields(fieldsObject, entity.orElse(null));
 	}
 
 	private void mapMetaAttributes(Document source, MongoPersistentEntity<?> entity, MetaMapping metaMapping) {
@@ -311,7 +324,7 @@ public class QueryMapper {
 				} else if (valueDbo.containsField("$ne")) {
 					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
 				} else {
-					return getMappedObject(resultDbo, null);
+					return getMappedObject(resultDbo, Optional.empty());
 				}
 				return resultDbo;
 			}
@@ -330,7 +343,7 @@ public class QueryMapper {
 				} else if (valueDbo.containsKey("$ne")) {
 					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
 				} else {
-					return getMappedObject(resultDbo, null);
+					return getMappedObject(resultDbo, Optional.empty());
 				}
 				return resultDbo;
 
@@ -380,8 +393,8 @@ public class QueryMapper {
 		}
 
 		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
-		return entity.hasIdProperty()
-				&& (type.equals(DBRef.class) || entity.getIdProperty().getActualType().isAssignableFrom(type));
+		return entity.hasIdProperty() && (type.equals(DBRef.class)
+				|| entity.getIdProperty().map(it -> it.getActualType().isAssignableFrom(type)).orElse(false));
 	}
 
 	/**
@@ -524,28 +537,31 @@ public class QueryMapper {
 		return converter.toDBRef(source, property);
 	}
 
+	private Optional<Object> convertId(Object id) {
+		return convertId(Optional.of(id));
+	}
+
 	/**
 	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
 	 * 
 	 * @param id
 	 * @return
 	 */
-	public Object convertId(Object id) {
+	public Optional<Object> convertId(Optional<Object> id) {
 
-		if (id == null) {
-			return null;
-		}
+		return id.map(it -> {
 
-		if (id instanceof String) {
-			return ObjectId.isValid(id.toString()) ? conversionService.convert(id, ObjectId.class) : id;
-		}
+			if (it instanceof String) {
+				return ObjectId.isValid(it.toString()) ? conversionService.convert(it, ObjectId.class) : it;
+			}
 
-		try {
-			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService.convert(id, ObjectId.class)
-					: delegateConvertToMongoType(id, null);
-		} catch (ConversionException o_O) {
-			return delegateConvertToMongoType(id, null);
-		}
+			try {
+				return conversionService.canConvert(it.getClass(), ObjectId.class)
+						? conversionService.convert(it, ObjectId.class) : delegateConvertToMongoType(it, null);
+			} catch (ConversionException o_O) {
+				return delegateConvertToMongoType(it, null);
+			}
+		});
 	}
 
 	/**
@@ -820,13 +836,9 @@ public class QueryMapper {
 		@Override
 		public boolean isIdField() {
 
-			MongoPersistentProperty idProperty = entity.getIdProperty();
-
-			if (idProperty != null) {
-				return idProperty.getName().equals(name) || idProperty.getFieldName().equals(name);
-			}
-
-			return DEFAULT_ID_NAMES.contains(name);
+			return entity.getIdProperty()//
+					.map(it -> it.getName().equals(name) || it.getFieldName().equals(name))//
+					.orElseGet(() -> DEFAULT_ID_NAMES.contains(name));
 		}
 
 		/* 
@@ -845,7 +857,7 @@ public class QueryMapper {
 		@Override
 		public MongoPersistentEntity<?> getPropertyEntity() {
 			MongoPersistentProperty property = getProperty();
-			return property == null ? null : mappingContext.getPersistentEntity(property);
+			return property == null ? null : mappingContext.getRequiredPersistentEntity(property);
 		}
 
 		/* 
@@ -875,8 +887,11 @@ public class QueryMapper {
 
 			if (this.path != null) {
 				for (MongoPersistentProperty p : this.path) {
-					if (p.isAssociation()) {
-						return p.getAssociation();
+
+					Optional<Association<MongoPersistentProperty>> association = p.getAssociation();
+
+					if (association.isPresent()) {
+						return association.get();
 					}
 				}
 			}

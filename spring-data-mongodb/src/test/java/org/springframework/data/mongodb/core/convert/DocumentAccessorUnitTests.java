@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-import com.mongodb.BasicDBObject;
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.Test;
@@ -28,6 +27,8 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
+import com.mongodb.BasicDBObject;
+
 /**
  * Unit tests for {@link DocumentAccessor}.
  * 
@@ -36,8 +37,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 public class DocumentAccessorUnitTests {
 
 	MongoMappingContext context = new MongoMappingContext();
-	MongoPersistentEntity<?> projectingTypeEntity = context.getPersistentEntity(ProjectingType.class);
-	MongoPersistentProperty fooProperty = projectingTypeEntity.getPersistentProperty("foo");
+	MongoPersistentEntity<?> projectingTypeEntity = context.getRequiredPersistentEntity(ProjectingType.class);
+	MongoPersistentProperty fooProperty = projectingTypeEntity.getRequiredPersistentProperty("foo");
 
 	@Test // DATAMONGO-766
 	public void putsNestedFieldCorrectly() {
@@ -80,14 +81,14 @@ public class DocumentAccessorUnitTests {
 	@Test // DATAMONGO-1335
 	public void writesAllNestingsCorrectly() {
 
-		MongoPersistentEntity<?> entity = context.getPersistentEntity(TypeWithTwoNestings.class);
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(TypeWithTwoNestings.class);
 
 		Document target = new Document();
 
 		DocumentAccessor accessor = new DocumentAccessor(target);
-		accessor.put(entity.getPersistentProperty("id"), "id");
-		accessor.put(entity.getPersistentProperty("b"), "b");
-		accessor.put(entity.getPersistentProperty("c"), "c");
+		accessor.put(entity.getRequiredPersistentProperty("id"), "id");
+		accessor.put(entity.getRequiredPersistentProperty("b"), "b");
+		accessor.put(entity.getRequiredPersistentProperty("c"), "c");
 
 		Document nestedA = DocumentTestUtils.getAsDocument(target, "a");
 
@@ -100,11 +101,11 @@ public class DocumentAccessorUnitTests {
 	public void exposesAvailabilityOfFields() {
 
 		DocumentAccessor accessor = new DocumentAccessor(new Document("a", new BasicDBObject("c", "d")));
-		MongoPersistentEntity<?> entity = context.getPersistentEntity(ProjectingType.class);
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(ProjectingType.class);
 
-		assertThat(accessor.hasValue(entity.getPersistentProperty("foo")), is(false));
-		assertThat(accessor.hasValue(entity.getPersistentProperty("a")), is(true));
-		assertThat(accessor.hasValue(entity.getPersistentProperty("name")), is(false));
+		assertThat(accessor.hasValue(entity.getRequiredPersistentProperty("foo")), is(false));
+		assertThat(accessor.hasValue(entity.getRequiredPersistentProperty("a")), is(true));
+		assertThat(accessor.hasValue(entity.getRequiredPersistentProperty("name")), is(false));
 	}
 
 	static class ProjectingType {
