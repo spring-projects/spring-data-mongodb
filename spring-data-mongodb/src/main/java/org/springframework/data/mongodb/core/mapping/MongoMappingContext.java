@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.util.AbstractMap;
 
 import org.springframework.beans.BeansException;
@@ -25,6 +23,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
+import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
@@ -76,9 +75,9 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 * @see org.springframework.data.mapping.AbstractMappingContext#createPersistentProperty(java.lang.reflect.Field, java.beans.PropertyDescriptor, org.springframework.data.mapping.MutablePersistentEntity, org.springframework.data.mapping.SimpleTypeHolder)
 	 */
 	@Override
-	public MongoPersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
-			BasicMongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
-		return new CachingMongoPersistentProperty(field, descriptor, owner, simpleTypeHolder, fieldNamingStrategy);
+	public MongoPersistentProperty createPersistentProperty(Property property, BasicMongoPersistentEntity<?> owner,
+			SimpleTypeHolder simpleTypeHolder) {
+		return new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
 	/*

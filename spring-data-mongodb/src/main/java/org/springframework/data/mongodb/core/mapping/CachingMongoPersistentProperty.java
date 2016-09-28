@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-
 import org.springframework.data.mapping.model.FieldNamingStrategy;
+import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 /**
@@ -43,9 +41,9 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	 * @param simpleTypeHolder
 	 * @param fieldNamingStrategy
 	 */
-	public CachingMongoPersistentProperty(Field field, PropertyDescriptor propertyDescriptor,
-			MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder, FieldNamingStrategy fieldNamingStrategy) {
-		super(field, propertyDescriptor, owner, simpleTypeHolder, fieldNamingStrategy);
+	public CachingMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
+			SimpleTypeHolder simpleTypeHolder, FieldNamingStrategy fieldNamingStrategy) {
+		super(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
 	/*

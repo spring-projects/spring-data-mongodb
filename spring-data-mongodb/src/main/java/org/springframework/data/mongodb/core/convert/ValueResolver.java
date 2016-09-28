@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.util.Optional;
+
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
@@ -38,5 +40,6 @@ interface ValueResolver {
 	 * @param parent
 	 * @return
 	 */
-	Object getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator, ObjectPath parent);
+	Optional<Object> getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator,
+			ObjectPath path);
 }

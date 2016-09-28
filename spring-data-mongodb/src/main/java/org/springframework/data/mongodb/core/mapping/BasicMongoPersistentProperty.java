@@ -15,10 +15,9 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
@@ -29,6 +28,7 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
@@ -72,10 +72,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @param simpleTypeHolder
 	 * @param fieldNamingStrategy
 	 */
-	public BasicMongoPersistentProperty(Field field, PropertyDescriptor propertyDescriptor,
-			MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder, FieldNamingStrategy fieldNamingStrategy) {
+	public BasicMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
+			SimpleTypeHolder simpleTypeHolder, FieldNamingStrategy fieldNamingStrategy) {
 
-		super(field, propertyDescriptor, owner, simpleTypeHolder);
+		super(property, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
 
@@ -120,15 +120,11 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 		if (isIdProperty()) {
 
-			if (owner == null) {
+			if (!getOwner().getIdProperty().isPresent()) {
 				return ID_FIELD_NAME;
 			}
 
-			if (owner.getIdProperty() == null) {
-				return ID_FIELD_NAME;
-			}
-
-			if (owner.isIdProperty(this)) {
+			if (getOwner().isIdProperty(this)) {
 				return ID_FIELD_NAME;
 			}
 		}
@@ -158,14 +154,13 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	private String getAnnotatedFieldName() {
 
-		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
+		Optional<org.springframework.data.mongodb.core.mapping.Field> annotation = findAnnotation(
 				org.springframework.data.mongodb.core.mapping.Field.class);
 
-		if (annotation != null && StringUtils.hasText(annotation.value())) {
-			return annotation.value();
-		}
-
-		return null;
+		return annotation//
+				.filter(it -> StringUtils.hasText(it.value()))//
+				.map(it -> it.value())//
+				.orElse(null);
 	}
 
 	/*
@@ -173,9 +168,11 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getFieldOrder()
 	 */
 	public int getFieldOrder() {
-		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
+
+		Optional<org.springframework.data.mongodb.core.mapping.Field> annotation = findAnnotation(
 				org.springframework.data.mongodb.core.mapping.Field.class);
-		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
+
+		return annotation.map(it -> it.order()).orElse(Integer.MAX_VALUE);
 	}
 
 	/*
@@ -200,7 +197,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDBRef()
 	 */
 	public DBRef getDBRef() {
-		return findAnnotation(DBRef.class);
+		return findAnnotation(DBRef.class).orElse(null);
 	}
 
 	/*

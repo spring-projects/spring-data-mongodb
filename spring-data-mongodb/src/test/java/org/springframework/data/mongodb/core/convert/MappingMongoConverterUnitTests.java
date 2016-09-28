@@ -115,6 +115,8 @@ public class MappingMongoConverterUnitTests {
 		mappingContext.setApplicationContext(context);
 		mappingContext.afterPropertiesSet();
 
+		mappingContext.getPersistentEntity(Address.class);
+
 		converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.afterPropertiesSet();
 	}
@@ -458,7 +460,6 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void writesNestedCollectionsCorrectly() {
 
 		CollectionWrapper wrapper = new CollectionWrapper();
@@ -552,7 +553,6 @@ public class MappingMongoConverterUnitTests {
 
 		GenericType<?> result = converter.read(GenericType.class, new org.bson.Document("content", address));
 		assertThat(result.content, is(instanceOf(Address.class)));
-
 	}
 
 	/**
@@ -1318,7 +1318,6 @@ public class MappingMongoConverterUnitTests {
 	 * @see DATAMONGO-724
 	 */
 	@Test
-	@SuppressWarnings("unchecked")
 	public void mappingConsidersCustomConvertersNotWritingTypeInformation() {
 
 		Person person = new Person();
@@ -1565,8 +1564,8 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(document, is(notNullValue()));
 		assertThat(document.get("box"), is(instanceOf(org.bson.Document.class)));
-		assertThat(document.get("box"), is((Object) new org.bson.Document().append("first", toDocument(object.box.getFirst()))
-				.append("second", toDocument(object.box.getSecond()))));
+		assertThat(document.get("box"), is((Object) new org.bson.Document()
+				.append("first", toDocument(object.box.getFirst())).append("second", toDocument(object.box.getSecond()))));
 	}
 
 	private static org.bson.Document toDocument(Point point) {
@@ -1612,7 +1611,7 @@ public class MappingMongoConverterUnitTests {
 		List<org.bson.Document> points = (List<org.bson.Document>) polygonDoc.get("points");
 
 		assertThat(points, hasSize(3));
-		assertThat(points, Matchers.<org.bson.Document> hasItems(toDocument(object.polygon.getPoints().get(0)),
+		assertThat(points, Matchers.<org.bson.Document>hasItems(toDocument(object.polygon.getPoints().get(0)),
 				toDocument(object.polygon.getPoints().get(1)), toDocument(object.polygon.getPoints().get(2))));
 	}
 
@@ -1998,7 +1997,7 @@ public class MappingMongoConverterUnitTests {
 
 		TypeWithOptional read = converter.read(TypeWithOptional.class, result);
 
-		assertThat(read.string, is(Optional.<String> empty()));
+		assertThat(read.string, is(Optional.<String>empty()));
 		assertThat(read.localDateTime, is(Optional.of(now)));
 	}
 
@@ -2006,7 +2005,6 @@ public class MappingMongoConverterUnitTests {
 	 * @see DATAMONGO-1118
 	 */
 	@Test
-	@SuppressWarnings("unchecked")
 	public void convertsMapKeyUsingCustomConverterForAndBackwards() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);

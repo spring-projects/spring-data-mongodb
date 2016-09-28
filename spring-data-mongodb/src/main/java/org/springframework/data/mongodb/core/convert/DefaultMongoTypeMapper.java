@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.bson.Document;
@@ -26,6 +27,7 @@ import org.springframework.data.convert.DefaultTypeMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.convert.TypeAliasAccessor;
 import org.springframework.data.convert.TypeInformationMapper;
+import org.springframework.data.mapping.Alias;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.ClassTypeInformation;
@@ -116,13 +118,13 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 		accessor.writeTypeTo(result, new Document("$in", restrictedMappedTypes));
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.convert.DefaultTypeMapper#getFallbackTypeFor(java.lang.Object)
 	 */
 	@Override
-	protected TypeInformation<?> getFallbackTypeFor(Bson source) {
-
-		return source instanceof BasicDBList ? LIST_TYPE_INFO : MAP_TYPE_INFO;
+	protected Optional<TypeInformation<?>> getFallbackTypeFor(Bson source) {
+		return Optional.of(source instanceof BasicDBList ? LIST_TYPE_INFO : MAP_TYPE_INFO);
 	}
 
 	/**
@@ -142,16 +144,16 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.TypeAliasAccessor#readAliasFrom(java.lang.Object)
 		 */
-		public Object readAliasFrom(Bson source) {
+		public Alias readAliasFrom(Bson source) {
 
 			if (source instanceof List) {
-				return null;
+				return Alias.NONE;
 			}
 
 			if (source instanceof Document) {
-				return ((Document) source).get(typeKey);
+				return Alias.ofOptional(Optional.ofNullable(((Document) source).get(typeKey)));
 			} else if (source instanceof DBObject) {
-				return ((DBObject) source).get(typeKey);
+				return Alias.ofOptional(Optional.ofNullable(((DBObject) source).get(typeKey)));
 			}
 
 			throw new IllegalArgumentException("Cannot read alias from " + source.getClass());

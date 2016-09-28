@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
+import static org.springframework.data.util.Optionals.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,11 +30,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -104,6 +105,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.util.Optionals;
+import org.springframework.data.util.Pair;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -111,6 +114,15 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.CommandResult;
+import com.mongodb.Cursor;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
@@ -353,7 +365,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			public CloseableIterator<T> doInCollection(MongoCollection<Document> collection)
 					throws MongoException, DataAccessException {
 
-				MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
+				MongoPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(entityType);
 
 				Document mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), persistentEntity);
 				Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
@@ -361,8 +373,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				FindIterable<Document> cursor = collection.find(mappedQuery).projection(mappedFields);
 				QueryCursorPreparer cursorPreparer = new QueryCursorPreparer(query, entityType);
 
-				ReadDocumentCallback<T> readCallback = new ReadDocumentCallback<T>(mongoConverter, entityType,
-						collectionName);
+				ReadDocumentCallback<T> readCallback = new ReadDocumentCallback<T>(mongoConverter, entityType, collectionName);
 
 				return new CloseableIterableCursorAdapter<T>(cursorPreparer.prepare(cursor), exceptionTranslator, readCallback);
 			}
@@ -440,7 +451,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(query);
 
-		Document queryObject = queryMapper.getMappedObject(query.getQueryObject(), null);
+		Document queryObject = queryMapper.getMappedObject(query.getQueryObject(), Optional.empty());
 		Document sortObject = query.getSortObject();
 		Document fieldsObject = query.getFieldsObject();
 
@@ -632,9 +643,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	public <T> T findById(Object id, Class<T> entityClass, String collectionName) {
-		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityClass);
-		MongoPersistentProperty idProperty = persistentEntity == null ? null : persistentEntity.getIdProperty();
-		String idKey = idProperty == null ? ID_FIELD : idProperty.getName();
+
+		String idKey = mappingContext.getPersistentEntity(entityClass)//
+				.flatMap(it -> it.getIdProperty())//
+				.map(it -> it.getName()).orElse(ID_FIELD);
+
 		return doFindOne(collectionName, new Document(idKey, id), null, entityClass);
 	}
 
@@ -752,13 +765,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.hasText(collectionName);
 		final Document document = query == null ? null
 				: queryMapper.getMappedObject(query.getQueryObject(),
-						entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
+						Optional.ofNullable(entityClass).flatMap(it -> mappingContext.getPersistentEntity(entityClass)));
 
-		return execute(collectionName, new CollectionCallback<Long>() {
-			public Long doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-				return collection.count(document);
-			}
-		});
+		return execute(collectionName, (CollectionCallback<Long>) collection -> collection.count(document));
 	}
 
 	/*
@@ -877,13 +886,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	private void initializeVersionProperty(Object entity) {
 
-		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(entity.getClass());
+		Optional<? extends MongoPersistentEntity<?>> persistentEntity = getPersistentEntity(entity.getClass());
 
-		if (mongoPersistentEntity != null && mongoPersistentEntity.hasVersionProperty()) {
-			ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(
-					mongoPersistentEntity.getPropertyAccessor(entity), mongoConverter.getConversionService());
-			accessor.setProperty(mongoPersistentEntity.getVersionProperty(), 0);
-		}
+		ifAllPresent(persistentEntity, persistentEntity.flatMap(it -> it.getVersionProperty()), (l, r) -> {
+			ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(l.getPropertyAccessor(entity),
+					mongoConverter.getConversionService());
+			accessor.setProperty(r, Optional.of(0));
+		});
 	}
 
 	public void insert(Collection<? extends Object> batchToSave, Class<?> entityClass) {
@@ -908,11 +917,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				continue;
 			}
 
-			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(element.getClass());
-
-			if (entity == null) {
-				throw new InvalidDataAccessApiUsageException("No PersistentEntity information found for " + element.getClass());
-			}
+			MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(element.getClass());
 
 			String collection = entity.getCollection();
 			List<T> collectionElements = elementsByCollection.get(collection);
@@ -969,41 +974,35 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(objectToSave);
 		Assert.hasText(collectionName);
 
-		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(objectToSave.getClass());
+		Optional<? extends MongoPersistentEntity<?>> entity = getPersistentEntity(objectToSave.getClass());
+		Optional<MongoPersistentProperty> versionProperty = entity.flatMap(it -> it.getVersionProperty());
 
-		// No optimistic locking -> simple save
-		if (mongoPersistentEntity == null || !mongoPersistentEntity.hasVersionProperty()) {
-			doSave(collectionName, objectToSave, this.mongoConverter);
-			return;
-		}
-
-		doSaveVersioned(objectToSave, mongoPersistentEntity, collectionName);
+		mapIfAllPresent(entity, versionProperty, //
+				(l, r) -> doSaveVersioned(objectToSave, l, collectionName))//
+						.orElseGet(() -> doSave(collectionName, objectToSave, this.mongoConverter));
 	}
 
-	private <T> void doSaveVersioned(T objectToSave, MongoPersistentEntity<?> entity, String collectionName) {
+	private <T> T doSaveVersioned(T objectToSave, MongoPersistentEntity<?> entity, String collectionName) {
 
 		ConvertingPropertyAccessor convertingAccessor = new ConvertingPropertyAccessor(
 				entity.getPropertyAccessor(objectToSave), mongoConverter.getConversionService());
 
-		MongoPersistentProperty idProperty = entity.getIdProperty();
-		MongoPersistentProperty versionProperty = entity.getVersionProperty();
+		Optional<MongoPersistentProperty> versionProperty = entity.getVersionProperty();
+		Optional<Number> versionNumber = versionProperty.flatMap(it -> convertingAccessor.getProperty(it, Number.class));
 
-		Object version = convertingAccessor.getProperty(versionProperty);
-		Number versionNumber = convertingAccessor.getProperty(versionProperty, Number.class);
+		return mapIfAllPresent(versionProperty, versionNumber, (property, number) -> {
 
-		// Fresh instance -> initialize version property
-		if (version == null) {
-			doInsert(collectionName, objectToSave, this.mongoConverter);
-		} else {
+			MongoPersistentProperty idProperty = entity.getIdProperty()//
+					.orElseThrow(() -> new MappingException("Couldn't find identifier property on entity " + entity + "!"));
 
 			assertUpdateableIdIfNotSet(objectToSave);
 
 			// Create query for entity with the id and old version
 			Object id = convertingAccessor.getProperty(idProperty);
-			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(versionProperty.getName()).is(version));
+			Query query = Query.query(Criteria.where(idProperty.getName()).is(id).and(property.getName()).is(number));
 
 			// Bump version number
-			convertingAccessor.setProperty(versionProperty, versionNumber.longValue() + 1);
+			convertingAccessor.setProperty(property, Optional.of(number.longValue() + 1));
 
 			Document document = new Document();
 
@@ -1021,10 +1020,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 								versionNumber, collectionName));
 			}
 			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, document, collectionName));
-		}
+
+			return objectToSave;
+
+		}).orElseGet(() -> {
+			doInsert(collectionName, objectToSave, this.mongoConverter);
+			return objectToSave;
+		});
 	}
 
-	protected <T> void doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
+	protected <T> T doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
 		assertUpdateableIdIfNotSet(objectToSave);
 
@@ -1037,6 +1042,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		populateIdIfNecessary(objectToSave, id);
 		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc, collectionName));
+
+		return objectToSave;
 	}
 
 	protected Object insertDocument(final String collectionName, final Document document, final Class<?> entityClass) {
@@ -1174,7 +1181,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			public UpdateResult doInCollection(MongoCollection<Document> collection)
 					throws MongoException, DataAccessException {
 
-				MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
+				Optional<? extends MongoPersistentEntity<?>> entity = entityClass == null ? null
+						: getPersistentEntity(entityClass);
 
 				increaseVersionForUpdateIfNecessary(entity, update);
 
@@ -1210,23 +1218,23 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	private void increaseVersionForUpdateIfNecessary(MongoPersistentEntity<?> persistentEntity, Update update) {
+	private void increaseVersionForUpdateIfNecessary(Optional<? extends MongoPersistentEntity<?>> persistentEntity,
+			Update update) {
 
-		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
-			String versionFieldName = persistentEntity.getVersionProperty().getFieldName();
+		ifAllPresent(persistentEntity, persistentEntity.flatMap(it -> it.getVersionProperty()), (entity, property) -> {
+			String versionFieldName = property.getFieldName();
 			if (!update.modifies(versionFieldName)) {
 				update.inc(versionFieldName, 1L);
 			}
-		}
+		});
 	}
 
-	private boolean documentContainsVersionProperty(Document document, MongoPersistentEntity<?> persistentEntity) {
+	private boolean documentContainsVersionProperty(Document document,
+			Optional<? extends MongoPersistentEntity<?>> persistentEntity) {
 
-		if (persistentEntity == null || !persistentEntity.hasVersionProperty()) {
-			return false;
-		}
-
-		return document.containsKey(persistentEntity.getVersionProperty().getFieldName());
+		return mapIfAllPresent(persistentEntity, persistentEntity.flatMap(it -> it.getVersionProperty()), //
+				(entity, property) -> document.containsKey(property.getFieldName()))//
+						.orElse(false);
 	}
 
 	public DeleteResult remove(Object object) {
@@ -1256,25 +1264,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param object
 	 * @return
 	 */
-	private Entry<String, Object> extractIdPropertyAndValue(Object object) {
+	private Pair<String, Optional<Object>> extractIdPropertyAndValue(Object object) {
 
 		Assert.notNull(object, "Id cannot be extracted from 'null'.");
 
 		Class<?> objectType = object.getClass();
 
 		if (object instanceof Document) {
-			return Collections.singletonMap(ID_FIELD, ((Document) object).get(ID_FIELD)).entrySet().iterator().next();
+			return Pair.of(ID_FIELD, Optional.ofNullable(((Document) object).get(ID_FIELD)));
 		}
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(objectType);
-		MongoPersistentProperty idProp = entity == null ? null : entity.getIdProperty();
+		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(objectType);
 
-		if (idProp == null || entity == null) {
-			throw new MappingException("No id property found for object of type " + objectType);
-		}
-
-		Object idValue = entity.getPropertyAccessor(object).getProperty(idProp);
-		return Collections.singletonMap(idProp.getFieldName(), idValue).entrySet().iterator().next();
+		return mapIfAllPresent(entity, entity.flatMap(it -> it.getIdProperty()), //
+				(l, r) -> Pair.of(r.getFieldName(), l.getPropertyAccessor(object).getProperty(r)))//
+						.orElseThrow(() -> new MappingException("No id property found for object of type " + objectType));
 	}
 
 	/**
@@ -1285,8 +1289,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private Query getIdQueryFor(Object object) {
 
-		Entry<String, Object> id = extractIdPropertyAndValue(object);
-		return new Query(where(id.getKey()).is(id.getValue()));
+		Pair<String, Optional<Object>> id = extractIdPropertyAndValue(object);
+		return new Query(where(id.getFirst()).is(id.getSecond().orElse(null)));
 	}
 
 	/**
@@ -1300,34 +1304,38 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notEmpty(objects, "Cannot create Query for empty collection.");
 
 		Iterator<?> it = objects.iterator();
-		Entry<String, Object> firstEntry = extractIdPropertyAndValue(it.next());
+		Pair<String, Optional<Object>> pair = extractIdPropertyAndValue(it.next());
 
 		ArrayList<Object> ids = new ArrayList<Object>(objects.size());
-		ids.add(firstEntry.getValue());
+		ids.add(pair.getSecond().orElse(null));
 
 		while (it.hasNext()) {
-			ids.add(extractIdPropertyAndValue(it.next()).getValue());
+			ids.add(extractIdPropertyAndValue(it.next()).getSecond().orElse(null));
 		}
 
-		return new Query(where(firstEntry.getKey()).in(ids));
+		return new Query(where(pair.getFirst()).in(ids));
 	}
 
-	private void assertUpdateableIdIfNotSet(Object entity) {
+	private void assertUpdateableIdIfNotSet(Object value) {
 
-		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entity.getClass());
-		MongoPersistentProperty idProperty = persistentEntity == null ? null : persistentEntity.getIdProperty();
+		Optional<? extends MongoPersistentEntity<?>> persistentEntity = mappingContext
+				.getPersistentEntity(value.getClass());
+		Optional<MongoPersistentProperty> idProperty = persistentEntity.flatMap(it -> it.getIdProperty());
 
-		if (idProperty == null || persistentEntity == null) {
-			return;
-		}
+		Optionals.ifAllPresent(persistentEntity, idProperty, (entity, property) -> {
 
-		Object idValue = persistentEntity.getPropertyAccessor(entity).getProperty(idProperty);
+			Optional<Object> propertyValue = entity.getPropertyAccessor(value).getProperty(property);
 
-		if (idValue == null && !MongoSimpleTypes.AUTOGENERATED_ID_TYPES.contains(idProperty.getType())) {
-			throw new InvalidDataAccessApiUsageException(
-					String.format("Cannot autogenerate id of type %s for entity of type %s!", idProperty.getType().getName(),
-							entity.getClass().getName()));
-		}
+			if (propertyValue.isPresent()) {
+				return;
+			}
+
+			if (!MongoSimpleTypes.AUTOGENERATED_ID_TYPES.contains(property.getType())) {
+				throw new InvalidDataAccessApiUsageException(
+						String.format("Cannot autogenerate id of type %s for entity of type %s!", property.getType().getName(),
+								value.getClass().getName()));
+			}
+		});
 	}
 
 	public DeleteResult remove(Query query, String collectionName) {
@@ -1351,7 +1359,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		final Document queryObject = query.getQueryObject();
-		final MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
+		final Optional<? extends MongoPersistentEntity<?>> entity = getPersistentEntity(entityClass);
 
 		return execute(collectionName, new CollectionCallback<DeleteResult>() {
 			public DeleteResult doInCollection(MongoCollection<Document> collection)
@@ -1431,7 +1439,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				result = result.sort(query.getSortObject());
 			}
 
-			result = result.filter(queryMapper.getMappedObject(query.getQueryObject(), null));
+			result = result.filter(queryMapper.getMappedObject(query.getQueryObject(), Optional.empty()));
 		}
 
 		if (mapReduceOptions != null) {
@@ -1477,7 +1485,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (criteria == null) {
 			document.put("cond", null);
 		} else {
-			document.put("cond", queryMapper.getMappedObject(criteria.getCriteriaObject(), null));
+			document.put("cond", queryMapper.getMappedObject(criteria.getCriteriaObject(), Optional.empty()));
 		}
 		// If initial document was a JavaScript string, potentially loaded by Spring's Resource abstraction, load it and
 		// convert to Document
@@ -1745,7 +1753,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	protected <T> T doFindOne(String collectionName, Document query, Document fields, Class<T> entityClass) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(entityClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
 		Document mappedFields = fields == null ? null : queryMapper.getMappedObject(fields, entity);
 
@@ -1795,7 +1803,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <S, T> List<T> doFind(String collectionName, Document query, Document fields, Class<S> entityClass,
 			CursorPreparer preparer, DocumentCallback<T> objectCallback) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(entityClass);
 
 		Document mappedFields = queryMapper.getMappedFields(fields, entity);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
@@ -1846,7 +1854,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(query), fields, sort, entityClass, collectionName);
 		}
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(entityClass);
 
 		return executeFindOneInternal(new FindAndRemoveCallback(queryMapper.getMappedObject(query, entity), fields, sort),
 				new ReadDocumentCallback<T>(readerToUse, entityClass, collectionName), collectionName);
@@ -1861,7 +1869,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			options = new FindAndModifyOptions();
 		}
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(entityClass);
 
 		increaseVersionForUpdateIfNecessary(entity, update);
 
@@ -1897,21 +1905,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			return;
 		}
 
-		MongoPersistentProperty idProp = getIdPropertyFor(savedObject.getClass());
+		getIdPropertyFor(savedObject.getClass()).ifPresent(idProp -> {
 
-		if (idProp == null) {
-			return;
-		}
+			ConversionService conversionService = mongoConverter.getConversionService();
+			MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(savedObject.getClass());
+			PersistentPropertyAccessor accessor = entity.getPropertyAccessor(savedObject);
 
-		ConversionService conversionService = mongoConverter.getConversionService();
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(savedObject.getClass());
-		PersistentPropertyAccessor accessor = entity.getPropertyAccessor(savedObject);
-
-		if (accessor.getProperty(idProp) != null) {
-			return;
-		}
-
-		new ConvertingPropertyAccessor(accessor, conversionService).setProperty(idProp, id);
+			Optional<Object> value = accessor.getProperty(idProp);
+			value.ifPresent(it -> new ConvertingPropertyAccessor(accessor, conversionService).setProperty(idProp, value));
+		});
 	}
 
 	private MongoCollection<Document> getAndPrepareCollection(MongoDatabase db, String collectionName) {
@@ -1939,7 +1941,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return
 	 */
 	private <T> T executeFindOneInternal(CollectionCallback<Document> collectionCallback,
-										 DocumentCallback<T> objectCallback, String collectionName) {
+			DocumentCallback<T> objectCallback, String collectionName) {
 
 		try {
 			T result = objectCallback
@@ -1969,7 +1971,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return
 	 */
 	private <T> List<T> executeFindMultiInternal(CollectionCallback<FindIterable<Document>> collectionCallback,
-												 CursorPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
+			CursorPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
 
 		try {
 
@@ -2042,13 +2044,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return exceptionTranslator;
 	}
 
-	private MongoPersistentEntity<?> getPersistentEntity(Class<?> type) {
-		return type == null ? null : mappingContext.getPersistentEntity(type);
+	private Optional<? extends MongoPersistentEntity<?>> getPersistentEntity(Class<?> type) {
+		return Optional.ofNullable(type).flatMap(it -> mappingContext.getPersistentEntity(it));
 	}
 
-	private MongoPersistentProperty getIdPropertyFor(Class<?> type) {
-		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(type);
-		return persistentEntity == null ? null : persistentEntity.getIdProperty();
+	private Optional<MongoPersistentProperty> getIdPropertyFor(Class<?> type) {
+		return mappingContext.getPersistentEntity(type).flatMap(it -> it.getIdProperty());
 	}
 
 	private <T> String determineEntityCollectionName(T obj) {
@@ -2066,12 +2067,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					"No class parameter provided, entity collection can't be determined!");
 		}
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
-		if (entity == null) {
-			throw new InvalidDataAccessApiUsageException(
-					"No Persistent Entity information found for the class " + entityClass.getName());
-		}
-		return entity.getCollection();
+		return mappingContext.getRequiredPersistentEntity(entityClass).getCollection();
 	}
 
 	/**
@@ -2176,8 +2172,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * 
 	 * @param ids
 	 * @param documents
-	 * @return 
-	 * TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
+	 * @return TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
 	 */
 	private static List<Object> consolidateIdentifiers(List<ObjectId> ids, List<Document> documents) {
 

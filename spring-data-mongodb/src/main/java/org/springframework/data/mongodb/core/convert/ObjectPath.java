@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
@@ -115,8 +116,8 @@ class ObjectPath {
 	 * 
 	 * @return
 	 */
-	public Object getCurrentObject() {
-		return items.isEmpty() ? null : items.get(items.size() - 1).getObject();
+	public Optional<Object> getCurrentObject() {
+		return items.isEmpty() ? Optional.empty() : Optional.of(items.get(items.size() - 1).getObject());
 	}
 
 	/* 

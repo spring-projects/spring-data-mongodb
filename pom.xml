@@ -28,9 +28,10 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>2.0.0.BUILD-SNAPSHOT</springdata.commons>
+		<springdata.commons>2.0.0.DATACMNS-867-SNAPSHOT</springdata.commons>
 		<mongo>3.2.2</mongo>
 		<mongo.reactivestreams>1.2.0</mongo.reactivestreams>
+		<mockito>2.2.17</mockito>
 	</properties>
 
 	<developers>

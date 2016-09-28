@@ -34,6 +34,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
@@ -90,7 +91,10 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Test
 	public void usesPropertyAccessForThrowableCause() {
 
-		MongoPersistentProperty property = getPropertyFor(ReflectionUtils.findField(Throwable.class, "cause"));
+		BasicMongoPersistentEntity<Throwable> entity = new BasicMongoPersistentEntity<>(
+				ClassTypeInformation.from(Throwable.class));
+		MongoPersistentProperty property = getPropertyFor(entity, "cause");
+
 		assertThat(property.usePropertyAccess(), is(true));
 	}
 
@@ -102,13 +106,13 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
 
-		MongoPersistentProperty property = new BasicMongoPersistentProperty(field, null, entity, new SimpleTypeHolder(),
-				UppercaseFieldNamingStrategy.INSTANCE);
+		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(field), entity,
+				new SimpleTypeHolder(), UppercaseFieldNamingStrategy.INSTANCE);
 		assertThat(property.getFieldName(), is("LASTNAME"));
 
 		field = ReflectionUtils.findField(Person.class, "firstname");
 
-		property = new BasicMongoPersistentProperty(field, null, entity, new SimpleTypeHolder(),
+		property = new BasicMongoPersistentProperty(Property.of(field), entity, new SimpleTypeHolder(),
 				UppercaseFieldNamingStrategy.INSTANCE);
 		assertThat(property.getFieldName(), is("foo"));
 	}
@@ -120,8 +124,8 @@ public class BasicMongoPersistentPropertyUnitTests {
 	public void rejectsInvalidValueReturnedByFieldNamingStrategy() {
 
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
-		MongoPersistentProperty property = new BasicMongoPersistentProperty(field, null, entity, new SimpleTypeHolder(),
-				InvalidFieldNamingStrategy.INSTANCE);
+		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(field), entity,
+				new SimpleTypeHolder(), InvalidFieldNamingStrategy.INSTANCE);
 
 		exception.expect(MappingException.class);
 		exception.expectMessage(InvalidFieldNamingStrategy.class.getName());
@@ -225,7 +229,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	private MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> persistentEntity, Field field) {
-		return new BasicMongoPersistentProperty(field, null, persistentEntity, new SimpleTypeHolder(),
+		return new BasicMongoPersistentProperty(Property.of(field), persistentEntity, new SimpleTypeHolder(),
 				PropertyNameFieldNamingStrategy.INSTANCE);
 	}
 
