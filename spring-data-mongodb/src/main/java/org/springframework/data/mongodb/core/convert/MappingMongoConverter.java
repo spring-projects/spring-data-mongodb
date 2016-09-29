@@ -65,6 +65,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
+import static org.springframework.cglib.proxy.Enhancer.*;
+
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
  * {@link DBObject}.
@@ -792,13 +794,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException("No id property found on class " + targetEntity.getType());
 		}
 
-		Object id = null;
+		Object id;
 
 		if (target.getClass().equals(idProperty.getType())) {
 			id = target;
 		} else {
-			BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
-			id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
+            BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
+            if (isEnhanced(wrapper.getBean().getClass())) {
+                id = wrapper.getProperty(idProperty, Object.class, false);
+            } else {
+                id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
+            }
 		}
 
 		if (null == id) {
