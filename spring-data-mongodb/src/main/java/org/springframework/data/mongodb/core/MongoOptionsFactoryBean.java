@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import javax.net.ssl.SSLSocketFactory;
+
 import com.mongodb.MongoOptions;
 
 import org.springframework.beans.factory.FactoryBean;
@@ -98,6 +100,13 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	 */
 	@SuppressWarnings("deprecation")
 	private boolean slaveOk = MONGO_OPTIONS.slaveOk;
+
+	/**
+	 * This controls SSL support via SSLSocketFactory.
+	 * 
+	 * Defaults to false.
+	 */
+	private boolean ssl;
 
 	/**
 	 * number of connections allowed per host will block if run out
@@ -205,6 +214,15 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		this.slaveOk = slaveOk;
 	}
 
+	/**
+	 * Specifies if the driver should use an SSL connection to Mongo. Defaults to false.
+	 * 
+	 * @param ssl true if the driver should use an SSL connection.
+	 */
+	public void setSsl(boolean ssl) {
+		this.ssl = ssl;
+	}
+
 	@SuppressWarnings("deprecation")
 	public void afterPropertiesSet() {
 		MONGO_OPTIONS.connectionsPerHost = connectionsPerHost;
@@ -219,6 +237,9 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		MONGO_OPTIONS.w = writeNumber;
 		MONGO_OPTIONS.wtimeout = writeTimeout;
 		MONGO_OPTIONS.fsync = writeFsync;
+		if (ssl) {
+			MONGO_OPTIONS.setSocketFactory(SSLSocketFactory.getDefault());
+		}
 	}
 
 	public MongoOptions getObject() {

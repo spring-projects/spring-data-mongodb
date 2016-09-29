@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import javax.net.ssl.SSLSocketFactory;
+
 import org.junit.Test;
 
 import com.mongodb.MongoOptions;
@@ -25,6 +27,7 @@ import static org.junit.Assert.*;
  * Unit tests for {@link MongoOptionsFactoryBean}.
  * 
  * @author Oliver Gierke
+ * @author Mike Saavedra
  */
 public class MongoOptionsFactoryBeanUnitTests {
 
@@ -41,4 +44,20 @@ public class MongoOptionsFactoryBeanUnitTests {
 		MongoOptions options = bean.getObject();
 		assertThat(options.maxAutoConnectRetryTime, is(27L));
 	}
+
+	/**
+	 * @see DATAMONGO-764
+	 */
+	@Test
+	public void testSslConnection() {
+
+		MongoOptionsFactoryBean bean = new MongoOptionsFactoryBean();
+		bean.setSsl(true);
+		bean.afterPropertiesSet();
+
+		MongoOptions options = bean.getObject();
+		assertNotNull(options.getSocketFactory());
+		assertTrue(options.getSocketFactory() instanceof SSLSocketFactory);
+	}
+	
 }
