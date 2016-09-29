@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.8.6.RELEASE (2016-09-29)
+---------------------------------------------
+* DATAMONGO-1499 - Release 1.8.6 (Gosling SR6).
+* DATAMONGO-1497 - MappingMongoConverter's check for whether a value is available for a property should use DbObjectAccessor.
+
+
 Changes in version 1.8.5.RELEASE (2016-09-20)
 ---------------------------------------------
 * DATAMONGO-1494 - Release 1.8.5 (Gosling SR5).
