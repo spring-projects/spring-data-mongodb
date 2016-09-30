@@ -1,0 +1,65 @@
+[[mongo.jmx]]
+= JMX support
+
+The JMX support for MongoDB exposes the results of executing the 'serverStatus' command on the admin database for a single MongoDB server instance. It also exposes an administrative MBean, MongoAdmin which will let you perform administrative operations such as drop or create a database. The JMX features build upon the JMX feature set available in the Spring Framework. See http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/jmx.html[here ] for more details.
+
+[[mongodb:jmx-configuration]]
+== MongoDB JMX Configuration
+
+Spring's Mongo namespace enables you to easily enable JMX functionality
+
+=== XML schema to configure MongoDB
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+        <beans xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+        xsi:schemaLocation=
+        "http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/data/mongo
+        http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+<beans>
+
+    <!-- Default bean name is 'mongo' -->
+    <mongo:mongo host="localhost" port="27017"/>
+
+    <!-- by default look for a Mongo object named 'mongo' -->
+    <mongo:jmx/>
+
+    <context:mbean-export/>
+
+    <!-- To translate any MongoExceptions thrown in @Repository annotated classes -->
+    <context:annotation-config/>
+
+    <bean id="registry" class="org.springframework.remoting.rmi.RmiRegistryFactoryBean" p:port="1099" />
+
+    <!-- Expose JMX over RMI -->
+    <bean id="serverConnector" class="org.springframework.jmx.support.ConnectorServerFactoryBean"
+        depends-on="registry"
+        p:objectName="connector:name=rmi"
+        p:serviceUrl="service:jmx:rmi://localhost/jndi/rmi://localhost:1099/myconnector" />
+
+</beans>      
+----
+
+This will expose several MBeans
+
+* AssertMetrics
+* BackgroundFlushingMetrics
+* BtreeIndexCounters
+* ConnectionMetrics
+* GlobalLoclMetrics
+* MemoryMetrics
+* OperationCounters
+* ServerInfo
+* MongoAdmin
+
+This is shown below in a screenshot from JConsole
+
+image::jconsole.png[]

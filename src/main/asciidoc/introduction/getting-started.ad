@@ -1,0 +1,32 @@
+[[get-started]]
+= Additional Help Resources
+
+Learning a new framework is not always straight forward. In this section, we try to provide what we think is an easy to follow guide for starting with Spring Data Document module. However, if you encounter issues or you are just looking for an advice, feel free to use one of the links below:
+
+[[get-started:help]]
+== Support
+
+There are a few support options available:
+
+[[get-started:help:community]]
+=== Community Forum
+
+Spring Data on Stackoverflow http://stackoverflow.com/questions/tagged/spring-data[Stackoverflow ] is a tag for all Spring Data (not just Document) users to share information and help each other. Note that registration is needed *only* for posting.
+
+[[get-started:help:professional]]
+=== Professional Support
+
+Professional, from-the-source support, with guaranteed response time, is available from http://gopivotal.com/[Pivotal Sofware, Inc.], the company behind Spring Data and Spring.
+
+[[get-started:up-to-date]]
+== Following Development
+
+For information on the Spring Data Mongo source code repository, nightly builds and snapshot artifacts please see the http://projects.spring.io/spring-data-mongodb/[Spring Data Mongo homepage].
+
+You can help make Spring Data best serve the needs of the Spring community by interacting with developers through the Community on http://stackoverflow.com/questions/tagged/spring-data[Stackoverflow]. To follow developer activity look for the mailing list information on the Spring Data Mongo homepage.
+
+If you encounter a bug or want to suggest an improvement, please create a ticket on the Spring Data issue https://jira.spring.io/browse/DATAMONGO[tracker].
+
+To stay up to date with the latest news and announcements in the Spring eco system, subscribe to the Spring Community http://spring.io[Portal].
+
+Lastly, you can follow the SpringSource Data http://spring.io/blog[blog ]or the project team on Twitter (http://twitter.com/SpringData[SpringData]).
