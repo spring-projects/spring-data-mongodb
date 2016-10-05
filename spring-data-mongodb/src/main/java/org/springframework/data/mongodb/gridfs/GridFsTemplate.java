@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import com.mongodb.gridfs.GridFSInputFile;
  * @author Philipp Schneider
  * @author Thomas Darimont
  * @author Martin Baumgartner
+ * @author Christoph Strobl
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -182,7 +183,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	public List<GridFSDBFile> find(Query query) {
 
 		if (query == null) {
-			return getGridFs().find((DBObject) null);
+			return getGridFs().find(new BasicDBObject());
 		}
 
 		DBObject queryObject = getMappedQuery(query.getQueryObject());

@@ -179,6 +179,22 @@
 		</profile>
 
 		<profile>
+
+			<id>mongo34-next</id>
+			<properties>
+				<mongo>3.4.0-SNAPSHOT</mongo>
+			</properties>
+
+			<repositories>
+				<repository>
+					<id>mongo-snapshots</id>
+					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+				</repository>
+			</repositories>
+
+		</profile>
+
+		<profile>
 			<id>release</id>
 			<build>
 				<plugins>

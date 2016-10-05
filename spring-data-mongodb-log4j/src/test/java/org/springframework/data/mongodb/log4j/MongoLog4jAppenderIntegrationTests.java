@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,37 +22,44 @@ import java.util.Calendar;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * Integration tests for {@link MongoLog4jAppender}.
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoLog4jAppenderIntegrationTests {
 
 	static final String NAME = MongoLog4jAppenderIntegrationTests.class.getName();
 
 	private static final Logger log = Logger.getLogger(NAME);
-	Mongo mongo;
+	MongoClient mongo;
 	DB db;
 	String collection;
 
 	@Before
 	public void setUp() throws Exception {
 
-		mongo = new Mongo("localhost", 27017);
+		mongo = new MongoClient("localhost", 27017);
 		db = mongo.getDB("logs");
 
 		Calendar now = Calendar.getInstance();
 		collection = String.valueOf(now.get(Calendar.YEAR)) + String.format("%1$02d", now.get(Calendar.MONTH) + 1);
-		db.getCollection(collection).drop();
+	}
+
+	@After
+	public void tearDown() {
+		db.getCollection(collection).remove(new BasicDBObject());
 	}
 
 	@Test
@@ -64,7 +71,6 @@ public class MongoLog4jAppenderIntegrationTests {
 		log.error("ERROR message");
 
 		DBCursor msgs = db.getCollection(collection).find();
-
 		assertThat(msgs.count(), is(4));
 	}
 
