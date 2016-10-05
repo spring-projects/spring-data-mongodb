@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ public class PerformanceTests {
 	private static final int ITERATIONS = 50;
 	private static final StopWatch watch = new StopWatch();
 	private static final Collection<String> IGNORED_WRITE_CONCERNS = Arrays.asList("MAJORITY", "REPLICAS_SAFE",
-			"FSYNC_SAFE", "FSYNCED", "JOURNAL_SAFE", "JOURNALED", "REPLICA_ACKNOWLEDGED");
+			"FSYNC_SAFE", "FSYNCED", "JOURNAL_SAFE", "JOURNALED", "REPLICA_ACKNOWLEDGED", "W2", "W3");
 	private static final int COLLECTION_SIZE = 1024 * 1024 * 256; // 256 MB
 	private static final Collection<String> COLLECTION_NAMES = Arrays.asList("template", "driver", "person");
 

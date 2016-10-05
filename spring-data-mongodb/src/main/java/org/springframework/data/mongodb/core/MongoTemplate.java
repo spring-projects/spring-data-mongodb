@@ -2182,7 +2182,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		public FindCallback(DBObject query, DBObject fields) {
-			this.query = query;
+			this.query = query == null ? new BasicDBObject() : query;
 			this.fields = fields;
 		}
 

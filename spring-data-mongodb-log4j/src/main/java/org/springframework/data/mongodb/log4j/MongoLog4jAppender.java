@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
 /**
@@ -37,6 +38,7 @@ import com.mongodb.WriteConcern;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @auhtor Christoph Strobl
  */
 public class MongoLog4jAppender extends AppenderSkeleton {
 
@@ -58,8 +60,8 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 	protected String collectionPattern = "%c";
 	protected PatternLayout collectionLayout = new PatternLayout(collectionPattern);
 	protected String applicationId = System.getProperty("APPLICATION_ID", null);
-	protected WriteConcern warnOrHigherWriteConcern = WriteConcern.SAFE;
-	protected WriteConcern infoOrLowerWriteConcern = WriteConcern.NORMAL;
+	protected WriteConcern warnOrHigherWriteConcern = WriteConcern.ACKNOWLEDGED;
+	protected WriteConcern infoOrLowerWriteConcern = WriteConcern.UNACKNOWLEDGED;
 	protected Mongo mongo;
 	protected DB db;
 
@@ -128,7 +130,7 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 	}
 
 	protected void connectToMongo() throws UnknownHostException {
-		this.mongo = new Mongo(host, port);
+		this.mongo = new MongoClient(host, port);
 		this.db = mongo.getDB(database);
 	}
 
