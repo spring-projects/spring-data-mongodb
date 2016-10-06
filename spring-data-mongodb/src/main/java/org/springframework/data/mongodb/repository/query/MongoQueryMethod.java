@@ -37,6 +37,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -248,8 +249,11 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setSnapshot(meta.snapshot());
 		}
 
-		if (meta.noCursorTimeout()) {
-			metaAttributes.setNoCursorTimeout(meta.noCursorTimeout());
+		if (!ObjectUtils.isEmpty(meta.flags())) {
+
+			for (org.springframework.data.mongodb.core.query.Meta.CursorOption option : meta.flags()) {
+				metaAttributes.addFlag(option);
+			}
 		}
 
 		return metaAttributes;

@@ -347,7 +347,7 @@ public class AbstractMongoQueryUnitTests {
 
 		List<Person> findByFirstname(String firstname);
 
-		@Meta(comment = "comment", noCursorTimeout = true)
+		@Meta(comment = "comment", flags = {org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT})
 		Page<Person> findByFirstname(String firstnanme, Pageable pageable);
 
 		@Meta(comment = "comment")

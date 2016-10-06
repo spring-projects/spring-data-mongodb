@@ -93,6 +93,7 @@ import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -2372,8 +2373,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						cursorToUse = cursorToUse.addSpecial(entry.getKey(), entry.getValue());
 					}
 
-					if (query.getMeta().isNoCursorTimeout() != null && query.getMeta().isNoCursorTimeout().booleanValue()) {
-						cursorToUse = cursorToUse.addOption(Bytes.QUERYOPTION_NOTIMEOUT);
+					for (Meta.CursorOption option : query.getMeta().getFlags()) {
+
+						switch (option) {
+							case EXHAUST:
+								cursorToUse = cursorToUse.addOption(Bytes.QUERYOPTION_EXHAUST);
+								break;
+							case NO_TIMEOUT:
+								cursorToUse = cursorToUse.addOption(Bytes.QUERYOPTION_NOTIMEOUT);
+								break;
+							case PARTIAL:
+								cursorToUse = cursorToUse.addOption(Bytes.QUERYOPTION_PARTIAL);
+								break;
+							case SLAVE_OK:
+								cursorToUse = cursorToUse.addOption(Bytes.QUERYOPTION_SLAVEOK);
+								break;
+							default:
+								throw new IllegalArgumentException(String.format("%s is no supported flag.", option));
+						}
 					}
 				}
 

@@ -339,12 +339,45 @@ public class Query {
 
 	/**
 	 * @return
-	 * @see Meta#setNoCursorTimeout(boolean)
+	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#NO_TIMEOUT
 	 * @since 1.10
 	 */
 	public Query noCursorTimeout() {
 
-		meta.setNoCursorTimeout(true);
+		meta.addFlag(Meta.CursorOption.NO_TIMEOUT);
+		return this;
+	}
+
+	/**
+	 * @return
+	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#EXHAUST
+	 * @since 1.10
+	 */
+	public Query exhaust() {
+
+		meta.addFlag(Meta.CursorOption.EXHAUST);
+		return this;
+	}
+
+	/**
+	 * @return
+	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#SLAVE_OK
+	 * @since 1.10
+	 */
+	public Query slaveOk() {
+
+		meta.addFlag(Meta.CursorOption.SLAVE_OK);
+		return this;
+	}
+
+	/**
+	 * @return
+	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#PARTIAL
+	 * @since 1.10
+	 */
+	public Query partialResults() {
+
+		meta.addFlag(Meta.CursorOption.PARTIAL);
 		return this;
 	}
 

@@ -152,7 +152,6 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
 	}
 
-
 	/**
 	 * @see DATAMONGO-1403
 	 */
@@ -210,7 +209,8 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithNoCursorTimeout");
 
 		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().isNoCursorTimeout(), is(true));
+		assertThat(method.getQueryMetaAttributes().getFlags(),
+				containsInAnyOrder(org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT));
 	}
 
 	/**
@@ -262,7 +262,7 @@ public class MongoQueryMethodUnitTests {
 		@Meta(snapshot = true)
 		List<User> metaWithSnapshotUsage();
 
-		@Meta(noCursorTimeout = true)
+		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT })
 		List<User> metaWithNoCursorTimeout();
 
 		/**
