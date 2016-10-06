@@ -17,8 +17,10 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.util.Assert;
@@ -46,7 +48,7 @@ public class Meta {
 	}
 
 	private final Map<String, Object> values = new LinkedHashMap<String, Object>(2);
-	private Boolean noCursorTimeout;
+	private final Set<CursorOption> flags = new LinkedHashSet<CursorOption>();
 
 	/**
 	 * @return {@literal null} if not set.
@@ -123,28 +125,31 @@ public class Meta {
 	}
 
 	/**
-	 * @return {@literal null} if not set.
+	 * Add {@link CursorOption} influencing behavior of the {@link com.mongodb.DBCursor}.
+	 *
+	 * @param option must not be {@literal null}.
+	 * @return
 	 * @since 1.10
 	 */
-	public Boolean isNoCursorTimeout() {
-		return this.noCursorTimeout;
+	public boolean addFlag(CursorOption option) {
+
+		Assert.notNull(option, "CursorOption must not be null!");
+		return this.flags.add(option);
 	}
 
 	/**
-	 * Instructs the server to avoid closing a cursor automatically after a period of inactivity.
-	 *
-	 * @param noCursorTimeout
+	 * @return never {@literal null}.
 	 * @since 1.10
 	 */
-	public void setNoCursorTimeout(boolean noCursorTimeout) {
-		this.noCursorTimeout = noCursorTimeout;
+	public Set<CursorOption> getFlags() {
+		return flags;
 	}
 
 	/**
 	 * @return
 	 */
 	public boolean hasValues() {
-		return !this.values.isEmpty() || this.noCursorTimeout != null;
+		return !this.values.isEmpty() || !this.flags.isEmpty();
 	}
 
 	/**
@@ -189,7 +194,10 @@ public class Meta {
 	 */
 	@Override
 	public int hashCode() {
-		return ObjectUtils.nullSafeHashCode(this.values);
+
+		int hash = ObjectUtils.nullSafeHashCode(this.values);
+		hash += ObjectUtils.nullSafeHashCode(this.flags);
+		return hash;
 	}
 
 	/*
@@ -208,6 +216,35 @@ public class Meta {
 		}
 
 		Meta other = (Meta) obj;
-		return ObjectUtils.nullSafeEquals(this.values, other.values);
+		if (!ObjectUtils.nullSafeEquals(this.values, other.values)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(this.flags, other.flags);
+	}
+
+	/**
+	 * {@link CursorOption} represents {@code OP_QUERY} wire protocol flags to change the behavior of queries.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	public enum CursorOption {
+
+		/** Prevents the server from timing out idle cursors. */
+		NO_TIMEOUT,
+
+		/**
+		 * Sets the cursor to return all data returned by the query at once rather than splitting the results into batches.
+		 */
+		EXHAUST,
+
+		/** Allows querying of a replica slave. */
+		SLAVE_OK,
+
+		/**
+		 * Sets the cursor to return partial data from a query against a sharded cluster in which some shards do not respond
+		 * rather than throwing an error.
+		 */
+		PARTIAL
 	}
 }

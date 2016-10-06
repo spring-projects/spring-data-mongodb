@@ -76,11 +76,11 @@ public @interface Meta {
 	boolean snapshot() default false;
 
 	/**
-	 * Instructs the server to avoid closing a cursor automatically after a period of inactivity.
+	 * Set {@link org.springframework.data.mongodb.core.query.Meta.CursorOption} to be used when executing query.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 1.10
 	 */
-	boolean noCursorTimeout() default false;
+	org.springframework.data.mongodb.core.query.Meta.CursorOption[] flags() default {};
 
 }
