@@ -196,7 +196,7 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link ProjectionOperation} includeing the given {@link Fields}.
+	 * Creates a new {@link ProjectionOperation} including the given {@link Fields}.
 	 *
 	 * @param fields must not be {@literal null}.
 	 * @return
