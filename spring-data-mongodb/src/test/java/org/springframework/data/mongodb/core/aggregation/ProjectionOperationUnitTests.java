@@ -109,6 +109,7 @@ public class ProjectionOperationUnitTests {
 		assertThat(addClause.get(1), is((Object) 41));
 	}
 
+	@Test
 	public void arithmenticProjectionOperationWithoutAlias() {
 
 		String fieldName = "a";
