@@ -264,7 +264,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 							appendTextIndexInformation(propertyDotPath, indexDefinitionBuilder,
 									mappingContext.getPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
 						} catch (CyclicPropertyReferenceException e) {
-							LOGGER.info(e.getMessage(), e);
+							LOGGER.info(e.getMessage());
 						} catch (InvalidDataAccessApiUsageException e) {
 							LOGGER.info(String.format("Potentially invalid index structure discovered. Breaking operation for %s.",
 									entity.getName()), e);
