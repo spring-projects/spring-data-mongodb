@@ -53,7 +53,7 @@ public abstract class QuerydslRepositorySupport {
 	 * @param path
 	 * @return
 	 */
-	protected <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path) {
+	public <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path) {
 		Assert.notNull(path);
 		MongoPersistentEntity<?> entity = context.getPersistentEntity(path.getType());
 		return from(path, entity.getCollection());
@@ -66,7 +66,7 @@ public abstract class QuerydslRepositorySupport {
 	 * @param collection must not be blank or {@literal null}
 	 * @return
 	 */
-	protected <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path, String collection) {
+	public <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path, String collection) {
 
 		Assert.notNull(path);
 		Assert.hasText(collection);
