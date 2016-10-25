@@ -22,6 +22,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -98,6 +99,6 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		Field mappedField = field(propertyPath.getLeafProperty().getName(),
 				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
 
-		return new FieldReference(new ExposedField(mappedField, true));
+		return new DirectFieldReference(new ExposedField(mappedField, true));
 	}
 }

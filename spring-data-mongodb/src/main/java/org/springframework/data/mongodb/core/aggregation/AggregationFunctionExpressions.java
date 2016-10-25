@@ -33,7 +33,7 @@ import com.mongodb.DBObject;
  */
 public enum AggregationFunctionExpressions {
 
-	SIZE;
+	SIZE, GTE;
 
 	/**
 	 * Returns an {@link AggregationExpression} build from the current {@link Enum} name and the given parameters.

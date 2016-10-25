@@ -24,6 +24,7 @@ import java.util.List;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.util.Assert;
 import org.springframework.util.CompositeIterator;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Value object to capture the fields exposed by an {@link AggregationOperation}.
@@ -104,7 +105,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			result.add(new ExposedField(field, synthetic));
 		}
 
-		return ExposedFields.from(result);
+		return from(result);
 	}
 
 	/**
@@ -338,10 +339,34 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * A reference to an {@link ExposedField}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	interface FieldReference {
+
+		/**
+		 * Returns the raw, unqualified reference, i.e. the field reference without a {@literal $} prefix.
+		 *
+		 * @return
+		 */
+		String getRaw();
+
+		/**
+		 * Returns the reference value for the given field reference. Will return 1 for a synthetic, unaliased field or the
+		 * raw rendering of the reference otherwise.
+		 *
+		 * @return
+		 */
+		Object getReferenceValue();
+	}
+
+	/**
+	 * A reference to an {@link ExposedField}.
 	 * 
 	 * @author Oliver Gierke
 	 */
-	static class FieldReference {
+	static class DirectFieldReference implements FieldReference {
 
 		private final ExposedField field;
 
@@ -350,17 +375,16 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		 * 
 		 * @param field must not be {@literal null}.
 		 */
-		public FieldReference(ExposedField field) {
+		public DirectFieldReference(ExposedField field) {
 
 			Assert.notNull(field, "ExposedField must not be null!");
 
 			this.field = field;
 		}
 
-		/**
-		 * Returns the raw, unqualified reference, i.e. the field reference without a {@literal $} prefix.
-		 * 
-		 * @return
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference#getRaw()
 		 */
 		public String getRaw() {
 
@@ -368,11 +392,9 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			return field.synthetic ? target : String.format("%s.%s", Fields.UNDERSCORE_ID, target);
 		}
 
-		/**
-		 * Returns the reference value for the given field reference. Will return 1 for a synthetic, unaliased field or the
-		 * raw rendering of the reference otherwise.
-		 * 
-		 * @return
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference#getReferenceValue()
 		 */
 		public Object getReferenceValue() {
 			return field.synthetic && !field.isAliased() ? 1 : toString();
@@ -398,11 +420,11 @@ public final class ExposedFields implements Iterable<ExposedField> {
 				return true;
 			}
 
-			if (!(obj instanceof FieldReference)) {
+			if (!(obj instanceof DirectFieldReference)) {
 				return false;
 			}
 
-			FieldReference that = (FieldReference) obj;
+			DirectFieldReference that = (DirectFieldReference) obj;
 
 			return this.field.equals(that.field);
 		}
@@ -414,6 +436,80 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		@Override
 		public int hashCode() {
 			return field.hashCode();
+		}
+	}
+
+	/**
+	 * A {@link FieldReference} to a {@link Field} used within a nested {@link AggregationExpression}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	static class ExpressionFieldReference implements FieldReference {
+
+		private FieldReference delegate;
+
+		/**
+		 * Creates a new {@link FieldReference} for the given {@link ExposedField}.
+		 *
+		 * @param field must not be {@literal null}.
+		 */
+		public ExpressionFieldReference(FieldReference field) {
+			delegate = field;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference#getRaw()
+		 */
+		@Override
+		public String getRaw() {
+			return delegate.getRaw();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference#getReferenceValue()
+		 */
+		@Override
+		public Object getReferenceValue() {
+			return delegate.getReferenceValue();
+		}
+
+		@Override
+		public String toString() {
+
+			String fieldRef = delegate.toString();
+
+			if (fieldRef.startsWith("$$")) {
+				return fieldRef;
+			}
+
+			if (fieldRef.startsWith("$")) {
+				return "$" + fieldRef;
+			}
+
+			return fieldRef;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+
+			if (this == obj) {
+				return true;
+			}
+
+			if (!(obj instanceof ExpressionFieldReference)) {
+				return false;
+			}
+
+			ExpressionFieldReference that = (ExpressionFieldReference) obj;
+			return ObjectUtils.nullSafeEquals(this.delegate, that.delegate);
+		}
+
+		@Override
+		public int hashCode() {
+			return delegate.hashCode();
 		}
 	}
 }
