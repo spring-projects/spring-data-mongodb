@@ -29,6 +29,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -67,6 +68,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
+
+import lombok.Builder;
 
 /**
  * Tests for {@link MongoTemplate#aggregate(String, AggregationPipeline, Class)}.
@@ -1496,6 +1499,42 @@ public class AggregationTests {
 		}
 	}
 
+	/**
+	 * @see DATAMONGO-1491
+	 */
+	@Test
+	public void filterShouldBeAppliedCorrectly() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
+
+		Item item43 = Item.builder().itemId("43").quantity(2).price(2L).build();
+		Item item2 = Item.builder().itemId("2").quantity(1).price(240L).build();
+		Sales sales1 = Sales.builder().id("0")
+				.items(Arrays.asList( //
+						item43, item2)) //
+				.build();
+
+		Item item23 = Item.builder().itemId("23").quantity(3).price(110L).build();
+		Item item103 = Item.builder().itemId("103").quantity(4).price(5L).build();
+		Item item38 = Item.builder().itemId("38").quantity(1).price(300L).build();
+		Sales sales2 = Sales.builder().id("1").items(Arrays.asList( //
+				item23, item103, item38)).build();
+
+		Item item4 = Item.builder().itemId("4").quantity(1).price(23L).build();
+		Sales sales3 = Sales.builder().id("2").items(Arrays.asList( //
+				item4)).build();
+
+		mongoTemplate.insert(Arrays.asList(sales1, sales2, sales3), Sales.class);
+
+		TypedAggregation<Sales> agg = newAggregation(Sales.class, project().and("items")
+				.filter("item", AggregationFunctionExpressions.GTE.of(field("item.price"), 100)).as("items"));
+
+		assertThat(mongoTemplate.aggregate(agg, Sales.class).getMappedResults(),
+				contains(Sales.builder().id("0").items(Collections.singletonList(item2)).build(),
+						Sales.builder().id("1").items(Arrays.asList(item23, item38)).build(),
+						Sales.builder().id("2").items(Collections.<Item> emptyList()).build()));
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -1735,5 +1774,23 @@ public class AggregationTests {
 			this.description = description;
 			this.qty = qty;
 		}
+	}
+
+	@lombok.Data
+	@Builder
+	static class Sales {
+
+		@Id String id;
+		List<Item> items;
+	}
+
+	@lombok.Data
+	@Builder
+	static class Item {
+
+		@org.springframework.data.mongodb.core.mapping.Field("item_id") //
+		String itemId;
+		Integer quantity;
+		Long price;
 	}
 }
