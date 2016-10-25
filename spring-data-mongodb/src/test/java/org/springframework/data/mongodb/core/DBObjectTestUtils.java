@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
 
@@ -52,6 +54,10 @@ public abstract class DBObjectTestUtils {
 	 */
 	public static BasicDBList getAsDBList(DBObject source, String key) {
 		return getTypedValue(source, key, BasicDBList.class);
+	}
+
+	public static List<Object> getAsList(DBObject source, String key) {
+		return getTypedValue(source, key, List.class);
 	}
 
 	/**
