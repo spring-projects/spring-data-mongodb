@@ -27,7 +27,7 @@ import com.mysema.query.mongodb.MongodbQuery;
  * 
  * @author Oliver Gierke
  */
-class SpringDataMongodbQuery<T> extends MongodbQuery<T> {
+public class SpringDataMongodbQuery<T> extends MongodbQuery<T> {
 
 	private final MongoOperations operations;
 
