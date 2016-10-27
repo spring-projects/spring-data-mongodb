@@ -27,7 +27,7 @@ import com.querydsl.mongodb.AbstractMongodbQuery;
  * 
  * @author Oliver Gierke
  */
-class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> {
+public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> {
 
 	private final MongoOperations operations;
 
