@@ -27,8 +27,10 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -37,6 +39,7 @@ import org.springframework.data.util.TypeInformation;
  * Reactive specific implementation of {@link MongoQueryMethod}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 public class ReactiveMongoQueryMethod extends MongoQueryMethod {
@@ -147,4 +150,21 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 	public boolean isStreamQuery() {
 		return true;
 	}
+
+	/**
+	 * Check if the given {@link org.springframework.data.repository.query.QueryMethod} receives a reactive parameter
+	 * wrapper as one of its parameters.
+	 *
+	 * @return
+	 */
+	public boolean hasReactiveWrapperParameter() {
+
+		for (MongoParameter mongoParameter : getParameters()) {
+			if (ReactiveWrapperConverters.supports(mongoParameter.getType())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }

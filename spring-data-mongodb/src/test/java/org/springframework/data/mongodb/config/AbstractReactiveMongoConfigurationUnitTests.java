@@ -50,7 +50,7 @@ import example.second.Second;
 
 /**
  * Unit tests for {@link AbstractReactiveMongoConfiguration}.
- * 
+ *
  * @author Mark Paluch
  */
 public class AbstractReactiveMongoConfigurationUnitTests {
@@ -74,7 +74,6 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 	 */
 	@Test
 	public void doesNotScanPackageIfMappingPackageIsNull() throws ClassNotFoundException {
-
 		assertScanningDisabled(null);
 	}
 

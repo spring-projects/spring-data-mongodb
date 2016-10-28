@@ -22,6 +22,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -40,6 +41,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
@@ -81,7 +83,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 
 		// Add fixed sorting criteria to index
 		if (sort != null) {
-			for (Sort.Order order : sort) {
+			for (Order order : sort) {
 				index.on(order.getProperty(), order.getDirection());
 			}
 		}
@@ -97,7 +99,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 			return Direction.DESC;
 		}
 
-		org.springframework.data.domain.Sort.Order order = sort.getOrderFor(property);
+		Order order = sort.getOrderFor(property);
 		return order == null ? Direction.DESC : order.isAscending() ? Direction.ASC : Direction.DESC;
 	}
 }

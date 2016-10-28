@@ -33,7 +33,7 @@ import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Integration tests for {@link AbstractReactiveMongoConfiguration}.
- * 
+ *
  * @author Mark Paluch
  */
 @RunWith(SpringRunner.class)

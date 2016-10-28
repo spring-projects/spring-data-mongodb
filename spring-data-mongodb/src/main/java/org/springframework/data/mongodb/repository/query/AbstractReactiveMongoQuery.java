@@ -44,22 +44,24 @@ import reactor.core.publisher.Mono;
  * Base class for reactive {@link RepositoryQuery} implementations for MongoDB.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.0
  */
 public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
-	private final MongoQueryMethod method;
+	private final ReactiveMongoQueryMethod method;
 	private final ReactiveMongoOperations operations;
 	private final EntityInstantiators instantiators;
 
 	/**
 	 * Creates a new {@link AbstractReactiveMongoQuery} from the given {@link MongoQueryMethod} and
 	 * {@link MongoOperations}.
-	 * 
+	 *
 	 * @param method must not be {@literal null}.
 	 * @param operations must not be {@literal null}.
 	 * @param conversionService must not be {@literal null}.
 	 */
-	public AbstractReactiveMongoQuery(MongoQueryMethod method, ReactiveMongoOperations operations,
+	public AbstractReactiveMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations,
 			ConversionService conversionService) {
 
 		Assert.notNull(method, "MongoQueryMethod must not be null!");
@@ -84,13 +86,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 */
 	public Object execute(Object[] parameters) {
 
-		boolean hasReactiveParameters = hasReactiveWrapperParameter();
-
-		if (hasReactiveParameters) {
-			return executeDeferred(parameters);
-		}
-
-		return execute(new MongoParametersParameterAccessor(method, parameters));
+		return method.hasReactiveWrapperParameter() ? executeDeferred(parameters)
+				: execute(new MongoParametersParameterAccessor(method, parameters));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -120,16 +117,6 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
 	}
 
-	private boolean hasReactiveWrapperParameter() {
-
-		for (MongoParameters.MongoParameter mongoParameter : method.getParameters()) {
-			if (ReactiveWrapperConverters.supports(mongoParameter.getType())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	/**
 	 * Returns the execution instance to use.
 	 *
@@ -153,7 +140,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			return new SlicedExecution(operations, accessor.getPageable());
 		} else if (isInfiniteStream(method)) {
 			return new TailExecution(operations, accessor.getPageable());
-		}  else if (method.isCollectionQuery()) {
+		} else if (method.isCollectionQuery()) {
 			return new CollectionExecution(operations, accessor.getPageable());
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(operations, accessor.getPageable());

@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 
@@ -27,35 +30,34 @@ import reactor.core.publisher.MonoProcessor;
  * to reactive parameter wrapper types upon creation. This class performs synchronization when acessing parameters.
  * 
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.0
  */
 class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 
 	private final Object[] values;
-	private final MonoProcessor<?>[] subscriptions;
+	private final List<MonoProcessor<?>> subscriptions;
 
 	public ReactiveMongoParameterAccessor(MongoQueryMethod method, Object[] values) {
 
 		super(method, values);
 
 		this.values = values;
-		this.subscriptions = new MonoProcessor<?>[values.length];
+		this.subscriptions = new ArrayList<>(values.length);
 
 		for (int i = 0; i < values.length; i++) {
 
 			Object value = values[i];
 
-			if (value == null) {
-				continue;
-			}
-
-			if (!ReactiveWrappers.supports(value.getClass())) {
+			if (value == null || !ReactiveWrappers.supports(value.getClass())) {
+				subscriptions.add(null);
 				continue;
 			}
 
 			if (ReactiveWrappers.isSingleValueType(value.getClass())) {
-				subscriptions[i] = ReactiveWrapperConverters.toWrapper(value, Mono.class).subscribe();
+				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Mono.class).subscribe());
 			} else {
-				subscriptions[i] = ReactiveWrapperConverters.toWrapper(value, Flux.class).collectList().subscribe();
+				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Flux.class).collectList().subscribe());
 			}
 		}
 	}
@@ -67,8 +69,8 @@ class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 	@Override
 	protected <T> T getValue(int index) {
 
-		if (subscriptions[index] != null) {
-			return (T) subscriptions[index].block();
+		if (subscriptions.get(index) != null) {
+			return (T) subscriptions.get(index).block();
 		}
 
 		return super.getValue(index);

@@ -38,7 +38,7 @@ import com.mongodb.connection.StreamFactoryFactory;
  * A factory bean for construction of a {@link MongoClientSettings} instance to be used with the async MongoDB driver.
  *
  * @author Mark Paluch
- * @since 1.7
+ * @since 2.0
  */
 public class ReactiveMongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoClientSettings> {
 

@@ -26,7 +26,7 @@ import reactor.core.publisher.Flux;
 
 /**
  * Unit tests for {@link ReactiveSliceImpl}.
- * 
+ *
  * @author Mark Paluch
  */
 public class ReactiveSliceImplUnitTests {

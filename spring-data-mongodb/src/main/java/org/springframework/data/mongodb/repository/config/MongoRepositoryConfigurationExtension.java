@@ -61,7 +61,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		return "MongoDB";
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getModulePrefix()
 	 */
@@ -152,7 +152,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 
 			return repositoryConfigurations.stream().filter(configuration -> {
 
-				Class<?> repositoryInterface = super.loadRepositoryInterface(configuration, loader);
+				Class<?> repositoryInterface = loadRepositoryInterface(configuration, loader);
 				return !RepositoryType.isReactiveRepository(repositoryInterface);
 
 			}).collect(Collectors.toList());

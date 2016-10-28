@@ -22,6 +22,11 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 
+/**
+ * @author Mark Paluch
+ * @param <T>
+ * @since 2.0
+ */
 public interface ReactiveCollectionCallback<T> {
 
 	Publisher<T> doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException;

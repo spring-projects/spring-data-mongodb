@@ -33,6 +33,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
+import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -52,22 +53,22 @@ import reactor.test.TestSubscriber;
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class ReactiveMongoTemplateExecuteTests {
 
-	private static final org.springframework.data.util.Version THREE = org.springframework.data.util.Version.parse("3.0");
+	private static final Version THREE = Version.parse("3.0");
 
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoOperations operations;
 
 	@Rule public ExpectedException thrown = ExpectedException.none();
 
-	org.springframework.data.util.Version mongoVersion;
+	Version mongoVersion;
 
 	@Before
 	public void setUp() {
 		cleanUp();
 
 		if (mongoVersion == null) {
-			org.bson.Document result = operations.executeCommand("{ buildInfo: 1 }").block();
-			mongoVersion = org.springframework.data.util.Version.parse(result.get("version").toString());
+			Document result = operations.executeCommand("{ buildInfo: 1 }").block();
+			mongoVersion = Version.parse(result.get("version").toString());
 		}
 	}
 

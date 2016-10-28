@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.performance;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.util.Assert.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -43,9 +41,9 @@ import org.junit.Test;
 import org.springframework.core.Constants;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.PersistenceConstructor;
-import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefProxyHandler;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DbRefResolverCallback;
@@ -70,11 +68,13 @@ import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
- * Test class to execute performance tests for plain Reactive Streams MongoDB driver usage, {@link ReactiveMongoOperations} and the repositories
- * abstraction.
- * 
+ * Test class to execute performance tests for plain Reactive Streams MongoDB driver usage,
+ * {@link ReactiveMongoOperations} and the repositories abstraction.
+ *
  * @author Mark Paluch
  */
 public class ReactivePerformanceTests {
@@ -96,22 +96,25 @@ public class ReactivePerformanceTests {
 	@Before
 	public void setUp() throws Exception {
 
-		this.mongo = MongoClients.create();
+		mongo = MongoClients.create();
 
-		SimpleReactiveMongoDatabaseFactory mongoDbFactory = new SimpleReactiveMongoDatabaseFactory(this.mongo, DATABASE_NAME);
+		SimpleReactiveMongoDatabaseFactory mongoDbFactory = new SimpleReactiveMongoDatabaseFactory(this.mongo,
+				DATABASE_NAME);
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setInitialEntitySet(Collections.singleton(Person.class));
 		context.afterPropertiesSet();
 
-		this.converter = new MappingMongoConverter(new DbRefResolver() {
+		converter = new MappingMongoConverter(new DbRefResolver() {
 			@Override
-			public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback, DbRefProxyHandler proxyHandler) {
+			public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+					DbRefProxyHandler proxyHandler) {
 				return null;
 			}
 
 			@Override
-			public DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation, MongoPersistentEntity<?> entity, Object id) {
+			public DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation,
+					MongoPersistentEntity<?> entity, Object id) {
 				return null;
 			}
 
@@ -125,12 +128,12 @@ public class ReactivePerformanceTests {
 				return null;
 			}
 		}, context);
-		this.operations = new ReactiveMongoTemplate(mongoDbFactory, converter);
+		operations = new ReactiveMongoTemplate(mongoDbFactory, converter);
 
 		ReactiveMongoRepositoryFactory factory = new ReactiveMongoRepositoryFactory(operations);
 		factory.setConversionService(new GenericConversionService());
 
-		this.repository = factory.getRepository(ReactivePersonRepository.class);
+		repository = factory.getRepository(ReactivePersonRepository.class);
 
 	}
 
@@ -139,24 +142,23 @@ public class ReactivePerformanceTests {
 	 */
 	@Test
 	public void writeWithWriteConcerns() {
-		executeWithWriteConcerns(new WriteConcernCallback() {
-			public void doWithWriteConcern(String constantName, WriteConcern concern) {
-				writeHeadline("WriteConcern: " + constantName);
-				System.out.println(String.format("Writing %s objects using plain driver took %sms", NUMBER_OF_PERSONS,
-						writingObjectsUsingPlainDriver(NUMBER_OF_PERSONS, concern)));
-				System.out.println(String.format("Writing %s objects using template took %sms", NUMBER_OF_PERSONS,
-						writingObjectsUsingMongoTemplate(NUMBER_OF_PERSONS, concern)));
-				System.out.println(String.format("Writing %s objects using repository took %sms", NUMBER_OF_PERSONS,
-						writingObjectsUsingRepositories(NUMBER_OF_PERSONS, concern)));
-				
-				System.out.println(String.format("Writing %s objects async using plain driver took %sms", NUMBER_OF_PERSONS,
-						writingAsyncObjectsUsingPlainDriver(NUMBER_OF_PERSONS, concern)));
-				System.out.println(String.format("Writing %s objects async using template took %sms", NUMBER_OF_PERSONS,
-						writingAsyncObjectsUsingMongoTemplate(NUMBER_OF_PERSONS, concern)));
-				System.out.println(String.format("Writing %s objects async using repository took %sms", NUMBER_OF_PERSONS,
-						writingAsyncObjectsUsingRepositories(NUMBER_OF_PERSONS, concern)));
-				writeFooter();
-			}
+		executeWithWriteConcerns((constantName, concern) -> {
+
+			writeHeadline("WriteConcern: " + constantName);
+			System.out.println(String.format("Writing %s objects using plain driver took %sms", NUMBER_OF_PERSONS,
+					writingObjectsUsingPlainDriver(NUMBER_OF_PERSONS, concern)));
+			System.out.println(String.format("Writing %s objects using template took %sms", NUMBER_OF_PERSONS,
+					writingObjectsUsingMongoTemplate(NUMBER_OF_PERSONS, concern)));
+			System.out.println(String.format("Writing %s objects using repository took %sms", NUMBER_OF_PERSONS,
+					writingObjectsUsingRepositories(NUMBER_OF_PERSONS, concern)));
+
+			System.out.println(String.format("Writing %s objects async using plain driver took %sms", NUMBER_OF_PERSONS,
+					writingAsyncObjectsUsingPlainDriver(NUMBER_OF_PERSONS, concern)));
+			System.out.println(String.format("Writing %s objects async using template took %sms", NUMBER_OF_PERSONS,
+					writingAsyncObjectsUsingMongoTemplate(NUMBER_OF_PERSONS, concern)));
+			System.out.println(String.format("Writing %s objects async using repository took %sms", NUMBER_OF_PERSONS,
+					writingAsyncObjectsUsingRepositories(NUMBER_OF_PERSONS, concern)));
+			writeFooter();
 		});
 	}
 
@@ -178,19 +180,15 @@ public class ReactivePerformanceTests {
 
 	private long convertDirectly(final List<Document> dbObjects) {
 
-		executeWatched(new WatchCallback<List<Person>>() {
+		executeWatched(() -> {
 
-			@Override
-			public List<Person> doInWatch() {
+			List<Person> persons = new ArrayList<Person>();
 
-				List<Person> persons = new ArrayList<ReactivePerformanceTests.Person>();
-
-				for (Document dbObject : dbObjects) {
-					persons.add(Person.from(new Document(dbObject)));
-				}
-
-				return persons;
+			for (Document dbObject : dbObjects) {
+				persons.add(Person.from(new Document(dbObject)));
 			}
+
+			return persons;
 		});
 
 		return watch.getLastTaskTimeMillis();
@@ -198,19 +196,15 @@ public class ReactivePerformanceTests {
 
 	private long convertUsingConverter(final List<Document> dbObjects) {
 
-		executeWatched(new WatchCallback<List<Person>>() {
+		executeWatched(() -> {
 
-			@Override
-			public List<Person> doInWatch() {
+			List<Person> persons = new ArrayList<Person>();
 
-				List<Person> persons = new ArrayList<ReactivePerformanceTests.Person>();
-
-				for (Document dbObject : dbObjects) {
-					persons.add(converter.read(Person.class, dbObject));
-				}
-
-				return persons;
+			for (Document dbObject : dbObjects) {
+				persons.add(converter.read(Person.class, dbObject));
 			}
+
+			return persons;
 		});
 
 		return watch.getLastTaskTimeMillis();
@@ -237,9 +231,12 @@ public class ReactivePerformanceTests {
 			statistics.registerTime(Api.TEMPLATE, Mode.WRITE, writingObjectsUsingMongoTemplate(numberOfPersons, concern));
 			statistics.registerTime(Api.REPOSITORY, Mode.WRITE, writingObjectsUsingRepositories(numberOfPersons, concern));
 
-			statistics.registerTime(Api.DRIVER, Mode.WRITE_ASYNC, writingAsyncObjectsUsingPlainDriver(numberOfPersons, concern));
-			statistics.registerTime(Api.TEMPLATE, Mode.WRITE_ASYNC, writingAsyncObjectsUsingMongoTemplate(numberOfPersons, concern));
-			statistics.registerTime(Api.REPOSITORY, Mode.WRITE_ASYNC, writingAsyncObjectsUsingRepositories(numberOfPersons, concern));
+			statistics.registerTime(Api.DRIVER, Mode.WRITE_ASYNC,
+					writingAsyncObjectsUsingPlainDriver(numberOfPersons, concern));
+			statistics.registerTime(Api.TEMPLATE, Mode.WRITE_ASYNC,
+					writingAsyncObjectsUsingMongoTemplate(numberOfPersons, concern));
+			statistics.registerTime(Api.REPOSITORY, Mode.WRITE_ASYNC,
+					writingAsyncObjectsUsingRepositories(numberOfPersons, concern));
 
 			statistics.registerTime(Api.DRIVER, Mode.READ, readingUsingPlainDriver());
 			statistics.registerTime(Api.TEMPLATE, Mode.READ, readingUsingTemplate());
@@ -267,22 +264,16 @@ public class ReactivePerformanceTests {
 	}
 
 	private long queryUsingTemplate() {
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				Query query = query(where("addresses.zipCode").regex(".*1.*"));
-				return operations.find(query, Person.class, "template").collectList().block();
-			}
+		executeWatched(() -> {
+			Query query = query(where("addresses.zipCode").regex(".*1.*"));
+			return operations.find(query, Person.class, "template").collectList().block();
 		});
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long queryUsingRepository() {
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				return repository.findByAddressesZipCodeContaining("1").collectList().block();
-			}
-		});
+		executeWatched(() -> repository.findByAddressesZipCodeContaining("1").collectList().block());
 
 		return watch.getLastTaskTimeMillis();
 	}
@@ -325,7 +316,8 @@ public class ReactivePerformanceTests {
 
 	private long writingObjectsUsingPlainDriver(int numberOfPersons, WriteConcern concern) {
 
-		final MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver").withWriteConcern(concern);
+		final MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver")
+				.withWriteConcern(concern);
 		final List<Person> persons = getPersonObjects(numberOfPersons);
 
 		executeWatched(new WatchCallback<Void>() {
@@ -372,17 +364,19 @@ public class ReactivePerformanceTests {
 
 		return watch.getLastTaskTimeMillis();
 	}
-	
-	
+
 	private long writingAsyncObjectsUsingPlainDriver(int numberOfPersons, WriteConcern concern) {
 
-		final MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver").withWriteConcern(concern);
+		final MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver")
+				.withWriteConcern(concern);
 		final List<Person> persons = getPersonObjects(numberOfPersons);
 
 		executeWatched(new WatchCallback<Void>() {
 			public Void doInWatch() {
 
-				Flux.from(collection.insertMany(persons.stream().map(person -> new Document(person.toDocument())).collect(Collectors.toList()))).then().block();
+				Flux.from(collection
+						.insertMany(persons.stream().map(person -> new Document(person.toDocument())).collect(Collectors.toList())))
+						.then().block();
 				return null;
 			}
 		});
@@ -408,7 +402,6 @@ public class ReactivePerformanceTests {
 
 		final List<Person> persons = getPersonObjects(numberOfPersons);
 
-		
 		executeWatched(new WatchCallback<Void>() {
 			public Void doInWatch() {
 				operations.setWriteConcern(concern);
@@ -417,53 +410,38 @@ public class ReactivePerformanceTests {
 			}
 		});
 
-		
-
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long readingUsingPlainDriver() {
 
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				return Flux.from(mongo.getDatabase(DATABASE_NAME).getCollection("driver").find()).map(Person::from).collectList().block();
-			}
-		});
+		executeWatched(() -> Flux.from(mongo.getDatabase(DATABASE_NAME).getCollection("driver").find()).map(Person::from)
+				.collectList().block());
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long readingUsingTemplate() {
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				return operations.findAll(Person.class, "template").collectList().block();
-			}
-		});
+		executeWatched(() -> operations.findAll(Person.class, "template").collectList().block());
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long readingUsingRepository() {
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				return repository.findAll().collectList().block();
-			}
-		});
+		executeWatched(() -> repository.findAll().collectList().block());
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long queryUsingPlainDriver() {
 
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
+		executeWatched(() -> {
 
-				MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver");
+			MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver");
 
-				Document regex = new Document("$regex", Pattern.compile(".*1.*"));
-				Document query = new Document("addresses.zipCode", regex);
-				return Flux.from(collection.find(query)).map(Person::from).collectList().block();
-			}
+			Document regex = new Document("$regex", Pattern.compile(".*1.*"));
+			Document query = new Document("addresses.zipCode", regex);
+			return Flux.from(collection.find(query)).map(Person::from).collectList().block();
 		});
 
 		return watch.getLastTaskTimeMillis();
@@ -755,8 +733,7 @@ public class ReactivePerformanceTests {
 	}
 
 	enum Mode {
-		WRITE, READ, QUERY,
-		WRITE_ASYNC
+		WRITE, READ, QUERY, WRITE_ASYNC
 	}
 
 	private static class Statistics {

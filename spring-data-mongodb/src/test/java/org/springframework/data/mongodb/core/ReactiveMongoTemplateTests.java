@@ -74,6 +74,7 @@ import reactor.test.TestSubscriber;
  * Integration test for {@link MongoTemplate}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
@@ -89,19 +90,10 @@ public class ReactiveMongoTemplateTests {
 	@Before
 	public void setUp() {
 		cleanDb();
-		queryMongoVersionIfNecessary();
 	}
 
 	@After
 	public void cleanUp() {}
-
-	private void queryMongoVersionIfNecessary() {
-
-		if (mongoVersion == null) {
-			org.bson.Document result = template.executeCommand("{ buildInfo: 1 }").block();
-			mongoVersion = org.springframework.data.util.Version.parse(result.get("version").toString());
-		}
-	}
 
 	private void cleanDb() {
 		template.dropCollection("people") //
@@ -181,7 +173,7 @@ public class ReactiveMongoTemplateTests {
 		template.insert(person).block();
 
 		TestSubscriber<Person> testSubscriber = TestSubscriber.create();
-		Flux<Person> flux = template.find(new Query(Criteria.where("_id").is(person.getId())), Person.class);
+		Flux<Person> flux = template.find(new Query(where("_id").is(person.getId())), Person.class);
 		flux.subscribe(testSubscriber);
 
 		testSubscriber.awaitAndAssertNextValueCount(1);
@@ -225,7 +217,7 @@ public class ReactiveMongoTemplateTests {
 		template.insert(person, "people").block();
 
 		TestSubscriber<Person> testSubscriber = TestSubscriber.create();
-		Flux<Person> flux = template.find(new Query(Criteria.where("_id").is(person.getId())), Person.class, "people");
+		Flux<Person> flux = template.find(new Query(where("_id").is(person.getId())), Person.class, "people");
 		flux.subscribe(testSubscriber);
 
 		testSubscriber.awaitAndAssertNextValueCount(1);
@@ -297,7 +289,7 @@ public class ReactiveMongoTemplateTests {
 		p.setAge(22);
 		template.insert(p).block();
 
-		Query q1 = new Query(Criteria.where("id").is(p.getId()));
+		Query q1 = new Query(where("id").is(p.getId()));
 		PersonWithAList p2 = template.findOne(q1, PersonWithAList.class).block();
 		assertThat(p2, notNullValue());
 		assertThat(p2.getWishList().size(), is(0));
@@ -345,7 +337,7 @@ public class ReactiveMongoTemplateTests {
 		template.insert(p3).block();
 
 		// test query with a sort
-		Query q2 = new Query(Criteria.where("age").gt(10));
+		Query q2 = new Query(where("age").gt(10));
 		q2.with(new Sort(Direction.DESC, "age"));
 		PersonWithAList p5 = template.findOne(q2, PersonWithAList.class).block();
 		assertThat(p5.getFirstName(), is("Mark"));
@@ -364,7 +356,7 @@ public class ReactiveMongoTemplateTests {
 		person.setAge(25);
 		mongoTemplate.insert(person).block();
 
-		Query q = new Query(Criteria.where("BOGUS").gt(22));
+		Query q = new Query(where("BOGUS").gt(22));
 		Update u = new Update().set("firstName", "Sven");
 		mongoTemplate.updateFirst(q, u, Person.class).block();
 	}
@@ -377,9 +369,8 @@ public class ReactiveMongoTemplateTests {
 
 		Person person = new Person("Oliver2", 25);
 		template.insert(person) //
-				.then(template.updateFirst(new Query(Criteria.where("age").is(25)), new Update().set("firstName", "Sven"),
-						Person.class)) //
-				.flatMap(p -> template.find(new Query(Criteria.where("age").is(25)), Person.class))
+				.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), Person.class)) //
+				.flatMap(p -> template.find(new Query(where("age").is(25)), Person.class))
 				.subscribeWith(TestSubscriber.create()) //
 				.await() //
 				.assertValuesWith(result -> {
@@ -395,9 +386,8 @@ public class ReactiveMongoTemplateTests {
 
 		Person person = new Person("Oliver2", 25);
 		template.insert(person, "people") //
-				.then(template.updateFirst(new Query(Criteria.where("age").is(25)), new Update().set("firstName", "Sven"),
-						"people")) //
-				.flatMap(p -> template.find(new Query(Criteria.where("age").is(25)), Person.class, "people"))
+				.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), "people")) //
+				.flatMap(p -> template.find(new Query(where("age").is(25)), Person.class, "people"))
 				.subscribeWith(TestSubscriber.create()) //
 				.await() //
 				.assertValuesWith(result -> {
@@ -411,13 +401,13 @@ public class ReactiveMongoTemplateTests {
 	@Test
 	public void updateMultiByEntityTypeShouldUpdateObjects() throws Exception {
 
-		Query query = new Query(new Criteria().orOperator(Criteria.where("firstName").is("Walter Jr"),
-				Criteria.where("firstName").is("Walter")));
+		Query query = new Query(
+				new Criteria().orOperator(where("firstName").is("Walter Jr"), Criteria.where("firstName").is("Walter")));
 
 		template.insertAll(Flux.just(new Person("Walter", 50), new Person("Skyler", 43), new Person("Walter Jr", 16))) //
 				.collectList() //
 				.flatMap(a -> template.updateMulti(query, new Update().set("firstName", "Walt"), Person.class)) //
-				.flatMap(p -> template.find(new Query(Criteria.where("firstName").is("Walt")), Person.class)) //
+				.flatMap(p -> template.find(new Query(where("firstName").is("Walt")), Person.class)) //
 				.subscribeWith(TestSubscriber.create()) //
 				.awaitAndAssertNextValueCount(2);
 	}
@@ -428,14 +418,14 @@ public class ReactiveMongoTemplateTests {
 	@Test
 	public void updateMultiByCollectionNameShouldUpdateObject() throws Exception {
 
-		Query query = new Query(new Criteria().orOperator(Criteria.where("firstName").is("Walter Jr"),
-				Criteria.where("firstName").is("Walter")));
+		Query query = new Query(
+				new Criteria().orOperator(where("firstName").is("Walter Jr"), Criteria.where("firstName").is("Walter")));
 
 		template
 				.insert(Flux.just(new Person("Walter", 50), new Person("Skyler", 43), new Person("Walter Jr", 16)), "people") //
 				.collectList() //
 				.flatMap(a -> template.updateMulti(query, new Update().set("firstName", "Walt"), Person.class, "people")) //
-				.flatMap(p -> template.find(new Query(Criteria.where("firstName").is("Walt")), Person.class, "people")) //
+				.flatMap(p -> template.find(new Query(where("firstName").is("Walt")), Person.class, "people")) //
 				.subscribeWith(TestSubscriber.create()) //
 				.awaitAndAssertNextValueCount(2);
 	}
@@ -482,7 +472,7 @@ public class ReactiveMongoTemplateTests {
 		thrown.expectMessage("age");
 		// thrown.expectMessage("failed");
 
-		Query query = new Query(Criteria.where("firstName").is("Amol"));
+		Query query = new Query(where("firstName").is("Amol"));
 		Update upd = new Update().push("age", 29);
 		template.updateFirst(query, upd, Person.class).block();
 	}
@@ -627,7 +617,7 @@ public class ReactiveMongoTemplateTests {
 	@Test
 	public void doesNotFailOnVersionInitForUnversionedEntity() {
 
-		org.bson.Document dbObject = new org.bson.Document();
+		Document dbObject = new Document();
 		dbObject.put("firstName", "Oliver");
 
 		template.insert(dbObject, template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class));
@@ -685,7 +675,7 @@ public class ReactiveMongoTemplateTests {
 	@Test
 	public void savesPlainDbObjectCorrectly() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "bar");
+		Document dbObject = new Document("foo", "bar");
 		template.save(dbObject, "collection").block();
 
 		assertThat(dbObject.containsKey("_id"), is(true));
@@ -697,10 +687,10 @@ public class ReactiveMongoTemplateTests {
 	@Test(expected = InvalidDataAccessApiUsageException.class)
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "bar");
+		Document dbObject = new Document("foo", "bar");
 		template.save(dbObject, "collection").block();
 
-		template.findById(dbObject.get("_id"), org.bson.Document.class).block();
+		template.findById(dbObject.get("_id"), Document.class).block();
 	}
 
 	/**
@@ -709,10 +699,10 @@ public class ReactiveMongoTemplateTests {
 	@Test
 	public void readsPlainDbObjectById() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "bar");
+		Document dbObject = new Document("foo", "bar");
 		template.save(dbObject, "collection").block();
 
-		org.bson.Document result = template.findById(dbObject.get("_id"), org.bson.Document.class, "collection").block();
+		Document result = template.findById(dbObject.get("_id"), Document.class, "collection").block();
 		assertThat(result.get("foo"), is(dbObject.get("foo")));
 		assertThat(result.get("_id"), is(dbObject.get("_id")));
 	}
@@ -729,7 +719,8 @@ public class ReactiveMongoTemplateTests {
 				new Venue("Maplewood, NJ", -74.2713, 40.73137));
 
 		template.insertAll(venues).blockLast();
-		template.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2D));
+		IndexOperationsAdapter.blocking(template.reactiveIndexOps(Venue.class))
+				.ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2D));
 
 		NearQuery geoFar = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150, Metrics.KILOMETERS);
 
@@ -931,11 +922,11 @@ public class ReactiveMongoTemplateTests {
 	@Test
 	public void savesJsonStringCorrectly() {
 
-		org.bson.Document dbObject = new org.bson.Document().append("first", "first").append("second", "second");
+		Document dbObject = new Document().append("first", "first").append("second", "second");
 
 		template.save(dbObject, "collection").block();
 
-		org.bson.Document result = template.findAll(org.bson.Document.class, "collection").next().block();
+		Document result = template.findAll(Document.class, "collection").next().block();
 		assertThat(result.containsKey("first"), is(true));
 	}
 

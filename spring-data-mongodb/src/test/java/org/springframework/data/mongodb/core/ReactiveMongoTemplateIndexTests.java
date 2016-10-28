@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.util.Version;
@@ -50,13 +49,11 @@ import reactor.test.TestSubscriber;
  * Integration test for {@link MongoTemplate}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class ReactiveMongoTemplateIndexTests {
-
-	private static final org.springframework.data.util.Version TWO_DOT_EIGHT = org.springframework.data.util.Version
-			.parse("2.8");
 
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoTemplate template;
@@ -68,19 +65,10 @@ public class ReactiveMongoTemplateIndexTests {
 	@Before
 	public void setUp() {
 		cleanDb();
-		queryMongoVersionIfNecessary();
 	}
 
 	@After
 	public void cleanUp() {}
-
-	private void queryMongoVersionIfNecessary() {
-
-		if (mongoVersion == null) {
-			org.bson.Document result = template.executeCommand("{ buildInfo: 1 }").block();
-			mongoVersion = Version.parse(result.get("version").toString());
-		}
-	}
 
 	private void cleanDb() {
 		template.dropCollection(Person.class).block();
@@ -90,7 +78,6 @@ public class ReactiveMongoTemplateIndexTests {
 	 * @see DATAMONGO-1444
 	 */
 	@Test
-	@SuppressWarnings("deprecation")
 	public void testEnsureIndexShouldCreateIndex() {
 
 		Person p1 = new Person("Oliver");
@@ -100,8 +87,7 @@ public class ReactiveMongoTemplateIndexTests {
 		p2.setAge(40);
 		template.insert(p2);
 
-		template.reactiveIndexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique())
-				.block();
+		template.reactiveIndexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique()).block();
 
 		MongoCollection<Document> coll = template.getCollection(template.getCollectionName(Person.class));
 		List<Document> indexInfo = Flux.from(coll.listIndexes()).collectList().block();
@@ -109,14 +95,14 @@ public class ReactiveMongoTemplateIndexTests {
 		assertThat(indexInfo.size(), is(2));
 		Object indexKey = null;
 		boolean unique = false;
-		for (org.bson.Document ix : indexInfo) {
+		for (Document ix : indexInfo) {
 
 			if ("age_-1".equals(ix.get("name"))) {
 				indexKey = ix.get("key");
 				unique = (Boolean) ix.get("unique");
 			}
 		}
-		assertThat(((org.bson.Document) indexKey), hasEntry("age", -1));
+		assertThat(((Document) indexKey), hasEntry("age", -1));
 		assertThat(unique, is(true));
 	}
 
@@ -124,15 +110,13 @@ public class ReactiveMongoTemplateIndexTests {
 	 * @see DATAMONGO-1444
 	 */
 	@Test
-	@SuppressWarnings("deprecation")
 	public void getIndexInfoShouldReturnCorrectIndex() {
 
 		Person p1 = new Person("Oliver");
 		p1.setAge(25);
 		template.insert(p1).block();
 
-		template.reactiveIndexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique())
-				.block();
+		template.reactiveIndexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique()).block();
 
 		List<IndexInfo> indexInfoList = Flux.from(template.reactiveIndexOps(Person.class).getIndexInfo()).collectList()
 				.block();
@@ -140,7 +124,6 @@ public class ReactiveMongoTemplateIndexTests {
 
 		IndexInfo ii = indexInfoList.get(1);
 		assertThat(ii.isUnique(), is(true));
-		assertThat(ii.isDropDuplicates(), is(false));
 		assertThat(ii.isSparse(), is(false));
 
 		List<IndexField> indexFields = ii.getIndexFields();
@@ -168,7 +151,7 @@ public class ReactiveMongoTemplateIndexTests {
 		ListIndexesPublisher<Document> listIndexesPublisher = template
 				.getCollection(template.getCollectionName(Person.class)).listIndexes();
 		List<Document> indexInfo = Flux.from(listIndexesPublisher).collectList().block();
-		org.bson.Document indexKey = null;
+		Document indexKey = null;
 		boolean unique = false;
 
 		for (Document document : indexInfo) {

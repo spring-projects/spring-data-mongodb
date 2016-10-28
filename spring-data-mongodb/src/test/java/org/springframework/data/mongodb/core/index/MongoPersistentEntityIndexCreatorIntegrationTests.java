@@ -37,7 +37,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -64,8 +63,8 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 	static final String SAMPLE_TYPE_COLLECTION_NAME = "sampleEntity";
 	static final String RECURSIVE_TYPE_COLLECTION_NAME = "recursiveGenericTypes";
 
-	public static @ClassRule RuleChain rules = RuleChain.outerRule(MongoVersionRule.atLeast(new Version(2, 6))).around(
-			CleanMongoDB.indexes(Arrays.asList(SAMPLE_TYPE_COLLECTION_NAME, RECURSIVE_TYPE_COLLECTION_NAME)));
+	public static @ClassRule RuleChain rules = RuleChain.outerRule(MongoVersionRule.atLeast(new Version(2, 6)))
+			.around(CleanMongoDB.indexes(Arrays.asList(SAMPLE_TYPE_COLLECTION_NAME, RECURSIVE_TYPE_COLLECTION_NAME)));
 
 	public @Rule ExpectedException expectedException = ExpectedException.none();
 
@@ -113,11 +112,11 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),
 				mongoTemplate);
 
-		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin", new Index().named("stormlight")
-				.on("lastname", Direction.ASC).unique(), "datamongo-1125"));
+		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
+				new Index().named("stormlight").on("lastname", Direction.ASC).unique(), "datamongo-1125"));
 
-		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin", new Index().named("stormlight")
-				.on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
+		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
+				new Index().named("stormlight").on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
 	}
 
 	@Document(collection = RECURSIVE_TYPE_COLLECTION_NAME)

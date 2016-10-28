@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.bson.Document;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -37,6 +38,8 @@ import com.mongodb.util.JSONParseException;
  * Reactive PartTree {@link RepositoryQuery} implementation for Mongo.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.0
  */
 public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
@@ -52,7 +55,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param conversionService must not be {@literal null}.
 	 */
-	public ReactivePartTreeMongoQuery(MongoQueryMethod method, ReactiveMongoOperations mongoOperations, ConversionService conversionService) {
+	public ReactivePartTreeMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations, ConversionService conversionService) {
 
 		super(method, mongoOperations, conversionService);
 
@@ -90,19 +93,14 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 			query.addCriteria(textCriteria);
 		}
 
-		String fieldSpec = this.getQueryMethod().getFieldSpecification();
+		String fieldSpec = getQueryMethod().getFieldSpecification();
 
 		if (!StringUtils.hasText(fieldSpec)) {
 
 			ReturnedType returnedType = processor.withDynamicProjection(accessor).getReturnedType();
 
 			if (returnedType.isProjecting()) {
-
-				Field fields = query.fields();
-
-				for (String field : returnedType.getInputProperties()) {
-					fields.include(field);
-				}
+				returnedType.getInputProperties().forEach(query.fields()::include);
 			}
 
 			return query;
@@ -110,7 +108,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 		try {
 
-			BasicQuery result = new BasicQuery(query.getQueryObject().toJson(), fieldSpec);
+			BasicQuery result = new BasicQuery(query.getQueryObject(), Document.parse(fieldSpec));
 			result.setSortObject(query.getSortObject());
 
 			return result;

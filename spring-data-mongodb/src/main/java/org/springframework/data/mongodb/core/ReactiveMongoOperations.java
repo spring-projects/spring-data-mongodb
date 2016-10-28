@@ -21,7 +21,6 @@ import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import org.springframework.data.geo.GeoResult;
-import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -46,6 +45,7 @@ import reactor.core.publisher.Mono;
  * {@link ReactiveMongoOperations} is deferred until subscriber subscribes to the {@link Publisher}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @see Flux
  * @see Mono
  * @see http://projectreactor.io/docs/
@@ -66,20 +66,6 @@ public interface ReactiveMongoOperations {
 	 * @return index operations on the named collection associated with the given entity class
 	 */
 	ReactiveIndexOperations reactiveIndexOps(Class<?> entityClass);
-
-	/**
-	 * Returns the operations that can be performed on indexes
-	 *
-	 * @return index operations on the named collection
-	 */
-	IndexOperations indexOps(String collectionName);
-
-	/**
-	 * Returns the operations that can be performed on indexes
-	 *
-	 * @return index operations on the named collection associated with the given entity class
-	 */
-	IndexOperations indexOps(Class<?> entityClass);
 
 	/**
 	 * Execute the a MongoDB command expressed as a JSON string. This will call the method JSON.parse that is part of the
@@ -955,4 +941,5 @@ public interface ReactiveMongoOperations {
 	 * @return
 	 */
 	MongoConverter getConverter();
+
 }

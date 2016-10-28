@@ -57,6 +57,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import lombok.NoArgsConstructor;
+import org.springframework.util.ClassUtils;
 import reactor.core.Cancellation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -83,7 +84,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader == null ? org.springframework.util.ClassUtils.getDefaultClassLoader() : classLoader;
+		this.classLoader = classLoader == null ? ClassUtils.getDefaultClassLoader() : classLoader;
 	}
 
 	@Override

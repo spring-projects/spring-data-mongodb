@@ -35,14 +35,15 @@ import com.mongodb.client.model.IndexOptions;
 
 /**
  * {@link Converter Converters} for index-related MongoDB documents/types.
- * 
+ *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 abstract class IndexConverters {
 
-	public final static Converter<IndexDefinition, IndexOptions> DEFINITION_TO_MONGO_INDEX_OPTIONS;
-	public final static Converter<Document, IndexInfo> DOCUMENT_INDEX_INFO;
+	private static final Converter<IndexDefinition, IndexOptions> DEFINITION_TO_MONGO_INDEX_OPTIONS;
+	private static final Converter<Document, IndexInfo> DOCUMENT_INDEX_INFO;
 
 	private static final Double ONE = Double.valueOf(1);
 	private static final Double MINUS_ONE = Double.valueOf(-1);
@@ -56,6 +57,14 @@ abstract class IndexConverters {
 
 	private IndexConverters() {
 
+	}
+
+	static Converter<IndexDefinition, IndexOptions> indexDefinitionToIndexOptionsConverter() {
+		return DEFINITION_TO_MONGO_INDEX_OPTIONS;
+	}
+
+	static Converter<Document, IndexInfo> documentToIndexInfoConverter() {
+		return DOCUMENT_INDEX_INFO;
 	}
 
 	private static Converter<IndexDefinition, IndexOptions> getIndexDefinitionIndexOptionsConverter() {
@@ -115,14 +124,14 @@ abstract class IndexConverters {
 	private static Converter<Document, IndexInfo> getDocumentIndexInfoConverter() {
 
 		return ix -> {
-			Document keyDbObject = (Document) ix.get("key");
-			int numberOfElements = keyDbObject.keySet().size();
+			Document keyDocument = (Document) ix.get("key");
+			int numberOfElements = keyDocument.keySet().size();
 
 			List<IndexField> indexFields = new ArrayList<IndexField>(numberOfElements);
 
-			for (String key : keyDbObject.keySet()) {
+			for (String key : keyDocument.keySet()) {
 
-				Object value = keyDbObject.get(key);
+				Object value = keyDocument.get(key);
 
 				if (TWO_D_IDENTIFIERS.contains(value)) {
 					indexFields.add(IndexField.geo(key));
@@ -148,11 +157,10 @@ abstract class IndexConverters {
 			String name = ix.get("name").toString();
 
 			boolean unique = ix.containsKey("unique") ? (Boolean) ix.get("unique") : false;
-			boolean dropDuplicates = ix.containsKey("dropDups") ? (Boolean) ix.get("dropDups") : false;
 			boolean sparse = ix.containsKey("sparse") ? (Boolean) ix.get("sparse") : false;
 
 			String language = ix.containsKey("default_language") ? (String) ix.get("default_language") : "";
-			return new IndexInfo(indexFields, name, unique, dropDuplicates, sparse, language);
+			return new IndexInfo(indexFields, name, unique, sparse, language);
 		};
 	}
 }

@@ -3,13 +3,13 @@
 
 The reactive MongoDB support contains a basic set of features which are summarized below.
 
-* Spring configuration support using Java based @Configuration classes a Mongo client instance and replica sets
-* `ReactiveMongoTemplate` helper class that increases productivity using Mongo operations in a reactive manner. Includes integrated object mapping between documents and POJOs.
-* Exception translation into Spring's portable Data Access Exception hierarchy
-* Feature Rich Object Mapping integrated with Spring's Conversion Service
-* Annotation based mapping metadata but extensible to support other metadata formats
-* Persistence and mapping lifecycle events
-* Java based Query, Criteria, and Update DSLs
+* Spring configuration support using Java based `@Configuration` classes a `MongoClient` instance and replica sets.
+* `ReactiveMongoTemplate` helper class that increases productivity using `MongoOperations in a reactive manner. Includes integrated object mapping between `Documents and POJOs.
+* Exception translation into Spring's portable Data Access Exception hierarchy.
+* Feature Rich Object Mapping integrated with Spring's `ConversionService`.
+* Annotation based mapping metadata but extensible to support other metadata formats.
+* Persistence and mapping lifecycle events.
+* Java based `Query`, `Criteria`, and `Update` DSLs.
 * Automatic implementation of reactive Repository interfaces including support for custom finder methods.
 
 For most tasks you will find yourself using `ReactiveMongoTemplate` or the Repository support that both leverage the rich mapping functionality. `ReactiveMongoTemplate` is the place to look for accessing functionality such as incrementing counters or ad-hoc CRUD operations. `ReactiveMongoTemplate` also provides callback methods so that it is easy for you to get a hold of the low level API artifacts such as `MongoDatabase` to communicate directly with MongoDB. The goal with naming conventions on various API artifacts is to copy those in the base MongoDB Java driver so you can easily map your existing knowledge onto the Spring APIs.
@@ -54,12 +54,11 @@ Then add the following to pom.xml dependencies section.
 
 NOTE: MongoDB uses two different drivers for blocking and reactive (non-blocking) data access. While blocking operations are provided by default, you're have to opt-in for reactive usage.
 
-Create a simple Person class to persist:
+Create a simple `Person` class to persist:
 
 [source,java]
 ----
-package org.spring.mongodb.example;
-
+@Document
 public class Person {
 
   private String id;
@@ -92,17 +91,6 @@ And a main application to run
 
 [source,java]
 ----
-package org.spring.mongodb.example;
-
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-
-import com.mongodb.reactivestreams.client.MongoClients;
-
 public class ReactiveMongoApp {
 
   private static final Logger log = LoggerFactory.getLogger(ReactiveMongoApp.class);
@@ -114,15 +102,10 @@ public class ReactiveMongoApp {
     ReactiveMongoTemplate mongoOps = new ReactiveMongoTemplate(MongoClients.create(), "database");
 
     mongoOps.insert(new Person("Joe", 34))
-
           .flatMap(p -> mongoOps.findOne(new Query(where("name").is("Joe")), Person.class))
-
           .doOnNext(person -> log.info(person.toString()))
-
           .flatMap(person -> mongoOps.dropCollection("person"))
-
           .doOnComplete(latch::countDown)
-
           .subscribe();
 
     latch.await();
@@ -181,7 +164,7 @@ public class AppConfig {
 
 This approach allows you to use the standard `com.mongodb.reactivestreams.client.MongoClient` API that you may already be used to using.
 
-An alternative is to register an instance of `com.mongodb.reactivestreams.client.MongoClient` instance with the container using Spring's `ReactiveMongoClientFactoryBean`. As compared to instantiating a `com.mongodb.reactivestreams.client.MongoClient` instance directly, the FactoryBean approach has the added advantage of also providing the container with an ExceptionTranslator implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html[Spring's DAO support features].
+An alternative is to register an instance of `com.mongodb.reactivestreams.client.MongoClient` instance with the container using Spring's `ReactiveMongoClientFactoryBean`. As compared to instantiating a `com.mongodb.reactivestreams.client.MongoClient` instance directly, the FactoryBean approach has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html[Spring's DAO support features].
 
 An example of a Java based bean metadata that supports exception translation on `@Repository` annotated classes is shown below:
 
@@ -197,16 +180,16 @@ public class AppConfig {
      */
      public @Bean ReactiveMongoClientFactoryBean mongoClient() {
 
-          ReactiveMongoClientFactoryBean mongoClient = new ReactiveMongoClientFactoryBean();
-          mongoClient.setHost("localhost");
+          ReactiveMongoClientFactoryBean clientFactory = new ReactiveMongoClientFactoryBean();
+          clientFactory.setHost("localhost");
 
-          return mongoClient;
+          return clientFactory;
      }
 }
 ----
 ====
 
-To access the `com.mongodb.reactivestreams.client.MongoClient` object created by the `ReactiveMongoClientFactoryBean` in other `@Configuration` or your own classes, use a `private @Autowired MongoClient mongoClient;` field.
+To access the `com.mongodb.reactivestreams.client.MongoClient` object created by the `ReactiveMongoClientFactoryBean` in other `@Configuration` or your own classes, just obtain the `MongoClient` from the context.
 
 
 [[mongo.mongo-db-factory]]
@@ -246,7 +229,7 @@ public interface ReactiveMongoDatabaseFactory {
 
 The class `org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory` provides implements the ReactiveMongoDatabaseFactory interface and is created with a standard `com.mongodb.reactivestreams.client.MongoClient` instance and the database name.
 
-Instead of using the IoC container to create an instance of ReactiveMongoTemplate, you can just use them in standard Java code as shown below.
+Instead of using the IoC container to create an instance of `ReactiveMongoTemplate`, you can just use them in standard Java code as shown below.
 
 [source,java]
 ----
@@ -256,27 +239,23 @@ public class MongoApp {
 
   public static void main(String[] args) throws Exception {
 
-    ReactiveMongoOperations mongoOps = new ReactiveMongoOperations(*new SimpleReactiveMongoDatabaseFactory(MongoClient.create(), "database")*);
+    ReactiveMongoOperations mongoOps = new ReactiveMongoOperations(new SimpleReactiveMongoDatabaseFactory(MongoClient.create(), "database"));
 
     mongoOps.insert(new Person("Joe", 34))
-
         .flatMap(p -> mongoOps.findOne(new Query(where("name").is("Joe")), Person.class))
-
         .doOnNext(person -> log.info(person.toString()))
-
         .flatMap(person -> mongoOps.dropCollection("person"))
-
         .subscribe();
   }
 }
 ----
 
-The code in bold highlights the use of SimpleMongoDbFactory and is the only difference between the listing shown in the <<mongodb-reactive-getting-started,getting started section>>.
+The use of `SimpleMongoDbFactory` is the only difference between the listing shown in the <<mongodb-reactive-getting-started,getting started section>>.
 
 [[mongo.mongo-db-factory-java]]
 === Registering a ReactiveMongoDatabaseFactory instance using Java based metadata
 
-To register a ReactiveMongoDatabaseFactory instance with the container, you write code much like what was highlighted in the previous code listing. A simple example is shown below
+To register a `ReactiveMongoDatabaseFactory` instance with the container, you write code much like what was highlighted in the previous code listing. A simple example is shown below
 
 [source,java]
 ----
@@ -315,7 +294,7 @@ NOTE: Once configured, `ReactiveMongoTemplate` is thread-safe and can be reused 
 
 The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the interface `MongoConverter`. Spring provides a default implementation with  `MongoMappingConverter`, but you can also write your own converter. Please refer to the section on MongoConverters for more detailed information.
 
-The `ReactiveMongoTemplate` class implements the interface `ReactiveMongoOperations`. In as much as possible, the methods on `ReactiveMongoOperations` are named after methods available on the MongoDB driver `Collection` object as as to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you will find methods such as "find", "findAndModify", "findOne", "insert", "remove", "save", "update" and "updateMulti". The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `ReactiveMongoOperations`. A major difference in between the two APIs is that ReactiveMongoOperations can be passed domain objects instead of `Document` and there are fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
+The `ReactiveMongoTemplate` class implements the interface `ReactiveMongoOperations`. In as much as possible, the methods on `ReactiveMongoOperations` are named after methods available on the MongoDB driver `Collection` object as as to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you will find methods such as "find", "findAndModify", "findOne", "insert", "remove", "save", "update" and "updateMulti". The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `ReactiveMongoOperations`. A major difference in between the two APIs is that `ReactiveMongoOperations` can be passed domain objects instead of `Document` and there are fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
 
 NOTE: The preferred way to reference the operations on `ReactiveMongoTemplate` instance is via its interface `ReactiveMongoOperations`.
 
@@ -350,7 +329,7 @@ public class AppConfig {
 ----
 ====
 
-There are several overloaded constructors of ReactiveMongoTemplate. These are
+There are several overloaded constructors of `ReactiveMongoTemplate`. These are
 
 * `ReactiveMongoTemplate(MongoClient mongo, String databaseName)` - takes the `com.mongodb.Mongo` object and the default database name to operate against.
 * `ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory)` - takes a ReactiveMongoDatabaseFactory object that encapsulated the `com.mongodb.reactivestreams.client.MongoClient` object and database name.
@@ -364,13 +343,13 @@ NOTE: The preferred way to reference the operations on `ReactiveMongoTemplate` i
 [[mongo.reactive.template.writeresultchecking]]
 === WriteResultChecking Policy
 
-When in development it is very handy to either log or throw an exception if the `com.mongodb.WriteResult` returned from any MongoDB operation contains an error. It is quite common to forget to do this during development and then end up with an application that looks like it runs successfully but in fact the database was not modified according to your expectations. Set MongoTemplate's  property to an enum with the following values, `LOG`, `EXCEPTION`, or `NONE` to either log the error, throw and exception or do nothing. The default is to use a `WriteResultChecking` value of `NONE`.
+When in development it is very handy to either log or throw an `Exception` if the `com.mongodb.WriteResult` returned from any MongoDB operation contains an error. It is quite common to forget to do this during development and then end up with an application that looks like it runs successfully but in fact the database was not modified according to your expectations. Set MongoTemplate's  property to an enum with the following values, `LOG`, `EXCEPTION`, or `NONE` to either log the error, throw and exception or do nothing. The default is to use a `WriteResultChecking` value of `NONE`.
 
 
 [[mongo.reactive.template.writeconcern]]
 === WriteConcern
 
-You can set the `com.mongodb.WriteConcern` property that the `ReactiveMongoTemplate` will use for write operations if it has not yet been specified via the driver at a higher level such as `MongoDatabase`. If ReactiveMongoTemplate's `WriteConcern` property is not set it will default to the one set in the MongoDB driver's DB or Collection setting.
+You can set the `com.mongodb.WriteConcern` property that the `ReactiveMongoTemplate` will use for write operations if it has not yet been specified via the driver at a higher level such as `MongoDatabase`. If ReactiveMongoTemplate's `WriteConcern` property is not set it will default to the one set in the MongoDB driver's `MongoDatabase` or `MongoCollection` setting.
 
 
 [[mongo.reactive.template.writeconcernresolver]]
@@ -445,17 +424,6 @@ You can save, update and delete the object as shown below.
 
 [source,java]
 ----
-package org.spring.mongodb.example;
-
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-
-import com.mongodb.reactivestreams.client.MongoClients;
-
 public class ReactiveMongoApp {
 
   private static final Logger log = LoggerFactory.getLogger(ReactiveMongoApp.class);
@@ -467,15 +435,10 @@ public class ReactiveMongoApp {
     ReactiveMongoTemplate mongoOps = new ReactiveMongoTemplate(MongoClients.create(), "database");
 
     mongoOps.insert(new Person("Joe", 34)).doOnNext(person -> log.info("Insert: " + person))
-
       .flatMap(person -> mongoOps.findById(person.getId(), Person.class))
-
       .doOnNext(person -> log.info("Found: " + person))
-
       .zipWith(person -> mongoOps.updateFirst(query(where("name").is("Joe")), update("age", 35), Person.class))
-
       .flatMap(tuple -> mongoOps.remove(tuple.getT1())).flatMap(deleteResult -> mongoOps.findAll(Person.class))
-
       .count().doOnSuccess(count -> {
         log.info("Number of people: " + count);
         latch.countDown();
@@ -529,14 +492,9 @@ Here is an example that uses the `ReactiveCollectionCallback` to return informat
 
 [source,java]
 ----
-Flux<Boolean> hasIndex = template.execute("geolocation", collection -> {
-
-  List<IndexInfo> indexes = template.indexOps(collection.getNamespace().getCollectionName()).getIndexInfo();
-  for (IndexInfo dbo : indexes) {
-    if ("location_2d".equals(dbo.getName())) {
-      return Mono.just(true);
-    }
-  }
-  return Mono.just(false);
-});
+Flux<Boolean> hasIndex = operations.execute("geolocation",
+    collection -> Flux.from(collection.listIndexes(Document.class))
+      .filter(document -> document.get("name").equals("fancy-index-name"))
+      .flatMap(document -> Mono.just(true))
+      .defaultIfEmpty(false));
 ----

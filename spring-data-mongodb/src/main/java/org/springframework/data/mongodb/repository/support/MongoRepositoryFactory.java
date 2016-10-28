@@ -20,6 +20,7 @@ import static org.springframework.data.querydsl.QueryDslUtils.*;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -43,6 +44,7 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.data.repository.reactive.RxJavaCrudRepository;
 import org.springframework.data.repository.util.QueryExecutionConverters;
+import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -56,6 +58,7 @@ import org.springframework.util.ClassUtils;
  */
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
+	// TODO: to we need this here and in ReactiveWrappers?
 	private static final boolean PROJECT_REACTOR_PRESENT = ClassUtils.isPresent("reactor.core.publisher.Flux",
 			QueryExecutionConverters.class.getClassLoader());
 	private static final boolean RXJAVA_OBSERVABLE_PRESENT = ClassUtils.isPresent("rx.Observable",
@@ -86,16 +89,21 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	@Override
 	protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
 
+
+
 		boolean isReactiveRepository = (PROJECT_REACTOR_PRESENT && ReactiveCrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface())) || (
 				   RXJAVA_OBSERVABLE_PRESENT && RxJavaCrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()));
 
-		if (isReactiveRepository) {
-			return SimpleReactiveMongoRepository.class;
-		}
-
-
 		boolean isQueryDslRepository = QUERY_DSL_PRESENT
 				&& QueryDslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
+
+		if (isReactiveRepository) {
+
+			if(isQueryDslRepository) {
+				throw new InvalidDataAccessApiUsageException("Cannot combine Querydsl and reactive repository in one interface");
+			}
+			return SimpleReactiveMongoRepository.class;
+		}
 
 		return isQueryDslRepository ? QueryDslMongoRepository.class : SimpleMongoRepository.class;
 	}

@@ -16,8 +16,11 @@
 package org.springframework.data.mongodb.repository.config;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.data.repository.util.ReactiveWrappers;
+import org.springframework.util.ReflectionUtils;
 
 import lombok.experimental.UtilityClass;
 
@@ -25,6 +28,8 @@ import lombok.experimental.UtilityClass;
  * Utility class to discover whether a repository interface uses reactive wrapper types.
  * 
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.0
  */
 @UtilityClass
 class RepositoryType {
@@ -41,16 +46,9 @@ class RepositoryType {
 			return false;
 		}
 
-		Method[] methods = repositoryInterface.getMethods();
-
-		for (Method method : methods) {
-
-			if (usesReactiveWrappers(method)) {
-				return true;
-			}
-		}
-
-		return false;
+		List<Method> reactiveMethods = new ArrayList<>();
+		ReflectionUtils.doWithMethods(repositoryInterface, reactiveMethods::add, RepositoryType::usesReactiveWrappers);
+		return !reactiveMethods.isEmpty();
 	}
 
 	private static boolean usesReactiveWrappers(Method method) {

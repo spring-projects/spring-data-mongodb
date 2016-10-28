@@ -46,7 +46,7 @@ import reactor.core.publisher.Flux;
 
 /**
  * Unit tests for {@link ReactiveMongoQueryExecution}.
- * 
+ *
  * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)

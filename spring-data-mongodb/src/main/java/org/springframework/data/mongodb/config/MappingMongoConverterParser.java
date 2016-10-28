@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,6 +73,7 @@ import org.w3c.dom.Element;
  * @author Maciej Walkowiak
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
@@ -121,6 +122,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		}
 
 		if(!registry.containsBeanDefinition("indexOperationsProvider")){
+
 			BeanDefinitionBuilder indexOperationsProviderBuilder = BeanDefinitionBuilder.genericBeanDefinition("org.springframework.data.mongodb.core.DefaultIndexOperationsProvider");
 			indexOperationsProviderBuilder.addConstructorArgReference(dbFactoryRef);
 			parserContext.registerBeanComponent(new BeanComponentDefinition(indexOperationsProviderBuilder.getBeanDefinition(), "indexOperationsProvider"));
@@ -129,9 +131,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		try {
 			registry.getBeanDefinition(INDEX_HELPER_BEAN_NAME);
 		} catch (NoSuchBeanDefinitionException ignored) {
-			if (!StringUtils.hasText(dbFactoryRef)) {
-				dbFactoryRef = DB_FACTORY_BEAN_NAME;
-			}
+
 			BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder
 					.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
 			indexHelperBuilder.addConstructorArgReference(ctxRef);

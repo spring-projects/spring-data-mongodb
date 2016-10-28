@@ -18,7 +18,9 @@ package org.springframework.data.mongodb.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
@@ -28,7 +30,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
  * Base class for reactive Spring Data MongoDB configuration using JavaConfig.
- * 
+ *
  * @author Mark Paluch
  * @since 2.0
  * @see MongoConfigurationSupport
@@ -39,39 +41,39 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 	/**
 	 * Return the {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want to expose a
 	 * {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}.
-	 * 
+	 *
 	 * @return
 	 */
 	public abstract MongoClient mongoClient();
 
 	/**
 	 * Creates a {@link ReactiveMongoTemplate}.
-	 * 
+	 *
 	 * @return
 	 */
 	@Bean
-	public ReactiveMongoTemplate reactiveMongoTemplate() throws Exception {
+	public ReactiveMongoOperations reactiveMongoTemplate() throws Exception {
 		return new ReactiveMongoTemplate(mongoDbFactory(), mappingMongoConverter());
 	}
 
 	/**
 	 * Creates a {@link SimpleMongoDbFactory} to be used by the {@link MongoTemplate}. Will use the {@link Mongo} instance
 	 * configured in {@link #mongoClient()}.
-	 * 
+	 *
 	 * @see #mongoClient()
 	 * @see #reactiveMongoTemplate()
 	 * @return
 	 * @throws Exception
 	 */
 	@Bean
-	public SimpleReactiveMongoDatabaseFactory mongoDbFactory() {
+	public ReactiveMongoDatabaseFactory mongoDbFactory() {
 		return new SimpleReactiveMongoDatabaseFactory(mongoClient(), getDatabaseName());
 	}
 
 	/**
 	 * Creates a {@link MappingMongoConverter} using the configured {@link #mongoDbFactory()} and
 	 * {@link #mongoMappingContext()}. Will get {@link #customConversions()} applied.
-	 * 
+	 *
 	 * @see #customConversions()
 	 * @see #mongoMappingContext()
 	 * @see #mongoDbFactory()

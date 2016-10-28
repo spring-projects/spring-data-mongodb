@@ -62,7 +62,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 			if (indexOptions != null) {
 				return collection.createIndex(indexDefinition.getIndexKeys(),
-						IndexConverters.DEFINITION_TO_MONGO_INDEX_OPTIONS.convert(indexDefinition));
+						IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition));
 			}
 
 			return collection.createIndex(indexDefinition.getIndexKeys());
@@ -96,7 +96,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 			ListIndexesPublisher<Document> indexesPublisher = collection.listIndexes(Document.class);
 
-			return Flux.from(indexesPublisher).map(t -> IndexConverters.DOCUMENT_INDEX_INFO.convert(t));
+			return Flux.from(indexesPublisher).map(IndexConverters.documentToIndexInfoConverter()::convert);
 		});
 	}
 }

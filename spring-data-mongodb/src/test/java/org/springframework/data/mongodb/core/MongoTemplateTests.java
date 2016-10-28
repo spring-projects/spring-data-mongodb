@@ -376,7 +376,6 @@ public class MongoTemplateTests {
 		assertThat(indexInfoList.size(), is(2));
 		IndexInfo ii = indexInfoList.get(1);
 		assertThat(ii.isUnique(), is(true));
-		assertThat(ii.isDropDuplicates(), is(false));
 		assertThat(ii.isSparse(), is(false));
 
 		List<IndexField> indexFields = ii.getIndexFields();
