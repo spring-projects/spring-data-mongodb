@@ -29,6 +29,8 @@ import com.mongodb.reactivestreams.client.MongoClients;
  * Convenient factory for configuring a reactive streams {@link MongoClient}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.0
  */
 public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoClient>
 		implements PersistenceExceptionTranslator {
@@ -122,6 +124,6 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 
 	@Override
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
-		return DEFAULT_EXCEPTION_TRANSLATOR.translateExceptionIfPossible(ex);
+		return exceptionTranslator.translateExceptionIfPossible(ex);
 	}
 }

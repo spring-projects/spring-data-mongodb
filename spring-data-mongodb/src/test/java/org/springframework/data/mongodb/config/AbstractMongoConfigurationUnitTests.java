@@ -48,7 +48,7 @@ import example.second.Second;
 
 /**
  * Unit tests for {@link AbstractMongoConfiguration}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Mark Paluch

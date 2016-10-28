@@ -24,7 +24,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
  * Interface for factories creating reactive {@link MongoDatabase} instances.
- * 
+ *
  * @author Mark Paluch
  * @since 2.0
  */
@@ -32,7 +32,7 @@ public interface ReactiveMongoDatabaseFactory {
 
 	/**
 	 * Creates a default {@link MongoDatabase} instance.
-	 * 
+	 *
 	 * @return
 	 * @throws DataAccessException
 	 */
@@ -40,7 +40,7 @@ public interface ReactiveMongoDatabaseFactory {
 
 	/**
 	 * Creates a {@link MongoDatabase} instance to access the database with the given name.
-	 * 
+	 *
 	 * @param dbName must not be {@literal null} or empty.
 	 * @return
 	 * @throws DataAccessException
@@ -49,7 +49,7 @@ public interface ReactiveMongoDatabaseFactory {
 
 	/**
 	 * Exposes a shared {@link MongoExceptionTranslator}.
-	 * 
+	 *
 	 * @return will never be {@literal null}.
 	 */
 	PersistenceExceptionTranslator getExceptionTranslator();

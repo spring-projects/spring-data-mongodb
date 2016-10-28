@@ -37,7 +37,7 @@ import reactor.core.Cancellation;
  * <p>
  * A stream that is no longer in use must be {@link Cancellation#dispose()} disposed} otherwise the streams will linger
  * and exhaust resources.
- * 
+ *
  * @author Mark Paluch
  * @see <a href="https://docs.mongodb.com/manual/core/tailable-cursors/">Tailable Cursors</a>
  */

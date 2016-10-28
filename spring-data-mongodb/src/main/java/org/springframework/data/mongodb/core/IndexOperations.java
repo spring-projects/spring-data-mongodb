@@ -35,7 +35,7 @@ public interface IndexOperations {
 	 * 
 	 * @param indexDefinition must not be {@literal null}.
 	 */
-	void ensureIndex(IndexDefinition indexDefinition);
+	String ensureIndex(IndexDefinition indexDefinition);
 
 	/**
 	 * Drops an index from this collection.

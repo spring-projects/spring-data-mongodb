@@ -54,6 +54,7 @@ import org.springframework.util.ClassUtils;
  * Factory to create {@link org.springframework.data.mongodb.repository.ReactiveMongoRepository} instances.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
@@ -140,7 +141,7 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 	/**
 	 * Reactive MongoDB support requires reactive wrapper support. If return type/parameters are reactive wrapper types,
 	 * then it's required to be able to convert these into Publisher.
-	 * 
+	 *
 	 * @param method the method to validate.
 	 */
 	private static void validate(Method method) {
@@ -212,7 +213,7 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
 				NamedQueries namedQueries) {
 
-			MongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method, metadata, factory, mappingContext);
+			ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method, metadata, factory, mappingContext);
 			String namedQueryName = queryMethod.getNamedQueryName();
 
 			if (namedQueries.hasQuery(namedQueryName)) {

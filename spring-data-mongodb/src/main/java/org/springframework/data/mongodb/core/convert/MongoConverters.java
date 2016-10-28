@@ -82,7 +82,6 @@ abstract class MongoConverters {
 		converters.add(DocumentToNamedMongoScriptConverter.INSTANCE);
 		converters.add(CurrencyToStringConverter.INSTANCE);
 		converters.add(StringToCurrencyConverter.INSTANCE);
-		converters.add(NumberToNumberConverterFactory.INSTANCE);
 		converters.add(AtomicIntegerToIntegerConverter.INSTANCE);
 		converters.add(AtomicLongToLongConverter.INSTANCE);
 		converters.add(LongToAtomicLongConverter.INSTANCE);
@@ -294,26 +293,6 @@ abstract class MongoConverters {
 		@Override
 		public String convert(Currency source) {
 			return source == null ? null : source.getCurrencyCode();
-		}
-	}
-
-	@ReadingConverter
-	public static enum PublisherToFluxConverter implements Converter<Publisher<?>, Flux<?>> {
-
-		INSTANCE;
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
-
-		@Override
-		public Flux<?> convert(Publisher<?> source) {
-
-			if(source instanceof Flux){
-				return (Flux<?>) source;
-			}
-			return Flux.from((Publisher<?>) source);
 		}
 	}
 

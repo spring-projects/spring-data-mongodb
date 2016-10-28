@@ -19,6 +19,7 @@ package org.springframework.data.mongodb.repository.support;
 import java.io.Serializable;
 
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.IndexOperationsAdapter;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
@@ -30,6 +31,7 @@ import org.springframework.util.Assert;
  * {@link org.springframework.data.mongodb.repository.ReactiveMongoRepository} instances.
  * 
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  * @see org.springframework.data.repository.reactive.ReactivePagingAndSortingRepository
  * @see org.springframework.data.repository.reactive.RxJavaPagingAndSortingRepository
@@ -84,7 +86,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 		if (createIndexesForQueryMethods) {
 			factory.addQueryCreationListener(
-					new IndexEnsuringQueryCreationListener(collectionName -> operations.indexOps(collectionName)));
+					new IndexEnsuringQueryCreationListener(collectionName -> IndexOperationsAdapter.blocking(operations.reactiveIndexOps(collectionName))));
 		}
 
 		return factory;

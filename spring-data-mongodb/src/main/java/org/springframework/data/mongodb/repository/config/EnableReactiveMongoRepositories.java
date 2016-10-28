@@ -37,7 +37,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
  * Annotation to activate reactive MongoDB repositories. If no base package is configured through either
  * {@link #value()}, {@link #basePackages()} or {@link #basePackageClasses()} it will trigger scanning of the package of
  * annotated class.
- * 
+ *
  * @author Mark Paluch
  * @since 2.0
  */

@@ -43,6 +43,7 @@ import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRe
 import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.ClassUtils;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -70,7 +71,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader == null ? org.springframework.util.ClassUtils.getDefaultClassLoader() : classLoader;
+		this.classLoader = classLoader == null ? ClassUtils.getDefaultClassLoader() : classLoader;
 	}
 
 	@Override

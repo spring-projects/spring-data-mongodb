@@ -35,7 +35,10 @@ import reactor.core.publisher.MonoProcessor;
  * A reactive chunk of data restricted by the configured {@link Pageable}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.0
  */
+//TODO: should that one move to SD Commons
 abstract class ReactiveChunk<T> implements Slice<T>, Serializable {
 
 	private static final long serialVersionUID = 867755909294344406L;
@@ -88,7 +91,7 @@ abstract class ReactiveChunk<T> implements Slice<T>, Serializable {
 	 * @see org.springframework.data.domain.Slice#getNumberOfElements()
 	 */
 	public int getNumberOfElements() {
-		return getContent0().size();
+		return getContent().size();
 	}
 
 	/*
@@ -141,7 +144,7 @@ abstract class ReactiveChunk<T> implements Slice<T>, Serializable {
 	 * @see org.springframework.data.domain.Slice#hasContent()
 	 */
 	public boolean hasContent() {
-		return !getContent0().isEmpty();
+		return !getContent().isEmpty();
 	}
 
 	/*
@@ -149,7 +152,18 @@ abstract class ReactiveChunk<T> implements Slice<T>, Serializable {
 	 * @see org.springframework.data.domain.Slice#getContent()
 	 */
 	public List<T> getContent() {
-		return Collections.unmodifiableList(getContent0());
+
+		if (contentCache != null) {
+			return Collections.unmodifiableList(contentCache);
+		}
+
+		List<T> list = processor.block();
+
+		if (list.size() > pageable.getPageSize()) {
+			return list.subList(0, pageable.getPageSize());
+		}
+
+		return Collections.unmodifiableList(list);
 	}
 
 	/*
@@ -165,7 +179,7 @@ abstract class ReactiveChunk<T> implements Slice<T>, Serializable {
 	 * @see java.lang.Iterable#iterator()
 	 */
 	public Iterator<T> iterator() {
-		return getContent0().iterator();
+		return getContent().iterator();
 	}
 
 	/**
@@ -178,28 +192,13 @@ abstract class ReactiveChunk<T> implements Slice<T>, Serializable {
 
 		Assert.notNull(converter, "Converter must not be null!");
 
-		List<S> result = new ArrayList<S>(getContent0().size());
+		List<S> result = new ArrayList<S>(getContent().size());
 
 		for (T element : this) {
 			result.add(converter.convert(element));
 		}
 
 		return result;
-	}
-
-	protected List<T> getContent0() {
-
-		if (contentCache != null) {
-			return contentCache;
-		}
-
-		List<T> list = processor.block();
-
-		if (list.size() > pageable.getPageSize()) {
-			return list.subList(0, pageable.getPageSize());
-		}
-
-		return list;
 	}
 
 	/**

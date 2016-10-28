@@ -34,17 +34,15 @@ public class IndexInfo {
 
 	private final String name;
 	private final boolean unique;
-	private final boolean dropDuplicates;
 	private final boolean sparse;
 	private final String language;
 
-	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean dropDuplicates, boolean sparse,
+	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse,
 			String language) {
 
 		this.indexFields = Collections.unmodifiableList(indexFields);
 		this.name = name;
 		this.unique = unique;
-		this.dropDuplicates = dropDuplicates;
 		this.sparse = sparse;
 		this.language = language;
 	}
@@ -84,10 +82,6 @@ public class IndexInfo {
 		return unique;
 	}
 
-	public boolean isDropDuplicates() {
-		return dropDuplicates;
-	}
-
 	public boolean isSparse() {
 		return sparse;
 	}
@@ -102,8 +96,7 @@ public class IndexInfo {
 
 	@Override
 	public String toString() {
-		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", dropDuplicates="
-				+ dropDuplicates + ", sparse=" + sparse + ", language=" + language + "]";
+		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", sparse=" + sparse + ", language=" + language + "]";
 	}
 
 	@Override
@@ -111,7 +104,6 @@ public class IndexInfo {
 
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (dropDuplicates ? 1231 : 1237);
 		result = prime * result + ObjectUtils.nullSafeHashCode(indexFields);
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + (sparse ? 1231 : 1237);
@@ -132,9 +124,6 @@ public class IndexInfo {
 			return false;
 		}
 		IndexInfo other = (IndexInfo) obj;
-		if (dropDuplicates != other.dropDuplicates) {
-			return false;
-		}
 		if (indexFields == null) {
 			if (other.indexFields != null) {
 				return false;

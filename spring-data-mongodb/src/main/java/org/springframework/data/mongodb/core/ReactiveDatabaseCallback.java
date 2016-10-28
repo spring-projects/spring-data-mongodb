@@ -21,6 +21,11 @@ import com.mongodb.MongoException;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import org.reactivestreams.Publisher;
 
+/**
+ * @author Mark Paluch
+ * @param <T>
+ * @since 2.0
+ */
 public interface ReactiveDatabaseCallback<T> {
 
 	Publisher<T> doInDB(MongoDatabase db) throws MongoException, DataAccessException;

@@ -21,14 +21,13 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.mongodb.repository.support.ReactivePageImpl;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
  * Unit tests for {@link ReactivePageImpl}.
- * 
+ *
  * @author Mark Paluch
  */
 public class ReactivePageImplUnitTests {
@@ -57,14 +56,15 @@ public class ReactivePageImplUnitTests {
 		assertThat(page.hasNext(), is(true));
 		assertThat(page.nextPageable(), is(new PageRequest(1, 1)));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-1444
 	 */
 	@Test
 	public void returnsContentBoundedByPageSize() {
 
-		Page<Object> page = new ReactivePageImpl<>(Flux.just(new Object(), new Object()), new PageRequest(0, 1), Mono.just(10L));
+		Page<Object> page = new ReactivePageImpl<>(Flux.just(new Object(), new Object()), new PageRequest(0, 1),
+				Mono.just(10L));
 
 		assertThat(page.getContent(), hasSize(1));
 		assertThat(page.hasNext(), is(true));

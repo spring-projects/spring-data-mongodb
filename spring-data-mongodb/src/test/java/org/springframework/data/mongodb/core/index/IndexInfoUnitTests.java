@@ -36,7 +36,7 @@ public class IndexInfoUnitTests {
 		IndexField fooField = IndexField.create("foo", Direction.ASC);
 		IndexField barField = IndexField.create("bar", Direction.DESC);
 
-		IndexInfo info = new IndexInfo(Arrays.asList(fooField, barField), "myIndex", false, false, false, "");
+		IndexInfo info = new IndexInfo(Arrays.asList(fooField, barField), "myIndex", false, false, "");
 		assertThat(info.isIndexForFields(Arrays.asList("foo", "bar")), is(true));
 	}
 }

@@ -20,14 +20,14 @@ import reactor.core.publisher.Flux;
 
 /**
  * Sample reactive repository managing {@link Person} entities.
- * 
+ *
  * @author Mark Paluch
  */
 public interface ReactivePersonRepository extends ReactiveMongoRepository<Person, String> {
 
 	/**
 	 * Returns all {@link Person}s with the given lastname.
-	 * 
+	 *
 	 * @param lastname
 	 * @return
 	 */

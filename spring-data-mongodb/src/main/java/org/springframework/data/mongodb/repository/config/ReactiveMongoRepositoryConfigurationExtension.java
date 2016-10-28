@@ -45,6 +45,8 @@ import org.w3c.dom.Element;
  * Reactive {@link RepositoryConfigurationExtension} for MongoDB.
  * 
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.0
  */
 public class ReactiveMongoRepositoryConfigurationExtension extends RepositoryConfigurationExtensionSupport {
 
@@ -161,11 +163,8 @@ public class ReactiveMongoRepositoryConfigurationExtension extends RepositoryCon
 		Collection<RepositoryConfiguration<T>> repositoryConfigurations = super.getRepositoryConfigurations(configSource,
 				loader, strictMatchesOnly);
 
-		return repositoryConfigurations.stream().filter(configuration -> {
-
-			Class<?> repositoryInterface = super.loadRepositoryInterface(configuration, loader);
-			return RepositoryType.isReactiveRepository(repositoryInterface);
-
-		}).collect(Collectors.toList());
+		return repositoryConfigurations.stream()
+				.filter(configuration -> RepositoryType.isReactiveRepository(loadRepositoryInterface(configuration, loader)))
+				.collect(Collectors.toList());
 	}
 }

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.MongoTemplate.potentiallyConvertRuntimeException;
+import static org.springframework.data.mongodb.core.MongoTemplate.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,19 +65,18 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.IndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
 	 */
-	public void ensureIndex(final IndexDefinition indexDefinition) {
-		execute(collection -> {
+	public String ensureIndex(final IndexDefinition indexDefinition) {
+
+		return execute(collection -> {
 
 			Document indexOptions = indexDefinition.getIndexOptions();
 
 			if (indexOptions != null) {
 
-				IndexOptions ops = IndexConverters.DEFINITION_TO_MONGO_INDEX_OPTIONS.convert(indexDefinition);
-				collection.createIndex(indexDefinition.getIndexKeys(), ops);
-			} else {
-				collection.createIndex(indexDefinition.getIndexKeys());
+				IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
+				return collection.createIndex(indexDefinition.getIndexKeys(), ops);
 			}
-			return null;
+			return collection.createIndex(indexDefinition.getIndexKeys());
 		});
 	}
 
@@ -86,11 +85,10 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * @see org.springframework.data.mongodb.core.IndexOperations#dropIndex(java.lang.String)
 	 */
 	public void dropIndex(final String name) {
-		execute(new CollectionCallback<Void>() {
-			public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-				collection.dropIndex(name);
-				return null;
-			}
+
+		execute(collection -> {
+			collection.dropIndex(name);
+			return null;
 		});
 
 	}
@@ -110,6 +108,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	public List<IndexInfo> getIndexInfo() {
 
 		return execute(new CollectionCallback<List<IndexInfo>>() {
+
 			public List<IndexInfo> doInCollection(MongoCollection<Document> collection)
 					throws MongoException, DataAccessException {
 
@@ -124,7 +123,7 @@ public class DefaultIndexOperations implements IndexOperations {
 				while (cursor.hasNext()) {
 
 					Document ix = cursor.next();
-					IndexInfo indexInfo = IndexConverters.DOCUMENT_INDEX_INFO.convert(ix);
+					IndexInfo indexInfo = IndexConverters.documentToIndexInfoConverter().convert(ix);
 					indexInfoList.add(indexInfo);
 				}
 

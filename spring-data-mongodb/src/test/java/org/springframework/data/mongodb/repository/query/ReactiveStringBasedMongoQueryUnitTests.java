@@ -56,7 +56,7 @@ import reactor.core.publisher.Mono;
 
 /**
  * Unit tests for {@link ReactiveStringBasedMongoQuery}.
- * 
+ *
  * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -138,7 +138,8 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 	@Test
 	public void shouldSupportFindByParameterizedCriteriaAndFields() throws Exception {
 
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Document("firstname", "first").append("lastname", "last"), Collections.singletonMap("lastname", 1));
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
+				new Document("firstname", "first").append("lastname", "last"), Collections.singletonMap("lastname", 1));
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields",
 				Document.class, Map.class);
 

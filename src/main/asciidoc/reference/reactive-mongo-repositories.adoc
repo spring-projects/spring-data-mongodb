@@ -11,7 +11,7 @@ This chapter will point out the specialties for reactive repository support for 
 
 The reactive space offers various reactive composition libraries. The most common libraries are https://github.com/ReactiveX/RxJava[RxJava] and https://projectreactor.io/[Project Reactor].
 
-Spring Data MongoDB is built on top of the MongoDB Reactive Streams driver to provide maximal interoperability relying on the http://www.reactive-streams.org/[Reactive Streams] initiative. Static APIs such as `ReactiveMongoOperations` are provided by using Project Reactor's `Flux` and `Mono` types. Project Reactor offers various adapters to convert reactive wrapper types  (`Flux` to `Observable` and vice versa) but conversion can easily clutter your code.
+Spring Data MongoDB is built on top of the https://mongodb.github.io/mongo-java-driver-reactivestreams/[MongoDB Reactive Streams] driver to provide maximal interoperability relying on the http://www.reactive-streams.org/[Reactive Streams] initiative. Static APIs such as `ReactiveMongoOperations` are provided by using Project Reactor's `Flux` and `Mono` types. Project Reactor offers various adapters to convert reactive wrapper types  (`Flux` to `Observable` and vice versa) but conversion can easily clutter your code.
 
 Spring Data's Repository abstraction is a dynamic API, mostly defined by you and your requirements, as you're declaring query methods. Reactive MongoDB repositories can be either implemented using RxJava or Project Reactor wrapper types by simply extending from one of the library-specific repository interfaces:
 
@@ -99,21 +99,17 @@ As our domain repository extends `ReactivePagingAndSortingRepository` it provide
 ====
 [source,java]
 ----
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration
 public class PersonRepositoryTests {
 
     @Autowired ReactivePersonRepository repository;
 
     @Test
     public void readsFirstPageCorrectly() {
-
       Mono<Page<Person>> persons = repository.findAll(new PageRequest(0, 10));
     }
 
     @Test
     public void readsFirstPageAsStream() {
-
       Flux<Person> persons = repository.findAll(new PageRequest(0, 10));
     }
 }
@@ -136,7 +132,7 @@ Following features are supported:
 * <<mongodb.repositories.queries.full-text>>
 * <<projections>>
 
-Reactive Repositories do not support Type-safe Query methods using QueryDSL.
+WARNING: Reactive Repositories do not support Type-safe Query methods using Querydsl.
 
 [[mongodb.reactive.repositories.queries.geo-spatial]]
 === Geo-spatial repository queries

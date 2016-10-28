@@ -216,9 +216,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Publisher of entities must not be null!");
 
-		return Flux.from(entities).flatMap(entity -> {
-			return mongoOperations.insert(entity, entityInformation.getCollectionName());
-		});
+		return Flux.from(entities).flatMap(entity -> mongoOperations.insert(entity, entityInformation.getCollectionName()));
 	}
 
 	public <S extends T> Mono<S> save(S entity) {
@@ -272,15 +270,17 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		});
 	}
 
+	// TODO: should this one really be void?
 	public Mono<Void> delete(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
 
 		return mongoOperations
-				.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName())
-				.then();
+				.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
+
 	}
 
+	// TODO: should this one really be void?
 	public Mono<Void> delete(T entity) {
 
 		Assert.notNull(entity, "The given entity must not be null!");
@@ -288,6 +288,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return delete(entityInformation.getId(entity));
 	}
 
+	// TODO: should this one really be void?
 	public Mono<Void> delete(Iterable<? extends T> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
@@ -295,6 +296,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return Flux.fromIterable(entities).flatMap(entity -> delete(entityInformation.getId(entity))).then();
 	}
 
+	// TODO: should this one really be void?
 	@Override
 	public Mono<Void> delete(Publisher<? extends T> entityStream) {
 
@@ -303,6 +305,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return Flux.from(entityStream).flatMap(entity -> delete(entityInformation.getId(entity))).then();
 	}
 
+	// TODO: should this one really be void?
 	public Mono<Void> deleteAll() {
 		return mongoOperations.remove(new Query(), entityInformation.getCollectionName())
 				.then(deleteResult -> Mono.empty());

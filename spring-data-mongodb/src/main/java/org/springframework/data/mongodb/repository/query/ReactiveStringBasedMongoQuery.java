@@ -36,6 +36,8 @@ import org.springframework.util.Assert;
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.0
  */
 public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
@@ -60,7 +62,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 * @param conversionService must not be {@literal null}.
 	 */
-	public ReactiveStringBasedMongoQuery(MongoQueryMethod method, ReactiveMongoOperations mongoOperations,
+	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
 										 SpelExpressionParser expressionParser, EvaluationContextProvider evaluationContextProvider, ConversionService conversionService) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider, conversionService);
 	}
@@ -75,7 +77,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param expressionParser must not be {@literal null}.
 	 * @param conversionService must not be {@literal null}.
 	 */
-	public ReactiveStringBasedMongoQuery(String query, MongoQueryMethod method, ReactiveMongoOperations mongoOperations,
+	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
 										 SpelExpressionParser expressionParser, EvaluationContextProvider evaluationContextProvider, ConversionService conversionService) {
 
 		super(method, mongoOperations, conversionService);

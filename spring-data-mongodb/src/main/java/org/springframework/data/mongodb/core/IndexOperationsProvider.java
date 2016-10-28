@@ -16,11 +16,10 @@
 
 package org.springframework.data.mongodb.core;
 
-import org.springframework.dao.support.PersistenceExceptionTranslator;
-
 /**
  * TODO: Revisit for a better pattern.
  * @author Mark Paluch
+ * @since 2.0
  */
 public interface IndexOperationsProvider {
 

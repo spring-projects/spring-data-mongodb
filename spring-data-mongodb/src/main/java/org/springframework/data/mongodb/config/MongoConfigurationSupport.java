@@ -16,6 +16,7 @@
 
 package org.springframework.data.mongodb.config;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -28,7 +29,9 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
+import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
@@ -51,7 +54,7 @@ import com.mongodb.MongoClient;
 
 /**
  * Base class for Spring Data MongoDB to be extended for JavaConfiguration usage.
- * 
+ *
  * @author Mark Paluch
  * @since 2.0
  */
@@ -100,20 +103,22 @@ public abstract class MongoConfigurationSupport {
 
 	/**
 	 * Returns a {@link MappingContextIsNewStrategyFactory} wrapped into a {@link CachingIsNewStrategyFactory}.
-	 * 
+	 *
 	 * @return
 	 * @throws ClassNotFoundException
 	 */
 	@Bean
 	public IsNewStrategyFactory isNewStrategyFactory() throws ClassNotFoundException {
-		return new CachingIsNewStrategyFactory(new MappingContextIsNewStrategyFactory(mongoMappingContext()));
+
+		return new CachingIsNewStrategyFactory(new MappingContextIsNewStrategyFactory(
+				new PersistentEntities(Arrays.<MappingContext<?, ?>> asList(new MappingContext[] { mongoMappingContext() }))));
 	}
 
 	/**
 	 * Register custom {@link Converter}s in a {@link CustomConversions} object if required. These
 	 * {@link CustomConversions} will be registered with the {@link #mappingMongoConverter()} and
 	 * {@link #mongoMappingContext()}. Returns an empty {@link CustomConversions} instance by default.
-	 * 
+	 *
 	 * @return must not be {@literal null}.
 	 */
 	@Bean
@@ -124,7 +129,7 @@ public abstract class MongoConfigurationSupport {
 	/**
 	 * Scans the mapping base package for classes annotated with {@link Document}. By default, it scans for entities in
 	 * all packages returned by {@link #getMappingBasePackages()}.
-	 * 
+	 *
 	 * @see #getMappingBasePackages()
 	 * @return
 	 * @throws ClassNotFoundException
@@ -143,7 +148,7 @@ public abstract class MongoConfigurationSupport {
 	/**
 	 * Scans the given base package for entities, i.e. MongoDB specific types annotated with {@link Document} and
 	 * {@link Persistent}.
-	 * 
+	 *
 	 * @param basePackage must not be {@literal null}.
 	 * @return
 	 * @throws ClassNotFoundException
@@ -178,7 +183,7 @@ public abstract class MongoConfigurationSupport {
 	 * Configures whether to abbreviate field names for domain objects by configuring a
 	 * {@link CamelCaseAbbreviatingFieldNamingStrategy} on the {@link MongoMappingContext} instance created. For advanced
 	 * customization needs, consider overriding {@link #mappingMongoConverter()}.
-	 * 
+	 *
 	 * @return
 	 */
 	protected boolean abbreviateFieldNames() {
@@ -187,7 +192,7 @@ public abstract class MongoConfigurationSupport {
 
 	/**
 	 * Configures a {@link FieldNamingStrategy} on the {@link MongoMappingContext} instance created.
-	 * 
+	 *
 	 * @return
 	 * @since 1.5
 	 */

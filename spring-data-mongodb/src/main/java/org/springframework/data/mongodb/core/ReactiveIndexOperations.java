@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.List;
+
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 
@@ -25,7 +27,8 @@ import reactor.core.publisher.Mono;
  * Index operations on a collection.
  *
  * @author Mark Paluch
- * @since 1.11
+ * @author Christoph Strobl
+ * @since 2.0
  */
 public interface ReactiveIndexOperations {
 
@@ -55,4 +58,5 @@ public interface ReactiveIndexOperations {
 	 * @return index information on the collection
 	 */
 	Flux<IndexInfo> getIndexInfo();
+
 }

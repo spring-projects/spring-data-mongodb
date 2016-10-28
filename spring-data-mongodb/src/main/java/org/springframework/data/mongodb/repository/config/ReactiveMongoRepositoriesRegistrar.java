@@ -24,12 +24,13 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
 
 /**
  * Mongo-specific {@link ImportBeanDefinitionRegistrar}.
- * 
+ *
  * @author Mark Paluch
+ * @since 2.0
  */
 class ReactiveMongoRepositoriesRegistrar extends RepositoryBeanDefinitionRegistrarSupport {
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryBeanDefinitionRegistrarSupport#getAnnotation()
 	 */
@@ -38,7 +39,7 @@ class ReactiveMongoRepositoriesRegistrar extends RepositoryBeanDefinitionRegistr
 		return EnableReactiveMongoRepositories.class;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryBeanDefinitionRegistrarSupport#getExtension()
 	 */
