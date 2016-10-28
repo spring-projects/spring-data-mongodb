@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,8 @@ import org.springframework.util.Assert;
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke
- * @since 1.10
+ * @author Christoph Strobl
+ * @since 1.7
  */
 public enum AggregationFunctionExpressions {
 
@@ -77,7 +78,7 @@ public enum AggregationFunctionExpressions {
 		 * @see org.springframework.data.mongodb.core.aggregation.Expression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
-		public Document toDbObject(AggregationOperationContext context) {
+		public Document toDocument(AggregationOperationContext context) {
 
 			List<Object> args = new ArrayList<Object>(values.size());
 
@@ -91,7 +92,7 @@ public enum AggregationFunctionExpressions {
 		private static Object unpack(Object value, AggregationOperationContext context) {
 
 			if (value instanceof AggregationExpression) {
-				return ((AggregationExpression) value).toDbObject(context);
+				return ((AggregationExpression) value).toDocument(context);
 			}
 
 			if (value instanceof Field) {

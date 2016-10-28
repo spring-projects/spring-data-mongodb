@@ -29,13 +29,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToGeoJsonLineStringConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToGeoJsonMultiLineStringConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToGeoJsonMultiPointConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToGeoJsonMultiPolygonConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToGeoJsonPointConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToGeoJsonPolygonConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.GeoJsonToDbObjectConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToGeoJsonLineStringConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToGeoJsonMultiLineStringConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToGeoJsonMultiPointConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToGeoJsonMultiPolygonConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToGeoJsonPointConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToGeoJsonPolygonConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.GeoJsonToDocumentConverter;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.GeoJsonGeometryCollection;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
@@ -47,8 +47,6 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
 
 /**
  * @author Christoph Strobl
@@ -178,7 +176,7 @@ public class GeoJsonConverterUnitTests {
 	 */
 	public static class DbObjectToGeoJsonPolygonConverterUnitTests {
 
-		DbObjectToGeoJsonPolygonConverter converter = DbObjectToGeoJsonPolygonConverter.INSTANCE;
+		DocumentToGeoJsonPolygonConverter converter = DocumentToGeoJsonPolygonConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		/**
@@ -224,7 +222,7 @@ public class GeoJsonConverterUnitTests {
 	 */
 	public static class DbObjectToGeoJsonPointConverterUnitTests {
 
-		DbObjectToGeoJsonPointConverter converter = DbObjectToGeoJsonPointConverter.INSTANCE;
+		DocumentToGeoJsonPointConverter converter = DocumentToGeoJsonPointConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		/**
@@ -261,7 +259,7 @@ public class GeoJsonConverterUnitTests {
 	 */
 	public static class DbObjectToGeoJsonLineStringConverterUnitTests {
 
-		DbObjectToGeoJsonLineStringConverter converter = DbObjectToGeoJsonLineStringConverter.INSTANCE;
+		DocumentToGeoJsonLineStringConverter converter = DocumentToGeoJsonLineStringConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		/**
@@ -298,7 +296,7 @@ public class GeoJsonConverterUnitTests {
 	 */
 	public static class DbObjectToGeoJsonMultiLineStringConverterUnitTests {
 
-		DbObjectToGeoJsonMultiLineStringConverter converter = DbObjectToGeoJsonMultiLineStringConverter.INSTANCE;
+		DocumentToGeoJsonMultiLineStringConverter converter = DocumentToGeoJsonMultiLineStringConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		/**
@@ -335,7 +333,7 @@ public class GeoJsonConverterUnitTests {
 	 */
 	public static class DbObjectToGeoJsonMultiPointConverterUnitTests {
 
-		DbObjectToGeoJsonMultiPointConverter converter = DbObjectToGeoJsonMultiPointConverter.INSTANCE;
+		DocumentToGeoJsonMultiPointConverter converter = DocumentToGeoJsonMultiPointConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		/**
@@ -372,7 +370,7 @@ public class GeoJsonConverterUnitTests {
 	 */
 	public static class DbObjectToGeoJsonMultiPolygonConverterUnitTests {
 
-		DbObjectToGeoJsonMultiPolygonConverter converter = DbObjectToGeoJsonMultiPolygonConverter.INSTANCE;
+		DocumentToGeoJsonMultiPolygonConverter converter = DocumentToGeoJsonMultiPolygonConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		/**
@@ -409,7 +407,7 @@ public class GeoJsonConverterUnitTests {
 	 */
 	public static class GeoJsonToDbObjectConverterUnitTests {
 
-		GeoJsonToDbObjectConverter converter = GeoJsonToDbObjectConverter.INSTANCE;
+		GeoJsonToDocumentConverter converter = GeoJsonToDocumentConverter.INSTANCE;
 
 		/**
 		 * @see DATAMONGO-1135

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldRefe
  * The context for an {@link AggregationOperation}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.3
  */
 public interface AggregationOperationContext {
@@ -29,10 +30,10 @@ public interface AggregationOperationContext {
 	/**
 	 * Returns the mapped {@link Document}, potentially converting the source considering mapping metadata etc.
 	 * 
-	 * @param dbObject will never be {@literal null}.
+	 * @param document will never be {@literal null}.
 	 * @return must not be {@literal null}.
 	 */
-	Document getMappedObject(Document dbObject);
+	Document getMappedObject(Document document);
 
 	/**
 	 * Returns a {@link FieldReference} for the given field or {@literal null} if the context does not expose the given

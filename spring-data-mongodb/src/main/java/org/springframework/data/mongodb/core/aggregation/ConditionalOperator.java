@@ -75,7 +75,7 @@ public class ConditionalOperator implements AggregationExpression {
 	 * @param thenValue must not be {@literal null}.
 	 * @param otherwiseValue must not be {@literal null}.
 	 */
-	public ConditionalOperator(DBObject condition, Object thenValue, Object otherwiseValue) {
+	public ConditionalOperator(Document condition, Object thenValue, Object otherwiseValue) {
 		this((Object) condition, thenValue, otherwiseValue);
 	}
 
@@ -99,7 +99,7 @@ public class ConditionalOperator implements AggregationExpression {
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public Document toDbObject(AggregationOperationContext context) {
+	public Document toDocument(AggregationOperationContext context) {
 
 		Document condObject = new Document();
 
@@ -117,7 +117,7 @@ public class ConditionalOperator implements AggregationExpression {
 		}
 
 		if (value instanceof ConditionalOperator) {
-			return ((ConditionalOperator) value).toDbObject(context);
+			return ((ConditionalOperator) value).toDocument(context);
 		}
 
 		return context.getMappedObject(new Document("$set", value)).get("$set");
@@ -244,7 +244,7 @@ public class ConditionalOperator implements AggregationExpression {
 		 * @param booleanExpression expression that yields in a boolean result, must not be {@literal null}.
 		 * @return the {@link ThenBuilder}
 		 */
-		ThenBuilder when(DBObject booleanExpression);
+		ThenBuilder when(Document booleanExpression);
 
 		/**
 		 * @param booleanField reference to a field holding a boolean value, must not be {@literal null}.
@@ -320,7 +320,7 @@ public class ConditionalOperator implements AggregationExpression {
 		 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperator.WhenBuilder#when(com.mongodb.DBObject)
 		 */
 		@Override
-		public ConditionalExpressionBuilder when(DBObject booleanExpression) {
+		public ConditionalExpressionBuilder when(Document booleanExpression) {
 
 			Assert.notNull(booleanExpression, "'Boolean expression' must not be null!");
 

@@ -23,6 +23,10 @@ import org.bson.conversions.Bson;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+/**
+ * @author Christoph Strobl
+ * @since 2.0
+ */
 public class BsonUtils {
 
 	public static <T> T get(Bson bson, String key) {

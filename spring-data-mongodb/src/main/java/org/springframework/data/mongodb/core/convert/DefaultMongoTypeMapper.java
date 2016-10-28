@@ -42,6 +42,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements MongoTypeMapper {
 

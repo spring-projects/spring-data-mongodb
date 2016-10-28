@@ -38,20 +38,9 @@ public @interface Meta {
 	/**
 	 * Set the maximum time limit in milliseconds for processing operations.
 	 *
-	 * @deprecated since 1.10 because of spelling issues. Please use {@link #maxExecutionTimeMs()} instead.
-	 * @return
-	 */
-	@AliasFor("maxExecutionTimeMs")
-	@Deprecated
-	long maxExcecutionTime() default -1;
-
-	/**
-	 * Set the maximum time limit in milliseconds for processing operations.
-	 *
 	 * @return
 	 * @since 1.10
 	 */
-	@AliasFor("maxExcecutionTime")
 	long maxExecutionTimeMs() default -1;
 
 	/**

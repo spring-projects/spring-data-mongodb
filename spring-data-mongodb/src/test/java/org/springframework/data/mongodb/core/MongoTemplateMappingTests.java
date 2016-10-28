@@ -83,8 +83,8 @@ public class MongoTemplateMappingTests {
 	private void checkPersonPersisted(MongoTemplate template) {
 		template.execute(Person.class, new CollectionCallback<Object>() {
 			public Object doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-				Document dbo = collection.find(new Document()).first();
-				assertThat((String) dbo.get("name"), is("Oliver"));
+				Document document = collection.find(new Document()).first();
+				assertThat((String) document.get("name"), is("Oliver"));
 				return null;
 			}
 		});

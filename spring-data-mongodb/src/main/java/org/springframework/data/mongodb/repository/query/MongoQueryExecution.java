@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.repository.query;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -48,9 +47,6 @@ import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.result.DeleteResult;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 /**
  * Set of classes to contain query execution strategies. Depending (mostly) on the return type of a
  * {@link org.springframework.data.repository.query.QueryMethod} a {@link AbstractMongoQuery} can be executed in various
@@ -58,6 +54,7 @@ import lombok.RequiredArgsConstructor;
  *
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 interface MongoQueryExecution {
 

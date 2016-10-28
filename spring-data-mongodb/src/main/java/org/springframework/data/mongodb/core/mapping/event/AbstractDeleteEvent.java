@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 by the original author(s).
+ * Copyright 2013-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,26 +31,14 @@ public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<Document>
 	/**
 	 * Creates a new {@link AbstractDeleteEvent} for the given {@link Document} and type.
 	 * 
-	 * @param dbo must not be {@literal null}.
-	 * @param type can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AbstractDeleteEvent(Document, Class, String)}.
-	 */
-	@Deprecated
-	public AbstractDeleteEvent(Document dbo, Class<T> type) {
-		this(dbo, type, null);
-	}
-
-	/**
-	 * Creates a new {@link AbstractDeleteEvent} for the given {@link Document} and type.
-	 * 
-	 * @param dbo must not be {@literal null}.
+	 * @param document must not be {@literal null}.
 	 * @param type can be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public AbstractDeleteEvent(Document dbo, Class<T> type, String collectionName) {
+	public AbstractDeleteEvent(Document document, Class<T> type, String collectionName) {
 
-		super(dbo, dbo, collectionName);
+		super(document, document, collectionName);
 		this.type = type;
 	}
 

@@ -65,12 +65,12 @@ public abstract class MongoOperationsUnitTests {
 
 		converter = new AbstractMongoConverter(null) {
 
-			public void write(Object t, Bson dbo) {
-				((Document) dbo).put("firstName", person.getFirstName());
+			public void write(Object t, Bson bson) {
+				((Document) bson).put("firstName", person.getFirstName());
 			}
 
 			@SuppressWarnings("unchecked")
-			public <S extends Object> S read(Class<S> clazz, Bson dbo) {
+			public <S extends Object> S read(Class<S> clazz, Bson bson) {
 				return (S) person;
 			}
 
@@ -198,16 +198,6 @@ public abstract class MongoOperationsUnitTests {
 			@Override
 			public void doWith(MongoOperations operations) {
 				operations.executeCommand("");
-			}
-		}.assertDataAccessException();
-	}
-
-	@Test
-	public void convertsExceptionForExecuteInSession() {
-		new Execution() {
-			@Override
-			public void doWith(MongoOperations operations) {
-				operations.executeInSession(dbCallback);
 			}
 		}.assertDataAccessException();
 	}

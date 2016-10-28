@@ -56,7 +56,7 @@ public class AggregationOptionsTests {
 	 */
 	@Test
 	public void aggregationOptionsToString() {
-		assertThat(aggregationOptions.toDbObject(),
+		assertThat(aggregationOptions.toDocument(),
 				is(Document.parse("{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"foo\" : 1}}")));
 	}
 }

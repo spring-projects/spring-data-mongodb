@@ -27,6 +27,7 @@ import org.springframework.util.Assert;
  * @see http://docs.mongodb.org/manual/reference/aggregation/skip/
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.3
  */
 public class SkipOperation implements AggregationOperation {

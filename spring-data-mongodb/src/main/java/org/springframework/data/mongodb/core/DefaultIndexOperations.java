@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,9 +86,6 @@ public class DefaultIndexOperations implements IndexOperations {
 					if (indexOptions.containsKey("unique")) {
 						ops = ops.unique((Boolean) indexOptions.get("unique"));
 					}
-					// if(indexOptions.containsField("dropDuplicates")) {
-					// ops = ops.((boolean)indexOptions.get("dropDuplicates"));
-					// }
 					if (indexOptions.containsKey("sparse")) {
 						ops = ops.sparse((Boolean) indexOptions.get("sparse"));
 					}
@@ -153,22 +150,6 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.IndexOperations#resetIndexCache()
-	 */
-	@Deprecated
-	public void resetIndexCache() {
-		mongoOperations.execute(collectionName, new CollectionCallback<Void>() {
-			public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-
-				// TODO remove this one
-				// ReflectiveDBCollectionInvoker.resetIndexCache(collection);
-				return null;
-			}
-		});
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.IndexOperations#getIndexInfo()
 	 */
 	public List<IndexInfo> getIndexInfo() {
@@ -177,25 +158,25 @@ public class DefaultIndexOperations implements IndexOperations {
 			public List<IndexInfo> doInCollection(MongoCollection<Document> collection)
 					throws MongoException, DataAccessException {
 
-				MongoCursor<Document> dbObjectList = collection.listIndexes(Document.class).iterator();
-				return getIndexData(dbObjectList);
+				MongoCursor<Document> cursor = collection.listIndexes(Document.class).iterator();
+				return getIndexData(cursor);
 			}
 
-			private List<IndexInfo> getIndexData(MongoCursor<Document> dbObjectList) {
+			private List<IndexInfo> getIndexData(MongoCursor<Document> cursor) {
 
 				List<IndexInfo> indexInfoList = new ArrayList<IndexInfo>();
 
-				while (dbObjectList.hasNext()) {
+				while (cursor.hasNext()) {
 
-					Document ix = dbObjectList.next();
-					Document keyDbObject = (Document) ix.get("key");
-					int numberOfElements = keyDbObject.keySet().size();
+					Document ix = cursor.next();
+					Document keyDocument = (Document) ix.get("key");
+					int numberOfElements = keyDocument.keySet().size();
 
 					List<IndexField> indexFields = new ArrayList<IndexField>(numberOfElements);
 
-					for (String key : keyDbObject.keySet()) {
+					for (String key : keyDocument.keySet()) {
 
-						Object value = keyDbObject.get(key);
+						Object value = keyDocument.get(key);
 
 						if (TWO_D_IDENTIFIERS.contains(value)) {
 							indexFields.add(IndexField.geo(key));

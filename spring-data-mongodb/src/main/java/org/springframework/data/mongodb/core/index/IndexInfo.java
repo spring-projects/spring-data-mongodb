@@ -38,19 +38,6 @@ public class IndexInfo {
 	private final boolean sparse;
 	private final String language;
 
-	/**
-	 * @deprecated Will be removed in 1.7. Please use {@link #IndexInfo(List, String, boolean, boolean, boolean, String)}
-	 * @param indexFields
-	 * @param name
-	 * @param unique
-	 * @param dropDuplicates
-	 * @param sparse
-	 */
-	@Deprecated
-	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean dropDuplicates, boolean sparse) {
-		this(indexFields, name, unique, dropDuplicates, sparse, "");
-	}
-
 	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean dropDuplicates, boolean sparse,
 			String language) {
 

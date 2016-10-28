@@ -34,5 +34,5 @@ public interface AggregationExpression {
 	 * @param context
 	 * @return
 	 */
-	Document toDbObject(AggregationOperationContext context);
+	Document toDocument(AggregationOperationContext context);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 by the original author(s).
+ * Copyright (c) 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,28 +33,16 @@ public class AfterLoadEvent<T> extends MongoMappingEvent<Document> {
 	private final Class<T> type;
 
 	/**
-	 * Creates a new {@link AfterLoadEvent} for the given {@link Document} and type.
-	 * 
-	 * @param dbo must not be {@literal null}.
-	 * @param type can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AfterLoadEvent(Document, Class, String)}.
-	 */
-	@Deprecated
-	public AfterLoadEvent(Document dbo, Class<T> type) {
-		this(dbo, type, null);
-	}
-
-	/**
 	 * Creates a new {@link AfterLoadEvent} for the given {@link Document}, type and collectionName.
 	 * 
-	 * @param dbo must not be {@literal null}.
+	 * @param document must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public AfterLoadEvent(Document dbo, Class<T> type, String collectionName) {
+	public AfterLoadEvent(Document document, Class<T> type, String collectionName) {
 
-		super(dbo, dbo, collectionName);
+		super(document, document, collectionName);
 
 		Assert.notNull(type, "Type must not be null!");
 		this.type = type;

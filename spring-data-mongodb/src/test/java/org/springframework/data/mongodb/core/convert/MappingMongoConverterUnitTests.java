@@ -42,7 +42,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.mongodb.BasicDBObject;
 import org.bson.types.ObjectId;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -2087,7 +2086,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readsEmptyEnumSet() {
 
-		DBObject source = new BasicDBObject("enumSet", new BasicDBList());
+		org.bson.Document source = new org.bson.Document("enumSet", Collections.emptyList());
 
 		assertThat(converter.read(ClassWithEnumProperty.class, source).enumSet, is(EnumSet.noneOf(SampleEnum.class)));
 	}

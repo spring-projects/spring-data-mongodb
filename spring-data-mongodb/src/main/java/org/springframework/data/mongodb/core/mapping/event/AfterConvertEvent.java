@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 by the original author(s).
+ * Copyright (c) 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,25 +30,13 @@ public class AfterConvertEvent<E> extends MongoMappingEvent<E> {
 	/**
 	 * Creates new {@link AfterConvertEvent}.
 	 * 
-	 * @param dbo can be {@literal null}.
-	 * @param source must not be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AfterConvertEvent(Document, Object, String)}.
-	 */
-	@Deprecated
-	public AfterConvertEvent(Document dbo, E source) {
-		this(dbo, source, null);
-	}
-
-	/**
-	 * Creates new {@link AfterConvertEvent}.
-	 * 
-	 * @param dbo can be {@literal null}.
+	 * @param document can be {@literal null}.
 	 * @param source must not be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public AfterConvertEvent(Document dbo, E source, String collectionName) {
-		super(source, dbo, collectionName);
+	public AfterConvertEvent(Document document, E source, String collectionName) {
+		super(source, document, collectionName);
 	}
 
 }

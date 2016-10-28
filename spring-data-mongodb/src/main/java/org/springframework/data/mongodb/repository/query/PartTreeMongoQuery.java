@@ -15,8 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
+import org.bson.Document;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -112,7 +114,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 		try {
 
-			BasicQuery result = new BasicQuery(query.getQueryObject().toJson(), fieldSpec);
+			BasicQuery result = new BasicQuery(query.getQueryObject(), new Document((BasicDBObject) JSON.parse(fieldSpec)));
 			result.setSortObject(query.getSortObject());
 
 			return result;

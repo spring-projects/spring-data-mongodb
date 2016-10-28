@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.index;
 
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -53,20 +52,6 @@ public final class IndexField {
 		this.weight = weight == null ? Float.NaN : weight;
 	}
 
-	/**
-	 * Creates a default {@link IndexField} with the given key and {@link Order}.
-	 * 
-	 * @deprecated use {@link #create(String, Direction)}.
-	 * @param key must not be {@literal null} or emtpy.
-	 * @param direction must not be {@literal null}.
-	 * @return
-	 */
-	@Deprecated
-	public static IndexField create(String key, Order order) {
-		Assert.notNull(order);
-		return new IndexField(key, order.toDirection(), Type.DEFAULT);
-	}
-
 	public static IndexField create(String key, Direction order) {
 		Assert.notNull(order);
 		return new IndexField(key, order, Type.DEFAULT);
@@ -96,17 +81,6 @@ public final class IndexField {
 	 */
 	public String getKey() {
 		return key;
-	}
-
-	/**
-	 * Returns the direction of the {@link IndexField} or {@literal null} in case we have a geo index field.
-	 * 
-	 * @deprecated use {@link #getDirection()} instead.
-	 * @return the direction
-	 */
-	@Deprecated
-	public Order getOrder() {
-		return Direction.ASC.equals(direction) ? Order.ASCENDING : Order.DESCENDING;
 	}
 
 	/**

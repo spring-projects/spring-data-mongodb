@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,33 +23,34 @@ import org.bson.Document;
  * map-reduce.
  * 
  * @author Mark Pollack
+ * @author Christoph Strobl
  */
 public class GroupBy {
 
 	private Document dboKeys;
 	private String keyFunction;
 	private String initial;
-	private Document initialDbObject;
+	private Document initialDocument;
 	private String reduce;
 	private String finalize;
 
 	public GroupBy(String... keys) {
-		Document dbo = new Document();
+		Document document = new Document();
 		for (String key : keys) {
-			dbo.put(key, 1);
+			document.put(key, 1);
 		}
-		dboKeys = dbo;
+		dboKeys = document;
 	}
 
 	// NOTE GroupByCommand does not handle keyfunction.
 
 	public GroupBy(String key, boolean isKeyFunction) {
-		Document dbo = new Document();
+		Document document = new Document();
 		if (isKeyFunction) {
 			keyFunction = key;
 		} else {
-			dbo.put(key, 1);
-			dboKeys = dbo;
+			document.put(key, 1);
+			dboKeys = document;
 		}
 	}
 
@@ -67,7 +68,7 @@ public class GroupBy {
 	}
 
 	public GroupBy initialDocument(Document initialDocument) {
-		initialDbObject = initialDocument;
+		this.initialDocument = initialDocument;
 		return this;
 	}
 
@@ -83,24 +84,24 @@ public class GroupBy {
 
 	public Document getGroupByObject() {
 		// return new GroupCommand(dbCollection, dboKeys, condition, initial, reduce, finalize);
-		Document dbo = new Document();
+		Document document = new Document();
 		if (dboKeys != null) {
-			dbo.put("key", dboKeys);
+			document.put("key", dboKeys);
 		}
 		if (keyFunction != null) {
-			dbo.put("$keyf", keyFunction);
+			document.put("$keyf", keyFunction);
 		}
 
-		dbo.put("$reduce", reduce);
+		document.put("$reduce", reduce);
 
-		dbo.put("initial", initialDbObject);
+		document.put("initial", initialDocument);
 		if (initial != null) {
-			dbo.put("initial", initial);
+			document.put("initial", initial);
 		}
 		if (finalize != null) {
-			dbo.put("finalize", finalize);
+			document.put("finalize", finalize);
 		}
-		return dbo;
+		return document;
 	}
 
 }

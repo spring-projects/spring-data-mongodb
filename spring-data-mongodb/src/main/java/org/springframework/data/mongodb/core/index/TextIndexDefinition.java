@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,15 +113,15 @@ public class TextIndexDefinition implements IndexDefinition {
 			options.put("default_language", defaultLanguage);
 		}
 
-		Document weightsDbo = new Document();
+		Document weightsDocument = new Document();
 		for (TextIndexedFieldSpec fieldSpec : fieldSpecs) {
 			if (fieldSpec.isWeighted()) {
-				weightsDbo.put(fieldSpec.getFieldname(), fieldSpec.getWeight());
+				weightsDocument.put(fieldSpec.getFieldname(), fieldSpec.getWeight());
 			}
 		}
 
-		if (!weightsDbo.isEmpty()) {
-			options.put("weights", weightsDbo);
+		if (!weightsDocument.isEmpty()) {
+			options.put("weights", weightsDocument);
 		}
 		if (StringUtils.hasText(languageOverride)) {
 			options.put("language_override", languageOverride);

@@ -127,17 +127,6 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	}
 
 	/**
-	 * Returns the index of a {@link Distance} parameter to be used for geo queries.
-	 * 
-	 * @return
-	 * @deprecated since 1.7. Please use {@link #getMaxDistanceIndex()} instead.
-	 */
-	@Deprecated
-	public int getDistanceIndex() {
-		return getMaxDistanceIndex();
-	}
-
-	/**
 	 * Returns the index of the {@link Distance} parameter to be used for max distance in geo queries.
 	 * 
 	 * @return

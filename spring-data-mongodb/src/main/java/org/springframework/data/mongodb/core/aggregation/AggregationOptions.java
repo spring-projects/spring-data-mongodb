@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.bson.Document;
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @see Aggregation#withOptions(AggregationOptions)
  * @see TypedAggregation#withOptions(AggregationOptions)
  * @since 1.6
@@ -111,14 +112,14 @@ public class AggregationOptions {
 	 * 
 	 * @return
 	 */
-	public Document toDbObject() {
+	public Document toDocument() {
 
-		Document dbo = new Document();
-		dbo.put(ALLOW_DISK_USE, allowDiskUse);
-		dbo.put(EXPLAIN, explain);
-		dbo.put(CURSOR, cursor);
+		Document document = new Document();
+		document.put(ALLOW_DISK_USE, allowDiskUse);
+		document.put(EXPLAIN, explain);
+		document.put(CURSOR, cursor);
 
-		return dbo;
+		return document;
 	}
 
 	/* (non-Javadoc)
@@ -126,7 +127,7 @@ public class AggregationOptions {
 	 */
 	@Override
 	public String toString() {
-		return toDbObject().toJson();
+		return toDocument().toJson();
 	}
 
 	/**
