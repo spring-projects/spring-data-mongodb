@@ -28,6 +28,8 @@ import org.springframework.util.Assert;
  * {@link AggregationExpressionTransformationContext}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
+ * @since 1.4
  */
 interface AggregationExpressionTransformer
 		extends ExpressionTransformer<AggregationExpressionTransformationContext<ExpressionNode>> {
@@ -38,7 +40,7 @@ interface AggregationExpressionTransformer
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
-	public static class AggregationExpressionTransformationContext<T extends ExpressionNode>
+	class AggregationExpressionTransformationContext<T extends ExpressionNode>
 			extends ExpressionTransformationContextSupport<T> {
 
 		private final AggregationOperationContext aggregationContext;

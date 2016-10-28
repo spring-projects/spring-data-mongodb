@@ -143,19 +143,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
 			assertThat(indexDefinition.getIndexOptions(),
 					equalTo(
-							new org.bson.Document().append("name", "indexedProperty").append("unique", true).append("dropDups", true)
+							new org.bson.Document().append("name", "indexedProperty").append("unique", true)
 									.append("sparse", true).append("background", true).append("expireAfterSeconds", 10L)));
-		}
-
-		/**
-		 * @see DATAMONGO-899
-		 */
-		@Test
-		public void resolvesIndexCollectionNameCorrectlyWhenDefinedInAnnotation() {
-
-			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
-					WithOptionsOnIndexedProperty.class);
-			assertThat(indexDefinitions.get(0).getCollection(), equalTo("CollectionOverride"));
 		}
 
 		/**
@@ -254,7 +243,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document(collection = "WithOptionsOnIndexedProperty")
 		static class WithOptionsOnIndexedProperty {
 
-			@Indexed(background = true, collection = "CollectionOverride", direction = IndexDirection.DESCENDING,
+			@Indexed(background = true, direction = IndexDirection.DESCENDING,
 					dropDups = true, expireAfterSeconds = 10, sparse = true, unique = true) //
 			String indexedProperty;
 		}
@@ -435,7 +424,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document(collection = "WithOptionsOnGeoSpatialIndexProperty")
 		static class WithOptionsOnGeoSpatialIndexProperty {
 
-			@GeoSpatialIndexed(collection = "CollectionOverride", bits = 2, max = 100, min = 1,
+			@GeoSpatialIndexed(bits = 2, max = 100, min = 1,
 					type = GeoSpatialIndexType.GEO_2D) //
 			Point location;
 		}
@@ -498,7 +487,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
 			assertThat(indexDefinition.getIndexOptions(), equalTo(new org.bson.Document().append("name", "compound_index")
-					.append("unique", true).append("dropDups", true).append("sparse", true).append("background", true)));
+					.append("unique", true).append("sparse", true).append("background", true)));
 			assertThat(indexDefinition.getIndexKeys(), equalTo(new org.bson.Document().append("foo", 1).append("bar", -1)));
 		}
 
@@ -513,7 +502,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
 			assertThat(indexDefinition.getIndexOptions(), equalTo(new org.bson.Document().append("name", "compound_index")
-					.append("unique", true).append("dropDups", true).append("sparse", true).append("background", true)));
+					.append("unique", true).append("sparse", true).append("background", true)));
 			assertThat(indexDefinition.getIndexKeys(), equalTo(new org.bson.Document().append("foo", 1).append("bar", -1)));
 		}
 
@@ -528,7 +517,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
 			assertThat(indexDefinition.getIndexOptions(), equalTo(new org.bson.Document().append("unique", true)
-					.append("dropDups", true).append("sparse", true).append("background", true)));
+					.append("sparse", true).append("background", true)));
 			assertThat(indexDefinition.getIndexKeys(), equalTo(new org.bson.Document().append("foo", 1).append("bar", -1)));
 		}
 

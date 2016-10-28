@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  * @author Philipp Schneider
  * @author Thomas Darimont
  * @author Martin Baumgartner
+ * @author Christoph Strobl
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -133,14 +134,14 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 */
 	public ObjectId store(InputStream content, String filename, String contentType, Object metadata) {
 
-		Document dbObject = null;
+		Document document = null;
 
 		if (metadata != null) {
-			dbObject = new Document();
-			converter.write(metadata, dbObject);
+			document = new Document();
+			converter.write(metadata, document);
 		}
 
-		return store(content, filename, contentType, dbObject);
+		return store(content, filename, contentType, document);
 	}
 
 	/*

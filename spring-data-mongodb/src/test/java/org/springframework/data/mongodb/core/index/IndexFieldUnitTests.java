@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.query.Order;
 
 /**
  * Unit tests for {@link IndexField}.
@@ -37,7 +36,6 @@ public class IndexFieldUnitTests {
 
 		assertThat(field.getKey(), is("foo"));
 		assertThat(field.getDirection(), is(Direction.ASC));
-		assertThat(field.getOrder(), is(Order.ASCENDING));
 		assertThat(field.isGeo(), is(false));
 	}
 

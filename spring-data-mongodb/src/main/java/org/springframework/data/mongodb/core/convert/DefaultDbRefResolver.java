@@ -27,11 +27,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DB;
-import com.mongodb.DBObject;
-import com.mongodb.client.MongoDatabase;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.bson.Document;
@@ -51,7 +46,9 @@ import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * A {@link DbRefResolver} that resolves {@link org.springframework.data.mongodb.core.mapping.DBRef}s by delegating to a
@@ -148,8 +145,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		MongoDatabase db = mongoDbFactory.getDb();
 		List<Document> result = new ArrayList<>();
-		db.getCollection(collection)
-				.find(new Document("_id", new Document("$in", ids))).into(result);
+		db.getCollection(collection).find(new Document("_id", new Document("$in", ids))).into(result);
 		Collections.sort(result, new DbRefByReferencePositionComparator(ids));
 		return result;
 	}

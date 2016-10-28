@@ -233,8 +233,8 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		org.springframework.data.mongodb.core.query.Meta metaAttributes = new org.springframework.data.mongodb.core.query.Meta();
-		if (meta.maxExcecutionTime() > 0) {
-			metaAttributes.setMaxTimeMsec(meta.maxExcecutionTime());
+		if (meta.maxExecutionTimeMs() > 0) {
+			metaAttributes.setMaxTimeMsec(meta.maxExecutionTimeMs());
 		}
 
 		if (meta.maxScanDocuments() > 0) {

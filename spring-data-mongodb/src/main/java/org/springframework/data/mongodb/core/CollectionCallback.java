@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,24 @@ import org.springframework.dao.DataAccessException;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 
+/**
+ * Callback interface for executing actions against a {@link MongoCollection}
+ *
+ * @author Mark Pollak
+ * @author Grame Rocher
+ * @author Oliver Gierke
+ * @author John Brisbin
+ * @auhtor Christoph Strobl
+ * @since 1.0
+ */
 public interface CollectionCallback<T> {
 
+	/**
+	 * @param collection never {@literal null}.
+	 * @return
+	 * @throws MongoException
+	 * @throws DataAccessException
+	 */
 	T doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException;
 
 }

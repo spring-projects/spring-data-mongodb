@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Wrapper value object for a {@link BasicDocument} to be able to access raw values by {@link MongoPersistentProperty}
+ * Wrapper value object for a {@link Document} to be able to access raw values by {@link MongoPersistentProperty}
  * references. The accessors will transparently resolve nested document values that a {@link MongoPersistentProperty}
  * might refer to through a path expression in field names.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 class DocumentAccessor {
 
@@ -42,7 +43,7 @@ class DocumentAccessor {
 	/**
 	 * Creates a new {@link DocumentAccessor} for the given {@link Document}.
 	 * 
-	 * @param dbObject must be a {@link BasicDocument} effectively, must not be {@literal null}.
+	 * @param dbObject must be a {@link Document} effectively, must not be {@literal null}.
 	 */
 	public DocumentAccessor(Bson dbObject) {
 
@@ -169,7 +170,7 @@ class DocumentAccessor {
 	}
 
 	/**
-	 * Returns the given source object as map, i.e. {@link BasicDocument}s and maps as is or {@literal null} otherwise.
+	 * Returns the given source object as map, i.e. {@link Document}s and maps as is or {@literal null} otherwise.
 	 * 
 	 * @param source can be {@literal null}.
 	 * @return

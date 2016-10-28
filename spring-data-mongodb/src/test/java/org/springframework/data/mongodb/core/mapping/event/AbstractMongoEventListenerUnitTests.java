@@ -126,7 +126,7 @@ public class AbstractMongoEventListenerUnitTests {
 	public void handlesUntypedImplementations() {
 
 		UntypedEventListener listener = new UntypedEventListener();
-		listener.onApplicationEvent(new MongoMappingEvent(new Object(), new Document()));
+		listener.onApplicationEvent(new MongoMappingEvent(new Object(), new Document(), "collection-1"));
 	}
 
 	/**

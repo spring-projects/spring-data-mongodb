@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -34,17 +33,7 @@ import org.springframework.util.StringUtils;
 public class Index implements IndexDefinition {
 
 	public enum Duplicates {
-		RETAIN, //
-
-		/**
-		 * Dropping Duplicates was removed in MongoDB Server 2.8.0-rc0.
-		 * <p>
-		 * See https://jira.mongodb.org/browse/SERVER-14710
-		 * 
-		 * @deprecated since 1.7.
-		 */
-		@Deprecated //
-		DROP
+		RETAIN
 	}
 
 	private final Map<String, Direction> fieldSpec = new LinkedHashMap<String, Direction>();
@@ -65,31 +54,6 @@ public class Index implements IndexDefinition {
 
 	public Index(String key, Direction direction) {
 		fieldSpec.put(key, direction);
-	}
-
-	/**
-	 * Creates a new {@link Indexed} on the given key and {@link Order}.
-	 * 
-	 * @deprecated use {@link #Index(String, Direction)} instead.
-	 * @param key must not be {@literal null} or empty.
-	 * @param order must not be {@literal null}.
-	 */
-	@Deprecated
-	public Index(String key, Order order) {
-		this(key, order.toDirection());
-	}
-
-	/**
-	 * Adds the given field to the index.
-	 * 
-	 * @deprecated use {@link #on(String, Direction)} instead.
-	 * @param key must not be {@literal null} or empty.
-	 * @param order must not be {@literal null}.
-	 * @return
-	 */
-	@Deprecated
-	public Index on(String key, Order order) {
-		return on(key, order.toDirection());
 	}
 
 	public Index on(String key, Direction direction) {
@@ -162,56 +126,44 @@ public class Index implements IndexDefinition {
 		return this;
 	}
 
-	/**
-	 * @see http://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping
-	 * @param duplicates
-	 * @return
-	 */
-	public Index unique(Duplicates duplicates) {
-		if (duplicates == Duplicates.DROP) {
-			this.dropDuplicates = true;
-		}
-		return unique();
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
 	 */
 	public Document getIndexKeys() {
 
-		Document dbo = new Document();
+		Document document = new Document();
 
 		for (Entry<String, Direction> entry : fieldSpec.entrySet()) {
-			dbo.put(entry.getKey(), Direction.ASC.equals(entry.getValue()) ? 1 : -1);
+			document.put(entry.getKey(), Direction.ASC.equals(entry.getValue()) ? 1 : -1);
 		}
 
-		return dbo;
+		return document;
 	}
 
 	public Document getIndexOptions() {
 
-		Document dbo = new Document();
+		Document document = new Document();
 		if (StringUtils.hasText(name)) {
-			dbo.put("name", name);
+			document.put("name", name);
 		}
 		if (unique) {
-			dbo.put("unique", true);
+			document.put("unique", true);
 		}
 		if (dropDuplicates) {
-			dbo.put("dropDups", true);
+			document.put("dropDups", true);
 		}
 		if (sparse) {
-			dbo.put("sparse", true);
+			document.put("sparse", true);
 		}
 		if (background) {
-			dbo.put("background", true);
+			document.put("background", true);
 		}
 		if (expire >= 0) {
-			dbo.put("expireAfterSeconds", expire);
+			document.put("expireAfterSeconds", expire);
 		}
 
-		return dbo;
+		return document;
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.springframework.util.ObjectUtils;
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Patryk Wasik
+ * @author Christoph Strobl
  */
 public class Field {
 
@@ -81,22 +82,22 @@ public class Field {
 
 	public Document getFieldsObject() {
 
-		Document dbo = new Document((Map) criteria);
+		Document document = new Document((Map) criteria);
 
 		for (Entry<String, Object> entry : slices.entrySet()) {
-			dbo.put(entry.getKey(), new Document("$slice", entry.getValue()));
+			document.put(entry.getKey(), new Document("$slice", entry.getValue()));
 		}
 
 		for (Entry<String, Criteria> entry : elemMatchs.entrySet()) {
 			Document dbObject = new Document("$elemMatch", entry.getValue().getCriteriaObject());
-			dbo.put(entry.getKey(), dbObject);
+			document.put(entry.getKey(), dbObject);
 		}
 
 		if (postionKey != null) {
-			dbo.put(postionKey + ".$", positionValue);
+			document.put(postionKey + ".$", positionValue);
 		}
 
-		return dbo;
+		return document;
 	}
 
 	/* 

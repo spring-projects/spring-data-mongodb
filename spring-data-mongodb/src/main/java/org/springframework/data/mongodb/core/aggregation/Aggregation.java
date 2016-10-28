@@ -483,7 +483,7 @@ public class Aggregation {
 	 * @param inputCollectionName the name of the input collection
 	 * @return the {@code Document} representing this aggregation
 	 */
-	public Document toDbObject(String inputCollectionName, AggregationOperationContext rootContext) {
+	public Document toDocument(String inputCollectionName, AggregationOperationContext rootContext) {
 
 		AggregationOperationContext context = rootContext;
 		List<Document> operationDocuments = new ArrayList<Document>(operations.size());
@@ -519,7 +519,7 @@ public class Aggregation {
 	@Override
 	public String toString() {
 		return SerializationUtils
-				.serializeToJsonSafely(toDbObject("__collection__", new NoOpAggregationOperationContext()));
+				.serializeToJsonSafely(toDocument("__collection__", new NoOpAggregationOperationContext()));
 	}
 
 	/**
@@ -534,8 +534,8 @@ public class Aggregation {
 		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.Document)
 		 */
 		@Override
-		public Document getMappedObject(Document dbObject) {
-			return dbObject;
+		public Document getMappedObject(Document document) {
+			return document;
 		}
 
 		/* 

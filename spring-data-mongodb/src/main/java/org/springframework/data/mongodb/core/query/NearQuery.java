@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -299,19 +299,6 @@ public final class NearQuery {
 	}
 
 	/**
-	 * Configures the distance multiplier to the multiplier of the given {@link Metric}.
-	 * 
-	 * @deprecated use {@link #in(Metric)} instead.
-	 * @param metric must not be {@literal null}.
-	 * @return
-	 */
-	@Deprecated
-	public NearQuery distanceMultiplier(Metric metric) {
-		Assert.notNull(metric);
-		return in(metric);
-	}
-
-	/**
 	 * Configures whether to return spherical values for the actual distance.
 	 * 
 	 * @param spherical
@@ -411,32 +398,32 @@ public final class NearQuery {
 	 */
 	public Document toDocument() {
 
-		Document dbObject = new Document();
+		Document document = new Document();
 
 		if (query != null) {
-			dbObject.put("query", query.getQueryObject());
+			document.put("query", query.getQueryObject());
 		}
 
 		if (maxDistance != null) {
-			dbObject.put("maxDistance", maxDistance.getNormalizedValue());
+			document.put("maxDistance", maxDistance.getNormalizedValue());
 		}
 
 		if (minDistance != null) {
-			dbObject.put("minDistance", minDistance.getNormalizedValue());
+			document.put("minDistance", minDistance.getNormalizedValue());
 		}
 
 		if (metric != null) {
-			dbObject.put("distanceMultiplier", metric.getMultiplier());
+			document.put("distanceMultiplier", metric.getMultiplier());
 		}
 
 		if (num != null) {
-			dbObject.put("num", num);
+			document.put("num", num);
 		}
 
-		dbObject.put("near", Arrays.asList(point.getX(), point.getY()));
+		document.put("near", Arrays.asList(point.getX(), point.getY()));
 
-		dbObject.put("spherical", spherical);
+		document.put("spherical", spherical);
 
-		return dbObject;
+		return document;
 	}
 }

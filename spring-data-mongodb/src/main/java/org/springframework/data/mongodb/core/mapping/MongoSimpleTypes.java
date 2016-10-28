@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright (c) 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import com.mongodb.DBRef;
  * Simple constant holder for a {@link SimpleTypeHolder} enriched with Mongo specific simple types.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public abstract class MongoSimpleTypes {
 

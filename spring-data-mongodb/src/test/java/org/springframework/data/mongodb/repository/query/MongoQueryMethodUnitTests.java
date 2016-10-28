@@ -260,7 +260,7 @@ public class MongoQueryMethodUnitTests {
 		@Meta
 		List<User> emptyMetaAnnotation();
 
-		@Meta(maxExcecutionTime = 100)
+		@Meta(maxExecutionTimeMs = 100)
 		List<User> metaWithMaxExecutionTime();
 
 		@Meta(maxExecutionTimeMs = 100)

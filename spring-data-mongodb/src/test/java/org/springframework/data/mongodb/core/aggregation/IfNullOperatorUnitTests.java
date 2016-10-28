@@ -24,8 +24,6 @@ import java.util.Arrays;
 import org.bson.Document;
 import org.junit.Test;
 
-import com.mongodb.DBObject;
-
 /**
  * Unit tests for {@link IfNullOperator}.
  *
@@ -60,7 +58,7 @@ public class IfNullOperatorUnitTests {
 				.ifNull("optional") //
 				.thenReplaceWith("a more sophisticated value");
 
-		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(dbObject,
 				isBsonObject().containing("$ifNull", Arrays.<Object> asList("$optional", "a more sophisticated value")));
@@ -76,7 +74,7 @@ public class IfNullOperatorUnitTests {
 				.ifNull(Fields.field("optional")) //
 				.thenReplaceWith(Fields.field("never-null"));
 
-		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(dbObject, isBsonObject().containing("$ifNull", Arrays.<Object> asList("$optional", "$never-null")));
 	}

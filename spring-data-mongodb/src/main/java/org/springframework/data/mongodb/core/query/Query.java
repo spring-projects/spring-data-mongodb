@@ -218,17 +218,17 @@ public class Query {
 
 	public Document getQueryObject() {
 
-		Document dbo = new Document();
+		Document document = new Document();
 
 		for (CriteriaDefinition definition : criteria.values()) {
-			dbo.putAll(definition.getCriteriaObject());
+			document.putAll(definition.getCriteriaObject());
 		}
 
 		if (!restrictedTypes.isEmpty()) {
-			dbo.put(RESTRICTED_TYPES_KEY, getRestrictedTypes());
+			document.put(RESTRICTED_TYPES_KEY, getRestrictedTypes());
 		}
 
-		return dbo;
+		return document;
 	}
 
 	public Document getFieldsObject() {
@@ -241,13 +241,13 @@ public class Query {
 			return null;
 		}
 
-		Document dbo = new Document();
+		Document document = new Document();
 
 		for (org.springframework.data.domain.Sort.Order order : this.sort) {
-			dbo.put(order.getProperty(), order.isAscending() ? 1 : -1);
+			document.put(order.getProperty(), order.isAscending() ? 1 : -1);
 		}
 
-		return dbo;
+		return document;
 	}
 
 	/**

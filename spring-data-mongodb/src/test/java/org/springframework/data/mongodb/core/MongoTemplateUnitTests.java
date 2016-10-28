@@ -365,7 +365,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.executeQuery(query, "collection1", new DocumentCallbackHandler() {
 
 			@Override
-			public void processDocument(Document dbObject) throws MongoException, DataAccessException {
+			public void processDocument(Document document) throws MongoException, DataAccessException {
 				// nothing to do - just a test
 			}
 		});

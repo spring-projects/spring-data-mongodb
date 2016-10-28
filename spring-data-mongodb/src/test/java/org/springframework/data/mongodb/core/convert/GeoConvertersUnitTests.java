@@ -29,17 +29,17 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.data.mongodb.core.convert.GeoConverters.BoxToDbObjectConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.CircleToDbObjectConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToBoxConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToCircleConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToPointConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToPolygonConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToSphereConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.GeoCommandToDbObjectConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.PointToDbObjectConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.PolygonToDbObjectConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.SphereToDbObjectConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.BoxToDocumentConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.CircleToDocumentConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToBoxConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToCircleConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToPointConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToPolygonConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.DocumentToSphereConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.GeoCommandToDocumentConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.PointToDocumentConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.PolygonToDocumentConverter;
+import org.springframework.data.mongodb.core.convert.GeoConverters.SphereToDocumentConverter;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
 
@@ -60,8 +60,8 @@ public class GeoConvertersUnitTests {
 
 		Box box = new Box(new Point(1, 2), new Point(3, 4));
 
-		Document dbo = BoxToDbObjectConverter.INSTANCE.convert(box);
-		Box result = DbObjectToBoxConverter.INSTANCE.convert(dbo);
+		Document dbo = BoxToDocumentConverter.INSTANCE.convert(box);
+		Box result = DocumentToBoxConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(box));
 		assertThat(result.getClass().equals(Box.class), is(true));
@@ -75,8 +75,8 @@ public class GeoConvertersUnitTests {
 
 		Circle circle = new Circle(new Point(1, 2), 3);
 
-		Document dbo = CircleToDbObjectConverter.INSTANCE.convert(circle);
-		Circle result = DbObjectToCircleConverter.INSTANCE.convert(dbo);
+		Document dbo = CircleToDocumentConverter.INSTANCE.convert(circle);
+		Circle result = DocumentToCircleConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(circle));
 	}
@@ -90,8 +90,8 @@ public class GeoConvertersUnitTests {
 		Distance radius = new Distance(3, Metrics.MILES);
 		Circle circle = new Circle(new Point(1, 2), radius);
 
-		Document dbo = CircleToDbObjectConverter.INSTANCE.convert(circle);
-		Circle result = DbObjectToCircleConverter.INSTANCE.convert(dbo);
+		Document dbo = CircleToDocumentConverter.INSTANCE.convert(circle);
+		Circle result = DocumentToCircleConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(circle));
 		assertThat(result.getRadius(), is(radius));
@@ -105,8 +105,8 @@ public class GeoConvertersUnitTests {
 
 		Polygon polygon = new Polygon(new Point(1, 2), new Point(2, 3), new Point(3, 4), new Point(5, 6));
 
-		Document dbo = PolygonToDbObjectConverter.INSTANCE.convert(polygon);
-		Polygon result = DbObjectToPolygonConverter.INSTANCE.convert(dbo);
+		Document dbo = PolygonToDocumentConverter.INSTANCE.convert(polygon);
+		Polygon result = DocumentToPolygonConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(polygon));
 		assertThat(result.getClass().equals(Polygon.class), is(true));
@@ -120,8 +120,8 @@ public class GeoConvertersUnitTests {
 
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
 
-		Document dbo = SphereToDbObjectConverter.INSTANCE.convert(sphere);
-		Sphere result = DbObjectToSphereConverter.INSTANCE.convert(dbo);
+		Document dbo = SphereToDocumentConverter.INSTANCE.convert(sphere);
+		Sphere result = DocumentToSphereConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(sphere));
 		assertThat(result.getClass().equals(Sphere.class), is(true));
@@ -136,8 +136,8 @@ public class GeoConvertersUnitTests {
 		Distance radius = new Distance(3, Metrics.KILOMETERS);
 		Sphere sphere = new Sphere(new Point(1, 2), radius);
 
-		Document dbo = SphereToDbObjectConverter.INSTANCE.convert(sphere);
-		Sphere result = DbObjectToSphereConverter.INSTANCE.convert(dbo);
+		Document dbo = SphereToDocumentConverter.INSTANCE.convert(sphere);
+		Sphere result = DocumentToSphereConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(sphere));
 		assertThat(result.getRadius(), is(radius));
@@ -152,8 +152,8 @@ public class GeoConvertersUnitTests {
 
 		Point point = new Point(1, 2);
 
-		Document dbo = PointToDbObjectConverter.INSTANCE.convert(point);
-		Point result = DbObjectToPointConverter.INSTANCE.convert(dbo);
+		Document dbo = PointToDocumentConverter.INSTANCE.convert(point);
+		Point result = DocumentToPointConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(point));
 		assertThat(result.getClass().equals(Point.class), is(true));
@@ -168,7 +168,7 @@ public class GeoConvertersUnitTests {
 		Box box = new Box(new double[] { 1, 2 }, new double[] { 3, 4 });
 		GeoCommand cmd = new GeoCommand(box);
 
-		Document dbo = GeoCommandToDbObjectConverter.INSTANCE.convert(cmd);
+		Document dbo = GeoCommandToDocumentConverter.INSTANCE.convert(cmd);
 
 		assertThat(dbo, is(notNullValue()));
 

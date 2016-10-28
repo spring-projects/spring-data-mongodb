@@ -110,7 +110,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.Bytes;
 import com.mongodb.CommandResult;
 import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
@@ -370,7 +369,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				FindIterable<Document> cursor = collection.find(mappedQuery).projection(mappedFields);
 				QueryCursorPreparer cursorPreparer = new QueryCursorPreparer(query, entityType);
 
-				ReadDbObjectCallback<T> readCallback = new ReadDbObjectCallback<T>(mongoConverter, entityType,
+				ReadDocumentCallback<T> readCallback = new ReadDocumentCallback<T>(mongoConverter, entityType,
 						collectionName);
 
 				return new CloseableIterableCursorAdapter<T>(cursorPreparer.prepare(cursor), exceptionTranslator, readCallback);
@@ -400,16 +399,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		});
 
 		return result;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(com.mongodb.Document, int)
-	 */
-	@Deprecated
-	public Document executeCommand(final Document command, final int options) {
-		return executeCommand(command,
-				(options & Bytes.QUERYOPTION_SLAVEOK) != 0 ? ReadPreference.secondaryPreferred() : ReadPreference.primary());
 	}
 
 	/*
@@ -499,20 +488,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeInSession(org.springframework.data.mongodb.core.DbCallback)
-	 */
-	@Deprecated
-	public <T> T executeInSession(final DbCallback<T> action) {
-
-		return execute(new DbCallback<T>() {
-			public T doInDB(MongoDatabase db) throws MongoException, DataAccessException {
-				return action.doInDB(db);
-			}
-		});
-	}
-
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass) {
 		return createCollection(determineCollectionName(entityClass));
 	}
@@ -527,7 +502,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public MongoCollection<Document> createCollection(final String collectionName,
 			final CollectionOptions collectionOptions) {
-		return doCreateCollection(collectionName, convertToDbObject(collectionOptions));
+		return doCreateCollection(collectionName, convertToDocument(collectionOptions));
 	}
 
 	public MongoCollection<Document> getCollection(final String collectionName) {
@@ -706,8 +681,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		List<Object> results = (List<Object>) commandResult.get("results");
 		results = results == null ? Collections.emptyList() : results;
 
-		DbObjectCallback<GeoResult<T>> callback = new GeoNearResultDbObjectCallback<T>(
-				new ReadDbObjectCallback<T>(mongoConverter, entityClass, collectionName), near.getMetric());
+		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<T>(
+				new ReadDocumentCallback<T>(mongoConverter, entityClass, collectionName), near.getMetric());
 		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
 
 		int index = 0;
@@ -783,13 +758,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public long count(Query query, Class<?> entityClass, String collectionName) {
 
 		Assert.hasText(collectionName);
-		final Document dbObject = query == null ? null
+		final Document document = query == null ? null
 				: queryMapper.getMappedObject(query.getQueryObject(),
 						entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
 
 		return execute(collectionName, new CollectionCallback<Long>() {
 			public Long doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-				return collection.count(dbObject);
+				return collection.count(document);
 			}
 		});
 	}
@@ -869,7 +844,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 
-		Document dbDoc = toDbObject(objectToSave, writer);
+		Document dbDoc = toDocument(objectToSave, writer);
 
 		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc, collectionName));
 		Object id = insertDocument(collectionName, dbDoc, objectToSave.getClass());
@@ -883,7 +858,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param writer
 	 * @return
 	 */
-	private <T> Document toDbObject(T objectToSave, MongoWriter<T> writer) {
+	private <T> Document toDocument(T objectToSave, MongoWriter<T> writer) {
 
 		if (objectToSave instanceof Document) {
 			return (Document) objectToSave;
@@ -967,7 +942,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		Assert.notNull(writer);
 
-		List<Document> dbObjectList = new ArrayList<Document>();
+		List<Document> documentList = new ArrayList<Document>();
 		for (T o : batchToSave) {
 
 			initializeVersionProperty(o);
@@ -977,14 +952,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			writer.write(o, dbDoc);
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(o, dbDoc, collectionName));
-			dbObjectList.add(dbDoc);
+			documentList.add(dbDoc);
 		}
-		List<ObjectId> ids = insertDocumentList(collectionName, dbObjectList);
+		List<ObjectId> ids = insertDocumentList(collectionName, documentList);
 		int i = 0;
 		for (T obj : batchToSave) {
 			if (i < ids.size()) {
 				populateIdIfNecessary(obj, ids.get(i));
-				maybeEmitEvent(new AfterSaveEvent<T>(obj, dbObjectList.get(i), collectionName));
+				maybeEmitEvent(new AfterSaveEvent<T>(obj, documentList.get(i), collectionName));
 			}
 			i++;
 		}
@@ -1037,13 +1012,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			// Bump version number
 			convertingAccessor.setProperty(versionProperty, versionNumber.longValue() + 1);
 
-			Document dbObject = new Document();
+			Document document = new Document();
 
 			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
-			this.mongoConverter.write(objectToSave, dbObject);
+			this.mongoConverter.write(objectToSave, document);
 
-			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbObject, collectionName));
-			Update update = Update.fromDocument(dbObject, ID_FIELD);
+			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, document, collectionName));
+			Update update = Update.fromDocument(document, ID_FIELD);
 
 			UpdateResult result = doUpdate(collectionName, query, update, objectToSave.getClass(), false, false);
 
@@ -1052,7 +1027,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						String.format("Cannot save entity %s with version %s to collection %s. Has it been modified meanwhile?", id,
 								versionNumber, collectionName));
 			}
-			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbObject, collectionName));
+			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, document, collectionName));
 		}
 	}
 
@@ -1062,7 +1037,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 
-		Document dbDoc = toDbObject(objectToSave, writer);
+		Document dbDoc = toDocument(objectToSave, writer);
 
 		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc, collectionName));
 		Object id = saveDocument(collectionName, dbDoc, objectToSave.getClass());
@@ -1071,35 +1046,34 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc, collectionName));
 	}
 
-	protected Object insertDocument(final String collectionName, final Document dbDoc, final Class<?> entityClass) {
+	protected Object insertDocument(final String collectionName, final Document document, final Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Inserting Document containing fields: {} in collection: {}", dbDoc.keySet(), collectionName);
+			LOGGER.debug("Inserting Document containing fields: {} in collection: {}", document.keySet(), collectionName);
 		}
 
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT, collectionName,
-						entityClass, dbDoc, null);
+						entityClass, document, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (writeConcernToUse == null) {
-					collection.insertOne(dbDoc);
+					collection.insertOne(document);
 				} else {
-					collection.withWriteConcern(writeConcernToUse).insertOne(dbDoc);
+					collection.withWriteConcern(writeConcernToUse).insertOne(document);
 				}
-				// handleAnyWriteResultErrors(writeResult, dbDoc, MongoActionOperation.INSERT);
-				return dbDoc.get(ID_FIELD);
+				return document.get(ID_FIELD);
 			}
 		});
 	}
 
-	protected List<ObjectId> insertDocumentList(final String collectionName, final List<Document> dbDocList) {
-		if (dbDocList.isEmpty()) {
+	protected List<ObjectId> insertDocumentList(final String collectionName, final List<Document> documentList) {
+		if (documentList.isEmpty()) {
 			return Collections.emptyList();
 		}
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Inserting list of Documents containing {} items", dbDocList.size());
+			LOGGER.debug("Inserting list of Documents containing {} items", documentList.size());
 		}
 
 		execute(collectionName, new CollectionCallback<Void>() {
@@ -1109,21 +1083,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 				if (writeConcernToUse == null) {
-					collection.insertMany(dbDocList);
+					collection.insertMany(documentList);
 				} else {
-					collection.withWriteConcern(writeConcernToUse).insertMany(dbDocList);
+					collection.withWriteConcern(writeConcernToUse).insertMany(documentList);
 				}
 
-				// WriteResult writeResult = writeConcernToUse == null ? collection.insert(dbDocList)
-				// : collection.insert(dbDocList.toArray((Document[]) new Document[dbDocList.size()]), writeConcernToUse);
-				// handleAnyWriteResultErrors(writeResult, null, MongoActionOperation.INSERT_LIST);
 				return null;
 			}
 		});
 
 		List<ObjectId> ids = new ArrayList<ObjectId>();
-		for (Document dbo : dbDocList) {
-			Object id = dbo.get(ID_FIELD);
+		for (Document document : documentList) {
+			Object id = document.get(ID_FIELD);
 			if (id instanceof ObjectId) {
 				ids.add((ObjectId) id);
 			} else {
@@ -1160,7 +1131,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					collection.withWriteConcern(writeConcernToUse).replaceOne(Filters.eq(ID_FIELD, dbDoc.get(ID_FIELD)), dbDoc,
 							new UpdateOptions().upsert(true));
 				}
-				// handleAnyWriteResultErrors(writeResult, dbDoc, MongoActionOperation.SAVE);
 				return dbDoc.get(ID_FIELD);
 			}
 		});
@@ -1255,13 +1225,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
-	private boolean dbObjectContainsVersionProperty(Document dbObject, MongoPersistentEntity<?> persistentEntity) {
+	private boolean documentContainsVersionProperty(Document document, MongoPersistentEntity<?> persistentEntity) {
 
 		if (persistentEntity == null || !persistentEntity.hasVersionProperty()) {
 			return false;
 		}
 
-		return dbObject.containsKey(persistentEntity.getVersionProperty().getFieldName());
+		return document.containsKey(persistentEntity.getVersionProperty().getFieldName());
 	}
 
 	public DeleteResult remove(Object object) {
@@ -1394,7 +1364,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass, collectionName));
 
-				Document dboq = queryMapper.getMappedObject(queryObject, entity);
+				Document mappedQuery = queryMapper.getMappedObject(queryObject, entity);
 
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName,
 						entityClass, null, queryObject);
@@ -1403,13 +1373,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				DeleteResult dr = null;
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Remove using query: {} in collection: {}.",
-							new Object[] { serializeToJsonSafely(dboq), collectionName });
+							new Object[] { serializeToJsonSafely(mappedQuery), collectionName });
 				}
 
 				if (writeConcernToUse == null) {
-					dr = collection.deleteMany(dboq);
+					dr = collection.deleteMany(mappedQuery);
 				} else {
-					dr = collection.withWriteConcern(writeConcernToUse).deleteMany(dboq);
+					dr = collection.withWriteConcern(writeConcernToUse).deleteMany(mappedQuery);
 				}
 
 				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass, collectionName));
@@ -1425,7 +1395,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> List<T> findAll(Class<T> entityClass, String collectionName) {
 		return executeFindMultiInternal(new FindCallback(null), null,
-				new ReadDbObjectCallback<T>(mongoConverter, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<T>(mongoConverter, entityClass, collectionName), collectionName);
 	}
 
 	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
@@ -1453,7 +1423,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		MongoCollection<Document> inputCollection = getCollection(inputCollectionName);
 
 		// MapReduceOp
-		MapReduceIterable<Document> result = inputCollection.mapReduce(mapFunction, reduceFunction);
+		MapReduceIterable<Document> result = inputCollection.mapReduce(mapFunc, reduceFunc);
 		if (query != null && result != null) {
 
 			if (query.getLimit() > 0 && mapReduceOptions.getLimit() == null) {
@@ -1490,10 +1460,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 		}
 		List<T> mappedResults = new ArrayList<T>();
-		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass, inputCollectionName);
+		DocumentCallback<T> callback = new ReadDocumentCallback<T>(mongoConverter, entityClass, inputCollectionName);
 
-		for (Document dbObject : result) {
-			mappedResults.add(callback.doWith(dbObject));
+		for (Document document : result) {
+			mappedResults.add(callback.doWith(document));
 		}
 
 		return new MapReduceResults<T>(mappedResults, new Document());
@@ -1506,36 +1476,36 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public <T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy,
 			Class<T> entityClass) {
 
-		Document dbo = groupBy.getGroupByObject();
-		dbo.put("ns", inputCollectionName);
+		Document document = groupBy.getGroupByObject();
+		document.put("ns", inputCollectionName);
 
 		if (criteria == null) {
-			dbo.put("cond", null);
+			document.put("cond", null);
 		} else {
-			dbo.put("cond", queryMapper.getMappedObject(criteria.getCriteriaObject(), null));
+			document.put("cond", queryMapper.getMappedObject(criteria.getCriteriaObject(), null));
 		}
 		// If initial document was a JavaScript string, potentially loaded by Spring's Resource abstraction, load it and
 		// convert to Document
 
-		if (dbo.containsKey("initial")) {
-			Object initialObj = dbo.get("initial");
+		if (document.containsKey("initial")) {
+			Object initialObj = document.get("initial");
 			if (initialObj instanceof String) {
 				String initialAsString = replaceWithResourceIfNecessary((String) initialObj);
-				dbo.put("initial", Document.parse(initialAsString));
+				document.put("initial", Document.parse(initialAsString));
 			}
 		}
 
-		if (dbo.containsKey("$reduce")) {
-			dbo.put("$reduce", replaceWithResourceIfNecessary(dbo.get("$reduce").toString()));
+		if (document.containsKey("$reduce")) {
+			document.put("$reduce", replaceWithResourceIfNecessary(document.get("$reduce").toString()));
 		}
-		if (dbo.containsKey("$keyf")) {
-			dbo.put("$keyf", replaceWithResourceIfNecessary(dbo.get("$keyf").toString()));
+		if (document.containsKey("$keyf")) {
+			document.put("$keyf", replaceWithResourceIfNecessary(document.get("$keyf").toString()));
 		}
-		if (dbo.containsKey("finalize")) {
-			dbo.put("finalize", replaceWithResourceIfNecessary(dbo.get("finalize").toString()));
+		if (document.containsKey("finalize")) {
+			document.put("finalize", replaceWithResourceIfNecessary(document.get("finalize").toString()));
 		}
 
-		Document commandObject = new Document("group", dbo);
+		Document commandObject = new Document("group", document);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Executing Group with Document [{}]", serializeToJsonSafely(commandObject));
@@ -1550,10 +1520,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		@SuppressWarnings("unchecked")
 		Iterable<Document> resultSet = (Iterable<Document>) commandResult.get("retval");
 		List<T> mappedResults = new ArrayList<T>();
-		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass, inputCollectionName);
+		DocumentCallback<T> callback = new ReadDocumentCallback<T>(mongoConverter, entityClass, inputCollectionName);
 
-		for (Document dbObject : resultSet) {
-			mappedResults.add(callback.doWith(dbObject));
+		for (Document resultDocument : resultSet) {
+			mappedResults.add(callback.doWith(resultDocument));
 		}
 
 		return new GroupByResults<T>(mappedResults, commandResult);
@@ -1643,7 +1613,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(outputType, "Output type must not be null!");
 
 		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-		Document command = aggregation.toDbObject(collectionName, rootContext);
+		Document command = aggregation.toDocument(collectionName, rootContext);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
@@ -1671,11 +1641,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return Collections.emptyList();
 		}
 
-		DbObjectCallback<O> callback = new UnwrapAndReadDbObjectCallback<O>(mongoConverter, outputType, collectionName);
+		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<O>(mongoConverter, outputType, collectionName);
 
 		List<O> mappedResults = new ArrayList<O>();
-		for (Document dbObject : resultSet) {
-			mappedResults.add(callback.doWith(dbObject));
+		for (Document document : resultSet) {
+			mappedResults.add(callback.doWith(document));
 		}
 
 		return mappedResults;
@@ -1790,7 +1760,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields),
-				new ReadDbObjectCallback<T>(this.mongoConverter, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<T>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
 	/**
@@ -1805,7 +1775,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	protected <T> List<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass) {
 		return doFind(collectionName, query, fields, entityClass, null,
-				new ReadDbObjectCallback<T>(this.mongoConverter, entityClass, collectionName));
+				new ReadDocumentCallback<T>(this.mongoConverter, entityClass, collectionName));
 	}
 
 	/**
@@ -1824,11 +1794,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	protected <T> List<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass,
 			CursorPreparer preparer) {
 		return doFind(collectionName, query, fields, entityClass, preparer,
-				new ReadDbObjectCallback<T>(mongoConverter, entityClass, collectionName));
+				new ReadDocumentCallback<T>(mongoConverter, entityClass, collectionName));
 	}
 
 	protected <S, T> List<T> doFind(String collectionName, Document query, Document fields, Class<S> entityClass,
-			CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
+			CursorPreparer preparer, DocumentCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -1844,20 +1814,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				collectionName);
 	}
 
-	protected Document convertToDbObject(CollectionOptions collectionOptions) {
-		Document dbo = new Document();
+	protected Document convertToDocument(CollectionOptions collectionOptions) {
+		Document document = new Document();
 		if (collectionOptions != null) {
 			if (collectionOptions.getCapped() != null) {
-				dbo.put("capped", collectionOptions.getCapped().booleanValue());
+				document.put("capped", collectionOptions.getCapped().booleanValue());
 			}
 			if (collectionOptions.getSize() != null) {
-				dbo.put("size", collectionOptions.getSize().intValue());
+				document.put("size", collectionOptions.getSize().intValue());
 			}
 			if (collectionOptions.getMaxDocuments() != null) {
-				dbo.put("max", collectionOptions.getMaxDocuments().intValue());
+				document.put("max", collectionOptions.getMaxDocuments().intValue());
 			}
 		}
-		return dbo;
+		return document;
 	}
 
 	/**
@@ -1884,7 +1854,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		return executeFindOneInternal(new FindAndRemoveCallback(queryMapper.getMappedObject(query, entity), fields, sort),
-				new ReadDbObjectCallback<T>(readerToUse, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<T>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
 	protected <T> T doFindAndModify(String collectionName, Document query, Document fields, Document sort,
@@ -1911,7 +1881,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, options),
-				new ReadDbObjectCallback<T>(readerToUse, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<T>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
 	/**
@@ -1927,8 +1897,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		if (savedObject instanceof Document) {
-			Document dbObject = (Document) savedObject;
-			dbObject.put(ID_FIELD, id);
+			Document document = (Document) savedObject;
+			document.put(ID_FIELD, id);
 			return;
 		}
 
@@ -1964,17 +1934,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * collection of objects. It will take the following steps
 	 * <ol>
 	 * <li>Execute the given {@link ConnectionCallback} for a {@link Document}.</li>
-	 * <li>Apply the given {@link DbObjectCallback} to each of the {@link Document}s to obtain the result.</li>
+	 * <li>Apply the given {@link DocumentCallback} to each of the {@link Document}s to obtain the result.</li>
 	 * <ol>
 	 *
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link Document} with
-	 * @param objectCallback the {@link DbObjectCallback} to transform {@link Document}s into the actual domain type
+	 * @param objectCallback the {@link DocumentCallback} to transform {@link Document}s into the actual domain type
 	 * @param collectionName the collection to be queried
 	 * @return
 	 */
 	private <T> T executeFindOneInternal(CollectionCallback<Document> collectionCallback,
-			DbObjectCallback<T> objectCallback, String collectionName) {
+										 DocumentCallback<T> objectCallback, String collectionName) {
 
 		try {
 			T result = objectCallback
@@ -1992,19 +1962,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBCursor}.</li>
 	 * <li>Prepare that {@link DBCursor} with the given {@link CursorPreparer} (will be skipped if {@link CursorPreparer}
 	 * is {@literal null}</li>
-	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DbObjectCallback} to each of the
+	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DocumentCallback} to each of the
 	 * {@link Document}s collecting the actual result {@link List}.</li>
 	 * <ol>
 	 *
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link DBCursor} with
 	 * @param preparer the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
-	 * @param objectCallback the {@link DbObjectCallback} to transform {@link Document}s into the actual domain type
+	 * @param objectCallback the {@link DocumentCallback} to transform {@link Document}s into the actual domain type
 	 * @param collectionName the collection to be queried
 	 * @return
 	 */
 	private <T> List<T> executeFindMultiInternal(CollectionCallback<FindIterable<Document>> collectionCallback,
-			CursorPreparer preparer, DbObjectCallback<T> objectCallback, String collectionName) {
+												 CursorPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
 
 		try {
 
@@ -2059,8 +2029,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				cursor = iterable.iterator();
 
 				while (cursor.hasNext()) {
-					Document dbobject = cursor.next();
-					callbackHandler.processDocument(dbobject);
+					callbackHandler.processDocument(cursor.next());
 				}
 
 			} finally {
@@ -2337,25 +2306,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @author Thomas Darimont
 	 */
 
-	interface DbObjectCallback<T> {
+	interface DocumentCallback<T> {
 
 		T doWith(Document object);
 	}
 
 	/**
-	 * Simple {@link DbObjectCallback} that will transform {@link Document} into the given target type using the given
+	 * Simple {@link DocumentCallback} that will transform {@link Document} into the given target type using the given
 	 * {@link MongoReader}.
 	 *
 	 * @author Oliver Gierke
 	 * @author Christoph Strobl
 	 */
-	private class ReadDbObjectCallback<T> implements DbObjectCallback<T> {
+	private class ReadDocumentCallback<T> implements DocumentCallback<T> {
 
 		private final EntityReader<? super T, Bson> reader;
 		private final Class<T> type;
 		private final String collectionName;
 
-		public ReadDbObjectCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
+		public ReadDocumentCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
 
 			Assert.notNull(reader);
 			Assert.notNull(type);
@@ -2376,9 +2345,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
-	class UnwrapAndReadDbObjectCallback<T> extends ReadDbObjectCallback<T> {
+	class UnwrapAndReadDocumentCallback<T> extends ReadDocumentCallback<T> {
 
-		public UnwrapAndReadDbObjectCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
+		public UnwrapAndReadDocumentCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
 			super(reader, type, collectionName);
 		}
 
@@ -2441,8 +2410,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					cursorToUse = cursorToUse.limit(query.getLimit());
 				}
 				if (query.getSortObject() != null) {
-					Document sortDbo = type != null ? getMappedSortObject(query, type) : query.getSortObject();
-					cursorToUse = cursorToUse.sort(sortDbo);
+					Document sort = type != null ? getMappedSortObject(query, type) : query.getSortObject();
+					cursorToUse = cursorToUse.sort(sort);
 				}
 
 				Document meta = new Document();
@@ -2483,23 +2452,23 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * {@link DbObjectCallback} that assumes a {@link GeoResult} to be created, delegates actual content unmarshalling to
+	 * {@link DocumentCallback} that assumes a {@link GeoResult} to be created, delegates actual content unmarshalling to
 	 * a delegate and creates a {@link GeoResult} from the result.
 	 *
 	 * @author Oliver Gierke
 	 */
-	static class GeoNearResultDbObjectCallback<T> implements DbObjectCallback<GeoResult<T>> {
+	static class GeoNearResultDocumentCallback<T> implements DocumentCallback<GeoResult<T>> {
 
-		private final DbObjectCallback<T> delegate;
+		private final DocumentCallback<T> delegate;
 		private final Metric metric;
 
 		/**
-		 * Creates a new {@link GeoNearResultDbObjectCallback} using the given {@link DbObjectCallback} delegate for
+		 * Creates a new {@link GeoNearResultDocumentCallback} using the given {@link DocumentCallback} delegate for
 		 * {@link GeoResult} content unmarshalling.
 		 *
 		 * @param delegate must not be {@literal null}.
 		 */
-		public GeoNearResultDbObjectCallback(DbObjectCallback<T> delegate, Metric metric) {
+		public GeoNearResultDocumentCallback(DocumentCallback<T> delegate, Metric metric) {
 			Assert.notNull(delegate);
 			this.delegate = delegate;
 			this.metric = metric;
@@ -2526,10 +2495,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		private volatile MongoCursor<Document> cursor;
 		private PersistenceExceptionTranslator exceptionTranslator;
-		private DbObjectCallback<T> objectReadCallback;
+		private DocumentCallback<T> objectReadCallback;
 
 		CloseableIterableCursorAdapter(MongoCursor<Document> cursor, PersistenceExceptionTranslator exceptionTranslator,
-				DbObjectCallback<T> objectReadCallback) {
+				DocumentCallback<T> objectReadCallback) {
 			this.cursor = cursor;
 			this.exceptionTranslator = exceptionTranslator;
 			this.objectReadCallback = objectReadCallback;
@@ -2543,7 +2512,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		 * @param objectReadCallback
 		 */
 		public CloseableIterableCursorAdapter(FindIterable<Document> cursor,
-				PersistenceExceptionTranslator exceptionTranslator, DbObjectCallback<T> objectReadCallback) {
+				PersistenceExceptionTranslator exceptionTranslator, DocumentCallback<T> objectReadCallback) {
 
 			this.cursor = cursor.iterator();
 			this.exceptionTranslator = exceptionTranslator;

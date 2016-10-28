@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,31 +119,31 @@ public class GeospatialIndex implements IndexDefinition {
 
 	public Document getIndexKeys() {
 
-		Document dbo = new Document();
+		Document document = new Document();
 
 		switch (type) {
 
 			case GEO_2D:
-				dbo.put(field, "2d");
+				document.put(field, "2d");
 				break;
 
 			case GEO_2DSPHERE:
-				dbo.put(field, "2dsphere");
+				document.put(field, "2dsphere");
 				break;
 
 			case GEO_HAYSTACK:
-				dbo.put(field, "geoHaystack");
+				document.put(field, "geoHaystack");
 				if (!StringUtils.hasText(additionalField)) {
 					throw new IllegalArgumentException("When defining geoHaystack index, an additionnal field must be defined");
 				}
-				dbo.put(additionalField, 1);
+				document.put(additionalField, 1);
 				break;
 
 			default:
 				throw new IllegalArgumentException("Unsupported geospatial index " + type);
 		}
 
-		return dbo;
+		return document;
 	}
 
 	public Document getIndexOptions() {
