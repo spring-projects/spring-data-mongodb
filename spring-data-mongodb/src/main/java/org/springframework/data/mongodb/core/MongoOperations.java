@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,18 +85,6 @@ public interface MongoOperations {
 	Document executeCommand(Document command);
 
 	/**
-	 * Execute a MongoDB command. Any errors that result from executing this command will be converted into Spring's DAO
-	 * exception hierarchy.
-	 * 
-	 * @param command a MongoDB command
-	 * @param options query options to use
-	 * @deprecated since 1.7. Please use {@link #executeCommand(Document, ReadPreference)}, as the MongoDB Java driver
-	 *             version 3 no longer supports this operation.
-	 */
-	@Deprecated
-	Document executeCommand(Document command, int options);
-
-	/**
 	 * Execute a MongoDB command. Any errors that result from executing this command will be converted into Spring's data
 	 * access exception hierarchy.
 	 * 
@@ -151,22 +139,6 @@ public interface MongoOperations {
 	 * @return a result object returned by the action or <tt>null</tt>
 	 */
 	<T> T execute(String collectionName, CollectionCallback<T> action);
-
-	/**
-	 * Executes the given {@link DbCallback} within the same connection to the database so as to ensure consistency in a
-	 * write heavy environment where you may read the data that you wrote. See the comments on {@see <a
-	 * href=http://www.mongodb.org/display/DOCS/Java+Driver+Concurrency>Java Driver Concurrency</a>}
-	 * <p/>
-	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
-	 * 
-	 * @param <T> return type
-	 * @param action callback that specified the MongoDB actions to perform on the DB instance
-	 * @return a result object returned by the action or <tt>null</tt>
-	 * @deprecated since 1.7 as the MongoDB Java driver version 3 does not longer support request boundaries via
-	 *             {@link DB#requestStart()} and {@link DB#requestDone()}.
-	 */
-	@Deprecated
-	<T> T executeInSession(DbCallback<T> action);
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB

@@ -27,6 +27,7 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.4
  */
 class ExposedFieldsAggregationOperationContext implements AggregationOperationContext {
@@ -56,8 +57,8 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.Document)
 	 */
 	@Override
-	public Document getMappedObject(Document dbObject) {
-		return rootContext.getMappedObject(dbObject);
+	public Document getMappedObject(Document document) {
+		return rootContext.getMappedObject(document);
 	}
 
 	/* 

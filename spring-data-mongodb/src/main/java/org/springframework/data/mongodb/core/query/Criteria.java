@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -617,9 +617,9 @@ public class Criteria implements CriteriaDefinition {
 		} else {
 			Document criteriaObject = new Document();
 			for (Criteria c : this.criteriaChain) {
-				Document dbo = c.getSingleCriteriaObject();
-				for (String k : dbo.keySet()) {
-					setValue(criteriaObject, k, dbo.get(k));
+				Document document = c.getSingleCriteriaObject();
+				for (String k : document.keySet()) {
+					setValue(criteriaObject, k, document.get(k));
 				}
 			}
 			return criteriaObject;
@@ -628,7 +628,7 @@ public class Criteria implements CriteriaDefinition {
 
 	protected Document getSingleCriteriaObject() {
 
-		Document dbo = new Document();
+		Document document = new Document();
 		boolean not = false;
 
 		for (Entry<String, Object> entry : criteria.entrySet()) {
@@ -641,33 +641,33 @@ public class Criteria implements CriteriaDefinition {
 			}
 
 			if (not) {
-				Document notDbo = new Document();
-				notDbo.put(key, value);
-				dbo.put("$not", notDbo);
+				Document notDocument = new Document();
+				notDocument.put(key, value);
+				document.put("$not", notDocument);
 				not = false;
 			} else {
 				if ("$not".equals(key) && value == null) {
 					not = true;
 				} else {
-					dbo.put(key, value);
+					document.put(key, value);
 				}
 			}
 		}
 
 		if (!StringUtils.hasText(this.key)) {
 			if (not) {
-				return new Document("$not", dbo);
+				return new Document("$not", document);
 			}
-			return dbo;
+			return document;
 		}
 
 		Document queryCriteria = new Document();
 
 		if (!NOT_SET.equals(isValue)) {
 			queryCriteria.put(this.key, this.isValue);
-			queryCriteria.putAll(dbo);
+			queryCriteria.putAll(document);
 		} else {
-			queryCriteria.put(this.key, dbo);
+			queryCriteria.put(this.key, document);
 		}
 
 		return queryCriteria;
@@ -681,10 +681,10 @@ public class Criteria implements CriteriaDefinition {
 		return bsonList;
 	}
 
-	private void setValue(Document dbo, String key, Object value) {
-		Object existing = dbo.get(key);
+	private void setValue(Document document, String key, Object value) {
+		Object existing = document.get(key);
 		if (existing == null) {
-			dbo.put(key, value);
+			document.put(key, value);
 		} else {
 			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDocument, "
 					+ "you can't add a second '" + key + "' expression specified as '" + key + " : " + value + "'. "

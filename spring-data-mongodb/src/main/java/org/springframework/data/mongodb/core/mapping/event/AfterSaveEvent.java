@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 by the original author(s).
+ * Copyright (c) 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,27 +29,15 @@ public class AfterSaveEvent<E> extends MongoMappingEvent<E> {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * Creates new {@link AfterSaveEvent}
-	 * 
-	 * @param source must not be {@literal null}.
-	 * @param dbo can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AfterSaveEvent(Object, Document, String)}.
-	 */
-	@Deprecated
-	public AfterSaveEvent(E source, Document dbo) {
-		super(source, dbo);
-	}
-
-	/**
 	 * Creates new {@link AfterSaveEvent}.
 	 * 
 	 * @param source must not be {@literal null}.
-	 * @param dbo can be {@literal null}.
+	 * @param document can be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public AfterSaveEvent(E source, Document dbo, String collectionName) {
-		super(source, dbo, collectionName);
+	public AfterSaveEvent(E source, Document document, String collectionName) {
+		super(source, document, collectionName);
 	}
 
 }

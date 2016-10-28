@@ -123,17 +123,8 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 			Document mappedIdValue = mapper.getMappedObject((BasicDBObject) superIdValue, null);
 			DBObject parsedId = (DBObject) JSON.parse(mappedIdValue.toJson());
 			return parsedId;
-			// return new BasicDBObject(mapper.getMappedObject((BasicDBObject)super.asDBObject(key, value)), null));
 		}
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
-		// Object mapped = value;
-		// if (value instanceof DBObject) {
-		// mapped = converter.convertToMongoType(new Document(((DBObject) value).toMap()));
-		// } else {
-		// mapped = super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
-		// }
-		//
-		// return mapped instanceof Document ? new BasicDBObject((Document) mapped) : (DBObject) mapped;
 	}
 
 	/*

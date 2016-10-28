@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,9 @@ public class CompoundIndexDefinition extends Index {
 	@Override
 	public Document getIndexKeys() {
 
-		Document dbo = new Document();
-		dbo.putAll(this.keys);
-		dbo.putAll(super.getIndexKeys());
-		return dbo;
+		Document document = new Document();
+		document.putAll(this.keys);
+		document.putAll(super.getIndexKeys());
+		return document;
 	}
 }

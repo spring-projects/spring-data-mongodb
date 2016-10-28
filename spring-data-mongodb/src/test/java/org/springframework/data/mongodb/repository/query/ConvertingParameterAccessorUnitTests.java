@@ -63,12 +63,6 @@ public class ConvertingParameterAccessorUnitTests {
 		this.converter = new MappingMongoConverter(resolver, context);
 	}
 
-	@SuppressWarnings("deprecation")
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullMongoDbFactory() {
-		new MappingMongoConverter((MongoDbFactory) null, context);
-	}
-
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullDbRefResolver() {
 		new MappingMongoConverter((DbRefResolver) null, context);

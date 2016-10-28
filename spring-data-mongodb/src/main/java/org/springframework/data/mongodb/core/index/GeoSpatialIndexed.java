@@ -84,16 +84,6 @@ public @interface GeoSpatialIndexed {
 	boolean useGeneratedName() default false;
 
 	/**
-	 * Name of the collection in which to create the index.
-	 * 
-	 * @return
-	 * @deprecated The collection name is derived from the domain type. Fixing the collection via this attribute might
-	 *             result in broken definitions. Will be removed in 1.7.
-	 */
-	@Deprecated
-	String collection() default "";
-
-	/**
 	 * Minimum value for indexed values.
 	 * 
 	 * @return

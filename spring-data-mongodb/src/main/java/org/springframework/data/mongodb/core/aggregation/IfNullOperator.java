@@ -31,6 +31,7 @@ import com.mongodb.DBObject;
  *
  * @see http://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.10
  */
 public class IfNullOperator implements AggregationExpression {
@@ -58,7 +59,7 @@ public class IfNullOperator implements AggregationExpression {
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public Document toDbObject(AggregationOperationContext context) {
+	public Document toDocument(AggregationOperationContext context) {
 
 		List<Object> list = new ArrayList<Object>();
 

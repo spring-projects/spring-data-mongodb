@@ -351,7 +351,7 @@ public class MongoTemplateTests {
 		p2.setAge(40);
 		template.insert(p2);
 
-		template.indexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique(Duplicates.DROP));
+		template.indexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique());
 
 		MongoCollection<org.bson.Document> coll = template.getCollection(template.getCollectionName(Person.class));
 		List<org.bson.Document> indexInfo = new ArrayList<org.bson.Document>();
@@ -1238,8 +1238,8 @@ public class MongoTemplateTests {
 		template.insert(new Person("Harry"));
 		final List<String> names = new ArrayList<String>();
 		template.executeQuery(new Query(), template.getCollectionName(Person.class), new DocumentCallbackHandler() {
-			public void processDocument(org.bson.Document dbObject) {
-				String name = (String) dbObject.get("firstName");
+			public void processDocument(org.bson.Document document) {
+				String name = (String) document.get("firstName");
 				if (name != null) {
 					names.add(name);
 				}
@@ -1259,8 +1259,8 @@ public class MongoTemplateTests {
 		template.insert(new Person("Harry"));
 		final List<String> names = new ArrayList<String>();
 		template.executeQuery(new Query(), template.getCollectionName(Person.class), new DocumentCallbackHandler() {
-			public void processDocument(org.bson.Document dbObject) {
-				String name = (String) dbObject.get("firstName");
+			public void processDocument(org.bson.Document document) {
+				String name = (String) document.get("firstName");
 				if (name != null) {
 					names.add(name);
 				}
@@ -2102,11 +2102,11 @@ public class MongoTemplateTests {
 				new DocumentCallbackHandler() {
 
 					@Override
-					public void processDocument(org.bson.Document dbObject) throws MongoException, DataAccessException {
+					public void processDocument(org.bson.Document document) throws MongoException, DataAccessException {
 
-						assertThat(dbObject, is(notNullValue()));
+						assertThat(document, is(notNullValue()));
 
-						ObjectWithEnumValue result = template.getConverter().read(ObjectWithEnumValue.class, dbObject);
+						ObjectWithEnumValue result = template.getConverter().read(ObjectWithEnumValue.class, document);
 
 						assertThat(result.value, is(EnumValue.VALUE2));
 					}

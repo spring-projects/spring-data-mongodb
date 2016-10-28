@@ -22,7 +22,9 @@ import org.springframework.util.Assert;
  * Value object to mitigate different representations of geo command execution results in MongoDB.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @soundtrack Fruitcake - Jeff Coffin (The Inside of the Outside)
+ * @since 1.9
  */
 class GeoCommandStatistics {
 

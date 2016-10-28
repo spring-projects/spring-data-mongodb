@@ -43,6 +43,7 @@ import com.mongodb.client.model.WriteModel;
  * 
  * @author Tobias Trelle
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.9
  */
 class DefaultBulkOperations implements BulkOperations {
@@ -50,7 +51,6 @@ class DefaultBulkOperations implements BulkOperations {
 	private final MongoOperations mongoOperations;
 	private final BulkMode bulkMode;
 	private final String collectionName;
-	private final Class<?> entityType;
 
 	private PersistenceExceptionTranslator exceptionTranslator;
 	private WriteConcernResolver writeConcernResolver;
@@ -79,7 +79,6 @@ class DefaultBulkOperations implements BulkOperations {
 		this.mongoOperations = mongoOperations;
 		this.bulkMode = bulkMode;
 		this.collectionName = collectionName;
-		this.entityType = entityType;
 
 		this.exceptionTranslator = new MongoExceptionTranslator();
 		this.writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
@@ -237,8 +236,6 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 
 		models.add(new DeleteManyModel<Document>(query.getQueryObject()));
-		// bulk.find(query.getQueryObject()).remove();
-
 		return this;
 	}
 

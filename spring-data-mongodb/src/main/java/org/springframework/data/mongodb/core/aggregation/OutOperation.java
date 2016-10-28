@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-
 import org.bson.Document;
 import org.springframework.util.Assert;
 
@@ -29,6 +26,7 @@ import org.springframework.util.Assert;
  *
  * @see http://docs.mongodb.org/manual/reference/aggregation/out/
  * @author Nikolay Bogdanov
+ * @author Christoph Strobl
  */
 public class OutOperation implements AggregationOperation {
 

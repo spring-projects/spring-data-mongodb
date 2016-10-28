@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import com.mongodb.DBRef;
 
 /**
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 
@@ -37,8 +38,8 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 
 	/**
 	 * @param spELContext must not be {@literal null}.
-	 * @param conversionService must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
+	 * @param resolver must not be {@literal null}.
 	 */
 	public DefaultDbRefProxyHandler(SpELContext spELContext,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,

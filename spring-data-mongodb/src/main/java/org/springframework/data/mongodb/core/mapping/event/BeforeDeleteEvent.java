@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 by the original author(s).
+ * Copyright 2013-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,26 +29,14 @@ public class BeforeDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	private static final long serialVersionUID = -2627547705679734497L;
 
 	/**
-	 * Creates a new {@link BeforeDeleteEvent} for the given {@link Document} and type.
-	 * 
-	 * @param dbo must not be {@literal null}.
-	 * @param type can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #BeforeDeleteEvent(Document, Class, String)}.
-	 */
-	@Deprecated
-	public BeforeDeleteEvent(Document dbo, Class<T> type) {
-		this(dbo, type, null);
-	}
-
-	/**
 	 * Creates a new {@link BeforeDeleteEvent} for the given {@link Document}, type and collectionName.
 	 * 
-	 * @param dbo must not be {@literal null}.
+	 * @param document must not be {@literal null}.
 	 * @param type can be {@literal null}.
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public BeforeDeleteEvent(Document dbo, Class<T> type, String collectionName) {
-		super(dbo, type, collectionName);
+	public BeforeDeleteEvent(Document document, Class<T> type, String collectionName) {
+		super(document, type, collectionName);
 	}
 }

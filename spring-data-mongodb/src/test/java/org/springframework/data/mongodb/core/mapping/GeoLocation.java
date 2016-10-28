@@ -29,7 +29,7 @@ public class GeoLocation {
 
 	@Id
 	private ObjectId id;
-	@GeoSpatialIndexed(collection = "geolocation")
+	@GeoSpatialIndexed
 	private double[] location;
 
 	public GeoLocation(double[] location) {

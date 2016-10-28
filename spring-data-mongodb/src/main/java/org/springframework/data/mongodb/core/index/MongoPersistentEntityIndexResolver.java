@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.MappingException;
-import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexedFieldSpec;
@@ -321,7 +320,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	@SuppressWarnings("deprecation")
-	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String fallbackCollection,
+	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String collection,
 			CompoundIndex index, MongoPersistentEntity<?> entity) {
 
 		CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(
@@ -332,7 +331,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		if (index.unique()) {
-			indexDefinition.unique(index.dropDups() ? Duplicates.DROP : Duplicates.RETAIN);
+			indexDefinition.unique();
 		}
 
 		if (index.sparse()) {
@@ -343,7 +342,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.background();
 		}
 
-		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
@@ -379,11 +377,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persitentProperty
 	 * @return
 	 */
-	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String fallbackCollection,
+	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persitentProperty) {
 
 		Indexed index = persitentProperty.findAnnotation(Indexed.class);
-		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
 
 		Index indexDefinition = new Index().on(dotPath,
 				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
@@ -393,7 +390,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		if (index.unique()) {
-			indexDefinition.unique(index.dropDups() ? Duplicates.DROP : Duplicates.RETAIN);
+			indexDefinition.unique();
 		}
 
 		if (index.sparse()) {
@@ -420,11 +417,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persistentProperty
 	 * @return
 	 */
-	protected IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String fallbackCollection,
+	protected IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
 		GeoSpatialIndexed index = persistentProperty.findAnnotation(GeoSpatialIndexed.class);
-		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
 
 		GeospatialIndex indexDefinition = new GeospatialIndex(dotPath);
 		indexDefinition.withBits(index.bits());

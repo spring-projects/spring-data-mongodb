@@ -126,17 +126,6 @@ public @interface CompoundIndex {
 	boolean useGeneratedName() default false;
 
 	/**
-	 * The collection the index will be created in. Will default to the collection the annotated domain class will be
-	 * stored in.
-	 * 
-	 * @return
-	 * @deprecated The collection name is derived from the domain type. Fixing the collection via this attribute might
-	 *             result in broken definitions. Will be removed in 1.7.
-	 */
-	@Deprecated
-	String collection() default "";
-
-	/**
 	 * If {@literal true} the index will be created in the background.
 	 * 
 	 * @see http://docs.mongodb.org/manual/core/indexes/#background-construction

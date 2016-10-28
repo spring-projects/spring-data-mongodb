@@ -134,14 +134,14 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 */
 	public ObjectId store(InputStream content, String filename, String contentType, Object metadata) {
 
-		Document dbObject = null;
+		Document document = null;
 
 		if (metadata != null) {
-			dbObject = new Document();
-			converter.write(metadata, dbObject);
+			document = new Document();
+			converter.write(metadata, document);
 		}
 
-		return store(content, filename, contentType, dbObject);
+		return store(content, filename, contentType, document);
 	}
 
 	/*

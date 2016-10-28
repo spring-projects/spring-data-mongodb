@@ -1065,7 +1065,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
-			return new Document(field.getName(), expression.toDbObject(context));
+			return new Document(field.getName(), expression.toDocument(context));
 		}
 	}
 }

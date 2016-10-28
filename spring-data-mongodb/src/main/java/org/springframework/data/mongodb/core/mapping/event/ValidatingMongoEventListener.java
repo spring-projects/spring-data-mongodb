@@ -20,7 +20,6 @@ import java.util.Set;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 
-import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -31,6 +30,7 @@ import org.springframework.util.Assert;
  * 
  * @author Maciej Walkowiak
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class ValidatingMongoEventListener extends AbstractMongoEventListener<Object> {
 

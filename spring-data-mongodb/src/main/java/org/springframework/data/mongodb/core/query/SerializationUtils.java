@@ -77,8 +77,8 @@ public abstract class SerializationUtils {
 
 		if (source instanceof Document) {
 
-			Document dbo = (Document) source;
-			Iterator<Map.Entry<String, Object>> iter = dbo.entrySet().iterator();
+			Document document = (Document) source;
+			Iterator<Map.Entry<String, Object>> iter = document.entrySet().iterator();
 			String pathPrefix = currentPath.isEmpty() ? "" : currentPath + ".";
 
 			while (iter.hasNext()) {

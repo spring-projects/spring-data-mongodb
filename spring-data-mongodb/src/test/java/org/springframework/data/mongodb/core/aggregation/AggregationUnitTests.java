@@ -32,7 +32,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -81,7 +80,7 @@ public class AggregationUnitTests {
 				project("a", "b"), //
 				group("a").count().as("cnt"), // a was introduced to the context by the project operation
 				project("cnt", "b") // b was removed from the context by the group operation
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT); // -> triggers IllegalArgumentException
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT); // -> triggers IllegalArgumentException
 	}
 
 	/**
@@ -94,7 +93,7 @@ public class AggregationUnitTests {
 				project("a", "b"), //
 				unwind("a"), //
 				project("a", "b") // b should still be available
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 	}
 
 	/**
@@ -107,7 +106,7 @@ public class AggregationUnitTests {
 				project("a", "b"), //
 				unwind("a", "x"), //
 				project("a", "b") // b should still be available
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 	}
 
 	/**
@@ -120,7 +119,7 @@ public class AggregationUnitTests {
 				project("a", "b"), //
 				unwind("a", "x"), //
 				project("a", "x") // b should still be available
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 	}
 
 	/**
@@ -130,7 +129,7 @@ public class AggregationUnitTests {
 	public void fullUnwindOperationShouldBuildCorrectClause() {
 
 		Document agg = newAggregation( //
-				unwind("a", "x", true)).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				unwind("a", "x", true)).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		@SuppressWarnings("unchecked")
 		Document unwind = ((List<Document>) agg.get("pipeline")).get(0);
@@ -147,7 +146,7 @@ public class AggregationUnitTests {
 	public void unwindOperationWithPreserveNullShouldBuildCorrectClause() {
 
 		Document agg = newAggregation( //
-				unwind("a", true)).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				unwind("a", true)).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		@SuppressWarnings("unchecked")
 		Document unwind = ((List<Document>) agg.get("pipeline")).get(0);
@@ -165,7 +164,7 @@ public class AggregationUnitTests {
 				project("a", "b"), //
 				match(where("a").gte(1)), //
 				project("a", "b") // b should still be available
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 	}
 
 	/**
@@ -178,7 +177,7 @@ public class AggregationUnitTests {
 				project("a"), //
 				group("a").count().as("aCnt"), //
 				project("aCnt", "a") //
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		@SuppressWarnings("unchecked")
 		Document secondProjection = ((List<Document>) agg.get("pipeline")).get(2);
@@ -198,7 +197,7 @@ public class AggregationUnitTests {
 		ops.add(group("a").count().as("aCnt"));
 		ops.add(project("aCnt", "a"));
 
-		Document agg = newAggregation(ops).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		Document agg = newAggregation(ops).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		@SuppressWarnings("unchecked")
 		Document secondProjection = ((List<Document>) agg.get("pipeline")).get(2);
@@ -218,7 +217,7 @@ public class AggregationUnitTests {
 		ops.add(group("a").count().as("aCnt"));
 		ops.add(project("aCnt", "a"));
 
-		Document agg = newAggregation(Document.class, ops).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		Document agg = newAggregation(Document.class, ops).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		@SuppressWarnings("unchecked")
 		Document secondProjection = ((List<Document>) agg.get("pipeline")).get(2);
@@ -236,7 +235,7 @@ public class AggregationUnitTests {
 		Document agg = newAggregation( //
 				project("a").andExpression("b+c").as("foo"), //
 				group("a").sum("foo").as("foosum") //
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		@SuppressWarnings("unchecked")
 		Document secondProjection = ((List<Document>) agg.get("pipeline")).get(1);
@@ -254,7 +253,7 @@ public class AggregationUnitTests {
 				project("cmsParameterId", "rules"), //
 				unwind("rules"), //
 				group("cmsParameterId", "rules.ruleType").count().as("totol") //
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(notNullValue()));
 
@@ -274,7 +273,7 @@ public class AggregationUnitTests {
 		Document agg = newAggregation( //
 				project().and("foo.bar").as("ba") //
 				, project().and("ba").as("b") //
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document projection0 = extractPipelineElement(agg, 0, "$project");
 		assertThat(projection0, is((Document) new Document("ba", "$foo.bar")));
@@ -291,7 +290,7 @@ public class AggregationUnitTests {
 
 		Document agg = newAggregation( //
 				project().and("a").as("aa") //
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg,
 				is(Document.parse("{ \"aggregate\" : \"foo\" , \"pipeline\" : [ { \"$project\" : { \"aa\" : \"$a\"}}]}")));
@@ -310,7 +309,7 @@ public class AggregationUnitTests {
 				project().and("a").as("aa") //
 		) //
 				.withOptions(aggregationOptions) //
-				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg,
 				is(Document.parse("{ \"aggregate\" : \"foo\" , " //
@@ -333,7 +332,7 @@ public class AggregationUnitTests {
 						.and(Aggregation.CURRENT + ".a").as("a2") //
 				, sort(Direction.DESC, "a") //
 				, group("someKey").first(Aggregation.ROOT).as("doc") //
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document projection0 = extractPipelineElement(agg, 0, "$project");
 		assertThat(projection0, is((Document) new Document("someKey", 1).append("a1", "$a").append("a2", "$$CURRENT.a")));
@@ -356,7 +355,7 @@ public class AggregationUnitTests {
 						.and("tags").minus(10).as("tags_count")//
 				, group("date")//
 						.sum("tags_count").as("count")//
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document group = extractPipelineElement(agg, 1, "$group");
 		assertThat(getAsDocument(group, "count"), is(new Document().append("$sum", "$tags_count")));
@@ -373,7 +372,7 @@ public class AggregationUnitTests {
 						.andExpression("tags-10")//
 				, group("date")//
 						.sum("tags_count").as("count")//
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document group = extractPipelineElement(agg, 1, "$group");
 		assertThat(getAsDocument(group, "count"), is(new Document().append("$sum", "$tags_count")));
@@ -387,7 +386,7 @@ public class AggregationUnitTests {
 		Document agg = newAggregation( //
 				project("a"), //
 				group("a").first(conditional(Criteria.where("a").gte(42), "answer", "no-answer")).as("foosum") //
-		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		@SuppressWarnings("unchecked")
 		Document secondProjection = ((List<Document>) agg.get("pipeline")).get(1);
@@ -408,7 +407,7 @@ public class AggregationUnitTests {
 						.when("isYellow") //
 						.then("bright") //
 						.otherwise("dark")).as("color"))
-				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 0, "$project");
 		Document expectedCondition = new Document() //
@@ -431,7 +430,7 @@ public class AggregationUnitTests {
 								.when("isYellow") //
 								.then("bright") //
 								.otherwise("dark")))
-				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 0, "$project");
 		Document expectedCondition = new Document() //
@@ -452,7 +451,7 @@ public class AggregationUnitTests {
 				.newAggregation(project()//
 						.and("color")//
 						.applyCondition(conditional(Criteria.where("key").gt(5), "bright", "dark"))) //
-				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 0, "$project");
 		Document expectedCondition = new Document() //
@@ -474,7 +473,7 @@ public class AggregationUnitTests {
 						project().and("color").as("chroma"),
 						project().and("luminosity") //
 								.applyCondition(conditional(field("chroma"), "bright", "dark"))) //
-				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 1, "$project");
 		Document expectedCondition = new Document() //
@@ -496,7 +495,7 @@ public class AggregationUnitTests {
 						project().and("color").as("chroma"),
 						project().and("luminosity") //
 								.applyCondition(conditional(Criteria.where("chroma").is(100), "bright", "dark"))) //
-				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 1, "$project");
 		Document expectedCondition = new Document() //
@@ -518,7 +517,7 @@ public class AggregationUnitTests {
 						project().and("color"), //
 						project().and("luminosity") //
 								.applyCondition(ifNull(field("chroma"), "unknown"))) //
-				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 1, "$project");
 
@@ -537,7 +536,7 @@ public class AggregationUnitTests {
 						project("fallback").and("color").as("chroma"),
 						project().and("luminosity") //
 								.applyCondition(ifNull(field("chroma"), field("fallback")))) //
-				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 1, "$project");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -153,9 +153,6 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 				if (indexOptions.containsKey("unique")) {
 					ops = ops.unique((Boolean) indexOptions.get("unique"));
 				}
-				// if(indexOptions.containsField("dropDuplicates")) {
-				// ops = ops.((boolean)indexOptions.get("dropDuplicates"));
-				// }
 				if (indexOptions.containsKey("sparse")) {
 					ops = ops.sparse((Boolean) indexOptions.get("sparse"));
 				}

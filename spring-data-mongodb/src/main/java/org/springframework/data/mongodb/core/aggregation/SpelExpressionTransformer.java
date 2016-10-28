@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -248,23 +248,23 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		private Document createOperationObjectAndAddToPreviousArgumentsIfNecessary(
 				AggregationExpressionTransformationContext<OperatorNode> context, OperatorNode currentNode) {
 
-			Document nextDbObject = new Document(currentNode.getMongoOperator(), new ArrayList<Object>());
+			Document nextDocument = new Document(currentNode.getMongoOperator(), new ArrayList<Object>());
 
 			if (!context.hasPreviousOperation()) {
-				return nextDbObject;
+				return nextDocument;
 			}
 
 			if (context.parentIsSameOperation()) {
 
 				// same operator applied in a row e.g. 1 + 2 + 3 carry on with the operation and render as $add: [1, 2 ,3]
-				nextDbObject = context.getPreviousOperationObject();
+				nextDocument = context.getPreviousOperationObject();
 			} else if (!currentNode.isUnaryOperator()) {
 
 				// different operator -> add context object for next level to list if arguments of previous expression
-				context.addToPreviousOperation(nextDbObject);
+				context.addToPreviousOperation(nextDocument);
 			}
 
-			return nextDbObject;
+			return nextDocument;
 		}
 
 		private Object convertUnaryMinusOp(ExpressionTransformationContextSupport<OperatorNode> context,

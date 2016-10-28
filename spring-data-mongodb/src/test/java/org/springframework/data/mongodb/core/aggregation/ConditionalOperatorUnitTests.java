@@ -25,7 +25,6 @@ import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
@@ -73,7 +72,7 @@ public class ConditionalOperatorUnitTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void builderRejectsNullFieldName() {
-		newBuilder().when((DBObject) null);
+		newBuilder().when((Document) null);
 	}
 
 	/**
@@ -99,7 +98,7 @@ public class ConditionalOperatorUnitTests {
 	public void simpleBuilderShouldRenderCorrectly() {
 
 		ConditionalOperator operator = newBuilder().when("isYellow").then("bright").otherwise("dark");
-		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document expectedCondition = new Document() //
 				.append("if", "$isYellow") //
@@ -117,7 +116,7 @@ public class ConditionalOperatorUnitTests {
 
 		ConditionalOperator operator = newBuilder().when(Criteria.where("luminosity").gte(100)).then("bright")
 				.otherwise("dark");
-		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document expectedCondition = new Document () //
 				.append("if", new Document ("$gte", Arrays.<Object> asList("$luminosity", 100))) //
@@ -139,7 +138,7 @@ public class ConditionalOperatorUnitTests {
 								Criteria.where("saturation").lt(11)))
 				.then("bright").otherwise("dark");
 
-		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document luminosity = new Document ("$gte", Arrays.<Object> asList("$luminosity", 100));
 		Document hue = new Document ("$eq", Arrays.<Object> asList("$hue", 50));
@@ -163,7 +162,7 @@ public class ConditionalOperatorUnitTests {
 				.and("saturation").and("chroma").is(200);
 		ConditionalOperator operator = newBuilder().when(criteria).then("bright").otherwise("dark");
 
-		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document gte = new Document ("$gte", Arrays.<Object> asList("$luminosity", 100));
 		Document is = new Document ("$eq", Arrays.<Object> asList("$chroma", 200));
@@ -193,7 +192,7 @@ public class ConditionalOperatorUnitTests {
 						.then("very-dark") //
 						.otherwise("not-so-dark"));
 
-		Document dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
+		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document trueCondition = new Document () //
 				.append("if", new Document ("$gte", Arrays.<Object> asList("$luminosity", 200))) //

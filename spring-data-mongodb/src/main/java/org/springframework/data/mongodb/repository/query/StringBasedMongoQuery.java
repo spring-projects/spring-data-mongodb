@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -282,11 +282,11 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 			} else if (value instanceof Document) {
 
-				Document dbo = (Document) value;
+				Document document = (Document) value;
 
-				for (String field : dbo.keySet()) {
+				for (String field : document.keySet()) {
 					collectParameterReferencesIntoBindings(bindings, field);
-					collectParameterReferencesIntoBindings(bindings, dbo.get(field));
+					collectParameterReferencesIntoBindings(bindings, document.get(field));
 				}
 			} else if (value instanceof DBObject) {
 

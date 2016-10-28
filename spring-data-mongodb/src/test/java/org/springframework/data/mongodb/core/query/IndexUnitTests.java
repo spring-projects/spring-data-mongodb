@@ -55,14 +55,6 @@ public class IndexUnitTests {
 	}
 
 	@Test
-	public void testWithDropDuplicates() {
-		Index i = new Index().on("name", Direction.ASC);
-		i.unique(Duplicates.DROP);
-		assertEquals(Document.parse("{ \"name\" : 1}"), i.getIndexKeys());
-		assertEquals(Document.parse("{ \"unique\" : true , \"dropDups\" : true}"), i.getIndexOptions());
-	}
-
-	@Test
 	public void testWithSparse() {
 		Index i = new Index().on("name", Direction.ASC);
 		i.sparse().unique();

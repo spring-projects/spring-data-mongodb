@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.springframework.util.Assert;
  * property references into document field names.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.3
  */
 public class TypeBasedAggregationOperationContext implements AggregationOperationContext {
@@ -66,8 +67,8 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.Document)
 	 */
 	@Override
-	public Document getMappedObject(Document dbObject) {
-		return mapper.getMappedObject(dbObject, mappingContext.getPersistentEntity(type));
+	public Document getMappedObject(Document document) {
+		return mapper.getMappedObject(document, mappingContext.getPersistentEntity(type));
 	}
 
 	/*

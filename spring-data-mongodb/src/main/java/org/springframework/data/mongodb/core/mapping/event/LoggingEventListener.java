@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
@@ -26,6 +25,7 @@ import org.springframework.context.ApplicationListener;
  * @author Jon Brisbin
  * @author Martin Baumgartner
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 

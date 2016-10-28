@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,15 +48,6 @@ public interface IndexOperations {
 	 * Drops all indices from this collection.
 	 */
 	void dropAllIndexes();
-
-	/**
-	 * Clears all indices that have not yet been applied to this collection.
-	 * 
-	 * @deprecated since 1.7. The MongoDB Java driver version 3.0 does no longer support reseting the index cache.
-	 * @throws {@link UnsupportedOperationException} when used with MongoDB Java driver version 3.0.
-	 */
-	@Deprecated
-	void resetIndexCache();
 
 	/**
 	 * Returns the index information on the collection.

@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoTemplate.CloseableIterableCursorAdapter;
-import org.springframework.data.mongodb.core.MongoTemplate.DbObjectCallback;
+import org.springframework.data.mongodb.core.MongoTemplate.DocumentCallback;
 import org.springframework.data.util.CloseableIterator;
 
 import com.mongodb.client.MongoCursor;
@@ -40,7 +40,7 @@ import com.mongodb.client.MongoCursor;
 public class CloseableIterableCursorAdapterUnitTests {
 
 	@Mock PersistenceExceptionTranslator exceptionTranslator;
-	@Mock DbObjectCallback<Object> callback;
+	@Mock DocumentCallback<Object> callback;
 
 	MongoCursor<Document> cursor;
 	CloseableIterator<Object> adapter;

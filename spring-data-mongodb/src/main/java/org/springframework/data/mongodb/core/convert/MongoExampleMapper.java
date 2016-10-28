@@ -251,24 +251,24 @@ public class MongoExampleMapper {
 
 	private void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher, boolean ignoreCase) {
 
-		Document dbo = new Document();
+		Document document = new Document();
 
 		if (ObjectUtils.nullSafeEquals(StringMatcher.DEFAULT, stringMatcher)) {
 
 			if (ignoreCase) {
-				dbo.put("$regex", Pattern.quote((String) entry.getValue()));
-				entry.setValue(dbo);
+				document.put("$regex", Pattern.quote((String) entry.getValue()));
+				entry.setValue(document);
 			}
 		} else {
 
 			Type type = stringMatcherPartMapping.get(stringMatcher);
 			String expression = MongoRegexCreator.INSTANCE.toRegularExpression((String) entry.getValue(), type);
-			dbo.put("$regex", expression);
-			entry.setValue(dbo);
+			document.put("$regex", expression);
+			entry.setValue(document);
 		}
 
 		if (ignoreCase) {
-			dbo.put("$options", "i");
+			document.put("$options", "i");
 		}
 	}
 }

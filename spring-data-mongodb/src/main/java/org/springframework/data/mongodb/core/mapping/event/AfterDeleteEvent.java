@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 by the original author(s).
+ * Copyright 2013-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,18 +29,6 @@ public class AfterDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * Creates a new {@link AfterDeleteEvent} for the given {@link Document} and type.
-	 * 
-	 * @param dbo must not be {@literal null}.
-	 * @param type can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AfterDeleteEvent(Document, Class, String)}.
-	 */
-	@Deprecated
-	public AfterDeleteEvent(Document dbo, Class<T> type) {
-		this(dbo, type, null);
-	}
-
-	/**
 	 * Creates a new {@link AfterDeleteEvent} for the given {@link Document}, type and collectionName.
 	 * 
 	 * @param dbo must not be {@literal null}.
@@ -48,7 +36,7 @@ public class AfterDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
-	public AfterDeleteEvent(Document dbo, Class<T> type, String collectionName) {
-		super(dbo, type, collectionName);
+	public AfterDeleteEvent(Document document, Class<T> type, String collectionName) {
+		super(document, type, collectionName);
 	}
 }

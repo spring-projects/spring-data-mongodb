@@ -25,13 +25,13 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.MongoTemplate.UnwrapAndReadDbObjectCallback;
+import org.springframework.data.mongodb.core.MongoTemplate.UnwrapAndReadDocumentCallback;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
- * Unit tests for {@link UnwrapAndReadDbObjectCallback}.
+ * Unit tests for {@link UnwrapAndReadDocumentCallback}.
  * 
  * @author Oliver Gierke
  */
@@ -40,7 +40,7 @@ public class UnwrapAndReadDbObjectCallbackUnitTests {
 
 	@Mock MongoDbFactory factory;
 
-	UnwrapAndReadDbObjectCallback<Target> callback;
+	UnwrapAndReadDocumentCallback<Target> callback;
 
 	@Before
 	public void setUp() {
@@ -49,7 +49,7 @@ public class UnwrapAndReadDbObjectCallbackUnitTests {
 		MappingMongoConverter converter = new MappingMongoConverter(new DefaultDbRefResolver(factory),
 				new MongoMappingContext());
 
-		this.callback = template.new UnwrapAndReadDbObjectCallback<Target>(converter, Target.class, "collection-1");
+		this.callback = template.new UnwrapAndReadDocumentCallback(converter, Target.class, "collection-1");
 	}
 
 	@Test
