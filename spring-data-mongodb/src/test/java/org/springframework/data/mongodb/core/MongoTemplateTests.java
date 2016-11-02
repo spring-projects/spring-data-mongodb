@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
@@ -43,6 +44,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -70,11 +72,14 @@ import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
@@ -114,6 +119,7 @@ public class MongoTemplateTests {
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
+	@Autowired ConfigurableApplicationContext context;
 
 	MongoTemplate mappingTemplate;
 	org.springframework.data.util.Version mongoVersion;
@@ -3162,6 +3168,28 @@ public class MongoTemplateTests {
 		template.save(wgj);
 
 		assertThat(template.findOne(query(where("id").is(wgj.id)), WithGeoJson.class).point, is(equalTo(wgj.point)));
+	}
+
+	/**
+	 * @see DATAMONGO-1513
+	 */
+	@Test
+	@DirtiesContext
+	public void populatesIdsAddedByEventListener() {
+
+		context.addApplicationListener(new AbstractMongoEventListener<Document>() {
+
+			@Override
+			public void onBeforeSave(BeforeSaveEvent<Document> event) {
+				event.getDBObject().put("_id", UUID.randomUUID().toString());
+			}
+		});
+
+		Document document = new Document();
+
+		template.insertAll(Arrays.asList(document));
+
+		assertThat(document.id, is(notNullValue()));
 	}
 
 	static class DoucmentWithNamedIdField {
