@@ -908,7 +908,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			maybeEmitEvent(new BeforeSaveEvent<T>(o, dbDoc, collectionName));
 			dbObjectList.add(dbDoc);
 		}
-		List<ObjectId> ids = insertDBObjectList(collectionName, dbObjectList);
+
+		List<Object> ids = consolidateIdentifiers(insertDBObjectList(collectionName, dbObjectList), dbObjectList);
+
 		int i = 0;
 		for (T obj : batchToSave) {
 			if (i < ids.size()) {
@@ -1013,6 +1015,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		});
 	}
 
+	// TODO: 2.0 - Change method signature to return List<Object> and return all identifiers (DATAMONGO-1513,
+	// DATAMONGO-1519)
 	protected List<ObjectId> insertDBObjectList(final String collectionName, final List<DBObject> dbDocList) {
 		if (dbDocList.isEmpty()) {
 			return Collections.emptyList();
@@ -2088,6 +2092,28 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			PersistenceExceptionTranslator exceptionTranslator) {
 		RuntimeException resolved = exceptionTranslator.translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
+	}
+
+	/**
+	 * Returns all identifiers for the given documents. Will augment the given identifiers and fill in only the ones that
+	 * are {@literal null} currently. This would've been better solved in {@link #insertDBObjectList(String, List)}
+	 * directly but would require a signature change of that method.
+	 * 
+	 * @param ids
+	 * @param documents
+	 * @return TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
+	 */
+	private static List<Object> consolidateIdentifiers(List<ObjectId> ids, List<DBObject> documents) {
+
+		List<Object> result = new ArrayList<Object>(ids.size());
+
+		for (int i = 0; i < ids.size(); i++) {
+
+			ObjectId objectId = ids.get(i);
+			result.add(objectId == null ? documents.get(i).get(ID_FIELD) : objectId);
+		}
+
+		return result;
 	}
 
 	// Callback implementations
