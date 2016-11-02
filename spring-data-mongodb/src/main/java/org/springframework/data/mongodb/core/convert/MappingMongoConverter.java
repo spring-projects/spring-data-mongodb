@@ -359,19 +359,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		Class<?> entityType = obj.getClass();
-		boolean handledByCustomConverter = conversions.getCustomWriteTarget(entityType, Document.class) != null;
+		Class<?> entityType = ClassUtils.getUserClass(obj.getClass());
 		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
-
-		if (!handledByCustomConverter && !(bson instanceof Collection)) {
-			typeMapper.writeType(type, bson);
-		}
 
 		Object target = obj instanceof LazyLoadingProxy ? ((LazyLoadingProxy) obj).getTarget() : obj;
 
 		writeInternal(target, bson, type);
 		if (asMap(bson).containsKey("_is") && asMap(bson).get("_id") == null) {
 			removeFromMap(bson, "_id");
+		}
+
+		boolean handledByCustomConverter = conversions.getCustomWriteTarget(entityType, Document.class) != null;
+		if (!handledByCustomConverter && !(bson instanceof Collection)) {
+			typeMapper.writeType(type, bson);
 		}
 	}
 
@@ -529,12 +529,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Object existingValue = accessor.get(prop);
 		Document document = existingValue instanceof Document ? (Document) existingValue : new Document();
-		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, document);
 
 		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
 				? mappingContext.getPersistentEntity(obj.getClass()) : mappingContext.getPersistentEntity(type);
 
 		writeInternal(obj, document, entity);
+		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, document);
 		accessor.put(prop, document);
 	}
 

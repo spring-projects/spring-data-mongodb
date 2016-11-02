@@ -44,6 +44,7 @@ import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -3468,6 +3469,22 @@ public class MongoTemplateTests {
 		assertThat(document.id, is(notNullValue()));
 	}
 
+
+	/**
+	 * @see DATAMONGO-1509
+	 */
+	@Test
+	public void findsByGnericNestedListElements() {
+
+		List<Model> modelList = Arrays.<Model>asList(new ModelA("value"));
+		DocumentWithCollection dwc = new DocumentWithCollection(modelList);
+
+		template.insert(dwc);
+
+		Query query = query(where("models").is(modelList));
+		assertThat(template.findOne(query, DocumentWithCollection.class), is(equalTo(dwc)));
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;
@@ -3547,6 +3564,7 @@ public class MongoTemplateTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
 	}
 
+	@EqualsAndHashCode
 	static class DocumentWithCollection {
 
 		@Id String id;
@@ -3599,6 +3617,7 @@ public class MongoTemplateTests {
 		String id();
 	}
 
+	@EqualsAndHashCode
 	static class ModelA implements Model {
 
 		@Id String id;
