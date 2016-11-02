@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldRefe
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
@@ -46,6 +47,7 @@ import com.mongodb.DBObject;
  * @author Alessio Fachechi
  * @author Christoph Strobl
  * @author Nikolay Bogdanov
+ * @author Pavel Vodrazka
  * @since 1.3
  */
 public class Aggregation {
@@ -321,13 +323,13 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link MatchOperation} using the given {@link Criteria}.
+	 * Creates a new {@link MatchOperation} using the given {@link CriteriaDefinition}.
 	 *
-	 * @param criteria must not be {@literal null}.
+	 * @param criteriaDefinition must not be {@literal null}.
 	 * @return
 	 */
-	public static MatchOperation match(Criteria criteria) {
-		return new MatchOperation(criteria);
+	public static MatchOperation match(CriteriaDefinition criteriaDefinition) {
+		return new MatchOperation(criteriaDefinition);
 	}
 
 	/**
