@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -110,7 +112,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 		try {
 
-			BasicQuery result = new BasicQuery(query.getQueryObject().toString(), fieldSpec);
+			BasicQuery result = new BasicQuery(query.getQueryObject(), (DBObject) JSON.parse(fieldSpec));
 			result.setSortObject(query.getSortObject());
 
 			return result;

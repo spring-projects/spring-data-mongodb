@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.IsTextQuery.*;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,6 +41,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -192,6 +194,18 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(fields.get("age"), is((Object) 1));
 	}
 
+	/**
+	 * @see DATAMONGO-1500
+	 */
+	@Test
+	public void shouldLeaveParameterConversionToQueryMapper() {
+
+		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findBySex", Sex.FEMALE);
+
+		assertThat(query.getQueryObject().get("sex"), is((Object) Sex.FEMALE));
+		assertThat(query.getFieldsObject().get("firstname"), is((Object) 1));
+	}
+
 	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object... args) {
 
 		Class<?>[] types = new Class<?>[args.length];
@@ -249,6 +263,9 @@ public class PartTreeMongoQueryUnitTests {
 		PersonDto findPersonDtoByAge(Integer age);
 
 		<T> T findDynamicallyProjectedBy(Class<T> type);
+
+		@Query(fields = "{ 'firstname' : 1 }")
+		List<Person> findBySex(Sex sex);
 	}
 
 	interface PersonProjection {
