@@ -41,6 +41,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -60,6 +63,7 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Pavel Vodrazka
  */
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateMapperUnitTests {
@@ -398,13 +402,76 @@ public class UpdateMapperUnitTests {
 		Document key = getAsDocument(push, "key");
 
 		assertThat(key.containsKey("$slice"), is(true));
-		assertThat(key.get("$slice"), is(5));
+		assertThat((Integer) key.get("$slice"), is(5));
 		assertThat(key.containsKey("$each"), is(true));
 
 		Document key2 = getAsDocument(push, "key-2");
 
 		assertThat(key2.containsKey("$slice"), is(true));
-		assertThat(key2.get("$slice"), is(-2));
+		assertThat((Integer) key2.get("$slice"), is(-2));
+		assertThat(key2.containsKey("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1141
+	 */
+	@Test
+	public void updatePushEachWithValueSortShouldRenderCorrectly() {
+
+		Update update = new Update().push("scores").sort(Direction.DESC).each(42, 23, 68);
+
+		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		Document push = getAsDocument(mappedObject, "$push");
+		Document key = getAsDocument(push, "scores");
+
+		assertThat(key.containsKey("$sort"), is(true));
+		assertThat((Integer) key.get("$sort"), is(-1));
+		assertThat(key.containsKey("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1141
+	 */
+	@Test
+	public void updatePushEachWithDocumentSortShouldRenderCorrectly() {
+
+		Update update = new Update().push("names")
+				.sort(new Sort(new Order(Direction.ASC, "last"), new Order(Direction.ASC, "first")))
+				.each(Collections.emptyList());
+
+		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		Document push = getAsDocument(mappedObject, "$push");
+		Document key = getAsDocument(push, "names");
+
+		assertThat(key.containsKey("$sort"), is(true));
+		assertThat((Document) key.get("$sort"), equalTo(new Document("last", 1).append("first", 1)));
+		assertThat(key.containsKey("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1141
+	 */
+	@Test
+	public void updatePushEachWithSortShouldRenderCorrectlyWhenUsingMultiplePush() {
+
+		Update update = new Update().push("authors").sort(Direction.ASC).each("Harry").push("chapters")
+				.sort(new Sort(Direction.ASC, "order")).each(Collections.emptyList());
+
+		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		Document push = getAsDocument(mappedObject, "$push");
+		Document key1 = getAsDocument(push, "authors");
+
+		assertThat(key1.containsKey("$sort"), is(true));
+		assertThat((Integer) key1.get("$sort"), is(1));
+		assertThat(key1.containsKey("$each"), is(true));
+
+		Document key2 = getAsDocument(push, "chapters");
+
+		assertThat(key2.containsKey("$sort"), is(true));
+		assertThat((Document) key2.get("$sort"), equalTo(new Document("order", 1)));
 		assertThat(key2.containsKey("$each"), is(true));
 	}
 
@@ -790,8 +857,7 @@ public class UpdateMapperUnitTests {
 	@Test
 	public void mappingShouldNotContainTypeInformationWhenValueTypeOfMapMatchesDeclaration() {
 
-		Map<Object, NestedDocument> map = Collections.singletonMap("jasnah",
-				new NestedDocument("kholin"));
+		Map<Object, NestedDocument> map = Collections.singletonMap("jasnah", new NestedDocument("kholin"));
 
 		Update update = new Update().set("concreteMap", map);
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -808,8 +874,8 @@ public class UpdateMapperUnitTests {
 	@SuppressWarnings("unchecked")
 	public void mapsUpdateWithBothReadingAndWritingConverterRegistered() {
 
-		CustomConversions conversions = new CustomConversions(
-				Arrays.asList(ClassWithEnum.AllocationToStringConverter.INSTANCE, ClassWithEnum.StringToAllocationConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(Arrays.asList(
+				ClassWithEnum.AllocationToStringConverter.INSTANCE, ClassWithEnum.StringToAllocationConverter.INSTANCE));
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
@@ -953,8 +1019,8 @@ public class UpdateMapperUnitTests {
 	@SuppressWarnings("unchecked")
 	public void mappingShouldConsiderCustomConvertersForEnumMapKeys() {
 
-		CustomConversions conversions = new CustomConversions(
-				Arrays.asList(ClassWithEnum.AllocationToStringConverter.INSTANCE, ClassWithEnum.StringToAllocationConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(Arrays.asList(
+				ClassWithEnum.AllocationToStringConverter.INSTANCE, ClassWithEnum.StringToAllocationConverter.INSTANCE));
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
