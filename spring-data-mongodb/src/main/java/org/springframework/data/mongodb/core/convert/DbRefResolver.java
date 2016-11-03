@@ -30,6 +30,7 @@ import com.mongodb.DBRef;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.4
  */
 public interface DbRefResolver {
@@ -70,7 +71,7 @@ public interface DbRefResolver {
 
 	/**
 	 * Loads a given {@link List} of {@link DBRef}s from the datasource in one batch. The resulting {@link List} of
-	 * {@link DBObject} will reflect the ordering of the {@link DBRef} passed in.<br />
+	 * {@link Document} will reflect the ordering of the {@link DBRef} passed in.<br />
 	 * The {@link DBRef} elements in the list must not reference different collections.
 	 *
 	 * @param dbRefs must not be {@literal null}.

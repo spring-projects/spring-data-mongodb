@@ -24,12 +24,9 @@ import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-
 /**
  * Encapsulates the aggregation framework {@code $cond} operator. A {@link ConditionalOperator} allows nested conditions
- * {@code if-then[if-then-else]-else} using {@link Field}, {@link CriteriaDefinition} or a {@link DBObject custom}
+ * {@code if-then[if-then-else]-else} using {@link Field}, {@link CriteriaDefinition} or a {@link Document custom}
  * condition. Replacement values can be either {@link Field field references}, values of simple MongoDB types or values
  * that can be converted to a simple MongoDB type.
  * 
@@ -68,7 +65,7 @@ public class ConditionalOperator implements AggregationExpression {
 	}
 
 	/**
-	 * Creates a new {@link ConditionalOperator} for a given {@link DBObject criteria} and {@code then}/{@code otherwise}
+	 * Creates a new {@link ConditionalOperator} for a given {@link Document criteria} and {@code then}/{@code otherwise}
 	 * values.
 	 *
 	 * @param condition must not be {@literal null}.
@@ -96,7 +93,7 @@ public class ConditionalOperator implements AggregationExpression {
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
@@ -112,7 +109,7 @@ public class ConditionalOperator implements AggregationExpression {
 
 	private Object resolveValue(AggregationOperationContext context, Object value) {
 
-		if (value instanceof DBObject || value instanceof Field) {
+		if (value instanceof Document || value instanceof Field) {
 			return resolve(context, value);
 		}
 
@@ -125,7 +122,7 @@ public class ConditionalOperator implements AggregationExpression {
 
 	private Object resolveCriteria(AggregationOperationContext context, Object value) {
 
-		if (value instanceof DBObject || value instanceof Field) {
+		if (value instanceof Document || value instanceof Field) {
 			return resolve(context, value);
 		}
 
@@ -144,7 +141,7 @@ public class ConditionalOperator implements AggregationExpression {
 		}
 
 		throw new InvalidDataAccessApiUsageException(
-				String.format("Invalid value in condition. Supported: DBObject, Field references, Criteria, got: %s", value));
+				String.format("Invalid value in condition. Supported: Document, Field references, Criteria, got: %s", value));
 	}
 
 	private List<Object> getClauses(AggregationOperationContext context, Document mappedObject) {
@@ -173,7 +170,7 @@ public class ConditionalOperator implements AggregationExpression {
 				}
 			}
 
-			clauses.add(new BasicDBObject(key, args));
+			clauses.add(new Document(key, args));
 
 		} else if (predicate instanceof Document) {
 
@@ -188,7 +185,7 @@ public class ConditionalOperator implements AggregationExpression {
 				List<Object> args = new ArrayList<Object>();
 				args.add("$" + key);
 				args.add(nested.get(s));
-				clauses.add(new BasicDBObject(s, args));
+				clauses.add(new Document(s, args));
 			}
 
 		} else if (!isKeyword(key)) {
@@ -196,7 +193,7 @@ public class ConditionalOperator implements AggregationExpression {
 			List<Object> args = new ArrayList<Object>();
 			args.add("$" + key);
 			args.add(predicate);
-			clauses.add(new BasicDBObject("$eq", args));
+			clauses.add(new Document("$eq", args));
 		}
 
 		return clauses;
@@ -271,7 +268,7 @@ public class ConditionalOperator implements AggregationExpression {
 	public static interface ThenBuilder {
 
 		/**
-		 * @param value the value to be used if the condition evaluates {@literal true}. Can be a {@link DBObject}, a value
+		 * @param value the value to be used if the condition evaluates {@literal true}. Can be a {@link Document}, a value
 		 *          that is supported by MongoDB or a value that can be converted to a MongoDB representation but must not
 		 *          be {@literal null}.
 		 * @return the {@link OtherwiseBuilder}
@@ -285,7 +282,7 @@ public class ConditionalOperator implements AggregationExpression {
 	public static interface OtherwiseBuilder {
 
 		/**
-		 * @param value the value to be used if the condition evaluates {@literal false}. Can be a {@link DBObject}, a value
+		 * @param value the value to be used if the condition evaluates {@literal false}. Can be a {@link Document}, a value
 		 *          that is supported by MongoDB or a value that can be converted to a MongoDB representation but must not
 		 *          be {@literal null}.
 		 * @return the {@link ConditionalOperator}
@@ -317,7 +314,7 @@ public class ConditionalOperator implements AggregationExpression {
 
 		/* 
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperator.WhenBuilder#when(com.mongodb.DBObject)
+		 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperator.WhenBuilder#when(org.bson.Document)
 		 */
 		@Override
 		public ConditionalExpressionBuilder when(Document booleanExpression) {

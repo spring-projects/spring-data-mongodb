@@ -46,7 +46,6 @@ import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.client.MongoDatabase;
 
@@ -57,6 +56,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.4
  */
 public class DefaultDbRefResolver implements DbRefResolver {
@@ -438,7 +438,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	}
 
 	/**
-	 * {@link Comparator} for sorting {@link DBObject} that have been loaded in random order by a predefined list of
+	 * {@link Comparator} for sorting {@link Document} that have been loaded in random order by a predefined list of
 	 * reference identifiers.
 	 *
 	 * @author Christoph Strobl

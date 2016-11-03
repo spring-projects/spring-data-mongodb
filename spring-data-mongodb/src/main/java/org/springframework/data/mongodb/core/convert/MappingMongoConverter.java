@@ -83,6 +83,7 @@ import com.mongodb.DBRef;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Jordi Llach
+ * @author Mark Paluch
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
 
@@ -281,7 +282,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			accessor.setProperty(idProperty, idValue);
 		}
 
-		final ObjectPath currentPath = path.push(result, entity, idValue != null ? documentAccessor.get(idProperty)  : null);
+		final ObjectPath currentPath = path.push(result, entity, idValue != null ? documentAccessor.get(idProperty) : null);
 
 		// Set properties not already set in the constructor
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
@@ -780,11 +781,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Writes the given simple value to the given {@link Document}. Will store enum names for enum values.
 	 * 
 	 * @param value
-	 * @param dbObject must not be {@literal null}.
+	 * @param bson must not be {@literal null}.
 	 * @param key must not be {@literal null}.
 	 */
-	private void writeSimpleInternal(Object value, Bson dbObject, String key) {
-		addToMap(dbObject, key, getPotentiallyConvertedSimpleWrite(value));
+	private void writeSimpleInternal(Object value, Bson bson, String key) {
+		addToMap(bson, key, getPotentiallyConvertedSimpleWrite(value));
 	}
 
 	private void writeSimpleInternal(Object value, Bson bson, MongoPersistentProperty property) {
@@ -1017,14 +1018,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return map;
 	}
 
+	@SuppressWarnings("unchecked")
 	private Map<String, Object> asMap(Bson bson) {
+
 		if (bson instanceof Document) {
 			return (Document) bson;
 		}
+
 		if (bson instanceof DBObject) {
 			return ((DBObject) bson).toMap();
 		}
-		throw new IllegalArgumentException("o_O what's that? Cannot read values from " + bson.getClass());
+
+		throw new IllegalArgumentException(
+				String.format("Cannot read %s. as map. Given Bson must be a Document or DBObject!", bson.getClass()));
 	}
 
 	private void addToMap(Bson bson, String key, Object value) {
@@ -1037,20 +1043,26 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			((DBObject) bson).put(key, value);
 			return;
 		}
-		throw new IllegalArgumentException("o_O what's that? Cannot add value to " + bson.getClass());
+		throw new IllegalArgumentException(
+				String.format("Cannot add key/value pair to %s. as map. Given Bson must be a Document or DBObject!",
+						bson.getClass()));
 	}
 
+	@SuppressWarnings("unchecked")
 	private void addAllToMap(Bson bson, Map value) {
 
 		if (bson instanceof Document) {
-			((Document) bson).putAll((Map) value);
+			((Document) bson).putAll(value);
 			return;
 		}
+
 		if (bson instanceof DBObject) {
-			((DBObject) bson).putAll((Map) value);
+			((DBObject) bson).putAll(value);
 			return;
 		}
-		throw new IllegalArgumentException("o_O what's that? Cannot add value to " + bson.getClass());
+
+		throw new IllegalArgumentException(String.format(
+				"Cannot add all to %s. Given Bson must be a Document or DBObject.", bson.getClass()));
 	}
 
 	private void removeFromMap(Bson bson, String key) {
@@ -1059,11 +1071,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			((Document) bson).remove(key);
 			return;
 		}
+
 		if (bson instanceof DBObject) {
 			((DBObject) bson).removeField(key);
 			return;
 		}
-		throw new IllegalArgumentException("o_O what's that? Cannot add value to " + bson.getClass());
+
+		throw new IllegalArgumentException(
+				String.format("Cannot remove from %s. Given Bson must be a Document or DBObject.", bson.getClass()));
 	}
 
 	/*

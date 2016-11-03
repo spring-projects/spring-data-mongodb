@@ -38,22 +38,22 @@ import com.mongodb.DBObject;
  */
 class DocumentAccessor {
 
-	private final Bson dbObject;
+	private final Bson document;
 
 	/**
 	 * Creates a new {@link DocumentAccessor} for the given {@link Document}.
 	 * 
-	 * @param dbObject must be a {@link Document} effectively, must not be {@literal null}.
+	 * @param document must be a {@link Document} effectively, must not be {@literal null}.
 	 */
-	public DocumentAccessor(Bson dbObject) {
+	public DocumentAccessor(Bson document) {
 
-		Assert.notNull(dbObject, "Document must not be null!");
+		Assert.notNull(document, "Document must not be null!");
 
-		if (!(dbObject instanceof Document) && !(dbObject instanceof DBObject)) {
-			Assert.isInstanceOf(Document.class, dbObject, "Given Document must be a Document or BasicDBObject!");
+		if (!(document instanceof Document) && !(document instanceof DBObject)) {
+			Assert.isInstanceOf(Document.class, document, "Given Bson must be a Document or DBObject!");
 		}
 
-		this.dbObject = dbObject;
+		this.document = document;
 	}
 
 	/**
@@ -70,21 +70,21 @@ class DocumentAccessor {
 		String fieldName = prop.getFieldName();
 
 		if (!fieldName.contains(".")) {
-			BsonUtils.addToMap(dbObject, fieldName, value);
+			BsonUtils.addToMap(document, fieldName, value);
 			return;
 		}
 
 		Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
-		Bson dbObject = this.dbObject;
+		Bson document = this.document;
 
 		while (parts.hasNext()) {
 
 			String part = parts.next();
 
 			if (parts.hasNext()) {
-				dbObject = getOrCreateNestedDbObject(part, dbObject);
+				document = getOrCreateNestedDocument(part, document);
 			} else {
-				BsonUtils.addToMap(dbObject, part, value);
+				BsonUtils.addToMap(document, part, value);
 			}
 		}
 	}
@@ -102,11 +102,11 @@ class DocumentAccessor {
 		String fieldName = property.getFieldName();
 
 		if (!fieldName.contains(".")) {
-			return BsonUtils.asMap(this.dbObject).get(fieldName);
+			return BsonUtils.asMap(this.document).get(fieldName);
 		}
 
 		Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
-		Map<String, Object> source = BsonUtils.asMap(this.dbObject);
+		Map<String, Object> source = BsonUtils.asMap(this.document);
 		Object result = null;
 
 		while (source != null && parts.hasNext()) {
@@ -122,7 +122,7 @@ class DocumentAccessor {
 	}
 
 	/**
-	 * Returns whether the underlying {@link DBObject} has a value ({@literal null} or non-{@literal null}) for the given
+	 * Returns whether the underlying {@link Document} has a value ({@literal null} or non-{@literal null}) for the given
 	 * {@link MongoPersistentProperty}.
 	 *
 	 * @param property must not be {@literal null}.
@@ -136,22 +136,22 @@ class DocumentAccessor {
 
 		if (!fieldName.contains(".")) {
 
-			if (this.dbObject instanceof Document) {
-				return ((Document) this.dbObject).containsKey(fieldName);
+			if (this.document instanceof Document) {
+				return ((Document) this.document).containsKey(fieldName);
 			}
 
-			if (this.dbObject instanceof DBObject) {
-				return ((DBObject) this.dbObject).containsField(fieldName);
+			if (this.document instanceof DBObject) {
+				return ((DBObject) this.document).containsField(fieldName);
 			}
 		}
 
 		String[] parts = fieldName.split("\\.");
 		Map<String, Object> source;
 
-		if (this.dbObject instanceof Document) {
-			source = ((Document) this.dbObject);
+		if (this.document instanceof Document) {
+			source = ((Document) this.document);
 		}else {
-			source = ((DBObject) this.dbObject).toMap();
+			source = ((DBObject) this.document).toMap();
 		}
 
 		Object result = null;
@@ -201,7 +201,7 @@ class DocumentAccessor {
 	 * @param source must not be {@literal null}.
 	 * @return
 	 */
-	private static Document getOrCreateNestedDbObject(String key, Bson source) {
+	private static Document getOrCreateNestedDocument(String key, Bson source) {
 
 		Object existing = BsonUtils.asMap(source).get(key);
 

@@ -55,30 +55,4 @@ public class BsonUtils {
 		}
 		throw new IllegalArgumentException("o_O what's that? Cannot add value to " + bson.getClass());
 	}
-
-	public static void addAllToMap(Bson bson, Map value) {
-
-		if (bson instanceof Document) {
-			((Document) bson).putAll((Map) value);
-			return;
-		}
-		if (bson instanceof DBObject) {
-			((DBObject) bson).putAll((Map) value);
-			return;
-		}
-		throw new IllegalArgumentException("o_O what's that? Cannot add value to " + bson.getClass());
-	}
-
-	public static void removeFromMap(Bson bson, String key) {
-
-		if (bson instanceof Document) {
-			((Document) bson).remove(key);
-			return;
-		}
-		if (bson instanceof DBObject) {
-			((DBObject) bson).removeField(key);
-			return;
-		}
-		throw new IllegalArgumentException("o_O what's that? Cannot add value to " + bson.getClass());
-	}
 }

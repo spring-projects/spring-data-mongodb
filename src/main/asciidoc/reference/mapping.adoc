@@ -122,7 +122,7 @@ In addition to these types, Spring Data MongoDB provides a set of built-in conve
 | native
 | `{"value" : null}`
 
-| `DBObject`
+| `Document`
 | native
 | `{"value" : { … }}`
 
@@ -392,7 +392,7 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 * `@TextIndexed` - applied at the field level to mark the field to be included in the text index.
 * `@Language` - applied at the field level to set the language override property for text index.
 * `@Transient` - by default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
-* `@PersistenceConstructor` - marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved DBObject.
+* `@PersistenceConstructor` - marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved Document.
 * `@Value` - this annotation is part of the Spring Framework . Within the mapping framework it can be applied to constructor arguments. This lets you use a Spring Expression Language statement to transform a key's value retrieved in the database before it is used to construct a domain object. In order to reference a property of a given document one has to use expressions like: `@Value("#root.myProperty")` where `root` refers to the root of the given document.
 * `@Field` - applied at the field level and described the name of the field as it will be represented in the MongoDB BSON document thus allowing the name to be different than the fieldname of the class.
 * `@Version` - applied at field level is used for optimistic locking and checked for modification on save operations. The initial value is `zero` which is bumped automatically on every update.
@@ -484,7 +484,7 @@ class OrderItem {
   // getters/setters ommitted
 }
 
-DBObject input = new BasicDBObject("id", "4711");
+Document input = new Document("id", "4711");
 input.put("unitPrice", 2.5);
 input.put("qty",5);
 OrderItem item = converter.read(OrderItem.class, input);
@@ -599,7 +599,7 @@ Simply declaring these beans in your Spring ApplicationContext will cause them t
 [[mapping-explicit-converters]]
 === Overriding Mapping with explicit Converters
 
-When storing and querying your objects it is convenient to have a `MongoConverter` instance handle the mapping of all Java types to DBObjects. However, sometimes you may want the `MongoConverter` s do most of the work but allow you to selectively handle the conversion for a particular type or to optimize performance.
+When storing and querying your objects it is convenient to have a `MongoConverter` instance handle the mapping of all Java types to Documents. However, sometimes you may want the `MongoConverter` s do most of the work but allow you to selectively handle the conversion for a particular type or to optimize performance.
 
 To selectively handle the conversion yourself, register one or more one or more `org.springframework.core.convert.converter.Converter` instances with the MongoConverter.
 
@@ -607,14 +607,14 @@ NOTE: Spring 3.0 introduced a core.convert package that provides a general type 
 
 The method `customConversions` in `AbstractMongoConfiguration` can be used to configure Converters. The examples <<mapping-configuration,here>> at the beginning of this chapter show how to perform the configuration using Java and XML.
 
-Below is an example of a Spring Converter implementation that converts from a DBObject to a Person POJO.
+Below is an example of a Spring Converter implementation that converts from a Document to a Person POJO.
 
 [source,java]
 ----
 @ReadingConverter
- public class PersonReadConverter implements Converter<DBObject, Person> {
+ public class PersonReadConverter implements Converter<Document, Person> {
 
-  public Person convert(DBObject source) {
+  public Person convert(Document source) {
     Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
     p.setAge((Integer) source.get("age"));
     return p;
@@ -622,19 +622,19 @@ Below is an example of a Spring Converter implementation that converts from a DB
 }
 ----
 
-Here is an example that converts from a Person to a DBObject.
+Here is an example that converts from a Person to a Document.
 
 [source,java]
 ----
 @WritingConverter
-public class PersonWriteConverter implements Converter<Person, DBObject> {
+public class PersonWriteConverter implements Converter<Person, Document> {
 
-  public DBObject convert(Person source) {
-    DBObject dbo = new BasicDBObject();
-    dbo.put("_id", source.getId());
-    dbo.put("name", source.getFirstName());
-    dbo.put("age", source.getAge());
-    return dbo;
+  public Document convert(Person source) {
+    Document document = new Document();
+    document.put("_id", source.getId());
+    document.put("name", source.getFirstName());
+    document.put("age", source.getAge());
+    return document;
   }
 }
 ----
