@@ -1476,7 +1476,7 @@ public class AggregationTests {
 		newAggregation(match(new Criteria()), //
 				group("field1").count().as("totalCount"), //
 				out("collection1"), //
-				skip(100));
+				skip(100L));
 	}
 
 	/**
