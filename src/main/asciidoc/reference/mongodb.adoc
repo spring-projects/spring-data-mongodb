@@ -145,7 +145,7 @@ This will produce the following output
 [source]
 ----
 10:01:32,062 DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
-10:01:32,265 DEBUG ramework.data.mongodb.core.MongoTemplate: 631 - insert DBObject containing fields: [_class, age, name] in collection: Person
+10:01:32,265 DEBUG ramework.data.mongodb.core.MongoTemplate: 631 - insert Document containing fields: [_class, age, name] in collection: Person
 10:01:32,765 DEBUG ramework.data.mongodb.core.MongoTemplate:1243 - findOne using query: { "name" : "Joe"} in db.collection: database.Person
 10:01:32,953  INFO      org.spring.mongodb.example.MongoApp:  25 - Person [id=4ddbba3c0be56b7e1b210166, name=Joe, age=34]
 10:01:32,984 DEBUG ramework.data.mongodb.core.MongoTemplate: 375 - Dropped collection [database.person]
@@ -424,7 +424,7 @@ NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across m
 
 The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the interface `MongoConverter`. Spring provides two implementations, `SimpleMappingConverter` and `MongoMappingConverter`, but you can also write your own converter. Please refer to the section on MongoConverters for more detailed information.
 
-The `MongoTemplate` class implements the interface `MongoOperations`. In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you will find methods such as "find", "findAndModify", "findOne", "insert", "remove", "save", "update" and "updateMulti". The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`. A major difference in between the two APIs is that MongoOperations can be passed domain objects instead of `DBObject` and there are fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `DBObject` to specify the parameters for those operations.
+The `MongoTemplate` class implements the interface `MongoOperations`. In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you will find methods such as "find", "findAndModify", "findOne", "insert", "remove", "save", "update" and "updateMulti". The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`. A major difference in between the two APIs is that MongoOperations can be passed domain objects instead of `Document` and there are fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
 
 NOTE: The preferred way to reference the operations on `MongoTemplate` instance is via its interface `MongoOperations`.
 
@@ -506,7 +506,7 @@ public interface WriteConcernResolver {
 }
 ----
 
-The passed in argument, MongoAction, is what you use to determine the `WriteConcern` value to be used or to use the value of the Template itself as a default. `MongoAction` contains the collection name being written to, the `java.lang.Class` of the POJO, the converted `DBObject`, as well as the operation as an enumeration (`MongoActionOperation`: REMOVE, UPDATE, INSERT, INSERT_LIST, SAVE) and a few other pieces of contextual information. For example,
+The passed in argument, MongoAction, is what you use to determine the `WriteConcern` value to be used or to use the value of the Template itself as a default. `MongoAction` contains the collection name being written to, the `java.lang.Class` of the POJO, the converted `Document`, as well as the operation as an enumeration (`MongoActionOperation`: REMOVE, UPDATE, INSERT, INSERT_LIST, SAVE) and a few other pieces of contextual information. For example,
 
 [source]
 ----
@@ -624,7 +624,7 @@ This would produce the following log output (including debug messages from `Mong
 [source]
 ----
 DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
-DEBUG work.data.mongodb.core.MongoTemplate: 632 - insert DBObject containing fields: [_class, age, name] in collection: person
+DEBUG work.data.mongodb.core.MongoTemplate: 632 - insert Document containing fields: [_class, age, name] in collection: person
 INFO               org.spring.example.MongoApp:  30 - Insert: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
 DEBUG work.data.mongodb.core.MongoTemplate:1246 - findOne using query: { "_id" : { "$oid" : "4ddc6e784ce5b1eba3ceaf5c"}} in db.collection: database.person
 INFO               org.spring.example.MongoApp:  34 - Found: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
@@ -769,7 +769,7 @@ Note that we are extending the `AbstractMongoConfiguration` class and override t
 [[mongo-template.save-insert]]
 === Methods for saving and inserting documents
 
-There are several convenient methods on `MongoTemplate` for saving and inserting your objects. To have more fine-grained control over the conversion process you can register Spring converters with the `MappingMongoConverter`, for example  `Converter<Person, DBObject>` and `Converter<DBObject, Person>`.
+There are several convenient methods on `MongoTemplate` for saving and inserting your objects. To have more fine-grained control over the conversion process you can register Spring converters with the `MappingMongoConverter`, for example  `Converter<Person, Document>` and `Converter<Document, Person>`.
 
 NOTE: The difference between insert and save operations is that a save operation will perform an insert if the object is not already present.
 
@@ -912,7 +912,7 @@ template.upsert(query(where("ssn").is(1111).and("firstName").is("Joe").and("Frai
 [[mongo-template.find-and-upsert]]
 === Finding and Upserting documents in a collection
 
-The `findAndModify(…)` method on DBCollection can update a document and return either the old or newly updated document in a single operation. `MongoTemplate` provides a findAndModify method that takes `Query` and `Update` classes and converts from `DBObject` to your POJOs. Here are the methods
+The `findAndModify(…)` method on DBCollection can update a document and return either the old or newly updated document in a single operation. `MongoTemplate` provides a findAndModify method that takes `Query` and `Update` classes and converts from `Document` to your POJOs. Here are the methods
 
 [source,java]
 ----
@@ -1592,7 +1592,7 @@ public class XObject {
 }
 ----
 
-You can also obtain the raw result as a `DbObject` by calling the method `getRawResults` on the `GroupByResults` class.
+You can also obtain the raw result as a `Document` by calling the method `getRawResults` on the `GroupByResults` class.
 
 There is an additional method overload of the group method on `MongoOperations` which lets you specify a `Criteria` object for selecting a subset of the rows. An example which uses a `Criteria` object, with some syntax sugar using static imports, as well as referencing a key-function and reduce function javascript files via a Spring Resource string is shown below.
 
@@ -1632,7 +1632,7 @@ An `AggregationOperation` represents a MongoDB aggregation pipeline operation an
 +
 * `AggregationResults`
 +
-`AggregationResults` is the container for the result of an aggregate operation. It provides access to the raw aggregation result in the form of an `DBObject`, to the mapped objects and information which performed the aggregation.
+`AggregationResults` is the container for the result of an aggregate operation. It provides access to the raw aggregation result in the form of an `Document`, to the mapped objects and information which performed the aggregation.
 +
 The canonical example for using the Spring Data MongoDB support for the MongoDB Aggregation Framework looks as follows:
 
@@ -1914,8 +1914,8 @@ TypedAggregation<Product> agg = newAggregation(Product.class,
         .and("spaceUnits").mod(2).as("spaceUnitsMod2")
 );
 
-AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
-List<DBObject> resultList = result.getMappedResults();
+AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
+List<Document> resultList = result.getMappedResults();
 ----
 
 Note that we derive the name of the input-collection from the `Product`-class passed as first parameter to the `newAggregation`-Method.
@@ -1950,8 +1950,8 @@ TypedAggregation<Product> agg = newAggregation(Product.class,
 
 );
 
-AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
-List<DBObject> resultList = result.getMappedResults();
+AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
+List<Document> resultList = result.getMappedResults();
 ----
 
 [[mongo.aggregation.examples.example6]]
@@ -1982,8 +1982,8 @@ TypedAggregation<Product> agg = newAggregation(Product.class,
         .andExpression("(netPrice * (1-discountRate)  + [0]) * (1+taxRate)", shippingCosts).as("salesPrice")
 );
 
-AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
-List<DBObject> resultList = result.getMappedResults();
+AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
+List<Document> resultList = result.getMappedResults();
 ----
 
 Note that we can also refer to other fields of the document within the SpEL expression.
@@ -2044,23 +2044,22 @@ NOTE: For more information on the Spring type conversion service see the referen
 [[mongo.custom-converters.writer]]
 === Saving using a registered Spring Converter
 
-An example implementation of the `Converter` that converts from a Person object to a `com.mongodb.DBObject` is shown below
+An example implementation of the `Converter` that converts from a Person object to a `org.bson.Document` is shown below
 
 [source,java]
 ----
 import org.springframework.core.convert.converter.Converter;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import org.bson.Document;
 
-public class PersonWriteConverter implements Converter<Person, DBObject> {
+public class PersonWriteConverter implements Converter<Person, Document> {
 
-  public DBObject convert(Person source) {
-    DBObject dbo = new BasicDBObject();
-    dbo.put("_id", source.getId());
-    dbo.put("name", source.getFirstName());
-    dbo.put("age", source.getAge());
-    return dbo;
+  public Document convert(Person source) {
+    Document document = new Document();
+    document.put("_id", source.getId());
+    document.put("name", source.getFirstName());
+    document.put("age", source.getAge());
+    return document;
   }
 }
 ----
@@ -2068,13 +2067,13 @@ public class PersonWriteConverter implements Converter<Person, DBObject> {
 [[mongo.custom-converters.reader]]
 === Reading using a Spring Converter
 
-An example implementation of a Converter that converts from a DBObject to a Person object is shown below.
+An example implementation of a Converter that converts from a Document to a Person object is shown below.
 
 [source,java]
 ----
-public class PersonReadConverter implements Converter<DBObject, Person> {
+public class PersonReadConverter implements Converter<Document, Person> {
 
-  public Person convert(DBObject source) {
+  public Person convert(Document source) {
     Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
     p.setAge((Integer) source.get("age"));
     return p;
@@ -2225,7 +2224,7 @@ You can also get at the MongoDB driver's `DB.command( )` method using the `execu
 [[mongo-template.commands.execution]]
 === Methods for executing commands
 
-* `CommandResult` *executeCommand* `(DBObject command)` Execute a MongoDB command.
+* `CommandResult` *executeCommand* `(Document command)` Execute a MongoDB command.
 * `CommandResult` *executeCommand* `(String jsonCommand)` Execute the a MongoDB command expressed as a JSON string.
 
 [[mongodb.mapping-usage.events]]
@@ -2233,7 +2232,7 @@ You can also get at the MongoDB driver's `DB.command( )` method using the `execu
 
 Built into the MongoDB mapping framework are several `org.springframework.context.ApplicationEvent` events that your application can respond to by registering special beans in the `ApplicationContext`. By being based off Spring's ApplicationContext event infrastructure this enables other products, such as Spring Integration, to easily receive these events as they are a well known eventing mechanism in Spring based applications.
 
-To intercept an object before it goes through the conversion process (which turns your domain object into a `com.mongodb.DBObject`), you'd register a subclass of `AbstractMongoEventListener` that overrides the `onBeforeConvert` method. When the event is dispatched, your listener will be called and passed the domain object before it goes into the converter.
+To intercept an object before it goes through the conversion process (which turns your domain object into a `org.bson.Document`), you'd register a subclass of `AbstractMongoEventListener` that overrides the `onBeforeConvert` method. When the event is dispatched, your listener will be called and passed the domain object before it goes into the converter.
 
 ====
 [source,java]
@@ -2247,7 +2246,7 @@ public class BeforeConvertListener extends AbstractMongoEventListener<Person> {
 ----
 ====
 
-To intercept an object before it goes into the database, you'd register a subclass of `org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener` that overrides the `onBeforeSave` method. When the event is dispatched, your listener will be called and passed the domain object and the converted `com.mongodb.DBObject`.
+To intercept an object before it goes into the database, you'd register a subclass of `org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener` that overrides the `onBeforeSave` method. When the event is dispatched, your listener will be called and passed the domain object and the converted `com.mongodb.Document`.
 
 ====
 [source,java]
@@ -2265,11 +2264,11 @@ Simply declaring these beans in your Spring ApplicationContext will cause them t
 
 The list of callback methods that are present in AbstractMappingEventListener are
 
-* `onBeforeConvert` - called in MongoTemplate insert, insertList and save operations before the object is converted to a DBObject using a MongoConveter.
-* `onBeforeSave` - called in MongoTemplate insert, insertList and save operations *before* inserting/saving the DBObject in the database.
-* `onAfterSave` - called in MongoTemplate insert, insertList and save operations *after* inserting/saving the DBObject in the database.
-* `onAfterLoad` - called in MongoTemplate find, findAndRemove, findOne and getCollection methods after the DBObject is retrieved from the database.
-* `onAfterConvert` - called in MongoTemplate find, findAndRemove, findOne and getCollection methods after the DBObject retrieved from the database was converted to a POJO.
+* `onBeforeConvert` - called in MongoTemplate insert, insertList and save operations before the object is converted to a Document using a MongoConveter.
+* `onBeforeSave` - called in MongoTemplate insert, insertList and save operations *before* inserting/saving the Document in the database.
+* `onAfterSave` - called in MongoTemplate insert, insertList and save operations *after* inserting/saving the Document in the database.
+* `onAfterLoad` - called in MongoTemplate find, findAndRemove, findOne and getCollection methods after the Document is retrieved from the database.
+* `onAfterConvert` - called in MongoTemplate find, findAndRemove, findOne and getCollection methods after the Document retrieved from the database was converted to a POJO.
 
 [[mongo.exception]]
 == Exception Translation
@@ -2303,9 +2302,9 @@ Here is an example that uses the `CollectionCallback` to return information abou
 ----
 boolean hasIndex = template.execute("geolocation", new CollectionCallbackBoolean>() {
   public Boolean doInCollection(Venue.class, DBCollection collection) throws MongoException, DataAccessException {
-    List<DBObject> indexes = collection.getIndexInfo();
-    for (DBObject dbo : indexes) {
-      if ("location_2d".equals(dbo.get("name"))) {
+    List<Document> indexes = collection.getIndexInfo();
+    for (Document document : indexes) {
+      if ("location_2d".equals(document.get("name"))) {
         return true;
       }
     }
@@ -2386,7 +2385,7 @@ class GridFsClient {
 ----
 ====
 
-The `store(…)` operations take an `InputStream`, a filename and optionally metadata information about the file to store. The metadata can be an arbitrary object which will be marshaled by the `MongoConverter` configured with the `GridFsTemplate`. Alternatively you can also provide a `DBObject` as well.
+The `store(…)` operations take an `InputStream`, a filename and optionally metadata information about the file to store. The metadata can be an arbitrary object which will be marshaled by the `MongoConverter` configured with the `GridFsTemplate`. Alternatively you can also provide a `Document` as well.
 
 Reading files from the filesystem can either be achieved through the `find(…)` or `getResources(…)` methods. Let's have a look at the `find(…)` methods first. You can either find a single file matching a `Query` or multiple ones. To easily define file queries we provide the `GridFsCriteria` helper class. It provides static factory methods to encapsulate default metadata fields (e.g. `whereFilename()`, `whereContentType()`) or the custom one through `whereMetaData()`.
 

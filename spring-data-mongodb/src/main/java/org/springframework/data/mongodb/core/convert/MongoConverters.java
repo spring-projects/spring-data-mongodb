@@ -42,14 +42,13 @@ import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.DBObject;
-
 /**
  * Wrapper class to contain useful converters for the usage with Mongo.
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 abstract class MongoConverters {
 
@@ -77,7 +76,7 @@ abstract class MongoConverters {
 		converters.add(DocumentToStringConverter.INSTANCE);
 		converters.add(TermToStringConverter.INSTANCE);
 		converters.add(NamedMongoScriptToDocumentConverter.INSTANCE);
-		converters.add(DocumentToNamedMongoScriptCoverter.INSTANCE);
+		converters.add(DocumentToNamedMongoScriptConverter.INSTANCE);
 		converters.add(CurrencyToStringConverter.INSTANCE);
 		converters.add(StringToCurrencyConverter.INSTANCE);
 		converters.add(AtomicIntegerToIntegerConverter.INSTANCE);
@@ -208,10 +207,7 @@ abstract class MongoConverters {
 				return null;
 			}
 
-			if (source instanceof Document) {
-				return ((Document) source).toJson();
-			}
-			return source.toString();
+			return source.toJson();
 		}
 	}
 
@@ -234,7 +230,7 @@ abstract class MongoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	public static enum DocumentToNamedMongoScriptCoverter implements Converter<Document, NamedMongoScript> {
+	public static enum DocumentToNamedMongoScriptConverter implements Converter<Document, NamedMongoScript> {
 
 		INSTANCE;
 
@@ -245,16 +241,8 @@ abstract class MongoConverters {
 				return null;
 			}
 
-			String id = null;
-			Object rawValue = null;
-
-			if (source instanceof Document) {
-				id = ((Document) source).get("_id").toString();
-				rawValue = ((Document) source).get("value");
-			} else if (source instanceof DBObject) {
-				id = ((DBObject) source).get("_id").toString();
-				rawValue = ((DBObject) source).get("value");
-			}
+			String id = source.get("_id").toString();
+			Object rawValue = source.get("value");
 
 			return new NamedMongoScript(id, ((Code) rawValue).getCode());
 		}

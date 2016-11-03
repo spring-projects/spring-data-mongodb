@@ -43,6 +43,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements MongoTypeMapper {
 
@@ -169,7 +170,6 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 				} else if (sink instanceof DBObject) {
 					((DBObject) sink).put(typeKey, alias);
 				}
-
 			}
 		}
 	}

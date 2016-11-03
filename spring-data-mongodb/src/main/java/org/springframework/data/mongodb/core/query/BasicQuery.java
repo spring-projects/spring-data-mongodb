@@ -30,6 +30,7 @@ import com.mongodb.util.JSON;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author John Willemin
+ * @author Mark Paluch
  */
 public class BasicQuery extends Query {
 
@@ -37,19 +38,41 @@ public class BasicQuery extends Query {
 	private Document fieldsObject;
 	private Document sortObject;
 
+	/**
+	 * Create a new {@link BasicQuery} given a JSON {@code query}.
+	 *
+	 * @param query may be {@literal null}.
+	 */
 	public BasicQuery(String query) {
 		this(query, null);
 	}
 
+	/**
+	 * Create a new {@link BasicQuery} given a query {@link Document}.
+	 *
+	 * @param queryObject may be {@literal null}.
+	 */
 	public BasicQuery(Document queryObject) {
 		this(queryObject, null);
 	}
 
+	/**
+	 * Create a new {@link BasicQuery} given a JSON {@code query} and {@code fields}.
+	 *
+	 * @param query may be {@literal null}.
+	 * @param fields may be {@literal null}.
+	 */
 	public BasicQuery(String query, String fields) {
 		this.queryObject = query != null ? new Document(((DBObject) JSON.parse(query)).toMap()) : null;
 		this.fieldsObject = fields != null ? new Document(((DBObject) JSON.parse(fields)).toMap()) : null;
 	}
 
+	/**
+	 * Create a new {@link BasicQuery} given a query {@link Document} and field specification {@link Document}.
+	 *
+	 * @param queryObject may be {@literal null}.
+	 * @param fieldsObject may be {@literal null}.
+	 */
 	public BasicQuery(Document queryObject, Document fieldsObject) {
 		this.queryObject = queryObject;
 		this.fieldsObject = fieldsObject;

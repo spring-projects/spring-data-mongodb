@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
@@ -21,9 +20,6 @@ import java.util.List;
 
 import org.bson.Document;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Encapsulates the aggregation framework {@code $ifNull} operator. Replacement values can be either {@link Field field
@@ -56,7 +52,7 @@ public class IfNullOperator implements AggregationExpression {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
@@ -73,7 +69,7 @@ public class IfNullOperator implements AggregationExpression {
 
 		if (value instanceof Field) {
 			return context.getReference((Field) value).toString();
-		} else if (value instanceof DBObject) {
+		} else if (value instanceof Document) {
 			return value;
 		}
 
@@ -120,7 +116,7 @@ public class IfNullOperator implements AggregationExpression {
 
 		/**
 		 * @param value the value to be used if the {@code $ifNull }condition evaluates {@literal true}. Can be a
-		 *          {@link DBObject}, a value that is supported by MongoDB or a value that can be converted to a MongoDB
+		 *          {@link Document}, a value that is supported by MongoDB or a value that can be converted to a MongoDB
 		 *          representation but must not be {@literal null}.
 		 * @return the {@link IfNullOperator}
 		 */

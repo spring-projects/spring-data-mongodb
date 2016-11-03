@@ -28,6 +28,7 @@ import org.springframework.util.ObjectUtils;
  * @author Oliver Gierke
  * @author Patryk Wasik
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class Field {
 
@@ -89,8 +90,7 @@ public class Field {
 		}
 
 		for (Entry<String, Criteria> entry : elemMatchs.entrySet()) {
-			Document dbObject = new Document("$elemMatch", entry.getValue().getCriteriaObject());
-			document.put(entry.getKey(), dbObject);
+			document.put(entry.getKey(), new Document("$elemMatch", entry.getValue().getCriteriaObject()));
 		}
 
 		if (postionKey != null) {

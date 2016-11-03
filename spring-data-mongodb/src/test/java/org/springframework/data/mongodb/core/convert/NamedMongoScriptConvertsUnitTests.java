@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.DocumentToNamedMongoScriptCoverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.DocumentToNamedMongoScriptConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.NamedMongoScriptToDocumentConverter;
 import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.DboToNamedMongoScriptConverterUnitTests;
 import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.NamedMongoScriptToDboConverterUnitTests;
@@ -95,7 +95,7 @@ public class NamedMongoScriptConvertsUnitTests {
 	 */
 	public static class DboToNamedMongoScriptConverterUnitTests {
 
-		DocumentToNamedMongoScriptCoverter converter = DocumentToNamedMongoScriptCoverter.INSTANCE;
+		DocumentToNamedMongoScriptConverter converter = DocumentToNamedMongoScriptConverter.INSTANCE;
 
 		/**
 		 * @see DATAMONGO-479
