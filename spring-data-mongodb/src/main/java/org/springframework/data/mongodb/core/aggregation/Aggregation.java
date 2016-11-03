@@ -248,8 +248,19 @@ public class Aggregation {
 	 *
 	 * @param elementsToSkip must not be less than zero.
 	 * @return
+	 * @deprecated prepare to get this one removed in favor of {@link #skip(long)}.
 	 */
 	public static SkipOperation skip(int elementsToSkip) {
+		return new SkipOperation(elementsToSkip);
+	}
+
+	/**
+	 * Creates a new {@link SkipOperation} skipping the given number of elements.
+	 *
+	 * @param elementsToSkip must not be less than zero.
+	 * @return
+	 */
+	public static SkipOperation skip(long elementsToSkip) {
 		return new SkipOperation(elementsToSkip);
 	}
 
