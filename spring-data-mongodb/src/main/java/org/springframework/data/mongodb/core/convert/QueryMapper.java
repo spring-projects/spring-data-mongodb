@@ -247,7 +247,7 @@ public class QueryMapper {
 		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
 
 			Iterable<?> conditions = keyword.getValue();
-			List newConditions = new ArrayList();
+			List<Object> newConditions = new ArrayList<Object>();
 
 			for (Object condition : conditions) {
 				newConditions.add(isDocument(condition) ? getMappedObject((Document) condition, entity)
@@ -291,6 +291,7 @@ public class QueryMapper {
 	 * @param newKey the key the value will be bound to eventually
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	protected Object getMappedValue(Field documentField, Object value) {
 
 		if (documentField.isIdField()) {
@@ -475,6 +476,12 @@ public class QueryMapper {
 		return value instanceof Document;
 	}
 
+	/**
+	 * Checks whether the given value is a {@link DBObject}.
+	 *
+	 * @param value can be {@literal null}.
+	 * @return
+	 */
 	protected final boolean isDBObject(Object value) {
 		return value instanceof DBObject;
 	}
@@ -585,13 +592,13 @@ public class QueryMapper {
 			this.value = BsonUtils.get(source, key);
 		}
 
-		public Keyword(Bson dbObject) {
+		public Keyword(Bson bson) {
 
-			Set<String> keys = BsonUtils.asMap(dbObject).keySet();
+			Set<String> keys = BsonUtils.asMap(bson).keySet();
 			Assert.isTrue(keys.size() == 1, "Can only use a single value Document!");
 
 			this.key = keys.iterator().next();
-			this.value = BsonUtils.get(dbObject, key);
+			this.value = BsonUtils.get(bson, key);
 		}
 
 		/**

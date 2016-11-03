@@ -46,6 +46,7 @@ import com.querydsl.mongodb.MongodbSerializer;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class SpringDataMongodbSerializer extends MongodbSerializer {
 
@@ -121,8 +122,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		if (ID_KEY.equals(key)) {
 			DBObject superIdValue = super.asDBObject(key, value);
 			Document mappedIdValue = mapper.getMappedObject((BasicDBObject) superIdValue, null);
-			DBObject parsedId = (DBObject) JSON.parse(mappedIdValue.toJson());
-			return parsedId;
+			return (DBObject) JSON.parse(mappedIdValue.toJson());
 		}
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
 	}

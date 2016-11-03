@@ -28,6 +28,7 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.7
  */
 public enum AggregationFunctionExpressions {
@@ -75,7 +76,7 @@ public enum AggregationFunctionExpressions {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Expression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 * @see org.springframework.data.mongodb.core.aggregation.Expression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
