@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.domain.Example.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
-import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.Arrays;
@@ -163,10 +163,10 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		org.bson.Document dbo = mapper.getMappedExample(Example.of(probe),
+		org.bson.Document document = mapper.getMappedExample(Example.of(probe),
 				context.getPersistentEntity(WrapperDocument.class));
 
-		assertThat(dbo,
+		assertThat(document,
 				isBsonObject().containing("_class", new org.bson.Document("$in", new String[] { probe.getClass().getName() })));
 	}
 
@@ -326,8 +326,8 @@ public class MongoExampleMapperUnitTests {
 		probe.referenceDocument = new ReferenceDocument();
 		probe.referenceDocument.id = "200";
 
-		org.bson.Document dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
-		com.mongodb.DBRef reference = getTypedValue(dbo, "referenceDocument", com.mongodb.DBRef.class);
+		org.bson.Document document = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
+		com.mongodb.DBRef reference = getTypedValue(document, "referenceDocument", com.mongodb.DBRef.class);
 
 		assertThat(reference.getId(), Is.<Object>is("200"));
 		assertThat(reference.getCollectionName(), is("refDoc"));
@@ -342,9 +342,9 @@ public class MongoExampleMapperUnitTests {
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "steelheart";
 
-		org.bson.Document dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
+		org.bson.Document document = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(dbo, isBsonObject().containing("stringValue", "steelheart"));
+		assertThat(document, isBsonObject().containing("stringValue", "steelheart"));
 	}
 
 	/**
@@ -356,10 +356,10 @@ public class MongoExampleMapperUnitTests {
 		ClassWithGeoTypes probe = new ClassWithGeoTypes();
 		probe.legacyPoint = new Point(10D, 20D);
 
-		org.bson.Document dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
+		org.bson.Document document = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
 
-		assertThat(dbo.get("legacyPoint.x"), Is.<Object>is(10D));
-		assertThat(dbo.get("legacyPoint.y"), Is.<Object>is(20D));
+		assertThat(document.get("legacyPoint.x"), Is.<Object>is(10D));
+		assertThat(document.get("legacyPoint.y"), Is.<Object>is(20D));
 	}
 
 	/**
@@ -474,9 +474,9 @@ public class MongoExampleMapperUnitTests {
 		probe.customNamedField = "steelheart";
 		probe.anotherStringValue = "calamity";
 
-		org.bson.Document dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
+		org.bson.Document document = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(dbo, isBsonObject().containing("anotherStringValue", "calamity"));
+		assertThat(document, isBsonObject().containing("anotherStringValue", "calamity"));
 	}
 
 	/**

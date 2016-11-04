@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,12 +56,12 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsBoxToDbObjectAndBackCorrectly() {
+	public void convertsBoxToDocumentAndBackCorrectly() {
 
 		Box box = new Box(new Point(1, 2), new Point(3, 4));
 
-		Document dbo = BoxToDocumentConverter.INSTANCE.convert(box);
-		Box result = DocumentToBoxConverter.INSTANCE.convert(dbo);
+		Document document = BoxToDocumentConverter.INSTANCE.convert(box);
+		Box result = DocumentToBoxConverter.INSTANCE.convert(document);
 
 		assertThat(result, is(box));
 		assertThat(result.getClass().equals(Box.class), is(true));
@@ -71,12 +71,12 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsCircleToDbObjectAndBackCorrectlyNeutralDistance() {
+	public void convertsCircleToDocumentAndBackCorrectlyNeutralDistance() {
 
 		Circle circle = new Circle(new Point(1, 2), 3);
 
-		Document dbo = CircleToDocumentConverter.INSTANCE.convert(circle);
-		Circle result = DocumentToCircleConverter.INSTANCE.convert(dbo);
+		Document document = CircleToDocumentConverter.INSTANCE.convert(circle);
+		Circle result = DocumentToCircleConverter.INSTANCE.convert(document);
 
 		assertThat(result, is(circle));
 	}
@@ -85,13 +85,13 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsCircleToDbObjectAndBackCorrectlyMilesDistance() {
+	public void convertsCircleToDocumentAndBackCorrectlyMilesDistance() {
 
 		Distance radius = new Distance(3, Metrics.MILES);
 		Circle circle = new Circle(new Point(1, 2), radius);
 
-		Document dbo = CircleToDocumentConverter.INSTANCE.convert(circle);
-		Circle result = DocumentToCircleConverter.INSTANCE.convert(dbo);
+		Document document = CircleToDocumentConverter.INSTANCE.convert(circle);
+		Circle result = DocumentToCircleConverter.INSTANCE.convert(document);
 
 		assertThat(result, is(circle));
 		assertThat(result.getRadius(), is(radius));
@@ -101,12 +101,12 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsPolygonToDbObjectAndBackCorrectly() {
+	public void convertsPolygonToDocumentAndBackCorrectly() {
 
 		Polygon polygon = new Polygon(new Point(1, 2), new Point(2, 3), new Point(3, 4), new Point(5, 6));
 
-		Document dbo = PolygonToDocumentConverter.INSTANCE.convert(polygon);
-		Polygon result = DocumentToPolygonConverter.INSTANCE.convert(dbo);
+		Document document = PolygonToDocumentConverter.INSTANCE.convert(polygon);
+		Polygon result = DocumentToPolygonConverter.INSTANCE.convert(document);
 
 		assertThat(result, is(polygon));
 		assertThat(result.getClass().equals(Polygon.class), is(true));
@@ -116,12 +116,12 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsSphereToDbObjectAndBackCorrectlyWithNeutralDistance() {
+	public void convertsSphereToDocumentAndBackCorrectlyWithNeutralDistance() {
 
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
 
-		Document dbo = SphereToDocumentConverter.INSTANCE.convert(sphere);
-		Sphere result = DocumentToSphereConverter.INSTANCE.convert(dbo);
+		Document document = SphereToDocumentConverter.INSTANCE.convert(sphere);
+		Sphere result = DocumentToSphereConverter.INSTANCE.convert(document);
 
 		assertThat(result, is(sphere));
 		assertThat(result.getClass().equals(Sphere.class), is(true));
@@ -131,13 +131,13 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsSphereToDbObjectAndBackCorrectlyWithKilometerDistance() {
+	public void convertsSphereToDocumentAndBackCorrectlyWithKilometerDistance() {
 
 		Distance radius = new Distance(3, Metrics.KILOMETERS);
 		Sphere sphere = new Sphere(new Point(1, 2), radius);
 
-		Document dbo = SphereToDocumentConverter.INSTANCE.convert(sphere);
-		Sphere result = DocumentToSphereConverter.INSTANCE.convert(dbo);
+		Document document = SphereToDocumentConverter.INSTANCE.convert(sphere);
+		Sphere result = DocumentToSphereConverter.INSTANCE.convert(document);
 
 		assertThat(result, is(sphere));
 		assertThat(result.getRadius(), is(radius));
@@ -152,8 +152,8 @@ public class GeoConvertersUnitTests {
 
 		Point point = new Point(1, 2);
 
-		Document dbo = PointToDocumentConverter.INSTANCE.convert(point);
-		Point result = DocumentToPointConverter.INSTANCE.convert(dbo);
+		Document document = PointToDocumentConverter.INSTANCE.convert(point);
+		Point result = DocumentToPointConverter.INSTANCE.convert(document);
 
 		assertThat(result, is(point));
 		assertThat(result.getClass().equals(Point.class), is(true));
@@ -163,16 +163,16 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsGeoCommandToDbObjectCorrectly() {
+	public void convertsGeoCommandToDocumentCorrectly() {
 
 		Box box = new Box(new double[] { 1, 2 }, new double[] { 3, 4 });
 		GeoCommand cmd = new GeoCommand(box);
 
-		Document dbo = GeoCommandToDocumentConverter.INSTANCE.convert(cmd);
+		Document document = GeoCommandToDocumentConverter.INSTANCE.convert(cmd);
 
-		assertThat(dbo, is(notNullValue()));
+		assertThat(document, is(notNullValue()));
 
-		List<Object> boxObject = (List<Object>) dbo.get("$box");
+		List<Object> boxObject = (List<Object>) document.get("$box");
 
 		assertThat(boxObject,
 				is((Object) Arrays.asList(GeoConverters.toList(box.getFirst()), GeoConverters.toList(box.getSecond()))));

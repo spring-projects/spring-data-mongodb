@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,11 +126,11 @@ public class CriteriaTests {
 	 * @see DATAMONGO-1068
 	 */
 	@Test
-	public void getCriteriaObjectShouldReturnEmptyDBOWhenNoCriteriaSpecified() {
+	public void getCriteriaObjectShouldReturnEmptyDocumentWhenNoCriteriaSpecified() {
 
-		Document dbo = new Criteria().getCriteriaObject();
+		Document document = new Criteria().getCriteriaObject();
 
-		assertThat(dbo, equalTo(new Document()));
+		assertThat(document, equalTo(new Document()));
 	}
 
 	/**
@@ -139,9 +139,9 @@ public class CriteriaTests {
 	@Test
 	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresent() {
 
-		Document dbo = new Criteria().lt("foo").getCriteriaObject();
+		Document document = new Criteria().lt("foo").getCriteriaObject();
 
-		assertThat(dbo, equalTo(new Document().append("$lt", "foo")));
+		assertThat(document, equalTo(new Document().append("$lt", "foo")));
 	}
 
 	/**
@@ -150,9 +150,9 @@ public class CriteriaTests {
 	@Test
 	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresentButMultipleCriteriasPresent() {
 
-		Document dbo = new Criteria().lt("foo").gt("bar").getCriteriaObject();
+		Document document = new Criteria().lt("foo").gt("bar").getCriteriaObject();
 
-		assertThat(dbo, equalTo(new Document().append("$lt", "foo").append("$gt", "bar")));
+		assertThat(document, equalTo(new Document().append("$lt", "foo").append("$gt", "bar")));
 	}
 
 	/**
@@ -161,9 +161,9 @@ public class CriteriaTests {
 	@Test
 	public void getCriteriaObjectShouldRespectNotWhenNoKeyPresent() {
 
-		Document dbo = new Criteria().lt("foo").not().getCriteriaObject();
+		Document document = new Criteria().lt("foo").not().getCriteriaObject();
 
-		assertThat(dbo, equalTo(new Document().append("$not", new Document("$lt", "foo"))));
+		assertThat(document, equalTo(new Document().append("$not", new Document("$lt", "foo"))));
 	}
 
 	/**
@@ -172,9 +172,9 @@ public class CriteriaTests {
 	@Test
 	public void geoJsonTypesShouldBeWrappedInGeometry() {
 
-		Document dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).getCriteriaObject();
+		Document document = new Criteria("foo").near(new GeoJsonPoint(100, 200)).getCriteriaObject();
 
-		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry", new GeoJsonPoint(100, 200)));
+		assertThat(document, isBsonObject().containing("foo.$near.$geometry", new GeoJsonPoint(100, 200)));
 	}
 
 	/**
@@ -183,9 +183,9 @@ public class CriteriaTests {
 	@Test
 	public void legacyCoordinateTypesShouldNotBeWrappedInGeometry() {
 
-		Document dbo = new Criteria("foo").near(new Point(100, 200)).getCriteriaObject();
+		Document document = new Criteria("foo").near(new Point(100, 200)).getCriteriaObject();
 
-		assertThat(dbo, isBsonObject().notContaining("foo.$near.$geometry"));
+		assertThat(document, isBsonObject().notContaining("foo.$near.$geometry"));
 	}
 
 	/**
@@ -194,9 +194,9 @@ public class CriteriaTests {
 	@Test
 	public void maxDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
 
-		Document dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
+		Document document = new Criteria("foo").near(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
-		assertThat(dbo, isBsonObject().containing("foo.$near.$maxDistance", 50D));
+		assertThat(document, isBsonObject().containing("foo.$near.$maxDistance", 50D));
 	}
 
 	/**
@@ -205,9 +205,9 @@ public class CriteriaTests {
 	@Test
 	public void maxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
-		Document dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
+		Document document = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
-		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$maxDistance", 50D));
+		assertThat(document, isBsonObject().containing("foo.$nearSphere.$maxDistance", 50D));
 	}
 
 	/**
@@ -216,9 +216,9 @@ public class CriteriaTests {
 	@Test
 	public void minDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
 
-		Document dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
+		Document document = new Criteria("foo").near(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
-		assertThat(dbo, isBsonObject().containing("foo.$near.$minDistance", 50D));
+		assertThat(document, isBsonObject().containing("foo.$near.$minDistance", 50D));
 	}
 
 	/**
@@ -227,9 +227,9 @@ public class CriteriaTests {
 	@Test
 	public void minDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
-		Document dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
+		Document document = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
-		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
+		assertThat(document, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
 	}
 
 	/**
@@ -238,11 +238,11 @@ public class CriteriaTests {
 	@Test
 	public void minAndMaxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
-		Document dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).maxDistance(100D)
+		Document document = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).maxDistance(100D)
 				.getCriteriaObject();
 
-		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
-		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$maxDistance", 100D));
+		assertThat(document, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
+		assertThat(document, isBsonObject().containing("foo.$nearSphere.$maxDistance", 100D));
 	}
 
 	/**
@@ -260,8 +260,8 @@ public class CriteriaTests {
 	public void intersectsShouldWrapGeoJsonTypeInGeometryCorrectly() {
 
 		GeoJsonLineString lineString = new GeoJsonLineString(new Point(0, 0), new Point(10, 10));
-		Document dbo = new Criteria("foo").intersects(lineString).getCriteriaObject();
+		Document document = new Criteria("foo").intersects(lineString).getCriteriaObject();
 
-		assertThat(dbo, isBsonObject().containing("foo.$geoIntersects.$geometry", lineString));
+		assertThat(document, isBsonObject().containing("foo.$geoIntersects.$geometry", lineString));
 	}
 }

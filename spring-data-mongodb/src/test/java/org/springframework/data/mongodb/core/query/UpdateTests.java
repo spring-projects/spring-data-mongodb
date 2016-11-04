@@ -25,10 +25,7 @@ import java.util.Map;
 import org.bson.Document;
 import org.joda.time.DateTime;
 import org.junit.Test;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 /**
  * Test cases for {@link Update}.
@@ -249,7 +246,7 @@ public class UpdateTests {
 	 * @see DATAMONGO-852
 	 */
 	@Test
-	public void testUpdateAffectsFieldShouldReturnTrueWhenUpdateWithKeyCreatedFromDbObject() {
+	public void testUpdateAffectsFieldShouldReturnTrueWhenUpdateWithKeyCreatedFromDocument() {
 
 		Update update = new Update().set("foo", "bar");
 		Update clone = Update.fromDocument(update.getUpdateObject());
@@ -261,7 +258,7 @@ public class UpdateTests {
 	 * @see DATAMONGO-852
 	 */
 	@Test
-	public void testUpdateAffectsFieldShouldReturnFalseWhenUpdateWithoutKeyCreatedFromDbObject() {
+	public void testUpdateAffectsFieldShouldReturnFalseWhenUpdateWithoutKeyCreatedFromDocument() {
 
 		Update update = new Update().set("foo", "bar");
 		Update clone = Update.fromDocument(update.getUpdateObject());
@@ -490,7 +487,7 @@ public class UpdateTests {
 
 		Document updateObject = update.getUpdateObject();
 
-		Document pullAll = DBObjectTestUtils.getAsDocument(updateObject, "$pullAll");
+		Document pullAll = DocumentTestUtils.getAsDocument(updateObject, "$pullAll");
 
 		assertThat(pullAll.get("field1"), is(notNullValue()));
 		assertThat(pullAll.get("field2"), is(notNullValue()));

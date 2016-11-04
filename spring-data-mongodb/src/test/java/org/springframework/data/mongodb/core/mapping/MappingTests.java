@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,9 +214,9 @@ public class MappingTests extends AbstractIntegrationTests {
 				List<Document> indexes = new ArrayList<Document>();
 				collection.listIndexes(Document.class).into(indexes);
 
-				for (Document dbo : indexes) {
-					if (dbo.get("name") != null && dbo.get("name") instanceof String
-							&& ((String) dbo.get("name")).startsWith("name")) {
+				for (Document document : indexes) {
+					if (document.get("name") != null && document.get("name") instanceof String
+							&& ((String) document.get("name")).startsWith("name")) {
 						return true;
 					}
 				}
@@ -235,9 +235,9 @@ public class MappingTests extends AbstractIntegrationTests {
 						List<Document> indexes = new ArrayList<Document>();
 						collection.listIndexes(Document.class).into(indexes);
 
-						for (Document dbo : indexes) {
-							if (dbo.get("name") != null && dbo.get("name") instanceof String
-									&& ((String) dbo.get("name")).startsWith("name")) {
+						for (Document document : indexes) {
+							if (document.get("name") != null && document.get("name") instanceof String
+									&& ((String) document.get("name")).startsWith("name")) {
 								return true;
 							}
 						}

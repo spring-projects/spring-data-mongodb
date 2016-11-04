@@ -137,16 +137,16 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		mapDBRef.map = mapVal;
 
-		Document dbObject = new Document();
-		converter.write(mapDBRef, dbObject);
+		Document document = new Document();
+		converter.write(mapDBRef, document);
 
-		Document map = (Document) dbObject.get("map");
+		Document map = (Document) document.get("map");
 
 		assertThat(map.get("test"), instanceOf(DBRef.class));
 
-		((Document) dbObject.get("map")).put("test", dbRef);
+		((Document) document.get("map")).put("test", dbRef);
 
-		MapDBRef read = converter.read(MapDBRef.class, dbObject);
+		MapDBRef read = converter.read(MapDBRef.class, document);
 
 		assertThat(read.map.get("test").id, is(BigInteger.ONE));
 	}
@@ -179,12 +179,12 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
 		lazyDbRefs.dbRefToInterface = new LinkedList<LazyDbRefTarget>(Arrays.asList(new LazyDbRefTarget("1")));
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, dbo);
+		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToInterface, false);
 		assertThat(result.dbRefToInterface.get(0).getId(), is(id));
@@ -203,13 +203,13 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
 		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<LazyDbRefTarget>(
 				Arrays.asList(new LazyDbRefTarget(id, value)));
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, dbo);
+		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteCollection, false);
 		assertThat(result.dbRefToConcreteCollection.get(0).getId(), is(id));
@@ -228,12 +228,12 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
 		lazyDbRefs.dbRefToConcreteType = new LazyDbRefTarget(id, value);
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, dbo);
+		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteType, false);
 		assertThat(result.dbRefToConcreteType.getId(), is(id));
@@ -252,13 +252,13 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
 		lazyDbRefs.dbRefToConcreteTypeWithPersistenceConstructor = new LazyDbRefTargetWithPeristenceConstructor((Object) id,
 				(Object) value);
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, dbo);
+		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteTypeWithPersistenceConstructor, false);
 		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructor.getId(), is(id));
@@ -277,13 +277,13 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
 		lazyDbRefs.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor = new LazyDbRefTargetWithPeristenceConstructorWithoutDefaultConstructor(
 				(Object) id, (Object) value);
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, dbo);
+		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor, false);
 		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor.getId(), is(id));
@@ -302,12 +302,12 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		SerializableClassWithLazyDbRefs lazyDbRefs = new SerializableClassWithLazyDbRefs();
 		lazyDbRefs.dbRefToSerializableTarget = new SerializableLazyDbRefTarget(id, value);
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		SerializableClassWithLazyDbRefs result = converterSpy.read(SerializableClassWithLazyDbRefs.class, dbo);
+		SerializableClassWithLazyDbRefs result = converterSpy.read(SerializableClassWithLazyDbRefs.class, document);
 
 		SerializableClassWithLazyDbRefs deserializedResult = (SerializableClassWithLazyDbRefs) transport(result);
 
@@ -327,12 +327,12 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
 		lazyDbRefs.dbRefToToStringObjectMethodOverride = new ToStringObjectMethodOverrideLazyDbRefTarget(id, value);
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
 		assertThat(result.dbRefToToStringObjectMethodOverride, is(notNullValue()));
 		assertProxyIsResolved(result.dbRefToToStringObjectMethodOverride, false);
@@ -351,12 +351,12 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
 		lazyDbRefs.dbRefToPlainObject = new LazyDbRefTarget(id, value);
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
 		assertThat(result.dbRefToPlainObject, is(notNullValue()));
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
@@ -382,13 +382,13 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
 		lazyDbRefs.dbRefToPlainObject = new LazyDbRefTarget(id, value);
 		lazyDbRefs.dbRefToToStringObjectMethodOverride = new ToStringObjectMethodOverrideLazyDbRefTarget(id, value);
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
 		assertThat(result.dbRefToPlainObject, is(notNullValue()));
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
@@ -411,13 +411,13 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
 		lazyDbRefs.dbRefToPlainObject = new LazyDbRefTarget(id, value);
 		lazyDbRefs.dbRefToToStringObjectMethodOverride = new ToStringObjectMethodOverrideLazyDbRefTarget(id, value);
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
 		assertThat(result.dbRefToPlainObject, is(notNullValue()));
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
@@ -438,15 +438,15 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
-		Document dbo = new Document();
+		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
 		lazyDbRefs.dbRefEqualsAndHashcodeObjectMethodOverride1 = new EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget(
 				id, value);
 		lazyDbRefs.dbRefEqualsAndHashcodeObjectMethodOverride2 = new EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget(
 				id, value);
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride1, false);
 		assertThat(result.dbRefEqualsAndHashcodeObjectMethodOverride1, is(notNullValue()));
@@ -465,12 +465,12 @@ public class DbRefMappingMongoConverterUnitTests {
 	@Test
 	public void shouldNotGenerateLazyLoadingProxyForNullValues() {
 
-		Document dbo = new Document();
+		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
 		lazyDbRefs.id = "42";
-		converter.write(lazyDbRefs, dbo);
+		converter.write(lazyDbRefs, document);
 
-		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, dbo);
+		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, document);
 
 		assertThat(result.id, is(lazyDbRefs.id));
 		assertThat(result.dbRefToInterface, is(nullValue()));
@@ -486,14 +486,14 @@ public class DbRefMappingMongoConverterUnitTests {
 	@Test
 	public void shouldBeAbleToStoreDirectReferencesToSelf() {
 
-		Document dbo = new Document();
+		Document document = new Document();
 
 		ClassWithDbRefField o = new ClassWithDbRefField();
 		o.id = "123";
 		o.reference = o;
-		converter.write(o, dbo);
+		converter.write(o, document);
 
-		ClassWithDbRefField found = converter.read(ClassWithDbRefField.class, dbo);
+		ClassWithDbRefField found = converter.read(ClassWithDbRefField.class, document);
 
 		assertThat(found, is(notNullValue()));
 		assertThat(found.reference, is(found));
@@ -505,16 +505,16 @@ public class DbRefMappingMongoConverterUnitTests {
 	@Test
 	public void shouldBeAbleToStoreNestedReferencesToSelf() {
 
-		Document dbo = new Document();
+		Document document = new Document();
 
 		ClassWithNestedDbRefField o = new ClassWithNestedDbRefField();
 		o.id = "123";
 		o.nested = new NestedReferenceHolder();
 		o.nested.reference = o;
 
-		converter.write(o, dbo);
+		converter.write(o, document);
 
-		ClassWithNestedDbRefField found = converter.read(ClassWithNestedDbRefField.class, dbo);
+		ClassWithNestedDbRefField found = converter.read(ClassWithNestedDbRefField.class, document);
 
 		assertThat(found, is(notNullValue()));
 		assertThat(found.nested, is(notNullValue()));
@@ -600,13 +600,13 @@ public class DbRefMappingMongoConverterUnitTests {
 		doReturn(Arrays.asList(new Document("_id", id1).append("value", value),
 				new Document("_id", id2).append("value", value))).when(converterSpy).bulkReadRefs(anyListOf(DBRef.class));
 
-		Document dbo = new Document();
+		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
 		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<LazyDbRefTarget>(
 				Arrays.asList(new LazyDbRefTarget(id1, value), new LazyDbRefTarget(id2, value)));
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, dbo);
+		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteCollection, false);
 		assertThat(result.dbRefToConcreteCollection.get(0).getId(), is(id1));
@@ -631,13 +631,13 @@ public class DbRefMappingMongoConverterUnitTests {
 				.doReturn(new Document("_id", id2).append("value", value)).when(converterSpy)
 				.readRef(Mockito.any(DBRef.class));
 
-		Document dbo = new Document();
+		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
 		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<LazyDbRefTarget>(
 				Arrays.asList(new LazyDbRefTarget(id1, value), new SerializableLazyDbRefTarget(id2, value)));
-		converterSpy.write(lazyDbRefs, dbo);
+		converterSpy.write(lazyDbRefs, document);
 
-		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, dbo);
+		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteCollection, false);
 		assertThat(result.dbRefToConcreteCollection.get(0).getId(), is(id1));
@@ -664,15 +664,15 @@ public class DbRefMappingMongoConverterUnitTests {
 		doReturn(Arrays.asList(new Document("_id", val1.id), new Document("_id", val2.id))).when(converterSpy)
 				.bulkReadRefs(anyListOf(DBRef.class));
 
-		Document dbo = new Document();
+		Document document = new Document();
 		MapDBRef mapDBRef = new MapDBRef();
 		mapDBRef.map = new LinkedHashMap<String, MapDBRefVal>();
 		mapDBRef.map.put("one", val1);
 		mapDBRef.map.put("two", val2);
 
-		converterSpy.write(mapDBRef, dbo);
+		converterSpy.write(mapDBRef, document);
 
-		MapDBRef result = converterSpy.read(MapDBRef.class, dbo);
+		MapDBRef result = converterSpy.read(MapDBRef.class, document);
 
 		// assertProxyIsResolved(result.map, false);
 		assertThat(result.map.get("one").id, is(val1.id));
@@ -699,15 +699,15 @@ public class DbRefMappingMongoConverterUnitTests {
 		doReturn(Arrays.asList(new Document("_id", val1.id), new Document("_id", val2.id))).when(converterSpy)
 				.bulkReadRefs(anyListOf(DBRef.class));
 
-		Document dbo = new Document();
+		Document document = new Document();
 		MapDBRef mapDBRef = new MapDBRef();
 		mapDBRef.lazyMap = new LinkedHashMap<String, MapDBRefVal>();
 		mapDBRef.lazyMap.put("one", val1);
 		mapDBRef.lazyMap.put("two", val2);
 
-		converterSpy.write(mapDBRef, dbo);
+		converterSpy.write(mapDBRef, document);
 
-		MapDBRef result = converterSpy.read(MapDBRef.class, dbo);
+		MapDBRef result = converterSpy.read(MapDBRef.class, document);
 
 		assertProxyIsResolved(result.lazyMap, false);
 		assertThat(result.lazyMap.get("one").id, is(val1.id));

@@ -49,14 +49,10 @@ import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import org.bson.Document;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.MongoCollection;
 
 /**
  * @author Christoph Strobl

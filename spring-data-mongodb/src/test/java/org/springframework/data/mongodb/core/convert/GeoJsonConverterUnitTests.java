@@ -52,13 +52,13 @@ import com.mongodb.BasicDBList;
  * @author Christoph Strobl
  */
 @RunWith(Suite.class)
-@SuiteClasses({ GeoJsonConverterUnitTests.GeoJsonToDbObjectConverterUnitTests.class,
-		GeoJsonConverterUnitTests.DbObjectToGeoJsonPointConverterUnitTests.class,
-		GeoJsonConverterUnitTests.DbObjectToGeoJsonPolygonConverterUnitTests.class,
-		GeoJsonConverterUnitTests.DbObjectToGeoJsonLineStringConverterUnitTests.class,
-		GeoJsonConverterUnitTests.DbObjectToGeoJsonMultiPolygonConverterUnitTests.class,
-		GeoJsonConverterUnitTests.DbObjectToGeoJsonMultiLineStringConverterUnitTests.class,
-		GeoJsonConverterUnitTests.DbObjectToGeoJsonMultiPointConverterUnitTests.class })
+@SuiteClasses({ GeoJsonConverterUnitTests.GeoJsonToDocumentConverterUnitTests.class,
+		GeoJsonConverterUnitTests.DocumentToGeoJsonPointConverterUnitTests.class,
+		GeoJsonConverterUnitTests.DocumentToGeoJsonPolygonConverterUnitTests.class,
+		GeoJsonConverterUnitTests.DocumentToGeoJsonLineStringConverterUnitTests.class,
+		GeoJsonConverterUnitTests.DocumentToGeoJsonMultiPolygonConverterUnitTests.class,
+		GeoJsonConverterUnitTests.DocumentToGeoJsonMultiLineStringConverterUnitTests.class,
+		GeoJsonConverterUnitTests.DocumentToGeoJsonMultiPointConverterUnitTests.class })
 public class GeoJsonConverterUnitTests {
 
 	/*
@@ -95,7 +95,7 @@ public class GeoJsonConverterUnitTests {
 			.add(SINGLE_POINT.getX()) //
 			.add(SINGLE_POINT.getY()) //
 			.get(); //
-	static final Document SINGLE_POINT_DBO = new Document() //
+	static final Document SINGLE_POINT_DOC = new Document() //
 			.append("type", "Point") //
 			.append("coordinates", SINGE_POINT_CORDS);//
 
@@ -105,7 +105,7 @@ public class GeoJsonConverterUnitTests {
 			.add(new BasicDbListBuilder().add(POINT_2.getX()).add(POINT_2.getY()).get()) //
 			.add(new BasicDbListBuilder().add(POINT_3.getX()).add(POINT_3.getY()).get()) //
 			.get();
-	static final Document MULTI_POINT_DBO = new Document() //
+	static final Document MULTI_POINT_DOC = new Document() //
 			.append("type", "MultiPoint")//
 			.append("coordinates", MULTI_POINT_CORDS);//
 
@@ -127,13 +127,13 @@ public class GeoJsonConverterUnitTests {
 			.get();
 
 	static final BasicDBList POLYGON_CORDS = new BasicDbListBuilder().add(POLYGON_OUTER_CORDS).get();
-	static final Document POLYGON_DBO = new Document() //
+	static final Document POLYGON_DOC = new Document() //
 			.append("type", "Polygon") //
 			.append("coordinates", POLYGON_CORDS); //
 
 	static final BasicDBList POLYGON_WITH_2_RINGS_CORDS = new BasicDbListBuilder().add(POLYGON_OUTER_CORDS)
 			.add(POLYGON_INNER_CORDS).get();
-	static final Document POLYGON_WITH_2_RINGS_DBO = new Document() //
+	static final Document POLYGON_WITH_2_RINGS_DOC = new Document() //
 			.append("type", "Polygon") //
 			.append("coordinates", POLYGON_WITH_2_RINGS_CORDS);
 
@@ -147,7 +147,7 @@ public class GeoJsonConverterUnitTests {
 			.add(new BasicDbListBuilder().add(POINT_3.getX()).add(POINT_3.getY()).get()) //
 			.add(new BasicDbListBuilder().add(POINT_0.getX()).add(POINT_0.getY()).get()) //
 			.get();
-	static final Document LINE_STRING_DBO = new Document().append("type", "LineString").append("coordinates",
+	static final Document LINE_STRING_DOC = new Document().append("type", "LineString").append("coordinates",
 			LINE_STRING_CORDS_0);
 
 	// MultiLineString
@@ -155,26 +155,26 @@ public class GeoJsonConverterUnitTests {
 			.add(LINE_STRING_CORDS_0) //
 			.add(LINE_STRING_CORDS_1) //
 			.get();
-	static final Document MULTI_LINE_STRING_DBO = new Document().append("type", "MultiLineString").append("coordinates",
+	static final Document MULTI_LINE_STRING_DOC = new Document().append("type", "MultiLineString").append("coordinates",
 			MUILT_LINE_STRING_CORDS);
 
 	// MultiPolygoin
 	static final BasicDBList MULTI_POLYGON_CORDS = new BasicDbListBuilder().add(POLYGON_CORDS).get();
-	static final Document MULTI_POLYGON_DBO = new Document().append("type", "MultiPolygon").append("coordinates",
+	static final Document MULTI_POLYGON_DOC = new Document().append("type", "MultiPolygon").append("coordinates",
 			MULTI_POLYGON_CORDS);
 
 	// GeometryCollection
 	static final BasicDBList GEOMETRY_COLLECTION_GEOMETRIES = new BasicDbListBuilder() //
-			.add(SINGLE_POINT_DBO)//
-			.add(POLYGON_DBO)//
+			.add(SINGLE_POINT_DOC)//
+			.add(POLYGON_DOC)//
 			.get();
-	static final Document GEOMETRY_COLLECTION_DBO = new Document().append("type", "GeometryCollection")
+	static final Document GEOMETRY_COLLECTION_DOC = new Document().append("type", "GeometryCollection")
 			.append("geometries", GEOMETRY_COLLECTION_GEOMETRIES);
 
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class DbObjectToGeoJsonPolygonConverterUnitTests {
+	public static class DocumentToGeoJsonPolygonConverterUnitTests {
 
 		DocumentToGeoJsonPolygonConverter converter = DocumentToGeoJsonPolygonConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
@@ -184,7 +184,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertDboCorrectly() {
-			assertThat(converter.convert(POLYGON_DBO), equalTo(POLYGON));
+			assertThat(converter.convert(POLYGON_DOC), equalTo(POLYGON));
 		}
 
 		/**
@@ -212,7 +212,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertDboWithMultipleRingsCorrectly() {
-			assertThat(converter.convert(POLYGON_WITH_2_RINGS_DBO), equalTo(POLYGON_WITH_2_RINGS));
+			assertThat(converter.convert(POLYGON_WITH_2_RINGS_DOC), equalTo(POLYGON_WITH_2_RINGS));
 		}
 
 	}
@@ -220,7 +220,7 @@ public class GeoJsonConverterUnitTests {
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class DbObjectToGeoJsonPointConverterUnitTests {
+	public static class DocumentToGeoJsonPointConverterUnitTests {
 
 		DocumentToGeoJsonPointConverter converter = DocumentToGeoJsonPointConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
@@ -230,7 +230,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertDboCorrectly() {
-			assertThat(converter.convert(SINGLE_POINT_DBO), equalTo(SINGLE_POINT));
+			assertThat(converter.convert(SINGLE_POINT_DOC), equalTo(SINGLE_POINT));
 		}
 
 		/**
@@ -257,7 +257,7 @@ public class GeoJsonConverterUnitTests {
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class DbObjectToGeoJsonLineStringConverterUnitTests {
+	public static class DocumentToGeoJsonLineStringConverterUnitTests {
 
 		DocumentToGeoJsonLineStringConverter converter = DocumentToGeoJsonLineStringConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
@@ -267,7 +267,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertDboCorrectly() {
-			assertThat(converter.convert(LINE_STRING_DBO), equalTo(LINE_STRING));
+			assertThat(converter.convert(LINE_STRING_DOC), equalTo(LINE_STRING));
 		}
 
 		/**
@@ -294,7 +294,7 @@ public class GeoJsonConverterUnitTests {
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class DbObjectToGeoJsonMultiLineStringConverterUnitTests {
+	public static class DocumentToGeoJsonMultiLineStringConverterUnitTests {
 
 		DocumentToGeoJsonMultiLineStringConverter converter = DocumentToGeoJsonMultiLineStringConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
@@ -304,7 +304,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertDboCorrectly() {
-			assertThat(converter.convert(MULTI_LINE_STRING_DBO), equalTo(MULTI_LINE_STRING));
+			assertThat(converter.convert(MULTI_LINE_STRING_DOC), equalTo(MULTI_LINE_STRING));
 		}
 
 		/**
@@ -331,7 +331,7 @@ public class GeoJsonConverterUnitTests {
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class DbObjectToGeoJsonMultiPointConverterUnitTests {
+	public static class DocumentToGeoJsonMultiPointConverterUnitTests {
 
 		DocumentToGeoJsonMultiPointConverter converter = DocumentToGeoJsonMultiPointConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
@@ -341,7 +341,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertDboCorrectly() {
-			assertThat(converter.convert(MULTI_POINT_DBO), equalTo(MULTI_POINT));
+			assertThat(converter.convert(MULTI_POINT_DOC), equalTo(MULTI_POINT));
 		}
 
 		/**
@@ -368,7 +368,7 @@ public class GeoJsonConverterUnitTests {
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class DbObjectToGeoJsonMultiPolygonConverterUnitTests {
+	public static class DocumentToGeoJsonMultiPolygonConverterUnitTests {
 
 		DocumentToGeoJsonMultiPolygonConverter converter = DocumentToGeoJsonMultiPolygonConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
@@ -378,7 +378,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertDboCorrectly() {
-			assertThat(converter.convert(MULTI_POLYGON_DBO), equalTo(MULTI_POLYGON));
+			assertThat(converter.convert(MULTI_POLYGON_DOC), equalTo(MULTI_POLYGON));
 		}
 
 		/**
@@ -405,7 +405,7 @@ public class GeoJsonConverterUnitTests {
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class GeoJsonToDbObjectConverterUnitTests {
+	public static class GeoJsonToDocumentConverterUnitTests {
 
 		GeoJsonToDocumentConverter converter = GeoJsonToDocumentConverter.INSTANCE;
 
@@ -421,7 +421,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertGeoJsonPointCorrectly() {
-			assertThat(converter.convert(SINGLE_POINT), equalTo(SINGLE_POINT_DBO));
+			assertThat(converter.convert(SINGLE_POINT), equalTo(SINGLE_POINT_DOC));
 		}
 
 		/**
@@ -429,7 +429,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertGeoJsonPolygonCorrectly() {
-			assertThat(converter.convert(POLYGON), equalTo(POLYGON_DBO));
+			assertThat(converter.convert(POLYGON), equalTo(POLYGON_DOC));
 		}
 
 		/**
@@ -437,7 +437,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertGeoJsonLineStringCorrectly() {
-			assertThat(converter.convert(LINE_STRING), equalTo(LINE_STRING_DBO));
+			assertThat(converter.convert(LINE_STRING), equalTo(LINE_STRING_DOC));
 		}
 
 		/**
@@ -445,7 +445,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertGeoJsonMultiLineStringCorrectly() {
-			assertThat(converter.convert(MULTI_LINE_STRING), equalTo(MULTI_LINE_STRING_DBO));
+			assertThat(converter.convert(MULTI_LINE_STRING), equalTo(MULTI_LINE_STRING_DOC));
 		}
 
 		/**
@@ -453,7 +453,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertGeoJsonMultiPointCorrectly() {
-			assertThat(converter.convert(MULTI_POINT), equalTo(MULTI_POINT_DBO));
+			assertThat(converter.convert(MULTI_POINT), equalTo(MULTI_POINT_DOC));
 		}
 
 		/**
@@ -461,7 +461,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertGeoJsonMultiPolygonCorrectly() {
-			assertThat(converter.convert(MULTI_POLYGON), equalTo(MULTI_POLYGON_DBO));
+			assertThat(converter.convert(MULTI_POLYGON), equalTo(MULTI_POLYGON_DOC));
 		}
 
 		/**
@@ -469,7 +469,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertGeometryCollectionCorrectly() {
-			assertThat(converter.convert(GEOMETRY_COLLECTION), equalTo(GEOMETRY_COLLECTION_DBO));
+			assertThat(converter.convert(GEOMETRY_COLLECTION), equalTo(GEOMETRY_COLLECTION_DOC));
 		}
 
 		/**
@@ -477,7 +477,7 @@ public class GeoJsonConverterUnitTests {
 		 */
 		@Test
 		public void shouldConvertGeoJsonPolygonWithMultipleRingsCorrectly() {
-			assertThat(converter.convert(POLYGON_WITH_2_RINGS), equalTo(POLYGON_WITH_2_RINGS_DBO));
+			assertThat(converter.convert(POLYGON_WITH_2_RINGS), equalTo(POLYGON_WITH_2_RINGS_DOC));
 		}
 	}
 }

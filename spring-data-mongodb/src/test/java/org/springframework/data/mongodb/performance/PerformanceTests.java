@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -129,17 +129,17 @@ public class PerformanceTests {
 		Statistics statistics = new Statistics(
 				"Plain conversion of " + NUMBER_OF_PERSONS * 100 + " persons - After %s iterations");
 
-		List<Document> dbObjects = getPersonDocuments(NUMBER_OF_PERSONS * 100);
+		List<Document> documents = getPersonDocuments(NUMBER_OF_PERSONS * 100);
 
 		for (int i = 0; i < ITERATIONS; i++) {
-			statistics.registerTime(Api.DIRECT, Mode.READ, convertDirectly(dbObjects));
-			statistics.registerTime(Api.CONVERTER, Mode.READ, convertUsingConverter(dbObjects));
+			statistics.registerTime(Api.DIRECT, Mode.READ, convertDirectly(documents));
+			statistics.registerTime(Api.CONVERTER, Mode.READ, convertUsingConverter(documents));
 		}
 
 		statistics.printResults(ITERATIONS);
 	}
 
-	private long convertDirectly(final List<Document> dbObjects) {
+	private long convertDirectly(final List<Document> documents) {
 
 		executeWatched(new WatchCallback<List<Person>>() {
 
@@ -148,8 +148,8 @@ public class PerformanceTests {
 
 				List<Person> persons = new ArrayList<PerformanceTests.Person>();
 
-				for (Document dbObject : dbObjects) {
-					persons.add(Person.from(new BasicDBObject(dbObject)));
+				for (Document document : documents) {
+					persons.add(Person.from(new BasicDBObject(document)));
 				}
 
 				return persons;
@@ -159,7 +159,7 @@ public class PerformanceTests {
 		return watch.getLastTaskTimeMillis();
 	}
 
-	private long convertUsingConverter(final List<Document> dbObjects) {
+	private long convertUsingConverter(final List<Document> documents) {
 
 		executeWatched(new WatchCallback<List<Person>>() {
 
@@ -168,8 +168,8 @@ public class PerformanceTests {
 
 				List<Person> persons = new ArrayList<PerformanceTests.Person>();
 
-				for (Document dbObject : dbObjects) {
-					persons.add(converter.read(Person.class, dbObject));
+				for (Document document : documents) {
+					persons.add(converter.read(Person.class, document));
 				}
 
 				return persons;
@@ -278,11 +278,11 @@ public class PerformanceTests {
 	}
 
 	private DBObject getCreateCollectionCommand(String name) {
-		DBObject dbObject = new BasicDBObject();
-		dbObject.put("createCollection", name);
-		dbObject.put("capped", false);
-		dbObject.put("size", COLLECTION_SIZE);
-		return dbObject;
+		DBObject document = new BasicDBObject();
+		document.put("createCollection", name);
+		document.put("capped", false);
+		document.put("size", COLLECTION_SIZE);
+		return document;
 	}
 
 	private long writingObjectsUsingPlainDriver(int numberOfPersons) {
@@ -405,13 +405,13 @@ public class PerformanceTests {
 
 	private List<Document> getPersonDocuments(int numberOfPersons) {
 
-		List<Document> dbObjects = new ArrayList<Document>(numberOfPersons);
+		List<Document> documents = new ArrayList<Document>(numberOfPersons);
 
 		for (Person person : getPersonObjects(numberOfPersons)) {
-			dbObjects.add(person.toDocument());
+			documents.add(person.toDocument());
 		}
 
-		return dbObjects;
+		return documents;
 	}
 
 	private <T> T executeWatched(WatchCallback<T> callback) {
@@ -471,12 +471,12 @@ public class PerformanceTests {
 
 		public Document toDocument() {
 
-			Document dbObject = new Document();
-			dbObject.put("firstname", firstname);
-			dbObject.put("lastname", lastname);
-			dbObject.put("addresses", writeAll(addresses));
-			dbObject.put("orders", writeAll(orders));
-			return dbObject;
+			Document document = new Document();
+			document.put("firstname", firstname);
+			document.put("lastname", lastname);
+			document.put("addresses", writeAll(addresses));
+			document.put("orders", writeAll(orders));
+			return document;
 		}
 	}
 
@@ -506,11 +506,11 @@ public class PerformanceTests {
 		}
 
 		public Document toDocument() {
-			Document dbObject = new Document();
-			dbObject.put("zipCode", zipCode);
-			dbObject.put("city", city);
-			dbObject.put("types", toBasicDBList(types));
-			return dbObject;
+			Document document = new Document();
+			document.put("zipCode", zipCode);
+			document.put("city", city);
+			document.put("types", toBasicDBList(types));
+			return document;
 		}
 	}
 
@@ -613,11 +613,11 @@ public class PerformanceTests {
 
 		public Document toDocument() {
 
-			Document dbObject = new Document();
-			dbObject.put("description", description);
-			dbObject.put("price", price);
-			dbObject.put("amount", amount);
-			return dbObject;
+			Document document = new Document();
+			document.put("description", description);
+			document.put("price", price);
+			document.put("amount", amount);
+			return document;
 		}
 	}
 
