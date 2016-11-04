@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.Test;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
 /**
@@ -55,8 +55,8 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation();
 		operation = operation.and("prop").previousOperation();
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		assertThat(projectClause.get("prop"), is((Object) Fields.UNDERSCORE_ID_REF));
 	}
 
@@ -65,8 +65,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = new ProjectionOperation(Fields.fields("foo").and("bar", "foobar"));
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
 		assertThat(projectClause.get("foo"), is((Object) 1));
 		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
@@ -77,8 +77,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = new ProjectionOperation();
 
-		Document dbObject = operation.and("foo").as("bar").toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.and("foo").as("bar").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
 		assertThat(projectClause.get("bar"), is((Object) "$foo"));
 	}
@@ -88,9 +88,9 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = new ProjectionOperation();
 
-		Document dbObject = operation.and("foo").plus(41).as("bar").toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
-		Document barClause = DBObjectTestUtils.getAsDocument(projectClause, "bar");
+		Document document = operation.and("foo").plus(41).as("bar").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+		Document barClause = DocumentTestUtils.getAsDocument(projectClause, "bar");
 		List<Object> addClause = (List<Object>) barClause.get("$add");
 
 		assertThat(addClause, hasSize(2));
@@ -102,8 +102,8 @@ public class ProjectionOperationUnitTests {
 
 		String fieldName = "a";
 		ProjectionOperationBuilder operation = new ProjectionOperation().and(fieldName).plus(1);
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldName, projectClause);
 
 		assertThat(oper.containsKey(ADD), is(true));
@@ -116,8 +116,8 @@ public class ProjectionOperationUnitTests {
 		String fieldName = "a";
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).plus(1).as(fieldAlias);
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
 		Document oper = exctractOperation(fieldAlias, projectClause);
 		assertThat(oper.containsKey(ADD), is(true));
@@ -130,8 +130,8 @@ public class ProjectionOperationUnitTests {
 		String fieldName = "a";
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).minus(1).as(fieldAlias);
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(SUBTRACT), is(true));
@@ -144,8 +144,8 @@ public class ProjectionOperationUnitTests {
 		String fieldName = "a";
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).multiply(1).as(fieldAlias);
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(MULTIPLY), is(true));
@@ -158,8 +158,8 @@ public class ProjectionOperationUnitTests {
 		String fieldName = "a";
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).divide(1).as(fieldAlias);
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(DIVIDE), is(true));
@@ -178,8 +178,8 @@ public class ProjectionOperationUnitTests {
 		String fieldName = "a";
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).mod(3).as(fieldAlias);
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(MOD), is(true));
@@ -202,8 +202,8 @@ public class ProjectionOperationUnitTests {
 	public void excludeShouldAllowExclusionOfUnderscoreId() {
 
 		ProjectionOperation projectionOp = new ProjectionOperation().andExclude(Fields.UNDERSCORE_ID);
-		Document dbObject = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		assertThat((Integer) projectClause.get(Fields.UNDERSCORE_ID), is(0));
 	}
 
@@ -216,8 +216,8 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = Aggregation.project("foo").and("foobar").as("bar").andInclude("inc1", "inc2")
 				.andExclude("_id");
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
 		assertThat(projectClause.get("foo"), is((Object) 1)); // implicit
 		assertThat(projectClause.get("bar"), is((Object) "$foobar")); // explicit
@@ -245,8 +245,8 @@ public class ProjectionOperationUnitTests {
 				.and("foo").divide("bar").as("fooDivideBar") //
 				.and("foo").mod("bar").as("fooModBar");
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DBObjectTestUtils.getAsDocument(dbObject, PROJECT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
 		assertThat((Document) projectClause.get("fooPlusBar"), //
 				is(new Document("$add", Arrays.asList("$foo", "$bar"))));
@@ -270,8 +270,8 @@ public class ProjectionOperationUnitTests {
 				.andExpression("(netPrice + surCharge) * taxrate * [0]", 2).as("grossSalesPrice") //
 				.and("foo").as("bar"); //
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(dbObject, is(Document.parse(
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		assertThat(document, is(Document.parse(
 				"{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}")));
 	}
 
@@ -294,10 +294,10 @@ public class ProjectionOperationUnitTests {
 				.and("date").extractDayOfWeek().as("dayOfWeek") //
 		;
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(dbObject, is(notNullValue()));
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		assertThat(document, is(notNullValue()));
 
-		Document projected = exctractOperation("$project", dbObject);
+		Document projected = exctractOperation("$project", document);
 
 		assertThat(projected.get("hour"), is((Object) new Document("$hour", Arrays.asList("$date"))));
 		assertThat(projected.get("min"), is((Object) new Document("$minute", Arrays.asList("$date"))));
@@ -323,10 +323,10 @@ public class ProjectionOperationUnitTests {
 				.as("dayOfYearPlus1Day") //
 		;
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(dbObject, is(notNullValue()));
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		assertThat(document, is(notNullValue()));
 
-		Document projected = exctractOperation("$project", dbObject);
+		Document projected = exctractOperation("$project", document);
 		assertThat(projected.get("dayOfYearPlus1Day"), is((Object) new Document("$dayOfYear",
 				Arrays.asList(new Document("$add", Arrays.<Object> asList("$date", 86400000))))));
 	}
@@ -343,9 +343,9 @@ public class ProjectionOperationUnitTests {
 				.size()//
 				.as("tags_count");
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document projected = exctractOperation("$project", dbObject);
+		Document projected = exctractOperation("$project", document);
 		assertThat(projected.get("tags_count"), is((Object) new Document("$size", Arrays.asList("$tags"))));
 	}
 
@@ -360,9 +360,9 @@ public class ProjectionOperationUnitTests {
 				.and(SIZE.of(field("tags"))) //
 				.as("tags_count");
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document projected = exctractOperation("$project", dbObject);
+		Document projected = exctractOperation("$project", document);
 		assertThat(projected.get("tags_count"), is((Object) new Document("$size", Arrays.asList("$tags"))));
 	}
 
@@ -374,8 +374,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation.project().and("field").slice(10).as("renamed");
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projected = exctractOperation("$project", dbObject);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projected = exctractOperation("$project", document);
 
 		assertThat(projected.get("renamed"),
 				is((Object) new Document("$slice", Arrays.<Object> asList("$field", 10))));
@@ -389,8 +389,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation.project().and("field").slice(10, 5).as("renamed");
 
-		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projected = exctractOperation("$project", dbObject);
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projected = exctractOperation("$project", document);
 
 		assertThat(projected.get("renamed"),
 				is((Object) new Document("$slice", Arrays.<Object> asList("$field", 5, 10))));

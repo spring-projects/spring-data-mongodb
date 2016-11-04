@@ -121,16 +121,16 @@ public class ApplicationContextEventTests {
 		BeforeSaveEvent<PersonPojoStringId> beforeSaveEvent = (BeforeSaveEvent<PersonPojoStringId>) personBeforeSaveListener.seenEvents
 				.get(0);
 		PersonPojoStringId p2 = beforeSaveEvent.getSource();
-		org.bson.Document dbo = beforeSaveEvent.getDocument();
+		org.bson.Document document = beforeSaveEvent.getDocument();
 
-		comparePersonAndDbo(p, p2, dbo);
+		comparePersonAndDocument(p, p2, document);
 
 		AfterSaveEvent<Object> afterSaveEvent = (AfterSaveEvent<Object>) afterSaveListener.seenEvents.get(0);
 		Assert.assertTrue(afterSaveEvent.getSource() instanceof PersonPojoStringId);
 		p2 = (PersonPojoStringId) afterSaveEvent.getSource();
-		dbo = beforeSaveEvent.getDocument();
+		document = beforeSaveEvent.getDocument();
 
-		comparePersonAndDbo(p, p2, dbo);
+		comparePersonAndDocument(p, p2, document);
 	}
 
 	/**
@@ -416,14 +416,14 @@ public class ApplicationContextEventTests {
 				is(equalTo(RELATED_COLLECTION_NAME)));
 	}
 
-	private void comparePersonAndDbo(PersonPojoStringId p, PersonPojoStringId p2, org.bson.Document dbo) {
+	private void comparePersonAndDocument(PersonPojoStringId p, PersonPojoStringId p2, org.bson.Document document) {
 
 		assertEquals(p.getId(), p2.getId());
 		assertEquals(p.getText(), p2.getText());
 
-		assertEquals("org.springframework.data.mongodb.core.mapping.PersonPojoStringId", dbo.get("_class"));
-		assertEquals("1", dbo.get("_id"));
-		assertEquals("Text", dbo.get("text"));
+		assertEquals("org.springframework.data.mongodb.core.mapping.PersonPojoStringId", document.get("_class"));
+		assertEquals("1", document.get("_id"));
+		assertEquals("Text", document.get("text"));
 	}
 
 	@Data

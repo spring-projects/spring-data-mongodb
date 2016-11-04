@@ -25,8 +25,6 @@ import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import com.mongodb.DBObject;
-
 /**
  * Unit tests for {@link ConditionalOperator}.
  *
@@ -98,14 +96,14 @@ public class ConditionalOperatorUnitTests {
 	public void simpleBuilderShouldRenderCorrectly() {
 
 		ConditionalOperator operator = newBuilder().when("isYellow").then("bright").otherwise("dark");
-		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document expectedCondition = new Document() //
 				.append("if", "$isYellow") //
 				.append("then", "bright") //
 				.append("else", "dark");
 
-		assertThat(dbObject, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
 	/**
@@ -116,14 +114,14 @@ public class ConditionalOperatorUnitTests {
 
 		ConditionalOperator operator = newBuilder().when(Criteria.where("luminosity").gte(100)).then("bright")
 				.otherwise("dark");
-		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document expectedCondition = new Document () //
-				.append("if", new Document ("$gte", Arrays.<Object> asList("$luminosity", 100))) //
+		Document expectedCondition = new Document() //
+				.append("if", new Document("$gte", Arrays.<Object> asList("$luminosity", 100))) //
 				.append("then", "bright") //
 				.append("else", "dark");
 
-		assertThat(dbObject, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
 	/**
@@ -138,18 +136,18 @@ public class ConditionalOperatorUnitTests {
 								Criteria.where("saturation").lt(11)))
 				.then("bright").otherwise("dark");
 
-		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document luminosity = new Document ("$gte", Arrays.<Object> asList("$luminosity", 100));
-		Document hue = new Document ("$eq", Arrays.<Object> asList("$hue", 50));
-		Document saturation = new Document ("$lt", Arrays.<Object> asList("$saturation", 11));
+		Document luminosity = new Document("$gte", Arrays.<Object> asList("$luminosity", 100));
+		Document hue = new Document("$eq", Arrays.<Object> asList("$hue", 50));
+		Document saturation = new Document("$lt", Arrays.<Object> asList("$saturation", 11));
 
-		Document expectedCondition = new Document () //
-				.append("if", Arrays.<Object> asList(luminosity, new Document ("$and", Arrays.asList(hue, saturation)))) //
+		Document expectedCondition = new Document() //
+				.append("if", Arrays.<Object> asList(luminosity, new Document("$and", Arrays.asList(hue, saturation)))) //
 				.append("then", "bright") //
 				.append("else", "dark");
 
-		assertThat(dbObject, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
 	/**
@@ -162,17 +160,17 @@ public class ConditionalOperatorUnitTests {
 				.and("saturation").and("chroma").is(200);
 		ConditionalOperator operator = newBuilder().when(criteria).then("bright").otherwise("dark");
 
-		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document gte = new Document ("$gte", Arrays.<Object> asList("$luminosity", 100));
-		Document is = new Document ("$eq", Arrays.<Object> asList("$chroma", 200));
+		Document gte = new Document("$gte", Arrays.<Object> asList("$luminosity", 100));
+		Document is = new Document("$eq", Arrays.<Object> asList("$chroma", 200));
 
-		Document expectedCondition = new Document () //
+		Document expectedCondition = new Document() //
 				.append("if", Arrays.asList(gte, is)) //
 				.append("then", "bright") //
 				.append("else", "dark");
 
-		assertThat(dbObject, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
 	/**
@@ -192,19 +190,19 @@ public class ConditionalOperatorUnitTests {
 						.then("very-dark") //
 						.otherwise("not-so-dark"));
 
-		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document trueCondition = new Document () //
-				.append("if", new Document ("$gte", Arrays.<Object> asList("$luminosity", 200))) //
+		Document trueCondition = new Document() //
+				.append("if", new Document("$gte", Arrays.<Object> asList("$luminosity", 200))) //
 				.append("then", "verybright") //
 				.append("else", "not-so-bright");
 
-		Document falseCondition = new Document () //
-				.append("if", new Document ("$lt", Arrays.<Object> asList("$luminosity", 50))) //
+		Document falseCondition = new Document() //
+				.append("if", new Document("$lt", Arrays.<Object> asList("$luminosity", 50))) //
 				.append("then", "very-dark") //
 				.append("else", "not-so-dark");
 
-		assertThat(dbObject, isBsonObject().containing("$cond.then.$cond", trueCondition));
-		assertThat(dbObject, isBsonObject().containing("$cond.else.$cond", falseCondition));
+		assertThat(document, isBsonObject().containing("$cond.then.$cond", trueCondition));
+		assertThat(document, isBsonObject().containing("$cond.else.$cond", falseCondition));
 	}
 }

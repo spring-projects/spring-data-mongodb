@@ -58,9 +58,9 @@ public class IfNullOperatorUnitTests {
 				.ifNull("optional") //
 				.thenReplaceWith("a more sophisticated value");
 
-		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(dbObject,
+		assertThat(document,
 				isBsonObject().containing("$ifNull", Arrays.<Object> asList("$optional", "a more sophisticated value")));
 	}
 
@@ -74,8 +74,8 @@ public class IfNullOperatorUnitTests {
 				.ifNull(Fields.field("optional")) //
 				.thenReplaceWith(Fields.field("never-null"));
 
-		Document dbObject = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(dbObject, isBsonObject().containing("$ifNull", Arrays.<Object> asList("$optional", "$never-null")));
+		assertThat(document, isBsonObject().containing("$ifNull", Arrays.<Object> asList("$optional", "$never-null")));
 	}
 }

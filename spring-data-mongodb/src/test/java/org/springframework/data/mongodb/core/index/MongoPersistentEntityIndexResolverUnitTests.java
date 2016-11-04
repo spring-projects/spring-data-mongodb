@@ -34,7 +34,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.CompoundIndexResolutionTests;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.GeoSpatialIndexResolutionTests;
@@ -695,7 +695,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertIndexPathAndCollection(new String[] { "nested.foo" }, "textIndexOnNestedWithWeightRoot",
 					indexDefinitions.get(0));
 
-			org.bson.Document weights = DBObjectTestUtils.getAsDocument(indexDefinitions.get(0).getIndexOptions(), "weights");
+			org.bson.Document weights = DocumentTestUtils.getAsDocument(indexDefinitions.get(0).getIndexOptions(), "weights");
 			assertThat(weights.get("nested.foo"), is((Object) 5F));
 		}
 
@@ -711,7 +711,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertIndexPathAndCollection(new String[] { "nested.foo", "nested.bar" },
 					"textIndexOnNestedWithMostSpecificValueRoot", indexDefinitions.get(0));
 
-			org.bson.Document weights = DBObjectTestUtils.getAsDocument(indexDefinitions.get(0).getIndexOptions(), "weights");
+			org.bson.Document weights = DocumentTestUtils.getAsDocument(indexDefinitions.get(0).getIndexOptions(), "weights");
 			assertThat(weights.get("nested.foo"), is((Object) 5F));
 			assertThat(weights.get("nested.bar"), is((Object) 10F));
 		}
@@ -791,7 +791,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					TextIndexedDocumentWithComposedAnnotation.class);
 
-			org.bson.Document weights = DBObjectTestUtils.getAsDocument(indexDefinitions.get(0).getIndexOptions(), "weights");
+			org.bson.Document weights = DocumentTestUtils.getAsDocument(indexDefinitions.get(0).getIndexOptions(), "weights");
 			assertThat(weights, isBsonObject().containing("foo", 99f));
 		}
 

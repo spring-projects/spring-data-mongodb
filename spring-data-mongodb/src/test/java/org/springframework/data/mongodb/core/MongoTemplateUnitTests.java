@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -340,7 +340,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection, times(1)).deleteMany(queryCaptor.capture());
 
-		Document idField = DBObjectTestUtils.getAsDocument(queryCaptor.getValue(), "_id");
+		Document idField = DocumentTestUtils.getAsDocument(queryCaptor.getValue(), "_id");
 		assertThat((List<Object>) idField.get("$in"),
 				IsIterableContainingInOrder.<Object> contains(Integer.valueOf(0), Integer.valueOf(1)));
 	}

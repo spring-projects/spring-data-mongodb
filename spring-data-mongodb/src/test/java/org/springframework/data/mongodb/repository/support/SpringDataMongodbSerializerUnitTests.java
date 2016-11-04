@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
 import java.util.List;
 import java.util.Collections;
@@ -95,9 +95,9 @@ public class SpringDataMongodbSerializerUnitTests {
 
 		DBObject result = serializer.asDBObject("foo", address);
 		assertThat(result, is(instanceOf(BasicDBObject.class)));
-		BasicDBObject dbObject = (BasicDBObject) result;
+		BasicDBObject document = (BasicDBObject) result;
 
-		Object value = dbObject.get("foo");
+		Object value = document.get("foo");
 		assertThat(value, is(notNullValue()));
 		assertThat(value, is(instanceOf(Document.class)));
 
@@ -163,7 +163,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	 * @see DATAMONGO-969
 	 */
 	@Test
-	public void shouldConvertCollectionOfObjectIdEvenWhenNestedInOperatorDbObject() {
+	public void shouldConvertCollectionOfObjectIdEvenWhenNestedInOperatorDocument() {
 
 		ObjectId firstId = new ObjectId("53bb9fd14438765b29c2d56e");
 		ObjectId secondId = new ObjectId("53bb9fda4438765b29c2d56f");

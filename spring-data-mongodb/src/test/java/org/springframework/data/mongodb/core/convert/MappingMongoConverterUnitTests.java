@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import static java.time.ZoneId.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -74,7 +74,7 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.MappingInstantiationException;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.NestedType;
 import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.ProjectingType;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.ClassWithMapUsingEnumAsKey.FooBarEnum;
@@ -126,12 +126,12 @@ public class MappingMongoConverterUnitTests {
 		address.city = "New York";
 		address.street = "Broadway";
 
-		org.bson.Document dbObject = new org.bson.Document();
+		org.bson.Document document = new org.bson.Document();
 
-		converter.write(address, dbObject);
+		converter.write(address, document);
 
-		assertThat(dbObject.get("city").toString(), is("New York"));
-		assertThat(dbObject.get("street").toString(), is("Broadway"));
+		assertThat(document.get("city").toString(), is("New York"));
+		assertThat(document.get("street").toString(), is("Broadway"));
 	}
 
 	@Test
@@ -143,12 +143,12 @@ public class MappingMongoConverterUnitTests {
 		Person person = new Person();
 		person.birthDate = new LocalDate();
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(person, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(person, document);
 
-		assertThat(dbObject.get("birthDate"), is(instanceOf(Date.class)));
+		assertThat(document.get("birthDate"), is(instanceOf(Date.class)));
 
-		Person result = converter.read(Person.class, dbObject);
+		Person result = converter.read(Person.class, document);
 		assertThat(result.birthDate, is(notNullValue()));
 	}
 
@@ -170,10 +170,10 @@ public class MappingMongoConverterUnitTests {
 
 		Map<Locale, String> map = Collections.singletonMap(Locale.US, "Foo");
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(map, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(map, document);
 
-		assertThat(dbObject.get(Locale.US.toString()).toString(), is("Foo"));
+		assertThat(document.get(Locale.US.toString()).toString(), is("Foo"));
 	}
 
 	/**
@@ -183,9 +183,9 @@ public class MappingMongoConverterUnitTests {
 	public void readsMapWithCustomKeyTypeCorrectly() {
 
 		org.bson.Document mapObject = new org.bson.Document(Locale.US.toString(), "Value");
-		org.bson.Document dbObject = new org.bson.Document("map", mapObject);
+		org.bson.Document document = new org.bson.Document("map", mapObject);
 
-		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, dbObject);
+		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, document);
 		assertThat(result.map.get(Locale.US), is("Value"));
 	}
 
@@ -195,11 +195,11 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void usesDocumentsStoredTypeIfSubtypeOfRequest() {
 
-		org.bson.Document dbObject = new org.bson.Document();
-		dbObject.put("birthDate", new LocalDate());
-		dbObject.put(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
+		org.bson.Document document = new org.bson.Document();
+		document.put("birthDate", new LocalDate());
+		document.put(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 
-		assertThat(converter.read(Contact.class, dbObject), is(instanceOf(Person.class)));
+		assertThat(converter.read(Contact.class, document), is(instanceOf(Person.class)));
 	}
 
 	/**
@@ -208,11 +208,11 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void ignoresDocumentsStoredTypeIfCompletelyDifferentTypeRequested() {
 
-		org.bson.Document dbObject = new org.bson.Document();
-		dbObject.put("birthDate", new LocalDate());
-		dbObject.put(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
+		org.bson.Document document = new org.bson.Document();
+		document.put("birthDate", new LocalDate());
+		document.put(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 
-		assertThat(converter.read(BirthDateContainer.class, dbObject), is(instanceOf(BirthDateContainer.class)));
+		assertThat(converter.read(BirthDateContainer.class, document), is(instanceOf(BirthDateContainer.class)));
 	}
 
 	@Test
@@ -267,8 +267,8 @@ public class MappingMongoConverterUnitTests {
 	 */
 	@Test
 	public void readsEnumsCorrectly() {
-		org.bson.Document dbObject = new org.bson.Document("sampleEnum", "FIRST");
-		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
+		org.bson.Document document = new org.bson.Document("sampleEnum", "FIRST");
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, document);
 
 		assertThat(result.sampleEnum, is(SampleEnum.FIRST));
 	}
@@ -281,9 +281,9 @@ public class MappingMongoConverterUnitTests {
 
 		BasicDBList enums = new BasicDBList();
 		enums.add("FIRST");
-		org.bson.Document dbObject = new org.bson.Document("enums", enums);
+		org.bson.Document document = new org.bson.Document("enums", enums);
 
-		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, document);
 
 		assertThat(result.enums, is(instanceOf(List.class)));
 		assertThat(result.enums.size(), is(1));
@@ -312,8 +312,8 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void considersFieldNameWhenReading() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "Oliver");
-		Person result = converter.read(Person.class, dbObject);
+		org.bson.Document document = new org.bson.Document("foo", "Oliver");
+		Person result = converter.read(Person.class, document);
 
 		assertThat(result.firstname, is("Oliver"));
 	}
@@ -346,15 +346,15 @@ public class MappingMongoConverterUnitTests {
 		CollectionWrapper wrapper = new CollectionWrapper();
 		wrapper.contacts = Arrays.asList((Contact) person);
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(wrapper, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(wrapper, document);
 
-		Object result = dbObject.get("contacts");
+		Object result = document.get("contacts");
 		assertThat(result, is(instanceOf(List.class)));
 		List<Object> contacts = (List<Object>) result;
-		org.bson.Document personDbObject = (org.bson.Document) contacts.get(0);
-		assertThat(personDbObject.get("foo").toString(), is("Oliver"));
-		assertThat((String) personDbObject.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(Person.class.getName()));
+		org.bson.Document personDocument = (org.bson.Document) contacts.get(0);
+		assertThat(personDocument.get("foo").toString(), is("Oliver"));
+		assertThat((String) personDocument.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(Person.class.getName()));
 	}
 
 	/**
@@ -382,14 +382,14 @@ public class MappingMongoConverterUnitTests {
 		LocaleWrapper wrapper = new LocaleWrapper();
 		wrapper.locale = Locale.US;
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(wrapper, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(wrapper, document);
 
-		Object localeField = dbObject.get("locale");
+		Object localeField = document.get("locale");
 		assertThat(localeField, is(instanceOf(String.class)));
 		assertThat((String) localeField, is("en_US"));
 
-		LocaleWrapper read = converter.read(LocaleWrapper.class, dbObject);
+		LocaleWrapper read = converter.read(LocaleWrapper.class, document);
 		assertThat(read.locale, is(Locale.US));
 	}
 
@@ -411,10 +411,10 @@ public class MappingMongoConverterUnitTests {
 		maps.nestedMaps = new LinkedHashMap<String, Map<String, Map<String, String>>>();
 		maps.nestedMaps.put("afield", firstLevel);
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(maps, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(maps, document);
 
-		ClassWithNestedMaps result = converter.read(ClassWithNestedMaps.class, dbObject);
+		ClassWithNestedMaps result = converter.read(ClassWithNestedMaps.class, document);
 		Map<String, Map<String, Map<String, String>>> nestedMap = result.nestedMaps;
 		assertThat(nestedMap, is(notNullValue()));
 		assertThat(nestedMap.get("afield"), is(firstLevel));
@@ -430,12 +430,12 @@ public class MappingMongoConverterUnitTests {
 		container.value = BigDecimal.valueOf(2.5d);
 		container.map = Collections.singletonMap("foo", container.value);
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(container, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(container, document);
 
-		assertThat(dbObject.get("value"), is(instanceOf(String.class)));
-		assertThat((String) dbObject.get("value"), is("2.5"));
-		assertThat(((org.bson.Document) dbObject.get("map")).get("foo"), is(instanceOf(String.class)));
+		assertThat(document.get("value"), is(instanceOf(String.class)));
+		assertThat((String) document.get("value"), is("2.5"));
+		assertThat(((org.bson.Document) document.get("map")).get("foo"), is(instanceOf(String.class)));
 	}
 
 	/**
@@ -444,13 +444,13 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readsClassWithBigDecimal() {
 
-		org.bson.Document dbObject = new org.bson.Document("value", "2.5");
-		dbObject.put("map", new org.bson.Document("foo", "2.5"));
+		org.bson.Document document = new org.bson.Document("value", "2.5");
+		document.put("map", new org.bson.Document("foo", "2.5"));
 
 		BasicDBList list = new BasicDBList();
 		list.add("2.5");
-		dbObject.put("collection", list);
-		BigDecimalContainer result = converter.read(BigDecimalContainer.class, dbObject);
+		document.put("collection", list);
+		BigDecimalContainer result = converter.read(BigDecimalContainer.class, document);
 
 		assertThat(result.value, is(BigDecimal.valueOf(2.5d)));
 		assertThat(result.map.get("foo"), is(BigDecimal.valueOf(2.5d)));
@@ -464,10 +464,10 @@ public class MappingMongoConverterUnitTests {
 		CollectionWrapper wrapper = new CollectionWrapper();
 		wrapper.strings = Arrays.asList(Arrays.asList("Foo"));
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(wrapper, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(wrapper, document);
 
-		Object outerStrings = dbObject.get("strings");
+		Object outerStrings = document.get("strings");
 		assertThat(outerStrings, is(instanceOf(List.class)));
 
 		List<Object> typedOuterString = (List<Object>) outerStrings;
@@ -483,24 +483,24 @@ public class MappingMongoConverterUnitTests {
 		Person person = new Person();
 		person.addresses = Collections.emptySet();
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(person, dbObject);
-		converter.read(Person.class, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(person, document);
+		converter.read(Person.class, document);
 	}
 
 	@Test
 	public void convertsObjectIdStringsToObjectIdCorrectly() {
 		PersonPojoStringId p1 = new PersonPojoStringId("1234567890", "Text-1");
-		org.bson.Document dbo1 = new org.bson.Document();
+		org.bson.Document doc1 = new org.bson.Document();
 
-		converter.write(p1, dbo1);
-		assertThat(dbo1.get("_id"), is(instanceOf(String.class)));
+		converter.write(p1, doc1);
+		assertThat(doc1.get("_id"), is(instanceOf(String.class)));
 
 		PersonPojoStringId p2 = new PersonPojoStringId(new ObjectId().toString(), "Text-1");
-		org.bson.Document dbo2 = new org.bson.Document();
+		org.bson.Document doc2 = new org.bson.Document();
 
-		converter.write(p2, dbo2);
-		assertThat(dbo2.get("_id"), is(instanceOf(ObjectId.class)));
+		converter.write(p2, doc2);
+		assertThat(doc2.get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
 	/**
@@ -741,9 +741,9 @@ public class MappingMongoConverterUnitTests {
 		assertThat(list, is(notNullValue()));
 		assertThat(list.size(), is(1));
 
-		org.bson.Document dbObject = (org.bson.Document) list.get(0);
-		assertThat(dbObject.containsKey("Foo"), is(true));
-		assertThat((String) dbObject.get("Foo"), is(Locale.ENGLISH.toString()));
+		org.bson.Document document = (org.bson.Document) list.get(0);
+		assertThat(document.containsKey("Foo"), is(true));
+		assertThat((String) document.get("Foo"), is(Locale.ENGLISH.toString()));
 	}
 
 	/**
@@ -801,10 +801,10 @@ public class MappingMongoConverterUnitTests {
 		list.add("pong");
 		keyValues.put("list", list);
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(keyValues, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(keyValues, document);
 
-		Map<String, Object> keyValuesFromMongo = converter.read(Map.class, dbObject);
+		Map<String, Object> keyValuesFromMongo = converter.read(Map.class, document);
 
 		assertEquals(keyValues.size(), keyValuesFromMongo.size());
 		assertEquals(keyValues.get("string"), keyValuesFromMongo.get("string"));
@@ -845,31 +845,31 @@ public class MappingMongoConverterUnitTests {
 	 * @see DATAMONGO-324
 	 */
 	@Test
-	public void writesDbObjectCorrectly() {
+	public void writesDocumentCorrectly() {
 
-		org.bson.Document dbObject = new org.bson.Document();
-		dbObject.put("foo", "bar");
+		org.bson.Document document = new org.bson.Document();
+		document.put("foo", "bar");
 
 		org.bson.Document result = new org.bson.Document();
 
-		converter.write(dbObject, result);
+		converter.write(document, result);
 
 		result.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
-		assertThat(dbObject, is(result));
+		assertThat(document, is(result));
 	}
 
 	/**
 	 * @see DATAMONGO-324
 	 */
 	@Test
-	public void readsDbObjectCorrectly() {
+	public void readsDocumentCorrectly() {
 
-		org.bson.Document dbObject = new org.bson.Document();
-		dbObject.put("foo", "bar");
+		org.bson.Document document = new org.bson.Document();
+		document.put("foo", "bar");
 
-		org.bson.Document result = converter.read(org.bson.Document.class, dbObject);
+		org.bson.Document result = converter.read(org.bson.Document.class, document);
 
-		assertThat(result, is(dbObject));
+		assertThat(result, is(document));
 	}
 
 	/**
@@ -936,10 +936,10 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void considersDefaultingExpressionsAtConstructorArguments() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "bar");
-		dbObject.put("foobar", 2.5);
+		org.bson.Document document = new org.bson.Document("foo", "bar");
+		document.put("foobar", 2.5);
 
-		DefaultedConstructorArgument result = converter.read(DefaultedConstructorArgument.class, dbObject);
+		DefaultedConstructorArgument result = converter.read(DefaultedConstructorArgument.class, document);
 		assertThat(result.bar, is(-1));
 	}
 
@@ -949,11 +949,11 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void usesDocumentFieldIfReferencedInAtValue() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "bar");
-		dbObject.put("something", 37);
-		dbObject.put("foobar", 2.5);
+		org.bson.Document document = new org.bson.Document("foo", "bar");
+		document.put("something", 37);
+		document.put("foobar", 2.5);
 
-		DefaultedConstructorArgument result = converter.read(DefaultedConstructorArgument.class, dbObject);
+		DefaultedConstructorArgument result = converter.read(DefaultedConstructorArgument.class, document);
 		assertThat(result.bar, is(37));
 	}
 
@@ -963,9 +963,9 @@ public class MappingMongoConverterUnitTests {
 	@Test(expected = MappingInstantiationException.class)
 	public void rejectsNotFoundConstructorParameterForPrimitiveType() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "bar");
+		org.bson.Document document = new org.bson.Document("foo", "bar");
 
-		converter.read(DefaultedConstructorArgument.class, dbObject);
+		converter.read(DefaultedConstructorArgument.class, document);
 	}
 
 	/**
@@ -1013,11 +1013,11 @@ public class MappingMongoConverterUnitTests {
 
 		converter.setMapKeyDotReplacement("~");
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(Collections.singletonMap("foo.bar", "foobar"), dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(Collections.singletonMap("foo.bar", "foobar"), document);
 
-		assertThat((String) dbObject.get("foo~bar"), is("foobar"));
-		assertThat(dbObject.containsKey("foo.bar"), is(false));
+		assertThat((String) document.get("foo~bar"), is("foobar"));
+		assertThat(document.containsKey("foo.bar"), is(false));
 	}
 
 	/**
@@ -1029,8 +1029,8 @@ public class MappingMongoConverterUnitTests {
 
 		converter.setMapKeyDotReplacement("~");
 
-		org.bson.Document dbObject = new org.bson.Document("foo~bar", "foobar");
-		Map<String, String> result = converter.read(Map.class, dbObject);
+		org.bson.Document document = new org.bson.Document("foo~bar", "foobar");
+		Map<String, String> result = converter.read(Map.class, document);
 
 		assertThat(result.get("foo.bar"), is("foobar"));
 		assertThat(result.containsKey("foobar"), is(false));
@@ -1061,9 +1061,9 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readsMemberClassCorrectly() {
 
-		org.bson.Document dbObject = new org.bson.Document("inner", new org.bson.Document("value", "FOO!"));
+		org.bson.Document document = new org.bson.Document("inner", new org.bson.Document("value", "FOO!"));
 
-		Outer outer = converter.read(Outer.class, dbObject);
+		Outer outer = converter.read(Outer.class, document);
 		assertThat(outer.inner, is(notNullValue()));
 		assertThat(outer.inner.value, is("FOO!"));
 		assertSyntheticFieldValueOf(outer.inner, outer);
@@ -1075,8 +1075,8 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readEmptyCollectionIsModifiable() {
 
-		org.bson.Document dbObject = new org.bson.Document("contactsSet", new BasicDBList());
-		CollectionWrapper wrapper = converter.read(CollectionWrapper.class, dbObject);
+		org.bson.Document document = new org.bson.Document("contactsSet", new BasicDBList());
+		CollectionWrapper wrapper = converter.read(CollectionWrapper.class, document);
 
 		assertThat(wrapper.contactsSet, is(notNullValue()));
 		wrapper.contactsSet.add(new Contact() {});
@@ -1089,9 +1089,9 @@ public class MappingMongoConverterUnitTests {
 	public void readsPlainDBRefObject() {
 
 		DBRef dbRef = new DBRef("foo", 2);
-		org.bson.Document dbObject = new org.bson.Document("ref", dbRef);
+		org.bson.Document document = new org.bson.Document("ref", dbRef);
 
-		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
+		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
 		assertThat(result.ref, is(dbRef));
 	}
 
@@ -1105,9 +1105,9 @@ public class MappingMongoConverterUnitTests {
 		BasicDBList refs = new BasicDBList();
 		refs.add(dbRef);
 
-		org.bson.Document dbObject = new org.bson.Document("refs", refs);
+		org.bson.Document document = new org.bson.Document("refs", refs);
 
-		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
+		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
 		assertThat(result.refs, hasSize(1));
 		assertThat(result.refs, hasItem(dbRef));
 	}
@@ -1120,9 +1120,9 @@ public class MappingMongoConverterUnitTests {
 
 		DBRef dbRef = mock(DBRef.class);
 		org.bson.Document refMap = new org.bson.Document("foo", dbRef);
-		org.bson.Document dbObject = new org.bson.Document("refMap", refMap);
+		org.bson.Document document = new org.bson.Document("refMap", refMap);
 
-		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
+		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
 
 		assertThat(result.refMap.entrySet(), hasSize(1));
 		assertThat(result.refMap.values(), hasItem(dbRef));
@@ -1139,9 +1139,9 @@ public class MappingMongoConverterUnitTests {
 		DBRef dbRef = mock(DBRef.class);
 
 		org.bson.Document refMap = new org.bson.Document("foo", dbRef);
-		org.bson.Document dbObject = new org.bson.Document("personMap", refMap);
+		org.bson.Document document = new org.bson.Document("personMap", refMap);
 
-		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
+		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
 
 		Matcher isPerson = instanceOf(Person.class);
 
@@ -1169,8 +1169,8 @@ public class MappingMongoConverterUnitTests {
 	 */
 	@Test
 	public void readsURLFromStringOutOfTheBox() throws Exception {
-		org.bson.Document dbObject = new org.bson.Document("url", "http://springsource.org");
-		URLWrapper result = converter.read(URLWrapper.class, dbObject);
+		org.bson.Document document = new org.bson.Document("url", "http://springsource.org");
+		URLWrapper result = converter.read(URLWrapper.class, document);
 		assertThat(result.url, is(new URL("http://springsource.org")));
 	}
 
@@ -1186,10 +1186,10 @@ public class MappingMongoConverterUnitTests {
 		ClassWithComplexId entity = new ClassWithComplexId();
 		entity.complexId = id;
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(entity, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(entity, document);
 
-		Object idField = dbObject.get("_id");
+		Object idField = document.get("_id");
 		assertThat(idField, is(notNullValue()));
 		assertThat(idField, is(instanceOf(org.bson.Document.class)));
 		assertThat(((org.bson.Document) idField).get("innerId"), is((Object) 4711L));
@@ -1296,8 +1296,8 @@ public class MappingMongoConverterUnitTests {
 		ThrowableWrapper wrapper = new ThrowableWrapper();
 		wrapper.throwable = new Exception();
 
-		org.bson.Document dbObject = new org.bson.Document();
-		converter.write(wrapper, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(wrapper, document);
 	}
 
 	/**
@@ -1355,10 +1355,10 @@ public class MappingMongoConverterUnitTests {
 		mongoConverter.setCustomConversions(conversions);
 		mongoConverter.afterPropertiesSet();
 
-		org.bson.Document dbObject = new org.bson.Document();
-		mongoConverter.write(entity, dbObject);
+		org.bson.Document document = new org.bson.Document();
+		mongoConverter.write(entity, document);
 
-		ClassWithMapProperty result = mongoConverter.read(ClassWithMapProperty.class, dbObject);
+		ClassWithMapProperty result = mongoConverter.read(ClassWithMapProperty.class, document);
 
 		assertThat(result.mapOfPersons, is(notNullValue()));
 		Person personCandidate = result.mapOfPersons.get("foo");
@@ -1379,8 +1379,8 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readsIntoStringsOutOfTheBox() {
 
-		org.bson.Document dbObject = new org.bson.Document("firstname", "Dave");
-		assertThat(converter.read(String.class, dbObject), is("{ \"firstname\" : \"Dave\" }"));
+		org.bson.Document document = new org.bson.Document("firstname", "Dave");
+		assertThat(converter.read(String.class, document), is("{ \"firstname\" : \"Dave\" }"));
 	}
 
 	/**
@@ -1401,7 +1401,7 @@ public class MappingMongoConverterUnitTests {
 		converter.write(type, result);
 
 		assertThat(result.get("name"), is((Object) "name"));
-		org.bson.Document aValue = DBObjectTestUtils.getAsDocument(result, "a");
+		org.bson.Document aValue = DocumentTestUtils.getAsDocument(result, "a");
 		assertThat(aValue.get("b"), is((Object) "bar"));
 		assertThat(aValue.get("c"), is((Object) "C"));
 	}
@@ -1484,9 +1484,9 @@ public class MappingMongoConverterUnitTests {
 
 		BasicDBList enumSet = new BasicDBList();
 		enumSet.add("SECOND");
-		org.bson.Document dbObject = new org.bson.Document("enumSet", enumSet);
+		org.bson.Document document = new org.bson.Document("enumSet", enumSet);
 
-		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, document);
 
 		assertThat(result.enumSet, is(instanceOf(EnumSet.class)));
 		assertThat(result.enumSet.size(), is(1));
@@ -1556,16 +1556,16 @@ public class MappingMongoConverterUnitTests {
 		ClassWithGeoBox object = new ClassWithGeoBox();
 		object.box = new Box(new Point(1, 2), new Point(3, 4));
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("box"), is(instanceOf(org.bson.Document.class)));
-		assertThat(dbo.get("box"), is((Object) new org.bson.Document().append("first", toDbObject(object.box.getFirst()))
-				.append("second", toDbObject(object.box.getSecond()))));
+		assertThat(document, is(notNullValue()));
+		assertThat(document.get("box"), is(instanceOf(org.bson.Document.class)));
+		assertThat(document.get("box"), is((Object) new org.bson.Document().append("first", toDocument(object.box.getFirst()))
+				.append("second", toDocument(object.box.getSecond()))));
 	}
 
-	private static org.bson.Document toDbObject(Point point) {
+	private static org.bson.Document toDocument(Point point) {
 		return new org.bson.Document("x", point.getX()).append("y", point.getY());
 	}
 
@@ -1578,10 +1578,10 @@ public class MappingMongoConverterUnitTests {
 		ClassWithGeoBox object = new ClassWithGeoBox();
 		object.box = new Box(new Point(1, 2), new Point(3, 4));
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		ClassWithGeoBox result = converter.read(ClassWithGeoBox.class, dbo);
+		ClassWithGeoBox result = converter.read(ClassWithGeoBox.class, document);
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.box, is(object.box));
@@ -1596,20 +1596,20 @@ public class MappingMongoConverterUnitTests {
 		ClassWithGeoPolygon object = new ClassWithGeoPolygon();
 		object.polygon = new Polygon(new Point(1, 2), new Point(3, 4), new Point(4, 5));
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		assertThat(dbo, is(notNullValue()));
+		assertThat(document, is(notNullValue()));
 
-		assertThat(dbo.get("polygon"), is(instanceOf(org.bson.Document.class)));
-		org.bson.Document polygonDbo = (org.bson.Document) dbo.get("polygon");
+		assertThat(document.get("polygon"), is(instanceOf(org.bson.Document.class)));
+		org.bson.Document polygonDoc = (org.bson.Document) document.get("polygon");
 
 		@SuppressWarnings("unchecked")
-		List<org.bson.Document> points = (List<org.bson.Document>) polygonDbo.get("points");
+		List<org.bson.Document> points = (List<org.bson.Document>) polygonDoc.get("points");
 
 		assertThat(points, hasSize(3));
-		assertThat(points, Matchers.<org.bson.Document> hasItems(toDbObject(object.polygon.getPoints().get(0)),
-				toDbObject(object.polygon.getPoints().get(1)), toDbObject(object.polygon.getPoints().get(2))));
+		assertThat(points, Matchers.<org.bson.Document> hasItems(toDocument(object.polygon.getPoints().get(0)),
+				toDocument(object.polygon.getPoints().get(1)), toDocument(object.polygon.getPoints().get(2))));
 	}
 
 	/**
@@ -1621,10 +1621,10 @@ public class MappingMongoConverterUnitTests {
 		ClassWithGeoPolygon object = new ClassWithGeoPolygon();
 		object.polygon = new Polygon(new Point(1, 2), new Point(3, 4), new Point(4, 5));
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		ClassWithGeoPolygon result = converter.read(ClassWithGeoPolygon.class, dbo);
+		ClassWithGeoPolygon result = converter.read(ClassWithGeoPolygon.class, document);
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.polygon, is(object.polygon));
@@ -1641,12 +1641,12 @@ public class MappingMongoConverterUnitTests {
 		Distance radius = circle.getRadius();
 		object.circle = circle;
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("circle"), is(instanceOf(org.bson.Document.class)));
-		assertThat(dbo.get("circle"),
+		assertThat(document, is(notNullValue()));
+		assertThat(document.get("circle"), is(instanceOf(org.bson.Document.class)));
+		assertThat(document.get("circle"),
 				is((Object) new org.bson.Document("center",
 						new org.bson.Document("x", circle.getCenter().getX()).append("y", circle.getCenter().getY()))
 								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
@@ -1661,10 +1661,10 @@ public class MappingMongoConverterUnitTests {
 		ClassWithGeoCircle object = new ClassWithGeoCircle();
 		object.circle = new Circle(new Point(1, 2), 3);
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		ClassWithGeoCircle result = converter.read(ClassWithGeoCircle.class, dbo);
+		ClassWithGeoCircle result = converter.read(ClassWithGeoCircle.class, document);
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.circle, is(result.circle));
@@ -1681,12 +1681,12 @@ public class MappingMongoConverterUnitTests {
 		Distance radius = sphere.getRadius();
 		object.sphere = sphere;
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("sphere"), is(instanceOf(org.bson.Document.class)));
-		assertThat(dbo.get("sphere"),
+		assertThat(document, is(notNullValue()));
+		assertThat(document.get("sphere"), is(instanceOf(org.bson.Document.class)));
+		assertThat(document.get("sphere"),
 				is((Object) new org.bson.Document("center",
 						new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
 								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
@@ -1703,12 +1703,12 @@ public class MappingMongoConverterUnitTests {
 		Distance radius = sphere.getRadius();
 		object.sphere = sphere;
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("sphere"), is(instanceOf(org.bson.Document.class)));
-		assertThat(dbo.get("sphere"),
+		assertThat(document, is(notNullValue()));
+		assertThat(document.get("sphere"), is(instanceOf(org.bson.Document.class)));
+		assertThat(document.get("sphere"),
 				is((Object) new org.bson.Document("center",
 						new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
 								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
@@ -1723,10 +1723,10 @@ public class MappingMongoConverterUnitTests {
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
 		object.sphere = new Sphere(new Point(1, 2), 3);
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		ClassWithGeoSphere result = converter.read(ClassWithGeoSphere.class, dbo);
+		ClassWithGeoSphere result = converter.read(ClassWithGeoSphere.class, document);
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.sphere, is(object.sphere));
@@ -1743,12 +1743,12 @@ public class MappingMongoConverterUnitTests {
 		Distance radius = sphere.getRadius();
 		object.shape = sphere;
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("shape"), is(instanceOf(org.bson.Document.class)));
-		assertThat(dbo.get("shape"),
+		assertThat(document, is(notNullValue()));
+		assertThat(document.get("shape"), is(instanceOf(org.bson.Document.class)));
+		assertThat(document.get("shape"),
 				is((Object) new org.bson.Document("center",
 						new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
 								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
@@ -1765,10 +1765,10 @@ public class MappingMongoConverterUnitTests {
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
 		object.shape = sphere;
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(object, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(object, document);
 
-		ClassWithGeoShape result = converter.read(ClassWithGeoShape.class, dbo);
+		ClassWithGeoShape result = converter.read(ClassWithGeoShape.class, document);
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.shape, is((Shape) sphere));
@@ -1783,10 +1783,10 @@ public class MappingMongoConverterUnitTests {
 		ClassWithTextScoreProperty source = new ClassWithTextScoreProperty();
 		source.score = Float.MAX_VALUE;
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(source, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(source, document);
 
-		assertThat(dbo.get("score"), nullValue());
+		assertThat(document.get("score"), nullValue());
 	}
 
 	/**
@@ -1811,10 +1811,10 @@ public class MappingMongoConverterUnitTests {
 		factory.setProxyTargetClass(true);
 
 		GenericType<?> proxied = (GenericType<?>) factory.getProxy();
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(proxied, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(proxied, document);
 
-		assertThat(dbo.get("_class"), is((Object) GenericType.class.getName()));
+		assertThat(document.get("_class"), is((Object) GenericType.class.getName()));
 	}
 
 	/**
@@ -1825,8 +1825,8 @@ public class MappingMongoConverterUnitTests {
 
 		LazyLoadingProxy mock = mock(LazyLoadingProxy.class);
 
-		org.bson.Document dbo = new org.bson.Document();
-		converter.write(mock, dbo);
+		org.bson.Document document = new org.bson.Document();
+		converter.write(mock, document);
 
 		verify(mock, times(1)).getTarget();
 	}
@@ -1910,9 +1910,9 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void namedIdFieldShouldExtractValueFromUnderscoreIdField() {
 
-		org.bson.Document dbo = new org.bson.Document().append("_id", "A").append("id", "B");
+		org.bson.Document document = new org.bson.Document().append("_id", "A").append("id", "B");
 
-		ClassWithNamedIdField withNamedIdField = converter.read(ClassWithNamedIdField.class, dbo);
+		ClassWithNamedIdField withNamedIdField = converter.read(ClassWithNamedIdField.class, document);
 
 		assertThat(withNamedIdField.id, is("A"));
 	}
@@ -1923,10 +1923,10 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void explicitlyRenamedIfFieldShouldExtractValueFromIdField() {
 
-		org.bson.Document dbo = new org.bson.Document().append("_id", "A").append("id", "B");
+		org.bson.Document document = new org.bson.Document().append("_id", "A").append("id", "B");
 
 		ClassWithExplicitlyRenamedField withExplicitlyRenamedField = converter.read(ClassWithExplicitlyRenamedField.class,
-				dbo);
+				document);
 
 		assertThat(withExplicitlyRenamedField.id, is("B"));
 	}
@@ -1937,9 +1937,9 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void annotatedIdFieldShouldExtractValueFromUnderscoreIdField() {
 
-		org.bson.Document dbo = new org.bson.Document().append("_id", "A").append("id", "B");
+		org.bson.Document document = new org.bson.Document().append("_id", "A").append("id", "B");
 
-		ClassWithAnnotatedIdField withAnnotatedIdField = converter.read(ClassWithAnnotatedIdField.class, dbo);
+		ClassWithAnnotatedIdField withAnnotatedIdField = converter.read(ClassWithAnnotatedIdField.class, document);
 
 		assertThat(withAnnotatedIdField.key, is("A"));
 	}
@@ -2037,7 +2037,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document target = new org.bson.Document();
 		converter.write(source, target);
 
-		org.bson.Document map = DBObjectTestUtils.getAsDocument(target, "map");
+		org.bson.Document map = DocumentTestUtils.getAsDocument(target, "map");
 
 		assertThat(map.containsKey("foo-enum-value"), is(true));
 		assertThat(map.containsKey("bar-enum-value"), is(true));

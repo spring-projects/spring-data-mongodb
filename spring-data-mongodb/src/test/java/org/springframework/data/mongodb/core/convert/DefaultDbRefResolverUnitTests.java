@@ -24,7 +24,6 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -42,13 +41,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -92,8 +86,8 @@ public class DefaultDbRefResolverUnitTests {
 
 		verify(collectionMock, times(1)).find(captor.capture());
 
-		Document _id = DBObjectTestUtils.getAsDocument(captor.getValue(), "_id");
-		Iterable<Object> $in = DBObjectTestUtils.getTypedValue(_id, "$in", Iterable.class);
+		Document _id = DocumentTestUtils.getAsDocument(captor.getValue(), "_id");
+		Iterable<Object> $in = DocumentTestUtils.getTypedValue(_id, "$in", Iterable.class);
 
 		assertThat($in, iterableWithSize(2));
 	}

@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
@@ -98,12 +98,12 @@ public class StringBasedMongoQueryUnitTests {
 		Address address = new Address("Foo", "0123", "Bar");
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, address);
 
-		Document dbObject = new Document();
-		converter.write(address, dbObject);
-		dbObject.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
+		Document document = new Document();
+		converter.write(address, document);
+		document.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
-		Document queryObject = new Document("address", dbObject);
+		Document queryObject = new Document("address", document);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
 
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
@@ -117,12 +117,12 @@ public class StringBasedMongoQueryUnitTests {
 		Address address = new Address("Foo", "0123", "Bar");
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews", address);
 
-		Document addressDbObject = new Document();
-		converter.write(address, addressDbObject);
-		addressDbObject.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
+		Document addressDocument = new Document();
+		converter.write(address, addressDocument);
+		addressDocument.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
 
 		Document reference = new Document("lastname", "Matthews");
-		reference.append("address", addressDbObject);
+		reference.append("address", addressDocument);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		assertThat(query.getQueryObject().toJson(), is(reference.toJson()));
@@ -276,7 +276,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
 
-		DBRef dbRef = DBObjectTestUtils.getTypedValue(query.getQueryObject(), "reference", DBRef.class);
+		DBRef dbRef = DocumentTestUtils.getTypedValue(query.getQueryObject(), "reference", DBRef.class);
 		assertThat(dbRef.getId(), is((Object) "myid"));
 		assertThat(dbRef.getCollectionName(), is("reference"));
 	}

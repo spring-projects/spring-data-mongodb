@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright (c) 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,10 +61,10 @@ public class GenericMappingTests {
 		wrapper.container = new Container<String>();
 		wrapper.container.content = "Foo!";
 
-		Document dbObject = new Document();
-		converter.write(wrapper, dbObject);
+		Document document = new Document();
+		converter.write(wrapper, document);
 
-		Object container = dbObject.get("container");
+		Object container = document.get("container");
 		assertThat(container, is(notNullValue()));
 		assertTrue(container instanceof Document);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import com.mongodb.BasicDBObject;
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.Test;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -43,13 +43,13 @@ public class DocumentAccessorUnitTests {
 	@Test
 	public void putsNestedFieldCorrectly() {
 
-		Document dbObject = new Document();
+		Document document = new Document();
 
-		DocumentAccessor accessor = new DocumentAccessor(dbObject);
+		DocumentAccessor accessor = new DocumentAccessor(document);
 		accessor.put(fooProperty, "FooBar");
 
-		Document aDbObject = DBObjectTestUtils.getAsDocument(dbObject, "a");
-		assertThat(aDbObject.get("b"), is((Object) "FooBar"));
+		Document aDocument = DocumentTestUtils.getAsDocument(document, "a");
+		assertThat(aDocument.get("b"), is((Object) "FooBar"));
 	}
 
 	@Test
@@ -69,7 +69,7 @@ public class DocumentAccessorUnitTests {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNonBasicDocuments() {
+	public void rejectsNonDocuments() {
 		new DocumentAccessor(new BsonDocument());
 	}
 
@@ -93,7 +93,7 @@ public class DocumentAccessorUnitTests {
 		accessor.put(entity.getPersistentProperty("b"), "b");
 		accessor.put(entity.getPersistentProperty("c"), "c");
 
-		Document nestedA = DBObjectTestUtils.getAsDocument(target, "a");
+		Document nestedA = DocumentTestUtils.getAsDocument(target, "a");
 
 		assertThat(nestedA, is(notNullValue()));
 		assertThat(nestedA.get("b"), is((Object) "b"));

@@ -22,7 +22,7 @@ import static org.hamcrest.core.IsEqual.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 /**
  * Unit tests for {@link TextCriteria}.
@@ -78,7 +78,7 @@ public class TextCriteriaUnitTests {
 	public void shouldCreateSearchFieldForPhraseCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingPhrase("coffee cake");
-		Assert.assertThat(DBObjectTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"),
+		Assert.assertThat(DocumentTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"),
 				IsEqual.<Document> equalTo(new Document("$search", "\"coffee cake\"")));
 	}
 
@@ -109,7 +109,7 @@ public class TextCriteriaUnitTests {
 	public void shouldCreateSearchFieldForNotPhraseCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().notMatchingPhrase("coffee cake");
-		Assert.assertThat(DBObjectTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"),
+		Assert.assertThat(DocumentTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"),
 				IsEqual.<Document> equalTo(new Document("$search", "-\"coffee cake\"")));
 	}
 
@@ -120,7 +120,7 @@ public class TextCriteriaUnitTests {
 	public void caseSensitiveOperatorShouldBeSetCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("coffee").caseSensitive(true);
-		assertThat(DBObjectTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"),
+		assertThat(DocumentTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"),
 				equalTo(new Document("$search", "coffee").append("$caseSensitive", true)));
 	}
 
@@ -131,7 +131,7 @@ public class TextCriteriaUnitTests {
 	public void diacriticSensitiveOperatorShouldBeSetCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("coffee").diacriticSensitive(true);
-		assertThat(DBObjectTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"),
+		assertThat(DocumentTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"),
 				equalTo(new Document("$search", "coffee").append("$diacriticSensitive", true)));
 	}
 
