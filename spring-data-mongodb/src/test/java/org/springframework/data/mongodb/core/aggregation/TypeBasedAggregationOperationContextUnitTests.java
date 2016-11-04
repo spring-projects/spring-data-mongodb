@@ -160,16 +160,16 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				.withOptions(
 						newAggregationOptions().allowDiskUse(true).explain(true).cursor(new org.bson.Document("foo", 1)).build());
 
-		org.bson.Document dbo = agg.toDocument("person", context);
+		org.bson.Document document = agg.toDocument("person", context);
 
-		org.bson.Document projection = getPipelineElementFromAggregationAt(dbo, 0);
+		org.bson.Document projection = getPipelineElementFromAggregationAt(document, 0);
 		assertThat(projection.containsKey("$project"), is(true));
 
 		assertThat(projection.get("$project"), is((Object) new org.bson.Document("name", 1).append("age", 1)));
 
-		assertThat(dbo.get("allowDiskUse"), is((Object) true));
-		assertThat(dbo.get("explain"), is((Object) true));
-		assertThat(dbo.get("cursor"), is((Object) new org.bson.Document("foo", 1)));
+		assertThat(document.get("allowDiskUse"), is((Object) true));
+		assertThat(document.get("explain"), is((Object) true));
+		assertThat(document.get("cursor"), is((Object) new org.bson.Document("foo", 1)));
 	}
 
 	/**
@@ -182,8 +182,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
 				group("counterName").sum("counterVolume").as("totalCounterVolume"));
 
-		org.bson.Document dbo = agg.toDocument("meterData", context);
-		org.bson.Document group = getPipelineElementFromAggregationAt(dbo, 0);
+		org.bson.Document document = agg.toDocument("meterData", context);
+		org.bson.Document group = getPipelineElementFromAggregationAt(document, 0);
 
 		org.bson.Document definition = (org.bson.Document) group.get("$group");
 
@@ -200,8 +200,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
 				lookup("OtherCollection", "resourceId", "otherId", "lookup"), sort(Direction.ASC, "resourceId"));
 
-		org.bson.Document dbo = agg.toDocument("meterData", context);
-		org.bson.Document sort = getPipelineElementFromAggregationAt(dbo, 1);
+		org.bson.Document document = agg.toDocument("meterData", context);
+		org.bson.Document sort = getPipelineElementFromAggregationAt(document, 1);
 
 		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
@@ -218,8 +218,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<MeterData> agg = newAggregation(MeterData.class, group().min("resourceId").as("foreignKey"),
 				lookup("OtherCollection", "foreignKey", "otherId", "lookup"), sort(Direction.ASC, "foreignKey"));
 
-		org.bson.Document dbo = agg.toDocument("meterData", context);
-		org.bson.Document sort = getPipelineElementFromAggregationAt(dbo, 2);
+		org.bson.Document document = agg.toDocument("meterData", context);
+		org.bson.Document sort = getPipelineElementFromAggregationAt(document, 2);
 
 		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
@@ -237,8 +237,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				lookup("OtherCollection", "resourceId", "otherId", "lookup"),
 				group().min("lookup.otherkey").as("something_totally_different"));
 
-		org.bson.Document dbo = agg.toDocument("meterData", context);
-		org.bson.Document group = getPipelineElementFromAggregationAt(dbo, 1);
+		org.bson.Document document = agg.toDocument("meterData", context);
+		org.bson.Document group = getPipelineElementFromAggregationAt(document, 1);
 
 		org.bson.Document definition = (org.bson.Document) group.get("$group");
 		org.bson.Document field = (org.bson.Document) definition.get("something_totally_different");
@@ -258,8 +258,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				group().min("lookup.otherkey").as("something_totally_different"),
 				sort(Direction.ASC, "something_totally_different"));
 
-		org.bson.Document dbo = agg.toDocument("meterData", context);
-		org.bson.Document sort = getPipelineElementFromAggregationAt(dbo, 2);
+		org.bson.Document document = agg.toDocument("meterData", context);
+		org.bson.Document sort = getPipelineElementFromAggregationAt(document, 2);
 
 		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
@@ -293,9 +293,9 @@ public class TypeBasedAggregationOperationContextUnitTests {
 						.applyCondition(conditional(Criteria.where("age.value").lt(10), new Age(0), field("age"))) //
 		);
 
-		Document dbo = agg.toDocument("person", context);
+		Document document = agg.toDocument("person", context);
 
-		Document projection = getPipelineElementFromAggregationAt(dbo, 0);
+		Document projection = getPipelineElementFromAggregationAt(document, 0);
 		assertThat(projection.containsKey("$project"), is(true));
 
 		Document project = getValue(projection, "$project");
@@ -319,9 +319,9 @@ public class TypeBasedAggregationOperationContextUnitTests {
 						.applyCondition(ifNull("age", new Age(0))) //
 		);
 
-		Document dbo = agg.toDocument("person", context);
+		Document document = agg.toDocument("person", context);
 
-		Document projection = getPipelineElementFromAggregationAt(dbo, 0);
+		Document projection = getPipelineElementFromAggregationAt(document, 0);
 		assertThat(projection.containsKey("$project"), is(true));
 
 		Document project = getValue(projection, "$project");
@@ -372,8 +372,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	Converter<org.bson.Document, Age> ageReadConverter() {
 		return new Converter<org.bson.Document, Age>() {
 			@Override
-			public Age convert(org.bson.Document dbObject) {
-				return new Age(((Integer) dbObject.get("v")));
+			public Age convert(org.bson.Document document) {
+				return new Age(((Integer) document.get("v")));
 			}
 		};
 	}

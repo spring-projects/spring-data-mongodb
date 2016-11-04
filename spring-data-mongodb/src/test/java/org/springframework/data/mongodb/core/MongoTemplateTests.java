@@ -1493,10 +1493,10 @@ public class MongoTemplateTests {
 	@Test
 	public void doesNotFailOnVersionInitForUnversionedEntity() {
 
-		org.bson.Document dbObject = new org.bson.Document();
-		dbObject.put("firstName", "Oliver");
+		org.bson.Document document = new org.bson.Document();
+		document.put("firstName", "Oliver");
 
-		template.insert(dbObject, template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class));
+		template.insert(document, template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class));
 	}
 
 	/**
@@ -1548,12 +1548,12 @@ public class MongoTemplateTests {
 	 * @see DATAMONGO-550
 	 */
 	@Test
-	public void savesPlainDbObjectCorrectly() {
+	public void savesPlainDocumentCorrectly() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "bar");
-		template.save(dbObject, "collection");
+		org.bson.Document document = new org.bson.Document("foo", "bar");
+		template.save(document, "collection");
 
-		assertThat(dbObject.containsKey("_id"), is(true));
+		assertThat(document.containsKey("_id"), is(true));
 	}
 
 	/**
@@ -1562,24 +1562,24 @@ public class MongoTemplateTests {
 	@Test(expected = InvalidDataAccessApiUsageException.class)
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "bar");
-		template.save(dbObject, "collection");
+		org.bson.Document document = new org.bson.Document("foo", "bar");
+		template.save(document, "collection");
 
-		template.findById(dbObject.get("_id"), org.bson.Document.class);
+		template.findById(document.get("_id"), org.bson.Document.class);
 	}
 
 	/**
 	 * @see DATAMONGO-550
 	 */
 	@Test
-	public void readsPlainDbObjectById() {
+	public void readsPlainDocumentById() {
 
-		org.bson.Document dbObject = new org.bson.Document("foo", "bar");
-		template.save(dbObject, "collection");
+		org.bson.Document document = new org.bson.Document("foo", "bar");
+		template.save(document, "collection");
 
-		org.bson.Document result = template.findById(dbObject.get("_id"), org.bson.Document.class, "collection");
-		assertThat(result.get("foo"), is(dbObject.get("foo")));
-		assertThat(result.get("_id"), is(dbObject.get("_id")));
+		org.bson.Document result = template.findById(document.get("_id"), org.bson.Document.class, "collection");
+		assertThat(result.get("foo"), is(document.get("foo")));
+		assertThat(result.get("_id"), is(document.get("_id")));
 	}
 
 	/**
@@ -1741,9 +1741,9 @@ public class MongoTemplateTests {
 	@Test
 	public void savesJsonStringCorrectly() {
 
-		org.bson.Document dbObject = new org.bson.Document().append("first", "first").append("second", "second");
+		org.bson.Document document = new org.bson.Document().append("first", "first").append("second", "second");
 
-		template.save(dbObject, "collection");
+		template.save(document, "collection");
 
 		List<org.bson.Document> result = template.findAll(org.bson.Document.class, "collection");
 		assertThat(result.size(), is(1));
@@ -2998,7 +2998,7 @@ public class MongoTemplateTests {
 	 * @see DATAMONGO-970
 	 */
 	@Test
-	public void insertsAndRemovesBasicDbObjectCorrectly() {
+	public void insertsAndRemovesBasicDocumentCorrectly() {
 
 		org.bson.Document object = new org.bson.Document("key", "value");
 		template.insert(object, "collection");

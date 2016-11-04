@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 /**
  * Unit tests for {@link NearQuery}.
@@ -156,6 +156,6 @@ public class NearQueryUnitTests {
 		query.num(num);
 		query.query(Query.query(Criteria.where("foo").is("bar")));
 
-		assertThat(DBObjectTestUtils.getTypedValue(query.toDocument(), "num", Integer.class), is(num));
+		assertThat(DocumentTestUtils.getTypedValue(query.toDocument(), "num", Integer.class), is(num));
 	}
 }

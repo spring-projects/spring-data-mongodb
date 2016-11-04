@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,31 +111,31 @@ public class IsTextQuery<T extends Query> extends IsQuery<T> {
 
 	private void appendLanguage(String language) {
 
-		Document dbo = getOrCreateTextDbo();
-		dbo.put("$language", language);
+		Document document = getOrCreateTextDocument();
+		document.put("$language", language);
 	}
 
-	private Document getOrCreateTextDbo() {
+	private Document getOrCreateTextDocument() {
 
-		Document dbo = (Document) query.get("$text");
-		if (dbo == null) {
-			dbo = new Document();
+		Document document = (Document) query.get("$text");
+		if (document == null) {
+			document = new Document();
 		}
 
-		return dbo;
+		return document;
 	}
 
 	private void appendTerm(String term) {
 
-		Document dbo = getOrCreateTextDbo();
-		String searchString = (String) dbo.get("$search");
+		Document document = getOrCreateTextDocument();
+		String searchString = (String) document.get("$search");
 		if (StringUtils.hasText(searchString)) {
 			searchString += (" " + term);
 		} else {
 			searchString = term;
 		}
-		dbo.put("$search", searchString);
-		query.put("$text", dbo);
+		document.put("$search", searchString);
+		query.put("$text", document);
 	}
 
 }

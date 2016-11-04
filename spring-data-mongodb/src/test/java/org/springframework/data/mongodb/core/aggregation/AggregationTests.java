@@ -986,14 +986,14 @@ public class AggregationTests {
 		);
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, Document.class);
-		Document dbo = results.getUniqueMappedResult();
+		Document document = results.getUniqueMappedResult();
 
-		assertThat(dbo, is(notNullValue()));
-		assertThat((String) dbo.get("concat"), is("ABCDE"));
-		assertThat((Integer) dbo.get("strcasecmp"), is(-1));
-		assertThat((String) dbo.get("substr"), is("B"));
-		assertThat((String) dbo.get("toLower"), is("abc"));
-		assertThat((String) dbo.get("toUpper"), is("ABC"));
+		assertThat(document, is(notNullValue()));
+		assertThat((String) document.get("concat"), is("ABCDE"));
+		assertThat((Integer) document.get("strcasecmp"), is(-1));
+		assertThat((String) document.get("substr"), is("B"));
+		assertThat((String) document.get("toLower"), is("abc"));
+		assertThat((String) document.get("toUpper"), is("ABC"));
 	}
 
 	/**
@@ -1023,19 +1023,19 @@ public class AggregationTests {
 		);
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, Document.class);
-		Document dbo = results.getUniqueMappedResult();
+		Document document = results.getUniqueMappedResult();
 
-		assertThat(dbo, is(notNullValue()));
-		assertThat((Integer) dbo.get("dayOfYear"), is(241));
-		assertThat((Integer) dbo.get("dayOfMonth"), is(29));
-		assertThat((Integer) dbo.get("dayOfWeek"), is(2));
-		assertThat((Integer) dbo.get("year"), is(1983));
-		assertThat((Integer) dbo.get("month"), is(8));
-		assertThat((Integer) dbo.get("week"), is(35));
-		assertThat((Integer) dbo.get("hour"), is(12));
-		assertThat((Integer) dbo.get("minute"), is(34));
-		assertThat((Integer) dbo.get("second"), is(56));
-		assertThat((Integer) dbo.get("millisecond"), is(789));
+		assertThat(document, is(notNullValue()));
+		assertThat((Integer) document.get("dayOfYear"), is(241));
+		assertThat((Integer) document.get("dayOfMonth"), is(29));
+		assertThat((Integer) document.get("dayOfWeek"), is(2));
+		assertThat((Integer) document.get("year"), is(1983));
+		assertThat((Integer) document.get("month"), is(8));
+		assertThat((Integer) document.get("week"), is(35));
+		assertThat((Integer) document.get("hour"), is(12));
+		assertThat((Integer) document.get("minute"), is(34));
+		assertThat((Integer) document.get("second"), is(56));
+		assertThat((Integer) document.get("millisecond"), is(789));
 	}
 
 	/**
@@ -1316,23 +1316,23 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, ObjectWithDate.class, Document.class);
 
 		assertThat(result.getMappedResults(), hasSize(1));
-		Document dbo = result.getMappedResults().get(0);
+		Document document = result.getMappedResults().get(0);
 
-		assertThat(dbo.get("hour"), is((Object) dateTime.getHourOfDay()));
-		assertThat(dbo.get("min"), is((Object) dateTime.getMinuteOfHour()));
-		assertThat(dbo.get("second"), is((Object) dateTime.getSecondOfMinute()));
-		assertThat(dbo.get("millis"), is((Object) dateTime.getMillisOfSecond()));
-		assertThat(dbo.get("year"), is((Object) dateTime.getYear()));
-		assertThat(dbo.get("month"), is((Object) dateTime.getMonthOfYear()));
+		assertThat(document.get("hour"), is((Object) dateTime.getHourOfDay()));
+		assertThat(document.get("min"), is((Object) dateTime.getMinuteOfHour()));
+		assertThat(document.get("second"), is((Object) dateTime.getSecondOfMinute()));
+		assertThat(document.get("millis"), is((Object) dateTime.getMillisOfSecond()));
+		assertThat(document.get("year"), is((Object) dateTime.getYear()));
+		assertThat(document.get("month"), is((Object) dateTime.getMonthOfYear()));
 		// dateTime.getWeekOfWeekyear()) returns 6 since for MongoDB the week starts on sunday and not on monday.
-		assertThat(dbo.get("week"), is((Object) 5));
-		assertThat(dbo.get("dayOfYear"), is((Object) dateTime.getDayOfYear()));
-		assertThat(dbo.get("dayOfMonth"), is((Object) dateTime.getDayOfMonth()));
+		assertThat(document.get("week"), is((Object) 5));
+		assertThat(document.get("dayOfYear"), is((Object) dateTime.getDayOfYear()));
+		assertThat(document.get("dayOfMonth"), is((Object) dateTime.getDayOfMonth()));
 
 		// dateTime.getDayOfWeek()
-		assertThat(dbo.get("dayOfWeek"), is((Object) 6));
-		assertThat(dbo.get("dayOfYearPlus1Day"), is((Object) dateTime.plusDays(1).getDayOfYear()));
-		assertThat(dbo.get("dayOfYearPlus1DayManually"), is((Object) dateTime.plusDays(1).getDayOfYear()));
+		assertThat(document.get("dayOfWeek"), is((Object) 6));
+		assertThat(document.get("dayOfYearPlus1Day"), is((Object) dateTime.plusDays(1).getDayOfYear()));
+		assertThat(document.get("dayOfYearPlus1DayManually"), is((Object) dateTime.plusDays(1).getDayOfYear()));
 	}
 
 	/**

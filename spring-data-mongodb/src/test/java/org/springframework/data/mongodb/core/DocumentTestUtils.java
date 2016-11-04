@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,11 @@ import com.mongodb.BasicDBList;
  * Helper classes to ease assertions on {@link Document}s.
  * 
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
-public abstract class DBObjectTestUtils {
+public abstract class DocumentTestUtils {
 
-	private DBObjectTestUtils() {
-
-	}
+	private DocumentTestUtils() {}
 
 	/**
 	 * Expects the field with the given key to be not {@literal null} and a {@link Document} in turn and returns it.

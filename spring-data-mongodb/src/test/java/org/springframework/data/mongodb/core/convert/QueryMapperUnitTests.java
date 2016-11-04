@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
@@ -41,7 +41,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
@@ -112,8 +112,8 @@ public class QueryMapperUnitTests {
 	@Test
 	public void handlesBigIntegerIdsCorrectly() {
 
-		org.bson.Document dbObject = new org.bson.Document("id", new BigInteger("1"));
-		org.bson.Document result = mapper.getMappedObject(dbObject, context.getPersistentEntity(IdWrapper.class));
+		org.bson.Document document = new org.bson.Document("id", new BigInteger("1"));
+		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
 		assertThat(result.get("_id"), is((Object) "1"));
 	}
 
@@ -121,8 +121,8 @@ public class QueryMapperUnitTests {
 	public void handlesObjectIdCapableBigIntegerIdsCorrectly() {
 
 		ObjectId id = new ObjectId();
-		org.bson.Document dbObject = new org.bson.Document("id", new BigInteger(id.toString(), 16));
-		org.bson.Document result = mapper.getMappedObject(dbObject, context.getPersistentEntity(IdWrapper.class));
+		org.bson.Document document = new org.bson.Document("id", new BigInteger(id.toString(), 16));
+		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
 		assertThat(result.get("_id"), is((Object) id));
 	}
 
@@ -138,8 +138,8 @@ public class QueryMapperUnitTests {
 				context.getPersistentEntity(Sample.class));
 		Object object = result.get("_id");
 		assertThat(object, is(instanceOf(org.bson.Document.class)));
-		org.bson.Document dbObject = (org.bson.Document) object;
-		assertThat(dbObject.get("$ne"), is(instanceOf(ObjectId.class)));
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$ne"), is(instanceOf(ObjectId.class)));
 	}
 
 	/**
@@ -224,12 +224,12 @@ public class QueryMapperUnitTests {
 	@Test
 	public void doesHandleNestedFieldsWithDefaultIdNames() {
 
-		org.bson.Document dbObject = new org.bson.Document("id", new ObjectId().toString());
-		dbObject.put("nested", new org.bson.Document("id", new ObjectId().toString()));
+		org.bson.Document document = new org.bson.Document("id", new ObjectId().toString());
+		document.put("nested", new org.bson.Document("id", new ObjectId().toString()));
 
 		MongoPersistentEntity<?> entity = context.getPersistentEntity(ClassWithDefaultId.class);
 
-		org.bson.Document result = mapper.getMappedObject(dbObject, entity);
+		org.bson.Document result = mapper.getMappedObject(document, entity);
 		assertThat(result.get("_id"), is(instanceOf(ObjectId.class)));
 		assertThat(((org.bson.Document) result.get("nested")).get("_id"), is(instanceOf(ObjectId.class)));
 	}
@@ -245,11 +245,11 @@ public class QueryMapperUnitTests {
 		Query query = Query
 				.query(Criteria.where("id").is("id_value").and("publishers").ne(accidentallyAnObjectId.toString()));
 
-		org.bson.Document dbObject = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(UserEntity.class));
-		assertThat(dbObject.get("publishers"), is(instanceOf(org.bson.Document.class)));
+		assertThat(document.get("publishers"), is(instanceOf(org.bson.Document.class)));
 
-		org.bson.Document publishers = (org.bson.Document) dbObject.get("publishers");
+		org.bson.Document publishers = (org.bson.Document) document.get("publishers");
 		assertThat(publishers.containsKey("$ne"), is(true));
 		assertThat(publishers.get("$ne"), is(instanceOf(String.class)));
 	}
@@ -351,7 +351,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WithDBRef.class));
 
-		org.bson.Document reference = DBObjectTestUtils.getAsDocument(result, "reference");
+		org.bson.Document reference = DocumentTestUtils.getAsDocument(result, "reference");
 
 		List<Object> inClause = getAsDBList(reference, "$in");
 		assertThat(inClause, hasSize(2));
@@ -394,12 +394,12 @@ public class QueryMapperUnitTests {
 	@Test
 	public void handleMapWithDBRefCorrectly() {
 
-		org.bson.Document mapDbObject = new org.bson.Document();
-		mapDbObject.put("test", new com.mongodb.DBRef("test", "test"));
-		org.bson.Document dbObject = new org.bson.Document();
-		dbObject.put("mapWithDBRef", mapDbObject);
+		org.bson.Document mapDocument = new org.bson.Document();
+		mapDocument.put("test", new com.mongodb.DBRef("test", "test"));
+		org.bson.Document document = new org.bson.Document();
+		document.put("mapWithDBRef", mapDocument);
 
-		org.bson.Document mapped = mapper.getMappedObject(dbObject, context.getPersistentEntity(WithMapDBRef.class));
+		org.bson.Document mapped = mapper.getMappedObject(document, context.getPersistentEntity(WithMapDBRef.class));
 
 		assertThat(mapped.containsKey("mapWithDBRef"), is(true));
 		assertThat(mapped.get("mapWithDBRef"), instanceOf(org.bson.Document.class));
@@ -410,9 +410,9 @@ public class QueryMapperUnitTests {
 	@Test
 	public void convertsUnderscoreIdValueWithoutMetadata() {
 
-		org.bson.Document dbObject = new org.bson.Document().append("_id", new ObjectId().toString());
+		org.bson.Document document = new org.bson.Document().append("_id", new ObjectId().toString());
 
-		org.bson.Document mapped = mapper.getMappedObject(dbObject, null);
+		org.bson.Document mapped = mapper.getMappedObject(document, null);
 		assertThat(mapped.containsKey("_id"), is(true));
 		assertThat(mapped.get("_id"), is(instanceOf(ObjectId.class)));
 	}
@@ -600,8 +600,8 @@ public class QueryMapperUnitTests {
 		embedded2.id = "2";
 		Query query = query(where("embedded").in(Arrays.asList(embedded, embedded2)));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
-		assertThat(dbo,
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
+		assertThat(document,
 				equalTo(org.bson.Document.parse("{ \"embedded\" : { \"$in\" : [ { \"_id\" : \"1\"} , { \"_id\" : \"2\"}]}}")));
 	}
 
@@ -621,9 +621,9 @@ public class QueryMapperUnitTests {
 				.elemMatch(new Criteria(). //
 						andOperator(Criteria.where("customizedField").is(embeddedClass.customizedField))));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
 
-		assertThat(dbo, isBsonObject().containing("my_items.$elemMatch.$and",
+		assertThat(document, isBsonObject().containing("my_items.$elemMatch.$and",
 				new BasicDbListBuilder().add(new BasicDBObject("fancy_custom_name", embeddedClass.customizedField)).get()));
 	}
 
@@ -634,9 +634,9 @@ public class QueryMapperUnitTests {
 	public void customizedFieldNameShouldBeMappedCorrectlyWhenApplyingSort() {
 
 		Query query = query(where("field").is("bar")).with(new Sort(Direction.DESC, "field"));
-		org.bson.Document dbo = mapper.getMappedObject(query.getSortObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getSortObject(),
 				context.getPersistentEntity(CustomizedField.class));
-		assertThat(dbo, equalTo(new org.bson.Document().append("foo", -1)));
+		assertThat(document, equalTo(new org.bson.Document().append("foo", -1)));
 	}
 
 	/**
@@ -647,10 +647,10 @@ public class QueryMapperUnitTests {
 
 		Query query = new Query();
 
-		org.bson.Document dbo = mapper.getMappedFields(query.getFieldsObject(),
+		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
 
-		assertThat(dbo, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
+		assertThat(document, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
 	}
 
 	/**
@@ -662,10 +662,10 @@ public class QueryMapperUnitTests {
 		Query query = new Query();
 		query.fields().include("textScore");
 
-		org.bson.Document dbo = mapper.getMappedFields(query.getFieldsObject(),
+		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
 
-		assertThat(dbo, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
+		assertThat(document, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
 	}
 
 	/**
@@ -676,10 +676,10 @@ public class QueryMapperUnitTests {
 
 		Query query = new Query().with(new Sort("textScore"));
 
-		org.bson.Document dbo = mapper.getMappedSort(query.getSortObject(),
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
 
-		assertThat(dbo, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
+		assertThat(document, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
 	}
 
 	/**
@@ -690,10 +690,10 @@ public class QueryMapperUnitTests {
 
 		Query query = new Query().with(new Sort("id"));
 
-		org.bson.Document dbo = mapper.getMappedSort(query.getSortObject(),
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
 
-		assertThat(dbo, equalTo(new org.bson.Document().append("_id", 1)));
+		assertThat(document, equalTo(new org.bson.Document().append("_id", 1)));
 	}
 
 	/**
@@ -720,10 +720,10 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("nested.id").is("bar"));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
 
-		assertThat(dbo, equalTo(new org.bson.Document().append("nested.id", "bar")));
+		assertThat(document, equalTo(new org.bson.Document().append("nested.id", "bar")));
 	}
 
 	/**
@@ -734,10 +734,10 @@ public class QueryMapperUnitTests {
 
 		Query query = new Query().with(new Sort("nested.id"));
 
-		org.bson.Document dbo = mapper.getMappedSort(query.getSortObject(),
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
 
-		assertThat(dbo, equalTo(new org.bson.Document().append("nested.id", 1)));
+		assertThat(document, equalTo(new org.bson.Document().append("nested.id", 1)));
 	}
 
 	/**
@@ -748,12 +748,12 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("foo").near(new GeoJsonPoint(100, 50)));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry.type", "Point"));
-		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry.coordinates.[0]", 100D));
-		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry.coordinates.[1]", 50D));
+		assertThat(document, isBsonObject().containing("foo.$near.$geometry.type", "Point"));
+		assertThat(document, isBsonObject().containing("foo.$near.$geometry.coordinates.[0]", 100D));
+		assertThat(document, isBsonObject().containing("foo.$near.$geometry.coordinates.[1]", 50D));
 	}
 
 	/**
@@ -764,10 +764,10 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("geoJsonPoint").near(new GeoJsonPoint(100, 50)));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$near.$geometry.type", "Point"));
+		assertThat(document, isBsonObject().containing("geoJsonPoint.$near.$geometry.type", "Point"));
 	}
 
 	/**
@@ -778,10 +778,10 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("geoJsonPoint").nearSphere(new GeoJsonPoint(100, 50)));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$nearSphere.$geometry.type", "Point"));
+		assertThat(document, isBsonObject().containing("geoJsonPoint.$nearSphere.$geometry.type", "Point"));
 	}
 
 	/**
@@ -792,10 +792,10 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("namedGeoJsonPoint").nearSphere(new GeoJsonPoint(100, 50)));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(dbo,
+		assertThat(document,
 				isBsonObject().containing("geoJsonPointWithNameViaFieldAnnotation.$nearSphere.$geometry.type", "Point"));
 	}
 
@@ -808,10 +808,10 @@ public class QueryMapperUnitTests {
 		Query query = query(where("geoJsonPoint")
 				.within(new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$geoWithin.$geometry.type", "Polygon"));
+		assertThat(document, isBsonObject().containing("geoJsonPoint.$geoWithin.$geometry.type", "Polygon"));
 	}
 
 	/**
@@ -823,11 +823,11 @@ public class QueryMapperUnitTests {
 		Query query = query(where("geoJsonPoint")
 				.intersects(new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.type", "Polygon"));
-		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.coordinates"));
+		assertThat(document, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.type", "Polygon"));
+		assertThat(document, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.coordinates"));
 	}
 
 	/**
@@ -838,10 +838,10 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("map.1.stringProperty").is("ba'alzamon"));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(EntityWithComplexValueTypeMap.class));
 
-		assertThat(dbo.containsKey("map.1.stringProperty"), is(true));
+		assertThat(document.containsKey("map.1.stringProperty"), is(true));
 	}
 
 	/**
@@ -852,10 +852,10 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("list.1.stringProperty").is("ba'alzamon"));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(EntityWithComplexValueTypeList.class));
 
-		assertThat(dbo.containsKey("list.1.stringProperty"), is(true));
+		assertThat(document.containsKey("list.1.stringProperty"), is(true));
 	}
 
 	/**
@@ -870,9 +870,9 @@ public class QueryMapperUnitTests {
 
 		Query query = query(byExample(probe));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
 
-		assertThat(dbo, isBsonObject().containing("embedded\\._id", "conflux"));
+		assertThat(document, isBsonObject().containing("embedded\\._id", "conflux"));
 	}
 
 	/**
@@ -886,11 +886,11 @@ public class QueryMapperUnitTests {
 
 		Query query = query(byExample(probe));
 
-		org.bson.Document dbo = mapper.getMappedObject(query.getQueryObject(),
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WithDBRef.class));
 
-		assertThat(dbo.get("legacyPoint.x"), Is.<Object> is(10D));
-		assertThat(dbo.get("legacyPoint.y"), Is.<Object> is(20D));
+		assertThat(document.get("legacyPoint.x"), Is.<Object> is(10D));
+		assertThat(document.get("legacyPoint.y"), Is.<Object> is(20D));
 	}
 
 	@Document

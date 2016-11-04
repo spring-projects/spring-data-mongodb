@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.DocumentToNamedMongoScriptConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.NamedMongoScriptToDocumentConverter;
-import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.DboToNamedMongoScriptConverterUnitTests;
-import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.NamedMongoScriptToDboConverterUnitTests;
+import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.DocumentToNamedMongoScriptConverterUnitTests;
+import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.NamedMongoScriptToDocumentConverterUnitTests;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
 
 /**
@@ -39,7 +39,7 @@ import org.springframework.data.mongodb.core.script.NamedMongoScript;
  * @since 1.7
  */
 @RunWith(Suite.class)
-@SuiteClasses({ NamedMongoScriptToDboConverterUnitTests.class, DboToNamedMongoScriptConverterUnitTests.class })
+@SuiteClasses({ NamedMongoScriptToDocumentConverterUnitTests.class, DocumentToNamedMongoScriptConverterUnitTests.class })
 public class NamedMongoScriptConvertsUnitTests {
 
 	static final String FUNCTION_NAME = "echo";
@@ -51,7 +51,7 @@ public class NamedMongoScriptConvertsUnitTests {
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class NamedMongoScriptToDboConverterUnitTests {
+	public static class NamedMongoScriptToDocumentConverterUnitTests {
 
 		NamedMongoScriptToDocumentConverter converter = NamedMongoScriptToDocumentConverter.INSTANCE;
 
@@ -59,7 +59,7 @@ public class NamedMongoScriptConvertsUnitTests {
 		 * @see DATAMONGO-479
 		 */
 		@Test
-		public void convertShouldReturnEmptyDboWhenScriptIsNull() {
+		public void convertShouldReturnEmptyDocWhenScriptIsNull() {
 			assertThat(converter.convert(null), is((Document) new Document()));
 		}
 
@@ -69,9 +69,9 @@ public class NamedMongoScriptConvertsUnitTests {
 		@Test
 		public void convertShouldConvertScriptNameCorreclty() {
 
-			Document dbo = converter.convert(ECHO_SCRIPT);
+			Document document = converter.convert(ECHO_SCRIPT);
 
-			Object id = dbo.get("_id");
+			Object id = document.get("_id");
 			assertThat(id, is(instanceOf(String.class)));
 			assertThat(id, is((Object) FUNCTION_NAME));
 		}
@@ -82,9 +82,9 @@ public class NamedMongoScriptConvertsUnitTests {
 		@Test
 		public void convertShouldConvertScriptCodeCorreclty() {
 
-			Document dbo = converter.convert(ECHO_SCRIPT);
+			Document document = converter.convert(ECHO_SCRIPT);
 
-			Object code = dbo.get("value");
+			Object code = document.get("value");
 			assertThat(code, is(instanceOf(Code.class)));
 			assertThat(code, is((Object) new Code(JS_FUNCTION)));
 		}
@@ -93,7 +93,7 @@ public class NamedMongoScriptConvertsUnitTests {
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class DboToNamedMongoScriptConverterUnitTests {
+	public static class DocumentToNamedMongoScriptConverterUnitTests {
 
 		DocumentToNamedMongoScriptConverter converter = DocumentToNamedMongoScriptConverter.INSTANCE;
 

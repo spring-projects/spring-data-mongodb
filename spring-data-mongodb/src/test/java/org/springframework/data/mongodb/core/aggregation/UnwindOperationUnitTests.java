@@ -21,7 +21,7 @@ import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import org.bson.Document;
 import org.junit.Test;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 /**
  * Unit tests for {@link UnwindOperation}.
@@ -52,7 +52,7 @@ public class UnwindOperationUnitTests {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a", "index");
 
-		Document unwindClause = extractDbObjectFromUnwindOperation(unwindOperation);
+		Document unwindClause = extractDocumentFromUnwindOperation(unwindOperation);
 
 		assertThat(unwindClause,
 				isBsonObject().containing("path", "$a").//
@@ -90,7 +90,7 @@ public class UnwindOperationUnitTests {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a", true);
 
-		Document unwindClause = extractDbObjectFromUnwindOperation(unwindOperation);
+		Document unwindClause = extractDocumentFromUnwindOperation(unwindOperation);
 
 		assertThat(unwindClause,
 				isBsonObject().containing("path", "$a").//
@@ -119,7 +119,7 @@ public class UnwindOperationUnitTests {
 		UnwindOperation unwindOperation = UnwindOperation.newUnwind().path("$foo").arrayIndex("myindex")
 				.preserveNullAndEmptyArrays();
 
-		Document unwindClause = extractDbObjectFromUnwindOperation(unwindOperation);
+		Document unwindClause = extractDocumentFromUnwindOperation(unwindOperation);
 
 		assertThat(unwindClause,
 				isBsonObject().containing("path", "$foo").//
@@ -127,10 +127,10 @@ public class UnwindOperationUnitTests {
 						containing("includeArrayIndex", "myindex"));
 	}
 
-	private Document extractDbObjectFromUnwindOperation(UnwindOperation unwindOperation) {
+	private Document extractDocumentFromUnwindOperation(UnwindOperation unwindOperation) {
 
-		Document dbObject = unwindOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document unwindClause = DBObjectTestUtils.getAsDocument(dbObject, "$unwind");
+		Document document = unwindOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document unwindClause = DocumentTestUtils.getAsDocument(document, "$unwind");
 		return unwindClause;
 	}
 }

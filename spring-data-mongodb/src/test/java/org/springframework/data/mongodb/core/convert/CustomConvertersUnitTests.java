@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright (c) 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class CustomConvertersUnitTests {
 	MappingMongoConverter converter;
 
 	@Mock BarToDocumentConverter barToDocumentConverter;
-	@Mock DocumentToBarConverter dbObjectToBarConverter;
+	@Mock DocumentToBarConverter documentToBarConverter;
 	@Mock MongoDbFactory mongoDbFactory;
 
 	MongoMappingContext context;
@@ -59,10 +59,10 @@ public class CustomConvertersUnitTests {
 	public void setUp() throws Exception {
 
 		when(barToDocumentConverter.convert(any(Bar.class))).thenReturn(new Document());
-		when(dbObjectToBarConverter.convert(any(Document.class))).thenReturn(new Bar());
+		when(documentToBarConverter.convert(any(Document.class))).thenReturn(new Bar());
 
 		CustomConversions conversions = new CustomConversions(
-				Arrays.asList(barToDocumentConverter, dbObjectToBarConverter));
+				Arrays.asList(barToDocumentConverter, documentToBarConverter));
 
 		context = new MongoMappingContext();
 		context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
@@ -87,11 +87,11 @@ public class CustomConvertersUnitTests {
 	@Test
 	public void nestedFromDocumentConverterGetsInvoked() {
 
-		Document dbObject = new Document();
-		dbObject.put("bar", new Document());
+		Document document = new Document();
+		document.put("bar", new Document());
 
-		converter.read(Foo.class, dbObject);
-		verify(dbObjectToBarConverter).convert(any(Document.class));
+		converter.read(Foo.class, document);
+		verify(documentToBarConverter).convert(any(Document.class));
 	}
 
 	@Test
@@ -105,15 +105,15 @@ public class CustomConvertersUnitTests {
 	public void fromDocumentConverterGetsInvoked() {
 
 		converter.read(Bar.class, new Document());
-		verify(dbObjectToBarConverter).convert(any(Document.class));
+		verify(documentToBarConverter).convert(any(Document.class));
 	}
 
 	@Test
 	public void foo() {
-		Document dbObject = new Document();
-		dbObject.put("foo", null);
+		Document document = new Document();
+		document.put("foo", null);
 
-		Assert.assertThat(dbObject.containsKey("foo"), CoreMatchers.is(true));
+		Assert.assertThat(document.containsKey("foo"), CoreMatchers.is(true));
 	}
 
 	public static class Foo {
