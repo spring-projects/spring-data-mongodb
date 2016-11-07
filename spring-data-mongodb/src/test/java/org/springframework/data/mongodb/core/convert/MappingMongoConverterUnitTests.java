@@ -2086,6 +2086,17 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.sample, is("value"));
 	}
 
+	/**
+	 * @see DATAMONGO-1525
+	 */
+	@Test
+	public void readsEmptyEnumSet() {
+
+		DBObject source = new BasicDBObject("enumSet", new BasicDBList());
+
+		assertThat(converter.read(ClassWithEnumProperty.class, source).enumSet, is(EnumSet.noneOf(SampleEnum.class)));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
