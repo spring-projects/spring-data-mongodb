@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -162,27 +163,17 @@ public class ReactiveMongoQueryMethodUnitTests {
 	/**
 	 * @see DATAMONGO-1444
 	 */
-	@Test
-	public void acceptsPageableMethodsUsingWrappedPage() throws Exception {
-
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "findMonoPageByLastname", String.class,
-				Pageable.class);
-
-		assertThat(method.isPageQuery(), is(true));
-		assertThat(method.isSliceQuery(), is(false));
+	@Test(expected = InvalidDataAccessApiUsageException.class)
+	public void throwsExceptionOnWrappedPage() throws Exception {
+		queryMethod(PersonRepository.class, "findMonoPageByLastname", String.class, Pageable.class);
 	}
 
 	/**
 	 * @see DATAMONGO-1444
 	 */
-	@Test
-	public void acceptsPageableMethodsUsingWrappedSlice() throws Exception {
-
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "findMonoSliceByLastname", String.class,
-				Pageable.class);
-
-		assertThat(method.isPageQuery(), is(false));
-		assertThat(method.isSliceQuery(), is(true));
+	@Test(expected = InvalidDataAccessApiUsageException.class)
+	public void throwsExceptionOnWrappedSlice() throws Exception {
+		queryMethod(PersonRepository.class, "findMonoSliceByLastname", String.class, Pageable.class);
 	}
 
 	/**

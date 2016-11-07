@@ -34,7 +34,7 @@ import org.springframework.data.repository.config.AnnotationRepositoryConfigurat
 import org.springframework.data.repository.config.RepositoryConfiguration;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.data.repository.reactive.RxJavaCrudRepository;
+import org.springframework.data.repository.reactive.RxJava1CrudRepository;
 
 /**
  * Unit tests for {@link ReactiveMongoRepositoryConfigurationExtension}.
@@ -115,7 +115,7 @@ public class ReactiveMongoRepositoryConfigurationExtensionUnitTests {
 
 	interface SampleRepository extends ReactiveCrudRepository<Sample, Long> {}
 
-	interface UnannotatedRepository extends RxJavaCrudRepository<Store, Long> {}
+	interface UnannotatedRepository extends RxJava1CrudRepository<Store, Long> {}
 
 	interface StoreRepository extends ReactiveMongoRepository<Store, Long> {}
 }

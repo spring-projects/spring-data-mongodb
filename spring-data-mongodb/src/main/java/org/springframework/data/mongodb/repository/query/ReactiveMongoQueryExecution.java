@@ -26,8 +26,6 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.support.ReactivePageImpl;
-import org.springframework.data.mongodb.repository.support.ReactiveSliceImpl;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.util.ReactiveWrappers;
@@ -84,61 +82,6 @@ interface ReactiveMongoQueryExecution {
 		@Override
 		public Object execute(Query query, Class<?> type, String collection) {
 			return operations.tail(query.with(pageable), type, collection);
-		}
-	}
-
-	/**
-	 * {@link ReactiveMongoQueryExecution} for {@link Slice} query methods.
-	 *
-	 * @author Mark Paluch
-	 */
-	@RequiredArgsConstructor
-	final class SlicedExecution implements ReactiveMongoQueryExecution {
-
-		private final @NonNull ReactiveMongoOperations operations;
-		private final @NonNull Pageable pageable;
-
-		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-
-			int pageSize = pageable.getPageSize();
-
-			// Apply Pageable but tweak limit to peek into next page
-			Query modifiedQuery = query.with(pageable).limit(pageSize + 1);
-			Flux<?> flux = operations.find(modifiedQuery, type, collection);
-
-			return Mono.fromSupplier(() -> new ReactiveSliceImpl<>(flux, pageable));
-		}
-	}
-
-	/**
-	 * {@link ReactiveMongoQueryExecution} for pagination queries.
-	 *
-	 * @author Mark Paluch
-	 */
-	@RequiredArgsConstructor
-	final class PagedExecution implements ReactiveMongoQueryExecution {
-
-		private final @NonNull ReactiveMongoOperations operations;
-		private final @NonNull Pageable pageable;
-
-		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-
-			int overallLimit = query.getLimit();
-			Mono<Long> count = operations.count(query, type, collection);
-
-			// Apply raw pagination
-			query = query.with(pageable);
-
-			// Adjust limit if page would exceed the overall limit
-			if (overallLimit != 0 && pageable.getOffset() + pageable.getPageSize() > overallLimit) {
-				query.limit(overallLimit - pageable.getOffset());
-			}
-
-			Flux<?> flux = operations.find(query, type, collection);
-
-			return Mono.fromSupplier(() -> new ReactivePageImpl<>(flux, pageable, count));
 		}
 	}
 

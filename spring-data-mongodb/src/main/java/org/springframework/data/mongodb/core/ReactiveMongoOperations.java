@@ -58,14 +58,14 @@ public interface ReactiveMongoOperations {
 	 *
 	 * @return index operations on the named collection
 	 */
-	ReactiveIndexOperations reactiveIndexOps(String collectionName);
+	ReactiveIndexOperations indexOps(String collectionName);
 
 	/**
 	 * Returns the reactive operations that can be performed on indexes
 	 *
 	 * @return index operations on the named collection associated with the given entity class
 	 */
-	ReactiveIndexOperations reactiveIndexOps(Class<?> entityClass);
+	ReactiveIndexOperations indexOps(Class<?> entityClass);
 
 	/**
 	 * Execute the a MongoDB command expressed as a JSON string. This will call the method JSON.parse that is part of the

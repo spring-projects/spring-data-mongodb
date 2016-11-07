@@ -42,7 +42,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.data.repository.reactive.RxJavaCrudRepository;
+import org.springframework.data.repository.reactive.RxJava1CrudRepository;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -92,7 +92,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 
 		boolean isReactiveRepository = (PROJECT_REACTOR_PRESENT && ReactiveCrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface())) || (
-				   RXJAVA_OBSERVABLE_PRESENT && RxJavaCrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()));
+				   RXJAVA_OBSERVABLE_PRESENT && RxJava1CrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()));
 
 		boolean isQueryDslRepository = QUERY_DSL_PRESENT
 				&& QueryDslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());

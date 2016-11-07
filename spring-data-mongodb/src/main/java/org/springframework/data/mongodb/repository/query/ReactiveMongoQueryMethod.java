@@ -19,6 +19,7 @@ import static org.springframework.data.repository.util.ClassUtils.*;
 
 import java.lang.reflect.Method;
 
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -34,6 +35,7 @@ import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.ClassUtils;
 
 /**
  * Reactive specific implementation of {@link MongoQueryMethod}.
@@ -70,6 +72,12 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 			boolean singleWrapperWithWrappedPageableResult = ReactiveWrappers.isSingleValueType(returnType.getType())
 					&& (PAGE_TYPE.isAssignableFrom(returnType.getComponentType())
 							|| SLICE_TYPE.isAssignableFrom(returnType.getComponentType()));
+
+			if (singleWrapperWithWrappedPageableResult) {
+				throw new InvalidDataAccessApiUsageException(
+						String.format("'%s.%s' must not use sliced or paged execution. Please use Flux.buffer(size, skip).",
+								ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
+			}
 
 			if (!multiWrapper && !singleWrapperWithWrappedPageableResult) {
 				throw new IllegalStateException(String.format(

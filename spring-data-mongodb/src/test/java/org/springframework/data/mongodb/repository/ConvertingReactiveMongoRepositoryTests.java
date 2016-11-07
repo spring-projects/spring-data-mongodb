@@ -36,8 +36,8 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.data.repository.RepositoryDefinition;
-import org.springframework.data.repository.reactive.ReactivePagingAndSortingRepository;
-import org.springframework.data.repository.reactive.RxJavaPagingAndSortingRepository;
+import org.springframework.data.repository.reactive.ReactiveSortingRepository;
+import org.springframework.data.repository.reactive.RxJava1SortingRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -236,13 +236,13 @@ public class ConvertingReactiveMongoRepositoryTests {
 	}
 
 	@Repository
-	interface ReactivePersonRepostitory extends ReactivePagingAndSortingRepository<ReactivePerson, String> {
+	interface ReactivePersonRepostitory extends ReactiveSortingRepository<ReactivePerson, String> {
 
 		Publisher<ReactivePerson> findByLastname(String lastname);
 	}
 
 	@Repository
-	interface RxJavaPersonRepostitory extends RxJavaPagingAndSortingRepository<ReactivePerson, String> {
+	interface RxJavaPersonRepostitory extends RxJava1SortingRepository<ReactivePerson, String> {
 
 		Observable<ReactivePerson> findByFirstnameAndLastname(String firstname, String lastname);
 

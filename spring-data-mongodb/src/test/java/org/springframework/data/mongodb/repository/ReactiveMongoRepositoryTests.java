@@ -139,48 +139,6 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	 * @see DATAMONGO-1444
 	 */
 	@Test
-	public void shouldFindMonoOfPage() {
-
-		Mono<Page<Person>> pageMono = repository.findMonoPageByLastname("Matthews", new PageRequest(0, 1));
-
-		Page<Person> persons = pageMono.block();
-
-		assertThat(persons.getContent(), hasSize(1));
-		assertThat(persons.getTotalPages(), is(2));
-
-		pageMono = repository.findMonoPageByLastname("Matthews", new PageRequest(0, 100));
-
-		persons = pageMono.block();
-
-		assertThat(persons.getContent(), hasSize(2));
-		assertThat(persons.getTotalPages(), is(1));
-	}
-
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
-	public void shouldFindMonoOfSlice() {
-
-		Mono<Slice<Person>> pageMono = repository.findMonoSliceByLastname("Matthews", new PageRequest(0, 1));
-
-		Slice<Person> persons = pageMono.block();
-
-		assertThat(persons.getContent(), hasSize(1));
-		assertThat(persons.hasNext(), is(true));
-
-		pageMono = repository.findMonoSliceByLastname("Matthews", new PageRequest(0, 100));
-
-		persons = pageMono.block();
-
-		assertThat(persons.getContent(), hasSize(2));
-		assertThat(persons.hasNext(), is(false));
-	}
-
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
 	public void shouldFindOneByLastName() {
 
 		Person carter = repository.findOneByLastname("Beauford").block();
@@ -387,10 +345,6 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		Flux<Person> findByLastname(String lastname);
 
 		Mono<Person> findOneByLastname(String lastname);
-
-		Mono<Page<Person>> findMonoPageByLastname(String lastname, Pageable pageRequest);
-
-		Mono<Slice<Person>> findMonoSliceByLastname(String lastname, Pageable pageRequest);
 
 		Mono<Person> findByLastname(Publisher<String> lastname);
 

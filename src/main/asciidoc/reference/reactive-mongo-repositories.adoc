@@ -16,9 +16,9 @@ Spring Data MongoDB is built on top of the https://mongodb.github.io/mongo-java-
 Spring Data's Repository abstraction is a dynamic API, mostly defined by you and your requirements, as you're declaring query methods. Reactive MongoDB repositories can be either implemented using RxJava or Project Reactor wrapper types by simply extending from one of the library-specific repository interfaces:
 
 * `ReactiveCrudRepository`
-* `ReactivePagingAndSortingRepository`
-* `RxJavaCrudRepository`
-* `RxJavaPagingAndSortingRepository`
+* `ReactiveSortingRepository`
+* `RxJava1CrudRepository`
+* `RxJava1SortingRepository`
 
 Spring Data converts reactive wrapper types behind the scenes so that you can stick to your favorite composition library.
 
@@ -50,7 +50,7 @@ We have a quite simple domain object here. Note that it has a property named `id
 ====
 [source]
 ----
-public interface ReactivePersonRepository extends ReactivePagingAndSortingRepository<Person, Long> {
+public interface ReactivePersonRepository extends ReactiveSortingRepository<Person, Long> {
 
   Flux<Person> findByFirstname(String firstname);
 
@@ -93,9 +93,9 @@ class ApplicationConfig extends AbstractReactiveMongoConfiguration {
 ----
 ====
 
-As our domain repository extends `ReactivePagingAndSortingRepository` it provides you with CRUD operations as well as methods for paginated and sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client. So accessing the second page of `Person` s at a page size of 10 would simply look something like this:
+As our domain repository extends `ReactiveSortingRepository` it provides you with CRUD operations as well as methods for sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client.
 
-.Paging access to Person entities
+.Sorted access to Person entities
 ====
 [source,java]
 ----
@@ -104,19 +104,12 @@ public class PersonRepositoryTests {
     @Autowired ReactivePersonRepository repository;
 
     @Test
-    public void readsFirstPageCorrectly() {
-      Mono<Page<Person>> persons = repository.findAll(new PageRequest(0, 10));
-    }
-
-    @Test
-    public void readsFirstPageAsStream() {
-      Flux<Person> persons = repository.findAll(new PageRequest(0, 10));
+    public void sortsElementsCorrectly() {
+      Flux<Person> persons = repository.findAll(new Sort(new Order(ASC, "lastname")));
     }
 }
 ----
 ====
-
-The sample creates an application context with Spring's unit test support which will perform annotation based dependency injection into test cases. Inside the test method we simply use the repository to query the datastore. We hand the repository a `PageRequest` instance that requests the first page of persons at a page size of 10.
 
 [[mongo.reactive.repositories.features]]
 == Features

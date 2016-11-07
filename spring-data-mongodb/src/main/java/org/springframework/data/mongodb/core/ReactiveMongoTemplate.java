@@ -209,7 +209,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (null != mappingContext && mappingContext instanceof MongoMappingContext) {
 			indexCreator = new MongoPersistentEntityIndexCreator((MongoMappingContext) mappingContext,
-					(collectionName) -> IndexOperationsAdapter.blocking(reactiveIndexOps(collectionName)));
+					(collectionName) -> IndexOperationsAdapter.blocking(indexOps(collectionName)));
 			eventPublisher = new MongoMappingEventPublisher(indexCreator);
 			if (mappingContext instanceof ApplicationEventPublisherAware) {
 				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
@@ -316,14 +316,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#reactiveIndexOps(java.lang.String)
 	 */
-	public ReactiveIndexOperations reactiveIndexOps(String collectionName) {
+	public ReactiveIndexOperations indexOps(String collectionName) {
 		return new DefaultReactiveIndexOperations(this, collectionName);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#reactiveIndexOps(java.lang.Class)
 	 */
-	public ReactiveIndexOperations reactiveIndexOps(Class<?> entityClass) {
+	public ReactiveIndexOperations indexOps(Class<?> entityClass) {
 		return new DefaultReactiveIndexOperations(this, determineCollectionName(entityClass));
 	}
 

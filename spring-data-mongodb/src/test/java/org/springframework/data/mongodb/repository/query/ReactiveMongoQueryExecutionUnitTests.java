@@ -37,8 +37,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.GeoNearExecution;
-import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.PagedExecution;
-import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.SlicedExecution;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.ClassUtils;
 
@@ -54,38 +52,6 @@ public class ReactiveMongoQueryExecutionUnitTests {
 
 	@Mock private ReactiveMongoOperations operations;
 	@Mock private MongoParameterAccessor parameterAccessor;
-
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
-	public void slicedExecutionShouldApplyQuerySettings() throws Exception {
-
-		Query query = new Query();
-
-		new SlicedExecution(operations, new PageRequest(1, 10)).execute(query, Person.class, "person");
-
-		assertThat(query.getLimit(), is(equalTo(11)));
-		assertThat(query.getSkip(), is(equalTo(10)));
-		verify(operations).find(query, Person.class, "person");
-	}
-
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
-	public void pagedExecutionShouldApplyQuerySettings() throws Exception {
-
-		Query query = new Query();
-
-		new PagedExecution(operations, new PageRequest(1, 10)).execute(query, Person.class, "person");
-
-		assertThat(query.getLimit(), is(equalTo(10)));
-		assertThat(query.getSkip(), is(equalTo(10)));
-
-		verify(operations).find(query, Person.class, "person");
-		verify(operations).count(query, Person.class, "person");
-	}
 
 	/**
 	 * @see DATAMONGO-1444

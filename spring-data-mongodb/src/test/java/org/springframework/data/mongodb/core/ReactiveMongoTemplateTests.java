@@ -719,7 +719,7 @@ public class ReactiveMongoTemplateTests {
 				new Venue("Maplewood, NJ", -74.2713, 40.73137));
 
 		template.insertAll(venues).blockLast();
-		IndexOperationsAdapter.blocking(template.reactiveIndexOps(Venue.class))
+		IndexOperationsAdapter.blocking(template.indexOps(Venue.class))
 				.ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2D));
 
 		NearQuery geoFar = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150, Metrics.KILOMETERS);
@@ -828,7 +828,7 @@ public class ReactiveMongoTemplateTests {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-		template.reactiveIndexOps(Person.class).ensureIndex(new Index().on("firstName", Direction.DESC).unique()).block();
+		template.indexOps(Person.class).ensureIndex(new Index().on("firstName", Direction.DESC).unique()).block();
 
 		Person person = new Person(new ObjectId(), "Amol");
 		person.setAge(28);
