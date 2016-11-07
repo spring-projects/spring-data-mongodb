@@ -68,6 +68,7 @@ import com.mongodb.WriteConcern;
 import lombok.Data;
 import reactor.core.Cancellation;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.TestSubscriber;
 
 /**
@@ -404,8 +405,7 @@ public class ReactiveMongoTemplateTests {
 		Query query = new Query(
 				new Criteria().orOperator(where("firstName").is("Walter Jr"), Criteria.where("firstName").is("Walter")));
 
-		template.insertAll(Flux.just(new Person("Walter", 50), new Person("Skyler", 43), new Person("Walter Jr", 16))) //
-				.collectList() //
+		template.insertAll(Mono.just(Arrays.asList(new Person("Walter", 50), new Person("Skyler", 43), new Person("Walter Jr", 16)))) //
 				.flatMap(a -> template.updateMulti(query, new Update().set("firstName", "Walt"), Person.class)) //
 				.flatMap(p -> template.find(new Query(where("firstName").is("Walt")), Person.class)) //
 				.subscribeWith(TestSubscriber.create()) //
@@ -422,7 +422,7 @@ public class ReactiveMongoTemplateTests {
 				new Criteria().orOperator(where("firstName").is("Walter Jr"), Criteria.where("firstName").is("Walter")));
 
 		template
-				.insert(Flux.just(new Person("Walter", 50), new Person("Skyler", 43), new Person("Walter Jr", 16)), "people") //
+				.insertAll(Mono.just(Arrays.asList(new Person("Walter", 50), new Person("Skyler", 43), new Person("Walter Jr", 16))), "people") //
 				.collectList() //
 				.flatMap(a -> template.updateMulti(query, new Update().set("firstName", "Walt"), Person.class, "people")) //
 				.flatMap(p -> template.find(new Query(where("firstName").is("Walt")), Person.class, "people")) //
