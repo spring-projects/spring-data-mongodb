@@ -168,7 +168,7 @@ public interface ReactiveMongoOperations {
 	/**
 	 * A set of collection names.
 	 *
-	 * @return list of collection names
+	 * @return Flux of collection names
 	 */
 	Flux<String> getCollectionNames();
 
@@ -221,21 +221,21 @@ public interface ReactiveMongoOperations {
 	Mono<Void> dropCollection(String collectionName);
 
 	/**
-	 * Query for a list of objects of type T from the collection used by the entity class.
+	 * Query for a {@link Flux} of objects of type T from the collection used by the entity class.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
 	 * <p/>
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
+	 * @param entityClass the parametrized type of the returned {@link Flux}.
 	 *
-	 * @param entityClass the parametrized type of the returned list
 	 * @return the converted collection
 	 */
 	<T> Flux<T> findAll(Class<T> entityClass);
 
 	/**
-	 * Query for a list of objects of type T from the specified collection.
+	 * Query for a {@link Flux} of objects of type T from the specified collection.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
@@ -243,7 +243,7 @@ public interface ReactiveMongoOperations {
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 *
-	 * @param entityClass the parametrized type of the returned list.
+	 * @param entityClass the parametrized type of the returned {@link Flux}.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the converted collection
 	 */
@@ -261,7 +261,7 @@ public interface ReactiveMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
+	 * @param entityClass the parametrized type of the returned {@link Mono}.
 	 * @return the converted object
 	 */
 	<T> Mono<T> findOne(Query query, Class<T> entityClass);
@@ -278,7 +278,7 @@ public interface ReactiveMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
+	 * @param entityClass the parametrized type of the returned {@link Mono}.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the converted object
 	 */
@@ -313,7 +313,7 @@ public interface ReactiveMongoOperations {
 	Mono<Boolean> exists(Query query, Class<?> entityClass, String collectionName);
 
 	/**
-	 * Map the results of an ad-hoc query on the collection for the entity class to a List of the specified type.
+	 * Map the results of an ad-hoc query on the collection for the entity class to a {@link Flux} of the specified type.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
@@ -323,13 +323,13 @@ public interface ReactiveMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
-	 * @return the List of converted objects
+	 * @param entityClass the parametrized type of the returned {@link Flux}.
+	 * @return the {@link Flux} of converted objects
 	 */
 	<T> Flux<T> find(Query query, Class<T> entityClass);
 
 	/**
-	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
+	 * Map the results of an ad-hoc query on the specified collection to a {@link Flux} of the specified type.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
@@ -339,9 +339,9 @@ public interface ReactiveMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
+	 * @param entityClass the parametrized type of the returned {@link Flux}.
 	 * @param collectionName name of the collection to retrieve the objects from
-	 * @return the List of converted objects
+	 * @return the {@link Flux} of converted objects
 	 */
 	<T> Flux<T> find(Query query, Class<T> entityClass, String collectionName);
 
@@ -459,7 +459,7 @@ public interface ReactiveMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
+	 * @param entityClass the parametrized type of the returned {@link Mono}.
 	 * @return the converted object
 	 */
 	<T> Mono<T> findAndRemove(Query query, Class<T> entityClass);
@@ -476,8 +476,8 @@ public interface ReactiveMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
-	 * @param collectionName name of the collection to retrieve the objects from
+	 * @param entityClass the parametrized type of the returned {@link Mono}.
+	 * @param collectionName name of the collection to retrieve the objects from.
 	 * @return the converted object
 	 */
 	<T> Mono<T> findAndRemove(Query query, Class<T> entityClass, String collectionName);
@@ -550,14 +550,14 @@ public interface ReactiveMongoOperations {
 	/**
 	 * Insert a Collection of objects into a collection in a single batch write to the database.
 	 *
-	 * @param batchToSave the list of objects to save.
+	 * @param batchToSave the batch of objects to save.
 	 * @param entityClass class that determines the collection to use
 	 * @return
 	 */
 	<T> Flux<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass);
 
 	/**
-	 * Insert a list of objects into the specified collection in a single batch write to the database.
+	 * Insert a batch of objects into the specified collection in a single batch write to the database.
 	 *
 	 * @param batchToSave the list of objects to save.
 	 * @param collectionName name of the collection to store the object in
@@ -600,16 +600,16 @@ public interface ReactiveMongoOperations {
 	 * @param entityClass class that determines the collection to use
 	 * @return
 	 */
-	<T> Flux<T> insert(Publisher<? extends T> batchToSave, Class<?> entityClass);
+	<T> Flux<T> insertAll(Mono<Collection<? extends T>> batchToSave, Class<?> entityClass);
 
 	/**
-	 * Insert a list of objects into the specified collection in a single batch write to the database.
+	 * Insert objects into the specified collection in a single batch write to the database.
 	 *
 	 * @param batchToSave the publisher which provides objects to save.
 	 * @param collectionName name of the collection to store the object in
 	 * @return
 	 */
-	<T> Flux<T> insert(Publisher<? extends T> batchToSave, String collectionName);
+	<T> Flux<T> insertAll(Mono<Collection<? extends T>> batchToSave, String collectionName);
 
 	/**
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
@@ -618,7 +618,7 @@ public interface ReactiveMongoOperations {
 	 * @param objectsToSave the publisher which provides objects to save.
 	 * @return
 	 */
-	<T> Flux<T> insertAll(Publisher<? extends T> objectsToSave);
+	<T> Flux<T> insertAll(Mono<Collection<? extends T>> objectsToSave);
 
 	/**
 	 * Save the object to the collection for the entity type of the object to save. This will perform an insert if the
@@ -910,8 +910,8 @@ public interface ReactiveMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
-	 * @return the List of converted objects
+	 * @param entityClass the parametrized type of the returned {@link Flux}.
+	 * @return the {@link Flux} of converted objects
 	 */
 	<T> Flux<T> tail(Query query, Class<T> entityClass);
 
@@ -929,9 +929,9 @@ public interface ReactiveMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
+	 * @param entityClass the parametrized type of the returned {@link Flux}.
 	 * @param collectionName name of the collection to retrieve the objects from
-	 * @return the List of converted objects
+	 * @return the {@link Flux} of converted objects
 	 */
 	<T> Flux<T> tail(Query query, Class<T> entityClass, String collectionName);
 
