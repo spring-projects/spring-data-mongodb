@@ -886,16 +886,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Class<?> collectionType = targetType.getType();
 
-		if (sourceValue.isEmpty()) {
-			return getPotentiallyConvertedSimpleRead(new HashSet<Object>(), collectionType);
-		}
-
 		TypeInformation<?> componentType = targetType.getComponentType();
 		Class<?> rawComponentType = componentType == null ? null : componentType.getType();
 
 		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
 		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>()
 				: CollectionFactory.createCollection(collectionType, rawComponentType, sourceValue.size());
+
+		if (sourceValue.isEmpty()) {
+			return getPotentiallyConvertedSimpleRead(items, collectionType);
+		}
 
 		for (Object dbObjItem : sourceValue) {
 
