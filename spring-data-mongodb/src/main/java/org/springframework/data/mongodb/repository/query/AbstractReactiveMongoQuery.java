@@ -25,11 +25,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.CollectionExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.GeoNearExecution;
-import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingConverter;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.SingleEntityExecution;
-import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.SlicedExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.TailExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
@@ -136,14 +134,10 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			return new DeleteExecution(operations, method);
 		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(operations, accessor, method.getReturnType());
-		} else if (method.isSliceQuery()) {
-			return new SlicedExecution(operations, accessor.getPageable());
 		} else if (isInfiniteStream(method)) {
 			return new TailExecution(operations, accessor.getPageable());
 		} else if (method.isCollectionQuery()) {
 			return new CollectionExecution(operations, accessor.getPageable());
-		} else if (method.isPageQuery()) {
-			return new PagedExecution(operations, accessor.getPageable());
 		} else {
 			return new SingleEntityExecution(operations, isCountQuery());
 		}

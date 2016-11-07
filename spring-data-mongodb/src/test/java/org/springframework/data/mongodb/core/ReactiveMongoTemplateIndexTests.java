@@ -87,7 +87,7 @@ public class ReactiveMongoTemplateIndexTests {
 		p2.setAge(40);
 		template.insert(p2);
 
-		template.reactiveIndexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique()).block();
+		template.indexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique()).block();
 
 		MongoCollection<Document> coll = template.getCollection(template.getCollectionName(Person.class));
 		List<Document> indexInfo = Flux.from(coll.listIndexes()).collectList().block();
@@ -116,9 +116,9 @@ public class ReactiveMongoTemplateIndexTests {
 		p1.setAge(25);
 		template.insert(p1).block();
 
-		template.reactiveIndexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique()).block();
+		template.indexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique()).block();
 
-		List<IndexInfo> indexInfoList = Flux.from(template.reactiveIndexOps(Person.class).getIndexInfo()).collectList()
+		List<IndexInfo> indexInfoList = Flux.from(template.indexOps(Person.class).getIndexInfo()).collectList()
 				.block();
 		assertThat(indexInfoList.size(), is(2));
 
@@ -140,10 +140,10 @@ public class ReactiveMongoTemplateIndexTests {
 
 		String command = "db." + template.getCollectionName(Person.class)
 				+ ".createIndex({'age':-1}, {'unique':true, 'sparse':true}), 1";
-		template.reactiveIndexOps(Person.class).dropAllIndexes().block();
+		template.indexOps(Person.class).dropAllIndexes().block();
 
 		TestSubscriber<IndexInfo> subscriber = TestSubscriber
-				.subscribe(template.reactiveIndexOps(Person.class).getIndexInfo());
+				.subscribe(template.indexOps(Person.class).getIndexInfo());
 		subscriber.await().assertComplete().assertNoValues();
 
 		Mono.from(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))).block();
@@ -165,7 +165,7 @@ public class ReactiveMongoTemplateIndexTests {
 		assertThat(indexKey, hasEntry("age", -1D));
 		assertThat(unique, is(true));
 
-		List<IndexInfo> indexInfos = template.reactiveIndexOps(Person.class).getIndexInfo().collectList().block();
+		List<IndexInfo> indexInfos = template.indexOps(Person.class).getIndexInfo().collectList().block();
 
 		IndexInfo info = indexInfos.get(1);
 		assertThat(info.isUnique(), is(true));

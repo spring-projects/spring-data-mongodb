@@ -253,36 +253,6 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	 * @see DATAMONGO-1444
 	 */
 	@Test
-	public void findAllWithPageRequestShouldReturnPage() {
-
-		Page<ReactivePerson> people = repository.findAll(new PageRequest(0, 10)).block();
-
-		assertThat(people.getTotalPages(), is(1));
-
-		List<String> ids = people.getContent().stream().map(ReactivePerson::getId).collect(Collectors.toList());
-
-		assertThat(ids, hasSize(7));
-		assertThat(ids, hasItems(dave.id, carter.id));
-	}
-
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
-	public void findAllWithPageRequestOfPageSize1ShouldReturnPage() {
-
-		Page<ReactivePerson> people = repository.findAll(new PageRequest(1, 1)).block();
-
-		List<String> ids = people.getContent().stream().map(ReactivePerson::getId).collect(Collectors.toList());
-
-		assertThat(people.getTotalPages(), is(7));
-		assertThat(ids, hasSize(1));
-	}
-
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
 	public void countShouldReturnNumberOfRecords() {
 
 		TestSubscriber<Long> testSubscriber = TestSubscriber.subscribe(repository.count());

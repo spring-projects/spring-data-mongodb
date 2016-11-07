@@ -21,8 +21,8 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.repository.reactive.ReactivePagingAndSortingRepository;
 
+import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
  * @since 2.0
  */
 @NoRepositoryBean
-public interface ReactiveMongoRepository<T, ID extends Serializable> extends ReactivePagingAndSortingRepository<T, ID> {
+public interface ReactiveMongoRepository<T, ID extends Serializable> extends ReactiveSortingRepository<T, ID> {
 
 	/**
 	 * Inserts the given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use

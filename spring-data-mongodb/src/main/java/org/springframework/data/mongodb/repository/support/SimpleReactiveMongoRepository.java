@@ -143,17 +143,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	}
 
 	@Override
-	public Mono<Page<T>> findAll(Pageable pageable) {
-
-		Assert.notNull(pageable, "The given Pageable must not be null!");
-
-		Mono<Long> count = count();
-		Flux<T> content = findAll(new Query().with(pageable));
-
-		return Mono.fromCallable(() -> new ReactivePageImpl<>(content, pageable, count));
-	}
-
-	@Override
 	public Flux<T> findAll(Sort sort) {
 		return findAll(new Query().with(sort));
 	}
