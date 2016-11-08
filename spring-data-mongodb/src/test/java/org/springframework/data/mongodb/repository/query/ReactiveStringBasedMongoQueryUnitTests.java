@@ -49,6 +49,7 @@ import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
 import org.springframework.data.repository.util.QueryExecutionConverters;
+import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import reactor.core.publisher.Flux;
@@ -250,7 +251,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 	private ReactiveStringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		DefaultConversionService conversionService = new DefaultConversionService();
-		QueryExecutionConverters.registerConvertersIn(conversionService);
+		ReactiveWrapperConverters.registerConvertersIn(conversionService);
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
