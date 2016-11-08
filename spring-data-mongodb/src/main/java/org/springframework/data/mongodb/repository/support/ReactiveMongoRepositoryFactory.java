@@ -78,7 +78,8 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
 
 		DefaultConversionService conversionService = new DefaultConversionService();
-		QueryExecutionConverters.registerConvertersIn(conversionService);
+		ReactiveWrapperConverters.registerConvertersIn(conversionService);
+
 		this.conversionService = conversionService;
 		setConversionService(conversionService);
 	}
