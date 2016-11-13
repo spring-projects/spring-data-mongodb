@@ -19,6 +19,9 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.util.Assert.*;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +42,6 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.Constants;
-import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -67,9 +69,6 @@ import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Test class to execute performance tests for plain Reactive Streams MongoDB driver usage,
@@ -131,10 +130,7 @@ public class ReactivePerformanceTests {
 		operations = new ReactiveMongoTemplate(mongoDbFactory, converter);
 
 		ReactiveMongoRepositoryFactory factory = new ReactiveMongoRepositoryFactory(operations);
-		factory.setConversionService(new GenericConversionService());
-
 		repository = factory.getRepository(ReactivePersonRepository.class);
-
 	}
 
 	/**

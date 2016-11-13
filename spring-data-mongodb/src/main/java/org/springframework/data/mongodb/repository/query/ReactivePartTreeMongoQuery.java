@@ -16,13 +16,11 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.bson.Document;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.BasicQuery;
-import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.QueryMethod;
@@ -53,11 +51,10 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
-	 * @param conversionService must not be {@literal null}.
 	 */
-	public ReactivePartTreeMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations, ConversionService conversionService) {
+	public ReactivePartTreeMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations) {
 
-		super(method, mongoOperations, conversionService);
+		super(method, mongoOperations);
 
 		this.processor = method.getResultProcessor();
 		this.tree = new PartTree(method.getName(), processor.getReturnedType().getDomainType());

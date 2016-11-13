@@ -20,7 +20,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -54,17 +53,17 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	private final ExpressionEvaluatingParameterBinder parameterBinder;
 
 	/**
-	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link MongoQueryMethod} and {@link MongoOperations}.
+	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link MongoQueryMethod} and
+	 * {@link MongoOperations}.
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @param conversionService must not be {@literal null}.
 	 */
 	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
-										 SpelExpressionParser expressionParser, EvaluationContextProvider evaluationContextProvider, ConversionService conversionService) {
-		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider, conversionService);
+			SpelExpressionParser expressionParser, EvaluationContextProvider evaluationContextProvider) {
+		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
 	}
 
 	/**
@@ -75,12 +74,12 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
-	 * @param conversionService must not be {@literal null}.
 	 */
-	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
-										 SpelExpressionParser expressionParser, EvaluationContextProvider evaluationContextProvider, ConversionService conversionService) {
+	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
+			ReactiveMongoOperations mongoOperations, SpelExpressionParser expressionParser,
+			EvaluationContextProvider evaluationContextProvider) {
 
-		super(method, mongoOperations, conversionService);
+		super(method, mongoOperations);
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
