@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.reactivestreams.Publisher;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
@@ -29,7 +30,6 @@ import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryMethod;
 import org.springframework.data.mongodb.repository.query.ReactivePartTreeMongoQuery;
@@ -43,7 +43,6 @@ import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -55,6 +54,7 @@ import org.springframework.util.ClassUtils;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 2.0
  */
 public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
@@ -63,7 +63,6 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final ReactiveMongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	private final ConversionService conversionService;
 
 	/**
 	 * Creates a new {@link ReactiveMongoRepositoryFactory} with the given {@link ReactiveMongoOperations}.
@@ -76,12 +75,6 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 
 		this.operations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
-
-		DefaultConversionService conversionService = new DefaultConversionService();
-		ReactiveWrapperConverters.registerConvertersIn(conversionService);
-
-		this.conversionService = conversionService;
-		setConversionService(conversionService);
 	}
 
 	/*
@@ -111,7 +104,7 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
-		return new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext, conversionService);
+		return new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext);
 	}
 
 	/*
@@ -131,7 +124,7 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 
 		if (!ReactiveWrappers.isAvailable()) {
 			throw new InvalidDataAccessApiUsageException(
-					String.format("Cannot implement Repository %s without reactive library support.",
+					String.format("Cannot implement repository %s without reactive library support.",
 							repositoryMetadata.getRepositoryInterface().getName()));
 		}
 
@@ -189,22 +182,12 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 	 *
 	 * @author Mark Paluch
 	 */
+	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
 		private final ReactiveMongoOperations operations;
 		private final EvaluationContextProvider evaluationContextProvider;
-		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-		final ConversionService conversionService;
-
-		MongoQueryLookupStrategy(ReactiveMongoOperations operations, EvaluationContextProvider evaluationContextProvider,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-				ConversionService conversionService) {
-
-			this.operations = operations;
-			this.evaluationContextProvider = evaluationContextProvider;
-			this.mappingContext = mappingContext;
-			this.conversionService = conversionService;
-		}
+		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 		/*
 		 * (non-Javadoc)
@@ -220,12 +203,11 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
 				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, EXPRESSION_PARSER,
-						evaluationContextProvider, conversionService);
+						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ReactiveStringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider,
-						conversionService);
+				return new ReactiveStringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
 			} else {
-				return new ReactivePartTreeMongoQuery(queryMethod, operations, conversionService);
+				return new ReactivePartTreeMongoQuery(queryMethod, operations);
 			}
 		}
 	}

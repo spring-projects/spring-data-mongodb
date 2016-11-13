@@ -19,6 +19,9 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
@@ -32,7 +35,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
@@ -48,12 +50,7 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
-import org.springframework.data.repository.util.QueryExecutionConverters;
-import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Unit tests for {@link ReactiveStringBasedMongoQuery}.
@@ -250,15 +247,12 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 	private ReactiveStringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
-		DefaultConversionService conversionService = new DefaultConversionService();
-		ReactiveWrapperConverters.registerConvertersIn(conversionService);
-
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
-		return new ReactiveStringBasedMongoQuery(queryMethod, operations, PARSER, DefaultEvaluationContextProvider.INSTANCE,
-				conversionService);
+		return new ReactiveStringBasedMongoQuery(queryMethod, operations, PARSER,
+				DefaultEvaluationContextProvider.INSTANCE);
 	}
 
 	private interface SampleRepository extends Repository<Person, Long> {
