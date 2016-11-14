@@ -16,29 +16,18 @@
 
 package org.springframework.data.mongodb.repository.config;
 
-import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.mongodb.config.BeanNames;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
-import org.springframework.data.repository.config.RepositoryConfiguration;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
-import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
-import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
+import org.springframework.data.repository.core.RepositoryMetadata;
 import org.w3c.dom.Element;
 
 /**
@@ -46,14 +35,13 @@ import org.w3c.dom.Element;
  * 
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 2.0
  */
-public class ReactiveMongoRepositoryConfigurationExtension extends RepositoryConfigurationExtensionSupport {
+class ReactiveMongoRepositoryConfigurationExtension extends MongoRepositoryConfigurationExtension {
 
 	private static final String MONGO_TEMPLATE_REF = "reactive-mongo-template-ref";
 	private static final String CREATE_QUERY_INDEXES = "create-query-indexes";
-
-	private boolean fallbackMappingContextCreated = false;
 
 	/* 
 	 * (non-Javadoc)
@@ -62,15 +50,6 @@ public class ReactiveMongoRepositoryConfigurationExtension extends RepositoryCon
 	@Override
 	public String getModuleName() {
 		return "Reactive MongoDB";
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getModulePrefix()
-	 */
-	@Override
-	protected String getModulePrefix() {
-		return "mongo";
 	}
 
 	/*
@@ -83,32 +62,11 @@ public class ReactiveMongoRepositoryConfigurationExtension extends RepositoryCon
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingAnnotations()
-	 */
-	@Override
-	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
-		return Collections.singleton(Document.class);
-	}
-
-	/* 
-	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingTypes()
 	 */
 	@Override
 	protected Collection<Class<?>> getIdentifyingTypes() {
 		return Collections.singleton(ReactiveMongoRepository.class);
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.RepositoryConfigurationSource)
-	 */
-	@Override
-	public void postProcess(BeanDefinitionBuilder builder, RepositoryConfigurationSource source) {
-
-		if (fallbackMappingContextCreated) {
-			builder.addPropertyReference("mappingContext", BeanNames.MAPPING_CONTEXT_BEAN_NAME);
-		}
 	}
 
 	/* 
@@ -139,32 +97,10 @@ public class ReactiveMongoRepositoryConfigurationExtension extends RepositoryCon
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#registerBeansForRoot(org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.data.repository.config.RepositoryConfigurationSource)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#useRepositoryConfiguration(org.springframework.data.repository.core.RepositoryMetadata)
 	 */
 	@Override
-	public void registerBeansForRoot(BeanDefinitionRegistry registry, RepositoryConfigurationSource configurationSource) {
-
-		super.registerBeansForRoot(registry, configurationSource);
-
-		if (!registry.containsBeanDefinition(BeanNames.MAPPING_CONTEXT_BEAN_NAME)) {
-
-			RootBeanDefinition definition = new RootBeanDefinition(MongoMappingContext.class);
-			definition.setRole(AbstractBeanDefinition.ROLE_INFRASTRUCTURE);
-			definition.setSource(configurationSource.getSource());
-
-			registry.registerBeanDefinition(BeanNames.MAPPING_CONTEXT_BEAN_NAME, definition);
-		}
-	}
-
-	@Override
-	public <T extends RepositoryConfigurationSource> Collection<RepositoryConfiguration<T>> getRepositoryConfigurations(
-			T configSource, ResourceLoader loader, boolean strictMatchesOnly) {
-
-		Collection<RepositoryConfiguration<T>> repositoryConfigurations = super.getRepositoryConfigurations(configSource,
-				loader, strictMatchesOnly);
-
-		return repositoryConfigurations.stream()
-				.filter(configuration -> RepositoryType.isReactiveRepository(loadRepositoryInterface(configuration, loader)))
-				.collect(Collectors.toList());
+	protected boolean useRepositoryConfiguration(RepositoryMetadata metadata) {
+		return metadata.isReactiveRepository();
 	}
 }
