@@ -600,7 +600,7 @@ public interface ReactiveMongoOperations {
 	 * @param entityClass class that determines the collection to use
 	 * @return
 	 */
-	<T> Flux<T> insertAll(Mono<Collection<? extends T>> batchToSave, Class<?> entityClass);
+	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, Class<?> entityClass);
 
 	/**
 	 * Insert objects into the specified collection in a single batch write to the database.
@@ -609,7 +609,7 @@ public interface ReactiveMongoOperations {
 	 * @param collectionName name of the collection to store the object in
 	 * @return
 	 */
-	<T> Flux<T> insertAll(Mono<Collection<? extends T>> batchToSave, String collectionName);
+	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName);
 
 	/**
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
@@ -618,7 +618,7 @@ public interface ReactiveMongoOperations {
 	 * @param objectsToSave the publisher which provides objects to save.
 	 * @return
 	 */
-	<T> Flux<T> insertAll(Mono<Collection<? extends T>> objectsToSave);
+	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> objectsToSave);
 
 	/**
 	 * Save the object to the collection for the entity type of the object to save. This will perform an insert if the

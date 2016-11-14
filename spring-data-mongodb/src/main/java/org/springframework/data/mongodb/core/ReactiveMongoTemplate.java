@@ -617,7 +617,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doFindOne(collectionName, new Document(idKey, id), null, entityClass);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#geoNear(org.springframework.data.mongodb.core.query.NearQuery, java.lang.Class)
 	 */
@@ -626,7 +626,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return geoNear(near, entityClass, determineCollectionName(entityClass));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#geoNear(org.springframework.data.mongodb.core.query.NearQuery, java.lang.Class, java.lang.String)
 	 */
@@ -769,7 +769,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insert(org.reactivestreams.Publisher, java.lang.Class)
 	 */
 	@Override
-	public <T> Flux<T> insertAll(Mono<Collection<? extends T>> batchToSave, Class<?> entityClass) {
+	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, Class<?> entityClass) {
 		return insertAll(batchToSave, determineCollectionName(entityClass));
 	}
 
@@ -777,7 +777,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insert(org.reactivestreams.Publisher, java.lang.String)
 	 */
 	@Override
-	public <T> Flux<T> insertAll(Mono<Collection<? extends T>> batchToSave, String collectionName) {
+	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName) {
 		return Flux.from(batchToSave).flatMap(collection -> insert(collection, collectionName));
 	}
 
@@ -847,7 +847,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insertAll(org.reactivestreams.Publisher)
 	 */
 	@Override
-	public <T> Flux<T> insertAll(Mono<Collection<? extends T>> objectsToSave) {
+	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> objectsToSave) {
 		return Flux.from(objectsToSave).flatMap(this::insertAll);
 	}
 
