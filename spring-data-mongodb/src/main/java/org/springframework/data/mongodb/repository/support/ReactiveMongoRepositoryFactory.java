@@ -20,10 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
-import org.reactivestreams.Publisher;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -38,16 +35,13 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.data.repository.core.support.ReactiveRepositoryFactorySupport;
 import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.repository.util.ReactiveWrapperConverters;
-import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 
 /**
  * Factory to create {@link org.springframework.data.mongodb.repository.ReactiveMongoRepository} instances.
@@ -57,7 +51,7 @@ import org.springframework.util.ClassUtils;
  * @author Oliver Gierke
  * @since 2.0
  */
-public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
+public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySupport {
 
 	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 
@@ -113,53 +107,6 @@ public class ReactiveMongoRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 		return getEntityInformation(domainClass, null);
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#validate(org.springframework.data.repository.core.RepositoryMetadata)
-	 */
-	@Override
-	protected void validate(RepositoryMetadata repositoryMetadata) {
-
-		if (!ReactiveWrappers.isAvailable()) {
-			throw new InvalidDataAccessApiUsageException(
-					String.format("Cannot implement repository %s without reactive library support.",
-							repositoryMetadata.getRepositoryInterface().getName()));
-		}
-
-		Arrays.stream(repositoryMetadata.getRepositoryInterface().getMethods())
-				.forEach(ReactiveMongoRepositoryFactory::validate);
-	}
-
-	/**
-	 * Reactive MongoDB support requires reactive wrapper support. If return type/parameters are reactive wrapper types,
-	 * then it's required to be able to convert these into Publisher.
-	 *
-	 * @param method the method to validate.
-	 */
-	private static void validate(Method method) {
-
-		if (ReactiveWrappers.supports(method.getReturnType())
-				&& !ClassUtils.isAssignable(Publisher.class, method.getReturnType())) {
-
-			if (!ReactiveWrapperConverters.supports(method.getReturnType())) {
-
-				throw new InvalidDataAccessApiUsageException(
-						String.format("No reactive type converter found for type %s used in %s, method %s.",
-								method.getReturnType().getName(), method.getDeclaringClass().getName(), method));
-			}
-		}
-
-		Arrays.stream(method.getParameterTypes()) //
-				.filter(ReactiveWrappers::supports) //
-				.filter(parameterType -> !ClassUtils.isAssignable(Publisher.class, parameterType)) //
-				.filter(parameterType -> !ReactiveWrapperConverters.supports(parameterType)) //
-				.forEach(parameterType -> {
-					throw new InvalidDataAccessApiUsageException(
-							String.format("No reactive type converter found for type %s used in %s, method %s.",
-									parameterType.getName(), method.getDeclaringClass().getName(), method));
-				});
 	}
 
 	@SuppressWarnings("unchecked")
