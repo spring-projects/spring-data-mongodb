@@ -18,14 +18,12 @@ package org.springframework.data.mongodb.repository.config;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.config.ParsingUtils;
 import org.springframework.data.mongodb.config.BeanNames;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -33,12 +31,11 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
-import org.springframework.data.repository.config.RepositoryConfiguration;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
-import org.springframework.data.repository.util.ReactiveWrappers;
+import org.springframework.data.repository.core.RepositoryMetadata;
 import org.w3c.dom.Element;
 
 /**
@@ -141,23 +138,12 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		}
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#useRepositoryConfiguration(org.springframework.data.repository.core.RepositoryMetadata)
+	 */
 	@Override
-	public <T extends RepositoryConfigurationSource> Collection<RepositoryConfiguration<T>> getRepositoryConfigurations(
-			T configSource, ResourceLoader loader, boolean strictMatchesOnly) {
-
-		Collection<RepositoryConfiguration<T>> repositoryConfigurations = super.getRepositoryConfigurations(configSource,
-				loader, strictMatchesOnly);
-
-		if (ReactiveWrappers.isAvailable()) {
-
-			return repositoryConfigurations.stream().filter(configuration -> {
-
-				Class<?> repositoryInterface = loadRepositoryInterface(configuration, loader);
-				return !RepositoryType.isReactiveRepository(repositoryInterface);
-
-			}).collect(Collectors.toList());
-		}
-
-		return repositoryConfigurations;
+	protected boolean useRepositoryConfiguration(RepositoryMetadata metadata) {
+		return !metadata.isReactiveRepository();
 	}
 }
