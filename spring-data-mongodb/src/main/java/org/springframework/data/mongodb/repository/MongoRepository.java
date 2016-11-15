@@ -58,7 +58,7 @@ public interface MongoRepository<T, ID extends Serializable>
 	List<T> findAll(Sort sort);
 
 	/**
-	 * Inserts the given a given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use
+	 * Inserts the given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use
 	 * the returned instance for further operations as the save operation might have changed the entity instance
 	 * completely. Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
 	 *
