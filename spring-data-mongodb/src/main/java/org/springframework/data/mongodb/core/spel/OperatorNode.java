@@ -29,7 +29,7 @@ import org.springframework.expression.spel.ast.Operator;
 
 /**
  * An {@link ExpressionNode} representing an operator.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
@@ -47,6 +47,10 @@ public class OperatorNode extends ExpressionNode {
 		map.put("/", "$divide");
 		map.put("%", "$mod");
 
+		map.put("and", "and");
+		map.put("or", "or");
+		map.put("!", "not");
+
 		OPERATORS = Collections.unmodifiableMap(map);
 	}
 
@@ -54,7 +58,7 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Creates a new {@link OperatorNode} from the given {@link Operator} and {@link ExpressionState}.
-	 * 
+	 *
 	 * @param node must not be {@literal null}.
 	 * @param state must not be {@literal null}.
 	 */
