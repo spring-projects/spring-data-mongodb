@@ -526,6 +526,9 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.convertToMongoType(null), is(nullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-1509
+	 */
 	@Test
 	public void writesGenericTypeCorrectly() {
 
@@ -537,7 +540,7 @@ public class MappingMongoConverterUnitTests {
 		converter.write(type, result);
 
 		org.bson.Document content = (org.bson.Document) result.get("content");
-		assertThat(content.get("_class"), is(notNullValue()));
+		assertTypeHint(content, Address.class);
 		assertThat(content.get("city"), is(notNullValue()));
 	}
 
@@ -1272,6 +1275,7 @@ public class MappingMongoConverterUnitTests {
 
 	/**
 	 * @see DATAMONGO-523
+	 * @see DATAMONGO-1509
 	 */
 	@Test
 	public void considersTypeAliasAnnotation() {
@@ -1282,9 +1286,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(aliased, result);
 
-		Object type = result.get("_class");
-		assertThat(type, is(notNullValue()));
-		assertThat(type.toString(), is("_"));
+		assertTypeHint(result, "_");
 	}
 
 	/**
@@ -1409,6 +1411,7 @@ public class MappingMongoConverterUnitTests {
 	/**
 	 * @see DATAMONGO-812
 	 * @see DATAMONGO-893
+	 * @see DATAMONGO-1509
 	 */
 	@Test
 	public void convertsListToBasicDBListAndRetainsTypeInformationForComplexObjects() {
@@ -1424,7 +1427,7 @@ public class MappingMongoConverterUnitTests {
 
 		List<Object> dbList = (List<Object>) result;
 		assertThat(dbList, hasSize(1));
-		assertThat(getTypedValue(getAsDocument(dbList, 0), "_class", String.class), equalTo(Address.class.getName()));
+		assertTypeHint(getAsDocument(dbList, 0), Address.class);
 	}
 
 	/**
@@ -1444,6 +1447,7 @@ public class MappingMongoConverterUnitTests {
 
 	/**
 	 * @see DATAMONGO-812
+	 * @see DATAMONGO-1509
 	 */
 	@Test
 	public void convertsArrayToBasicDBListAndRetainsTypeInformationForComplexObjects() {
@@ -1458,7 +1462,7 @@ public class MappingMongoConverterUnitTests {
 
 		List<Object> dbList = (List<Object>) result;
 		assertThat(dbList, hasSize(1));
-		assertThat(getTypedValue(getAsDocument(dbList, 0), "_class", String.class), equalTo(Address.class.getName()));
+		assertTypeHint(getAsDocument(dbList, 0), Address.class);
 	}
 
 	/**
@@ -1802,6 +1806,7 @@ public class MappingMongoConverterUnitTests {
 
 	/**
 	 * @see DATAMONGO-1001
+	 * @see DATAMONGO-1509
 	 */
 	@Test
 	public void shouldWriteCglibProxiedClassTypeInformationCorrectly() {
@@ -1814,7 +1819,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(proxied, document);
 
-		assertThat(document.get("_class"), is((Object) GenericType.class.getName()));
+		assertTypeHint(document, GenericType.class);
 	}
 
 	/**
