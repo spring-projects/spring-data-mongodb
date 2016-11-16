@@ -203,7 +203,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void findsPersonInAgeRangeCorrectly() throws Exception {
 
 		List<Person> result = repository.findByAgeBetween(40, 45);
-		assertThat(result.size(), is(2));
+		assertThat(result.size(), is(3));
 		assertThat(result, hasItems(dave, leroi));
 	}
 
