@@ -3027,6 +3027,24 @@ public class MongoTemplateTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1176
+	 */
+	@Test
+	public void generatesIdForInsertAll() {
+
+		Person walter = new Person(null, "Walter");
+		Person jesse = new Person(null, "Jesse");
+
+		template.insertAll(Arrays.asList(walter, jesse));
+
+		List<Person> result = template.findAll(Person.class);
+
+		assertThat(result, hasSize(2));
+		assertThat(walter.getId(), is(notNullValue()));
+		assertThat(jesse.getId(), is(notNullValue()));
+	}
+
+	/**
 	 * @see DATAMONGO-1208
 	 */
 	@Test

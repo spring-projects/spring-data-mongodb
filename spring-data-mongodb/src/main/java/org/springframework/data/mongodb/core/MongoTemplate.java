@@ -938,13 +938,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		for (T o : batchToSave) {
 
 			initializeVersionProperty(o);
-			Document dbDoc = new Document();
 
 			maybeEmitEvent(new BeforeConvertEvent<T>(o, collectionName));
-			writer.write(o, dbDoc);
+			Document document = toDocument(o, writer);
 
-			maybeEmitEvent(new BeforeSaveEvent<T>(o, dbDoc, collectionName));
-			documentList.add(dbDoc);
+			maybeEmitEvent(new BeforeSaveEvent<T>(o, document, collectionName));
+			documentList.add(document);
 		}
 
 		List<Object> ids = consolidateIdentifiers(insertDocumentList(collectionName, documentList), documentList);
