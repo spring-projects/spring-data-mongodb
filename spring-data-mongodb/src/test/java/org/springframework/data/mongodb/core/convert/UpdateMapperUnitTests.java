@@ -102,7 +102,7 @@ public class UpdateMapperUnitTests {
 		Document push = getAsDocument(mappedObject, "$push");
 		Document list = getAsDocument(push, "aliased");
 
-		assertThat(list.get("_class"), is(ConcreteChildClass.class.getName()));
+		assertTypeHint(list, ConcreteChildClass.class);
 	}
 
 	/**
@@ -119,7 +119,7 @@ public class UpdateMapperUnitTests {
 
 		Document set = getAsDocument(mappedObject, "$set");
 		Document modelDocument = (Document) set.get("model");
-		assertThat(modelDocument.get("_class"), not(nullValue()));
+		assertTypeHint(modelDocument, ModelImpl.class);
 	}
 
 	/**
@@ -168,7 +168,7 @@ public class UpdateMapperUnitTests {
 
 		Document set = getAsDocument(mappedObject, "$set");
 		Document modelDocument = getAsDocument(set, "aliased.$");
-		assertThat(modelDocument.get("_class"), is(ConcreteChildClass.class.getName()));
+		assertTypeHint(modelDocument, ConcreteChildClass.class);
 	}
 
 	/**
@@ -205,8 +205,8 @@ public class UpdateMapperUnitTests {
 
 		Document someObject = getAsDocument(document, "aliased.$.someObject");
 		assertThat(someObject, is(notNullValue()));
-		assertThat(someObject.get("_class"), is(ConcreteChildClass.class.getName()));
 		assertThat(someObject.get("value"), is("bubu"));
+		assertTypeHint(someObject, ConcreteChildClass.class);
 	}
 
 	/**
@@ -276,9 +276,9 @@ public class UpdateMapperUnitTests {
 
 		Document push = getAsDocument(mappedObject, "$push");
 		Document model = getAsDocument(push, "models");
-		List<Object> each = getAsDBList(model, "$each");
+		List<Document> each = getAsDBList(model, "$each");
 
-		assertThat(((Document) each.get(0)).get("_class").toString(), equalTo(ListModel.class.getName()));
+		assertTypeHint(each.get(0), ListModel.class);
 	}
 
 	/**
@@ -566,8 +566,7 @@ public class UpdateMapperUnitTests {
 		List each = getAsDBList(values, "$each");
 
 		for (Object updateValue : each) {
-			assertThat(((Document) updateValue).get("_class").toString(),
-					equalTo("org.springframework.data.mongodb.core.convert.UpdateMapperUnitTests$ModelImpl"));
+			assertTypeHint((Document) updateValue, ModelImpl.class);
 		}
 	}
 

@@ -666,7 +666,8 @@ When querying and updating `MongoTemplate` will use the converter to handle conv
 
 As MongoDB collections can contain documents that represent instances of a variety of types. A great example here is if you store a hierarchy of classes or simply have a class with a property of type `Object`. In the latter case the values held inside that property have to be read in correctly when retrieving the object. Thus we need a mechanism to store type information alongside the actual document.
 
-To achieve that the `MappingMongoConverter` uses a `MongoTypeMapper` abstraction with `DefaultMongoTypeMapper` as it's main implementation. Its default behavior is storing the fully qualified classname under `_class` inside the document for the top-level document as well as for every value if it's a complex type and a subtype of the property type declared.
+To achieve that the `MappingMongoConverter` uses a `MongoTypeMapper` abstraction with `DefaultMongoTypeMapper` as it's main implementation. Its default behavior is storing the fully qualified classname under `_class` inside the document. Type hints are written for  top-level documents as well as for every value if it's a complex type and a subtype of the property type declared.
+
 
 .Type mapping
 ====
@@ -685,13 +686,14 @@ sample.value = new Person();
 
 mongoTemplate.save(sample);
 
-{ "_class" : "com.acme.Sample",
-  "value" : { "_class" : "com.acme.Person" }
+{
+  "value" : { "_class" : "com.acme.Person" },
+  "_class" : "com.acme.Sample"
 }
 ----
 ====
 
-As you can see we store the type information for the actual root class persistent as well as for the nested type as it is complex and a subtype of `Contact`. So if you're now using `mongoTemplate.findAll(Object.class, "sample")` we are able to find out that the document stored shall be a `Sample` instance. We are also able to find out that the value property shall be a `Person` actually.
+As you can see we store the type information as last field for the actual root class as well as for the nested type as it is complex and a subtype of `Contact`. So if you're now using `mongoTemplate.findAll(Object.class, "sample")` we are able to find out that the document stored shall be a `Sample` instance. We are also able to find out that the value property shall be a `Person` actually.
 
 ==== Customizing type mapping
 
@@ -1053,7 +1055,7 @@ As you can see most methods return the `Criteria` object to provide a fluent sty
 * `Criteria` *gte* `(Object o)` Creates a criterion using the `$gte` operator
 * `Criteria` *in* `(Object... o)` Creates a criterion using the `$in` operator for a varargs argument.
 * `Criteria` *in* `(Collection<?> collection)` Creates a criterion using the `$in` operator using a collection
-* `Criteria` *is* `(Object o)` Creates a criterion using the `$is` operator
+* `Criteria` *is* `(Object o)` Creates a criterion using field matching (`{ key:value }`). If the specified value is a document, the order of the fields and exact equality in the document matters.
 * `Criteria` *lt* `(Object o)` Creates a criterion using the `$lt` operator
 * `Criteria` *lte* `(Object o)` Creates a criterion using the `$lte` operator
 * `Criteria` *mod* `(Number value, Number remainder)` Creates a criterion using the `$mod` operator

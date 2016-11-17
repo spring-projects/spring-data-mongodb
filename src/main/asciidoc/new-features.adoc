@@ -1,6 +1,12 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.2-0-0]]
+== What's new in Spring Data MongoDB 2.0
+* Upgrade to Java 8.
+* Usage of the `Document` API instead of `DBObject`.
+* <<mongo.reactive>>.
+
 [[new-features.1-10-0]]
 == What's new in Spring Data MongoDB 1.10
 * Support for `$min`, `$max` and `$slice` operators via `Update`.

@@ -273,6 +273,8 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 | `{"location" : {"$exists" : exists }}`
 |===
 
+NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
+
 [[mongodb.repositories.queries.delete]]
 === Repository delete queries
 

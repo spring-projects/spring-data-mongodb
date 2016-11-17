@@ -19,6 +19,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.*;
 import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsEqual.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.assertTypeHint;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -421,9 +422,9 @@ public class ApplicationContextEventTests {
 		assertEquals(p.getId(), p2.getId());
 		assertEquals(p.getText(), p2.getText());
 
-		assertEquals("org.springframework.data.mongodb.core.mapping.PersonPojoStringId", document.get("_class"));
 		assertEquals("1", document.get("_id"));
 		assertEquals("Text", document.get("text"));
+		assertTypeHint(document, PersonPojoStringId.class);
 	}
 
 	@Data

@@ -3482,7 +3482,7 @@ public class MongoTemplateTests {
 
 		Document document = new Document();
 
-		template.insertAll(Arrays.asList(document));
+		template.insertAll(Collections.singletonList(document));
 
 		assertThat(document.id, is(notNullValue()));
 	}
@@ -3492,9 +3492,9 @@ public class MongoTemplateTests {
 	 * @see DATAMONGO-1509
 	 */
 	@Test
-	public void findsByGnericNestedListElements() {
+	public void findsByGenericNestedListElements() {
 
-		List<Model> modelList = Arrays.<Model>asList(new ModelA("value"));
+		List<Model> modelList = Collections.singletonList(new ModelA("value"));
 		DocumentWithCollection dwc = new DocumentWithCollection(modelList);
 
 		template.insert(dwc);

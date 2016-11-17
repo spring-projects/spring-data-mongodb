@@ -49,18 +49,18 @@ public abstract class DocumentTestUtils {
 	/**
 	 * Expects the field with the given key to be not {@literal null} and a {@link BasicDBList}.
 	 * 
-	 * @param source the {@link Document} to lookup the {@link BasicDBList} in
-	 * @param key the key of the field to find the {@link BasicDBList} in
+	 * @param source the {@link Document} to lookup the {@link List} in
+	 * @param key the key of the field to find the {@link List} in
 	 * @return
 	 */
-	public static List<Object> getAsDBList(Document source, String key) {
+	public static <T> List<T> getAsDBList(Document source, String key) {
 		return getTypedValue(source, key, List.class);
 	}
 
 	/**
 	 * Expects the list element with the given index to be a non-{@literal null} {@link Document} and returns it.
 	 * 
-	 * @param source the {@link BasicDBList} to look up the {@link Document} element in
+	 * @param source the {@link List} to look up the {@link Document} element in
 	 * @param index the index of the element expected to contain a {@link Document}
 	 * @return
 	 */
