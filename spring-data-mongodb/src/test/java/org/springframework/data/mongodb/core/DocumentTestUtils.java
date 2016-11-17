@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.bson.Document;
@@ -79,5 +80,24 @@ public abstract class DocumentTestUtils {
 		assertThat(value, is(instanceOf(type)));
 
 		return (T) value;
+	}
+
+	public static void assertTypeHint(Document document, Class<?> type) {
+		assertTypeHint(document, type.getName());
+	}
+
+	public static void assertTypeHint(Document document, String expectedTypeString) {
+
+		Iterator<String> keyIterator = document.keySet().iterator();
+		while (keyIterator.hasNext()) {
+			String key = keyIterator.next();
+			if (key.equals("_class")) {
+				assertThat((String) document.get(key), is(equalTo(expectedTypeString)));
+				assertThat(keyIterator.hasNext(), is(false));
+				return;
+			}
+		}
+
+		fail(String.format("Expected to find type info %s in %s.", document, expectedTypeString));
 	}
 }
