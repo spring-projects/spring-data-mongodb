@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,41 +17,76 @@ package org.springframework.data.mongodb.core.spel;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.expression.spel.ExpressionState;
+import org.springframework.expression.spel.ast.OpAnd;
 import org.springframework.expression.spel.ast.OpDivide;
+import org.springframework.expression.spel.ast.OpEQ;
+import org.springframework.expression.spel.ast.OpGE;
+import org.springframework.expression.spel.ast.OpGT;
+import org.springframework.expression.spel.ast.OpLE;
+import org.springframework.expression.spel.ast.OpLT;
 import org.springframework.expression.spel.ast.OpMinus;
 import org.springframework.expression.spel.ast.OpModulus;
 import org.springframework.expression.spel.ast.OpMultiply;
+import org.springframework.expression.spel.ast.OpNE;
+import org.springframework.expression.spel.ast.OpOr;
 import org.springframework.expression.spel.ast.OpPlus;
 import org.springframework.expression.spel.ast.Operator;
+import org.springframework.expression.spel.ast.OperatorPower;
 
 /**
  * An {@link ExpressionNode} representing an operator.
  *
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class OperatorNode extends ExpressionNode {
 
 	private static final Map<String, String> OPERATORS;
+	private static final Set<Class> SUPPORTED_MATH_OPERATORS;
 
 	static {
 
-		Map<String, String> map = new HashMap<String, String>(6);
+		Map<String, String> map = new HashMap<String, String>(14, 1);
 
 		map.put("+", "$add");
 		map.put("-", "$subtract");
 		map.put("*", "$multiply");
 		map.put("/", "$divide");
 		map.put("%", "$mod");
+		map.put("^", "$pow");
+		map.put("==", "$eq");
+		map.put("!=", "$ne");
+		map.put(">", "$gt");
+		map.put(">=", "$gte");
+		map.put("<", "$lt");
+		map.put("<=", "$lte");
 
-		map.put("and", "and");
-		map.put("or", "or");
-		map.put("!", "not");
+		map.put("and", "$and");
+		map.put("or", "$or");
 
 		OPERATORS = Collections.unmodifiableMap(map);
+
+		Set<Class> set = new HashSet<Class>(12, 1);
+		set.add(OpMinus.class);
+		set.add(OpPlus.class);
+		set.add(OpMultiply.class);
+		set.add(OpDivide.class);
+		set.add(OpModulus.class);
+		set.add(OperatorPower.class);
+		set.add(OpNE.class);
+		set.add(OpEQ.class);
+		set.add(OpGT.class);
+		set.add(OpGE.class);
+		set.add(OpLT.class);
+		set.add(OpLE.class);
+
+		SUPPORTED_MATH_OPERATORS = Collections.unmodifiableSet(set);
 	}
 
 	private final Operator operator;
@@ -73,8 +108,16 @@ public class OperatorNode extends ExpressionNode {
 	 */
 	@Override
 	public boolean isMathematicalOperation() {
-		return operator instanceof OpMinus || operator instanceof OpPlus || operator instanceof OpMultiply
-				|| operator instanceof OpDivide || operator instanceof OpModulus;
+		return SUPPORTED_MATH_OPERATORS.contains(operator.getClass());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.spel.ExpressionNode#isConjunctionOperator()
+	 */
+	@Override
+	public boolean isLogicalOperator() {
+		return operator instanceof OpOr || operator instanceof OpAnd;
 	}
 
 	/**
@@ -92,6 +135,13 @@ public class OperatorNode extends ExpressionNode {
 	 * @return
 	 */
 	public String getMongoOperator() {
+
+		if (!OPERATORS.containsKey(operator.getOperatorName())) {
+			throw new IllegalArgumentException(String.format(
+					"Unknown operator name. Cannot translate %s into its MongoDB aggregation function representation.",
+					operator.getOperatorName()));
+		}
+
 		return OPERATORS.get(operator.getOperatorName());
 	}
 
