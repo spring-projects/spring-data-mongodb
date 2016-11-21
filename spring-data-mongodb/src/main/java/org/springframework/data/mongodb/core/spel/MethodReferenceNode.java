@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,16 @@
  */
 package org.springframework.data.mongodb.core.spel;
 
-import org.springframework.expression.spel.ExpressionState;
-import org.springframework.expression.spel.ast.MethodReference;
+import static org.springframework.data.mongodb.core.spel.MethodReferenceNode.AggregationMethodReference.*;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.expression.spel.ExpressionState;
+import org.springframework.expression.spel.ast.MethodReference;
+import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * An {@link ExpressionNode} representing a method reference.
@@ -28,95 +32,115 @@ import java.util.Map;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Sebastien Gerard
+ * @author Christoph Strobl
  */
 public class MethodReferenceNode extends ExpressionNode {
 
-	private static final Map<String, String> FUNCTIONS;
+	private static final Map<String, AggregationMethodReference> FUNCTIONS;
 
 	static {
-		Map<String, String> map = new HashMap<String, String>();
 
-		map.put("and", "$and"); // Returns true only when all its expressions evaluate to true.
-		map.put("or", "$or"); // Returns true when any of its expressions evaluates to true.
-		map.put("not", "$not"); // Returns the boolean value that is the opposite of its argument expression.
+		Map<String, AggregationMethodReference> map = new HashMap<String, AggregationMethodReference>();
 
-		map.put("setEquals", "$setEquals"); // Returns true if the input sets have the same distinct elements.
-		map.put("setIntersection", "$setIntersection"); // Returns a set with elements that appear in all of the input sets.
-		map.put("setUnion", "$setUnion"); // Returns a set with elements that appear in any of the input sets.
-		map.put("setDifference", "$setDifference"); // Returns a set with elements that appear in the 1st set but not in the
+		// BOOLEAN OPERATORS
+		map.put("and", arrayArgumentAggregationMethodReference().forOperator("$and"));
+		map.put("or", arrayArgumentAggregationMethodReference().forOperator("$or"));
+		map.put("not", arrayArgumentAggregationMethodReference().forOperator("$not"));
+
+		// SET OPERATORS
+		map.put("setEquals", arrayArgumentAggregationMethodReference().forOperator("$setEquals"));
+		map.put("setIntersection", arrayArgumentAggregationMethodReference().forOperator("$setIntersection"));
+		map.put("setUnion", arrayArgumentAggregationMethodReference().forOperator("$setUnion"));
+		map.put("setDifference", arrayArgumentAggregationMethodReference().forOperator("$setDifference"));
 		// 2nd.
-		map.put("setIsSubset", "$setIsSubset"); // Returns true if all elements of the 1st set appear in the 2nd set.
-		map.put("anyElementTrue", "$anyElementTrue"); // Returns whether any elements of a set evaluate to true.
-		map.put("allElementsTrue", "$allElementsTrue"); // Returns whether no element of a set evaluates to false.
+		map.put("setIsSubset", arrayArgumentAggregationMethodReference().forOperator("$setIsSubset"));
+		map.put("anyElementTrue", arrayArgumentAggregationMethodReference().forOperator("$anyElementTrue"));
+		map.put("allElementsTrue", arrayArgumentAggregationMethodReference().forOperator("$allElementsTrue"));
 
-		map.put("cmp", "$cmp"); // Returns: 0 if the two values are equivalent, 1 if the first value is greater than the
-		// second, and -1 if the first value is less than the second.
-		map.put("eq", "$eq"); // Returns true if the values are equivalent.
-		map.put("gt", "$gt"); // Returns true if the first value is greater than the second.
-		map.put("gte", "$gte"); // Returns true if the first value is greater than or equal to the second.
-		map.put("lt", "$lt"); // Returns true if the first value is less than the second.
-		map.put("lte", "$lte"); // Returns true if the first value is less than or equal to the second.
-		map.put("ne", "$ne"); // Returns true if the values are not equivalent.
+		// COMPARISON OPERATORS
+		map.put("cmp", arrayArgumentAggregationMethodReference().forOperator("$cmp"));
+		map.put("eq", arrayArgumentAggregationMethodReference().forOperator("$eq"));
+		map.put("gt", arrayArgumentAggregationMethodReference().forOperator("$gt"));
+		map.put("gte", arrayArgumentAggregationMethodReference().forOperator("$gte"));
+		map.put("lt", arrayArgumentAggregationMethodReference().forOperator("$lt"));
+		map.put("lte", arrayArgumentAggregationMethodReference().forOperator("$lte"));
+		map.put("ne", arrayArgumentAggregationMethodReference().forOperator("$ne"));
 
-		map.put("abs", "$abs"); // Returns the absolute value of a number.;
-		map.put("add", "$add"); // Adds numbers to return the sum, or adds numbers and a date to return a new date.
-		map.put("ceil", "$ceil"); // Returns the smallest integer greater than or equal to the specified number.
-		map.put("divide", "$divide"); // Returns the result of dividing the first number by the second.
-		map.put("exp", "$exp"); // Raises e to the specified exponent.
-		map.put("floor", "$floor"); // Returns the largest integer less than or equal to the specified number.
-		map.put("ln", "$ln"); // Calculates the natural log of a number.
-		map.put("log", "$log"); // Calculates the log of a number in the specified base.
-		map.put("log10", "$log10"); // Calculates the log base 10 of a number.
-		map.put("mod", "$mod"); // Returns the remainder of the first number divided by the second.
-		map.put("multiply", "$multiply"); // Multiplies numbers to return the product.
-		map.put("pow", "$pow"); // Raises a number to the specified exponent.
-		map.put("sqrt", "$sqrt"); // Calculates the square root.
-		map.put("subtract", "$subtract"); // Returns the result of subtracting the second value from the first. If the
-		// two values are numbers, return the difference. If the two values are dates, return the difference in
-		// milliseconds.
-		map.put("trunc", "$trunc"); // Truncates a number to its integer.
+		// ARITHMETIC OPERATORS
+		map.put("abs", singleArgumentAggregationMethodReference().forOperator("$abs"));
+		map.put("add", arrayArgumentAggregationMethodReference().forOperator("$add"));
+		map.put("ceil", singleArgumentAggregationMethodReference().forOperator("$ceil"));
+		map.put("divide", arrayArgumentAggregationMethodReference().forOperator("$divide"));
+		map.put("exp", singleArgumentAggregationMethodReference().forOperator("$exp"));
+		map.put("floor", singleArgumentAggregationMethodReference().forOperator("$floor"));
+		map.put("ln", singleArgumentAggregationMethodReference().forOperator("$ln"));
+		map.put("log", arrayArgumentAggregationMethodReference().forOperator("$log"));
+		map.put("log10", singleArgumentAggregationMethodReference().forOperator("$log10"));
+		map.put("mod", arrayArgumentAggregationMethodReference().forOperator("$mod"));
+		map.put("multiply", arrayArgumentAggregationMethodReference().forOperator("$multiply"));
+		map.put("pow", arrayArgumentAggregationMethodReference().forOperator("$pow"));
+		map.put("sqrt", singleArgumentAggregationMethodReference().forOperator("$sqrt"));
+		map.put("subtract", arrayArgumentAggregationMethodReference().forOperator("$subtract"));
+		map.put("trunc", singleArgumentAggregationMethodReference().forOperator("$trunc"));
 
-		map.put("concat", "$concat"); // Concatenates two strings.
-		map.put("substr", "$substr"); // Takes a string and returns portion of that string.
-		map.put("toLower", "$toLower"); // Converts a string to lowercase.
-		map.put("toUpper", "$toUpper"); // Converts a string to uppercase.
-		map.put("strcasecmp", "$strcasecmp"); // Compares two strings and returns an integer that reflects the comparison.
+		// STRING OPERATORS
+		map.put("concat", arrayArgumentAggregationMethodReference().forOperator("$concat"));
+		map.put("strcasecmp", arrayArgumentAggregationMethodReference().forOperator("$strcasecmp"));
+		map.put("substr", arrayArgumentAggregationMethodReference().forOperator("$substr"));
+		map.put("toLower", singleArgumentAggregationMethodReference().forOperator("$toLower"));
+		map.put("toUpper", singleArgumentAggregationMethodReference().forOperator("$toUpper"));
+		map.put("strcasecmp", arrayArgumentAggregationMethodReference().forOperator("$strcasecmp"));
 
-		map.put("meta", "$meta"); // Access text search metadata.
+		// TEXT SEARCH OPERATORS
+		map.put("meta", singleArgumentAggregationMethodReference().forOperator("$meta"));
 
-		map.put("arrayElemAt", "$arrayElemAt"); // Returns the element at the specified array index.
-		map.put("concatArrays", "$concatArrays"); // Concatenates arrays to return the concatenated array.
-		map.put("filter", "$filter"); // Selects a subset of the array to return an array with only the elements that
-		// match the filter condition.
-		map.put("isArray", "$isArray"); // Determines if the operand is an array. Returns a boolean.
-		map.put("size", "$size"); // Returns the number of elements in the array.
-		map.put("slice", "$slice"); // Returns a subset of an array.
+		// ARRAY OPERATORS
+		map.put("arrayElemAt", arrayArgumentAggregationMethodReference().forOperator("$arrayElemAt"));
+		map.put("concatArrays", arrayArgumentAggregationMethodReference().forOperator("$concatArrays"));
+		map.put("filter", mapArgumentAggregationMethodReference().forOperator("$filter") //
+				.mappingParametersTo("input", "as", "cond"));
+		map.put("isArray", singleArgumentAggregationMethodReference().forOperator("$isArray"));
+		map.put("size", singleArgumentAggregationMethodReference().forOperator("$size"));
+		map.put("slice", arrayArgumentAggregationMethodReference().forOperator("$slice"));
 
-		map.put("map", "$map"); // Applies a subexpression to each element of an array and returns the array of
-		// resulting values in order.
-		map.put("let", "$let"); // Defines variables for use within the scope of a subexpression and returns the result
-		// of the subexpression.
+		// VARIABLE OPERATORS
+		map.put("map", mapArgumentAggregationMethodReference().forOperator("$map") //
+				.mappingParametersTo("input", "as", "in"));
+		map.put("let", mapArgumentAggregationMethodReference().forOperator("$let").mappingParametersTo("vars", "in"));
 
-		map.put("literal", "$literal"); // Return a value without parsing.
+		// LITERAL OPERATORS
+		map.put("literal", singleArgumentAggregationMethodReference().forOperator("$literal"));
 
-		map.put("dayOfYear", "$dayOfYear"); // Converts a date to a number between 1 and 366.
-		map.put("dayOfMonth", "$dayOfMonth"); // Converts a date to a number between 1 and 31.
-		map.put("dayOfWeek", "$dayOfWeek"); // Converts a date to a number between 1 and 7.
-		map.put("year", "$year"); // Converts a date to the full year.
-		map.put("month", "$month"); // Converts a date into a number between 1 and 12.
-		map.put("week", "$week"); // Converts a date into a number between 0 and 53
-		map.put("hour", "$hour"); // Converts a date into a number between 0 and 23.
-		map.put("minute", "$minute"); // Converts a date into a number between 0 and 59.
-		map.put("second", "$second"); // Converts a date into a number between 0 and 59. May be 60 to account for leap
-		// seconds.
-		map.put("millisecond", "$millisecond"); // Returns the millisecond portion of a date as an integer between 0 and
-		// 999.
-		map.put("dateToString", "$dateToString"); // Returns the date as a formatted string.
+		// DATE OPERATORS
+		map.put("dayOfYear", singleArgumentAggregationMethodReference().forOperator("$dayOfYear"));
+		map.put("dayOfMonth", singleArgumentAggregationMethodReference().forOperator("$dayOfMonth"));
+		map.put("dayOfWeek", singleArgumentAggregationMethodReference().forOperator("$dayOfWeek"));
+		map.put("year", singleArgumentAggregationMethodReference().forOperator("$year"));
+		map.put("month", singleArgumentAggregationMethodReference().forOperator("$month"));
+		map.put("week", singleArgumentAggregationMethodReference().forOperator("$week"));
+		map.put("hour", singleArgumentAggregationMethodReference().forOperator("$hour"));
+		map.put("minute", singleArgumentAggregationMethodReference().forOperator("$minute"));
+		map.put("second", singleArgumentAggregationMethodReference().forOperator("$second"));
+		map.put("millisecond", singleArgumentAggregationMethodReference().forOperator("$millisecond"));
+		map.put("dateToString", mapArgumentAggregationMethodReference().forOperator("$dateToString") //
+				.mappingParametersTo("format", "date"));
 
-		map.put("cond", "$cond"); // A ternary operator that evaluates one expression, and depending on the result,
-		// returns the value of one of the other two expressions.
-		map.put("ifNull", "$ifNull"); // Returns either the non-null result of the first expression or the result of the
-		// second expression if the first expression results in a null result.
+		// CONDITIONAL OPERATORS
+		map.put("cond", mapArgumentAggregationMethodReference().forOperator("$cond") //
+				.mappingParametersTo("if", "then", "else"));
+		map.put("ifNull", arrayArgumentAggregationMethodReference().forOperator("$ifNull"));
+
+		// GROUP OPERATORS
+		map.put("sum", arrayArgumentAggregationMethodReference().forOperator("$sum"));
+		map.put("avg", arrayArgumentAggregationMethodReference().forOperator("$avg"));
+		map.put("first", singleArgumentAggregationMethodReference().forOperator("$first"));
+		map.put("last", singleArgumentAggregationMethodReference().forOperator("$last"));
+		map.put("max", arrayArgumentAggregationMethodReference().forOperator("$max"));
+		map.put("min", arrayArgumentAggregationMethodReference().forOperator("$min"));
+		map.put("push", singleArgumentAggregationMethodReference().forOperator("$push"));
+		map.put("addToSet", singleArgumentAggregationMethodReference().forOperator("$addToSet"));
+		map.put("stdDevPop", arrayArgumentAggregationMethodReference().forOperator("$stdDevPop"));
+		map.put("stdDevSamp", arrayArgumentAggregationMethodReference().forOperator("$stdDevSamp"));
 
 		FUNCTIONS = Collections.unmodifiableMap(map);
 	}
@@ -127,10 +151,144 @@ public class MethodReferenceNode extends ExpressionNode {
 
 	/**
 	 * Returns the name of the method.
+	 * 
+	 * @Deprecated since 1.10. Please use {@link #getMethodReference()}.
 	 */
+	@Deprecated
 	public String getMethodName() {
+
+		AggregationMethodReference methodReference = getMethodReference();
+		return methodReference != null ? methodReference.getMongoOperator() : null;
+	}
+
+	/**
+	 * Return the {@link AggregationMethodReference}.
+	 *
+	 * @return can be {@literal null}.
+	 * @since 1.10
+	 */
+	public AggregationMethodReference getMethodReference() {
+
 		String name = getName();
 		String methodName = name.substring(0, name.indexOf('('));
 		return FUNCTIONS.get(methodName);
 	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	public static final class AggregationMethodReference {
+
+		private final String mongoOperator;
+		private final ArgumentType argumentType;
+		private final String[] argumentMap;
+
+		/**
+		 * Creates new {@link AggregationMethodReference}.
+		 *
+		 * @param mongoOperator can be {@literal null}.
+		 * @param argumentType can be {@literal null}.
+		 * @param argumentMap can be {@literal null}.
+		 */
+		private AggregationMethodReference(String mongoOperator, ArgumentType argumentType, String[] argumentMap) {
+
+			this.mongoOperator = mongoOperator;
+			this.argumentType = argumentType;
+			this.argumentMap = argumentMap;
+		}
+
+		/**
+		 * Get the MongoDB specific operator.
+		 *
+		 * @return can be {@literal null}.
+		 */
+		public String getMongoOperator() {
+			return this.mongoOperator;
+		}
+
+		/**
+		 * Get the {@link ArgumentType} used by the MongoDB.
+		 *
+		 * @return never {@literal null}.
+		 */
+		public ArgumentType getArgumentType() {
+			return this.argumentType;
+		}
+
+		/**
+		 * Get the property names in order order of appearance in resulting operation.
+		 *
+		 * @return never {@literal null}.
+		 */
+		public String[] getArgumentMap() {
+			return argumentMap != null ? argumentMap : new String[] {};
+		}
+
+		/**
+		 * Create a new {@link AggregationMethodReference} for a {@link ArgumentType#SINGLE} argument.
+		 *
+		 * @return never {@literal null}.
+		 */
+		static AggregationMethodReference singleArgumentAggregationMethodReference() {
+			return new AggregationMethodReference(null, ArgumentType.SINGLE, null);
+		}
+
+		/**
+		 * Create a new {@link AggregationMethodReference} for an {@link ArgumentType#ARRAY} argument.
+		 *
+		 * @return never {@literal null}.
+		 */
+		static AggregationMethodReference arrayArgumentAggregationMethodReference() {
+			return new AggregationMethodReference(null, ArgumentType.ARRAY, null);
+		}
+
+		/**
+		 * Create a new {@link AggregationMethodReference} for a {@link ArgumentType#MAP} argument.
+		 *
+		 * @return never {@literal null}.
+		 */
+		static AggregationMethodReference mapArgumentAggregationMethodReference() {
+			return new AggregationMethodReference(null, ArgumentType.MAP, null);
+		}
+
+		/**
+		 * Create a new {@link AggregationMethodReference} for a given {@literal aggregationExpressionOperator} reusing
+		 * previously set arguments.
+		 *
+		 * @param aggregationExpressionOperator should not be {@literal null}.
+		 * @return never {@literal null}.
+		 */
+		AggregationMethodReference forOperator(String aggregationExpressionOperator) {
+			return new AggregationMethodReference(aggregationExpressionOperator, argumentType, argumentMap);
+		}
+
+		/**
+		 * Create a new {@link AggregationMethodReference} for mapping actual parameters within the AST to the given
+		 * {@literal aggregationExpressionProperties} reusing previously set arguments. <br />
+		 * <strong>NOTE:</strong> Can only be applied to {@link AggregationMethodReference} of type
+		 * {@link ArgumentType#MAP}.
+		 *
+		 * @param aggregationExpressionProperties should not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @throws IllegalArgumentException
+		 */
+		AggregationMethodReference mappingParametersTo(String... aggregationExpressionProperties) {
+
+			Assert.isTrue(ObjectUtils.nullSafeEquals(argumentType, ArgumentType.MAP),
+					"Parameter mapping can only be applied to AggregationMethodReference with MAPPED ArgumentType.");
+			return new AggregationMethodReference(mongoOperator, argumentType, aggregationExpressionProperties);
+		}
+
+		/**
+		 * The actual argument type to use when mapping parameters to MongoDB specific format.
+		 *
+		 * @author Christoph Strobl
+		 * @since 1.10
+		 */
+		public enum ArgumentType {
+			SINGLE, ARRAY, MAP
+		}
+	}
+
 }

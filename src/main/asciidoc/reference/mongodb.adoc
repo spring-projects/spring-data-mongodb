@@ -1745,6 +1745,49 @@ will be translated into the following projection expression part:
 
 Have a look at an example in more context in <<mongo.aggregation.examples.example5>> and <<mongo.aggregation.examples.example6>>. You can find more usage examples for supported SpEL expression constructs in `SpelExpressionTransformerUnitTests`.
 
+.Supported SpEL transformations
+[cols="2"]
+|===
+| a == b
+| { $eq : [$a, $b] }
+| a != b
+| { $ne : [$a , $b] }
+| a > b
+| { $gt : [$a, $b] }
+| a >= b
+| { $gte : [$a, $b] }
+| a < b
+| { $lt : [$a, $b] }
+| a <= b
+| { $lte : [$a, $b] }
+| a + b
+| { $add : [$a, $b] }
+| a - b
+| { $subtract : [$a, $b] }
+| a * b
+| { $multiply : [$a, $b] }
+| a / b
+| { $divide : [$a, $b] }
+| a^b
+| { $pow : [$a, $b] }
+| a % b
+| { $mod : [$a, $b] }
+| a && b
+| { $and : [$a, $b] }
+| a \|\| b
+| { $or : [$a, $b] }
+| !a
+| { $not : [$a] }
+|===
+
+Next to the transformations shown in <<Supported SpEL transformations>> it is possible to use standard SpEL operations like `new` to eg. create arrays and reference expressions via their name followed by the arguments to use in brackets.
+
+[source,java]
+----
+// { $setEquals : [$a, [5, 8, 13] ] }
+.andExpression("setEquals(a, new int[]{5, 8, 13})");
+----
+
 [[mongo.aggregation.examples]]
 ==== Aggregation Framework Examples
 
