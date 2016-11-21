@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,14 @@ import org.springframework.expression.spel.SpelNode;
 import org.springframework.expression.spel.ast.Literal;
 import org.springframework.expression.spel.ast.MethodReference;
 import org.springframework.expression.spel.ast.Operator;
+import org.springframework.expression.spel.ast.OperatorNot;
 import org.springframework.util.Assert;
 
 /**
  * A value object for nodes in an expression. Allows iterating ove potentially available child {@link ExpressionNode}s.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class ExpressionNode implements Iterable<ExpressionNode> {
 
@@ -79,6 +81,10 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 			return new LiteralNode((Literal) node, state);
 		}
 
+		if (node instanceof OperatorNot) {
+			return new NotOperatorNode((OperatorNot) node, state);
+		}
+
 		return new ExpressionNode(node, state);
 	}
 
@@ -119,6 +125,16 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 * @return
 	 */
 	public boolean isMathematicalOperation() {
+		return false;
+	}
+
+	/**
+	 * Returns whether the {@link ExpressionNode} is a logical conjunction operation like {@code &&, ||}.
+	 *
+	 * @return
+	 * @since 1.10
+	 */
+	public boolean isLogicalOperator() {
 		return false;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.Person;
  * @see DATAMONGO-774
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class SpelExpressionTransformerUnitTests {
 
@@ -72,7 +73,7 @@ public class SpelExpressionTransformerUnitTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowExceptionOnUnknownOperand() {
-		transform("a ^ 1");
+		transform("a++");
 	}
 
 	@Test
@@ -202,16 +203,695 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("a.b + a.c"), is((Object) Document.parse("{ \"$add\" : [ \"$a.b\" , \"$a.c\"]}")));
 	}
 
+	/**
+	 * @see DATAMONGO-1530
+	 */
 	@Test
-	public void shouldRenderStringFunctions() {
+	public void shouldRenderMethodReferenceNodeAnd() {
+		assertThat(transform("and(a, b)"), is((Object) Document.parse("{ \"$and\" : [ \"$a\" , \"$b\"]}")));
+	}
 
-		assertThat(transform("concat(a, b)"), is((Object) Document.parse("{ \"$concat\" : [ \"$a\" , \"$b\"]}")));
-		assertThat(transform("substr(a, 1, 2)"), is((Object) Document.parse("{ \"$substr\" : [ \"$a\" , 1 , 2]}")));
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeOr() {
+		assertThat(transform("or(a, b)"), is((Object) Document.parse("{ \"$or\" : [ \"$a\" , \"$b\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeNot() {
+		assertThat(transform("not(a)"), is((Object) Document.parse("{ \"$not\" : [ \"$a\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeSetEquals() {
+		assertThat(transform("setEquals(a, b)"), is((Object) Document.parse("{ \"$setEquals\" : [ \"$a\" , \"$b\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeSetEqualsForArrays() {
+		assertThat(transform("setEquals(new int[]{1,2,3}, new int[]{4,5,6})"),
+				is((Object) Document.parse("{ \"$setEquals\" : [ [ 1 , 2 , 3] , [ 4 , 5 , 6]]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeSetEqualsMixedArrays() {
+		assertThat(transform("setEquals(a, new int[]{4,5,6})"), is((Object) Document.parse("{ \"$setEquals\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceSetIntersection() {
+		assertThat(transform("setIntersection(a, new int[]{4,5,6})"),
+				is((Object) Document.parse("{ \"$setIntersection\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceSetUnion() {
+		assertThat(transform("setUnion(a, new int[]{4,5,6})"), is((Object) Document.parse("{ \"$setUnion\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceSeDifference() {
+		assertThat(transform("setDifference(a, new int[]{4,5,6})"), is((Object) Document.parse("{ \"$setDifference\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceSetIsSubset() {
+		assertThat(transform("setIsSubset(a, new int[]{4,5,6})"), is((Object) Document.parse("{ \"$setIsSubset\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceAnyElementTrue() {
+		assertThat(transform("anyElementTrue(a)"), is((Object) Document.parse("{ \"$anyElementTrue\" : [ \"$a\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceAllElementsTrue() {
+		assertThat(transform("allElementsTrue(a, new int[]{4,5,6})"),
+				is((Object) Document.parse("{ \"$allElementsTrue\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceCmp() {
+		assertThat(transform("cmp(a, 250)"), is((Object) Document.parse("{ \"$cmp\" : [ \"$a\" , 250]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceEq() {
+		assertThat(transform("eq(a, 250)"), is((Object) Document.parse("{ \"$eq\" : [ \"$a\" , 250]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceGt() {
+		assertThat(transform("gt(a, 250)"), is((Object) Document.parse("{ \"$gt\" : [ \"$a\" , 250]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceGte() {
+		assertThat(transform("gte(a, 250)"), is((Object) Document.parse("{ \"$gte\" : [ \"$a\" , 250]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceLt() {
+		assertThat(transform("lt(a, 250)"), is((Object) Document.parse("{ \"$lt\" : [ \"$a\" , 250]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceLte() {
+		assertThat(transform("lte(a, 250)"), is((Object) Document.parse("{ \"$lte\" : [ \"$a\" , 250]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNe() {
+		assertThat(transform("ne(a, 250)"), is((Object) Document.parse("{ \"$ne\" : [ \"$a\" , 250]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceAbs() {
+		assertThat(transform("abs(1)"), is((Object) Document.parse("{ \"$abs\" : 1}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceAdd() {
+		assertThat(transform("add(a, 250)"), is((Object) Document.parse("{ \"$add\" : [ \"$a\" , 250]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceCeil() {
+		assertThat(transform("ceil(7.8)"), is((Object) Document.parse("{ \"$ceil\" : 7.8}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceDivide() {
+		assertThat(transform("divide(a, 250)"), is((Object) Document.parse("{ \"$divide\" : [ \"$a\" , 250]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceExp() {
+		assertThat(transform("exp(2)"), is((Object) Document.parse("{ \"$exp\" : 2}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceFloor() {
+		assertThat(transform("floor(2)"), is((Object) Document.parse("{ \"$floor\" : 2}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceLn() {
+		assertThat(transform("ln(2)"), is((Object) Document.parse("{ \"$ln\" : 2}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceLog() {
+		assertThat(transform("log(100, 10)"), is((Object) Document.parse("{ \"$log\" : [ 100 , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceLog10() {
+		assertThat(transform("log10(100)"), is((Object) Document.parse("{ \"$log10\" : 100}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeMod() {
+		assertThat(transform("mod(a, b)"), is((Object) Document.parse("{ \"$mod\" : [ \"$a\" , \"$b\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeMultiply() {
+		assertThat(transform("multiply(a, b)"), is((Object) Document.parse("{ \"$multiply\" : [ \"$a\" , \"$b\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodePow() {
+		assertThat(transform("pow(a, 2)"), is((Object) Document.parse("{ \"$pow\" : [ \"$a\" , 2]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceSqrt() {
+		assertThat(transform("sqrt(2)"), is((Object) Document.parse("{ \"$sqrt\" : 2}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeSubtract() {
+		assertThat(transform("subtract(a, b)"), is((Object) Document.parse("{ \"$subtract\" : [ \"$a\" , \"$b\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceTrunc() {
+		assertThat(transform("trunc(2.1)"), is((Object) Document.parse("{ \"$trunc\" : 2.1}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeConcat() {
+		assertThat(transform("concat(a, b, 'c')"), is((Object) Document.parse("{ \"$concat\" : [ \"$a\" , \"$b\" , \"c\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeSubstrc() {
+		assertThat(transform("substr(a, 0, 1)"), is((Object) Document.parse("{ \"$substr\" : [ \"$a\" , 0 , 1]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceToLower() {
+		assertThat(transform("toLower(a)"), is((Object) Document.parse("{ \"$toLower\" : \"$a\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceToUpper() {
+		assertThat(transform("toUpper(a)"), is((Object) Document.parse("{ \"$toUpper\" : \"$a\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeStrCaseCmp() {
 		assertThat(transform("strcasecmp(a, b)"), is((Object) Document.parse("{ \"$strcasecmp\" : [ \"$a\" , \"$b\"]}")));
-		assertThat(transform("toLower(a)"), is((Object) Document.parse("{ \"$toLower\" : [ \"$a\"]}")));
-		assertThat(transform("toUpper(a)"), is((Object) Document.parse("{ \"$toUpper\" : [ \"$a\"]}")));
-		assertThat(transform("toUpper(toLower(a))"),
-				is((Object) Document.parse("{ \"$toUpper\" : [ { \"$toLower\" : [ \"$a\"]}]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceMeta() {
+		assertThat(transform("meta('textScore')"), is((Object) Document.parse("{ \"$meta\" : \"textScore\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeArrayElemAt() {
+		assertThat(transform("arrayElemAt(a, 10)"), is((Object) Document.parse("{ \"$arrayElemAt\" : [ \"$a\" , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeConcatArrays() {
+		assertThat(transform("concatArrays(a, b, c)"), is((Object) Document.parse("{ \"$concatArrays\" : [ \"$a\" , \"$b\" , \"$c\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeFilter() {
+		assertThat(transform("filter(a, 'num', '$$num' > 10)"),
+				is((Object) Document.parse("{ \"$filter\" : { \"input\" : \"$a\" , \"as\" : \"num\" , \"cond\" : { \"$gt\" : [ \"$$num\" , 10]}}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceIsArray() {
+		assertThat(transform("isArray(a)"), is((Object) Document.parse("{ \"$isArray\" : \"$a\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceIsSize() {
+		assertThat(transform("size(a)"), is((Object) Document.parse("{ \"$size\" : \"$a\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeSlice() {
+		assertThat(transform("slice(a, 10)"), is((Object) Document.parse("{ \"$slice\" : [ \"$a\" , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeMap() {
+		assertThat(transform("map(quizzes, 'grade', '$$grade' + 2)"), is(
+				(Object) Document.parse("{ \"$map\" : { \"input\" : \"$quizzes\" , \"as\" : \"grade\" , \"in\" : { \"$add\" : [ \"$$grade\" , 2]}}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeLet() {
+		assertThat(transform("let({low:1, high:'$$low'}, gt('$$low', '$$high'))"), is(
+				(Object) Document.parse("{ \"$let\" : { \"vars\" : { \"low\" : 1 , \"high\" : \"$$low\"} , \"in\" : { \"$gt\" : [ \"$$low\" , \"$$high\"]}}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceLiteral() {
+		assertThat(transform("literal($1)"), is((Object) Document.parse("{ \"$literal\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceDayOfYear() {
+		assertThat(transform("dayOfYear($1)"), is((Object) Document.parse("{ \"$dayOfYear\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceDayOfMonth() {
+		assertThat(transform("dayOfMonth($1)"), is((Object) Document.parse("{ \"$dayOfMonth\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceDayOfWeek() {
+		assertThat(transform("dayOfWeek($1)"), is((Object) Document.parse("{ \"$dayOfWeek\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceYear() {
+		assertThat(transform("year($1)"), is((Object) Document.parse("{ \"$year\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceMonth() {
+		assertThat(transform("month($1)"), is((Object) Document.parse("{ \"$month\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceWeek() {
+		assertThat(transform("week($1)"), is((Object) Document.parse("{ \"$week\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceHour() {
+		assertThat(transform("hour($1)"), is((Object) Document.parse("{ \"$hour\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceMinute() {
+		assertThat(transform("minute($1)"), is((Object) Document.parse("{ \"$minute\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceSecond() {
+		assertThat(transform("second($1)"), is((Object) Document.parse("{ \"$second\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceMillisecond() {
+		assertThat(transform("millisecond($1)"), is((Object) Document.parse("{ \"$millisecond\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceDateToString() {
+		assertThat(transform("dateToString('%Y-%m-%d', $date)"),
+				is((Object) Document.parse("{ \"$dateToString\" : { \"format\" : \"%Y-%m-%d\" , \"date\" : \"$date\"}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceCond() {
+		assertThat(transform("cond(qty > 250, 30, 20)"),
+				is((Object) Document.parse("{ \"$cond\" : { \"if\" : { \"$gt\" : [ \"$qty\" , 250]} , \"then\" : 30 , \"else\" : 20}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeIfNull() {
+		assertThat(transform("ifNull(a, 10)"), is((Object) Document.parse("{ \"$ifNull\" : [ \"$a\" , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeSum() {
+		assertThat(transform("sum(a, b)"), is((Object) Document.parse("{ \"$sum\" : [ \"$a\" , \"$b\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeAvg() {
+		assertThat(transform("avg(a, b)"), is((Object) Document.parse("{ \"$avg\" : [ \"$a\" , \"$b\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceFirst() {
+		assertThat(transform("first($1)"), is((Object) Document.parse("{ \"$first\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceLast() {
+		assertThat(transform("last($1)"), is((Object) Document.parse("{ \"$last\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeMax() {
+		assertThat(transform("max(a, b)"), is((Object) Document.parse("{ \"$max\" : [ \"$a\" , \"$b\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeMin() {
+		assertThat(transform("min(a, b)"), is((Object) Document.parse("{ \"$min\" : [ \"$a\" , \"$b\"]}")));
+	}
+
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodePush() {
+		assertThat(transform("push({'item':'$item', 'quantity':'$qty'})"), is((Object) Document.parse("{ \"$push\" : { \"item\" : \"$item\" , \"quantity\" : \"$qty\"}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceAddToSet() {
+		assertThat(transform("addToSet($1)"), is((Object) Document.parse("{ \"$addToSet\" : \"$1\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeStdDevPop() {
+		assertThat(transform("stdDevPop(scores.score)"), is((Object) Document.parse("{ \"$stdDevPop\" : [ \"$scores.score\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderMethodReferenceNodeStdDevSamp() {
+		assertThat(transform("stdDevSamp(age)"), is((Object) Document.parse("{ \"$stdDevSamp\" : [ \"$age\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderOperationNodeEq() {
+		assertThat(transform("foo == 10"), is((Object) Document.parse("{ \"$eq\" : [ \"$foo\" , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderOperationNodeNe() {
+		assertThat(transform("foo != 10"), is((Object) Document.parse("{ \"$ne\" : [ \"$foo\" , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderOperationNodeGt() {
+		assertThat(transform("foo > 10"), is((Object) Document.parse("{ \"$gt\" : [ \"$foo\" , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderOperationNodeGte() {
+		assertThat(transform("foo >= 10"), is((Object) Document.parse("{ \"$gte\" : [ \"$foo\" , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderOperationNodeLt() {
+		assertThat(transform("foo < 10"), is((Object) Document.parse("{ \"$lt\" : [ \"$foo\" , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderOperationNodeLte() {
+		assertThat(transform("foo <= 10"), is((Object) Document.parse("{ \"$lte\" : [ \"$foo\" , 10]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderOperationNodePow() {
+		assertThat(transform("foo^2"), is((Object) Document.parse("{ \"$pow\" : [ \"$foo\" , 2]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderOperationNodeOr() {
+		assertThat(transform("true || false"), is((Object) Document.parse("{ \"$or\" : [ true , false]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderComplexOperationNodeOr() {
+		assertThat(transform("1+2 || concat(a, b) || true"),
+				is((Object) Document.parse("{ \"$or\" : [ { \"$add\" : [ 1 , 2]} , { \"$concat\" : [ \"$a\" , \"$b\"]} , true]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderOperationNodeAnd() {
+		assertThat(transform("true && false"), is((Object) Document.parse("{ \"$and\" : [ true , false]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderComplexOperationNodeAnd() {
+		assertThat(transform("1+2 && concat(a, b) && true"),
+				is((Object) Document.parse("{ \"$and\" : [ { \"$add\" : [ 1 , 2]} , { \"$concat\" : [ \"$a\" , \"$b\"]} , true]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderNotCorrectly() {
+		assertThat(transform("!true"), is((Object) Document.parse("{ \"$not\" : [ true]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1530
+	 */
+	@Test
+	public void shouldRenderComplexNotCorrectly() {
+		assertThat(transform("!(foo > 10)"), is((Object) Document.parse("{ \"$not\" : [ { \"$gt\" : [ \"$foo\" , 10]}]}")));
 	}
 
 	private Object transform(String expression, Object... params) {
