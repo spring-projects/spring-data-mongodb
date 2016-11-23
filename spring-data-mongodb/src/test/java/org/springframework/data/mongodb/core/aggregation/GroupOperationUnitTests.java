@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Gustavo de Geus
  */
 public class GroupOperationUnitTests {
 
@@ -203,6 +204,35 @@ public class GroupOperationUnitTests {
 
 		assertThat(tagsCount.get("$first"), is((Object) new BasicDBObject("$size", Arrays.asList("$tags"))));
 	}
+	
+	/**
+	 * @see DATAMONGO-1327
+	 */
+	@Test
+	public void groupOperationStdDevSampWithValue() {
+
+		GroupOperation groupOperation = Aggregation.group("a", "b").stdDevSamp("field").as("fieldStdDevSamp");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "fieldStdDevSamp");
+
+		assertThat(push, is((DBObject) new BasicDBObject("$stdDevSamp", "$field")));
+	}
+	
+	/**
+	 * @see DATAMONGO-1327
+	 */
+	@Test
+	public void groupOperationStdDevPopWithValue() {
+
+		GroupOperation groupOperation = Aggregation.group("a", "b").stdDevPop("field").as("fieldStdDevPop");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "fieldStdDevPop");
+
+		assertThat(push, is((DBObject) new BasicDBObject("$stdDevPop", "$field")));
+	}
+
 
 	private DBObject extractDbObjectFromGroupOperation(GroupOperation groupOperation) {
 		DBObject dbObject = groupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
