@@ -1,6 +1,18 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.0.M1 (2016-11-23)
+----------------------------------------
+* DATAMONGO-1527 - Release 2.0 M1 (Kay).
+* DATAMONGO-1509 - Inconsistent type alias placement in list of classes.
+* DATAMONGO-1461 - Upgrade Hibernate/JPA dependencies to match Spring 5 baseline.
+* DATAMONGO-1448 - Set up 2.0 development.
+* DATAMONGO-1444 - Reactive support in Spring Data MongoDB.
+* DATAMONGO-1176 - Use org.bson types instead of com.mongodb.
+* DATAMONGO-563 - Upgrade to MongoDB driver 2.9.2 as it fixes a serious regression introduced in 2.9.0.
+* DATAMONGO-562 - Cannot create entity with OptimisticLocking (@Version) and initial id.
+
+
 Changes in version 1.9.5.RELEASE (2016-11-03)
 ---------------------------------------------
 * DATAMONGO-1521 - Aggregation.skip(...) expects int but new SkipOperation(...) supports long.
