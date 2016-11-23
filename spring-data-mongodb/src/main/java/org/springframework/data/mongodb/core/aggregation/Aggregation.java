@@ -25,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -557,7 +558,7 @@ public class Aggregation {
 		 */
 		@Override
 		public FieldReference getReference(Field field) {
-			return new FieldReference(new ExposedField(field, true));
+			return new DirectFieldReference(new ExposedField(field, true));
 		}
 
 		/* 
@@ -566,7 +567,7 @@ public class Aggregation {
 		 */
 		@Override
 		public FieldReference getReference(String name) {
-			return new FieldReference(new ExposedField(new AggregationField(name), true));
+			return new DirectFieldReference(new ExposedField(new AggregationField(name), true));
 		}
 	}
 

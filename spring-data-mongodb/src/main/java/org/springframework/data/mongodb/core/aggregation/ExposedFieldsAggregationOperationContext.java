@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
 
@@ -112,10 +113,10 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 
 			if (field != null) {
 				// we return a FieldReference to the given field directly to make sure that we reference the proper alias here.
-				return new FieldReference(new ExposedField(field, exposedField.isSynthetic()));
+				return new DirectFieldReference(new ExposedField(field, exposedField.isSynthetic()));
 			}
 
-			return new FieldReference(exposedField);
+			return new DirectFieldReference(exposedField);
 		}
 
 		if (name.contains(".")) {
@@ -126,7 +127,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 			if (rootField != null) {
 
 				// We have to synthetic to true, in order to render the field-name as is.
-				return new FieldReference(new ExposedField(name, true));
+				return new DirectFieldReference(new ExposedField(name, true));
 			}
 		}
 		return null;

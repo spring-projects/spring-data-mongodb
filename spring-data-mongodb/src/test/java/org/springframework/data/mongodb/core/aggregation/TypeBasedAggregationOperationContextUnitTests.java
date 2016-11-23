@@ -38,6 +38,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -105,7 +106,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	public void aliasesIdFieldCorrectly() {
 
 		AggregationOperationContext context = getContext(Foo.class);
-		assertThat(context.getReference("id"), is(new FieldReference(new ExposedField(field("id", "_id"), true))));
+		assertThat(context.getReference("id"), is((FieldReference) new DirectFieldReference(new ExposedField(field("id", "_id"), true))));
 	}
 
 	/**

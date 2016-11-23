@@ -641,6 +641,19 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return project("slice", offset, count);
 		}
 
+		/**
+		 * Generates a {@code $filter} expression that returns a subset of the array held by the given field.
+		 *
+		 * @param as The variable name for the element in the input array. Must not be {@literal null}.
+		 * @param condition The {@link AggregationExpression} that determines whether to include the element in the
+		 *          resulting array. Must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder filter(String as, AggregationExpression condition) {
+			return this.operation.and(AggregationExpressions.Filter.filter(name).as(as).by(condition));
+		}
+
 		/* 
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
