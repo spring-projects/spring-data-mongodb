@@ -319,21 +319,45 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevSamp}-expression that for the given
 	 * field-reference.
 	 *
-	 * @param reference
-	 * @return
+	 * @param reference must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
 	 */
 	public GroupOperationBuilder stdDevSamp(String reference) {
 		return newBuilder(GroupOps.STD_DEV_SAMP, reference, null);
 	}
 
 	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevSamp}-expression that for the given {@link AggregationExpression}.
+	 *
+	 * @param expr must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public GroupOperationBuilder stdDevSamp(AggregationExpression expr) {
+		return newBuilder(GroupOps.STD_DEV_SAMP, null, expr);
+	}
+
+	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevPop}-expression that for the given field-reference.
 	 *
-	 * @param reference
-	 * @return
+	 * @param reference must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
 	 */
 	public GroupOperationBuilder stdDevPop(String reference) {
 		return newBuilder(GroupOps.STD_DEV_POP, reference, null);
+	}
+
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevPop}-expression that for the given {@link AggregationExpression}.
+	 *
+	 * @param expr must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public GroupOperationBuilder stdDevPop(AggregationExpression expr) {
+		return newBuilder(GroupOps.STD_DEV_POP, null, expr);
 	}
 
 	private GroupOperationBuilder newBuilder(Keyword keyword, String reference, Object value) {
@@ -400,21 +424,18 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	private static enum GroupOps implements Keyword {
 
-		SUM, LAST, FIRST, PUSH, AVG, MIN, MAX, ADD_TO_SET, COUNT, STD_DEV_SAMP, STD_DEV_POP;
+		SUM("$sum"), LAST("$last"), FIRST("$first"), PUSH("$push"), AVG("$avg"), MIN("$min"), MAX("$max"), ADD_TO_SET("$addToSet"), STD_DEV_POP("$stdDevPop"), STD_DEV_SAMP("$stdDevSamp");
+
+		private String mongoOperator;
+
+		GroupOps(String mongoOperator) {
+			this.mongoOperator = mongoOperator;
+		}
+
 
 		@Override
 		public String toString() {
-
-			String[] parts = name().split("_");
-
-			StringBuilder builder = new StringBuilder();
-
-			for (String part : parts) {
-				String lowerCase = part.toLowerCase(Locale.US);
-				builder.append(builder.length() == 0 ? lowerCase : StringUtils.capitalize(lowerCase));
-			}
-
-			return "$" + builder.toString();
+			return mongoOperator;
 		}
 	}
 
