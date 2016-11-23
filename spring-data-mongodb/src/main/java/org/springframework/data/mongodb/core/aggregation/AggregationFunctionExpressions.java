@@ -33,7 +33,7 @@ import org.springframework.util.Assert;
  */
 public enum AggregationFunctionExpressions {
 
-	SIZE, GTE;
+	SIZE, CMP, EQ, GT, GTE, LT, LTE, NE;
 
 	/**
 	 * Returns an {@link AggregationExpression} build from the current {@link Enum} name and the given parameters.

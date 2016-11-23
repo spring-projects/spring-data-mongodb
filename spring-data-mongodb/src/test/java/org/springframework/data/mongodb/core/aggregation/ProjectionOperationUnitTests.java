@@ -19,6 +19,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.util.DBObjectUtils.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -394,6 +396,90 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(projected.get("renamed"),
 				is((Object) new Document("$slice", Arrays.<Object> asList("$field", 5, 10))));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderCmpCorrectly() {
+
+		ProjectionOperation operation = Aggregation.project().and("field").cmp(10).as("cmp10");
+
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
+				isBsonObject().containing("$project.cmp10.$cmp.[0]", "$field").containing("$project.cmp10.$cmp.[1]", 10));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderEqCorrectly() {
+
+		ProjectionOperation operation = Aggregation.project().and("field").eq(10).as("eq10");
+
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
+				isBsonObject().containing("$project.eq10.$eq.[0]", "$field").containing("$project.eq10.$eq.[1]", 10));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderGtCorrectly() {
+
+		ProjectionOperation operation = Aggregation.project().and("field").gt(10).as("gt10");
+
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
+				isBsonObject().containing("$project.gt10.$gt.[0]", "$field").containing("$project.gt10.$gt.[1]", 10));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderGteCorrectly() {
+
+		ProjectionOperation operation = Aggregation.project().and("field").gte(10).as("gte10");
+
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
+				isBsonObject().containing("$project.gte10.$gte.[0]", "$field").containing("$project.gte10.$gte.[1]", 10));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderLtCorrectly() {
+
+		ProjectionOperation operation = Aggregation.project().and("field").lt(10).as("lt10");
+
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
+				isBsonObject().containing("$project.lt10.$lt.[0]", "$field").containing("$project.lt10.$lt.[1]", 10));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderLteCorrectly() {
+
+		ProjectionOperation operation = Aggregation.project().and("field").lte(10).as("lte10");
+
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
+				isBsonObject().containing("$project.lte10.$lte.[0]", "$field").containing("$project.lte10.$lte.[1]", 10));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderNeCorrectly() {
+
+		ProjectionOperation operation = Aggregation.project().and("field").ne(10).as("ne10");
+
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
+				isBsonObject().containing("$project.ne10.$ne.[0]", "$field").containing("$project.ne10.$ne.[1]", 10));
 	}
 
 	private static Document exctractOperation(String field, Document fromProjectClause) {

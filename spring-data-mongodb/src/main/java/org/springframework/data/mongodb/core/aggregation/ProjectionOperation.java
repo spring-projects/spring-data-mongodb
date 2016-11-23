@@ -615,6 +615,78 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
+		 * Generates a {@code $cmp} expression (compare to) that compares the value of the field to a given value or field.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder cmp(Object compareValue) {
+			return project("cmp", compareValue);
+		}
+
+		/**
+		 * Generates a {@code $eq} expression (equal) that compares the value of the field to a given value or field.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder eq(Object compareValue) {
+			return project("eq", compareValue);
+		}
+
+		/**
+		 * Generates a {@code $gt} expression (greater than) that compares the value of the field to a given value or field.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder gt(Object compareValue) {
+			return project("gt", compareValue);
+		}
+
+		/**
+		 * Generates a {@code $gte} expression (greater than equal) that compares the value of the field to a given value or
+		 * field.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder gte(Object compareValue) {
+			return project("gte", compareValue);
+		}
+
+		/**
+		 * Generates a {@code $lt} expression (less than) that compares the value of the field to a given value or field.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder lt(Object compareValue) {
+			return project("lt", compareValue);
+		}
+
+		/**
+		 * Generates a {@code $lte} expression (less than equal) that compares the value of the field to a given value or
+		 * field.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder lte(Object compareValue) {
+			return project("lte", compareValue);
+		}
+
+		/**
+		 * Generates a {@code $ne} expression (not equal) that compares the value of the field to a given value or field.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder ne(Object compareValue) {
+			return project("ne", compareValue);
+		}
+
+		/**
 		 * Generates a {@code $slice} expression that returns a subset of the array held by the given field. <br />
 		 * If {@literal n} is positive, $slice returns up to the first n elements in the array. <br />
 		 * If {@literal n} is negative, $slice returns up to the last n elements in the array.
