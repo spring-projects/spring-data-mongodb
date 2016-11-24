@@ -26,6 +26,9 @@ import org.springframework.core.annotation.AliasFor;
  * Annotation to declare finder count queries directly on repository methods. Both attributes allow using a placeholder
  * notation of {@code ?0}, {@code ?1} and so on.
  *
+ * @see DATAMONGO-1539
+ *
+ * @author Fırat KÜÇÜK
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
