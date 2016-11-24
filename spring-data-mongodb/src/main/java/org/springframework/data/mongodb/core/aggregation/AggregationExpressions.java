@@ -130,8 +130,7 @@ public interface AggregationExpressions {
 			}
 
 			NestedDelegatingExpressionAggregationOperationContext nea = new NestedDelegatingExpressionAggregationOperationContext(context);
-			DBObject mappedCondition = ((AggregationExpression) condition).toDbObject(nea);
-			return mappedCondition;
+			return ((AggregationExpression) condition).toDbObject(nea);
 		}
 
 		/**
@@ -223,7 +222,7 @@ public interface AggregationExpressions {
 			public AsBuilder filter(List<?> array) {
 
 				Assert.notNull(array, "Array must not be null!");
-				filter.input = new ArrayList(array);
+				filter.input = new ArrayList<Object>(array);
 				return this;
 			}
 
@@ -287,7 +286,5 @@ public interface AggregationExpressions {
 				return filter;
 			}
 		}
-
 	}
-
 }
