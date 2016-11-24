@@ -60,6 +60,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -647,9 +649,9 @@ public class AggregationTests {
 		mongoTemplate.insert(new LineItem("idonly", null, 0));
 
 		TypedAggregation<LineItem> aggregation = newAggregation(LineItem.class, //
-project("id") //
-		.and("caption")//
-		.applyCondition(ConditionalOperators.ifNull("caption").then("unknown")),
+				project("id") //
+						.and("caption")//
+						.applyCondition(ConditionalOperators.ifNull("caption").then("unknown")),
 				sort(ASC, "id"));
 
 		assertThat(aggregation.toString(), is(notNullValue()));
@@ -1541,6 +1543,36 @@ project("id") //
 						Sales.builder().id("2").items(Collections.<Item> emptyList()).build()));
 	}
 
+	/**
+	 * @see DATAMONGO-1538
+	 */
+	@Test
+	public void letShouldBeAppliedCorrectly() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
+
+		Sales2 sales1 = Sales2.builder().id("1").price(10).tax(0.5F).applyDiscount(true).build();
+		Sales2 sales2 = Sales2.builder().id("2").price(10).tax(0.25F).applyDiscount(false).build();
+
+		mongoTemplate.insert(Arrays.asList(sales1, sales2), Sales2.class);
+
+		ExpressionVariable total = ExpressionVariable.newVariable("total")
+				.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax")));
+		ExpressionVariable discounted = ExpressionVariable.newVariable("discounted")
+				.forExpression(Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
+
+		TypedAggregation<Sales2> agg = Aggregation.newAggregation(Sales2.class,
+				Aggregation.project()
+						.and(Let.define(total, discounted).andApply(
+								AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted"))))
+						.as("finalTotal"));
+
+		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
+		assertThat(result.getMappedResults(),
+				contains(new Document("_id", "1").append("finalTotal", 9.450000000000001D),
+						new Document("_id", "2").append("finalTotal", 10.25D)));
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -1782,6 +1814,9 @@ project("id") //
 		}
 	}
 
+	/**
+	 * @DATAMONGO-1491
+	 */
 	@lombok.Data
 	@Builder
 	static class Sales {
@@ -1790,6 +1825,9 @@ project("id") //
 		List<Item> items;
 	}
 
+	/**
+	 * @DATAMONGO-1491
+	 */
 	@lombok.Data
 	@Builder
 	static class Item {
@@ -1798,5 +1836,18 @@ project("id") //
 		String itemId;
 		Integer quantity;
 		Long price;
+	}
+
+	/**
+	 * @DATAMONGO-1538
+	 */
+	@lombok.Data
+	@Builder
+	static class Sales2 {
+
+		String id;
+		Integer price;
+		Float tax;
+		boolean applyDiscount;
 	}
 }

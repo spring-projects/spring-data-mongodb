@@ -16,8 +16,10 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
@@ -25,22 +27,14 @@ import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 import java.util.Arrays;
 import java.util.List;
 
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.BooleanOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.VariableOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.*;
+
+import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link ProjectionOperation}.
@@ -286,9 +280,8 @@ public class ProjectionOperationUnitTests {
 				.and("foo").as("bar"); //
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(
-				document,
-				is(Document.parse("{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}")));
+		assertThat(document, is(Document.parse(
+				"{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}")));
 	}
 
 	/**
@@ -393,8 +386,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projected = exctractOperation("$project", document);
 
-		assertThat(projected.get("renamed"),
-				is((Object) new Document("$slice", Arrays.<Object> asList("$field", 10))));
+		assertThat(projected.get("renamed"), is((Object) new Document("$slice", Arrays.<Object> asList("$field", 10))));
 	}
 
 	/**
@@ -408,8 +400,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projected = exctractOperation("$project", document);
 
-		assertThat(projected.get("renamed"),
-				is((Object) new Document("$slice", Arrays.<Object> asList("$field", 5, 10))));
+		assertThat(projected.get("renamed"), is((Object) new Document("$slice", Arrays.<Object> asList("$field", 5, 10))));
 	}
 
 	/**
@@ -602,7 +593,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and("A").subsetOfArray("B").as("aIsSubsetOfB")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg,
+				is(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}")));
 	}
 
 	/**
@@ -614,7 +606,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").isSubsetOf("B")).as("aIsSubsetOfB")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg,
+				is(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}")));
 	}
 
 	/**
@@ -626,7 +619,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("responses").and("responses").anyElementInArrayTrue().as("isAnyTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}")));
+		assertThat(agg,
+				is(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}")));
 	}
 
 	/**
@@ -638,7 +632,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("responses").and(SetOperators.arrayAsSet("responses").anyElementTrue()).as("isAnyTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}")));
+		assertThat(agg,
+				is(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}")));
 	}
 
 	/**
@@ -739,8 +734,8 @@ public class ProjectionOperationUnitTests {
 				.divide(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { result: { $divide: [ \"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+		assertThat(agg, is(Document
+				.parse("{ $project: { result: { $divide: [ \"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
 	}
 
 	/**
@@ -852,7 +847,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log(2))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $log: [ { $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+		assertThat(agg,
+				is(Document.parse("{ $project: { result: { $log: [ { $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
 	}
 
 	/**
@@ -902,7 +898,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).mod(2))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $mod: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+		assertThat(agg,
+				is(Document.parse("{ $project: { result: { $mod: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
 	}
 
 	/**
@@ -915,8 +912,8 @@ public class ProjectionOperationUnitTests {
 				.multiply(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(
-				Document.parse("{ $project: { result: { $multiply: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+		assertThat(agg, is(Document
+				.parse("{ $project: { result: { $multiply: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
 	}
 
 	/**
@@ -955,7 +952,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).pow(2))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $pow: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+		assertThat(agg,
+				is(Document.parse("{ $project: { result: { $pow: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
 	}
 
 	/**
@@ -991,8 +989,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and("numericField").minus(AggregationFunctionExpressions.SIZE.of(field("someArray")))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
+		assertThat(agg, is(
+				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
 	}
 
 	/**
@@ -1006,8 +1004,8 @@ public class ProjectionOperationUnitTests {
 						.subtract(AggregationFunctionExpressions.SIZE.of(field("someArray"))))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
+		assertThat(agg, is(
+				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
 	}
 
 	/**
@@ -1140,7 +1138,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and("quarter").strCaseCmp("13q4").as("comparisonResult")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
+		assertThat(agg,
+				is(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
 	}
 
 	/**
@@ -1152,7 +1151,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("quarter").strCaseCmp("13q4")).as("comparisonResult")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
+		assertThat(agg,
+				is(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
 	}
 
 	/**
@@ -1644,8 +1644,8 @@ public class ProjectionOperationUnitTests {
 						.and(ComparisonOperators.valueOf("qty").lessThanValue(250)))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(
-				Document.parse("{ $project: { result: { $and: [ { $gt: [ \"$qty\", 100 ] }, { $lt: [ \"$qty\", 250 ] } ] } } }")));
+		assertThat(agg, is(Document
+				.parse("{ $project: { result: { $and: [ { $gt: [ \"$qty\", 100 ] }, { $lt: [ \"$qty\", 250 ] } ] } } }")));
 	}
 
 	/**
@@ -1659,8 +1659,8 @@ public class ProjectionOperationUnitTests {
 						.or(ComparisonOperators.valueOf("qty").lessThanValue(200)))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(
-				Document.parse("{ $project: { result: { $or: [ { $gt: [ \"$qty\", 250 ] }, { $lt: [ \"$qty\", 200 ] } ] } } }")));
+		assertThat(agg, is(Document
+				.parse("{ $project: { result: { $or: [ { $gt: [ \"$qty\", 250 ] }, { $lt: [ \"$qty\", 200 ] } ] } } }")));
 	}
 
 	/**
@@ -1711,11 +1711,12 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderIfNullConditionAggregationExpression() {
 
-		Document agg = project().and(ConditionalOperators.ifNull(ArrayOperators.arrayOf("array").elementAt(1)).then("a more sophisticated value"))
+		Document agg = project().and(
+				ConditionalOperators.ifNull(ArrayOperators.arrayOf("array").elementAt(1)).then("a more sophisticated value"))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { result: { $ifNull: [ { $arrayElemAt: [\"$array\", 1] }, \"a more sophisticated value\" ] } } }")));
+		assertThat(agg, is(Document.parse(
+				"{ $project: { result: { $ifNull: [ { $arrayElemAt: [\"$array\", 1] }, \"a more sophisticated value\" ] } } }")));
 	}
 
 	/**
@@ -1742,6 +1743,58 @@ public class ProjectionOperationUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(Document.parse("{ $project: { result: { $ifNull: [ \"$optional\", \"$never-null\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1538
+	 */
+	@Test
+	public void shouldRenderLetExpressionCorrectly() {
+
+		Document agg = Aggregation.project()
+				.and(VariableOperators
+						.define(
+								newVariable("total")
+										.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax"))),
+								newVariable("discounted").forExpression(Cond.when("applyDiscount").then(0.9D).otherwise(1.0D)))
+						.andApply(AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))) //
+				.as("finalTotal").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project:{  \"finalTotal\" : { \"$let\": {" + //
+						"\"vars\": {" + //
+						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
+						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
+						"}," + //
+						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
+						"}}}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1538
+	 */
+	@Test
+	public void shouldRenderLetExpressionCorrectlyWhenUsingLetOnProjectionBuilder() {
+
+		ExpressionVariable var1 = newVariable("total")
+				.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax")));
+
+		ExpressionVariable var2 = newVariable("discounted")
+				.forExpression(Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
+
+		Document agg = Aggregation.project().and("foo")
+				.let(Arrays.asList(var1, var2),
+						AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))
+				.as("finalTotal").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project:{ \"finalTotal\" : { \"$let\": {" + //
+						"\"vars\": {" + //
+						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
+						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
+						"}," + //
+						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
+						"}}}}")));
 	}
 
 	private static Document exctractOperation(String field, Document fromProjectClause) {

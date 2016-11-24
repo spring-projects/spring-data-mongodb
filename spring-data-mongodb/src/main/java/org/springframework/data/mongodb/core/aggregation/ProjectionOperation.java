@@ -17,10 +17,12 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.IfNull;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -850,7 +852,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates a {@code $setIsSubset} expression that takes array of the previously mentioned field and returns
 		 * {@literal true} if it is a subset of the given {@literal array}.
-		 * 
+		 *
 		 * @param array must not be {@literal null}.
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -1193,7 +1195,35 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return this.operation.and(AggregationExpressions.DateToString.dateOf(name).toString(format));
 		}
 
-		/* 
+		/**
+		 * Generates a {@code $let} expression that binds variables for use in the specified expression, and returns the
+		 * result of the expression.
+		 *
+		 * @param valueExpression The {@link AggregationExpression} bound to {@literal variableName}.
+		 * @param variableName The variable name to be used in the {@literal in} {@link AggregationExpression}.
+		 * @param in The {@link AggregationExpression} to evaluate.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder let(AggregationExpression valueExpression, String variableName,
+											  AggregationExpression in) {
+			return this.operation.and(AggregationExpressions.Let.define(ExpressionVariable.newVariable(variableName).forExpression(valueExpression)).andApply(in));
+		}
+
+		/**
+		 * Generates a {@code $let} expression that binds variables for use in the specified expression, and returns the
+		 * result of the expression.
+		 *
+		 * @param variables The bound {@link ExpressionVariable}s.
+		 * @param in The {@link AggregationExpression} to evaluate.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder let(Collection<ExpressionVariable> variables, AggregationExpression in) {
+			return this.operation.and(AggregationExpressions.Let.define(variables).andApply(in));
+		}
+
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */

@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.OtherwiseBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.ThenBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.AsBuilder;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
@@ -1983,6 +1985,28 @@ public interface AggregationExpressions {
 		 */
 		public static Map.AsBuilder mapItemsOf(AggregationExpression expression) {
 			return Map.itemsOf(expression);
+		}
+
+		/**
+		 * Start creating new {@link Let} that allows definition of {@link ExpressionVariable} that can be used within a
+		 * nested {@link AggregationExpression}.
+		 *
+		 * @param variables must not be {@literal null}.
+		 * @return
+		 */
+		public static Let.LetBuilder define(ExpressionVariable... variables) {
+			return Let.define(variables);
+		}
+
+		/**
+		 * Start creating new {@link Let} that allows definition of {@link ExpressionVariable} that can be used within a
+		 * nested {@link AggregationExpression}.
+		 *
+		 * @param variables must not be {@literal null}.
+		 * @return
+		 */
+		public static Let.LetBuilder define(Collection<ExpressionVariable> variables) {
+			return Let.define(variables);
 		}
 	}
 
@@ -6691,6 +6715,187 @@ public interface AggregationExpressions {
 
 				Assert.notNull(expression, "AggregationExpression must not be null!");
 				return new Cond(condition, thenValue, expression);
+			}
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $let} that binds {@link AggregationExpression} to variables for use in the
+	 * specified {@code in} expression, and returns the result of the expression.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	class Let implements AggregationExpression {
+
+		private final List<ExpressionVariable> vars;
+		private final AggregationExpression expression;
+
+		private Let(List<ExpressionVariable> vars, AggregationExpression expression) {
+
+			this.vars = vars;
+			this.expression = expression;
+		}
+
+		/**
+		 * Start creating new {@link Let} by defining the variables for {@code $vars}.
+		 *
+		 * @param variables must not be {@literal null}.
+		 * @return
+		 */
+		public static LetBuilder define(final Collection<ExpressionVariable> variables) {
+
+			Assert.notNull(variables, "Variables must not be null!");
+
+			return new LetBuilder() {
+				@Override
+				public Let andApply(final AggregationExpression expression) {
+
+					Assert.notNull(expression, "Expression must not be null!");
+					return new Let(new ArrayList<ExpressionVariable>(variables), expression);
+				}
+			};
+		}
+
+		/**
+		 * Start creating new {@link Let} by defining the variables for {@code $vars}.
+		 *
+		 * @param variables must not be {@literal null}.
+		 * @return
+		 */
+		public static LetBuilder define(final ExpressionVariable... variables) {
+
+			Assert.notNull(variables, "Variables must not be null!");
+
+			return new LetBuilder() {
+				@Override
+				public Let andApply(final AggregationExpression expression) {
+
+					Assert.notNull(expression, "Expression must not be null!");
+					return new Let(Arrays.asList(variables), expression);
+				}
+			};
+		}
+
+		public interface LetBuilder {
+
+			/**
+			 * Define the {@link AggregationExpression} to evaluate.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			Let andApply(AggregationExpression expression);
+		}
+
+		@Override
+		public Document toDocument(final AggregationOperationContext context) {
+
+			return toLet(new ExposedFieldsAggregationOperationContext(
+					ExposedFields.synthetic(Fields.fields(getVariableNames())), context) {
+
+				@Override
+				public FieldReference getReference(Field field) {
+
+					FieldReference ref = null;
+					try {
+						ref = context.getReference(field);
+					} catch (Exception e) {
+						// just ignore that one.
+					}
+					return ref != null ? ref : super.getReference(field);
+				}
+			});
+		}
+
+		private String[] getVariableNames() {
+
+			String[] varNames = new String[this.vars.size()];
+			for (int i = 0; i < this.vars.size(); i++) {
+				varNames[i] = this.vars.get(i).variableName;
+			}
+			return varNames;
+		}
+
+		private Document toLet(AggregationOperationContext context) {
+
+			Document letExpression = new Document();
+
+			Document mappedVars = new Document();
+			for (ExpressionVariable var : this.vars) {
+				mappedVars.putAll(getMappedVariable(var, context));
+			}
+
+			letExpression.put("vars", mappedVars);
+			letExpression.put("in", getMappedIn(context));
+
+			return new Document("$let", letExpression);
+		}
+
+		private Document getMappedVariable(ExpressionVariable var, AggregationOperationContext context) {
+
+			return new Document(var.variableName, var.expression instanceof AggregationExpression
+					? ((AggregationExpression) var.expression).toDocument(context) : var.expression);
+		}
+
+		private Object getMappedIn(AggregationOperationContext context) {
+			return expression.toDocument(new NestedDelegatingExpressionAggregationOperationContext(context));
+		}
+
+		/**
+		 * @author Christoph Strobl
+		 */
+		public static class ExpressionVariable {
+
+			private final String variableName;
+			private final Object expression;
+
+			/**
+			 * Creates new {@link ExpressionVariable}.
+			 *
+			 * @param variableName can be {@literal null}.
+			 * @param expression can be {@literal null}.
+			 */
+			private ExpressionVariable(String variableName, Object expression) {
+
+				this.variableName = variableName;
+				this.expression = expression;
+			}
+
+			/**
+			 * Create a new {@link ExpressionVariable} with given name.
+			 *
+			 * @param variableName must not be {@literal null}.
+			 * @return never {@literal null}.
+			 */
+			public static ExpressionVariable newVariable(String variableName) {
+
+				Assert.notNull(variableName, "VariableName must not be null!");
+				return new ExpressionVariable(variableName, null);
+			}
+
+			/**
+			 * Create a new {@link ExpressionVariable} with current name and given {@literal expression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return never {@literal null}.
+			 */
+			public ExpressionVariable forExpression(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return new ExpressionVariable(variableName, expression);
+			}
+
+			/**
+			 * Create a new {@link ExpressionVariable} with current name and given {@literal expressionObject}.
+			 *
+			 * @param expressionObject must not be {@literal null}.
+			 * @return never {@literal null}.
+			 */
+			public ExpressionVariable forExpression(Document expressionObject) {
+
+				Assert.notNull(expressionObject, "Expression must not be null!");
+				return new ExpressionVariable(variableName, expressionObject);
 			}
 		}
 	}
