@@ -619,6 +619,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates a {@code $cmp} expression (compare to) that compares the value of the field to a given value or field.
 		 *
+		 * @param compareValue compare value or a {@link Field} object.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
@@ -629,6 +630,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates a {@code $eq} expression (equal) that compares the value of the field to a given value or field.
 		 *
+		 * @param compareValue compare value or a {@link Field} object.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
@@ -639,6 +641,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates a {@code $gt} expression (greater than) that compares the value of the field to a given value or field.
 		 *
+		 * @param compareValue compare value or a {@link Field} object.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
@@ -650,6 +653,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * Generates a {@code $gte} expression (greater than equal) that compares the value of the field to a given value or
 		 * field.
 		 *
+		 * @param compareValue compare value or a {@link Field} object.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
@@ -660,6 +664,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates a {@code $lt} expression (less than) that compares the value of the field to a given value or field.
 		 *
+		 * @param compareValue compare value or a {@link Field} object.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
@@ -671,6 +676,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * Generates a {@code $lte} expression (less than equal) that compares the value of the field to a given value or
 		 * field.
 		 *
+		 * @param compareValue the compare value or a {@link Field} object.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
@@ -681,6 +687,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates a {@code $ne} expression (not equal) that compares the value of the field to a given value or field.
 		 *
+		 * @param compareValue compare value or a {@link Field} object.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
