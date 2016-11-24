@@ -123,7 +123,16 @@ class DefaultBulkOperations implements BulkOperations {
 
 		Assert.notNull(document, "Document must not be null!");
 
-		models.add(new InsertOneModel<Document>((Document) mongoOperations.getConverter().convertToMongoType(document)));
+		if (document instanceof Document) {
+
+			models.add(new InsertOneModel<>((Document) document));
+			return this;
+		}
+
+		Document sink = new Document();
+		mongoOperations.getConverter().write(document, sink);
+
+		models.add(new InsertOneModel<>(sink));
 		return this;
 	}
 
