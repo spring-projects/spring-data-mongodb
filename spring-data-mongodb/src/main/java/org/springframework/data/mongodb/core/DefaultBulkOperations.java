@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteException;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.BulkWriteRequestBuilder;
@@ -38,6 +39,7 @@ import com.mongodb.WriteConcern;
  * 
  * @author Tobias Trelle
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.9
  */
 class DefaultBulkOperations implements BulkOperations {
@@ -117,7 +119,15 @@ class DefaultBulkOperations implements BulkOperations {
 
 		Assert.notNull(document, "Document must not be null!");
 
-		bulk.insert((DBObject) mongoOperations.getConverter().convertToMongoType(document));
+		if (document instanceof DBObject) {
+
+			bulk.insert((DBObject) document);
+			return this;
+		}
+
+		DBObject sink = new BasicDBObject();
+		mongoOperations.getConverter().write(document, sink);
+		bulk.insert(sink);
 		return this;
 	}
 

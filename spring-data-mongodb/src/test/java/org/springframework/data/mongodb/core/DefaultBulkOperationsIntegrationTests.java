@@ -46,6 +46,7 @@ import com.mongodb.WriteConcern;
  * 
  * @author Tobias Trelle
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -268,6 +269,25 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(result.getInsertedCount(), is(3));
 		assertThat(result.getModifiedCount(), is(2));
 		assertThat(result.getRemovedCount(), is(1));
+	}
+
+	/**
+	 * @see DATAMONGO-1534
+	 */
+	@Test
+	public void insertShouldConsiderInheritance() {
+
+		SpecialDoc specialDoc = new SpecialDoc();
+		specialDoc.id = "id-special";
+		specialDoc.value = "normal-value";
+		specialDoc.specialValue = "special-value";
+
+		createBulkOps(BulkMode.ORDERED).insert(Arrays.asList(specialDoc)).execute();
+
+		BaseDoc doc = operations.findOne(where("_id", specialDoc.id), BaseDoc.class, COLLECTION_NAME);
+
+		assertThat(doc, notNullValue());
+		assertThat(doc, instanceOf(SpecialDoc.class));
 	}
 
 	private void testUpdate(BulkMode mode, boolean multi, int expectedUpdates) {
