@@ -64,6 +64,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Fırat KÜÇÜK
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
@@ -1307,4 +1308,25 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, not(hasItem(boyd)));
 	}
 
+	/**
+	 * @see DATAMONGO-1539
+	 */
+    @Test
+    public void countsPersonsByFirstname() {
+
+        long result = repository.countByThePersonsFirstname("Dave");
+        assertThat(result, is(1L));
+    }
+
+	/**
+	 * @see DATAMONGO-1539
+	 */
+	@Test
+    public void deletesPersonsByFirstname() {
+
+        repository.deleteByThePersonsFirstname("Dave");
+
+        long result = repository.countByThePersonsFirstname("Dave");
+        assertThat(result, is(0L));
+    }
 }
