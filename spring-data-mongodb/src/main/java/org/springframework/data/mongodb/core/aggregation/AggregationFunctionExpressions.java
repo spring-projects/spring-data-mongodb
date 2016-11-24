@@ -36,7 +36,7 @@ import com.mongodb.DBObject;
 @Deprecated
 public enum AggregationFunctionExpressions {
 
-	SIZE, CMP, EQ, GT, GTE, LT, LTE, NE, SUBTRACT, ADD;
+	SIZE, CMP, EQ, GT, GTE, LT, LTE, NE, SUBTRACT, ADD, MULTIPLY;
 
 	/**
 	 * Returns an {@link AggregationExpression} build from the current {@link Enum} name and the given parameters.
