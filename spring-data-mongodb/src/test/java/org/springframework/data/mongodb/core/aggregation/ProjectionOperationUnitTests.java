@@ -16,8 +16,10 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
@@ -28,17 +30,9 @@ import java.util.List;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.BooleanOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.VariableOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.*;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -1712,11 +1706,12 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderIfNullConditionAggregationExpression() {
 
-		DBObject agg = project().and(ConditionalOperators.ifNull(ArrayOperators.arrayOf("array").elementAt(1)).then("a more sophisticated value"))
+		DBObject agg = project().and(
+				ConditionalOperators.ifNull(ArrayOperators.arrayOf("array").elementAt(1)).then("a more sophisticated value"))
 				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(JSON.parse("{ $project: { result: { $ifNull: [ { $arrayElemAt: [\"$array\", 1] }, \"a more sophisticated value\" ] } } }")));
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { result: { $ifNull: [ { $arrayElemAt: [\"$array\", 1] }, \"a more sophisticated value\" ] } } }")));
 	}
 
 	/**
@@ -1743,6 +1738,58 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $ifNull: [ \"$optional\", \"$never-null\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1538
+	 */
+	@Test
+	public void shouldRenderLetExpressionCorrectly() {
+
+		DBObject agg = Aggregation.project()
+				.and(VariableOperators
+						.define(
+								newVariable("total")
+										.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax"))),
+								newVariable("discounted").forExpression(Cond.when("applyDiscount").then(0.9D).otherwise(1.0D)))
+						.andApply(AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))) //
+				.as("finalTotal").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(JSON.parse("{ $project:{  \"finalTotal\" : { \"$let\": {" + //
+						"\"vars\": {" + //
+						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
+						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
+						"}," + //
+						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
+						"}}}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1538
+	 */
+	@Test
+	public void shouldRenderLetExpressionCorrectlyWhenUsingLetOnProjectionBuilder() {
+
+		ExpressionVariable var1 = newVariable("total")
+				.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax")));
+
+		ExpressionVariable var2 = newVariable("discounted")
+				.forExpression(Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
+
+		DBObject agg = Aggregation.project().and("foo")
+				.let(Arrays.asList(var1, var2),
+						AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))
+				.as("finalTotal").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(JSON.parse("{ $project:{ \"finalTotal\" : { \"$let\": {" + //
+						"\"vars\": {" + //
+						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
+						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
+						"}," + //
+						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
+						"}}}}")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
