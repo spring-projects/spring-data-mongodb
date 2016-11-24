@@ -367,4 +367,23 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@Query("{ firstname : :#{#firstname}}")
 	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterVariableOnly(@Param("firstname") String firstname);
+
+	/**
+	 * Returns the count of {@link Person} with the given firstname. Uses {@link Count} annotation to define the query
+	 * to be executed.
+	 *
+	 * @param firstname
+	 * @return
+	 */
+	@Count(value = "{ 'firstname' : ?0 }")
+	long countByThePersonsFirstname(String firstname);
+
+	/**
+	 * Deletes {@link Person} entities with the given firstname. Uses {@link Delete} annotation to define the query
+	 * to be executed.
+	 *
+	 * @param firstname
+	 */
+	@Delete(value = "{ 'firstname' : ?0 }")
+	void deleteByThePersonsFirstname(String firstname);
 }

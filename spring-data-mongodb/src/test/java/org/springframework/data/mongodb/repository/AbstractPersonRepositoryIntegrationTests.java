@@ -1311,4 +1311,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, not(hasItem(boyd)));
 	}
 
+    @Test
+    public void countsPersonsByFirstname() {
+
+        long result = repository.countByThePersonsFirstname("Dave");
+        assertThat(result, is(1L));
+    }
+
+    @Test
+    public void deletesPersonsByFirstname() {
+
+        repository.deleteByThePersonsFirstname("Dave");
+
+        long result = repository.countByThePersonsFirstname("Dave");
+        assertThat(result, is(0L));
+    }
 }
