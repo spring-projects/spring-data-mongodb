@@ -17,10 +17,10 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
-import static org.springframework.data.mongodb.util.DBObjectUtils.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +28,14 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.BooleanOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
 /**
@@ -273,8 +281,9 @@ public class ProjectionOperationUnitTests {
 				.and("foo").as("bar"); //
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(document, is(Document.parse(
-				"{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}")));
+		assertThat(
+				document,
+				is(Document.parse("{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}")));
 	}
 
 	/**
@@ -480,6 +489,1185 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
 				isBsonObject().containing("$project.ne10.$ne.[0]", "$field").containing("$project.ne10.$ne.[1]", 10));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetEquals() {
+
+		Document agg = project("A", "B").and("A").equalsArrays("B").as("sameElements")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, sameElements: { $setEquals: [ \"$A\", \"$B\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetEqualsAggregationExpresssion() {
+
+		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").isEqualTo("B")).as("sameElements")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, sameElements: { $setEquals: [ \"$A\", \"$B\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetIntersection() {
+
+		Document agg = project("A", "B").and("A").intersectsArrays("B").as("commonToBoth")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { A: 1, B: 1, commonToBoth: { $setIntersection: [ \"$A\", \"$B\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetIntersectionAggregationExpresssion() {
+
+		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").intersects("B")).as("commonToBoth")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { A: 1, B: 1, commonToBoth: { $setIntersection: [ \"$A\", \"$B\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetUnion() {
+
+		Document agg = project("A", "B").and("A").unionArrays("B").as("allValues").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, allValues: { $setUnion: [ \"$A\", \"$B\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetUnionAggregationExpresssion() {
+
+		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").union("B")).as("allValues")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, allValues: { $setUnion: [ \"$A\", \"$B\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetDifference() {
+
+		Document agg = project("A", "B").and("B").differenceToArray("A").as("inBOnly")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, inBOnly: { $setDifference: [ \"$B\", \"$A\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetDifferenceAggregationExpresssion() {
+
+		Document agg = project("A", "B").and(SetOperators.arrayAsSet("B").differenceTo("A")).as("inBOnly")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, inBOnly: { $setDifference: [ \"$B\", \"$A\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetIsSubset() {
+
+		Document agg = project("A", "B").and("A").subsetOfArray("B").as("aIsSubsetOfB")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSetIsSubsetAggregationExpresssion() {
+
+		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").isSubsetOf("B")).as("aIsSubsetOfB")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAnyElementTrue() {
+
+		Document agg = project("responses").and("responses").anyElementInArrayTrue().as("isAnyTrue")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAnyElementTrueAggregationExpresssion() {
+
+		Document agg = project("responses").and(SetOperators.arrayAsSet("responses").anyElementTrue()).as("isAnyTrue")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAllElementsTrue() {
+
+		Document agg = project("responses").and("responses").allElementsInArrayTrue().as("isAllTrue")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { responses: 1, isAllTrue: { $allElementsTrue: [ \"$responses\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAllElementsTrueAggregationExpresssion() {
+
+		Document agg = project("responses").and(SetOperators.arrayAsSet("responses").allElementsTrue()).as("isAllTrue")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { responses: 1, isAllTrue: { $allElementsTrue: [ \"$responses\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAbs() {
+
+		Document agg = project().and("anyNumber").absoluteValue().as("absoluteValue")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { absoluteValue : { $abs:  \"$anyNumber\" }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAbsAggregationExpresssion() {
+
+		Document agg = project()
+				.and(
+						ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).abs())
+				.as("delta").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { delta: { $abs: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAddAggregationExpresssion() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("price").add("fee")).as("total")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse(" { $project: { total: { $add: [ \"$price\", \"$fee\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderCeil() {
+
+		Document agg = project().and("anyNumber").ceil().as("ceilValue").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { ceilValue : { $ceil:  \"$anyNumber\" }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderCeilAggregationExpresssion() {
+
+		Document agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ceil())
+				.as("delta").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { delta: { $ceil: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDivide() {
+
+		Document agg = project().and("value")
+				.divide(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { result: { $divide: [ \"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDivideAggregationExpresssion() {
+
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf("anyNumber")
+						.divideBy(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document
+				.parse("{ $project: { result: { $divide: [ \"$anyNumber\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderExp() {
+
+		Document agg = project().and("value").exp().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $exp: \"$value\" } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderExpAggregationExpresssion() {
+
+		Document agg = project()
+				.and(
+						ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).exp())
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $exp: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderFloor() {
+
+		Document agg = project().and("value").floor().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $floor: \"$value\" } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderFloorAggregationExpresssion() {
+
+		Document agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).floor())
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $floor: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLn() {
+
+		Document agg = project().and("value").ln().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $ln: \"$value\"} }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLnAggregationExpresssion() {
+
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ln())
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $ln: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLog() {
+
+		Document agg = project().and("value").log(2).as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $log: [ \"$value\", 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLogAggregationExpresssion() {
+
+		Document agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log(2))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $log: [ { $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLog10() {
+
+		Document agg = project().and("value").log10().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $log10: \"$value\" } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLog10AggregationExpresssion() {
+
+		Document agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log10())
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $log10: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMod() {
+
+		Document agg = project().and("value").mod(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { result: { $mod: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderModAggregationExpresssion() {
+
+		Document agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).mod(2))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $mod: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMultiply() {
+
+		Document agg = project().and("value")
+				.multiply(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(
+				Document.parse("{ $project: { result: { $multiply: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMultiplyAggregationExpresssion() {
+
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
+						.multiplyBy(2).multiplyBy("refToAnotherNumber"))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse(
+				"{ $project: { result: { $multiply: [{ $subtract: [ \"$start\", \"$end\" ] }, 2, \"$refToAnotherNumber\"] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderPow() {
+
+		Document agg = project().and("value").pow(2).as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $pow: [\"$value\", 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderPowAggregationExpresssion() {
+
+		Document agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).pow(2))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $pow: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSqrt() {
+
+		Document agg = project().and("value").sqrt().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $sqrt: \"$value\" } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSqrtAggregationExpresssion() {
+
+		Document agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).sqrt())
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $sqrt: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSubtract() {
+
+		Document agg = project().and("numericField").minus(AggregationFunctionExpressions.SIZE.of(field("someArray")))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSubtractAggregationExpresssion() {
+
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf("numericField")
+						.subtract(AggregationFunctionExpressions.SIZE.of(field("someArray"))))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderTrunc() {
+
+		Document agg = project().and("value").trunc().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result : { $trunc: \"$value\" }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderTruncAggregationExpresssion() {
+
+		Document agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).trunc())
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $trunc: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderConcat() {
+
+		Document agg = project().and("item").concat(" - ", field("description")).as("itemDescription")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
+
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderConcatAggregationExpression() {
+
+		Document agg = project().and(StringOperators.valueOf("item").concat(" - ").concatValueOf("description"))
+				.as("itemDescription").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
+
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSubstr() {
+
+		Document agg = project().and("quarter").substring(0, 2).as("yearSubstring").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSubstrAggregationExpression() {
+
+		Document agg = project().and(StringOperators.valueOf("quarter").substring(0, 2)).as("yearSubstring")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderToLower() {
+
+		Document agg = project().and("item").toLower().as("item").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { item: { $toLower: \"$item\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderToLowerAggregationExpression() {
+
+		Document agg = project().and(StringOperators.valueOf("item").toLower()).as("item")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { item: { $toLower: \"$item\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderToUpper() {
+
+		Document agg = project().and("item").toUpper().as("item").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { item: { $toUpper: \"$item\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderToUpperAggregationExpression() {
+
+		Document agg = project().and(StringOperators.valueOf("item").toUpper()).as("item")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { item: { $toUpper: \"$item\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderStrCaseCmp() {
+
+		Document agg = project().and("quarter").strCaseCmp("13q4").as("comparisonResult")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderStrCaseCmpAggregationExpression() {
+
+		Document agg = project().and(StringOperators.valueOf("quarter").strCaseCmp("13q4")).as("comparisonResult")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderArrayElementAt() {
+
+		Document agg = project().and("favorites").arrayElementAt(0).as("first").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { first: { $arrayElemAt: [ \"$favorites\", 0 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderArrayElementAtAggregationExpression() {
+
+		Document agg = project().and(ArrayOperators.arrayOf("favorites").elementAt(0)).as("first")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { first: { $arrayElemAt: [ \"$favorites\", 0 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderConcatArrays() {
+
+		Document agg = project().and("instock").concatArrays("ordered").as("items").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { items: { $concatArrays: [ \"$instock\", \"$ordered\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderConcatArraysAggregationExpression() {
+
+		Document agg = project().and(ArrayOperators.arrayOf("instock").concat("ordered")).as("items")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { items: { $concatArrays: [ \"$instock\", \"$ordered\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderIsArray() {
+
+		Document agg = project().and("instock").isArray().as("isAnArray").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { isAnArray: { $isArray: \"$instock\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderIsArrayAggregationExpression() {
+
+		Document agg = project().and(ArrayOperators.arrayOf("instock").isArray()).as("isAnArray")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { isAnArray: { $isArray: \"$instock\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSizeAggregationExpression() {
+
+		Document agg = project().and(ArrayOperators.arrayOf("instock").length()).as("arraySize")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { arraySize: { $size: \"$instock\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSliceAggregationExpression() {
+
+		Document agg = project().and(ArrayOperators.arrayOf("favorites").slice().itemCount(3)).as("threeFavorites")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 3 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSliceWithPositionAggregationExpression() {
+
+		Document agg = project().and(ArrayOperators.arrayOf("favorites").slice().offset(2).itemCount(3))
+				.as("threeFavorites").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 2, 3 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLiteral() {
+
+		Document agg = project().and("$1").asLiteral().as("literalOnly").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { literalOnly: { $literal:  \"$1\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLiteralAggregationExpression() {
+
+		Document agg = project().and(LiteralOperators.valueOf("$1").asLiteral()).as("literalOnly")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { literalOnly: { $literal:  \"$1\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDayOfYearAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").dayOfYear()).as("dayOfYear")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { dayOfYear: { $dayOfYear: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDayOfMonthAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").dayOfMonth()).as("day")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { day: { $dayOfMonth: \"$date\" }} }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDayOfWeekAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").dayOfWeek()).as("dayOfWeek")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { dayOfWeek: { $dayOfWeek: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderYearAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").year()).as("year")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { year: { $year: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMonthAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").month()).as("month")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { month: { $month: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderWeekAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").week()).as("week")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { week: { $week: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderHourAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").hour()).as("hour")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { hour: { $hour: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMinuteAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").minute()).as("minute")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { minute: { $minute: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSecondAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").second()).as("second")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { second: { $second: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMillisecondAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").millisecond()).as("msec")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { msec: { $millisecond: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDateToString() {
+
+		Document agg = project().and("date").dateAsFormattedString("%H:%M:%S:%L").as("time")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDateToStringAggregationExpression() {
+
+		Document agg = project().and(DateOperators.dateOf("date").toString("%H:%M:%S:%L")).as("time")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSumAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").sum()).as("quizTotal")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { quizTotal: { $sum: \"$quizzes\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSumWithMultipleArgsAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("final").sum().and("midterm")).as("examTotal")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: {  examTotal: { $sum: [ \"$final\", \"$midterm\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAvgAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").avg()).as("quizAvg")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { quizAvg: { $avg: \"$quizzes\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAvgWithMultipleArgsAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("final").avg().and("midterm")).as("examAvg")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: {  examAvg: { $avg: [ \"$final\", \"$midterm\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMaxAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").max()).as("quizMax")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { quizMax: { $max: \"$quizzes\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMaxWithMultipleArgsAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("final").max().and("midterm")).as("examMax")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: {  examMax: { $max: [ \"$final\", \"$midterm\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMinAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").min()).as("quizMin")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { quizMin: { $min: \"$quizzes\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMinWithMultipleArgsAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("final").min().and("midterm")).as("examMin")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: {  examMin: { $min: [ \"$final\", \"$midterm\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderStdDevPopAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("scores").stdDevPop()).as("stdDev")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { stdDev: { $stdDevPop: \"$scores\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderStdDevSampAggregationExpression() {
+
+		Document agg = project().and(ArithmeticOperators.valueOf("scores").stdDevSamp()).as("stdDev")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { stdDev: { $stdDevSamp: \"$scores\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderCmpAggregationExpression() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").compareToValue(250)).as("cmp250")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { cmp250: { $cmp: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderEqAggregationExpression() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").equalToValue(250)).as("eq250")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { eq250: { $eq: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderGtAggregationExpression() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").greaterThanValue(250)).as("gt250")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { gt250: { $gt: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderGteAggregationExpression() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").greaterThanEqualToValue(250)).as("gte250")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { gte250: { $gte: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLtAggregationExpression() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").lessThanValue(250)).as("lt250")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { lt250: { $lt: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLteAggregationExpression() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").lessThanEqualToValue(250)).as("lte250")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { lte250: { $lte: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderNeAggregationExpression() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").notEqualToValue(250)).as("ne250")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { ne250: { $ne: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLogicAndAggregationExpression() {
+
+		Document agg = project()
+				.and(BooleanOperators.valueOf(ComparisonOperators.valueOf("qty").greaterThanValue(100))
+						.and(ComparisonOperators.valueOf("qty").lessThanValue(250)))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(
+				Document.parse("{ $project: { result: { $and: [ { $gt: [ \"$qty\", 100 ] }, { $lt: [ \"$qty\", 250 ] } ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLogicOrAggregationExpression() {
+
+		Document agg = project()
+				.and(BooleanOperators.valueOf(ComparisonOperators.valueOf("qty").greaterThanValue(250))
+						.or(ComparisonOperators.valueOf("qty").lessThanValue(200)))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(
+				Document.parse("{ $project: { result: { $or: [ { $gt: [ \"$qty\", 250 ] }, { $lt: [ \"$qty\", 200 ] } ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderNotAggregationExpression() {
+
+		Document agg = project().and(BooleanOperators.not(ComparisonOperators.valueOf("qty").greaterThanValue(250)))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $not: [ { $gt: [ \"$qty\", 250 ] } ] } } }")));
 	}
 
 	private static Document exctractOperation(String field, Document fromProjectClause) {

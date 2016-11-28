@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -185,6 +186,14 @@ public final class Fields implements Iterable<Field> {
 		return fields.iterator();
 	}
 
+	/**
+	 *
+	 * @return
+	 * @since 1.10
+	 */
+	public List<Field> asList() {
+		return Collections.unmodifiableList(fields);
+	}
 	/**
 	 * Value object to encapsulate a field in an aggregation operation.
 	 * 

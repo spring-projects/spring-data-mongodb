@@ -1678,17 +1678,29 @@ At the time of this writing we provide support for the following Aggregation Ope
 | Pipeline Aggregation Operators
 | project, skip, limit, lookup, unwind, group, sort, geoNear
 
+| Set Aggregation Operators
+| setEquals, setIntersection, setUnion, setDifference, setIsSubset, anyElementTrue, allElementsTrue
+
 | Group Aggregation Operators
-| addToSet, first, last, max, min, avg, push, sum, (*count)
+| addToSet, first, last, max, min, avg, push, sum, (*count), stdDevPop, stdDevSamp
 
 | Arithmetic Aggregation Operators
-| add (*via plus), subtract (*via minus), multiply, divide, mod
+| abs, add (*via plus), ceil, divide, exp, floor, ln, log, log10, mod, multiply, pow, sqrt, subtract (*via minus), trunc
+
+| String Aggregation Operators
+| concat, substr, toLower, toUpper, stcasecmp
 
 | Comparison Aggregation Operators
 | eq (*via: is), gt, gte, lt, lte, ne
 
 | Array Aggregation Operators
-| size, slice, filter
+| arrayElementAt, concatArrays, filter, isArray, size, slice
+
+| Literal Operators
+| literal
+
+| Date Aggregation Operators
+| dayOfYear, dayOfMonth, dayOfWeek, year, month, week, hour, minute, second, millisecond, dateToString
 
 | Conditional Aggregation Operators
 | cond, ifNull

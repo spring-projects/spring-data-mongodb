@@ -30,10 +30,12 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.7
+ * @deprecated since 1.10. Please use {@link AggregationExpressions} instead.
  */
+@Deprecated
 public enum AggregationFunctionExpressions {
 
-	SIZE, CMP, EQ, GT, GTE, LT, LTE, NE;
+	SIZE, CMP, EQ, GT, GTE, LT, LTE, NE, SUBTRACT;
 
 	/**
 	 * Returns an {@link AggregationExpression} build from the current {@link Enum} name and the given parameters.
@@ -52,7 +54,7 @@ public enum AggregationFunctionExpressions {
 	 * 
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
-	 * @since 1.10
+	 * @since 1.7
 	 */
 	static class FunctionExpression implements AggregationExpression {
 
