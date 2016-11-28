@@ -16,11 +16,15 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -30,6 +34,369 @@ import com.mongodb.DBObject;
  * @since 1.10
  */
 public interface AggregationExpressions {
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class SetOperators {
+
+		/**
+		 * Take the array referenced by given {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 */
+		public static SetOperatorFactory arrayAsSet(String fieldRef) {
+			return new SetOperatorFactory(fieldRef);
+		}
+
+		public static class SetOperatorFactory {
+
+			private final String fieldRef;
+
+			/**
+			 * Creates new {@link SetOperatorFactory} for given {@literal fieldRef}.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 */
+			public SetOperatorFactory(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				this.fieldRef = fieldRef;
+			}
+
+			/**
+			 * Compares the previously mentioned field to one or more arrays and returns {@literal true} if they have the same
+			 * distinct elements and {@literal false} otherwise.
+			 *
+			 * @param arrayReferences must not be {@literal null}.
+			 * @return
+			 */
+			public SetEquals isEqualTo(String... arrayReferences) {
+				return SetEquals.arrayAsSet(fieldRef).isEqualTo(arrayReferences);
+			}
+
+			/**
+			 * Takes array of the previously mentioned field and one or more arrays and returns an array that contains the
+			 * elements that appear in every of those.
+			 *
+			 * @param arrayReferences must not be {@literal null}.
+			 * @return
+			 */
+			public SetIntersection intersects(String... arrayReferences) {
+				return SetIntersection.arrayAsSet(fieldRef).intersects(arrayReferences);
+			}
+
+			/**
+			 * Takes array of the previously mentioned field and one or more arrays and returns an array that contains the
+			 * elements that appear in any of those.
+			 *
+			 * @param arrayReferences must not be {@literal null}.
+			 * @return
+			 */
+			public SetUnion union(String... arrayReferences) {
+				return SetUnion.arrayAsSet(fieldRef).union(arrayReferences);
+			}
+
+			/**
+			 * Takes array of the previously mentioned field and returns an array containing the elements that do not exist in
+			 * the given {@literal arrayReference}.
+			 *
+			 * @param arrayReference must not be {@literal null}.
+			 * @return
+			 */
+			public SetDifference differenceTo(String arrayReference) {
+				return SetDifference.arrayAsSet(fieldRef).differenceTo(arrayReference);
+			}
+
+			/**
+			 * Takes array of the previously mentioned field and returns {@literal true} if it is a subset of the given
+			 * {@literal arrayReference}.
+			 *
+			 * @param arrayReference must not be {@literal null}.
+			 * @return
+			 */
+			public SetIsSubset isSubsetOf(String arrayReference) {
+				return SetIsSubset.arrayAsSet(fieldRef).isSubsetOf(arrayReference);
+			}
+
+			/**
+			 * Takes array of the previously mentioned field and returns {@literal true} if any of the elements are
+			 * {@literal true} and {@literal false} otherwise.
+			 *
+			 * @return
+			 */
+			public AnyElementTrue anyElementTrue() {
+				return AnyElementTrue.arrayAsSet(fieldRef);
+			}
+
+			/**
+			 * Takes array of the previously mentioned field and returns {@literal true} if no elements is {@literal false}.
+			 *
+			 * @return
+			 */
+			public AllElementsTrue allElementsTrue() {
+				return AllElementsTrue.arrayAsSet(fieldRef);
+			}
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	abstract class AbstractAggregationExpression implements AggregationExpression {
+
+		private final Object value;
+
+		protected AbstractAggregationExpression(Object value) {
+			this.value = value;
+		}
+
+		@Override
+		public DBObject toDbObject(AggregationOperationContext context) {
+			return toDbObject(this.value, context);
+		}
+
+		public DBObject toDbObject(Object value, AggregationOperationContext context) {
+
+			Object valueToUse;
+			if (value instanceof List) {
+
+				List<Object> arguments = (List<Object>) value;
+				List<Object> args = new ArrayList<Object>(arguments.size());
+
+				for (Object val : arguments) {
+					args.add(unpack(val, context));
+				}
+				valueToUse = args;
+			} else if (value instanceof Map) {
+
+				DBObject dbo = new BasicDBObject();
+				for (Map.Entry<String, Object> entry : ((Map<String, Object>) value).entrySet()) {
+					dbo.put(entry.getKey(), unpack(entry.getValue(), context));
+				}
+				valueToUse = dbo;
+			}
+
+			else {
+				valueToUse = unpack(value, context);
+			}
+
+			return new BasicDBObject(getMongoMethod(), valueToUse);
+		}
+
+		protected static List<Field> asFields(String... fieldRefs) {
+
+			if (ObjectUtils.isEmpty(fieldRefs)) {
+				return Collections.emptyList();
+			}
+
+			return Fields.fields(fieldRefs).asList();
+		}
+
+		private Object unpack(Object value, AggregationOperationContext context) {
+
+			if (value instanceof AggregationExpression) {
+				return ((AggregationExpression) value).toDbObject(context);
+			}
+
+			if (value instanceof Field) {
+				return context.getReference((Field) value).toString();
+			}
+
+			return value;
+		}
+
+		protected List<Object> append(Object value) {
+
+			if (this.value instanceof List) {
+
+				List<Object> clone = new ArrayList<Object>((List) this.value);
+
+				if (value instanceof List) {
+					for (Object val : (List) value) {
+						clone.add(val);
+					}
+				} else {
+					clone.add(value);
+				}
+				return clone;
+			}
+
+			return Arrays.asList(this.value, value);
+		}
+
+		protected Object append(String key, Object value) {
+			return null;
+		}
+
+		public abstract String getMongoMethod();
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class SetEquals extends AbstractAggregationExpression {
+
+		private SetEquals(List<?> arrays) {
+			super(arrays);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$setEquals";
+		}
+
+		public static SetEquals arrayAsSet(String arrayReference) {
+			return new SetEquals(asFields(arrayReference));
+		}
+
+		public SetEquals isEqualTo(String... arrayReferences) {
+			return new SetEquals(append(Fields.fields(arrayReferences).asList()));
+		}
+
+		public SetEquals isEqualTo(Object[] compareValue) {
+			return new SetEquals(append(compareValue));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class SetIntersection extends AbstractAggregationExpression {
+
+		private SetIntersection(List<?> arrays) {
+			super(arrays);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$setIntersection";
+		}
+
+		public static SetIntersection arrayAsSet(String arrayReference) {
+			return new SetIntersection(asFields(arrayReference));
+		}
+
+		public SetIntersection intersects(String... arrayReferences) {
+			return new SetIntersection(append(asFields(arrayReferences)));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class SetUnion extends AbstractAggregationExpression {
+
+		private SetUnion(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$setUnion";
+		}
+
+		public static SetUnion arrayAsSet(String arrayReference) {
+			return new SetUnion(asFields(arrayReference));
+		}
+
+		public SetUnion union(String... arrayReferences) {
+			return new SetUnion(append(asFields(arrayReferences)));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class SetDifference extends AbstractAggregationExpression {
+
+		private SetDifference(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$setDifference";
+		}
+
+		public static SetDifference arrayAsSet(String arrayReference) {
+			return new SetDifference(asFields(arrayReference));
+		}
+
+		public SetDifference differenceTo(String arrayReference) {
+			return new SetDifference(append(Fields.field(arrayReference)));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class SetIsSubset extends AbstractAggregationExpression {
+
+		private SetIsSubset(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$setIsSubset";
+		}
+
+		public static SetIsSubset arrayAsSet(String arrayReference) {
+			return new SetIsSubset(asFields(arrayReference));
+		}
+
+		public SetIsSubset isSubsetOf(String arrayReference) {
+			return new SetIsSubset(append(Fields.field(arrayReference)));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class AnyElementTrue extends AbstractAggregationExpression {
+
+		private AnyElementTrue(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$anyElementTrue";
+		}
+
+		public static AnyElementTrue arrayAsSet(String arrayReference) {
+			return new AnyElementTrue(asFields(arrayReference));
+		}
+
+		public AnyElementTrue anyElementTrue() {
+			return this;
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class AllElementsTrue extends AbstractAggregationExpression {
+
+		private AllElementsTrue(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$allElementsTrue";
+		}
+
+		public static AllElementsTrue arrayAsSet(String arrayReference) {
+			return new AllElementsTrue(asFields(arrayReference));
+		}
+
+		public AllElementsTrue allElementsTrue() {
+			return this;
+		}
+	}
 
 	/**
 	 * {@code $filter} {@link AggregationExpression} allows to select a subset of the array to return based on the
@@ -129,7 +496,8 @@ public interface AggregationExpressions {
 				return condition;
 			}
 
-			NestedDelegatingExpressionAggregationOperationContext nea = new NestedDelegatingExpressionAggregationOperationContext(context);
+			NestedDelegatingExpressionAggregationOperationContext nea = new NestedDelegatingExpressionAggregationOperationContext(
+					context);
 			return ((AggregationExpression) condition).toDbObject(nea);
 		}
 

@@ -733,6 +733,99 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return this.operation.and(AggregationExpressions.Filter.filter(name).as(as).by(condition));
 		}
 
+		// SET OPERATORS
+
+		/**
+		 * Compares the previously mentioned field to one or more arrays and returns {@literal true} if they have the same
+		 * distinct elements and {@literal false} otherwise.
+		 *
+		 * @param arrays must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder equalsArray(String... arrays) {
+
+			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
+			return project("setEquals", Fields.fields(arrays).asList().toArray());
+		}
+
+		/**
+		 * Takes array of the previously mentioned field and one or more arrays and returns an array that contains the
+		 * elements that appear in every of those.
+		 *
+		 * @param arrays must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder intersectsArrays(String... arrays) {
+
+			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
+			return project("setIntersection", Fields.fields(arrays).asList().toArray());
+		}
+
+		/**
+		 * Takes array of the previously mentioned field and one or more arrays and returns an array that contains the
+		 * elements that appear in any of those.
+		 *
+		 * @param arrays must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder unionArrays(String... arrays) {
+
+			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
+			return project("setUnion", Fields.fields(arrays).asList().toArray());
+		}
+
+		/**
+		 * Takes array of the previously mentioned field and returns an array containing the elements that do not exist in
+		 * the given {@literal array}.
+		 *
+		 * @param array must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder differenceToArray(String array) {
+
+			Assert.hasText(array, "Array must not be null or empty!");
+			return project("setDifference", Fields.fields(array).asList().toArray());
+		}
+
+		/**
+		 * Takes array of the previously mentioned field and returns {@literal true} if it is a subset of the given
+		 * {@literal array}.
+		 * 
+		 * @param array must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder subsetOfArray(String array) {
+
+			Assert.hasText(array, "Array must not be null or empty!");
+			return project("setIsSubset", Fields.fields(array).asList().toArray());
+		}
+
+		/**
+		 * Takes array of the previously mentioned field and returns {@literal true} if any of the elements are
+		 * {@literal true} and {@literal false} otherwise.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder anyElementInArrayTrue() {
+			return project("anyElementTrue");
+		}
+
+		/**
+		 * Takes array of the previously mentioned field and returns {@literal true} if no elements is {@literal false}.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder allElementsInArrayTrue() {
+			return project("allElementsTrue");
+		}
+
 		/* 
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
