@@ -101,6 +101,7 @@ import com.mongodb.util.JSON;
  * @author Oliver Gierke
  * @author Patrik Wasik
  * @author Christoph Strobl
+ * @author Faycal IHABRITANE
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoConverterUnitTests {
@@ -2084,6 +2085,23 @@ public class MappingMongoConverterUnitTests {
 		TypeWithPropertyInNestedField result = converter.read(TypeWithPropertyInNestedField.class, source);
 
 		assertThat(result.sample, is("value"));
+	}
+	
+	
+	/**
+	 * @see DATAMONGO-1525
+	 */
+	@Test
+	public void readsEmptyEnumSetCorrectly() {
+
+		BasicDBList enumSet = new BasicDBList();
+		DBObject dbObject = new BasicDBObject("enumSet", enumSet);
+
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
+
+		assertThat(result.enumSet, is(instanceOf(EnumSet.class)));
+		assertThat(result.enumSet.size(), is(0));
+		assertThat(result.enumSet,not(hasItems(SampleEnum.FIRST,SampleEnum.SECOND)));
 	}
 
 	static class GenericType<T> {

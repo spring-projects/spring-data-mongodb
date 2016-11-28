@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,6 +81,7 @@ import com.mongodb.DBRef;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Jordi Llach
+ * @author Faycal IHABRITANE
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
 
@@ -891,13 +893,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Assert.notNull(path, "Object path must not be null!");
 
 		Class<?> collectionType = targetType.getType();
-
-		if (sourceValue.isEmpty()) {
-			return getPotentiallyConvertedSimpleRead(new HashSet<Object>(), collectionType);
-		}
-
 		TypeInformation<?> componentType = targetType.getComponentType();
 		Class<?> rawComponentType = componentType == null ? null : componentType.getType();
+
+		if (sourceValue.isEmpty()) {
+			if (EnumSet.class.isAssignableFrom(collectionType)) {
+				return EnumSet.noneOf(rawComponentType.asSubclass(Enum.class));
+			}
+			return getPotentiallyConvertedSimpleRead(new HashSet<Object>(), collectionType);
+		}
 
 		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
 		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>()
