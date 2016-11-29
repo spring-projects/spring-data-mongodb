@@ -144,6 +144,415 @@ public interface AggregationExpressions {
 	/**
 	 * @author Christoph Strobl
 	 */
+	class ArithmeticOperators {
+
+		/**
+		 * Take the array referenced by given {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 */
+		public static ArithmeticOperatorFactory valueOf(String fieldRef) {
+			return new ArithmeticOperatorFactory(fieldRef);
+		}
+
+		/**
+		 * Take the array referenced by given {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 */
+		public static ArithmeticOperatorFactory valueOf(AggregationExpression fieldRef) {
+			return new ArithmeticOperatorFactory(fieldRef);
+		}
+
+		public static class ArithmeticOperatorFactory {
+
+			private final String fieldRef;
+			private final AggregationExpression expression;
+
+			/**
+			 * Creates new {@link ArithmeticOperatorFactory} for given {@literal fieldRef}.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 */
+			public ArithmeticOperatorFactory(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				this.fieldRef = fieldRef;
+				this.expression = null;
+			}
+
+			/**
+			 * Creats new {@link ArithmeticOperatorFactory} for given {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 */
+			public ArithmeticOperatorFactory(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				this.fieldRef = null;
+				this.expression = expression;
+			}
+
+			/**
+			 * Returns the absolute value of the associated number.
+			 *
+			 * @return
+			 */
+			public Abs abs() {
+				return fieldRef != null ? Abs.absoluteValueOf(fieldRef) : Abs.absoluteValueOf(expression);
+			}
+
+			/**
+			 * Adds value of {@literal fieldRef} to the associated number.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			public Add add(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createAdd().add(fieldRef);
+			}
+
+			/**
+			 * Adds value of {@link AggregationExpression} to the associated number.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public Add add(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createAdd().add(expression);
+			}
+
+			/**
+			 * Adds given {@literal value} to the associated number.
+			 *
+			 * @param value must not be {@literal null}.
+			 * @return
+			 */
+			public Add add(Number value) {
+
+				Assert.notNull(value, "Value must not be null!");
+				return createAdd().add(value);
+			}
+
+			private Add createAdd() {
+				return fieldRef != null ? Add.valueOf(fieldRef) : Add.valueOf(expression);
+			}
+
+			/**
+			 * Returns the smallest integer greater than or equal to the assoicated number.
+			 *
+			 * @return
+			 */
+			public Ceil ceil() {
+				return fieldRef != null ? Ceil.ceilValueOf(fieldRef) : Ceil.ceilValueOf(expression);
+			}
+
+			/**
+			 * Divide associated number by number referenced via {@literal fieldRef}.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			public Divide divideBy(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createDivide().divideBy(fieldRef);
+			}
+
+			/**
+			 * Divide associated number by number extracted via {@literal expression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public Divide divideBy(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createDivide().divideBy(expression);
+			}
+
+			/**
+			 * Divide associated number by given {@literal value}.
+			 *
+			 * @param value
+			 * @return
+			 */
+			public Divide divideBy(Number value) {
+
+				Assert.notNull(value, "Value must not be null!");
+				return createDivide().divideBy(value);
+			}
+
+			private Divide createDivide() {
+				return fieldRef != null ? Divide.valueOf(fieldRef) : Divide.valueOf(expression);
+			}
+
+			/**
+			 * Raises Euler’s number (i.e. e ) to the associated number.
+			 *
+			 * @return
+			 */
+			public Exp exp() {
+				return fieldRef != null ? Exp.expValueOf(fieldRef) : Exp.expValueOf(expression);
+			}
+
+			/**
+			 * Returns the largest integer less than or equal to the associated number.
+			 *
+			 * @return
+			 */
+			public Floor floor() {
+				return fieldRef != null ? Floor.floorValueOf(fieldRef) : Floor.floorValueOf(expression);
+			}
+
+			/**
+			 * Calculates the natural logarithm ln (i.e loge) of the assoicated number.
+			 *
+			 * @return
+			 */
+			public Ln ln() {
+				return fieldRef != null ? Ln.lnValueOf(fieldRef) : Ln.lnValueOf(expression);
+			}
+
+			/**
+			 * Calculates the log of the associated number in the specified base referenced via {@literal fieldRef}.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			public Log log(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createLog().log(fieldRef);
+			}
+
+			/**
+			 * Calculates the log of the associated number in the specified base extracted by given {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public Log log(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createLog().log(fieldRef);
+			}
+
+			/**
+			 * Calculates the log of a the associated number in the specified {@literal base}.
+			 *
+			 * @param base must not be {@literal null}.
+			 * @return
+			 */
+			public Log log(Number base) {
+
+				Assert.notNull(base, "Base must not be null!");
+				return createLog().log(base);
+			}
+
+			private Log createLog() {
+				return fieldRef != null ? Log.valueOf(fieldRef) : Log.valueOf(expression);
+			}
+
+			/**
+			 * Calculates the log base 10 for the associated number.
+			 *
+			 * @return
+			 */
+			public Log10 log10() {
+				return fieldRef != null ? Log10.log10ValueOf(fieldRef) : Log10.log10ValueOf(expression);
+			}
+
+			/**
+			 * Divides the associated number by another and returns the remainder.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			public Mod mod(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createMod().mod(fieldRef);
+			}
+
+			/**
+			 * Divides the associated number by another and returns the remainder.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public Mod mod(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createMod().mod(expression);
+			}
+
+			/**
+			 * Divides the associated number by another and returns the remainder.
+			 *
+			 * @param value must not be {@literal null}.
+			 * @return
+			 */
+			public Mod mod(Number value) {
+
+				Assert.notNull(value, "Base must not be null!");
+				return createMod().mod(value);
+			}
+
+			private Mod createMod() {
+				return fieldRef != null ? Mod.valueOf(fieldRef) : Mod.valueOf(expression);
+			}
+
+			/**
+			 * Multiplies the associated number with another.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			public Multiply multiplyBy(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createMultiply().multiplyBy(fieldRef);
+			}
+
+			/**
+			 * Multiplies the associated number with another.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public Multiply multiplyBy(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createMultiply().multiplyBy(expression);
+			}
+
+			/**
+			 * Multiplies the associated number with another.
+			 *
+			 * @param value must not be {@literal null}.
+			 * @return
+			 */
+			public Multiply multiplyBy(Number value) {
+
+				Assert.notNull(value, "Value must not be null!");
+				return createMultiply().multiplyBy(value);
+			}
+
+
+			private Multiply createMultiply() {
+				return fieldRef != null ? Multiply.valueOf(fieldRef) : Multiply.valueOf(expression);
+			}
+
+			/**
+			 * Raises the associated number to the specified exponent.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			public Pow pow(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createPow().pow(fieldRef);
+			}
+
+			/**
+			 * Raises the associated number to the specified exponent.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public Pow pow(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createPow().pow(expression);
+			}
+
+			/**
+			 * Raises the associated number to the specified exponent.
+			 *
+			 * @param value must not be {@literal null}.
+			 * @return
+			 */
+			public Pow pow(Number value) {
+
+				Assert.notNull(value, "Value must not be null!");
+				return createPow().pow(value);
+			}
+
+			private Pow createPow() {
+				return fieldRef != null ? Pow.valueOf(fieldRef) : Pow.valueOf(expression);
+			}
+
+			/**
+			 * Calculates the square root of the associated number.
+			 *
+			 * @return
+			 */
+			public Sqrt sqrt() {
+				return fieldRef != null ? Sqrt.sqrtOf(fieldRef) : Sqrt.sqrtOf(expression);
+			}
+
+			/**
+			 * Subtracts value of given from the associated number.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			public Subtract subtract(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createSubtract().subtract(fieldRef);
+			}
+
+			/**
+			 * Subtracts value of given from the associated number.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public Subtract subtract(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createSubtract().subtract(expression);
+			}
+
+			/**
+			 * Subtracts value from the associated number.
+			 *
+			 * @param value
+			 * @return
+			 */
+			public Subtract subtract(Number value) {
+
+				Assert.notNull(value, "Value must not be null!");
+				return createSubtract().subtract(value);
+			}
+
+			private Subtract createSubtract() {
+				return fieldRef != null ? Subtract.valueOf(fieldRef) : Subtract.valueOf(expression);
+			}
+
+			/**
+			 * Truncates a number to its integer.
+			 *
+			 * @return
+			 */
+			public Trunc trunc() {
+				return fieldRef != null ? Trunc.truncValueOf(fieldRef) : Trunc.truncValueOf(expression);
+			}
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
 	abstract class AbstractAggregationExpression implements AggregationExpression {
 
 		private final Object value;
@@ -176,9 +585,7 @@ public interface AggregationExpressions {
 					dbo.put(entry.getKey(), unpack(entry.getValue(), context));
 				}
 				valueToUse = dbo;
-			}
-
-			else {
+			} else {
 				valueToUse = unpack(value, context);
 			}
 
@@ -395,6 +802,495 @@ public interface AggregationExpressions {
 
 		public AllElementsTrue allElementsTrue() {
 			return this;
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Abs extends AbstractAggregationExpression {
+
+		private Abs(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$abs";
+		}
+
+		public static Abs absoluteValueOf(String fieldRef) {
+			return new Abs(Fields.field(fieldRef));
+		}
+
+		public static Abs absoluteValueOf(AggregationExpression expression) {
+			return new Abs(expression);
+		}
+
+		public static Abs absoluteValueOf(Number value) {
+			return new Abs(value);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Add extends AbstractAggregationExpression {
+
+		protected Add(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$add";
+		}
+
+		public static Add valueOf(String fieldRef) {
+			return new Add(asFields(fieldRef));
+		}
+
+		public static Add valueOf(AggregationExpression expression) {
+			return new Add(Collections.singletonList(expression));
+		}
+
+		public static Add valueOf(Number value) {
+			return new Add(Collections.singletonList(value));
+		}
+
+		public Add add(String fieldRef) {
+			return new Add(append(Fields.field(fieldRef)));
+		}
+
+		public Add add(AggregationExpression expression) {
+			return new Add(append(expression));
+		}
+
+		public Add add(Number value) {
+			return new Add(append(value));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Ceil extends AbstractAggregationExpression {
+
+		private Ceil(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$ceil";
+		}
+
+		public static Ceil ceilValueOf(String fieldRef) {
+			return new Ceil(Fields.field(fieldRef));
+		}
+
+		public static Ceil ceilValueOf(AggregationExpression expression) {
+			return new Ceil(expression);
+		}
+
+		public static Ceil ceilValueOf(Number value) {
+			return new Ceil(value);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Divide extends AbstractAggregationExpression {
+
+		private Divide(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$divide";
+		}
+
+		public static Divide valueOf(String fieldRef) {
+			return new Divide(asFields(fieldRef));
+		}
+
+		public static Divide valueOf(AggregationExpression expression) {
+			return new Divide(Collections.singletonList(expression));
+		}
+
+		public static Divide valueOf(Number value) {
+			return new Divide(Collections.singletonList(value));
+		}
+
+		public Divide divideBy(String fieldRef) {
+			return new Divide(append(Fields.field(fieldRef)));
+		}
+
+		public Divide divideBy(AggregationExpression expression) {
+			return new Divide(append(expression));
+		}
+
+		public Divide divideBy(Number value) {
+			return new Divide(append(value));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Exp extends AbstractAggregationExpression {
+
+		protected Exp(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$exp";
+		}
+
+		public static Exp expValueOf(String fieldRef) {
+			return new Exp(Fields.field(fieldRef));
+		}
+
+		public static Exp expValueOf(AggregationExpression expression) {
+			return new Exp(expression);
+		}
+
+		public static Exp expValueOf(Number value) {
+			return new Exp(value);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Floor extends AbstractAggregationExpression {
+
+		protected Floor(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$floor";
+		}
+
+		public static Floor floorValueOf(String fieldRef) {
+			return new Floor(Fields.field(fieldRef));
+		}
+
+		public static Floor floorValueOf(AggregationExpression expression) {
+			return new Floor(expression);
+		}
+
+		public static Floor floorValueOf(Number value) {
+			return new Floor(value);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Ln extends AbstractAggregationExpression {
+
+		private Ln(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$ln";
+		}
+
+		public static Ln lnValueOf(String fieldRef) {
+			return new Ln(Fields.field(fieldRef));
+		}
+
+		public static Ln lnValueOf(AggregationExpression expression) {
+			return new Ln(expression);
+		}
+
+		public static Ln lnValueOf(Number value) {
+			return new Ln(value);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Log extends AbstractAggregationExpression {
+
+		private Log(List<?> values) {
+			super(values);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$log";
+		}
+
+		public static Log valueOf(String fieldRef) {
+			return new Log(asFields(fieldRef));
+		}
+
+		public static Log valueOf(AggregationExpression expression) {
+			return new Log(Collections.singletonList(expression));
+		}
+
+		public static Log valueOf(Number value) {
+			return new Log(Collections.singletonList(value));
+		}
+
+		public Log log(String fieldRef) {
+			return new Log(append(Fields.field(fieldRef)));
+		}
+
+		public Log log(AggregationExpression expression) {
+			return new Log(append(expression));
+		}
+
+		public Log log(Number base) {
+			return new Log(append(base));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Log10 extends AbstractAggregationExpression {
+
+		private Log10(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$log10";
+		}
+
+		public static Log10 log10ValueOf(String fieldRef) {
+			return new Log10(Fields.field(fieldRef));
+		}
+
+		public static Log10 log10ValueOf(AggregationExpression expression) {
+			return new Log10(expression);
+		}
+
+		public static Log10 log10ValueOf(Number value) {
+			return new Log10(value);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Mod extends AbstractAggregationExpression {
+
+		private Mod(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$mod";
+		}
+
+		public static Mod valueOf(String fieldRef) {
+			return new Mod(asFields(fieldRef));
+		}
+
+		public static Mod valueOf(AggregationExpression expression) {
+			return new Mod(Collections.singletonList(expression));
+		}
+
+		public static Mod valueOf(Number value) {
+			return new Mod(Collections.singletonList(value));
+		}
+
+		public Mod mod(String fieldRef) {
+			return new Mod(append(Fields.field(fieldRef)));
+		}
+
+		public Mod mod(AggregationExpression expression) {
+			return new Mod(append(expression));
+		}
+
+		public Mod mod(Number base) {
+			return new Mod(append(base));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Multiply extends AbstractAggregationExpression {
+
+		private Multiply(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$multiply";
+		}
+
+		public static Multiply valueOf(String fieldRef) {
+			return new Multiply(asFields(fieldRef));
+		}
+
+		public static Multiply valueOf(AggregationExpression expression) {
+			return new Multiply(Collections.singletonList(expression));
+		}
+
+		public static Multiply valueOf(Number value) {
+			return new Multiply(Collections.singletonList(value));
+		}
+
+		public Multiply multiplyBy(String fieldRef) {
+			return new Multiply(append(Fields.field(fieldRef)));
+		}
+
+		public Multiply multiplyBy(AggregationExpression expression) {
+			return new Multiply(append(expression));
+		}
+
+		public Multiply multiplyBy(Number value) {
+			return new Multiply(append(value));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Pow extends AbstractAggregationExpression {
+
+		private Pow(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$pow";
+		}
+
+		public static Pow valueOf(String fieldRef) {
+			return new Pow(asFields(fieldRef));
+		}
+
+		public static Pow valueOf(AggregationExpression expression) {
+			return new Pow(Collections.singletonList(expression));
+		}
+
+		public static Pow valueOf(Number value) {
+			return new Pow(Collections.singletonList(value));
+		}
+
+		public Pow pow(String fieldRef) {
+			return new Pow(append(Fields.field(fieldRef)));
+		}
+
+		public Pow pow(AggregationExpression expression) {
+			return new Pow(append(expression));
+		}
+
+		public Pow pow(Number value) {
+			return new Pow(append(value));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Sqrt extends AbstractAggregationExpression {
+
+		private Sqrt(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$sqrt";
+		}
+
+		public static Sqrt sqrtOf(String fieldRef) {
+			return new Sqrt(Fields.field(fieldRef));
+		}
+
+		public static Sqrt sqrtOf(AggregationExpression expression) {
+			return new Sqrt(expression);
+		}
+
+		public static Sqrt sqrtOf(Number value) {
+			return new Sqrt(value);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Subtract extends AbstractAggregationExpression {
+
+		protected Subtract(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$subtract";
+		}
+
+		public static Subtract valueOf(String fieldRef) {
+			return new Subtract(asFields(fieldRef));
+		}
+
+		public static Subtract valueOf(AggregationExpression expression) {
+			return new Subtract(Collections.singletonList(expression));
+		}
+
+		public static Subtract valueOf(Number value) {
+			return new Subtract(Collections.singletonList(value));
+		}
+
+		public Subtract subtract(String fieldRef) {
+			return new Subtract(append(Fields.field(fieldRef)));
+		}
+
+		public Subtract subtract(AggregationExpression expression) {
+			return new Subtract(append(expression));
+		}
+
+		public Subtract subtract(Number value) {
+			return new Subtract(append(value));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class Trunc extends AbstractAggregationExpression {
+
+		private Trunc(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$trunc";
+		}
+
+		public static Trunc truncValueOf(String fieldRef) {
+			return new Trunc(Fields.field(fieldRef));
+		}
+
+		public static Trunc truncValueOf(AggregationExpression expression) {
+			return new Trunc(expression);
+		}
+
+		public static Trunc truncValueOf(Number value) {
+			return new Trunc(value);
 		}
 	}
 

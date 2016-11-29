@@ -28,7 +28,22 @@ import java.util.List;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Abs;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Ceil;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Divide;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Exp;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Floor;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Ln;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Log;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Log10;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Mod;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Multiply;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Pow;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Sqrt;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Subtract;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Trunc;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
 import com.mongodb.BasicDBObject;
@@ -278,9 +293,8 @@ public class ProjectionOperationUnitTests {
 				.and("foo").as("bar"); //
 
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		assertThat(
-				dbObject.toString(),
-				is("{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}"));
+		assertThat(dbObject.toString(), is(
+				"{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}"));
 	}
 
 	/**
@@ -335,10 +349,8 @@ public class ProjectionOperationUnitTests {
 		assertThat(dbObject, is(notNullValue()));
 
 		DBObject projected = exctractOperation("$project", dbObject);
-		assertThat(
-				projected.get("dayOfYearPlus1Day"),
-				is((Object) new BasicDBObject("$dayOfYear", Arrays.asList(new BasicDBObject("$add", Arrays.<Object> asList(
-						"$date", 86400000))))));
+		assertThat(projected.get("dayOfYearPlus1Day"), is((Object) new BasicDBObject("$dayOfYear",
+				Arrays.asList(new BasicDBObject("$add", Arrays.<Object> asList("$date", 86400000))))));
 	}
 
 	/**
@@ -659,6 +671,384 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(agg,
 				is(JSON.parse("{ $project: { responses: 1, isAllTrue: { $allElementsTrue: [ \"$responses\" ] }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAbs() {
+
+		DBObject agg = project().and("anyNumber").absoluteValue().as("absoluteValue")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { absoluteValue : { $abs:  \"$anyNumber\" }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAbsAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Abs.absoluteValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("delta")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { delta: { $abs: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAddAggregationExpresssion() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("price").add("fee")).as("total")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(" { $project: { total: { $add: [ \"$price\", \"$fee\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderCeil() {
+
+		DBObject agg = project().and("anyNumber").ceil().as("ceilValue").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { ceilValue : { $ceil:  \"$anyNumber\" }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderCeilAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Ceil.ceilValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("delta")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { delta: { $ceil: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDivide() {
+
+		DBObject agg = project()
+				.and("value")
+						.divide(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON
+				.parse("{ $project: { result: { $divide: [ \"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDivideAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Divide.valueOf("anyNumber")
+						.divideBy(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON
+				.parse("{ $project: { result: { $divide: [ \"$anyNumber\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderExp() {
+
+		DBObject agg = project()
+				.and("value").exp().as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $exp: \"$value\" } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderExpAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Exp.expValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $exp: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderFloor() {
+
+		DBObject agg = project()
+				.and("value").floor().as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $floor: \"$value\" } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderFloorAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Floor.floorValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $floor: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLn() {
+
+		DBObject agg = project().and("value").ln()
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $ln: \"$value\"} }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLnAggregationExpresssion() {
+
+		DBObject agg = project().and(Ln.lnValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $ln: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLog() {
+
+		DBObject agg = project()
+				.and("value").log(2).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $log: [ \"$value\", 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLogAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Log.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log(2)).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $log: [ { $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLog10() {
+
+		DBObject agg = project()
+				.and("value").log10().as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $log10: \"$value\" } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLog10AggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Log10.log10ValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $log10: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMod() {
+
+		DBObject agg = project()
+				.and("value").mod(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $mod: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderModAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Mod.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).mod(2)).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $mod: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMultiply() {
+
+		DBObject agg = project()
+				.and("value").multiply(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { result: { $multiply: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMultiplyAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Multiply.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).multiplyBy(2)
+						.multiplyBy("refToAnotherNumber"))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { result: { $multiply: [{ $subtract: [ \"$start\", \"$end\" ] }, 2, \"$refToAnotherNumber\"] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderPow() {
+
+		DBObject agg = project()
+				.and("value").pow(2).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $pow: [\"$value\", 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderPowAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Pow.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).pow(2)).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $pow: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSqrt() {
+
+		DBObject agg = project().and("value").sqrt()
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $sqrt: \"$value\" } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSqrtAggregationExpresssion() {
+
+		DBObject agg = project().and(Sqrt.sqrtOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $sqrt: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSubtract() {
+
+		DBObject agg = project()
+				.and("numericField").minus(AggregationFunctionExpressions.SIZE.of(field("someArray")))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(JSON.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSubtractAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Subtract.valueOf("numericField").subtract(AggregationFunctionExpressions.SIZE.of(field("someArray"))))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(JSON.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderTrunc() {
+
+		DBObject agg = project()
+				.and("value").trunc().as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result : { $trunc: \"$value\" }}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderTruncAggregationExpresssion() {
+
+		DBObject agg = project()
+				.and(Trunc.truncValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $trunc: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {

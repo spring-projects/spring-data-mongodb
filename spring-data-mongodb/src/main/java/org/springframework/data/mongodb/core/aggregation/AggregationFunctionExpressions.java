@@ -33,7 +33,7 @@ import com.mongodb.DBObject;
  */
 public enum AggregationFunctionExpressions {
 
-	SIZE, CMP, EQ, GT, GTE, LT, LTE, NE;
+	SIZE, CMP, EQ, GT, GTE, LT, LTE, NE, SUBTRACT;
 
 	/**
 	 * Returns an {@link AggregationExpression} build from the current {@link Enum} name and the given parameters.
