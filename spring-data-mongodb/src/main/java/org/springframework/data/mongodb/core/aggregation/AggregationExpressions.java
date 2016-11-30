@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.AsBuilder;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
@@ -662,7 +663,7 @@ public interface AggregationExpressions {
 			 *
 			 * @return
 			 */
-			private ToLower toLower() {
+			public ToLower toLower() {
 				return fieldRef != null ? ToLower.lowerValueOf(fieldRef) : ToLower.lowerValueOf(expression);
 			}
 
@@ -671,7 +672,7 @@ public interface AggregationExpressions {
 			 *
 			 * @return
 			 */
-			private ToUpper toUpper() {
+			public ToUpper toUpper() {
 				return fieldRef != null ? ToUpper.upperValueOf(fieldRef) : ToUpper.upperValueOf(expression);
 			}
 
@@ -682,7 +683,7 @@ public interface AggregationExpressions {
 			 * @param value must not be {@literal null}.
 			 * @return
 			 */
-			private StrCaseCmp strCaseCmp(String value) {
+			public StrCaseCmp strCaseCmp(String value) {
 
 				Assert.notNull(value, "Value must not be null!");
 				return createStrCaseCmp().strcasecmp(value);
@@ -695,7 +696,7 @@ public interface AggregationExpressions {
 			 * @param fieldRef must not be {@literal null}.
 			 * @return
 			 */
-			private StrCaseCmp strCaseCmpValueOf(String fieldRef) {
+			public StrCaseCmp strCaseCmpValueOf(String fieldRef) {
 
 				Assert.notNull(fieldRef, "FieldRef must not be null!");
 				return createStrCaseCmp().strcasecmpValueOf(fieldRef);
@@ -708,7 +709,7 @@ public interface AggregationExpressions {
 			 * @param expression must not be {@literal null}.
 			 * @return
 			 */
-			private StrCaseCmp strCaseCmpValueOf(AggregationExpression expression) {
+			public StrCaseCmp strCaseCmpValueOf(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null!");
 				return createStrCaseCmp().strcasecmpValueOf(expression);
@@ -716,6 +717,155 @@ public interface AggregationExpressions {
 
 			private StrCaseCmp createStrCaseCmp() {
 				return fieldRef != null ? StrCaseCmp.valueOf(fieldRef) : StrCaseCmp.valueOf(expression);
+			}
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	class ArrayOperators {
+
+		/**
+		 * Take the array referenced by given {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 */
+		public static ArrayOperatorFactory arrayOf(String fieldRef) {
+			return new ArrayOperatorFactory(fieldRef);
+		}
+
+		/**
+		 * Take the array referenced by given {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 */
+		public static ArrayOperatorFactory arrayOf(AggregationExpression expression) {
+			return new ArrayOperatorFactory(expression);
+		}
+
+		public static class ArrayOperatorFactory {
+
+			private final String fieldRef;
+			private final AggregationExpression expression;
+
+			public ArrayOperatorFactory(String fieldRef) {
+				this.fieldRef = fieldRef;
+				this.expression = null;
+			}
+
+			public ArrayOperatorFactory(AggregationExpression expression) {
+				this.fieldRef = null;
+				this.expression = expression;
+			}
+
+			/**
+			 * Takes the associated array and returns the element at the specified array {@literal position}.
+			 *
+			 * @param position
+			 * @return
+			 */
+			public ArrayElemtAt elementAt(int position) {
+				return createArrayElemAt().elementAt(position);
+			}
+
+			/**
+			 * Takes the associated array and returns the element at the position resulting form the given
+			 * {@literal expression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public ArrayElemtAt elementAt(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createArrayElemAt().elementAt(expression);
+			}
+
+			/**
+			 * Takes the associated array and returns the element at the position defined by the referenced {@literal field}.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			public ArrayElemtAt elementAt(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createArrayElemAt().elementAt(fieldRef);
+			}
+
+			private ArrayElemtAt createArrayElemAt() {
+				return usesFieldRef() ? ArrayElemtAt.arrayOf(fieldRef) : ArrayElemtAt.arrayOf(expression);
+			}
+
+			/**
+			 * Takes the associated array and concats the given {@literal arrayFieldReference} to it.
+			 *
+			 * @param arrayFieldReference must not be {@literal null}.
+			 * @return
+			 */
+			public ConcatArrays concat(String arrayFieldReference) {
+
+				Assert.notNull(arrayFieldReference, "ArrayFieldReference must not be null!");
+				return createConcatArrays().concat(arrayFieldReference);
+			}
+
+			/**
+			 * Takes the associated array and concats the array resulting form the given {@literal expression} to it.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public ConcatArrays concat(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createConcatArrays().concat(expression);
+			}
+
+			private ConcatArrays createConcatArrays() {
+				return usesFieldRef() ? ConcatArrays.arrayOf(fieldRef) : ConcatArrays.arrayOf(expression);
+			}
+
+			/**
+			 * Takes the associated array and selects a subset of the array to return based on the specified condition.
+			 *
+			 * @return
+			 */
+			public AsBuilder filter() {
+				return Filter.filter(fieldRef);
+			}
+
+			/**
+			 * Takes the associated array and an check if its an array.
+			 *
+			 * @return
+			 */
+			public IsArray isArray() {
+				return usesFieldRef() ? IsArray.isArray(fieldRef) : IsArray.isArray(expression);
+			}
+
+			/**
+			 * Takes the associated array and retrieves its length.
+			 *
+			 * @return
+			 */
+			public Size length() {
+				return usesFieldRef() ? Size.lengthOfArray(fieldRef) : Size.lengthOfArray(expression);
+			}
+
+			/**
+			 * Takes the associated array and selects a subset from it.
+			 *
+			 * @return
+			 */
+			public Slice slice() {
+				return usesFieldRef() ? Slice.sliceArrayOf(fieldRef) : Slice.sliceArrayOf(expression);
+			}
+
+			private boolean usesFieldRef() {
+				return fieldRef != null;
 			}
 		}
 	}
@@ -1679,7 +1829,76 @@ public interface AggregationExpressions {
 		public StrCaseCmp strcasecmpValueOf(AggregationExpression expression) {
 			return new StrCaseCmp(append(expression));
 		}
+	}
 
+	/**
+	 * {@link AggregationExpression} for {@code $arrayElementAt}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class ArrayElemtAt extends AbstractAggregationExpression {
+
+		private ArrayElemtAt(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$arrayElemAt";
+		}
+
+		public static ArrayElemtAt arrayOf(String fieldRef) {
+			return new ArrayElemtAt(asFields(fieldRef));
+		}
+
+		public static ArrayElemtAt arrayOf(AggregationExpression expression) {
+			return new ArrayElemtAt(Collections.singletonList(expression));
+		}
+
+		public ArrayElemtAt elementAt(int index) {
+			return new ArrayElemtAt(append(index));
+		}
+
+		public ArrayElemtAt elementAt(AggregationExpression expression) {
+			return new ArrayElemtAt(append(expression));
+		}
+
+		public ArrayElemtAt elementAt(String numericFieldRef) {
+			return new ArrayElemtAt(append(Fields.field(numericFieldRef)));
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $concatArrays}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class ConcatArrays extends AbstractAggregationExpression {
+
+		private ConcatArrays(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$concatArrays";
+		}
+
+		public static ConcatArrays arrayOf(String fieldRef) {
+			return new ConcatArrays(asFields(fieldRef));
+		}
+
+		public static ConcatArrays arrayOf(AggregationExpression expression) {
+			return new ConcatArrays(Collections.singletonList(expression));
+		}
+
+		public ConcatArrays concat(String arrayFieldReference) {
+			return new ConcatArrays(append(Fields.field(arrayFieldReference)));
+		}
+
+		public ConcatArrays concat(AggregationExpression expression) {
+			return new ConcatArrays(append(expression));
+		}
 	}
 
 	/**
@@ -1939,4 +2158,99 @@ public interface AggregationExpressions {
 			}
 		}
 	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $isArray}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class IsArray extends AbstractAggregationExpression {
+
+		private IsArray(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$isArray";
+		}
+
+		public static IsArray isArray(String fieldRef) {
+			return new IsArray(Fields.field(fieldRef));
+		}
+
+		public static IsArray isArray(AggregationExpression expression) {
+			return new IsArray(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $size}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Size extends AbstractAggregationExpression {
+
+		private Size(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$size";
+		}
+
+		public static Size lengthOfArray(String fieldRef) {
+			return new Size(Fields.field(fieldRef));
+		}
+
+		public static Size lengthOfArray(AggregationExpression expression) {
+			return new Size(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $slice}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Slice extends AbstractAggregationExpression {
+
+		private Slice(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$slice";
+		}
+
+		public static Slice sliceArrayOf(String fieldRef) {
+			return new Slice(asFields(fieldRef));
+		}
+
+		public static Slice sliceArrayOf(AggregationExpression expression) {
+			return new Slice(Collections.singletonList(expression));
+		}
+
+		public Slice itemCount(int nrElements) {
+			return new Slice(append(nrElements));
+		}
+
+		public SliceElementsBuilder offset(final int position) {
+
+			return new SliceElementsBuilder() {
+
+				@Override
+				public Slice itemCount(int nrElements) {
+					return new Slice(append(position)).itemCount(nrElements);
+				}
+			};
+		}
+
+		public interface SliceElementsBuilder {
+			Slice itemCount(int nrElements);
+		}
+	}
+
 }

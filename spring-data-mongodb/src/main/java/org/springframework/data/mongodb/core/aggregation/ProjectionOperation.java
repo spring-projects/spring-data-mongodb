@@ -802,7 +802,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public ProjectionOperationBuilder equalsArray(String... arrays) {
 
 			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
-			return project("setEquals", Fields.fields(arrays).asList().toArray());
+			return project("setEquals", Fields.fields(arrays));
 		}
 
 		/**
@@ -816,7 +816,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public ProjectionOperationBuilder intersectsArrays(String... arrays) {
 
 			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
-			return project("setIntersection", Fields.fields(arrays).asList().toArray());
+			return project("setIntersection", Fields.fields(arrays));
 		}
 
 		/**
@@ -830,7 +830,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public ProjectionOperationBuilder unionArrays(String... arrays) {
 
 			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
-			return project("setUnion", Fields.fields(arrays).asList().toArray());
+			return project("setUnion", Fields.fields(arrays));
 		}
 
 		/**
@@ -844,7 +844,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public ProjectionOperationBuilder differenceToArray(String array) {
 
 			Assert.hasText(array, "Array must not be null or empty!");
-			return project("setDifference", Fields.fields(array).asList().toArray());
+			return project("setDifference", Fields.fields(array));
 		}
 
 		/**
@@ -858,7 +858,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public ProjectionOperationBuilder subsetOfArray(String array) {
 
 			Assert.hasText(array, "Array must not be null or empty!");
-			return project("setIsSubset", Fields.fields(array).asList().toArray());
+			return project("setIsSubset", Fields.fields(array));
 		}
 
 		/**
@@ -1123,6 +1123,40 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return project("strcasecmp", expression);
 		}
 
+		/**
+		 * Takes the string representation of the previously mentioned field and returns the element at the specified array
+		 * {@literal position}.
+		 *
+		 * @param position
+		 * @return
+		 * @since 1.10
+		 */
+		ProjectionOperationBuilder arrayElementAt(int position) {
+			return project("arrayElemAt", position);
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and concats it with the arrays from the
+		 * referenced {@literal fields}.
+		 *
+		 * @param fields must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		ProjectionOperationBuilder concatArrays(String... fields) {
+			return project("concatArrays", Fields.fields(fields));
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and checks if its an array.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		ProjectionOperationBuilder isArray() {
+			return this.operation.and(AggregationExpressions.IsArray.isArray(name));
+		}
+
 		/* 
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
@@ -1310,6 +1344,10 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 					if (element instanceof Field) {
 						result.add(context.getReference((Field) element).toString());
+					} else if (element instanceof Fields) {
+						for(Field field : (Fields)element) {
+							result.add(context.getReference(field).toString());
+						}
 					} else if (element instanceof AggregationExpression) {
 						result.add(((AggregationExpression) element).toDbObject(context));
 					} else {

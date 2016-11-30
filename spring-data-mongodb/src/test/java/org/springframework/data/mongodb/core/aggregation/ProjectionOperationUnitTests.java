@@ -28,27 +28,10 @@ import java.util.List;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Abs;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Ceil;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Concat;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Divide;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Exp;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Floor;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Ln;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Log;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Log10;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Mod;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Multiply;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Pow;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Sqrt;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StrCaseCmp;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Substr;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Subtract;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ToLower;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ToUpper;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Trunc;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
 import com.mongodb.BasicDBObject;
@@ -697,8 +680,9 @@ public class ProjectionOperationUnitTests {
 	public void shouldRenderAbsAggregationExpresssion() {
 
 		DBObject agg = project()
-				.and(Abs.absoluteValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("delta")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+				.and(
+						ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).abs())
+				.as("delta").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { delta: { $abs: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
 	}
@@ -732,9 +716,9 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderCeilAggregationExpresssion() {
 
-		DBObject agg = project()
-				.and(Ceil.ceilValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("delta")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ceil())
+				.as("delta").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { delta: { $ceil: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
 	}
@@ -745,13 +729,12 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderDivide() {
 
-		DBObject agg = project()
-				.and("value")
-						.divide(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
-				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value")
+				.divide(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(JSON
-				.parse("{ $project: { result: { $divide: [ \"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+		assertThat(agg,
+				is(JSON.parse("{ $project: { result: { $divide: [ \"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
 	}
 
 	/**
@@ -761,7 +744,7 @@ public class ProjectionOperationUnitTests {
 	public void shouldRenderDivideAggregationExpresssion() {
 
 		DBObject agg = project()
-				.and(Divide.valueOf("anyNumber")
+				.and(ArithmeticOperators.valueOf("anyNumber")
 						.divideBy(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))))
 				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
@@ -775,9 +758,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderExp() {
 
-		DBObject agg = project()
-				.and("value").exp().as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value").exp().as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $exp: \"$value\" } }}")));
 	}
@@ -789,8 +770,9 @@ public class ProjectionOperationUnitTests {
 	public void shouldRenderExpAggregationExpresssion() {
 
 		DBObject agg = project()
-				.and(Exp.expValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+				.and(
+						ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).exp())
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $exp: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
 	}
@@ -801,9 +783,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderFloor() {
 
-		DBObject agg = project()
-				.and("value").floor().as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value").floor().as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $floor: \"$value\" } }}")));
 	}
@@ -814,9 +794,9 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderFloorAggregationExpresssion() {
 
-		DBObject agg = project()
-				.and(Floor.floorValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).floor())
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $floor: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
 	}
@@ -827,8 +807,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderLn() {
 
-		DBObject agg = project().and("value").ln()
-				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value").ln().as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $ln: \"$value\"} }}")));
 	}
@@ -839,7 +818,8 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderLnAggregationExpresssion() {
 
-		DBObject agg = project().and(Ln.lnValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))))
+		DBObject agg = project()
+				.and(ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ln())
 				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $ln: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
@@ -851,9 +831,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderLog() {
 
-		DBObject agg = project()
-				.and("value").log(2).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value").log(2).as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $log: [ \"$value\", 2] } }}")));
 	}
@@ -864,9 +842,9 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderLogAggregationExpresssion() {
 
-		DBObject agg = project()
-				.and(Log.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log(2)).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log(2))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $log: [ { $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
 	}
@@ -877,9 +855,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderLog10() {
 
-		DBObject agg = project()
-				.and("value").log10().as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value").log10().as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $log10: \"$value\" } }}")));
 	}
@@ -890,9 +866,9 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderLog10AggregationExpresssion() {
 
-		DBObject agg = project()
-				.and(Log10.log10ValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log10())
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $log10: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
 	}
@@ -903,11 +879,11 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderMod() {
 
-		DBObject agg = project()
-				.and("value").mod(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value").mod(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(JSON.parse("{ $project: { result: { $mod: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+		assertThat(agg,
+				is(JSON.parse("{ $project: { result: { $mod: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
 	}
 
 	/**
@@ -916,9 +892,9 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderModAggregationExpresssion() {
 
-		DBObject agg = project()
-				.and(Mod.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).mod(2)).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).mod(2))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $mod: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
 	}
@@ -929,12 +905,12 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderMultiply() {
 
-		DBObject agg = project()
-				.and("value").multiply(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
-				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value")
+				.multiply(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(JSON.parse(
-				"{ $project: { result: { $multiply: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+		assertThat(agg, is(
+				JSON.parse("{ $project: { result: { $multiply: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
 	}
 
 	/**
@@ -944,8 +920,8 @@ public class ProjectionOperationUnitTests {
 	public void shouldRenderMultiplyAggregationExpresssion() {
 
 		DBObject agg = project()
-				.and(Multiply.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).multiplyBy(2)
-						.multiplyBy("refToAnotherNumber"))
+				.and(ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
+						.multiplyBy(2).multiplyBy("refToAnotherNumber"))
 				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse(
@@ -958,9 +934,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderPow() {
 
-		DBObject agg = project()
-				.and("value").pow(2).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value").pow(2).as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $pow: [\"$value\", 2] } }}")));
 	}
@@ -971,9 +945,9 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderPowAggregationExpresssion() {
 
-		DBObject agg = project()
-				.and(Pow.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).pow(2)).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).pow(2))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $pow: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
 	}
@@ -984,8 +958,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderSqrt() {
 
-		DBObject agg = project().and("value").sqrt()
-				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value").sqrt().as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $sqrt: \"$value\" } }}")));
 	}
@@ -996,7 +969,8 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderSqrtAggregationExpresssion() {
 
-		DBObject agg = project().and(Sqrt.sqrtOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))))
+		DBObject agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).sqrt())
 				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $sqrt: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
@@ -1008,8 +982,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderSubtract() {
 
-		DBObject agg = project()
-				.and("numericField").minus(AggregationFunctionExpressions.SIZE.of(field("someArray")))
+		DBObject agg = project().and("numericField").minus(AggregationFunctionExpressions.SIZE.of(field("someArray")))
 				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg,
@@ -1023,7 +996,8 @@ public class ProjectionOperationUnitTests {
 	public void shouldRenderSubtractAggregationExpresssion() {
 
 		DBObject agg = project()
-				.and(Subtract.valueOf("numericField").subtract(AggregationFunctionExpressions.SIZE.of(field("someArray"))))
+				.and(ArithmeticOperators.valueOf("numericField")
+						.subtract(AggregationFunctionExpressions.SIZE.of(field("someArray"))))
 				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg,
@@ -1036,9 +1010,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderTrunc() {
 
-		DBObject agg = project()
-				.and("value").trunc().as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("value").trunc().as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result : { $trunc: \"$value\" }}}")));
 	}
@@ -1049,9 +1021,9 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderTruncAggregationExpresssion() {
 
-		DBObject agg = project()
-				.and(Trunc.truncValueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))).as("result")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(
+				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).trunc())
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $trunc: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
 	}
@@ -1062,11 +1034,11 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderConcat() {
 
-		DBObject agg = project()
-				.and("item").concat(" - ", field("description")).as("itemDescription")
+		DBObject agg = project().and("item").concat(" - ", field("description")).as("itemDescription")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(JSON.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
+		assertThat(agg,
+				is(JSON.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
 
 	}
 
@@ -1076,11 +1048,11 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderConcatAggregationExpression() {
 
-		DBObject agg = project()
-				.and(Concat.valueOf("item").concat(" - ").concatValueOf("description")).as("itemDescription")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(StringOperators.valueOf("item").concat(" - ").concatValueOf("description"))
+				.as("itemDescription").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(JSON.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
+		assertThat(agg,
+				is(JSON.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
 
 	}
 
@@ -1090,9 +1062,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderSubstr() {
 
-		DBObject agg = project()
-				.and("quarter").substring(0, 2).as("yearSubstring")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("quarter").substring(0, 2).as("yearSubstring").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }")));
 	}
@@ -1103,8 +1073,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderSubstrAggregationExpression() {
 
-		DBObject agg = project()
-				.and(Substr.valueOf("quarter").substring(0, 2)).as("yearSubstring")
+		DBObject agg = project().and(StringOperators.valueOf("quarter").substring(0, 2)).as("yearSubstring")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }")));
@@ -1116,9 +1085,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderToLower() {
 
-		DBObject agg = project()
-				.and("item").toLower().as("item")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("item").toLower().as("item").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { item: { $toLower: \"$item\" } } }")));
 	}
@@ -1129,8 +1096,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderToLowerAggregationExpression() {
 
-		DBObject agg = project()
-				.and(ToLower.lowerValueOf("item")).as("item")
+		DBObject agg = project().and(StringOperators.valueOf("item").toLower()).as("item")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { item: { $toLower: \"$item\" } } }")));
@@ -1142,9 +1108,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderToUpper() {
 
-		DBObject agg = project()
-				.and("item").toUpper().as("item")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and("item").toUpper().as("item").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { item: { $toUpper: \"$item\" } } }")));
 	}
@@ -1155,8 +1119,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderToUpperAggregationExpression() {
 
-		DBObject agg = project()
-				.and(ToUpper.upperValueOf("item")).as("item")
+		DBObject agg = project().and(StringOperators.valueOf("item").toUpper()).as("item")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { item: { $toUpper: \"$item\" } } }")));
@@ -1168,8 +1131,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderStrCaseCmp() {
 
-		DBObject agg = project()
-				.and("quarter").strCaseCmp("13q4").as("comparisonResult")
+		DBObject agg = project().and("quarter").strCaseCmp("13q4").as("comparisonResult")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
@@ -1181,11 +1143,115 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderStrCaseCmpAggregationExpression() {
 
-		DBObject agg = project()
-				.and(StrCaseCmp.valueOf("quarter").strcasecmp("13q4")).as("comparisonResult")
+		DBObject agg = project().and(StringOperators.valueOf("quarter").strCaseCmp("13q4")).as("comparisonResult")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderArrayElementAt() {
+
+		DBObject agg = project().and("favorites").arrayElementAt(0).as("first").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { first: { $arrayElemAt: [ \"$favorites\", 0 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderArrayElementAtAggregationExpression() {
+
+		DBObject agg = project().and(ArrayOperators.arrayOf("favorites").elementAt(0)).as("first")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { first: { $arrayElemAt: [ \"$favorites\", 0 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderConcatArrays() {
+
+		DBObject agg = project().and("instock").concatArrays("ordered").as("items").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { items: { $concatArrays: [ \"$instock\", \"$ordered\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderConcatArraysAggregationExpression() {
+
+		DBObject agg = project().and(ArrayOperators.arrayOf("instock").concat("ordered")).as("items")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { items: { $concatArrays: [ \"$instock\", \"$ordered\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderIsArray() {
+
+		DBObject agg = project().and("instock").isArray().as("isAnArray").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { isAnArray: { $isArray: \"$instock\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderIsArrayAggregationExpression() {
+
+		DBObject agg = project().and(ArrayOperators.arrayOf("instock").isArray()).as("isAnArray")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { isAnArray: { $isArray: \"$instock\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSizeAggregationExpression() {
+
+		DBObject agg = project().and(ArrayOperators.arrayOf("instock").length()).as("arraySize")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { arraySize: { $size: \"$instock\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSliceAggregationExpression() {
+
+		DBObject agg = project().and(ArrayOperators.arrayOf("favorites").slice().itemCount(3)).as("threeFavorites")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 3 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSliceWithPositionAggregationExpression() {
+
+		DBObject agg = project().and(ArrayOperators.arrayOf("favorites").slice().offset(2).itemCount(3))
+				.as("threeFavorites").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 2, 3 ] } } }")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
