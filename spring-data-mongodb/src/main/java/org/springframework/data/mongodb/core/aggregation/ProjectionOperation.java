@@ -23,7 +23,6 @@ import java.util.List;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
-import org.springframework.expression.Expression;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -1031,6 +1030,97 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder trunc() {
 			return this.operation.and(AggregationExpressions.Trunc.truncValueOf(name));
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and concats given values to it.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder concat(Object... values) {
+			return project("concat", values);
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and returns a substring starting at a specified
+		 * index position.
+		 *
+		 * @param start
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder substring(int start) {
+			return substring(start, -1);
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and returns a substring starting at a specified
+		 * index position including the specified number of characters.
+		 *
+		 * @param start
+		 * @param nrOfChars
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder substring(int start, int nrOfChars) {
+			return project("substr", start, nrOfChars);
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and lowers it.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder toLower() {
+			return this.operation.and(AggregationExpressions.ToLower.lowerValueOf(name));
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and uppers it.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder toUpper() {
+			return this.operation.and(AggregationExpressions.ToUpper.upperValueOf(name));
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and performs case-insensitive comparison to the
+		 * given {@literal value}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder strCaseCmp(String value) {
+			return project("strcasecmp", value);
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and performs case-insensitive comparison to the
+		 * referenced {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder strCaseCmpValueOf(String fieldRef) {
+			return project("strcasecmp", fieldRef);
+		}
+
+		/**
+		 * Takes the string representation of the previously mentioned field and performs case-insensitive comparison to the
+		 * result of the given {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder strCaseCmp(AggregationExpression expression) {
+			return project("strcasecmp", expression);
 		}
 
 		/* 

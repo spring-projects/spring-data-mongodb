@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Abs;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Ceil;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Concat;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Divide;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Exp;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Floor;
@@ -42,7 +43,11 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Pow;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Sqrt;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StrCaseCmp;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Substr;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Subtract;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ToLower;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ToUpper;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Trunc;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
@@ -1049,6 +1054,138 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $trunc: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderConcat() {
+
+		DBObject agg = project()
+				.and("item").concat(" - ", field("description")).as("itemDescription")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
+
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderConcatAggregationExpression() {
+
+		DBObject agg = project()
+				.and(Concat.valueOf("item").concat(" - ").concatValueOf("description")).as("itemDescription")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
+
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSubstr() {
+
+		DBObject agg = project()
+				.and("quarter").substring(0, 2).as("yearSubstring")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSubstrAggregationExpression() {
+
+		DBObject agg = project()
+				.and(Substr.valueOf("quarter").substring(0, 2)).as("yearSubstring")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderToLower() {
+
+		DBObject agg = project()
+				.and("item").toLower().as("item")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { item: { $toLower: \"$item\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderToLowerAggregationExpression() {
+
+		DBObject agg = project()
+				.and(ToLower.lowerValueOf("item")).as("item")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { item: { $toLower: \"$item\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderToUpper() {
+
+		DBObject agg = project()
+				.and("item").toUpper().as("item")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { item: { $toUpper: \"$item\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderToUpperAggregationExpression() {
+
+		DBObject agg = project()
+				.and(ToUpper.upperValueOf("item")).as("item")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { item: { $toUpper: \"$item\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderStrCaseCmp() {
+
+		DBObject agg = project()
+				.and("quarter").strCaseCmp("13q4").as("comparisonResult")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderStrCaseCmpAggregationExpression() {
+
+		DBObject agg = project()
+				.and(StrCaseCmp.valueOf("quarter").strcasecmp("13q4")).as("comparisonResult")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {

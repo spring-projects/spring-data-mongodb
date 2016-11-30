@@ -333,7 +333,8 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Calculates the log of the associated number in the specified base extracted by given {@link AggregationExpression}.
+			 * Calculates the log of the associated number in the specified base extracted by given
+			 * {@link AggregationExpression}.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -445,7 +446,6 @@ public interface AggregationExpressions {
 				return createMultiply().multiplyBy(value);
 			}
 
-
 			private Multiply createMultiply() {
 				return fieldRef != null ? Multiply.valueOf(fieldRef) : Multiply.valueOf(expression);
 			}
@@ -553,6 +553,176 @@ public interface AggregationExpressions {
 	/**
 	 * @author Christoph Strobl
 	 */
+	class StringOperators {
+
+		/**
+		 * Take the array referenced by given {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 */
+		public static StringOperatorFactory valueOf(String fieldRef) {
+			return new StringOperatorFactory(fieldRef);
+		}
+
+		/**
+		 * Take the array referenced by given {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 */
+		public static StringOperatorFactory valueOf(AggregationExpression fieldRef) {
+			return new StringOperatorFactory(fieldRef);
+		}
+
+		public static class StringOperatorFactory {
+
+			private final String fieldRef;
+			private final AggregationExpression expression;
+
+			public StringOperatorFactory(String fieldRef) {
+				this.fieldRef = fieldRef;
+				this.expression = null;
+			}
+
+			public StringOperatorFactory(AggregationExpression expression) {
+				this.fieldRef = null;
+				this.expression = expression;
+			}
+
+			/**
+			 * Takes the associated string representation and concats the value of the referenced field to it.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			public Concat concatValueOf(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createConcat().concatValueOf(fieldRef);
+			}
+
+			/**
+			 * Takes the associated string representation and concats the result of the given {@link AggregationExpression} to
+			 * it.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public Concat concatValueOf(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createConcat().concatValueOf(expression);
+			}
+
+			/**
+			 * Takes the associated string representation and concats given {@literal value} to it.
+			 *
+			 * @param value must not be {@literal null}.
+			 * @return
+			 */
+			public Concat concat(String value) {
+
+				Assert.notNull(value, "Value must not be null!");
+				return createConcat().concat(value);
+			}
+
+			private Concat createConcat() {
+				return fieldRef != null ? Concat.valueOf(fieldRef) : Concat.valueOf(expression);
+			}
+
+			/**
+			 * Takes the associated string representation and returns a substring starting at a specified index position.
+			 *
+			 * @param start
+			 * @return
+			 */
+			public Substr substring(int start) {
+				return substring(start, -1);
+			}
+
+			/**
+			 * Takes the associated string representation and returns a substring starting at a specified index position
+			 * including the specified number of characters.
+			 *
+			 * @param start
+			 * @param nrOfChars
+			 * @return
+			 */
+			public Substr substring(int start, int nrOfChars) {
+				return createSubstr().substring(start, nrOfChars);
+			}
+
+			private Substr createSubstr() {
+				return fieldRef != null ? Substr.valueOf(fieldRef) : Substr.valueOf(expression);
+			}
+
+			/**
+			 * Takes the associated string representation and lowers it.
+			 *
+			 * @return
+			 */
+			private ToLower toLower() {
+				return fieldRef != null ? ToLower.lowerValueOf(fieldRef) : ToLower.lowerValueOf(expression);
+			}
+
+			/**
+			 * Takes the associated string representation and uppers it.
+			 *
+			 * @return
+			 */
+			private ToUpper toUpper() {
+				return fieldRef != null ? ToUpper.upperValueOf(fieldRef) : ToUpper.upperValueOf(expression);
+			}
+
+			/**
+			 * Takes the associated string representation and performs case-insensitive comparison to the given
+			 * {@literal value}.
+			 *
+			 * @param value must not be {@literal null}.
+			 * @return
+			 */
+			private StrCaseCmp strCaseCmp(String value) {
+
+				Assert.notNull(value, "Value must not be null!");
+				return createStrCaseCmp().strcasecmp(value);
+			}
+
+			/**
+			 * Takes the associated string representation and performs case-insensitive comparison to the referenced
+			 * {@literal fieldRef}.
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return
+			 */
+			private StrCaseCmp strCaseCmpValueOf(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				return createStrCaseCmp().strcasecmpValueOf(fieldRef);
+			}
+
+			/**
+			 * Takes the associated string representation and performs case-insensitive comparison to the result of the given
+			 * {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			private StrCaseCmp strCaseCmpValueOf(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createStrCaseCmp().strcasecmpValueOf(expression);
+			}
+
+			private StrCaseCmp createStrCaseCmp() {
+				return fieldRef != null ? StrCaseCmp.valueOf(fieldRef) : StrCaseCmp.valueOf(expression);
+			}
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
 	abstract class AbstractAggregationExpression implements AggregationExpression {
 
 		private final Object value;
@@ -641,6 +811,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $setEquals}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class SetEquals extends AbstractAggregationExpression {
@@ -668,6 +840,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $setIntersection}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class SetIntersection extends AbstractAggregationExpression {
@@ -691,6 +865,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $setUnion}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class SetUnion extends AbstractAggregationExpression {
@@ -714,6 +890,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $setDifference}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class SetDifference extends AbstractAggregationExpression {
@@ -737,6 +915,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $setIsSubset}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class SetIsSubset extends AbstractAggregationExpression {
@@ -760,6 +940,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $anyElementTrue}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class AnyElementTrue extends AbstractAggregationExpression {
@@ -783,6 +965,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $allElementsTrue}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class AllElementsTrue extends AbstractAggregationExpression {
@@ -806,6 +990,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $abs}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Abs extends AbstractAggregationExpression {
@@ -833,6 +1019,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $add}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Add extends AbstractAggregationExpression {
@@ -872,6 +1060,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $ceil}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Ceil extends AbstractAggregationExpression {
@@ -899,6 +1089,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $divide}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Divide extends AbstractAggregationExpression {
@@ -938,6 +1130,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $exp}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Exp extends AbstractAggregationExpression {
@@ -965,6 +1159,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $floor}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Floor extends AbstractAggregationExpression {
@@ -992,6 +1188,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $ln}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Ln extends AbstractAggregationExpression {
@@ -1019,6 +1217,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $log}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Log extends AbstractAggregationExpression {
@@ -1058,6 +1258,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $log10}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Log10 extends AbstractAggregationExpression {
@@ -1085,6 +1287,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $mod}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Mod extends AbstractAggregationExpression {
@@ -1124,6 +1328,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $multiply}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Multiply extends AbstractAggregationExpression {
@@ -1163,6 +1369,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $pow}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Pow extends AbstractAggregationExpression {
@@ -1202,6 +1410,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $sqrt}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Sqrt extends AbstractAggregationExpression {
@@ -1229,6 +1439,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $subtract}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Subtract extends AbstractAggregationExpression {
@@ -1268,6 +1480,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * {@link AggregationExpression} for {@code $trunc}.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Trunc extends AbstractAggregationExpression {
@@ -1292,6 +1506,180 @@ public interface AggregationExpressions {
 		public static Trunc truncValueOf(Number value) {
 			return new Trunc(value);
 		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $concat}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Concat extends AbstractAggregationExpression {
+
+		private Concat(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$concat";
+		}
+
+		public static Concat valueOf(String fieldRef) {
+			return new Concat(asFields(fieldRef));
+		}
+
+		public static Concat valueOf(AggregationExpression expression) {
+			return new Concat(Collections.singletonList(expression));
+		}
+
+		public static Concat stringValue(String value) {
+			return new Concat(Collections.singletonList(value));
+		}
+
+		public Concat concatValueOf(String fieldRef) {
+			return new Concat(append(Fields.field(fieldRef)));
+		}
+
+		public Concat concatValueOf(AggregationExpression expression) {
+			return new Concat(append(expression));
+		}
+
+		public Concat concat(String value) {
+			return new Concat(append(value));
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $substr}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Substr extends AbstractAggregationExpression {
+
+		private Substr(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$substr";
+		}
+
+		public static Substr valueOf(String fieldRef) {
+			return new Substr(asFields(fieldRef));
+		}
+
+		public static Substr valueOf(AggregationExpression expression) {
+			return new Substr(Collections.singletonList(expression));
+		}
+
+		public Substr substring(int start) {
+			return substring(start, -1);
+		}
+
+		public Substr substring(int start, int nrOfChars) {
+			return new Substr(append(Arrays.asList(start, nrOfChars)));
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toLower}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class ToLower extends AbstractAggregationExpression {
+
+		private ToLower(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$toLower";
+		}
+
+		public static ToLower lower(String value) {
+			return new ToLower(value);
+		}
+
+		public static ToLower lowerValueOf(String fieldRef) {
+			return new ToLower(Fields.field(fieldRef));
+		}
+
+		public static ToLower lowerValueOf(AggregationExpression expression) {
+			return new ToLower(Collections.singletonList(expression));
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toUpper}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class ToUpper extends AbstractAggregationExpression {
+
+		private ToUpper(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$toUpper";
+		}
+
+		public static ToUpper upper(String value) {
+			return new ToUpper(value);
+		}
+
+		public static ToUpper upperValueOf(String fieldRef) {
+			return new ToUpper(Fields.field(fieldRef));
+		}
+
+		public static ToUpper upperValueOf(AggregationExpression expression) {
+			return new ToUpper(Collections.singletonList(expression));
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $strcasecmp}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class StrCaseCmp extends AbstractAggregationExpression {
+
+		private StrCaseCmp(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$strcasecmp";
+		}
+
+		public static StrCaseCmp valueOf(String fieldRef) {
+			return new StrCaseCmp(asFields(fieldRef));
+		}
+
+		public static StrCaseCmp valueOf(AggregationExpression expression) {
+			return new StrCaseCmp(Collections.singletonList(expression));
+		}
+
+		public static StrCaseCmp stringValue(String value) {
+			return new StrCaseCmp(Collections.singletonList(value));
+		}
+
+		public StrCaseCmp strcasecmp(String value) {
+			return new StrCaseCmp(append(value));
+		}
+
+		public StrCaseCmp strcasecmpValueOf(String fieldRef) {
+			return new StrCaseCmp(append(Fields.field(fieldRef)));
+		}
+
+		public StrCaseCmp strcasecmpValueOf(AggregationExpression expression) {
+			return new StrCaseCmp(append(expression));
+		}
+
 	}
 
 	/**
