@@ -1131,7 +1131,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @return
 		 * @since 1.10
 		 */
-		ProjectionOperationBuilder arrayElementAt(int position) {
+		public ProjectionOperationBuilder arrayElementAt(int position) {
 			return project("arrayElemAt", position);
 		}
 
@@ -1143,7 +1143,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @return
 		 * @since 1.10
 		 */
-		ProjectionOperationBuilder concatArrays(String... fields) {
+		public ProjectionOperationBuilder concatArrays(String... fields) {
 			return project("concatArrays", Fields.fields(fields));
 		}
 
@@ -1153,8 +1153,18 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @return
 		 * @since 1.10
 		 */
-		ProjectionOperationBuilder isArray() {
+		public ProjectionOperationBuilder isArray() {
 			return this.operation.and(AggregationExpressions.IsArray.isArray(name));
+		}
+
+		/**
+		 * Takes the value previously and uses it as literal.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder asLiteral() {
+			return this.operation.and(AggregationExpressions.Literal.asLiteral(name));
 		}
 
 		/* 
@@ -1345,7 +1355,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 					if (element instanceof Field) {
 						result.add(context.getReference((Field) element).toString());
 					} else if (element instanceof Fields) {
-						for(Field field : (Fields)element) {
+						for (Field field : (Fields) element) {
 							result.add(context.getReference(field).toString());
 						}
 					} else if (element instanceof AggregationExpression) {

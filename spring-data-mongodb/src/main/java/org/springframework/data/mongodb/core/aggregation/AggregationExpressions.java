@@ -873,6 +873,42 @@ public interface AggregationExpressions {
 	/**
 	 * @author Christoph Strobl
 	 */
+	class LiteralOperators {
+
+		/**
+		 * Take the value referenced by given {@literal value}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
+		public static LiteralOperatorFactory valueOf(Object value) {
+
+			Assert.notNull(value, "Value must not be null!");
+			return new LiteralOperatorFactory(value);
+		}
+
+		public static class LiteralOperatorFactory {
+
+			private final Object value;
+
+			public LiteralOperatorFactory(Object value) {
+				this.value = value;
+			}
+
+			/**
+			 * Returns the associated value without parsing.
+			 *
+			 * @return
+			 */
+			public Literal asLiteral() {
+				return Literal.asLiteral(value);
+			}
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
 	abstract class AbstractAggregationExpression implements AggregationExpression {
 
 		private final Object value;
@@ -2250,6 +2286,27 @@ public interface AggregationExpressions {
 
 		public interface SliceElementsBuilder {
 			Slice itemCount(int nrElements);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $literal}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Literal extends AbstractAggregationExpression {
+
+		private Literal(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$literal";
+		}
+
+		public static Literal asLiteral(Object value) {
+			return new Literal(value);
 		}
 	}
 

@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
@@ -1252,6 +1253,29 @@ public class ProjectionOperationUnitTests {
 				.as("threeFavorites").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 2, 3 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLiteral() {
+
+		DBObject agg = project().and("$1").asLiteral().as("literalOnly").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { literalOnly: { $literal:  \"$1\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLiteralAggregationExpression() {
+
+		DBObject agg = project().and(LiteralOperators.valueOf("$1").asLiteral()).as("literalOnly")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { literalOnly: { $literal:  \"$1\"} } }")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
