@@ -38,150 +38,155 @@ import com.mongodb.DBObject;
 public interface AggregationExpressions {
 
 	/**
+	 * Gateway to {@literal Set expressions} which perform {@literal set} operation on arrays, treating arrays as sets.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class SetOperators {
 
 		/**
-		 * Take the array referenced by given {@literal fieldRef}.
+		 * Take the array referenced by given {@literal fieldReference}.
 		 *
-		 * @param fieldRef must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static SetOperatorFactory arrayAsSet(String fieldRef) {
-			return new SetOperatorFactory(fieldRef);
+		public static SetOperatorFactory arrayAsSet(String fieldReference) {
+			return new SetOperatorFactory(fieldReference);
 		}
 
 		public static class SetOperatorFactory {
 
-			private final String fieldRef;
+			private final String fieldReference;
 
 			/**
-			 * Creates new {@link SetOperatorFactory} for given {@literal fieldRef}.
+			 * Creates new {@link SetOperatorFactory} for given {@literal fieldReference}.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 */
-			public SetOperatorFactory(String fieldRef) {
+			public SetOperatorFactory(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				this.fieldRef = fieldRef;
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				this.fieldReference = fieldReference;
 			}
 
 			/**
-			 * Compares the previously mentioned field to one or more arrays and returns {@literal true} if they have the same
-			 * distinct elements and {@literal false} otherwise.
+			 * Creates new {@link AggregationExpressions} that compares the previously mentioned field to one or more arrays
+			 * and returns {@literal true} if they have the same distinct elements and {@literal false} otherwise.
 			 *
 			 * @param arrayReferences must not be {@literal null}.
 			 * @return
 			 */
 			public SetEquals isEqualTo(String... arrayReferences) {
-				return SetEquals.arrayAsSet(fieldRef).isEqualTo(arrayReferences);
+				return SetEquals.arrayAsSet(fieldReference).isEqualTo(arrayReferences);
 			}
 
 			/**
-			 * Takes array of the previously mentioned field and one or more arrays and returns an array that contains the
-			 * elements that appear in every of those.
+			 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and one or more
+			 * arrays and returns an array that contains the elements that appear in every of those.
 			 *
 			 * @param arrayReferences must not be {@literal null}.
 			 * @return
 			 */
 			public SetIntersection intersects(String... arrayReferences) {
-				return SetIntersection.arrayAsSet(fieldRef).intersects(arrayReferences);
+				return SetIntersection.arrayAsSet(fieldReference).intersects(arrayReferences);
 			}
 
 			/**
-			 * Takes array of the previously mentioned field and one or more arrays and returns an array that contains the
-			 * elements that appear in any of those.
+			 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and one or more
+			 * arrays and returns an array that contains the elements that appear in any of those.
 			 *
 			 * @param arrayReferences must not be {@literal null}.
 			 * @return
 			 */
 			public SetUnion union(String... arrayReferences) {
-				return SetUnion.arrayAsSet(fieldRef).union(arrayReferences);
+				return SetUnion.arrayAsSet(fieldReference).union(arrayReferences);
 			}
 
 			/**
-			 * Takes array of the previously mentioned field and returns an array containing the elements that do not exist in
-			 * the given {@literal arrayReference}.
+			 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns an
+			 * array containing the elements that do not exist in the given {@literal arrayReference}.
 			 *
 			 * @param arrayReference must not be {@literal null}.
 			 * @return
 			 */
 			public SetDifference differenceTo(String arrayReference) {
-				return SetDifference.arrayAsSet(fieldRef).differenceTo(arrayReference);
+				return SetDifference.arrayAsSet(fieldReference).differenceTo(arrayReference);
 			}
 
 			/**
-			 * Takes array of the previously mentioned field and returns {@literal true} if it is a subset of the given
-			 * {@literal arrayReference}.
+			 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns
+			 * {@literal true} if it is a subset of the given {@literal arrayReference}.
 			 *
 			 * @param arrayReference must not be {@literal null}.
 			 * @return
 			 */
 			public SetIsSubset isSubsetOf(String arrayReference) {
-				return SetIsSubset.arrayAsSet(fieldRef).isSubsetOf(arrayReference);
+				return SetIsSubset.arrayAsSet(fieldReference).isSubsetOf(arrayReference);
 			}
 
 			/**
-			 * Takes array of the previously mentioned field and returns {@literal true} if any of the elements are
-			 * {@literal true} and {@literal false} otherwise.
+			 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns
+			 * {@literal true} if any of the elements are {@literal true} and {@literal false} otherwise.
 			 *
 			 * @return
 			 */
 			public AnyElementTrue anyElementTrue() {
-				return AnyElementTrue.arrayAsSet(fieldRef);
+				return AnyElementTrue.arrayAsSet(fieldReference);
 			}
 
 			/**
-			 * Takes array of the previously mentioned field and returns {@literal true} if no elements is {@literal false}.
+			 * Creates new {@link AggregationExpressions} that tkes array of the previously mentioned field and returns
+			 * {@literal true} if no elements is {@literal false}.
 			 *
 			 * @return
 			 */
 			public AllElementsTrue allElementsTrue() {
-				return AllElementsTrue.arrayAsSet(fieldRef);
+				return AllElementsTrue.arrayAsSet(fieldReference);
 			}
 		}
 	}
 
 	/**
+	 * Gateway to {@literal Arithmetic} aggregation operations that perform mathematic operations on numbers.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class ArithmeticOperators {
 
 		/**
-		 * Take the array referenced by given {@literal fieldRef}.
+		 * Take the array referenced by given {@literal fieldReference}.
 		 *
-		 * @param fieldRef must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static ArithmeticOperatorFactory valueOf(String fieldRef) {
-			return new ArithmeticOperatorFactory(fieldRef);
+		public static ArithmeticOperatorFactory valueOf(String fieldReference) {
+			return new ArithmeticOperatorFactory(fieldReference);
 		}
 
 		/**
-		 * Take the array referenced by given {@literal fieldRef}.
+		 * Take the array referenced by given {@literal fieldReference}.
 		 *
-		 * @param fieldRef must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static ArithmeticOperatorFactory valueOf(AggregationExpression fieldRef) {
-			return new ArithmeticOperatorFactory(fieldRef);
+		public static ArithmeticOperatorFactory valueOf(AggregationExpression fieldReference) {
+			return new ArithmeticOperatorFactory(fieldReference);
 		}
 
 		public static class ArithmeticOperatorFactory {
 
-			private final String fieldRef;
+			private final String fieldReference;
 			private final AggregationExpression expression;
 
 			/**
-			 * Creates new {@link ArithmeticOperatorFactory} for given {@literal fieldRef}.
+			 * Creates new {@link ArithmeticOperatorFactory} for given {@literal fieldReference}.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 */
-			public ArithmeticOperatorFactory(String fieldRef) {
+			public ArithmeticOperatorFactory(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				this.fieldRef = fieldRef;
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				this.fieldReference = fieldReference;
 				this.expression = null;
 			}
 
@@ -193,33 +198,35 @@ public interface AggregationExpressions {
 			public ArithmeticOperatorFactory(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null!");
-				this.fieldRef = null;
+				this.fieldReference = null;
 				this.expression = expression;
 			}
 
 			/**
-			 * Returns the absolute value of the associated number.
+			 * Creates new {@link AggregationExpressions} that returns the absolute value of the associated number.
 			 *
 			 * @return
 			 */
 			public Abs abs() {
-				return fieldRef != null ? Abs.absoluteValueOf(fieldRef) : Abs.absoluteValueOf(expression);
+				return fieldReference != null ? Abs.absoluteValueOf(fieldReference) : Abs.absoluteValueOf(expression);
 			}
 
 			/**
-			 * Adds value of {@literal fieldRef} to the associated number.
+			 * Creates new {@link AggregationExpressions} that adds the value of {@literal fieldReference} to the associated
+			 * number.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public Add add(String fieldRef) {
+			public Add add(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createAdd().add(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createAdd().add(fieldReference);
 			}
 
 			/**
-			 * Adds value of {@link AggregationExpression} to the associated number.
+			 * Creates new {@link AggregationExpressions} that adds the resulting value of the given
+			 * {@link AggregationExpression} to the associated number.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -231,7 +238,7 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Adds given {@literal value} to the associated number.
+			 * Creates new {@link AggregationExpressions} that adds the given {@literal value} to the associated number.
 			 *
 			 * @param value must not be {@literal null}.
 			 * @return
@@ -243,32 +250,35 @@ public interface AggregationExpressions {
 			}
 
 			private Add createAdd() {
-				return fieldRef != null ? Add.valueOf(fieldRef) : Add.valueOf(expression);
+				return fieldReference != null ? Add.valueOf(fieldReference) : Add.valueOf(expression);
 			}
 
 			/**
-			 * Returns the smallest integer greater than or equal to the assoicated number.
+			 * Creates new {@link AggregationExpressions} that returns the smallest integer greater than or equal to the
+			 * assoicated number.
 			 *
 			 * @return
 			 */
 			public Ceil ceil() {
-				return fieldRef != null ? Ceil.ceilValueOf(fieldRef) : Ceil.ceilValueOf(expression);
+				return fieldReference != null ? Ceil.ceilValueOf(fieldReference) : Ceil.ceilValueOf(expression);
 			}
 
 			/**
-			 * Divide associated number by number referenced via {@literal fieldRef}.
+			 * Creates new {@link AggregationExpressions} that ivides the associated number by number referenced via
+			 * {@literal fieldReference}.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public Divide divideBy(String fieldRef) {
+			public Divide divideBy(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createDivide().divideBy(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createDivide().divideBy(fieldReference);
 			}
 
 			/**
-			 * Divide associated number by number extracted via {@literal expression}.
+			 * Creates new {@link AggregationExpressions} that divides the associated number by number extracted via
+			 * {@literal expression}.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -280,7 +290,7 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Divide associated number by given {@literal value}.
+			 * Creates new {@link AggregationExpressions} that divides the associated number by given {@literal value}.
 			 *
 			 * @param value
 			 * @return
@@ -292,51 +302,54 @@ public interface AggregationExpressions {
 			}
 
 			private Divide createDivide() {
-				return fieldRef != null ? Divide.valueOf(fieldRef) : Divide.valueOf(expression);
+				return fieldReference != null ? Divide.valueOf(fieldReference) : Divide.valueOf(expression);
 			}
 
 			/**
-			 * Raises Euler’s number (i.e. e ) to the associated number.
+			 * Creates new {@link AggregationExpressions} that raises Euler’s number (i.e. e ) on the associated number.
 			 *
 			 * @return
 			 */
 			public Exp exp() {
-				return fieldRef != null ? Exp.expValueOf(fieldRef) : Exp.expValueOf(expression);
+				return fieldReference != null ? Exp.expValueOf(fieldReference) : Exp.expValueOf(expression);
 			}
 
 			/**
-			 * Returns the largest integer less than or equal to the associated number.
+			 * Creates new {@link AggregationExpressions} that returns the largest integer less than or equal to the
+			 * associated number.
 			 *
 			 * @return
 			 */
 			public Floor floor() {
-				return fieldRef != null ? Floor.floorValueOf(fieldRef) : Floor.floorValueOf(expression);
+				return fieldReference != null ? Floor.floorValueOf(fieldReference) : Floor.floorValueOf(expression);
 			}
 
 			/**
-			 * Calculates the natural logarithm ln (i.e loge) of the assoicated number.
+			 * Creates new {@link AggregationExpressions} that calculates the natural logarithm ln (i.e loge) of the
+			 * assoicated number.
 			 *
 			 * @return
 			 */
 			public Ln ln() {
-				return fieldRef != null ? Ln.lnValueOf(fieldRef) : Ln.lnValueOf(expression);
+				return fieldReference != null ? Ln.lnValueOf(fieldReference) : Ln.lnValueOf(expression);
 			}
 
 			/**
-			 * Calculates the log of the associated number in the specified base referenced via {@literal fieldRef}.
+			 * Creates new {@link AggregationExpressions} that calculates the log of the associated number in the specified
+			 * base referenced via {@literal fieldReference}.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public Log log(String fieldRef) {
+			public Log log(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createLog().log(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createLog().log(fieldReference);
 			}
 
 			/**
-			 * Calculates the log of the associated number in the specified base extracted by given
-			 * {@link AggregationExpression}.
+			 * Creates new {@link AggregationExpressions} that calculates the log of the associated number in the specified
+			 * base extracted by given {@link AggregationExpression}.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -344,11 +357,12 @@ public interface AggregationExpressions {
 			public Log log(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null!");
-				return createLog().log(fieldRef);
+				return createLog().log(fieldReference);
 			}
 
 			/**
-			 * Calculates the log of a the associated number in the specified {@literal base}.
+			 * Creates new {@link AggregationExpressions} that calculates the log of a the associated number in the specified
+			 * {@literal base}.
 			 *
 			 * @param base must not be {@literal null}.
 			 * @return
@@ -360,32 +374,34 @@ public interface AggregationExpressions {
 			}
 
 			private Log createLog() {
-				return fieldRef != null ? Log.valueOf(fieldRef) : Log.valueOf(expression);
+				return fieldReference != null ? Log.valueOf(fieldReference) : Log.valueOf(expression);
 			}
 
 			/**
-			 * Calculates the log base 10 for the associated number.
+			 * Creates new {@link AggregationExpressions} that calculates the log base 10 for the associated number.
 			 *
 			 * @return
 			 */
 			public Log10 log10() {
-				return fieldRef != null ? Log10.log10ValueOf(fieldRef) : Log10.log10ValueOf(expression);
+				return fieldReference != null ? Log10.log10ValueOf(fieldReference) : Log10.log10ValueOf(expression);
 			}
 
 			/**
-			 * Divides the associated number by another and returns the remainder.
+			 * Creates new {@link AggregationExpressions} that divides the associated number by another and returns the
+			 * remainder.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public Mod mod(String fieldRef) {
+			public Mod mod(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createMod().mod(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createMod().mod(fieldReference);
 			}
 
 			/**
-			 * Divides the associated number by another and returns the remainder.
+			 * Creates new {@link AggregationExpressions} that divides the associated number by another and returns the
+			 * remainder.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -397,7 +413,8 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Divides the associated number by another and returns the remainder.
+			 * Creates new {@link AggregationExpressions} that divides the associated number by another and returns the
+			 * remainder.
 			 *
 			 * @param value must not be {@literal null}.
 			 * @return
@@ -409,23 +426,23 @@ public interface AggregationExpressions {
 			}
 
 			private Mod createMod() {
-				return fieldRef != null ? Mod.valueOf(fieldRef) : Mod.valueOf(expression);
+				return fieldReference != null ? Mod.valueOf(fieldReference) : Mod.valueOf(expression);
 			}
 
 			/**
-			 * Multiplies the associated number with another.
+			 * Creates new {@link AggregationExpressions} that multiplies the associated number with another.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public Multiply multiplyBy(String fieldRef) {
+			public Multiply multiplyBy(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createMultiply().multiplyBy(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createMultiply().multiplyBy(fieldReference);
 			}
 
 			/**
-			 * Multiplies the associated number with another.
+			 * Creates new {@link AggregationExpressions} that multiplies the associated number with another.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -437,7 +454,7 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Multiplies the associated number with another.
+			 * Creates new {@link AggregationExpressions} that multiplies the associated number with another.
 			 *
 			 * @param value must not be {@literal null}.
 			 * @return
@@ -449,23 +466,23 @@ public interface AggregationExpressions {
 			}
 
 			private Multiply createMultiply() {
-				return fieldRef != null ? Multiply.valueOf(fieldRef) : Multiply.valueOf(expression);
+				return fieldReference != null ? Multiply.valueOf(fieldReference) : Multiply.valueOf(expression);
 			}
 
 			/**
-			 * Raises the associated number to the specified exponent.
+			 * Creates new {@link AggregationExpressions} that raises the associated number to the specified exponent.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public Pow pow(String fieldRef) {
+			public Pow pow(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createPow().pow(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createPow().pow(fieldReference);
 			}
 
 			/**
-			 * Raises the associated number to the specified exponent.
+			 * Creates new {@link AggregationExpressions} that raises the associated number to the specified exponent.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -477,7 +494,7 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Raises the associated number to the specified exponent.
+			 * Creates new {@link AggregationExpressions} that raises the associated number to the specified exponent.
 			 *
 			 * @param value must not be {@literal null}.
 			 * @return
@@ -489,32 +506,32 @@ public interface AggregationExpressions {
 			}
 
 			private Pow createPow() {
-				return fieldRef != null ? Pow.valueOf(fieldRef) : Pow.valueOf(expression);
+				return fieldReference != null ? Pow.valueOf(fieldReference) : Pow.valueOf(expression);
 			}
 
 			/**
-			 * Calculates the square root of the associated number.
+			 * Creates new {@link AggregationExpressions} that calculates the square root of the associated number.
 			 *
 			 * @return
 			 */
 			public Sqrt sqrt() {
-				return fieldRef != null ? Sqrt.sqrtOf(fieldRef) : Sqrt.sqrtOf(expression);
+				return fieldReference != null ? Sqrt.sqrtOf(fieldReference) : Sqrt.sqrtOf(expression);
 			}
 
 			/**
-			 * Subtracts value of given from the associated number.
+			 * Creates new {@link AggregationExpressions} that subtracts value of given from the associated number.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public Subtract subtract(String fieldRef) {
+			public Subtract subtract(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createSubtract().subtract(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createSubtract().subtract(fieldReference);
 			}
 
 			/**
-			 * Subtracts value of given from the associated number.
+			 * Creates new {@link AggregationExpressions} that subtracts value of given from the associated number.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -526,7 +543,7 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Subtracts value from the associated number.
+			 * Creates new {@link AggregationExpressions} that subtracts value from the associated number.
 			 *
 			 * @param value
 			 * @return
@@ -538,129 +555,133 @@ public interface AggregationExpressions {
 			}
 
 			private Subtract createSubtract() {
-				return fieldRef != null ? Subtract.valueOf(fieldRef) : Subtract.valueOf(expression);
+				return fieldReference != null ? Subtract.valueOf(fieldReference) : Subtract.valueOf(expression);
 			}
 
 			/**
-			 * Truncates a number to its integer.
+			 * Creates new {@link AggregationExpressions} that truncates a number to its integer.
 			 *
 			 * @return
 			 */
 			public Trunc trunc() {
-				return fieldRef != null ? Trunc.truncValueOf(fieldRef) : Trunc.truncValueOf(expression);
+				return fieldReference != null ? Trunc.truncValueOf(fieldReference) : Trunc.truncValueOf(expression);
 			}
 
 			/**
-			 * Calculates and returns the sum of numeric values.
+			 * Creates new {@link AggregationExpressions} that calculates and returns the sum of numeric values.
 			 *
 			 * @return
 			 */
 			public Sum sum() {
-				return fieldRef != null ? Sum.sumOf(fieldRef) : Sum.sumOf(expression);
+				return fieldReference != null ? Sum.sumOf(fieldReference) : Sum.sumOf(expression);
 			}
 
 			/**
-			 * Returns the average value of the numeric values.
+			 * Creates new {@link AggregationExpressions} that returns the average value of the numeric values.
 			 *
 			 * @return
 			 */
 			public Avg avg() {
-				return fieldRef != null ? Avg.avgOf(fieldRef) : Avg.avgOf(expression);
+				return fieldReference != null ? Avg.avgOf(fieldReference) : Avg.avgOf(expression);
 			}
 
 			/**
-			 * Returns the maximum value.
+			 * Creates new {@link AggregationExpressions} that returns the maximum value.
 			 *
 			 * @return
 			 */
 			public Max max() {
-				return fieldRef != null ? Max.maxOf(fieldRef) : Max.maxOf(expression);
+				return fieldReference != null ? Max.maxOf(fieldReference) : Max.maxOf(expression);
 			}
 
 			/**
-			 * Returns the minimum value.
+			 * Creates new {@link AggregationExpressions} that returns the minimum value.
 			 *
 			 * @return
 			 */
 			public Min min() {
-				return fieldRef != null ? Min.minOf(fieldRef) : Min.minOf(expression);
+				return fieldReference != null ? Min.minOf(fieldReference) : Min.minOf(expression);
 			}
 
 			/**
-			 * Calculates the population standard deviation of the input values.
+			 * Creates new {@link AggregationExpressions} that calculates the population standard deviation of the input
+			 * values.
 			 *
 			 * @return
 			 */
 			public StdDevPop stdDevPop() {
-				return fieldRef != null ? StdDevPop.stdDevPopOf(fieldRef) : StdDevPop.stdDevPopOf(expression);
+				return fieldReference != null ? StdDevPop.stdDevPopOf(fieldReference) : StdDevPop.stdDevPopOf(expression);
 			}
 
 			/**
-			 * Calculates the sample standard deviation of the input values.
+			 * Creates new {@link AggregationExpressions} that calculates the sample standard deviation of the input values.
 			 *
 			 * @return
 			 */
 			public StdDevSamp stdDevSamp() {
-				return fieldRef != null ? StdDevSamp.stdDevSampOf(fieldRef) : StdDevSamp.stdDevSampOf(expression);
+				return fieldReference != null ? StdDevSamp.stdDevSampOf(fieldReference) : StdDevSamp.stdDevSampOf(expression);
 			}
 		}
 	}
 
 	/**
+	 * Gateway to {@literal String} aggregation operations.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class StringOperators {
 
 		/**
-		 * Take the array referenced by given {@literal fieldRef}.
+		 * Take the array referenced by given {@literal fieldReference}.
 		 *
-		 * @param fieldRef must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static StringOperatorFactory valueOf(String fieldRef) {
-			return new StringOperatorFactory(fieldRef);
+		public static StringOperatorFactory valueOf(String fieldReference) {
+			return new StringOperatorFactory(fieldReference);
 		}
 
 		/**
-		 * Take the array referenced by given {@literal fieldRef}.
+		 * Take the array referenced by given {@literal fieldReference}.
 		 *
-		 * @param fieldRef must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static StringOperatorFactory valueOf(AggregationExpression fieldRef) {
-			return new StringOperatorFactory(fieldRef);
+		public static StringOperatorFactory valueOf(AggregationExpression fieldReference) {
+			return new StringOperatorFactory(fieldReference);
 		}
 
 		public static class StringOperatorFactory {
 
-			private final String fieldRef;
+			private final String fieldReference;
 			private final AggregationExpression expression;
 
-			public StringOperatorFactory(String fieldRef) {
-				this.fieldRef = fieldRef;
+			public StringOperatorFactory(String fieldReference) {
+				this.fieldReference = fieldReference;
 				this.expression = null;
 			}
 
 			public StringOperatorFactory(AggregationExpression expression) {
-				this.fieldRef = null;
+				this.fieldReference = null;
 				this.expression = expression;
 			}
 
 			/**
-			 * Takes the associated string representation and concats the value of the referenced field to it.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and concats the
+			 * value of the referenced field to it.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public Concat concatValueOf(String fieldRef) {
+			public Concat concatValueOf(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createConcat().concatValueOf(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createConcat().concatValueOf(fieldReference);
 			}
 
 			/**
-			 * Takes the associated string representation and concats the result of the given {@link AggregationExpression} to
-			 * it.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and concats the
+			 * result of the given {@link AggregationExpression} to it.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -672,7 +693,8 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Takes the associated string representation and concats given {@literal value} to it.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and concats given
+			 * {@literal value} to it.
 			 *
 			 * @param value must not be {@literal null}.
 			 * @return
@@ -684,11 +706,12 @@ public interface AggregationExpressions {
 			}
 
 			private Concat createConcat() {
-				return fieldRef != null ? Concat.valueOf(fieldRef) : Concat.valueOf(expression);
+				return fieldReference != null ? Concat.valueOf(fieldReference) : Concat.valueOf(expression);
 			}
 
 			/**
-			 * Takes the associated string representation and returns a substring starting at a specified index position.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and returns a
+			 * substring starting at a specified index position.
 			 *
 			 * @param start
 			 * @return
@@ -698,8 +721,8 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Takes the associated string representation and returns a substring starting at a specified index position
-			 * including the specified number of characters.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and returns a
+			 * substring starting at a specified index position including the specified number of characters.
 			 *
 			 * @param start
 			 * @param nrOfChars
@@ -710,30 +733,30 @@ public interface AggregationExpressions {
 			}
 
 			private Substr createSubstr() {
-				return fieldRef != null ? Substr.valueOf(fieldRef) : Substr.valueOf(expression);
+				return fieldReference != null ? Substr.valueOf(fieldReference) : Substr.valueOf(expression);
 			}
 
 			/**
-			 * Takes the associated string representation and lowers it.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and lowers it.
 			 *
 			 * @return
 			 */
 			public ToLower toLower() {
-				return fieldRef != null ? ToLower.lowerValueOf(fieldRef) : ToLower.lowerValueOf(expression);
+				return fieldReference != null ? ToLower.lowerValueOf(fieldReference) : ToLower.lowerValueOf(expression);
 			}
 
 			/**
-			 * Takes the associated string representation and uppers it.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and uppers it.
 			 *
 			 * @return
 			 */
 			public ToUpper toUpper() {
-				return fieldRef != null ? ToUpper.upperValueOf(fieldRef) : ToUpper.upperValueOf(expression);
+				return fieldReference != null ? ToUpper.upperValueOf(fieldReference) : ToUpper.upperValueOf(expression);
 			}
 
 			/**
-			 * Takes the associated string representation and performs case-insensitive comparison to the given
-			 * {@literal value}.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and performs
+			 * case-insensitive comparison to the given {@literal value}.
 			 *
 			 * @param value must not be {@literal null}.
 			 * @return
@@ -745,21 +768,21 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Takes the associated string representation and performs case-insensitive comparison to the referenced
-			 * {@literal fieldRef}.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and performs
+			 * case-insensitive comparison to the referenced {@literal fieldReference}.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public StrCaseCmp strCaseCmpValueOf(String fieldRef) {
+			public StrCaseCmp strCaseCmpValueOf(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createStrCaseCmp().strcasecmpValueOf(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createStrCaseCmp().strcasecmpValueOf(fieldReference);
 			}
 
 			/**
-			 * Takes the associated string representation and performs case-insensitive comparison to the result of the given
-			 * {@link AggregationExpression}.
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and performs
+			 * case-insensitive comparison to the result of the given {@link AggregationExpression}.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -771,30 +794,32 @@ public interface AggregationExpressions {
 			}
 
 			private StrCaseCmp createStrCaseCmp() {
-				return fieldRef != null ? StrCaseCmp.valueOf(fieldRef) : StrCaseCmp.valueOf(expression);
+				return fieldReference != null ? StrCaseCmp.valueOf(fieldReference) : StrCaseCmp.valueOf(expression);
 			}
 		}
 	}
 
 	/**
+	 * Gateway to {@litearl array} aggregation operations.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class ArrayOperators {
 
 		/**
-		 * Take the array referenced by given {@literal fieldRef}.
+		 * Take the array referenced by given {@literal fieldReference}.
 		 *
-		 * @param fieldRef must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static ArrayOperatorFactory arrayOf(String fieldRef) {
-			return new ArrayOperatorFactory(fieldRef);
+		public static ArrayOperatorFactory arrayOf(String fieldReference) {
+			return new ArrayOperatorFactory(fieldReference);
 		}
 
 		/**
-		 * Take the array referenced by given {@literal fieldRef}.
+		 * Take the array referenced by given {@literal fieldReference}.
 		 *
-		 * @param fieldRef must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static ArrayOperatorFactory arrayOf(AggregationExpression expression) {
@@ -803,21 +828,22 @@ public interface AggregationExpressions {
 
 		public static class ArrayOperatorFactory {
 
-			private final String fieldRef;
+			private final String fieldReference;
 			private final AggregationExpression expression;
 
-			public ArrayOperatorFactory(String fieldRef) {
-				this.fieldRef = fieldRef;
+			public ArrayOperatorFactory(String fieldReference) {
+				this.fieldReference = fieldReference;
 				this.expression = null;
 			}
 
 			public ArrayOperatorFactory(AggregationExpression expression) {
-				this.fieldRef = null;
+				this.fieldReference = null;
 				this.expression = expression;
 			}
 
 			/**
-			 * Takes the associated array and returns the element at the specified array {@literal position}.
+			 * Creates new {@link AggregationExpressions} that takes the associated array and returns the element at the
+			 * specified array {@literal position}.
 			 *
 			 * @param position
 			 * @return
@@ -827,8 +853,8 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Takes the associated array and returns the element at the position resulting form the given
-			 * {@literal expression}.
+			 * Creates new {@link AggregationExpressions} that takes the associated array and returns the element at the
+			 * position resulting form the given {@literal expression}.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -840,23 +866,25 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Takes the associated array and returns the element at the position defined by the referenced {@literal field}.
+			 * Creates new {@link AggregationExpressions} that takes the associated array and returns the element at the
+			 * position defined by the referenced {@literal field}.
 			 *
-			 * @param fieldRef must not be {@literal null}.
+			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public ArrayElemtAt elementAt(String fieldRef) {
+			public ArrayElemtAt elementAt(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				return createArrayElemAt().elementAt(fieldRef);
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createArrayElemAt().elementAt(fieldReference);
 			}
 
 			private ArrayElemtAt createArrayElemAt() {
-				return usesFieldRef() ? ArrayElemtAt.arrayOf(fieldRef) : ArrayElemtAt.arrayOf(expression);
+				return usesFieldRef() ? ArrayElemtAt.arrayOf(fieldReference) : ArrayElemtAt.arrayOf(expression);
 			}
 
 			/**
-			 * Takes the associated array and concats the given {@literal arrayFieldReference} to it.
+			 * Creates new {@link AggregationExpressions} that takes the associated array and concats the given
+			 * {@literal arrayFieldReference} to it.
 			 *
 			 * @param arrayFieldReference must not be {@literal null}.
 			 * @return
@@ -868,7 +896,8 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Takes the associated array and concats the array resulting form the given {@literal expression} to it.
+			 * Creates new {@link AggregationExpressions} that takes the associated array and concats the array resulting form
+			 * the given {@literal expression} to it.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -880,47 +909,48 @@ public interface AggregationExpressions {
 			}
 
 			private ConcatArrays createConcatArrays() {
-				return usesFieldRef() ? ConcatArrays.arrayOf(fieldRef) : ConcatArrays.arrayOf(expression);
+				return usesFieldRef() ? ConcatArrays.arrayOf(fieldReference) : ConcatArrays.arrayOf(expression);
 			}
 
 			/**
-			 * Takes the associated array and selects a subset of the array to return based on the specified condition.
+			 * Creates new {@link AggregationExpressions} that takes the associated array and selects a subset of the array to
+			 * return based on the specified condition.
 			 *
 			 * @return
 			 */
 			public AsBuilder filter() {
-				return Filter.filter(fieldRef);
+				return Filter.filter(fieldReference);
 			}
 
 			/**
-			 * Takes the associated array and an check if its an array.
+			 * Creates new {@link AggregationExpressions} that takes the associated array and an check if its an array.
 			 *
 			 * @return
 			 */
 			public IsArray isArray() {
-				return usesFieldRef() ? IsArray.isArray(fieldRef) : IsArray.isArray(expression);
+				return usesFieldRef() ? IsArray.isArray(fieldReference) : IsArray.isArray(expression);
 			}
 
 			/**
-			 * Takes the associated array and retrieves its length.
+			 * Creates new {@link AggregationExpressions} that takes the associated array and retrieves its length.
 			 *
 			 * @return
 			 */
 			public Size length() {
-				return usesFieldRef() ? Size.lengthOfArray(fieldRef) : Size.lengthOfArray(expression);
+				return usesFieldRef() ? Size.lengthOfArray(fieldReference) : Size.lengthOfArray(expression);
 			}
 
 			/**
-			 * Takes the associated array and selects a subset from it.
+			 * Creates new {@link AggregationExpressions} that takes the associated array and selects a subset from it.
 			 *
 			 * @return
 			 */
 			public Slice slice() {
-				return usesFieldRef() ? Slice.sliceArrayOf(fieldRef) : Slice.sliceArrayOf(expression);
+				return usesFieldRef() ? Slice.sliceArrayOf(fieldReference) : Slice.sliceArrayOf(expression);
 			}
 
 			private boolean usesFieldRef() {
-				return fieldRef != null;
+				return fieldReference != null;
 			}
 		}
 	}
@@ -951,7 +981,7 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Returns the associated value without parsing.
+			 * Creates new {@link AggregationExpressions} that returns the associated value without parsing.
 			 *
 			 * @return
 			 */
@@ -967,21 +997,21 @@ public interface AggregationExpressions {
 	class DateOperators {
 
 		/**
-		 * Take the date referenced by given {@literal fieldRef}.
+		 * Take the date referenced by given {@literal fieldReference}.
 		 *
-		 * @param fieldRef must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static DateOperatorFactory dateOf(String fieldRef) {
+		public static DateOperatorFactory dateOf(String fieldReference) {
 
-			Assert.notNull(fieldRef, "FieldRef must not be null!");
-			return new DateOperatorFactory(fieldRef);
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new DateOperatorFactory(fieldReference);
 		}
 
 		/**
 		 * Take the date resulting from the given {@literal expression}.
 		 *
-		 * @param fieldRef must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static DateOperatorFactory dateOf(AggregationExpression expression) {
@@ -992,125 +1022,135 @@ public interface AggregationExpressions {
 
 		public static class DateOperatorFactory {
 
-			private final String fieldRef;
+			private final String fieldReference;
 			private final AggregationExpression expression;
 
-			public DateOperatorFactory(String fieldRef) {
+			public DateOperatorFactory(String fieldReference) {
 
-				Assert.notNull(fieldRef, "FieldRef must not be null!");
-				this.fieldRef = fieldRef;
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				this.fieldReference = fieldReference;
 				this.expression = null;
 			}
 
 			public DateOperatorFactory(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null!");
-				this.fieldRef = null;
+				this.fieldReference = null;
 				this.expression = expression;
 			}
 
 			/**
-			 * Returns the day of the year for a date as a number between 1 and 366.
+			 * Creates new {@link AggregationExpressions} that returns the day of the year for a date as a number between 1
+			 * and 366.
 			 *
 			 * @return
 			 */
 			public DayOfYear dayOfYear() {
-				return usesFieldRef() ? DayOfYear.dayOfYear(fieldRef) : DayOfYear.dayOfYear(expression);
+				return usesFieldRef() ? DayOfYear.dayOfYear(fieldReference) : DayOfYear.dayOfYear(expression);
 			}
 
 			/**
-			 * Returns the day of the month for a date as a number between 1 and 31.
+			 * Creates new {@link AggregationExpressions} that returns the day of the month for a date as a number between 1
+			 * and 31.
 			 *
 			 * @return
 			 */
 			public DayOfMonth dayOfMonth() {
-				return usesFieldRef() ? DayOfMonth.dayOfMonth(fieldRef) : DayOfMonth.dayOfMonth(expression);
+				return usesFieldRef() ? DayOfMonth.dayOfMonth(fieldReference) : DayOfMonth.dayOfMonth(expression);
 			}
 
 			/**
-			 * Returns the day of the week for a date as a number between 1 (Sunday) and 7 (Saturday).
+			 * Creates new {@link AggregationExpressions} that returns the day of the week for a date as a number between 1
+			 * (Sunday) and 7 (Saturday).
 			 *
 			 * @return
 			 */
 			public DayOfWeek dayOfWeek() {
-				return usesFieldRef() ? DayOfWeek.dayOfWeek(fieldRef) : DayOfWeek.dayOfWeek(expression);
+				return usesFieldRef() ? DayOfWeek.dayOfWeek(fieldReference) : DayOfWeek.dayOfWeek(expression);
 			}
 
 			/**
-			 * Returns the year portion of a date.
+			 * Creates new {@link AggregationExpressions} that returns the year portion of a date.
 			 *
 			 * @return
 			 */
 			public Year year() {
-				return usesFieldRef() ? Year.yearOf(fieldRef) : Year.yearOf(expression);
+				return usesFieldRef() ? Year.yearOf(fieldReference) : Year.yearOf(expression);
 			}
 
 			/**
-			 * Returns the month of a date as a number between 1 and 12.
+			 * Creates new {@link AggregationExpressions} that returns the month of a date as a number between 1 and 12.
 			 *
 			 * @return
 			 */
 			public Month month() {
-				return usesFieldRef() ? Month.monthOf(fieldRef) : Month.monthOf(expression);
+				return usesFieldRef() ? Month.monthOf(fieldReference) : Month.monthOf(expression);
 			}
 
 			/**
-			 * Returns the week of the year for a date as a number between 0 and 53.
+			 * Creates new {@link AggregationExpressions} that returns the week of the year for a date as a number between 0
+			 * and 53.
 			 *
 			 * @return
 			 */
 			public Week week() {
-				return usesFieldRef() ? Week.weekOf(fieldRef) : Week.weekOf(expression);
+				return usesFieldRef() ? Week.weekOf(fieldReference) : Week.weekOf(expression);
 			}
 
 			/**
-			 * Returns the hour portion of a date as a number between 0 and 23.
+			 * Creates new {@link AggregationExpressions} that returns the hour portion of a date as a number between 0 and
+			 * 23.
 			 *
 			 * @return
 			 */
 			public Hour hour() {
-				return usesFieldRef() ? Hour.hourOf(fieldRef) : Hour.hourOf(expression);
+				return usesFieldRef() ? Hour.hourOf(fieldReference) : Hour.hourOf(expression);
 			}
 
 			/**
-			 * Returns the minute portion of a date as a number between 0 and 59.
+			 * Creates new {@link AggregationExpressions} that returns the minute portion of a date as a number between 0 and
+			 * 59.
 			 *
 			 * @return
 			 */
 			public Minute minute() {
-				return usesFieldRef() ? Minute.minuteOf(fieldRef) : Minute.minuteOf(expression);
+				return usesFieldRef() ? Minute.minuteOf(fieldReference) : Minute.minuteOf(expression);
 			}
 
 			/**
-			 * Returns the second portion of a date as a number between 0 and 59, but can be 60 to account for leap seconds.
+			 * Creates new {@link AggregationExpressions} that returns the second portion of a date as a number between 0 and
+			 * 59, but can be 60 to account for leap seconds.
 			 *
 			 * @return
 			 */
 			public Second second() {
-				return usesFieldRef() ? Second.secondOf(fieldRef) : Second.secondOf(expression);
+				return usesFieldRef() ? Second.secondOf(fieldReference) : Second.secondOf(expression);
 			}
 
 			/**
-			 * Returns the millisecond portion of a date as an integer between 0 and 999.
+			 * Creates new {@link AggregationExpressions} that returns the millisecond portion of a date as an integer between
+			 * 0 and 999.
 			 *
 			 * @return
 			 */
 			public Millisecond millisecond() {
-				return usesFieldRef() ? Millisecond.millisecondOf(fieldRef) : Millisecond.millisecondOf(expression);
+				return usesFieldRef() ? Millisecond.millisecondOf(fieldReference) : Millisecond.millisecondOf(expression);
 			}
 
 			/**
-			 * Converts a date object to a string according to a user-specified {@literal format}.
+			 * Creates new {@link AggregationExpressions} that converts a date object to a string according to a
+			 * user-specified {@literal format}.
 			 *
 			 * @param format must not be {@literal null}.
 			 * @return
 			 */
 			public DateToString toString(String format) {
-				return (usesFieldRef() ? DateToString.dateOf(fieldRef) : DateToString.dateOf(expression)).toString(format);
+				return (usesFieldRef() ? DateToString.dateOf(fieldReference) : DateToString.dateOf(expression))
+						.toString(format);
 			}
 
 			private boolean usesFieldRef() {
-				return fieldRef != null;
+				return fieldReference != null;
 			}
 		}
 	}
@@ -1229,10 +1269,14 @@ public interface AggregationExpressions {
 		}
 
 		public static SetEquals arrayAsSet(String arrayReference) {
+
+			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetEquals(asFields(arrayReference));
 		}
 
 		public SetEquals isEqualTo(String... arrayReferences) {
+
+			Assert.notNull(arrayReferences, "ArrayReferences must not be null!");
 			return new SetEquals(append(Fields.fields(arrayReferences).asList()));
 		}
 
@@ -1258,10 +1302,14 @@ public interface AggregationExpressions {
 		}
 
 		public static SetIntersection arrayAsSet(String arrayReference) {
+
+			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetIntersection(asFields(arrayReference));
 		}
 
 		public SetIntersection intersects(String... arrayReferences) {
+
+			Assert.notNull(arrayReferences, "ArrayReferences must not be null!");
 			return new SetIntersection(append(asFields(arrayReferences)));
 		}
 	}
@@ -1283,10 +1331,14 @@ public interface AggregationExpressions {
 		}
 
 		public static SetUnion arrayAsSet(String arrayReference) {
+
+			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetUnion(asFields(arrayReference));
 		}
 
 		public SetUnion union(String... arrayReferences) {
+
+			Assert.notNull(arrayReferences, "ArrayReferences must not be null!");
 			return new SetUnion(append(asFields(arrayReferences)));
 		}
 	}
@@ -1308,10 +1360,14 @@ public interface AggregationExpressions {
 		}
 
 		public static SetDifference arrayAsSet(String arrayReference) {
+
+			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetDifference(asFields(arrayReference));
 		}
 
 		public SetDifference differenceTo(String arrayReference) {
+
+			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetDifference(append(Fields.field(arrayReference)));
 		}
 	}
@@ -1333,10 +1389,14 @@ public interface AggregationExpressions {
 		}
 
 		public static SetIsSubset arrayAsSet(String arrayReference) {
+
+			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetIsSubset(asFields(arrayReference));
 		}
 
 		public SetIsSubset isSubsetOf(String arrayReference) {
+
+			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetIsSubset(append(Fields.field(arrayReference)));
 		}
 	}
@@ -1358,6 +1418,8 @@ public interface AggregationExpressions {
 		}
 
 		public static AnyElementTrue arrayAsSet(String arrayReference) {
+
+			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new AnyElementTrue(asFields(arrayReference));
 		}
 
@@ -1383,6 +1445,8 @@ public interface AggregationExpressions {
 		}
 
 		public static AllElementsTrue arrayAsSet(String arrayReference) {
+
+			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new AllElementsTrue(asFields(arrayReference));
 		}
 
@@ -1407,11 +1471,15 @@ public interface AggregationExpressions {
 			return "$abs";
 		}
 
-		public static Abs absoluteValueOf(String fieldRef) {
-			return new Abs(Fields.field(fieldRef));
+		public static Abs absoluteValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Abs(Fields.field(fieldReference));
 		}
 
 		public static Abs absoluteValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Abs(expression);
 		}
 
@@ -1436,11 +1504,15 @@ public interface AggregationExpressions {
 			return "$add";
 		}
 
-		public static Add valueOf(String fieldRef) {
-			return new Add(asFields(fieldRef));
+		public static Add valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Add(asFields(fieldReference));
 		}
 
 		public static Add valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Add(Collections.singletonList(expression));
 		}
 
@@ -1448,11 +1520,15 @@ public interface AggregationExpressions {
 			return new Add(Collections.singletonList(value));
 		}
 
-		public Add add(String fieldRef) {
-			return new Add(append(Fields.field(fieldRef)));
+		public Add add(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Add(append(Fields.field(fieldReference)));
 		}
 
 		public Add add(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Add(append(expression));
 		}
 
@@ -1477,11 +1553,15 @@ public interface AggregationExpressions {
 			return "$ceil";
 		}
 
-		public static Ceil ceilValueOf(String fieldRef) {
-			return new Ceil(Fields.field(fieldRef));
+		public static Ceil ceilValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Ceil(Fields.field(fieldReference));
 		}
 
 		public static Ceil ceilValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Ceil(expression);
 		}
 
@@ -1506,11 +1586,15 @@ public interface AggregationExpressions {
 			return "$divide";
 		}
 
-		public static Divide valueOf(String fieldRef) {
-			return new Divide(asFields(fieldRef));
+		public static Divide valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Divide(asFields(fieldReference));
 		}
 
 		public static Divide valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Divide(Collections.singletonList(expression));
 		}
 
@@ -1518,11 +1602,15 @@ public interface AggregationExpressions {
 			return new Divide(Collections.singletonList(value));
 		}
 
-		public Divide divideBy(String fieldRef) {
-			return new Divide(append(Fields.field(fieldRef)));
+		public Divide divideBy(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Divide(append(Fields.field(fieldReference)));
 		}
 
 		public Divide divideBy(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Divide(append(expression));
 		}
 
@@ -1547,11 +1635,15 @@ public interface AggregationExpressions {
 			return "$exp";
 		}
 
-		public static Exp expValueOf(String fieldRef) {
-			return new Exp(Fields.field(fieldRef));
+		public static Exp expValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Exp(Fields.field(fieldReference));
 		}
 
 		public static Exp expValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Exp(expression);
 		}
 
@@ -1576,11 +1668,15 @@ public interface AggregationExpressions {
 			return "$floor";
 		}
 
-		public static Floor floorValueOf(String fieldRef) {
-			return new Floor(Fields.field(fieldRef));
+		public static Floor floorValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Floor(Fields.field(fieldReference));
 		}
 
 		public static Floor floorValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Floor(expression);
 		}
 
@@ -1605,11 +1701,15 @@ public interface AggregationExpressions {
 			return "$ln";
 		}
 
-		public static Ln lnValueOf(String fieldRef) {
-			return new Ln(Fields.field(fieldRef));
+		public static Ln lnValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Ln(Fields.field(fieldReference));
 		}
 
 		public static Ln lnValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Ln(expression);
 		}
 
@@ -1634,11 +1734,15 @@ public interface AggregationExpressions {
 			return "$log";
 		}
 
-		public static Log valueOf(String fieldRef) {
-			return new Log(asFields(fieldRef));
+		public static Log valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Log(asFields(fieldReference));
 		}
 
 		public static Log valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Log(Collections.singletonList(expression));
 		}
 
@@ -1646,11 +1750,15 @@ public interface AggregationExpressions {
 			return new Log(Collections.singletonList(value));
 		}
 
-		public Log log(String fieldRef) {
-			return new Log(append(Fields.field(fieldRef)));
+		public Log log(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Log(append(Fields.field(fieldReference)));
 		}
 
 		public Log log(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Log(append(expression));
 		}
 
@@ -1675,11 +1783,15 @@ public interface AggregationExpressions {
 			return "$log10";
 		}
 
-		public static Log10 log10ValueOf(String fieldRef) {
-			return new Log10(Fields.field(fieldRef));
+		public static Log10 log10ValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Log10(Fields.field(fieldReference));
 		}
 
 		public static Log10 log10ValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Log10(expression);
 		}
 
@@ -1704,11 +1816,15 @@ public interface AggregationExpressions {
 			return "$mod";
 		}
 
-		public static Mod valueOf(String fieldRef) {
-			return new Mod(asFields(fieldRef));
+		public static Mod valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Mod(asFields(fieldReference));
 		}
 
 		public static Mod valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Mod(Collections.singletonList(expression));
 		}
 
@@ -1716,11 +1832,15 @@ public interface AggregationExpressions {
 			return new Mod(Collections.singletonList(value));
 		}
 
-		public Mod mod(String fieldRef) {
-			return new Mod(append(Fields.field(fieldRef)));
+		public Mod mod(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Mod(append(Fields.field(fieldReference)));
 		}
 
 		public Mod mod(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Mod(append(expression));
 		}
 
@@ -1745,11 +1865,15 @@ public interface AggregationExpressions {
 			return "$multiply";
 		}
 
-		public static Multiply valueOf(String fieldRef) {
-			return new Multiply(asFields(fieldRef));
+		public static Multiply valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Multiply(asFields(fieldReference));
 		}
 
 		public static Multiply valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Multiply(Collections.singletonList(expression));
 		}
 
@@ -1757,11 +1881,15 @@ public interface AggregationExpressions {
 			return new Multiply(Collections.singletonList(value));
 		}
 
-		public Multiply multiplyBy(String fieldRef) {
-			return new Multiply(append(Fields.field(fieldRef)));
+		public Multiply multiplyBy(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Multiply(append(Fields.field(fieldReference)));
 		}
 
 		public Multiply multiplyBy(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Multiply(append(expression));
 		}
 
@@ -1786,11 +1914,15 @@ public interface AggregationExpressions {
 			return "$pow";
 		}
 
-		public static Pow valueOf(String fieldRef) {
-			return new Pow(asFields(fieldRef));
+		public static Pow valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Pow(asFields(fieldReference));
 		}
 
 		public static Pow valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Pow(Collections.singletonList(expression));
 		}
 
@@ -1798,11 +1930,15 @@ public interface AggregationExpressions {
 			return new Pow(Collections.singletonList(value));
 		}
 
-		public Pow pow(String fieldRef) {
-			return new Pow(append(Fields.field(fieldRef)));
+		public Pow pow(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Pow(append(Fields.field(fieldReference)));
 		}
 
 		public Pow pow(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Pow(append(expression));
 		}
 
@@ -1827,11 +1963,15 @@ public interface AggregationExpressions {
 			return "$sqrt";
 		}
 
-		public static Sqrt sqrtOf(String fieldRef) {
-			return new Sqrt(Fields.field(fieldRef));
+		public static Sqrt sqrtOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Sqrt(Fields.field(fieldReference));
 		}
 
 		public static Sqrt sqrtOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Sqrt(expression);
 		}
 
@@ -1856,11 +1996,15 @@ public interface AggregationExpressions {
 			return "$subtract";
 		}
 
-		public static Subtract valueOf(String fieldRef) {
-			return new Subtract(asFields(fieldRef));
+		public static Subtract valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Subtract(asFields(fieldReference));
 		}
 
 		public static Subtract valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Subtract(Collections.singletonList(expression));
 		}
 
@@ -1868,11 +2012,15 @@ public interface AggregationExpressions {
 			return new Subtract(Collections.singletonList(value));
 		}
 
-		public Subtract subtract(String fieldRef) {
-			return new Subtract(append(Fields.field(fieldRef)));
+		public Subtract subtract(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Subtract(append(Fields.field(fieldReference)));
 		}
 
 		public Subtract subtract(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Subtract(append(expression));
 		}
 
@@ -1897,11 +2045,15 @@ public interface AggregationExpressions {
 			return "$trunc";
 		}
 
-		public static Trunc truncValueOf(String fieldRef) {
-			return new Trunc(Fields.field(fieldRef));
+		public static Trunc truncValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Trunc(Fields.field(fieldReference));
 		}
 
 		public static Trunc truncValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Trunc(expression);
 		}
 
@@ -1926,11 +2078,15 @@ public interface AggregationExpressions {
 			return "$concat";
 		}
 
-		public static Concat valueOf(String fieldRef) {
-			return new Concat(asFields(fieldRef));
+		public static Concat valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Concat(asFields(fieldReference));
 		}
 
 		public static Concat valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Concat(Collections.singletonList(expression));
 		}
 
@@ -1938,11 +2094,15 @@ public interface AggregationExpressions {
 			return new Concat(Collections.singletonList(value));
 		}
 
-		public Concat concatValueOf(String fieldRef) {
-			return new Concat(append(Fields.field(fieldRef)));
+		public Concat concatValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Concat(append(Fields.field(fieldReference)));
 		}
 
 		public Concat concatValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Concat(append(expression));
 		}
 
@@ -1967,11 +2127,15 @@ public interface AggregationExpressions {
 			return "$substr";
 		}
 
-		public static Substr valueOf(String fieldRef) {
-			return new Substr(asFields(fieldRef));
+		public static Substr valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Substr(asFields(fieldReference));
 		}
 
 		public static Substr valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Substr(Collections.singletonList(expression));
 		}
 
@@ -2004,11 +2168,15 @@ public interface AggregationExpressions {
 			return new ToLower(value);
 		}
 
-		public static ToLower lowerValueOf(String fieldRef) {
-			return new ToLower(Fields.field(fieldRef));
+		public static ToLower lowerValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ToLower(Fields.field(fieldReference));
 		}
 
 		public static ToLower lowerValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new ToLower(Collections.singletonList(expression));
 		}
 	}
@@ -2033,11 +2201,15 @@ public interface AggregationExpressions {
 			return new ToUpper(value);
 		}
 
-		public static ToUpper upperValueOf(String fieldRef) {
-			return new ToUpper(Fields.field(fieldRef));
+		public static ToUpper upperValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ToUpper(Fields.field(fieldReference));
 		}
 
 		public static ToUpper upperValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new ToUpper(Collections.singletonList(expression));
 		}
 	}
@@ -2058,11 +2230,15 @@ public interface AggregationExpressions {
 			return "$strcasecmp";
 		}
 
-		public static StrCaseCmp valueOf(String fieldRef) {
-			return new StrCaseCmp(asFields(fieldRef));
+		public static StrCaseCmp valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new StrCaseCmp(asFields(fieldReference));
 		}
 
 		public static StrCaseCmp valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new StrCaseCmp(Collections.singletonList(expression));
 		}
 
@@ -2074,11 +2250,15 @@ public interface AggregationExpressions {
 			return new StrCaseCmp(append(value));
 		}
 
-		public StrCaseCmp strcasecmpValueOf(String fieldRef) {
-			return new StrCaseCmp(append(Fields.field(fieldRef)));
+		public StrCaseCmp strcasecmpValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new StrCaseCmp(append(Fields.field(fieldReference)));
 		}
 
 		public StrCaseCmp strcasecmpValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new StrCaseCmp(append(expression));
 		}
 	}
@@ -2099,11 +2279,15 @@ public interface AggregationExpressions {
 			return "$arrayElemAt";
 		}
 
-		public static ArrayElemtAt arrayOf(String fieldRef) {
-			return new ArrayElemtAt(asFields(fieldRef));
+		public static ArrayElemtAt arrayOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ArrayElemtAt(asFields(fieldReference));
 		}
 
 		public static ArrayElemtAt arrayOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new ArrayElemtAt(Collections.singletonList(expression));
 		}
 
@@ -2112,11 +2296,15 @@ public interface AggregationExpressions {
 		}
 
 		public ArrayElemtAt elementAt(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new ArrayElemtAt(append(expression));
 		}
 
-		public ArrayElemtAt elementAt(String numericFieldRef) {
-			return new ArrayElemtAt(append(Fields.field(numericFieldRef)));
+		public ArrayElemtAt elementAt(String arrayFieldReference) {
+
+			Assert.notNull(arrayFieldReference, "ArrayReference must not be null!");
+			return new ArrayElemtAt(append(Fields.field(arrayFieldReference)));
 		}
 	}
 
@@ -2136,19 +2324,27 @@ public interface AggregationExpressions {
 			return "$concatArrays";
 		}
 
-		public static ConcatArrays arrayOf(String fieldRef) {
-			return new ConcatArrays(asFields(fieldRef));
+		public static ConcatArrays arrayOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ConcatArrays(asFields(fieldReference));
 		}
 
 		public static ConcatArrays arrayOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new ConcatArrays(Collections.singletonList(expression));
 		}
 
 		public ConcatArrays concat(String arrayFieldReference) {
+
+			Assert.notNull(arrayFieldReference, "ArrayFieldReference must not be null!");
 			return new ConcatArrays(append(Fields.field(arrayFieldReference)));
 		}
 
 		public ConcatArrays concat(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new ConcatArrays(append(expression));
 		}
 	}
@@ -2427,11 +2623,15 @@ public interface AggregationExpressions {
 			return "$isArray";
 		}
 
-		public static IsArray isArray(String fieldRef) {
-			return new IsArray(Fields.field(fieldRef));
+		public static IsArray isArray(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new IsArray(Fields.field(fieldReference));
 		}
 
 		public static IsArray isArray(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new IsArray(expression);
 		}
 	}
@@ -2452,11 +2652,15 @@ public interface AggregationExpressions {
 			return "$size";
 		}
 
-		public static Size lengthOfArray(String fieldRef) {
-			return new Size(Fields.field(fieldRef));
+		public static Size lengthOfArray(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Size(Fields.field(fieldReference));
 		}
 
 		public static Size lengthOfArray(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Size(expression);
 		}
 	}
@@ -2477,11 +2681,15 @@ public interface AggregationExpressions {
 			return "$slice";
 		}
 
-		public static Slice sliceArrayOf(String fieldRef) {
-			return new Slice(asFields(fieldRef));
+		public static Slice sliceArrayOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Slice(asFields(fieldReference));
 		}
 
 		public static Slice sliceArrayOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Slice(Collections.singletonList(expression));
 		}
 
@@ -2542,11 +2750,15 @@ public interface AggregationExpressions {
 			return "$dayOfYear";
 		}
 
-		public static DayOfYear dayOfYear(String fieldRef) {
-			return new DayOfYear(Fields.field(fieldRef));
+		public static DayOfYear dayOfYear(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new DayOfYear(Fields.field(fieldReference));
 		}
 
 		public static DayOfYear dayOfYear(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new DayOfYear(expression);
 		}
 	}
@@ -2567,11 +2779,15 @@ public interface AggregationExpressions {
 			return "$dayOfMonth";
 		}
 
-		public static DayOfMonth dayOfMonth(String fieldRef) {
-			return new DayOfMonth(Fields.field(fieldRef));
+		public static DayOfMonth dayOfMonth(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new DayOfMonth(Fields.field(fieldReference));
 		}
 
 		public static DayOfMonth dayOfMonth(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new DayOfMonth(expression);
 		}
 	}
@@ -2592,11 +2808,15 @@ public interface AggregationExpressions {
 			return "$dayOfWeek";
 		}
 
-		public static DayOfWeek dayOfWeek(String fieldRef) {
-			return new DayOfWeek(Fields.field(fieldRef));
+		public static DayOfWeek dayOfWeek(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new DayOfWeek(Fields.field(fieldReference));
 		}
 
 		public static DayOfWeek dayOfWeek(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new DayOfWeek(expression);
 		}
 	}
@@ -2617,11 +2837,15 @@ public interface AggregationExpressions {
 			return "$year";
 		}
 
-		public static Year yearOf(String fieldRef) {
-			return new Year(Fields.field(fieldRef));
+		public static Year yearOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Year(Fields.field(fieldReference));
 		}
 
 		public static Year yearOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Year(expression);
 		}
 	}
@@ -2642,11 +2866,15 @@ public interface AggregationExpressions {
 			return "$month";
 		}
 
-		public static Month monthOf(String fieldRef) {
-			return new Month(Fields.field(fieldRef));
+		public static Month monthOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Month(Fields.field(fieldReference));
 		}
 
 		public static Month monthOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Month(expression);
 		}
 	}
@@ -2667,11 +2895,15 @@ public interface AggregationExpressions {
 			return "$week";
 		}
 
-		public static Week weekOf(String fieldRef) {
-			return new Week(Fields.field(fieldRef));
+		public static Week weekOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Week(Fields.field(fieldReference));
 		}
 
 		public static Week weekOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Week(expression);
 		}
 	}
@@ -2692,11 +2924,15 @@ public interface AggregationExpressions {
 			return "$hour";
 		}
 
-		public static Hour hourOf(String fieldRef) {
-			return new Hour(Fields.field(fieldRef));
+		public static Hour hourOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Hour(Fields.field(fieldReference));
 		}
 
 		public static Hour hourOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Hour(expression);
 		}
 	}
@@ -2717,11 +2953,15 @@ public interface AggregationExpressions {
 			return "$minute";
 		}
 
-		public static Minute minuteOf(String fieldRef) {
-			return new Minute(Fields.field(fieldRef));
+		public static Minute minuteOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Minute(Fields.field(fieldReference));
 		}
 
 		public static Minute minuteOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Minute(expression);
 		}
 	}
@@ -2742,11 +2982,27 @@ public interface AggregationExpressions {
 			return "$second";
 		}
 
-		public static Second secondOf(String fieldRef) {
-			return new Second(Fields.field(fieldRef));
+		/**
+		 * Creates new {@link Second}.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static Second secondOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Second(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Second}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Second secondOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Second(expression);
 		}
 	}
@@ -2767,11 +3023,27 @@ public interface AggregationExpressions {
 			return "$millisecond";
 		}
 
-		public static Millisecond millisecondOf(String fieldRef) {
-			return new Millisecond(Fields.field(fieldRef));
+		/**
+		 * Creates new {@link Millisecond}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static Millisecond millisecondOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Millisecond(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Millisecond}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Millisecond millisecondOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Millisecond(expression);
 		}
 	}
@@ -2792,35 +3064,61 @@ public interface AggregationExpressions {
 			return "$dateToString";
 		}
 
-		public static FormatBuilder dateOf(final String fieldRef) {
+		/**
+		 * Creates new {@link FormatBuilder} allowing to define the date format to apply.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static FormatBuilder dateOf(final String fieldReference) {
 
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new FormatBuilder() {
 				@Override
 				public DateToString toString(String format) {
 
-					Map<String, Object> args = new LinkedHashMap<String, Object>(2);
-					args.put("format", format);
-					args.put("date", Fields.field(fieldRef));
-					return new DateToString(args);
+					Assert.notNull(format, "Format must not be null!");
+					return new DateToString(argumentMap(Fields.field(fieldReference), format));
 				}
 			};
 		}
 
+		/**
+		 * Creates new {@link FormatBuilder} allowing to define the date format to apply.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static FormatBuilder dateOf(final AggregationExpression expression) {
 
+			Assert.notNull(expression, "Expression must not be null!");
 			return new FormatBuilder() {
 				@Override
 				public DateToString toString(String format) {
 
-					Map<String, Object> args = new LinkedHashMap<String, Object>(2);
-					args.put("format", format);
-					args.put("date", expression);
-					return new DateToString(args);
+					Assert.notNull(format, "Format must not be null!");
+
+					return new DateToString(argumentMap(expression, format));
 				}
 			};
+		}
+
+		private static Map<String, Object> argumentMap(Object date, String format) {
+
+			Map<String, Object> args = new LinkedHashMap<String, Object>(2);
+			args.put("format", format);
+			args.put("date", date);
+			return args;
 		}
 
 		public interface FormatBuilder {
+
+			/**
+			 * Creates new {@link DateToString} with all previously added arguments appending the given one.
+			 *
+			 * @param format must not be {@literal null}.
+			 * @return
+			 */
 			DateToString toString(String format);
 		}
 	}
@@ -2841,19 +3139,53 @@ public interface AggregationExpressions {
 			return "$sum";
 		}
 
-		public static Sum sumOf(String fieldRef) {
-			return new Sum(asFields(fieldRef));
+		/**
+		 * Creates new {@link Sum}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static Sum sumOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Sum(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Sum}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Sum sumOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Sum(Collections.singletonList(expression));
 		}
 
-		public Sum and(String fieldRef) {
-			return new Sum(append(Fields.field(fieldRef)));
+		/**
+		 * Creates new {@link Sum} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
+		 * possible in {@code $project} stage.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public Sum and(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Sum(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Creates new {@link Sum} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
+		 * possible in {@code $project} stage.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public Sum and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Sum(append(expression));
 		}
 
@@ -2886,19 +3218,53 @@ public interface AggregationExpressions {
 			return "$avg";
 		}
 
-		public static Avg avgOf(String fieldRef) {
-			return new Avg(asFields(fieldRef));
+		/**
+		 * Creates new {@link Avg}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static Avg avgOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Avg(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Avg}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Avg avgOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Avg(Collections.singletonList(expression));
 		}
 
-		public Avg and(String fieldRef) {
-			return new Avg(append(Fields.field(fieldRef)));
+		/**
+		 * Creates new {@link Avg} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
+		 * possible in {@code $project} stage.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public Avg and(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Avg(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Creates new {@link Avg} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
+		 * possible in {@code $project} stage.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public Avg and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Avg(append(expression));
 		}
 
@@ -2931,19 +3297,53 @@ public interface AggregationExpressions {
 			return "$max";
 		}
 
-		public static Max maxOf(String fieldRef) {
-			return new Max(asFields(fieldRef));
+		/**
+		 * Creates new {@link Max}.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static Max maxOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Max(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Max}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Max maxOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Max(Collections.singletonList(expression));
 		}
 
-		public Max and(String fieldRef) {
-			return new Max(append(Fields.field(fieldRef)));
+		/**
+		 * Creates new {@link Max} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
+		 * possible in {@code $project} stage.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public Max and(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Max(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Creates new {@link Max} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
+		 * possible in {@code $project} stage.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public Max and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Max(append(expression));
 		}
 
@@ -2976,19 +3376,53 @@ public interface AggregationExpressions {
 			return "$min";
 		}
 
-		public static Min minOf(String fieldRef) {
-			return new Min(asFields(fieldRef));
+		/**
+		 * Creates new {@link Min}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static Min minOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Min(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Min}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Min minOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Min(Collections.singletonList(expression));
 		}
 
-		public Min and(String fieldRef) {
-			return new Min(append(Fields.field(fieldRef)));
+		/**
+		 * Creates new {@link Min} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public Min and(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Min(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Creates new {@link Min} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
+		 * possible in {@code $project} stage.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public Min and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new Min(append(expression));
 		}
 
@@ -3021,19 +3455,53 @@ public interface AggregationExpressions {
 			return "$stdDevPop";
 		}
 
-		public static StdDevPop stdDevPopOf(String fieldRef) {
-			return new StdDevPop(asFields(fieldRef));
+		/**
+		 * Creates new {@link StdDevPop}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static StdDevPop stdDevPopOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new StdDevPop(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link StdDevPop} with all previously added arguments appending the given one.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static StdDevPop stdDevPopOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new StdDevPop(Collections.singletonList(expression));
 		}
 
-		public StdDevPop and(String fieldRef) {
-			return new StdDevPop(append(Fields.field(fieldRef)));
+		/**
+		 * Creates new {@link StdDevPop} with all previously added arguments appending the given one. <br/>
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public StdDevPop and(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new StdDevPop(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Creates new {@link StdDevSamp} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public StdDevPop and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new StdDevPop(append(expression));
 		}
 
@@ -3066,19 +3534,53 @@ public interface AggregationExpressions {
 			return "$stdDevSamp";
 		}
 
-		public static StdDevSamp stdDevSampOf(String fieldRef) {
-			return new StdDevSamp(asFields(fieldRef));
+		/**
+		 * Creates new {@link StdDevSamp}.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static StdDevSamp stdDevSampOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new StdDevSamp(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link StdDevSamp}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static StdDevSamp stdDevSampOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new StdDevSamp(Collections.singletonList(expression));
 		}
 
-		public StdDevSamp and(String fieldRef) {
-			return new StdDevSamp(append(Fields.field(fieldRef)));
+		/**
+		 * Creates new {@link StdDevSamp} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public StdDevSamp and(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new StdDevSamp(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Creates new {@link StdDevSamp} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public StdDevSamp and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new StdDevSamp(append(expression));
 		}
 
