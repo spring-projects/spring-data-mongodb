@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.BooleanOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
@@ -1628,6 +1629,48 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { ne250: { $ne: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLogicAndAggregationExpression() {
+
+		DBObject agg = project()
+				.and(BooleanOperators.valueOf(ComparisonOperators.valueOf("qty").greaterThanValue(100))
+						.and(ComparisonOperators.valueOf("qty").lessThanValue(250)))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(
+				JSON.parse("{ $project: { result: { $and: [ { $gt: [ \"$qty\", 100 ] }, { $lt: [ \"$qty\", 250 ] } ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLogicOrAggregationExpression() {
+
+		DBObject agg = project()
+				.and(BooleanOperators.valueOf(ComparisonOperators.valueOf("qty").greaterThanValue(250))
+						.or(ComparisonOperators.valueOf("qty").lessThanValue(200)))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(
+				JSON.parse("{ $project: { result: { $or: [ { $gt: [ \"$qty\", 250 ] }, { $lt: [ \"$qty\", 200 ] } ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderNotAggregationExpression() {
+
+		DBObject agg = project().and(BooleanOperators.not(ComparisonOperators.valueOf("qty").greaterThanValue(250)))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $not: [ { $gt: [ \"$qty\", 250 ] } ] } } }")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
