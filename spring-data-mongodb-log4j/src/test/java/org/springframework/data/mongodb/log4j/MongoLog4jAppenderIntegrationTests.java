@@ -15,56 +15,50 @@
  */
 package org.springframework.data.mongodb.log4j;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import java.util.Calendar;
-
+import com.mongodb.*;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCursor;
-import com.mongodb.MongoClient;
+import java.net.UnknownHostException;
+import java.util.Calendar;
+import java.util.Collections;
+
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Integration tests for {@link MongoLog4jAppender}.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
 public class MongoLog4jAppenderIntegrationTests {
 
-	static final String NAME = MongoLog4jAppenderIntegrationTests.class.getName();
+	private static final Logger log = Logger.getLogger(MongoLog4jAppenderIntegrationTests.class.getName());
+	private MongoClient mongo;
+	private DB db;
+	private String collection;
+	private ServerAddress serverLocation;
 
-	private static final Logger log = Logger.getLogger(NAME);
-	MongoClient mongo;
-	DB db;
-	String collection;
+	@Before public void setUp() throws Exception {
+		serverLocation = new ServerAddress("localhost", 27017);
 
-	@Before
-	public void setUp() throws Exception {
-
-		mongo = new MongoClient("localhost", 27017);
+		mongo = new MongoClient(serverLocation);
 		db = mongo.getDB("logs");
 
 		Calendar now = Calendar.getInstance();
 		collection = String.valueOf(now.get(Calendar.YEAR)) + String.format("%1$02d", now.get(Calendar.MONTH) + 1);
 	}
 
-	@After
-	public void tearDown() {
+	@After public void tearDown() {
 		db.getCollection(collection).remove(new BasicDBObject());
 	}
 
-	@Test
-	public void testLogging() {
-
+	@Test public void testLogging() {
 		log.debug("DEBUG message");
 		log.info("INFO message");
 		log.warn("WARN message");
@@ -74,10 +68,15 @@ public class MongoLog4jAppenderIntegrationTests {
 		assertThat(msgs.count(), is(4));
 	}
 
-	@Test
-	public void testProperties() {
+	@Test public void testLoggingWithCredentials() throws UnknownHostException {
+		MongoCredential credential = MongoCredential.createCredential("username", "logs", "password".toCharArray());
+		mongo = new MongoClient(serverLocation, Collections.singletonList(credential));
+		testLogging();
+	}
 
+	@Test public void testProperties() {
 		MDC.put("property", "one");
 		log.debug("DEBUG message");
 	}
+
 }
