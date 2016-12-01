@@ -549,6 +549,60 @@ public interface AggregationExpressions {
 			public Trunc trunc() {
 				return fieldRef != null ? Trunc.truncValueOf(fieldRef) : Trunc.truncValueOf(expression);
 			}
+
+			/**
+			 * Calculates and returns the sum of numeric values.
+			 *
+			 * @return
+			 */
+			public Sum sum() {
+				return fieldRef != null ? Sum.sumOf(fieldRef) : Sum.sumOf(expression);
+			}
+
+			/**
+			 * Returns the average value of the numeric values.
+			 *
+			 * @return
+			 */
+			public Avg avg() {
+				return fieldRef != null ? Avg.avgOf(fieldRef) : Avg.avgOf(expression);
+			}
+
+			/**
+			 * Returns the maximum value.
+			 *
+			 * @return
+			 */
+			public Max max() {
+				return fieldRef != null ? Max.maxOf(fieldRef) : Max.maxOf(expression);
+			}
+
+			/**
+			 * Returns the minimum value.
+			 *
+			 * @return
+			 */
+			public Min min() {
+				return fieldRef != null ? Min.minOf(fieldRef) : Min.minOf(expression);
+			}
+
+			/**
+			 * Calculates the population standard deviation of the input values.
+			 *
+			 * @return
+			 */
+			public StdDevPop stdDevPop() {
+				return fieldRef != null ? StdDevPop.stdDevPopOf(fieldRef) : StdDevPop.stdDevPopOf(expression);
+			}
+
+			/**
+			 * Calculates the sample standard deviation of the input values.
+			 *
+			 * @return
+			 */
+			public StdDevSamp stdDevSamp() {
+				return fieldRef != null ? StdDevSamp.stdDevSampOf(fieldRef) : StdDevSamp.stdDevSampOf(expression);
+			}
 		}
 	}
 
@@ -2768,6 +2822,276 @@ public interface AggregationExpressions {
 
 		public interface FormatBuilder {
 			DateToString toString(String format);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $sum}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Sum extends AbstractAggregationExpression {
+
+		private Sum(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$sum";
+		}
+
+		public static Sum sumOf(String fieldRef) {
+			return new Sum(asFields(fieldRef));
+		}
+
+		public static Sum sumOf(AggregationExpression expression) {
+			return new Sum(Collections.singletonList(expression));
+		}
+
+		public Sum and(String fieldRef) {
+			return new Sum(append(Fields.field(fieldRef)));
+		}
+
+		public Sum and(AggregationExpression expression) {
+			return new Sum(append(expression));
+		}
+
+		@Override
+		public DBObject toDbObject(Object value, AggregationOperationContext context) {
+
+			if (value instanceof List) {
+				if (((List) value).size() == 1) {
+					return super.toDbObject(((List<Object>) value).iterator().next(), context);
+				}
+			}
+
+			return super.toDbObject(value, context);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $avg}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Avg extends AbstractAggregationExpression {
+
+		private Avg(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$avg";
+		}
+
+		public static Avg avgOf(String fieldRef) {
+			return new Avg(asFields(fieldRef));
+		}
+
+		public static Avg avgOf(AggregationExpression expression) {
+			return new Avg(Collections.singletonList(expression));
+		}
+
+		public Avg and(String fieldRef) {
+			return new Avg(append(Fields.field(fieldRef)));
+		}
+
+		public Avg and(AggregationExpression expression) {
+			return new Avg(append(expression));
+		}
+
+		@Override
+		public DBObject toDbObject(Object value, AggregationOperationContext context) {
+
+			if (value instanceof List) {
+				if (((List) value).size() == 1) {
+					return super.toDbObject(((List<Object>) value).iterator().next(), context);
+				}
+			}
+
+			return super.toDbObject(value, context);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $max}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Max extends AbstractAggregationExpression {
+
+		private Max(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$max";
+		}
+
+		public static Max maxOf(String fieldRef) {
+			return new Max(asFields(fieldRef));
+		}
+
+		public static Max maxOf(AggregationExpression expression) {
+			return new Max(Collections.singletonList(expression));
+		}
+
+		public Max and(String fieldRef) {
+			return new Max(append(Fields.field(fieldRef)));
+		}
+
+		public Max and(AggregationExpression expression) {
+			return new Max(append(expression));
+		}
+
+		@Override
+		public DBObject toDbObject(Object value, AggregationOperationContext context) {
+
+			if (value instanceof List) {
+				if (((List) value).size() == 1) {
+					return super.toDbObject(((List<Object>) value).iterator().next(), context);
+				}
+			}
+
+			return super.toDbObject(value, context);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $min}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Min extends AbstractAggregationExpression {
+
+		private Min(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$min";
+		}
+
+		public static Min minOf(String fieldRef) {
+			return new Min(asFields(fieldRef));
+		}
+
+		public static Min minOf(AggregationExpression expression) {
+			return new Min(Collections.singletonList(expression));
+		}
+
+		public Min and(String fieldRef) {
+			return new Min(append(Fields.field(fieldRef)));
+		}
+
+		public Min and(AggregationExpression expression) {
+			return new Min(append(expression));
+		}
+
+		@Override
+		public DBObject toDbObject(Object value, AggregationOperationContext context) {
+
+			if (value instanceof List) {
+				if (((List) value).size() == 1) {
+					return super.toDbObject(((List<Object>) value).iterator().next(), context);
+				}
+			}
+
+			return super.toDbObject(value, context);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $stdDevPop}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class StdDevPop extends AbstractAggregationExpression {
+
+		private StdDevPop(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$stdDevPop";
+		}
+
+		public static StdDevPop stdDevPopOf(String fieldRef) {
+			return new StdDevPop(asFields(fieldRef));
+		}
+
+		public static StdDevPop stdDevPopOf(AggregationExpression expression) {
+			return new StdDevPop(Collections.singletonList(expression));
+		}
+
+		public StdDevPop and(String fieldRef) {
+			return new StdDevPop(append(Fields.field(fieldRef)));
+		}
+
+		public StdDevPop and(AggregationExpression expression) {
+			return new StdDevPop(append(expression));
+		}
+
+		@Override
+		public DBObject toDbObject(Object value, AggregationOperationContext context) {
+
+			if (value instanceof List) {
+				if (((List) value).size() == 1) {
+					return super.toDbObject(((List<Object>) value).iterator().next(), context);
+				}
+			}
+
+			return super.toDbObject(value, context);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $stdDevSamp}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class StdDevSamp extends AbstractAggregationExpression {
+
+		private StdDevSamp(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$stdDevSamp";
+		}
+
+		public static StdDevSamp stdDevSampOf(String fieldRef) {
+			return new StdDevSamp(asFields(fieldRef));
+		}
+
+		public static StdDevSamp stdDevSampOf(AggregationExpression expression) {
+			return new StdDevSamp(Collections.singletonList(expression));
+		}
+
+		public StdDevSamp and(String fieldRef) {
+			return new StdDevSamp(append(Fields.field(fieldRef)));
+		}
+
+		public StdDevSamp and(AggregationExpression expression) {
+			return new StdDevSamp(append(expression));
+		}
+
+		@Override
+		public DBObject toDbObject(Object value, AggregationOperationContext context) {
+
+			if (value instanceof List) {
+				if (((List) value).size() == 1) {
+					return super.toDbObject(((List<Object>) value).iterator().next(), context);
+				}
+			}
+
+			return super.toDbObject(value, context);
 		}
 	}
 

@@ -1425,6 +1425,126 @@ public class ProjectionOperationUnitTests {
 				is(JSON.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }")));
 	}
 
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSumAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("quizzes").sum()).as("quizTotal")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { quizTotal: { $sum: \"$quizzes\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSumWithMultipleArgsAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("final").sum().and("midterm")).as("examTotal")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: {  examTotal: { $sum: [ \"$final\", \"$midterm\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAvgAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("quizzes").avg()).as("quizAvg")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { quizAvg: { $avg: \"$quizzes\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderAvgWithMultipleArgsAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("final").avg().and("midterm")).as("examAvg")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: {  examAvg: { $avg: [ \"$final\", \"$midterm\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMaxAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("quizzes").max()).as("quizMax")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { quizMax: { $max: \"$quizzes\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMaxWithMultipleArgsAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("final").max().and("midterm")).as("examMax")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: {  examMax: { $max: [ \"$final\", \"$midterm\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMinAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("quizzes").min()).as("quizMin")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { quizMin: { $min: \"$quizzes\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMinWithMultipleArgsAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("final").min().and("midterm")).as("examMin")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: {  examMin: { $min: [ \"$final\", \"$midterm\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderStdDevPopAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("scores").stdDevPop()).as("stdDev")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { stdDev: { $stdDevPop: \"$scores\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderStdDevSampAggregationExpression() {
+
+		DBObject agg = project().and(ArithmeticOperators.valueOf("scores").stdDevSamp()).as("stdDev")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { stdDev: { $stdDevSamp: \"$scores\"} } }")));
+	}
+
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
 		return (DBObject) fromProjectClause.get(field);
 	}
