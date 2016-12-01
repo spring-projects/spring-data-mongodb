@@ -31,6 +31,7 @@ import java.util.*;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Ricardo Espirito Santo
  */
 public class MongoLog4jAppender extends AppenderSkeleton {
 

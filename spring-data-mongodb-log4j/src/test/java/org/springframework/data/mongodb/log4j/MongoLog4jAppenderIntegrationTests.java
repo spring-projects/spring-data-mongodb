@@ -68,6 +68,9 @@ public class MongoLog4jAppenderIntegrationTests {
 		assertThat(msgs.count(), is(4));
 	}
 
+	/**
+	 * @see DATAMONGO-442
+	 */
 	@Test public void testLoggingWithCredentials() throws UnknownHostException {
 		MongoCredential credential = MongoCredential.createCredential("username", "logs", "password".toCharArray());
 		mongo = new MongoClient(serverLocation, Collections.singletonList(credential));
