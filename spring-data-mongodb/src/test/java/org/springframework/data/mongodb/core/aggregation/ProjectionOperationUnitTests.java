@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
@@ -1276,6 +1277,152 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { literalOnly: { $literal:  \"$1\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDayOfYearAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").dayOfYear()).as("dayOfYear")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { dayOfYear: { $dayOfYear: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDayOfMonthAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").dayOfMonth()).as("day")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { day: { $dayOfMonth: \"$date\" }} }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDayOfWeekAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").dayOfWeek()).as("dayOfWeek")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { dayOfWeek: { $dayOfWeek: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderYearAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").year()).as("year")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { year: { $year: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMonthAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").month()).as("month")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { month: { $month: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderWeekAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").week()).as("week")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { week: { $week: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderHourAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").hour()).as("hour")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { hour: { $hour: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMinuteAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").minute()).as("minute")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { minute: { $minute: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderSecondAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").second()).as("second")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { second: { $second: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderMillisecondAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").millisecond()).as("msec")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { msec: { $millisecond: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDateToString() {
+
+		DBObject agg = project().and("date").dateAsFormattedString("%H:%M:%S:%L").as("time")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(JSON.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderDateToStringAggregationExpression() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").toString("%H:%M:%S:%L")).as("time")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(JSON.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {

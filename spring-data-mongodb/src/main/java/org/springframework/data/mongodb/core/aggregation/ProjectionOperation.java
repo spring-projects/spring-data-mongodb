@@ -1167,6 +1167,17 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return this.operation.and(AggregationExpressions.Literal.asLiteral(name));
 		}
 
+		/**
+		 * Takes the date representation of the previously mentioned field and applies given {@literal format} to it.
+		 *
+		 * @param format must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder dateAsFormattedString(String format) {
+			return this.operation.and(AggregationExpressions.DateToString.dateOf(name).toString(format));
+		}
+
 		/* 
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)

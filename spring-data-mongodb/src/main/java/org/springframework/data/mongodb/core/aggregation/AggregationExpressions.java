@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -909,6 +910,160 @@ public interface AggregationExpressions {
 	/**
 	 * @author Christoph Strobl
 	 */
+	class DateOperators {
+
+		/**
+		 * Take the date referenced by given {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 */
+		public static DateOperatorFactory dateOf(String fieldRef) {
+
+			Assert.notNull(fieldRef, "FieldRef must not be null!");
+			return new DateOperatorFactory(fieldRef);
+		}
+
+		/**
+		 * Take the date resulting from the given {@literal expression}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 */
+		public static DateOperatorFactory dateOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new DateOperatorFactory(expression);
+		}
+
+		public static class DateOperatorFactory {
+
+			private final String fieldRef;
+			private final AggregationExpression expression;
+
+			public DateOperatorFactory(String fieldRef) {
+
+				Assert.notNull(fieldRef, "FieldRef must not be null!");
+				this.fieldRef = fieldRef;
+				this.expression = null;
+			}
+
+			public DateOperatorFactory(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				this.fieldRef = null;
+				this.expression = expression;
+			}
+
+			/**
+			 * Returns the day of the year for a date as a number between 1 and 366.
+			 *
+			 * @return
+			 */
+			public DayOfYear dayOfYear() {
+				return usesFieldRef() ? DayOfYear.dayOfYear(fieldRef) : DayOfYear.dayOfYear(expression);
+			}
+
+			/**
+			 * Returns the day of the month for a date as a number between 1 and 31.
+			 *
+			 * @return
+			 */
+			public DayOfMonth dayOfMonth() {
+				return usesFieldRef() ? DayOfMonth.dayOfMonth(fieldRef) : DayOfMonth.dayOfMonth(expression);
+			}
+
+			/**
+			 * Returns the day of the week for a date as a number between 1 (Sunday) and 7 (Saturday).
+			 *
+			 * @return
+			 */
+			public DayOfWeek dayOfWeek() {
+				return usesFieldRef() ? DayOfWeek.dayOfWeek(fieldRef) : DayOfWeek.dayOfWeek(expression);
+			}
+
+			/**
+			 * Returns the year portion of a date.
+			 *
+			 * @return
+			 */
+			public Year year() {
+				return usesFieldRef() ? Year.yearOf(fieldRef) : Year.yearOf(expression);
+			}
+
+			/**
+			 * Returns the month of a date as a number between 1 and 12.
+			 *
+			 * @return
+			 */
+			public Month month() {
+				return usesFieldRef() ? Month.monthOf(fieldRef) : Month.monthOf(expression);
+			}
+
+			/**
+			 * Returns the week of the year for a date as a number between 0 and 53.
+			 *
+			 * @return
+			 */
+			public Week week() {
+				return usesFieldRef() ? Week.weekOf(fieldRef) : Week.weekOf(expression);
+			}
+
+			/**
+			 * Returns the hour portion of a date as a number between 0 and 23.
+			 *
+			 * @return
+			 */
+			public Hour hour() {
+				return usesFieldRef() ? Hour.hourOf(fieldRef) : Hour.hourOf(expression);
+			}
+
+			/**
+			 * Returns the minute portion of a date as a number between 0 and 59.
+			 *
+			 * @return
+			 */
+			public Minute minute() {
+				return usesFieldRef() ? Minute.minuteOf(fieldRef) : Minute.minuteOf(expression);
+			}
+
+			/**
+			 * Returns the second portion of a date as a number between 0 and 59, but can be 60 to account for leap seconds.
+			 *
+			 * @return
+			 */
+			public Second second() {
+				return usesFieldRef() ? Second.secondOf(fieldRef) : Second.secondOf(expression);
+			}
+
+			/**
+			 * Returns the millisecond portion of a date as an integer between 0 and 999.
+			 *
+			 * @return
+			 */
+			public Millisecond millisecond() {
+				return usesFieldRef() ? Millisecond.millisecondOf(fieldRef) : Millisecond.millisecondOf(expression);
+			}
+
+			/**
+			 * Converts a date object to a string according to a user-specified {@literal format}.
+			 *
+			 * @param format must not be {@literal null}.
+			 * @return
+			 */
+			public DateToString toString(String format) {
+				return (usesFieldRef() ? DateToString.dateOf(fieldRef) : DateToString.dateOf(expression)).toString(format);
+			}
+
+			private boolean usesFieldRef() {
+				return fieldRef != null;
+			}
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
 	abstract class AbstractAggregationExpression implements AggregationExpression {
 
 		private final Object value;
@@ -990,7 +1145,14 @@ public interface AggregationExpressions {
 		}
 
 		protected Object append(String key, Object value) {
-			return null;
+
+			if (!(value instanceof Map)) {
+				throw new IllegalArgumentException("o_O");
+			}
+			Map<String, Object> clone = new LinkedHashMap<String, Object>((Map<String, Object>) value);
+			clone.put(key, value);
+			return clone;
+
 		}
 
 		public abstract String getMongoMethod();
@@ -2307,6 +2469,305 @@ public interface AggregationExpressions {
 
 		public static Literal asLiteral(Object value) {
 			return new Literal(value);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dayOfYear}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class DayOfYear extends AbstractAggregationExpression {
+
+		private DayOfYear(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$dayOfYear";
+		}
+
+		public static DayOfYear dayOfYear(String fieldRef) {
+			return new DayOfYear(Fields.field(fieldRef));
+		}
+
+		public static DayOfYear dayOfYear(AggregationExpression expression) {
+			return new DayOfYear(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dayOfMonth}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class DayOfMonth extends AbstractAggregationExpression {
+
+		private DayOfMonth(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$dayOfMonth";
+		}
+
+		public static DayOfMonth dayOfMonth(String fieldRef) {
+			return new DayOfMonth(Fields.field(fieldRef));
+		}
+
+		public static DayOfMonth dayOfMonth(AggregationExpression expression) {
+			return new DayOfMonth(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dayOfWeek}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class DayOfWeek extends AbstractAggregationExpression {
+
+		private DayOfWeek(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$dayOfWeek";
+		}
+
+		public static DayOfWeek dayOfWeek(String fieldRef) {
+			return new DayOfWeek(Fields.field(fieldRef));
+		}
+
+		public static DayOfWeek dayOfWeek(AggregationExpression expression) {
+			return new DayOfWeek(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $year}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Year extends AbstractAggregationExpression {
+
+		private Year(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$year";
+		}
+
+		public static Year yearOf(String fieldRef) {
+			return new Year(Fields.field(fieldRef));
+		}
+
+		public static Year yearOf(AggregationExpression expression) {
+			return new Year(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $month}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Month extends AbstractAggregationExpression {
+
+		private Month(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$month";
+		}
+
+		public static Month monthOf(String fieldRef) {
+			return new Month(Fields.field(fieldRef));
+		}
+
+		public static Month monthOf(AggregationExpression expression) {
+			return new Month(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $week}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Week extends AbstractAggregationExpression {
+
+		private Week(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$week";
+		}
+
+		public static Week weekOf(String fieldRef) {
+			return new Week(Fields.field(fieldRef));
+		}
+
+		public static Week weekOf(AggregationExpression expression) {
+			return new Week(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $hour}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Hour extends AbstractAggregationExpression {
+
+		private Hour(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$hour";
+		}
+
+		public static Hour hourOf(String fieldRef) {
+			return new Hour(Fields.field(fieldRef));
+		}
+
+		public static Hour hourOf(AggregationExpression expression) {
+			return new Hour(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $minute}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Minute extends AbstractAggregationExpression {
+
+		private Minute(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$minute";
+		}
+
+		public static Minute minuteOf(String fieldRef) {
+			return new Minute(Fields.field(fieldRef));
+		}
+
+		public static Minute minuteOf(AggregationExpression expression) {
+			return new Minute(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $second}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Second extends AbstractAggregationExpression {
+
+		private Second(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$second";
+		}
+
+		public static Second secondOf(String fieldRef) {
+			return new Second(Fields.field(fieldRef));
+		}
+
+		public static Second secondOf(AggregationExpression expression) {
+			return new Second(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $millisecond}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Millisecond extends AbstractAggregationExpression {
+
+		private Millisecond(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$millisecond";
+		}
+
+		public static Millisecond millisecondOf(String fieldRef) {
+			return new Millisecond(Fields.field(fieldRef));
+		}
+
+		public static Millisecond millisecondOf(AggregationExpression expression) {
+			return new Millisecond(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dateToString}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class DateToString extends AbstractAggregationExpression {
+
+		private DateToString(Object value) {
+			super(value);
+		}
+
+		@Override
+		public String getMongoMethod() {
+			return "$dateToString";
+		}
+
+		public static FormatBuilder dateOf(final String fieldRef) {
+
+			return new FormatBuilder() {
+				@Override
+				public DateToString toString(String format) {
+
+					Map<String, Object> args = new LinkedHashMap<String, Object>(2);
+					args.put("format", format);
+					args.put("date", Fields.field(fieldRef));
+					return new DateToString(args);
+				}
+			};
+		}
+
+		public static FormatBuilder dateOf(final AggregationExpression expression) {
+
+			return new FormatBuilder() {
+				@Override
+				public DateToString toString(String format) {
+
+					Map<String, Object> args = new LinkedHashMap<String, Object>(2);
+					args.put("format", format);
+					args.put("date", expression);
+					return new DateToString(args);
+				}
+			};
+		}
+
+		public interface FormatBuilder {
+			DateToString toString(String format);
 		}
 	}
 
