@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
@@ -1543,6 +1544,90 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { stdDev: { $stdDevSamp: \"$scores\"} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderCmpAggregationExpression() {
+
+		DBObject agg = project().and(ComparisonOperators.valueOf("qty").compareToValue(250)).as("cmp250")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { cmp250: { $cmp: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderEqAggregationExpression() {
+
+		DBObject agg = project().and(ComparisonOperators.valueOf("qty").equalToValue(250)).as("eq250")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { eq250: { $eq: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderGtAggregationExpression() {
+
+		DBObject agg = project().and(ComparisonOperators.valueOf("qty").greaterThanValue(250)).as("gt250")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { gt250: { $gt: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderGteAggregationExpression() {
+
+		DBObject agg = project().and(ComparisonOperators.valueOf("qty").greaterThanEqualToValue(250)).as("gte250")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { gte250: { $gte: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLtAggregationExpression() {
+
+		DBObject agg = project().and(ComparisonOperators.valueOf("qty").lessThanValue(250)).as("lt250")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { lt250: { $lt: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderLteAggregationExpression() {
+
+		DBObject agg = project().and(ComparisonOperators.valueOf("qty").lessThanEqualToValue(250)).as("lte250")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { lte250: { $lte: [\"$qty\", 250]} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1536
+	 */
+	@Test
+	public void shouldRenderNeAggregationExpression() {
+
+		DBObject agg = project().and(ComparisonOperators.valueOf("qty").notEqualToValue(250)).as("ne250")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { ne250: { $ne: [\"$qty\", 250]} } }")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
