@@ -529,6 +529,20 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
+		 * Generates an {@code $subtract} expression that subtracts the result of the given {@link AggregationExpression}
+		 * from the previously mentioned field.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder minus(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return project("subtract", expression);
+		}
+
+		/**
 		 * Generates an {@code $multiply} expression that multiplies the given number with the previously mentioned field.
 		 * 
 		 * @param number
@@ -551,6 +565,20 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			Assert.notNull(fieldReference, FIELD_REFERENCE_NOT_NULL);
 			return project("multiply", Fields.field(fieldReference));
+		}
+
+		/**
+		 * Generates an {@code $multiply} expression that multiplies the previously with the result of the
+		 * {@link AggregationExpression}. mentioned field.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder multiply(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return project("multiply", expression);
 		}
 
 		/**
@@ -580,6 +608,20 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
+		 * Generates an {@code $divide} expression that divides the value of the previously mentioned by the result of the
+		 * {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder divide(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return project("divide", expression);
+		}
+
+		/**
 		 * Generates an {@code $mod} expression that divides the previously mentioned field by the given number and returns
 		 * the remainder.
 		 * 
@@ -596,7 +638,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates an {@code $mod} expression that divides the value of the given field by the previously mentioned field
 		 * and returns the remainder.
-		 * 
+		 *
 		 * @param fieldReference
 		 * @return
 		 */
@@ -604,6 +646,20 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			Assert.notNull(fieldReference, FIELD_REFERENCE_NOT_NULL);
 			return project("mod", Fields.field(fieldReference));
+		}
+
+		/**
+		 * Generates an {@code $mod} expression that divides the value of the previously mentioned field by the result of
+		 * the {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder mod(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return project("mod", expression);
 		}
 
 		/**
@@ -731,6 +787,410 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder filter(String as, AggregationExpression condition) {
 			return this.operation.and(AggregationExpressions.Filter.filter(name).as(as).by(condition));
+		}
+
+		// SET OPERATORS
+
+		/**
+		 * Generates a {@code $setEquals} expression that compares the previously mentioned field to one or more arrays and
+		 * returns {@literal true} if they have the same distinct elements and {@literal false} otherwise.
+		 *
+		 * @param arrays must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder equalsArrays(String... arrays) {
+
+			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
+			return project("setEquals", Fields.fields(arrays));
+		}
+
+		/**
+		 * Generates a {@code $setIntersection} expression that takes array of the previously mentioned field and one or
+		 * more arrays and returns an array that contains the elements that appear in every of those.
+		 *
+		 * @param arrays must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder intersectsArrays(String... arrays) {
+
+			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
+			return project("setIntersection", Fields.fields(arrays));
+		}
+
+		/**
+		 * Generates a {@code $setUnion} expression that takes array of the previously mentioned field and one or more
+		 * arrays and returns an array that contains the elements that appear in any of those.
+		 *
+		 * @param arrays must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder unionArrays(String... arrays) {
+
+			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
+			return project("setUnion", Fields.fields(arrays));
+		}
+
+		/**
+		 * Generates a {@code $setDifference} expression that takes array of the previously mentioned field and returns an
+		 * array containing the elements that do not exist in the given {@literal array}.
+		 *
+		 * @param array must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder differenceToArray(String array) {
+
+			Assert.hasText(array, "Array must not be null or empty!");
+			return project("setDifference", Fields.fields(array));
+		}
+
+		/**
+		 * Generates a {@code $setIsSubset} expression that takes array of the previously mentioned field and returns
+		 * {@literal true} if it is a subset of the given {@literal array}.
+		 * 
+		 * @param array must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder subsetOfArray(String array) {
+
+			Assert.hasText(array, "Array must not be null or empty!");
+			return project("setIsSubset", Fields.fields(array));
+		}
+
+		/**
+		 * Generates an {@code $anyElementTrue} expression that Takes array of the previously mentioned field and returns
+		 * {@literal true} if any of the elements are {@literal true} and {@literal false} otherwise.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder anyElementInArrayTrue() {
+			return project("anyElementTrue");
+		}
+
+		/**
+		 * Generates an {@code $allElementsTrue} expression that takes array of the previously mentioned field and returns
+		 * {@literal true} if no elements is {@literal false}.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder allElementsInArrayTrue() {
+			return project("allElementsTrue");
+		}
+
+		/**
+		 * Generates a {@code $abs} expression that takes the number of the previously mentioned field and returns the
+		 * absolute value of it.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder absoluteValue() {
+			return this.operation.and(AggregationExpressions.Abs.absoluteValueOf(name));
+		}
+
+		/**
+		 * Generates a {@code $ceil} expression that takes the number of the previously mentioned field and returns the
+		 * smallest integer greater than or equal to the specified number.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder ceil() {
+			return this.operation.and(AggregationExpressions.Ceil.ceilValueOf(name));
+		}
+
+		/**
+		 * Generates a {@code $exp} expression that takes the number of the previously mentioned field and raises Euler’s
+		 * number (i.e. e ) on it.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder exp() {
+			return this.operation.and(AggregationExpressions.Exp.expValueOf(name));
+		}
+
+		/**
+		 * Generates a {@code $floor} expression that takes the number of the previously mentioned field and returns the
+		 * largest integer less than or equal to it.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder floor() {
+			return this.operation.and(AggregationExpressions.Floor.floorValueOf(name));
+		}
+
+		/**
+		 * Generates a {@code $ln} expression that takes the number of the previously mentioned field and calculates the
+		 * natural logarithm ln (i.e loge) of it.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder ln() {
+			return this.operation.and(AggregationExpressions.Ln.lnValueOf(name));
+		}
+
+		/**
+		 * Generates a {@code $log} expression that takes the number of the previously mentioned field and calculates the
+		 * log of the associated number in the specified base.
+		 *
+		 * @param baseFieldRef must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder log(String baseFieldRef) {
+			return this.operation.and(AggregationExpressions.Log.valueOf(name).log(baseFieldRef));
+		}
+
+		/**
+		 * Generates a {@code $log} expression that takes the number of the previously mentioned field and calculates the
+		 * log of the associated number in the specified base.
+		 *
+		 * @param base must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder log(Number base) {
+			return this.operation.and(AggregationExpressions.Log.valueOf(name).log(base));
+		}
+
+		/**
+		 * Generates a {@code $log} expression that takes the number of the previously mentioned field and calculates the
+		 * log of the associated number in the specified base.
+		 *
+		 * @param base must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder log(AggregationExpression base) {
+			return this.operation.and(AggregationExpressions.Log.valueOf(name).log(base));
+		}
+
+		/**
+		 * Generates a {@code $log10} expression that takes the number of the previously mentioned field and calculates the
+		 * log base 10.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder log10() {
+			return this.operation.and(AggregationExpressions.Log10.log10ValueOf(name));
+		}
+
+		/**
+		 * Generates a {@code $pow} expression that takes the number of the previously mentioned field and raises it by the
+		 * specified exponent.
+		 *
+		 * @param exponentFieldRef must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder pow(String exponentFieldRef) {
+			return this.operation.and(AggregationExpressions.Pow.valueOf(name).pow(exponentFieldRef));
+		}
+
+		/**
+		 * Generates a {@code $pow} expression that takes the number of the previously mentioned field and raises it by the
+		 * specified exponent.
+		 *
+		 * @param exponent must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder pow(Number exponent) {
+			return this.operation.and(AggregationExpressions.Pow.valueOf(name).pow(exponent));
+		}
+
+		/**
+		 * Generates a {@code $pow} expression that Takes the number of the previously mentioned field and raises it by the
+		 * specified exponent.
+		 *
+		 * @param exponentExpression must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder pow(AggregationExpression exponentExpression) {
+			return this.operation.and(AggregationExpressions.Pow.valueOf(name).pow(exponentExpression));
+		}
+
+		/**
+		 * Generates a {@code $sqrt} expression that takes the number of the previously mentioned field and calculates the
+		 * square root.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder sqrt() {
+			return this.operation.and(AggregationExpressions.Sqrt.sqrtOf(name));
+		}
+
+		/**
+		 * Takes the number of the previously mentioned field and truncates it to its integer value.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder trunc() {
+			return this.operation.and(AggregationExpressions.Trunc.truncValueOf(name));
+		}
+
+		/**
+		 * Generates a {@code $concat} expression that takes the string representation of the previously mentioned field and
+		 * concats given values to it.
+		 *
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder concat(Object... values) {
+			return project("concat", values);
+		}
+
+		/**
+		 * Generates a {@code $substr} expression that Takes the string representation of the previously mentioned field and
+		 * returns a substring starting at a specified index position.
+		 *
+		 * @param start
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder substring(int start) {
+			return substring(start, -1);
+		}
+
+		/**
+		 * Generates a {@code $substr} expression that takes the string representation of the previously mentioned field and
+		 * returns a substring starting at a specified index position including the specified number of characters.
+		 *
+		 * @param start
+		 * @param nrOfChars
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder substring(int start, int nrOfChars) {
+			return project("substr", start, nrOfChars);
+		}
+
+		/**
+		 * Generates a {@code $toLower} expression that takes the string representation of the previously mentioned field
+		 * and lowers it.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder toLower() {
+			return this.operation.and(AggregationExpressions.ToLower.lowerValueOf(name));
+		}
+
+		/**
+		 * Generates a {@code $toUpper} expression that takes the string representation of the previously mentioned field
+		 * and uppers it.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder toUpper() {
+			return this.operation.and(AggregationExpressions.ToUpper.upperValueOf(name));
+		}
+
+		/**
+		 * Generates a {@code $strcasecmp} expression that takes the string representation of the previously mentioned field
+		 * and performs case-insensitive comparison to the given {@literal value}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder strCaseCmp(String value) {
+			return project("strcasecmp", value);
+		}
+
+		/**
+		 * Generates a {@code $strcasecmp} expression that takes the string representation of the previously mentioned field
+		 * and performs case-insensitive comparison to the referenced {@literal fieldRef}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder strCaseCmpValueOf(String fieldRef) {
+			return project("strcasecmp", fieldRef);
+		}
+
+		/**
+		 * Generates a {@code $strcasecmp} expression that takes the string representation of the previously mentioned field
+		 * and performs case-insensitive comparison to the result of the given {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder strCaseCmp(AggregationExpression expression) {
+			return project("strcasecmp", expression);
+		}
+
+		/**
+		 * Generates a {@code $arrayElemAt} expression that takes the string representation of the previously mentioned
+		 * field and returns the element at the specified array {@literal position}.
+		 *
+		 * @param position
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder arrayElementAt(int position) {
+			return project("arrayElemAt", position);
+		}
+
+		/**
+		 * Generates a {@code $concatArrays} expression that takes the string representation of the previously mentioned
+		 * field and concats it with the arrays from the referenced {@literal fields}.
+		 *
+		 * @param fields must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder concatArrays(String... fields) {
+			return project("concatArrays", Fields.fields(fields));
+		}
+
+		/**
+		 * Generates a {@code $isArray} expression that takes the string representation of the previously mentioned field
+		 * and checks if its an array.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder isArray() {
+			return this.operation.and(AggregationExpressions.IsArray.isArray(name));
+		}
+
+		/**
+		 * Generates a {@code $literal} expression that Takes the value previously and uses it as literal.
+		 *
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder asLiteral() {
+			return this.operation.and(AggregationExpressions.Literal.asLiteral(name));
+		}
+
+		/**
+		 * Generates a {@code $dateToString} expression that takes the date representation of the previously mentioned field
+		 * and applies given {@literal format} to it.
+		 *
+		 * @param format must not be {@literal null}.
+		 * @return
+		 * @since 1.10
+		 */
+		public ProjectionOperationBuilder dateAsFormattedString(String format) {
+			return this.operation.and(AggregationExpressions.DateToString.dateOf(name).toString(format));
 		}
 
 		/* 
@@ -917,7 +1377,18 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				result.add(context.getReference(getField().getName()).toString());
 
 				for (Object element : values) {
-					result.add(element instanceof Field ? context.getReference((Field) element).toString() : element);
+
+					if (element instanceof Field) {
+						result.add(context.getReference((Field) element).toString());
+					} else if (element instanceof Fields) {
+						for (Field field : (Fields) element) {
+							result.add(context.getReference(field).toString());
+						}
+					} else if (element instanceof AggregationExpression) {
+						result.add(((AggregationExpression) element).toDbObject(context));
+					} else {
+						result.add(element);
+					}
 				}
 
 				return result;
