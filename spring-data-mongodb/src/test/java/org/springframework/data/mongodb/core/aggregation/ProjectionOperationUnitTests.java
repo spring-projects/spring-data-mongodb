@@ -25,6 +25,8 @@ import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 import java.util.Arrays;
 import java.util.List;
 
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -36,6 +38,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.VariableOperators;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
 /**
@@ -1668,6 +1671,36 @@ public class ProjectionOperationUnitTests {
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(Document.parse("{ $project: { result: { $not: [ { $gt: [ \"$qty\", 250 ] } ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderMapAggregationExpression() {
+
+		Document agg = Aggregation.project()
+				.and(VariableOperators.map().itemsOf("quizzes").as("grade")
+						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
+				.as("adjustedGrades").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse(
+				"{ $project:{ adjustedGrades:{ $map: { input: \"$quizzes\", as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderMapAggregationExpressionOnExpression() {
+
+		Document agg = Aggregation.project()
+				.and(VariableOperators.map().itemsOf(AggregationFunctionExpressions.SIZE.of("foo")).as("grade")
+						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
+				.as("adjustedGrades").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse(
+				"{ $project:{ adjustedGrades:{ $map: { input: { $size : [\"foo\"]}, as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}")));
 	}
 
 	private static Document exctractOperation(String field, Document fromProjectClause) {
