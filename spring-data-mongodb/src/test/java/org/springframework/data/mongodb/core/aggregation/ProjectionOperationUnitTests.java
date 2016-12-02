@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.VariableOperators;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
 import com.mongodb.BasicDBObject;
@@ -1671,6 +1672,36 @@ public class ProjectionOperationUnitTests {
 				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $not: [ { $gt: [ \"$qty\", 250 ] } ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderMapAggregationExpression() {
+
+		DBObject agg = Aggregation.project()
+				.and(VariableOperators.map().itemsOf("quizzes").as("grade")
+						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
+				.as("adjustedGrades").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project:{ adjustedGrades:{ $map: { input: \"$quizzes\", as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-784
+	 */
+	@Test
+	public void shouldRenderMapAggregationExpressionOnExpression() {
+
+		DBObject agg = Aggregation.project()
+				.and(VariableOperators.map().itemsOf(AggregationFunctionExpressions.SIZE.of("foo")).as("grade")
+						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
+				.as("adjustedGrades").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project:{ adjustedGrades:{ $map: { input: { $size : [\"foo\"]}, as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
