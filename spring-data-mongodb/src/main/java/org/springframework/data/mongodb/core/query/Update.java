@@ -316,7 +316,7 @@ public class Update {
 	 */
 	public Update multiply(String key, Number multiplier) {
 
-		Assert.notNull(multiplier, "Multiplier must not be 'null'.");
+		Assert.notNull(multiplier, "Multiplier must not be null.");
 		addMultiFieldOperation("$mul", key, multiplier.doubleValue());
 		return this;
 	}
@@ -333,7 +333,7 @@ public class Update {
 	 */
 	public Update max(String key, Object value) {
 
-		Assert.notNull(value, "Value for max operation must not be 'null'.");
+		Assert.notNull(value, "Value for max operation must not be null.");
 		addMultiFieldOperation("$max", key, value);
 		return this;
 	}
@@ -350,7 +350,7 @@ public class Update {
 	 */
 	public Update min(String key, Object value) {
 
-		Assert.notNull(value, "Value for min operation must not be 'null'.");
+		Assert.notNull(value, "Value for min operation must not be null.");
 		addMultiFieldOperation("$min", key, value);
 		return this;
 	}
@@ -782,7 +782,7 @@ public class Update {
 		 */
 		public PushOperatorBuilder sort(Direction direction) {
 
-			Assert.notNull(direction, "Direction must not be 'null'.");
+			Assert.notNull(direction, "Direction must not be null.");
 			this.modifiers.addModifier(new SortModifier(direction));
 			return this;
 		}
@@ -797,7 +797,7 @@ public class Update {
 		 */
 		public PushOperatorBuilder sort(Sort sort) {
 
-			Assert.notNull(sort, "Sort must not be 'null'.");
+			Assert.notNull(sort, "Sort must not be null.");
 			this.modifiers.addModifier(new SortModifier(sort));
 			return this;
 		}
