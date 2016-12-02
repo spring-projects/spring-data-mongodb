@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.Map.Entry;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -37,6 +39,7 @@ import com.mongodb.DBObject;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class UpdateMapper extends QueryMapper {
 
@@ -130,11 +133,23 @@ public class UpdateMapper extends QueryMapper {
 	}
 
 	private DBObject getMappedValue(Field field, Modifier modifier) {
+		return new BasicDBObject(modifier.getKey(), getMappedModifier(field, modifier));
+	}
+
+	private Object getMappedModifier(Field field, Modifier modifier) {
+
+		Object value = modifier.getValue();
+
+		if (value instanceof Sort) {
+
+			DBObject sortObject = getSortObject((Sort) value);
+			return field == null || field.getPropertyEntity() == null ? sortObject
+					: getMappedSort(sortObject, field.getPropertyEntity());
+		}
 
 		TypeInformation<?> typeHint = field == null ? ClassTypeInformation.OBJECT : field.getTypeHint();
 
-		Object value = converter.convertToMongoType(modifier.getValue(), typeHint);
-		return new BasicDBObject(modifier.getKey(), value);
+		return converter.convertToMongoType(value, typeHint);
 	}
 
 	private TypeInformation<?> getTypeHintForEntity(Object source, MongoPersistentEntity<?> entity) {
@@ -151,6 +166,17 @@ public class UpdateMapper extends QueryMapper {
 		}
 
 		return NESTED_DOCUMENT;
+	}
+
+	public DBObject getSortObject(Sort sort) {
+
+		DBObject dbo = new BasicDBObject();
+
+		for (Order order : sort) {
+			dbo.put(order.getProperty(), order.isAscending() ? 1 : -1);
+		}
+
+		return dbo;
 	}
 
 	/* 

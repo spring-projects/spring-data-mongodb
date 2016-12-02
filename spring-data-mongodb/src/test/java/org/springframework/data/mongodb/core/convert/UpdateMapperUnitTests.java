@@ -429,7 +429,8 @@ public class UpdateMapperUnitTests {
 
 		Update update = new Update().push("scores").sort(Direction.DESC).each(42, 23, 68);
 
-		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
 
 		DBObject push = getAsDBObject(mappedObject, "$push");
 		DBObject key = getAsDBObject(push, "scores");
@@ -445,16 +446,19 @@ public class UpdateMapperUnitTests {
 	@Test
 	public void updatePushEachWithDocumentSortShouldRenderCorrectly() {
 
-		Update update = new Update().push("names").sort(new Sort(new Order(Direction.ASC, "last"), new Order(Direction.ASC, "first")))
+		Update update = new Update().push("list")
+				.sort(new Sort(new Order(Direction.ASC, "value"), new Order(Direction.ASC, "field")))
 				.each(Collections.emptyList());
 
-		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithList.class));
 
 		DBObject push = getAsDBObject(mappedObject, "$push");
-		DBObject key = getAsDBObject(push, "names");
+		DBObject key = getAsDBObject(push, "list");
 
 		assertThat(key.containsField("$sort"), is(true));
-		assertThat((DBObject) key.get("$sort"), equalTo(new BasicDBObjectBuilder().add("last", 1).add("first", 1).get()));
+		assertThat((DBObject) key.get("$sort"),
+				equalTo(new BasicDBObjectBuilder().add("renamed-value", 1).add("field", 1).get()));
 		assertThat(key.containsField("$each"), is(true));
 	}
 
@@ -464,8 +468,8 @@ public class UpdateMapperUnitTests {
 	@Test
 	public void updatePushEachWithSortShouldRenderCorrectlyWhenUsingMultiplePush() {
 
-		Update update = new Update().push("authors").sort(Direction.ASC).each("Harry")
-				.push("chapters").sort(new Sort(Direction.ASC, "order")).each(Collections.emptyList());
+		Update update = new Update().push("authors").sort(Direction.ASC).each("Harry").push("chapters")
+				.sort(new Sort(Direction.ASC, "order")).each(Collections.emptyList());
 
 		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
 
@@ -1278,9 +1282,14 @@ public class UpdateMapperUnitTests {
 		NestedDocument concreteValue;
 	}
 
+	static class EntityWithList {
+		List<EntityWithAliasedObject> list;
+	}
+
 	static class EntityWithAliasedObject {
 
 		@Field("renamed-value") Object value;
+		Object field;
 	}
 
 	static class EntityWithObjectMap {
