@@ -593,6 +593,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	 */
 	@Test
 	public void executesDerivedExistsProjectionToBoolean() {
+
 		assertThat(repository.existsByFirstname("Oliver August"), is(true));
 		assertThat(repository.existsByFirstname("Hans Peter"), is(false));
 	}
