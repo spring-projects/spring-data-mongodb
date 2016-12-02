@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
@@ -76,6 +76,7 @@ public class UpdateMapperUnitTests {
 	private Converter<NestedEntity, Document> writingConverterSpy;
 
 	@Before
+	@SuppressWarnings("unchecked")
 	public void setUp() {
 
 		this.writingConverterSpy = Mockito.spy(new NestedEntityWriteConverter());
