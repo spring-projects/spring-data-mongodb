@@ -1694,7 +1694,7 @@ At the time of this writing we provide support for the following Aggregation Ope
 | Array Aggregation Operators
 | arrayElementAt, concatArrays, filter, isArray, size, slice
 
-| Array Literal Operators
+| Literal Operators
 | literal
 
 | Date Aggregation Operators

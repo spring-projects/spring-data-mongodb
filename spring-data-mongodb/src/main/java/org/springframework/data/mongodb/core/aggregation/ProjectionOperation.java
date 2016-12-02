@@ -792,22 +792,22 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		// SET OPERATORS
 
 		/**
-		 * Compares the previously mentioned field to one or more arrays and returns {@literal true} if they have the same
-		 * distinct elements and {@literal false} otherwise.
+		 * Generates a {@code $setEquals} expression that compares the previously mentioned field to one or more arrays and
+		 * returns {@literal true} if they have the same distinct elements and {@literal false} otherwise.
 		 *
 		 * @param arrays must not be {@literal null}.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
-		public ProjectionOperationBuilder equalsArray(String... arrays) {
+		public ProjectionOperationBuilder equalsArrays(String... arrays) {
 
 			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
 			return project("setEquals", Fields.fields(arrays));
 		}
 
 		/**
-		 * Takes array of the previously mentioned field and one or more arrays and returns an array that contains the
-		 * elements that appear in every of those.
+		 * Generates a {@code $setIntersection} expression that takes array of the previously mentioned field and one or
+		 * more arrays and returns an array that contains the elements that appear in every of those.
 		 *
 		 * @param arrays must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -820,8 +820,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes array of the previously mentioned field and one or more arrays and returns an array that contains the
-		 * elements that appear in any of those.
+		 * Generates a {@code $setUnion} expression that takes array of the previously mentioned field and one or more
+		 * arrays and returns an array that contains the elements that appear in any of those.
 		 *
 		 * @param arrays must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -834,8 +834,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes array of the previously mentioned field and returns an array containing the elements that do not exist in
-		 * the given {@literal array}.
+		 * Generates a {@code $setDifference} expression that takes array of the previously mentioned field and returns an
+		 * array containing the elements that do not exist in the given {@literal array}.
 		 *
 		 * @param array must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -848,8 +848,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes array of the previously mentioned field and returns {@literal true} if it is a subset of the given
-		 * {@literal array}.
+		 * Generates a {@code $setIsSubset} expression that takes array of the previously mentioned field and returns
+		 * {@literal true} if it is a subset of the given {@literal array}.
 		 * 
 		 * @param array must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -862,8 +862,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes array of the previously mentioned field and returns {@literal true} if any of the elements are
-		 * {@literal true} and {@literal false} otherwise.
+		 * Generates an {@code $anyElementTrue} expression that Takes array of the previously mentioned field and returns
+		 * {@literal true} if any of the elements are {@literal true} and {@literal false} otherwise.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -873,7 +873,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes array of the previously mentioned field and returns {@literal true} if no elements is {@literal false}.
+		 * Generates an {@code $allElementsTrue} expression that takes array of the previously mentioned field and returns
+		 * {@literal true} if no elements is {@literal false}.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -883,7 +884,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and returns the absolute value of it.
+		 * Generates a {@code $abs} expression that takes the number of the previously mentioned field and returns the
+		 * absolute value of it.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -893,8 +895,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and returns the smallest integer greater than or equal to the
-		 * specified number.
+		 * Generates a {@code $ceil} expression that takes the number of the previously mentioned field and returns the
+		 * smallest integer greater than or equal to the specified number.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -904,7 +906,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and raises Euler’s number (i.e. e ) on it.
+		 * Generates a {@code $exp} expression that takes the number of the previously mentioned field and raises Euler’s
+		 * number (i.e. e ) on it.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -914,7 +917,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and returns the largest integer less than or equal to it.
+		 * Generates a {@code $floor} expression that takes the number of the previously mentioned field and returns the
+		 * largest integer less than or equal to it.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -924,7 +928,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and calculates the natural logarithm ln (i.e loge) of it.
+		 * Generates a {@code $ln} expression that takes the number of the previously mentioned field and calculates the
+		 * natural logarithm ln (i.e loge) of it.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -934,8 +939,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and calculates the log of the associated number in the
-		 * specified base.
+		 * Generates a {@code $log} expression that takes the number of the previously mentioned field and calculates the
+		 * log of the associated number in the specified base.
 		 *
 		 * @param baseFieldRef must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -946,8 +951,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and calculates the log of the associated number in the
-		 * specified base.
+		 * Generates a {@code $log} expression that takes the number of the previously mentioned field and calculates the
+		 * log of the associated number in the specified base.
 		 *
 		 * @param base must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -958,8 +963,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and calculates the log of the associated number in the
-		 * specified base.
+		 * Generates a {@code $log} expression that takes the number of the previously mentioned field and calculates the
+		 * log of the associated number in the specified base.
 		 *
 		 * @param base must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -970,7 +975,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and calculates the log base 10.
+		 * Generates a {@code $log10} expression that takes the number of the previously mentioned field and calculates the
+		 * log base 10.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -980,7 +986,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and Raises it by the specified exponent.
+		 * Generates a {@code $pow} expression that takes the number of the previously mentioned field and raises it by the
+		 * specified exponent.
 		 *
 		 * @param exponentFieldRef must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -991,7 +998,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and Raises it by the specified exponent.
+		 * Generates a {@code $pow} expression that takes the number of the previously mentioned field and raises it by the
+		 * specified exponent.
 		 *
 		 * @param exponent must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -1002,7 +1010,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and Raises it by the specified exponent.
+		 * Generates a {@code $pow} expression that Takes the number of the previously mentioned field and raises it by the
+		 * specified exponent.
 		 *
 		 * @param exponentExpression must not be {@literal null}.
 		 * @return never {@literal null}.
@@ -1013,7 +1022,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the number of the previously mentioned field and calculates the square root.
+		 * Generates a {@code $sqrt} expression that takes the number of the previously mentioned field and calculates the
+		 * square root.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -1033,7 +1043,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and concats given values to it.
+		 * Generates a {@code $concat} expression that takes the string representation of the previously mentioned field and
+		 * concats given values to it.
 		 *
 		 * @return never {@literal null}.
 		 * @since 1.10
@@ -1043,8 +1054,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and returns a substring starting at a specified
-		 * index position.
+		 * Generates a {@code $substr} expression that Takes the string representation of the previously mentioned field and
+		 * returns a substring starting at a specified index position.
 		 *
 		 * @param start
 		 * @return
@@ -1055,8 +1066,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and returns a substring starting at a specified
-		 * index position including the specified number of characters.
+		 * Generates a {@code $substr} expression that takes the string representation of the previously mentioned field and
+		 * returns a substring starting at a specified index position including the specified number of characters.
 		 *
 		 * @param start
 		 * @param nrOfChars
@@ -1068,7 +1079,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and lowers it.
+		 * Generates a {@code $toLower} expression that takes the string representation of the previously mentioned field
+		 * and lowers it.
 		 *
 		 * @return
 		 * @since 1.10
@@ -1078,7 +1090,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and uppers it.
+		 * Generates a {@code $toUpper} expression that takes the string representation of the previously mentioned field
+		 * and uppers it.
 		 *
 		 * @return
 		 * @since 1.10
@@ -1088,8 +1101,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and performs case-insensitive comparison to the
-		 * given {@literal value}.
+		 * Generates a {@code $strcasecmp} expression that takes the string representation of the previously mentioned field
+		 * and performs case-insensitive comparison to the given {@literal value}.
 		 *
 		 * @param value must not be {@literal null}.
 		 * @return
@@ -1100,8 +1113,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and performs case-insensitive comparison to the
-		 * referenced {@literal fieldRef}.
+		 * Generates a {@code $strcasecmp} expression that takes the string representation of the previously mentioned field
+		 * and performs case-insensitive comparison to the referenced {@literal fieldRef}.
 		 *
 		 * @param fieldRef must not be {@literal null}.
 		 * @return
@@ -1112,8 +1125,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and performs case-insensitive comparison to the
-		 * result of the given {@link AggregationExpression}.
+		 * Generates a {@code $strcasecmp} expression that takes the string representation of the previously mentioned field
+		 * and performs case-insensitive comparison to the result of the given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -1124,8 +1137,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and returns the element at the specified array
-		 * {@literal position}.
+		 * Generates a {@code $arrayElemAt} expression that takes the string representation of the previously mentioned
+		 * field and returns the element at the specified array {@literal position}.
 		 *
 		 * @param position
 		 * @return
@@ -1136,8 +1149,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and concats it with the arrays from the
-		 * referenced {@literal fields}.
+		 * Generates a {@code $concatArrays} expression that takes the string representation of the previously mentioned
+		 * field and concats it with the arrays from the referenced {@literal fields}.
 		 *
 		 * @param fields must not be {@literal null}.
 		 * @return
@@ -1148,7 +1161,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the string representation of the previously mentioned field and checks if its an array.
+		 * Generates a {@code $isArray} expression that takes the string representation of the previously mentioned field
+		 * and checks if its an array.
 		 *
 		 * @return
 		 * @since 1.10
@@ -1158,7 +1172,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the value previously and uses it as literal.
+		 * Generates a {@code $literal} expression that Takes the value previously and uses it as literal.
 		 *
 		 * @return
 		 * @since 1.10
@@ -1168,7 +1182,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
-		 * Takes the date representation of the previously mentioned field and applies given {@literal format} to it.
+		 * Generates a {@code $dateToString} expression that takes the date representation of the previously mentioned field
+		 * and applies given {@literal format} to it.
 		 *
 		 * @param format must not be {@literal null}.
 		 * @return

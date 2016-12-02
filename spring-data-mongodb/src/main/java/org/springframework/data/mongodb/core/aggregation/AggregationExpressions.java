@@ -208,9 +208,20 @@ public interface AggregationExpressions {
 			return new SetOperatorFactory(fieldReference);
 		}
 
+		/**
+		 * Take the array resulting from the given {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static SetOperatorFactory arrayAsSet(AggregationExpression expression) {
+			return new SetOperatorFactory(expression);
+		}
+
 		public static class SetOperatorFactory {
 
 			private final String fieldReference;
+			private final AggregationExpression expression;
 
 			/**
 			 * Creates new {@link SetOperatorFactory} for given {@literal fieldReference}.
@@ -221,6 +232,19 @@ public interface AggregationExpressions {
 
 				Assert.notNull(fieldReference, "FieldReference must not be null!");
 				this.fieldReference = fieldReference;
+				this.expression = null;
+			}
+
+			/**
+			 * Creates new {@link SetOperatorFactory} for given {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 */
+			public SetOperatorFactory(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				this.fieldReference = null;
+				this.expression = expression;
 			}
 
 			/**
@@ -231,7 +255,22 @@ public interface AggregationExpressions {
 			 * @return
 			 */
 			public SetEquals isEqualTo(String... arrayReferences) {
-				return SetEquals.arrayAsSet(fieldReference).isEqualTo(arrayReferences);
+				return createSetEquals().isEqualTo(arrayReferences);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that compares the previously mentioned field to one or more arrays
+			 * and returns {@literal true} if they have the same distinct elements and {@literal false} otherwise.
+			 *
+			 * @param expressions must not be {@literal null}.
+			 * @return
+			 */
+			public SetEquals isEqualTo(AggregationExpression... expressions) {
+				return createSetEquals().isEqualTo(expressions);
+			}
+
+			private SetEquals createSetEquals() {
+				return usesFieldRef() ? SetEquals.arrayAsSet(fieldReference) : SetEquals.arrayAsSet(expression);
 			}
 
 			/**
@@ -242,7 +281,22 @@ public interface AggregationExpressions {
 			 * @return
 			 */
 			public SetIntersection intersects(String... arrayReferences) {
-				return SetIntersection.arrayAsSet(fieldReference).intersects(arrayReferences);
+				return createSetIntersection().intersects(arrayReferences);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and one or more
+			 * arrays and returns an array that contains the elements that appear in every of those.
+			 *
+			 * @param expressions must not be {@literal null}.
+			 * @return
+			 */
+			public SetIntersection intersects(AggregationExpression... expressions) {
+				return createSetIntersection().intersects(expressions);
+			}
+
+			private SetIntersection createSetIntersection() {
+				return usesFieldRef() ? SetIntersection.arrayAsSet(fieldReference) : SetIntersection.arrayAsSet(expression);
 			}
 
 			/**
@@ -253,7 +307,22 @@ public interface AggregationExpressions {
 			 * @return
 			 */
 			public SetUnion union(String... arrayReferences) {
-				return SetUnion.arrayAsSet(fieldReference).union(arrayReferences);
+				return createSetUnion().union(arrayReferences);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and one or more
+			 * arrays and returns an array that contains the elements that appear in any of those.
+			 *
+			 * @param expressions must not be {@literal null}.
+			 * @return
+			 */
+			public SetUnion union(AggregationExpression... expressions) {
+				return createSetUnion().union(expressions);
+			}
+
+			private SetUnion createSetUnion() {
+				return usesFieldRef() ? SetUnion.arrayAsSet(fieldReference) : SetUnion.arrayAsSet(expression);
 			}
 
 			/**
@@ -264,7 +333,22 @@ public interface AggregationExpressions {
 			 * @return
 			 */
 			public SetDifference differenceTo(String arrayReference) {
-				return SetDifference.arrayAsSet(fieldReference).differenceTo(arrayReference);
+				return createSetDifference().differenceTo(arrayReference);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns an
+			 * array containing the elements that do not exist in the given {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public SetDifference differenceTo(AggregationExpression expression) {
+				return createSetDifference().differenceTo(expression);
+			}
+
+			private SetDifference createSetDifference() {
+				return usesFieldRef() ? SetDifference.arrayAsSet(fieldReference) : SetDifference.arrayAsSet(expression);
 			}
 
 			/**
@@ -275,7 +359,22 @@ public interface AggregationExpressions {
 			 * @return
 			 */
 			public SetIsSubset isSubsetOf(String arrayReference) {
-				return SetIsSubset.arrayAsSet(fieldReference).isSubsetOf(arrayReference);
+				return createSetIsSubset().isSubsetOf(arrayReference);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns
+			 * {@literal true} if it is a subset of the given {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public SetIsSubset isSubsetOf(AggregationExpression expression) {
+				return createSetIsSubset().isSubsetOf(expression);
+			}
+
+			private SetIsSubset createSetIsSubset() {
+				return usesFieldRef() ? SetIsSubset.arrayAsSet(fieldReference) : SetIsSubset.arrayAsSet(expression);
 			}
 
 			/**
@@ -285,7 +384,7 @@ public interface AggregationExpressions {
 			 * @return
 			 */
 			public AnyElementTrue anyElementTrue() {
-				return AnyElementTrue.arrayAsSet(fieldReference);
+				return usesFieldRef() ? AnyElementTrue.arrayAsSet(fieldReference) : AnyElementTrue.arrayAsSet(expression);
 			}
 
 			/**
@@ -295,7 +394,11 @@ public interface AggregationExpressions {
 			 * @return
 			 */
 			public AllElementsTrue allElementsTrue() {
-				return AllElementsTrue.arrayAsSet(fieldReference);
+				return usesFieldRef() ? AllElementsTrue.arrayAsSet(fieldReference) : AllElementsTrue.arrayAsSet(expression);
+			}
+
+			private boolean usesFieldRef() {
+				return this.fieldReference != null;
 			}
 		}
 	}
@@ -1741,20 +1844,64 @@ public interface AggregationExpressions {
 			return "$setEquals";
 		}
 
+		/**
+		 * Create new {@link SetEquals}.
+		 *
+		 * @param arrayReference must not be {@literal null}.
+		 * @return
+		 */
 		public static SetEquals arrayAsSet(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetEquals(asFields(arrayReference));
 		}
 
+		/**
+		 * Create new {@link SetEquals}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static SetEquals arrayAsSet(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SetEquals(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link java.util.Set} with all previously added arguments appending the given one.
+		 *
+		 * @param arrayReferences must not be {@literal null}.
+		 * @return
+		 */
 		public SetEquals isEqualTo(String... arrayReferences) {
 
 			Assert.notNull(arrayReferences, "ArrayReferences must not be null!");
 			return new SetEquals(append(Fields.fields(arrayReferences).asList()));
 		}
 
-		public SetEquals isEqualTo(Object[] compareValue) {
-			return new SetEquals(append(compareValue));
+		/**
+		 * Creates new {@link Sum} with all previously added arguments appending the given one.
+		 *
+		 * @param expressions must not be {@literal null}.
+		 * @return
+		 */
+		public SetEquals isEqualTo(AggregationExpression... expressions) {
+
+			Assert.notNull(expressions, "Expressions must not be null!");
+			return new SetEquals(append(Arrays.asList(expressions)));
+		}
+
+		/**
+		 * Creates new {@link Sum} with all previously added arguments appending the given one.
+		 *
+		 * @param array must not be {@literal null}.
+		 * @return
+		 */
+		public SetEquals isEqualTo(Object[] array) {
+
+			Assert.notNull(array, "Array must not be null!");
+			return new SetEquals(append(array));
 		}
 	}
 
@@ -1774,16 +1921,52 @@ public interface AggregationExpressions {
 			return "$setIntersection";
 		}
 
+		/**
+		 * Creates new {@link SetIntersection}
+		 *
+		 * @param arrayReference must not be {@literal null}.
+		 * @return
+		 */
 		public static SetIntersection arrayAsSet(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetIntersection(asFields(arrayReference));
 		}
 
+		/**
+		 * Creates new {@link SetIntersection}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static SetIntersection arrayAsSet(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SetIntersection(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link SetIntersection} with all previously added arguments appending the given one.
+		 *
+		 * @param arrayReferences must not be {@literal null}.
+		 * @return
+		 */
 		public SetIntersection intersects(String... arrayReferences) {
 
 			Assert.notNull(arrayReferences, "ArrayReferences must not be null!");
 			return new SetIntersection(append(asFields(arrayReferences)));
+		}
+
+		/**
+		 * Creates new {@link SetIntersection} with all previously added arguments appending the given one.
+		 *
+		 * @param expressions must not be {@literal null}.
+		 * @return
+		 */
+		public SetIntersection intersects(AggregationExpression... expressions) {
+
+			Assert.notNull(expressions, "Expressions must not be null!");
+			return new SetIntersection(append(Arrays.asList(expressions)));
 		}
 	}
 
@@ -1803,16 +1986,52 @@ public interface AggregationExpressions {
 			return "$setUnion";
 		}
 
+		/**
+		 * Creates new {@link SetUnion}.
+		 *
+		 * @param arrayReference must not be {@literal null}.
+		 * @return
+		 */
 		public static SetUnion arrayAsSet(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetUnion(asFields(arrayReference));
 		}
 
+		/**
+		 * Creates new {@link SetUnion}.
+		 *
+		 * @param expressions must not be {@literal null}.
+		 * @return
+		 */
+		public static SetUnion arrayAsSet(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SetUnion(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link SetUnion} with all previously added arguments appending the given one.
+		 *
+		 * @param arrayReferences must not be {@literal null}.
+		 * @return
+		 */
 		public SetUnion union(String... arrayReferences) {
 
 			Assert.notNull(arrayReferences, "ArrayReferences must not be null!");
 			return new SetUnion(append(asFields(arrayReferences)));
+		}
+
+		/**
+		 * Creates new {@link SetUnion} with all previously added arguments appending the given one.
+		 *
+		 * @param expressions must not be {@literal null}.
+		 * @return
+		 */
+		public SetUnion union(AggregationExpression... expressions) {
+
+			Assert.notNull(expressions, "Expressions must not be null!");
+			return new SetUnion(append(Arrays.asList(expressions)));
 		}
 	}
 
@@ -1832,16 +2051,52 @@ public interface AggregationExpressions {
 			return "$setDifference";
 		}
 
+		/**
+		 * Creates new {@link SetDifference}.
+		 *
+		 * @param arrayReference must not be {@literal null}.
+		 * @return
+		 */
 		public static SetDifference arrayAsSet(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetDifference(asFields(arrayReference));
 		}
 
+		/**
+		 * Creates new {@link SetDifference}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static SetDifference arrayAsSet(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SetDifference(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link SetDifference} with all previously added arguments appending the given one.
+		 *
+		 * @param arrayReference must not be {@literal null}.
+		 * @return
+		 */
 		public SetDifference differenceTo(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetDifference(append(Fields.field(arrayReference)));
+		}
+
+		/**
+		 * Creates new {@link SetDifference} with all previously added arguments appending the given one.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public SetDifference differenceTo(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SetDifference(append(expression));
 		}
 	}
 
@@ -1861,16 +2116,52 @@ public interface AggregationExpressions {
 			return "$setIsSubset";
 		}
 
+		/**
+		 * Creates new {@link SetIsSubset}.
+		 *
+		 * @param arrayReference must not be {@literal null}.
+		 * @return
+		 */
 		public static SetIsSubset arrayAsSet(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetIsSubset(asFields(arrayReference));
 		}
 
+		/**
+		 * Creates new {@link SetIsSubset}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static SetIsSubset arrayAsSet(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SetIsSubset(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link SetIsSubset} with all previously added arguments appending the given one.
+		 *
+		 * @param arrayReference must not be {@literal null}.
+		 * @return
+		 */
 		public SetIsSubset isSubsetOf(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new SetIsSubset(append(Fields.field(arrayReference)));
+		}
+
+		/**
+		 * Creates new {@link SetIsSubset} with all previously added arguments appending the given one.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public SetIsSubset isSubsetOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SetIsSubset(append(expression));
 		}
 	}
 
@@ -1890,10 +2181,28 @@ public interface AggregationExpressions {
 			return "$anyElementTrue";
 		}
 
+		/**
+		 * Creates new {@link AnyElementTrue}.
+		 *
+		 * @param arrayReference must not be {@literal null}.
+		 * @return
+		 */
 		public static AnyElementTrue arrayAsSet(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new AnyElementTrue(asFields(arrayReference));
+		}
+
+		/**
+		 * Creats new {@link AnyElementTrue}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static AnyElementTrue arrayAsSet(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new AnyElementTrue(Collections.singletonList(expression));
 		}
 
 		public AnyElementTrue anyElementTrue() {
@@ -1917,10 +2226,28 @@ public interface AggregationExpressions {
 			return "$allElementsTrue";
 		}
 
+		/**
+		 * Creates new {@link AllElementsTrue}.
+		 *
+		 * @param arrayReference must not be {@literal null}.
+		 * @return
+		 */
 		public static AllElementsTrue arrayAsSet(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null!");
 			return new AllElementsTrue(asFields(arrayReference));
+		}
+
+		/**
+		 * Creates new {@link AllElementsTrue}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static AllElementsTrue arrayAsSet(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new AllElementsTrue(Collections.singletonList(expression));
 		}
 
 		public AllElementsTrue allElementsTrue() {
@@ -3637,8 +3964,8 @@ public interface AggregationExpressions {
 		}
 
 		/**
-		 * Creates new {@link Sum} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
-		 * possible in {@code $project} stage.
+		 * Creates new {@link Sum} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
@@ -3650,8 +3977,8 @@ public interface AggregationExpressions {
 		}
 
 		/**
-		 * Creates new {@link Sum} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
-		 * possible in {@code $project} stage.
+		 * Creates new {@link Sum} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -3716,8 +4043,8 @@ public interface AggregationExpressions {
 		}
 
 		/**
-		 * Creates new {@link Avg} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
-		 * possible in {@code $project} stage.
+		 * Creates new {@link Avg} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
@@ -3729,8 +4056,8 @@ public interface AggregationExpressions {
 		}
 
 		/**
-		 * Creates new {@link Avg} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
-		 * possible in {@code $project} stage.
+		 * Creates new {@link Avg} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -3795,8 +4122,8 @@ public interface AggregationExpressions {
 		}
 
 		/**
-		 * Creates new {@link Max} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
-		 * possible in {@code $project} stage.
+		 * Creates new {@link Max} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 * 
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
@@ -3808,8 +4135,8 @@ public interface AggregationExpressions {
 		}
 
 		/**
-		 * Creates new {@link Max} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
-		 * possible in {@code $project} stage.
+		 * Creates new {@link Max} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -3887,8 +4214,8 @@ public interface AggregationExpressions {
 		}
 
 		/**
-		 * Creates new {@link Min} with all previously added arguments appending the given one. <strong>NOTE:</strong> Only
-		 * possible in {@code $project} stage.
+		 * Creates new {@link Min} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return

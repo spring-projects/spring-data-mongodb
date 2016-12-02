@@ -500,7 +500,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderSetEquals() {
 
-		DBObject agg = project("A", "B").and("A").equalsArray("B").as("sameElements")
+		DBObject agg = project("A", "B").and("A").equalsArrays("B").as("sameElements")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { A: 1, B: 1, sameElements: { $setEquals: [ \"$A\", \"$B\" ] }}}")));
