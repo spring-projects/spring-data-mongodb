@@ -1315,22 +1315,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	/**
 	 * @see DATAMONGO-1539
 	 */
-    @Test
-    public void countsPersonsByFirstname() {
-
-        long result = repository.countByThePersonsFirstname("Dave");
-        assertThat(result, is(1L));
-    }
+	@Test
+	public void countsPersonsByFirstname() {
+		assertThat(repository.countByThePersonsFirstname("Dave"), is(1L));
+	}
 
 	/**
 	 * @see DATAMONGO-1539
 	 */
 	@Test
-    public void deletesPersonsByFirstname() {
+	public void deletesPersonsByFirstname() {
 
-        repository.deleteByThePersonsFirstname("Dave");
+		repository.deleteByThePersonsFirstname("Dave");
 
-        long result = repository.countByThePersonsFirstname("Dave");
-        assertThat(result, is(0L));
-    }
+		assertThat(repository.countByThePersonsFirstname("Dave"), is(0L));
+	}
 }

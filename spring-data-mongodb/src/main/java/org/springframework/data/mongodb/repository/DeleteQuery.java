@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,27 +20,26 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import org.springframework.core.annotation.AliasFor;
 
 /**
- * Annotation to declare finder count queries directly on repository methods. Both attributes allow using a placeholder
+ * Annotation to declare finder delete queries directly on repository methods. Both attributes allow using a placeholder
  * notation of {@code ?0}, {@code ?1} and so on.
  *
- * @see DATAMONGO-1539
- *
  * @author Fırat KÜÇÜK
+ * @author Oliver Gierke
+ * @since 1.10
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
-@Query(count = true)
-public @interface Count {
+@Query(delete = true)
+public @interface DeleteQuery {
 
 	/**
 	 * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precedence over the
-	 * method name then.
-     *
-     * Alias for {@link Query#value}.
+	 * method name then. Alias for {@link Query#value}.
 	 *
 	 * @return
 	 */
