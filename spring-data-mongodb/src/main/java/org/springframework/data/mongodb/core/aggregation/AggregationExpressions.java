@@ -33,6 +33,7 @@ import com.mongodb.DBObject;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.10
  */
 public interface AggregationExpressions {
@@ -80,7 +81,7 @@ public interface AggregationExpressions {
 		 * Creates new {@link AggregationExpressions} that evaluates the boolean value of {@link AggregationExpression}
 		 * result and returns the opposite boolean value.
 		 *
-		 * @param fieldReference must not be {@literal null}.
+		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static Not not(AggregationExpression expression) {
@@ -1232,12 +1233,26 @@ public interface AggregationExpressions {
 			private final String fieldReference;
 			private final AggregationExpression expression;
 
+			/**
+			 * Creates new {@link StringOperatorFactory} for given {@literal fieldReference}.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 */
 			public StringOperatorFactory(String fieldReference) {
+
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
 				this.fieldReference = fieldReference;
 				this.expression = null;
 			}
 
+			/**
+			 * Creates new {@link StringOperatorFactory} for given {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 */
 			public StringOperatorFactory(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
 				this.fieldReference = null;
 				this.expression = expression;
 			}
@@ -1376,7 +1391,7 @@ public interface AggregationExpressions {
 	}
 
 	/**
-	 * Gateway to {@litearl array} aggregation operations.
+	 * Gateway to {@literal array} aggregation operations.
 	 *
 	 * @author Christoph Strobl
 	 */
@@ -1407,12 +1422,26 @@ public interface AggregationExpressions {
 			private final String fieldReference;
 			private final AggregationExpression expression;
 
+			/**
+			 * Creates new {@link ArrayOperatorFactory} for given {@literal fieldReference}.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 */
 			public ArrayOperatorFactory(String fieldReference) {
+
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
 				this.fieldReference = fieldReference;
 				this.expression = null;
 			}
 
+			/**
+			 * Creates new {@link ArrayOperatorFactory} for given {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 */
 			public ArrayOperatorFactory(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
 				this.fieldReference = null;
 				this.expression = expression;
 			}
@@ -1424,7 +1453,7 @@ public interface AggregationExpressions {
 			 * @param position
 			 * @return
 			 */
-			public ArrayElemtAt elementAt(int position) {
+			public ArrayElemAt elementAt(int position) {
 				return createArrayElemAt().elementAt(position);
 			}
 
@@ -1435,7 +1464,7 @@ public interface AggregationExpressions {
 			 * @param expression must not be {@literal null}.
 			 * @return
 			 */
-			public ArrayElemtAt elementAt(AggregationExpression expression) {
+			public ArrayElemAt elementAt(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null!");
 				return createArrayElemAt().elementAt(expression);
@@ -1448,14 +1477,14 @@ public interface AggregationExpressions {
 			 * @param fieldReference must not be {@literal null}.
 			 * @return
 			 */
-			public ArrayElemtAt elementAt(String fieldReference) {
+			public ArrayElemAt elementAt(String fieldReference) {
 
 				Assert.notNull(fieldReference, "FieldReference must not be null!");
 				return createArrayElemAt().elementAt(fieldReference);
 			}
 
-			private ArrayElemtAt createArrayElemAt() {
-				return usesFieldRef() ? ArrayElemtAt.arrayOf(fieldReference) : ArrayElemtAt.arrayOf(expression);
+			private ArrayElemAt createArrayElemAt() {
+				return usesFieldRef() ? ArrayElemAt.arrayOf(fieldReference) : ArrayElemAt.arrayOf(expression);
 			}
 
 			/**
@@ -1532,6 +1561,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * Gateway to {@literal literal} aggregation operations.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class LiteralOperators {
@@ -1552,7 +1583,14 @@ public interface AggregationExpressions {
 
 			private final Object value;
 
+			/**
+			 * Creates new {@link LiteralOperatorFactory} for given {@literal value}.
+			 *
+			 * @param value must not be {@literal null}.
+			 */
 			public LiteralOperatorFactory(Object value) {
+
+				Assert.notNull(value, "Value must not be null!");
 				this.value = value;
 			}
 
@@ -1568,6 +1606,8 @@ public interface AggregationExpressions {
 	}
 
 	/**
+	 * Gateway to {@literal Date} aggregation operations.
+	 *
 	 * @author Christoph Strobl
 	 */
 	class DateOperators {
@@ -1587,7 +1627,7 @@ public interface AggregationExpressions {
 		/**
 		 * Take the date resulting from the given {@literal expression}.
 		 *
-		 * @param fieldReference must not be {@literal null}.
+		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static DateOperatorFactory dateOf(AggregationExpression expression) {
@@ -1601,6 +1641,11 @@ public interface AggregationExpressions {
 			private final String fieldReference;
 			private final AggregationExpression expression;
 
+			/**
+			 * Creates new {@link ArithmeticOperatorFactory} for given {@literal fieldReference}.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 */
 			public DateOperatorFactory(String fieldReference) {
 
 				Assert.notNull(fieldReference, "FieldReference must not be null!");
@@ -1608,6 +1653,11 @@ public interface AggregationExpressions {
 				this.expression = null;
 			}
 
+			/**
+			 * Creates new {@link ArithmeticOperatorFactory} for given {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 */
 			public DateOperatorFactory(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null!");
@@ -1825,7 +1875,7 @@ public interface AggregationExpressions {
 
 		}
 
-		public abstract String getMongoMethod();
+		protected abstract String getMongoMethod();
 	}
 
 	/**
@@ -1840,7 +1890,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$setEquals";
 		}
 
@@ -1917,7 +1967,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$setIntersection";
 		}
 
@@ -1982,7 +2032,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$setUnion";
 		}
 
@@ -2001,7 +2051,7 @@ public interface AggregationExpressions {
 		/**
 		 * Creates new {@link SetUnion}.
 		 *
-		 * @param expressions must not be {@literal null}.
+		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static SetUnion arrayAsSet(AggregationExpression expression) {
@@ -2047,7 +2097,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$setDifference";
 		}
 
@@ -2112,7 +2162,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$setIsSubset";
 		}
 
@@ -2177,7 +2227,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$anyElementTrue";
 		}
 
@@ -2222,7 +2272,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$allElementsTrue";
 		}
 
@@ -2267,23 +2317,42 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$abs";
 		}
 
+		/**
+		 * Creates new {@link Abs}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Abs absoluteValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Abs(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Abs}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Abs absoluteValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Abs(expression);
 		}
-
+		/**
+		 * Creates new {@link Abs}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Abs absoluteValueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Abs(value);
 		}
 	}
@@ -2300,23 +2369,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$add";
 		}
 
+		/**
+		 * Creates new {@link Add}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Add valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Add(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Add}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Add valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Add(Collections.singletonList(expression));
 		}
 
+		/**
+		 * Creates new {@link Add}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Add valueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Add(Collections.singletonList(value));
 		}
 
@@ -2349,23 +2438,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$ceil";
 		}
 
+		/**
+		 * Creates new {@link Ceil}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Ceil ceilValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Ceil(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Ceil}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Ceil ceilValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Ceil(expression);
 		}
 
+		/**
+		 * Creates new {@link Ceil}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Ceil ceilValueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Ceil(value);
 		}
 	}
@@ -2382,23 +2491,44 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$divide";
 		}
 
+
+		/**
+		 * Creates new {@link Divide}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Divide valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Divide(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Divide}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Divide valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Divide(Collections.singletonList(expression));
 		}
 
+		/**
+		 * Creates new {@link Divide}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Divide valueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Divide(Collections.singletonList(value));
 		}
 
@@ -2426,28 +2556,48 @@ public interface AggregationExpressions {
 	 */
 	class Exp extends AbstractAggregationExpression {
 
-		protected Exp(Object value) {
+		private Exp(Object value) {
 			super(value);
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$exp";
 		}
 
+		/**
+		 * Creates new {@link Exp}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Exp expValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Exp(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Exp}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Exp expValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Exp(expression);
 		}
 
+		/**
+		 * Creates new {@link Exp}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Exp expValueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Exp(value);
 		}
 	}
@@ -2459,28 +2609,48 @@ public interface AggregationExpressions {
 	 */
 	class Floor extends AbstractAggregationExpression {
 
-		protected Floor(Object value) {
+		private Floor(Object value) {
 			super(value);
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$floor";
 		}
 
+		/**
+		 * Creates new {@link Floor}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Floor floorValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Floor(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Floor}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Floor floorValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Floor(expression);
 		}
 
+		/**
+		 * Creates new {@link Floor}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Floor floorValueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Floor(value);
 		}
 	}
@@ -2497,23 +2667,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$ln";
 		}
 
+		/**
+		 * Creates new {@link Ln}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Ln lnValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Ln(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Ln}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Ln lnValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Ln(expression);
 		}
 
+		/**
+		 * Creates new {@link Ln}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Ln lnValueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Ln(value);
 		}
 	}
@@ -2530,23 +2720,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$log";
 		}
 
+		/**
+		 * Creates new {@link Min}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Log valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Log(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Log}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Log valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Log(Collections.singletonList(expression));
 		}
 
+		/**
+		 * Creates new {@link Log}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Log valueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Log(Collections.singletonList(value));
 		}
 
@@ -2579,23 +2789,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$log10";
 		}
 
+		/**
+		 * Creates new {@link Log10}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Log10 log10ValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Log10(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Log10}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Log10 log10ValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Log10(expression);
 		}
 
+		/**
+		 * Creates new {@link Log10}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Log10 log10ValueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Log10(value);
 		}
 	}
@@ -2612,23 +2842,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$mod";
 		}
 
+		/**
+		 * Creates new {@link Mod}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Mod valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Mod(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Mod}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Mod valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Mod(Collections.singletonList(expression));
 		}
 
+		/**
+		 * Creates new {@link Mod}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Mod valueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Mod(Collections.singletonList(value));
 		}
 
@@ -2661,23 +2911,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$multiply";
 		}
 
+		/**
+		 * Creates new {@link Multiply}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Multiply valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Multiply(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Multiply}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Multiply valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Multiply(Collections.singletonList(expression));
 		}
 
+		/**
+		 * Creates new {@link Multiply}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Multiply valueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Multiply(Collections.singletonList(value));
 		}
 
@@ -2710,23 +2980,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$pow";
 		}
 
+		/**
+		 * Creates new {@link Pow}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Pow valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Pow(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Pow}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Pow valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Pow(Collections.singletonList(expression));
 		}
 
+		/**
+		 * Creates new {@link Pow}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Pow valueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Pow(Collections.singletonList(value));
 		}
 
@@ -2759,23 +3049,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$sqrt";
 		}
 
+		/**
+		 * Creates new {@link Sqrt}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Sqrt sqrtOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Sqrt(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Sqrt}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Sqrt sqrtOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Sqrt(expression);
 		}
 
+		/**
+		 * Creates new {@link Sqrt}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Sqrt sqrtOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Sqrt(value);
 		}
 	}
@@ -2787,28 +3097,48 @@ public interface AggregationExpressions {
 	 */
 	class Subtract extends AbstractAggregationExpression {
 
-		protected Subtract(List<?> value) {
+		private Subtract(List<?> value) {
 			super(value);
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$subtract";
 		}
 
+		/**
+		 * Creates new {@link Subtract}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Subtract valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Subtract(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Subtract}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Subtract valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Subtract(Collections.singletonList(expression));
 		}
 
+		/**
+		 * Creates new {@link Subtract}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Subtract valueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Subtract(Collections.singletonList(value));
 		}
 
@@ -2841,23 +3171,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$trunc";
 		}
 
+		/**
+		 * Creates new {@link Trunc}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Trunc truncValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Trunc(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Trunc}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Trunc truncValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Trunc(expression);
 		}
 
+		/**
+		 * Creates new {@link Trunc}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Trunc truncValueOf(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Trunc(value);
 		}
 	}
@@ -2874,23 +3224,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$concat";
 		}
 
+		/**
+		 * Creates new {@link Concat}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Concat valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Concat(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Concat}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Concat valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Concat(Collections.singletonList(expression));
 		}
 
+		/**
+		 * Creates new {@link Concat}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Concat stringValue(String value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Concat(Collections.singletonList(value));
 		}
 
@@ -2923,16 +3293,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$substr";
 		}
 
+		/**
+		 * Creates new {@link Substr}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Substr valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Substr(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Substr}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Substr valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -2960,24 +3342,44 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$toLower";
 		}
 
-		public static ToLower lower(String value) {
-			return new ToLower(value);
-		}
-
+		/**
+		 * Creates new {@link ToLower}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static ToLower lowerValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new ToLower(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link ToLower}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static ToLower lowerValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new ToLower(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link ToLower}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
+		public static ToLower lower(String value) {
+
+			Assert.notNull(value, "Value must not be null!");
+			return new ToLower(value);
 		}
 	}
 
@@ -2993,24 +3395,44 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$toUpper";
 		}
 
-		public static ToUpper upper(String value) {
-			return new ToUpper(value);
-		}
-
+		/**
+		 * Creates new {@link ToUpper}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static ToUpper upperValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new ToUpper(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link ToUpper}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static ToUpper upperValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new ToUpper(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link ToUpper}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
+		public static ToUpper upper(String value) {
+
+			Assert.notNull(value, "Value must not be null!");
+			return new ToUpper(value);
 		}
 	}
 
@@ -3026,23 +3448,43 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$strcasecmp";
 		}
 
+		/**
+		 * Creates new {@link StrCaseCmp}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static StrCaseCmp valueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new StrCaseCmp(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link StrCaseCmp}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static StrCaseCmp valueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new StrCaseCmp(Collections.singletonList(expression));
 		}
 
+		/**
+		 * Creates new {@link StrCaseCmp}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static StrCaseCmp stringValue(String value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new StrCaseCmp(Collections.singletonList(value));
 		}
 
@@ -3068,43 +3510,55 @@ public interface AggregationExpressions {
 	 *
 	 * @author Christoph Strobl
 	 */
-	class ArrayElemtAt extends AbstractAggregationExpression {
+	class ArrayElemAt extends AbstractAggregationExpression {
 
-		private ArrayElemtAt(List<?> value) {
+		private ArrayElemAt(List<?> value) {
 			super(value);
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$arrayElemAt";
 		}
 
-		public static ArrayElemtAt arrayOf(String fieldReference) {
+		/**
+		 * Creates new {@link ArrayElemAt}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static ArrayElemAt arrayOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
-			return new ArrayElemtAt(asFields(fieldReference));
+			return new ArrayElemAt(asFields(fieldReference));
 		}
 
-		public static ArrayElemtAt arrayOf(AggregationExpression expression) {
+		/**
+		 * Creates new {@link ArrayElemAt}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static ArrayElemAt arrayOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new ArrayElemtAt(Collections.singletonList(expression));
+			return new ArrayElemAt(Collections.singletonList(expression));
 		}
 
-		public ArrayElemtAt elementAt(int index) {
-			return new ArrayElemtAt(append(index));
+		public ArrayElemAt elementAt(int index) {
+			return new ArrayElemAt(append(index));
 		}
 
-		public ArrayElemtAt elementAt(AggregationExpression expression) {
+		public ArrayElemAt elementAt(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new ArrayElemtAt(append(expression));
+			return new ArrayElemAt(append(expression));
 		}
 
-		public ArrayElemtAt elementAt(String arrayFieldReference) {
+		public ArrayElemAt elementAt(String arrayFieldReference) {
 
 			Assert.notNull(arrayFieldReference, "ArrayReference must not be null!");
-			return new ArrayElemtAt(append(Fields.field(arrayFieldReference)));
+			return new ArrayElemAt(append(Fields.field(arrayFieldReference)));
 		}
 	}
 
@@ -3120,16 +3574,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$concatArrays";
 		}
 
+		/**
+		 * Creates new {@link ConcatArrays}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static ConcatArrays arrayOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new ConcatArrays(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link ConcatArrays}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static ConcatArrays arrayOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3419,16 +3885,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$isArray";
 		}
 
+		/**
+		 * Creates new {@link IsArray}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static IsArray isArray(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new IsArray(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link IsArray}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static IsArray isArray(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3448,16 +3926,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$size";
 		}
 
+		/**
+		 * Creates new {@link Size}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Size lengthOfArray(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Size(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Size}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Size lengthOfArray(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3477,16 +3967,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$slice";
 		}
 
+		/**
+		 * Creates new {@link Slice}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Slice sliceArrayOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Slice(asFields(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Slice}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Slice sliceArrayOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3525,11 +4027,19 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$literal";
 		}
 
+		/**
+		 * Creates new {@link Literal}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return
+		 */
 		public static Literal asLiteral(Object value) {
+
+			Assert.notNull(value, "Value must not be null!");
 			return new Literal(value);
 		}
 	}
@@ -3546,16 +4056,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$dayOfYear";
 		}
 
+		/**
+		 * Creates new {@link DayOfYear}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static DayOfYear dayOfYear(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new DayOfYear(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link DayOfYear}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static DayOfYear dayOfYear(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3575,16 +4097,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$dayOfMonth";
 		}
 
+		/**
+		 * Creates new {@link DayOfMonth}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static DayOfMonth dayOfMonth(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new DayOfMonth(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link DayOfMonth}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static DayOfMonth dayOfMonth(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3604,16 +4138,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$dayOfWeek";
 		}
 
+		/**
+		 * Creates new {@link DayOfWeek}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static DayOfWeek dayOfWeek(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new DayOfWeek(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link DayOfWeek}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static DayOfWeek dayOfWeek(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3633,16 +4179,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$year";
 		}
 
+		/**
+		 * Creates new {@link Year}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Year yearOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Year(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Year}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Year yearOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3662,16 +4220,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$month";
 		}
 
+		/**
+		 * Creates new {@link Month}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Month monthOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Month(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Month}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Month monthOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3691,16 +4261,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$week";
 		}
 
+		/**
+		 * Creates new {@link Week}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Week weekOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Week(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Week}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Week weekOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3720,16 +4302,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$hour";
 		}
 
+		/**
+		 * Creates new {@link Hour}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Hour hourOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Hour(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Hour}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Hour hourOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3749,16 +4343,28 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$minute";
 		}
 
+		/**
+		 * Creates new {@link Minute}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static Minute minuteOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Minute(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link Minute}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static Minute minuteOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -3778,7 +4384,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$second";
 		}
 
@@ -3819,7 +4425,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$millisecond";
 		}
 
@@ -3860,7 +4466,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$dateToString";
 		}
 
@@ -3935,7 +4541,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$sum";
 		}
 
@@ -4014,7 +4620,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$avg";
 		}
 
@@ -4093,7 +4699,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$max";
 		}
 
@@ -4172,7 +4778,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$min";
 		}
 
@@ -4251,7 +4857,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$stdDevPop";
 		}
 
@@ -4330,7 +4936,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$stdDevSamp";
 		}
 
@@ -4409,7 +5015,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$cmp";
 		}
 
@@ -4486,7 +5092,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$eq";
 		}
 
@@ -4563,7 +5169,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$gt";
 		}
 
@@ -4640,7 +5246,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$lt";
 		}
 
@@ -4717,7 +5323,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$gte";
 		}
 
@@ -4794,7 +5400,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$lte";
 		}
 
@@ -4871,7 +5477,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$ne";
 		}
 
@@ -4948,7 +5554,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$and";
 		}
 
@@ -5012,7 +5618,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$or";
 		}
 
@@ -5078,7 +5684,7 @@ public interface AggregationExpressions {
 		}
 
 		@Override
-		public String getMongoMethod() {
+		protected String getMongoMethod() {
 			return "$not";
 		}
 
