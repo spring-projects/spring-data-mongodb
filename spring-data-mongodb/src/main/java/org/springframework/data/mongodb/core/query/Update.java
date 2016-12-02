@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -44,6 +47,7 @@ import com.mongodb.DBObject;
  * @author Thomas Darimont
  * @author Alexey Plotnik
  * @author Mark Paluch
+ * @author Pavel Vodrazka
  */
 public class Update {
 
@@ -660,6 +664,58 @@ public class Update {
 			return this.count;
 		}
 	}
+	
+	/**
+	 * Implementation of {@link Modifier} representing {@code $sort}.
+	 *
+	 * @author Pavel Vodrazka
+	 * @since 1.10
+	 */
+	private static class SortModifier implements Modifier {
+
+		private final Object sort;
+
+		public SortModifier(Direction direction) {
+			this.sort = direction.isAscending() ? 1 : -1;
+		}
+
+		public SortModifier(Sort sort) {
+			this.sort = createDBObject(sort);
+		}
+
+		private DBObject createDBObject(Sort sort) {
+
+			DBObject obj = new BasicDBObject();
+
+			for (Order order : sort) {
+				if (order.isIgnoreCase()) {
+					throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case! "
+							+ "MongoDB does not support sorting ignoring case currently!", order.getProperty()));
+				}
+				obj.put(order.getProperty(), order.isAscending() ? 1 : -1);
+			}
+
+			return obj;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getKey()
+		 */
+		@Override
+		public String getKey() {
+			return "$sort";
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getValue()
+		 */
+		@Override
+		public Object getValue() {
+			return this.sort;
+		}		
+	}
 
 	/**
 	 * Builder for creating {@code $push} modifiers
@@ -704,6 +760,36 @@ public class Update {
 		public PushOperatorBuilder slice(int count) {
 
 			this.modifiers.addModifier(new Slice(count));
+			return this;
+		}
+
+		/**
+		 * Propagates {@code $sort} to {@code $push}. {@code $sort} requires the {@code $each} operator.
+		 * Forces elements to be sorted by values in given {@literal direction}.
+		 *
+		 * @param direction must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public PushOperatorBuilder sort(Direction direction) {
+
+			Assert.notNull(direction, "Direction must not be 'null'.");
+			this.modifiers.addModifier(new SortModifier(direction));
+			return this;
+		}
+
+		/**
+		 * Propagates {@code $sort} to {@code $push}. {@code $sort} requires the {@code $each} operator.
+		 * Forces document elements to be sorted in given {@literal order}.
+		 *
+		 * @param order must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 1.10
+		 */
+		public PushOperatorBuilder sort(Sort order) {
+
+			Assert.notNull(order, "Order must not be 'null'.");
+			this.modifiers.addModifier(new SortModifier(order));
 			return this;
 		}
 

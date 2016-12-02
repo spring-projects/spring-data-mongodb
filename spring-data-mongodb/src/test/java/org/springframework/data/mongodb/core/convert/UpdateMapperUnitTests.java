@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.collection.IsMapContaining.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -42,6 +43,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
@@ -68,6 +72,7 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Pavel Vodrazka
  */
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateMapperUnitTests {
@@ -413,6 +418,68 @@ public class UpdateMapperUnitTests {
 
 		assertThat(key2.containsField("$slice"), is(true));
 		assertThat((Integer) key2.get("$slice"), is(-2));
+		assertThat(key2.containsField("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1141
+	 */
+	@Test
+	public void updatePushEachWithValueSortShouldRenderCorrectly() {
+
+		Update update = new Update().push("scores").sort(Direction.DESC).each(42, 23, 68);
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key = getAsDBObject(push, "scores");
+
+		assertThat(key.containsField("$sort"), is(true));
+		assertThat((Integer) key.get("$sort"), is(-1));
+		assertThat(key.containsField("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1141
+	 */
+	@Test
+	public void updatePushEachWithDocumentSortShouldRenderCorrectly() {
+
+		Update update = new Update().push("names").sort(new Sort(new Order(Direction.ASC, "last"), new Order(Direction.ASC, "first")))
+				.each(Collections.emptyList());
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key = getAsDBObject(push, "names");
+
+		assertThat(key.containsField("$sort"), is(true));
+		assertThat((DBObject) key.get("$sort"), equalTo(new BasicDBObjectBuilder().add("last", 1).add("first", 1).get()));
+		assertThat(key.containsField("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1141
+	 */
+	@Test
+	public void updatePushEachWithSortShouldRenderCorrectlyWhenUsingMultiplePush() {
+
+		Update update = new Update().push("authors").sort(Direction.ASC).each("Harry")
+				.push("chapters").sort(new Sort(Direction.ASC, "order")).each(Collections.emptyList());
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key1 = getAsDBObject(push, "authors");
+
+		assertThat(key1.containsField("$sort"), is(true));
+		assertThat((Integer) key1.get("$sort"), is(1));
+		assertThat(key1.containsField("$each"), is(true));
+
+		DBObject key2 = getAsDBObject(push, "chapters");
+
+		assertThat(key2.containsField("$sort"), is(true));
+		assertThat((DBObject) key2.get("$sort"), equalTo(new BasicDBObjectBuilder().add("order", 1).get()));
 		assertThat(key2.containsField("$each"), is(true));
 	}
 
