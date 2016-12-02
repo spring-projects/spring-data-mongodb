@@ -20,6 +20,8 @@ import java.util.Map.Entry;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -69,7 +71,7 @@ public class UpdateMapper extends QueryMapper {
 		for (String s : document.keySet()) {
 			if (s.startsWith("$")) {
 
-				if(s.equals("$set")){
+				if (s.equals("$set")) {
 					set = document.get(s, Document.class);
 				}
 				hasOperators = true;
@@ -99,6 +101,7 @@ public class UpdateMapper extends QueryMapper {
 
 	/**
 	 * Returns {@literal true} if the given {@link Document} is an update object that uses update operators.
+	 * 
 	 * @param updateObj
 	 * @return {@literal true} if the given {@link Document} is an update object.
 	 */
@@ -194,11 +197,23 @@ public class UpdateMapper extends QueryMapper {
 	}
 
 	private Document getMappedValue(Field field, Modifier modifier) {
+		return new Document(modifier.getKey(), getMappedModifier(field, modifier));
+	}
+
+	private Object getMappedModifier(Field field, Modifier modifier) {
+
+		Object value = modifier.getValue();
+
+		if (value instanceof Sort) {
+
+			Document sortObject = getSortObject((Sort) value);
+			return field == null || field.getPropertyEntity() == null ? sortObject
+					: getMappedSort(sortObject, field.getPropertyEntity());
+		}
 
 		TypeInformation<?> typeHint = field == null ? ClassTypeInformation.OBJECT : field.getTypeHint();
 
-		Object value = converter.convertToMongoType(modifier.getValue(), typeHint);
-		return new Document(modifier.getKey(), value);
+		return converter.convertToMongoType(value, typeHint);
 	}
 
 	private TypeInformation<?> getTypeHintForEntity(Object source, MongoPersistentEntity<?> entity) {
@@ -227,6 +242,17 @@ public class UpdateMapper extends QueryMapper {
 
 		return entity == null ? super.createPropertyField(entity, key, mappingContext)
 				: new MetadataBackedUpdateField(entity, key, mappingContext);
+	}
+
+	private static Document getSortObject(Sort sort) {
+
+		Document document = new Document();
+
+		for (Order order : sort) {
+			document.put(order.getProperty(), order.isAscending() ? 1 : -1);
+		}
+
+		return document;
 	}
 
 	/**

@@ -667,33 +667,42 @@ public class Update {
 	 * Implementation of {@link Modifier} representing {@code $sort}.
 	 *
 	 * @author Pavel Vodrazka
+	 * @author Mark Paluch
 	 * @since 1.10
 	 */
 	private static class SortModifier implements Modifier {
 
 		private final Object sort;
 
+		/**
+		 * Creates a new {@link SortModifier} instance given {@link Direction}.
+		 *
+		 * @param direction must not be {@literal null}.
+		 */
 		public SortModifier(Direction direction) {
+
+			Assert.notNull(direction, "Direction must not be null!");
 			this.sort = direction.isAscending() ? 1 : -1;
 		}
 
+		/**
+		 * Creates a new {@link SortModifier} instance given {@link Sort}.
+		 *
+		 * @param sort must not be {@literal null}.
+		 */
 		public SortModifier(Sort sort) {
-			this.sort = createDBObject(sort);
-		}
 
-		private Document createDBObject(Sort sort) {
-
-			Document obj = new Document();
+			Assert.notNull(sort, "Sort must not be null!");
 
 			for (Order order : sort) {
+
 				if (order.isIgnoreCase()) {
 					throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case! "
 							+ "MongoDB does not support sorting ignoring case currently!", order.getProperty()));
 				}
-				obj.put(order.getProperty(), order.isAscending() ? 1 : -1);
 			}
 
-			return obj;
+			this.sort = sort;
 		}
 
 		/*
@@ -780,14 +789,14 @@ public class Update {
 		 * Propagates {@code $sort} to {@code $push}. {@code $sort} requires the {@code $each} operator. Forces document
 		 * elements to be sorted in given {@literal order}.
 		 *
-		 * @param order must not be {@literal null}.
+		 * @param sort must not be {@literal null}.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
-		public PushOperatorBuilder sort(Sort order) {
+		public PushOperatorBuilder sort(Sort sort) {
 
-			Assert.notNull(order, "Order must not be 'null'.");
-			this.modifiers.addModifier(new SortModifier(order));
+			Assert.notNull(sort, "Sort must not be 'null'.");
+			this.modifiers.addModifier(new SortModifier(sort));
 			return this;
 		}
 

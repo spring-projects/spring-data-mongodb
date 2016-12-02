@@ -420,7 +420,8 @@ public class UpdateMapperUnitTests {
 
 		Update update = new Update().push("scores").sort(Direction.DESC).each(42, 23, 68);
 
-		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
 
 		Document push = getAsDocument(mappedObject, "$push");
 		Document key = getAsDocument(push, "scores");
@@ -436,17 +437,18 @@ public class UpdateMapperUnitTests {
 	@Test
 	public void updatePushEachWithDocumentSortShouldRenderCorrectly() {
 
-		Update update = new Update().push("names")
-				.sort(new Sort(new Order(Direction.ASC, "last"), new Order(Direction.ASC, "first")))
+		Update update = new Update().push("list")
+				.sort(new Sort(new Order(Direction.ASC, "value"), new Order(Direction.ASC, "field")))
 				.each(Collections.emptyList());
 
-		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithList.class));
 
 		Document push = getAsDocument(mappedObject, "$push");
-		Document key = getAsDocument(push, "names");
+		Document key = getAsDocument(push, "list");
 
 		assertThat(key.containsKey("$sort"), is(true));
-		assertThat((Document) key.get("$sort"), equalTo(new Document("last", 1).append("first", 1)));
+		assertThat((Document) key.get("$sort"), equalTo(new Document("renamed-value", 1).append("field", 1)));
 		assertThat(key.containsKey("$each"), is(true));
 	}
 
@@ -1317,9 +1319,14 @@ public class UpdateMapperUnitTests {
 		NestedDocument concreteValue;
 	}
 
+	static class EntityWithList {
+		List<EntityWithAliasedObject> list;
+	}
+
 	static class EntityWithAliasedObject {
 
 		@Field("renamed-value") Object value;
+		Object field;
 	}
 
 	static class EntityWithObjectMap {
