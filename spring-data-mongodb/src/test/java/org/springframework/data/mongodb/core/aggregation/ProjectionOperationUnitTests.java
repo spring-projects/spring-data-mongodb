@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.BooleanOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
@@ -49,6 +50,7 @@ import com.mongodb.util.JSON;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class ProjectionOperationUnitTests {
 
@@ -1706,5 +1708,44 @@ public class ProjectionOperationUnitTests {
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
 		return (DBObject) fromProjectClause.get(field);
+	}
+
+	/**
+	 * @see DATAMONGO-861, DATAMONGO-1542
+	 */
+	@Test
+	public void shouldRenderIfNullConditionAggregationExpression() {
+
+		DBObject agg = project().and(ConditionalOperators.ifNull(ArrayOperators.arrayOf("array").elementAt(1)).then("a more sophisticated value"))
+				.as("result").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(JSON.parse("{ $project: { result: { $ifNull: [ { $arrayElemAt: [\"$array\", 1] }, \"a more sophisticated value\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1542
+	 */
+	@Test
+	public void shouldRenderIfNullValueAggregationExpression() {
+
+		DBObject agg = project()
+				.and(ConditionalOperators.ifNull("field").then(ArrayOperators.arrayOf("array").elementAt(1))).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(JSON.parse("{ $project: { result: { $ifNull: [ \"$field\", { $arrayElemAt: [\"$array\", 1] } ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-861, DATAMONGO-1542
+	 */
+	@Test
+	public void fieldReplacementIfNullShouldRenderCorrectly() {
+
+		DBObject agg = project().and(ConditionalOperators.ifNull("optional").thenValueOf("$never-null")).as("result")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project: { result: { $ifNull: [ \"$optional\", \"$never-null\" ] } } }")));
 	}
 }

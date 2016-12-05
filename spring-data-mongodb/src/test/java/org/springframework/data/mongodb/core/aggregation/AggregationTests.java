@@ -24,6 +24,8 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import lombok.Builder;
+
 import java.io.BufferedInputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -55,6 +57,8 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.Venue;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -72,8 +76,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.util.JSON;
-
-import lombok.Builder;
 
 /**
  * Tests for {@link MongoTemplate#aggregate(String, AggregationPipeline, Class)}.
@@ -522,7 +524,7 @@ public class AggregationTests {
 		TypedAggregation<InventoryItem> aggregation = newAggregation(InventoryItem.class, //
 				project("item") //
 						.and("discount")//
-						.applyCondition(ConditionalOperator.newBuilder().when(Criteria.where("qty").gte(250)) //
+						.applyCondition(Cond.newBuilder().when(Criteria.where("qty").gte(250)) //
 								.then(30) //
 								.otherwise(20)));
 
@@ -570,7 +572,7 @@ public class AggregationTests {
 
 		TypedAggregation<InventoryItem> aggregation = newAggregation(InventoryItem.class, //
 				project("item") //
-						.and(ifNull("description", "Unspecified")) //
+						.and(ConditionalOperators.ifNull("description").then("Unspecified")) //
 						.as("description")//
 		);
 
@@ -597,7 +599,7 @@ public class AggregationTests {
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
 				project() //
 						.and("largePopulation")//
-						.applyCondition(ConditionalOperator.newBuilder().when(Criteria.where("population").gte(20000)) //
+						.applyCondition(ConditionalOperators.when(Criteria.where("population").gte(20000)) //
 								.then(true) //
 								.otherwise(false)) //
 						.and("population").as("population"));
@@ -622,9 +624,9 @@ public class AggregationTests {
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
 				project() //
 						.and("size")//
-						.applyCondition(ConditionalOperator.newBuilder().when(Criteria.where("population").gte(20000)) //
-								.then(ConditionalOperator.newBuilder().when(Criteria.where("population").gte(200000)).then("huge")
-										.otherwise("small")) //
+						.applyCondition(ConditionalOperators.when(Criteria.where("population").gte(20000)) //
+								.then(
+										ConditionalOperators.when(Criteria.where("population").gte(200000)).then("huge").otherwise("small")) //
 								.otherwise("small")) //
 						.and("population").as("population"));
 
@@ -649,9 +651,9 @@ public class AggregationTests {
 		mongoTemplate.insert(new LineItem("idonly", null, 0));
 
 		TypedAggregation<LineItem> aggregation = newAggregation(LineItem.class, //
-				project("id") //
-						.and("caption")//
-						.applyCondition(ifNull(field("caption"), "unknown")),
+project("id") //
+		.and("caption")//
+		.applyCondition(ConditionalOperators.ifNull("caption").then("unknown")),
 				sort(ASC, "id"));
 
 		assertThat(aggregation.toString(), is(notNullValue()));
@@ -678,7 +680,7 @@ public class AggregationTests {
 		TypedAggregation<LineItem> aggregation = newAggregation(LineItem.class, //
 				project("id") //
 						.and("caption")//
-						.applyCondition(ifNull(field("caption"), field("id"))),
+						.applyCondition(ConditionalOperators.ifNull("caption").thenValueOf("id")),
 				sort(ASC, "id"));
 
 		assertThat(aggregation.toString(), is(notNullValue()));
@@ -714,12 +716,16 @@ public class AggregationTests {
 		TypedAggregation<CarPerson> agg = Aggregation.newAggregation(CarPerson.class,
 				unwind("descriptors.carDescriptor.entries"), //
 				project() //
-						.and(new ConditionalOperator(Criteria.where("descriptors.carDescriptor.entries.make").is("MAKE1"), "good",
-								"meh"))
+						.and(ConditionalOperators //
+								.when(Criteria.where("descriptors.carDescriptor.entries.make").is("MAKE1")).then("good")
+								.otherwise("meh"))
 						.as("make") //
 						.and("descriptors.carDescriptor.entries.model").as("model") //
 						.and("descriptors.carDescriptor.entries.year").as("year"), //
-				group("make").avg(new ConditionalOperator(Criteria.where("year").gte(2012), 1, 9000)).as("score"),
+				group("make").avg(ConditionalOperators //
+						.when(Criteria.where("year").gte(2012)) //
+						.then(1) //
+						.otherwise(9000)).as("score"),
 				sort(ASC, "make"));
 
 		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);

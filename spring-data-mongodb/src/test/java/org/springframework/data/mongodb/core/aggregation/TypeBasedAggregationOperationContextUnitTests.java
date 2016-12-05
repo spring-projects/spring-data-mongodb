@@ -36,9 +36,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -49,6 +50,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link TypeBasedAggregationOperationContext}.
@@ -292,7 +294,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class,
 				project("name") //
 						.and("age") //
-						.applyCondition(conditional(Criteria.where("age.value").lt(10), new Age(0), field("age"))) //
+						.applyCondition(
+								ConditionalOperators.when(Criteria.where("age.value").lt(10)).then(new Age(0)).otherwiseValueOf("age")) //
 		);
 
 		DBObject dbo = agg.toDbObject("person", context);
@@ -309,7 +312,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-861
+	 * @see DATAMONGO-861, DATAMONGO-1542
 	 */
 	@Test
 	public void rendersAggregationIfNullInTypedAggregationContextCorrectly() {
@@ -318,7 +321,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class,
 				project("name") //
 						.and("age") //
-						.applyCondition(ifNull("age", new Age(0))) //
+						.applyCondition(ConditionalOperators.ifNull("age").then(new Age(0))) //
 		);
 
 		DBObject dbo = agg.toDbObject("person", context);
@@ -328,6 +331,9 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		DBObject project = getValue(projection, "$project");
 		DBObject age = getValue(project, "age");
+
+		assertThat(age, is(JSON.parse(
+				"{ $ifNull: [ \"$age\", { \"_class\":\"org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContextUnitTests$Age\",  \"value\": 0} ] }")));
 
 		assertThat(age, isBsonObject().containing("$ifNull.[0]", "$age"));
 		assertThat(age, isBsonObject().containing("$ifNull.[1].value", 0));

@@ -19,7 +19,6 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
@@ -31,6 +30,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.mongodb.BasicDBObject;
@@ -391,7 +392,9 @@ public class AggregationUnitTests {
 
 		DBObject agg = newAggregation( //
 				project("a"), //
-				group("a").first(conditional(Criteria.where("a").gte(42), "answer", "no-answer")).as("foosum") //
+				group("a")
+						.first(ConditionalOperators.when(Criteria.where("a").gte(42)).thenValueOf("answer").otherwise("no-answer"))
+						.as("foosum") //
 		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
 
 		@SuppressWarnings("unchecked")
@@ -409,7 +412,7 @@ public class AggregationUnitTests {
 	public void shouldRenderProjectionConditionalExpressionCorrectly() {
 
 		DBObject agg = Aggregation.newAggregation(//
-				project().and(ConditionalOperator.newBuilder() //
+				project().and(Cond.newBuilder() //
 						.when("isYellow") //
 						.then("bright") //
 						.otherwise("dark")).as("color"))
@@ -432,7 +435,7 @@ public class AggregationUnitTests {
 
 		DBObject agg = Aggregation.newAggregation(//
 				project().and("color")
-						.applyCondition(ConditionalOperator.newBuilder() //
+						.applyCondition(Cond.newBuilder() //
 								.when("isYellow") //
 								.then("bright") //
 								.otherwise("dark")))
@@ -456,7 +459,8 @@ public class AggregationUnitTests {
 		DBObject agg = Aggregation
 				.newAggregation(project()//
 						.and("color")//
-						.applyCondition(conditional(Criteria.where("key").gt(5), "bright", "dark"))) //
+						.applyCondition(Cond.newBuilder().when(Criteria.where("key").gt(5)) //
+								.then("bright").otherwise("dark"))) //
 				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
 
 		DBObject project = extractPipelineElement(agg, 0, "$project");
@@ -478,7 +482,10 @@ public class AggregationUnitTests {
 				.newAggregation(//
 						project().and("color").as("chroma"),
 						project().and("luminosity") //
-								.applyCondition(conditional(field("chroma"), "bright", "dark"))) //
+								.applyCondition(ConditionalOperators //
+										.when("chroma") //
+										.thenValueOf("bright") //
+										.otherwise("dark"))) //
 				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
 
 		DBObject project = extractPipelineElement(agg, 1, "$project");
@@ -500,7 +507,10 @@ public class AggregationUnitTests {
 				.newAggregation(//
 						project().and("color").as("chroma"),
 						project().and("luminosity") //
-								.applyCondition(conditional(Criteria.where("chroma").is(100), "bright", "dark"))) //
+								.applyCondition(Cond.newBuilder()
+										.when(Criteria.where("chroma") //
+												.is(100)) //
+										.then("bright").otherwise("dark"))) //
 				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
 
 		DBObject project = extractPipelineElement(agg, 1, "$project");
@@ -522,7 +532,9 @@ public class AggregationUnitTests {
 				.newAggregation(//
 						project().and("color"), //
 						project().and("luminosity") //
-								.applyCondition(ifNull(field("chroma"), "unknown"))) //
+								.applyCondition(ConditionalOperators //
+										.ifNull("chroma") //
+										.then("unknown"))) //
 				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
 
 		DBObject project = extractPipelineElement(agg, 1, "$project");
@@ -541,7 +553,8 @@ public class AggregationUnitTests {
 				.newAggregation(//
 						project("fallback").and("color").as("chroma"),
 						project().and("luminosity") //
-								.applyCondition(ifNull(field("chroma"), field("fallback")))) //
+								.applyCondition(ConditionalOperators.ifNull("chroma") //
+										.thenValueOf("fallback"))) //
 				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
 
 		DBObject project = extractPipelineElement(agg, 1, "$project");
