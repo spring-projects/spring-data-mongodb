@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.BooleanOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
@@ -47,6 +48,7 @@ import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Pro
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class ProjectionOperationUnitTests {
 
@@ -1701,6 +1703,45 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(agg, is(Document.parse(
 				"{ $project:{ adjustedGrades:{ $map: { input: { $size : [\"foo\"]}, as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-861, DATAMONGO-1542
+	 */
+	@Test
+	public void shouldRenderIfNullConditionAggregationExpression() {
+
+		Document agg = project().and(ConditionalOperators.ifNull(ArrayOperators.arrayOf("array").elementAt(1)).then("a more sophisticated value"))
+				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { result: { $ifNull: [ { $arrayElemAt: [\"$array\", 1] }, \"a more sophisticated value\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1542
+	 */
+	@Test
+	public void shouldRenderIfNullValueAggregationExpression() {
+
+		Document agg = project()
+				.and(ConditionalOperators.ifNull("field").then(ArrayOperators.arrayOf("array").elementAt(1))).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $project: { result: { $ifNull: [ \"$field\", { $arrayElemAt: [\"$array\", 1] } ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-861, DATAMONGO-1542
+	 */
+	@Test
+	public void fieldReplacementIfNullShouldRenderCorrectly() {
+
+		Document agg = project().and(ConditionalOperators.ifNull("optional").thenValueOf("$never-null")).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(Document.parse("{ $project: { result: { $ifNull: [ \"$optional\", \"$never-null\" ] } } }")));
 	}
 
 	private static Document exctractOperation(String field, Document fromProjectClause) {

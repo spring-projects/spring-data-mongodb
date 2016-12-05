@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.IfNull;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
@@ -241,22 +243,22 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public abstract ProjectionOperation as(String alias);
 
 		/**
-		 * Apply a conditional projection using {@link ConditionalOperator}.
+		 * Apply a conditional projection using {@link Cond}.
 		 *
-		 * @param conditionalOperator must not be {@literal null}.
+		 * @param cond must not be {@literal null}.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
-		public abstract ProjectionOperation applyCondition(ConditionalOperator conditionalOperator);
+		public abstract ProjectionOperation applyCondition(Cond cond);
 
 		/**
-		 * Apply a conditional value replacement for {@literal null} values using {@link IfNullOperator}.
+		 * Apply a conditional value replacement for {@literal null} values using {@link IfNull}.
 		 *
-		 * @param ifNullOperator must not be {@literal null}.
+		 * @param ifNull must not be {@literal null}.
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
-		public abstract ProjectionOperation applyCondition(IfNullOperator ifNullOperator);
+		public abstract ProjectionOperation applyCondition(IfNull ifNull);
 	}
 
 	/**
@@ -460,10 +462,10 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.AbstractProjectionOperationBuilder#transform(org.springframework.data.mongodb.core.aggregation.ConditionalOperator)
 		 */
 		@Override
-		public ProjectionOperation applyCondition(ConditionalOperator conditionalOperator) {
+		public ProjectionOperation applyCondition(Cond cond) {
 
-			Assert.notNull(conditionalOperator, "ConditionalOperator must not be null!");
-			return this.operation.and(new ExpressionProjection(Fields.field(name), conditionalOperator));
+			Assert.notNull(cond, "ConditionalOperator must not be null!");
+			return this.operation.and(new ExpressionProjection(Fields.field(name), cond));
 		}
 
 		/*
@@ -471,10 +473,10 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.AbstractProjectionOperationBuilder#transform(org.springframework.data.mongodb.core.aggregation.IfNullOperator)
 		 */
 		@Override
-		public ProjectionOperation applyCondition(IfNullOperator ifNullOperator) {
+		public ProjectionOperation applyCondition(IfNull ifNull) {
 
-			Assert.notNull(ifNullOperator, "IfNullOperator must not be null!");
-			return this.operation.and(new ExpressionProjection(Fields.field(name), ifNullOperator));
+			Assert.notNull(ifNull, "IfNullOperator must not be null!");
+			return this.operation.and(new ExpressionProjection(Fields.field(name), ifNull));
 		}
 
 		/**

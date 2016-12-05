@@ -19,7 +19,6 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
@@ -32,6 +31,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -384,15 +385,18 @@ public class AggregationUnitTests {
 	public void conditionExpressionBasedFieldsShouldBeReferencableInFollowingOperations() {
 
 		Document agg = newAggregation( //
-				project("a"), //
-				group("a").first(conditional(Criteria.where("a").gte(42), "answer", "no-answer")).as("foosum") //
+				project("a", "answer"), //
+				group("a")
+						.first(Cond.newBuilder().when(Criteria.where("a").gte(42)).thenValueOf("answer").otherwise("no-answer"))
+						.as("foosum") //
 		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
+		System.out.println("agg: " + agg);
 		@SuppressWarnings("unchecked")
 		Document secondProjection = ((List<Document>) agg.get("pipeline")).get(1);
 		Document fields = getAsDocument(secondProjection, "$group");
 		assertThat(getAsDocument(fields, "foosum"), isBsonObject().containing("$first"));
-		assertThat(getAsDocument(fields, "foosum"), isBsonObject().containing("$first.$cond.then", "answer"));
+		assertThat(getAsDocument(fields, "foosum"), isBsonObject().containing("$first.$cond.then", "$answer"));
 		assertThat(getAsDocument(fields, "foosum"), isBsonObject().containing("$first.$cond.else", "no-answer"));
 	}
 
@@ -403,7 +407,7 @@ public class AggregationUnitTests {
 	public void shouldRenderProjectionConditionalExpressionCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
-				project().and(ConditionalOperator.newBuilder() //
+				project().and(Cond.newBuilder() //
 						.when("isYellow") //
 						.then("bright") //
 						.otherwise("dark")).as("color"))
@@ -426,7 +430,7 @@ public class AggregationUnitTests {
 
 		Document agg = Aggregation.newAggregation(//
 				project().and("color")
-						.applyCondition(ConditionalOperator.newBuilder() //
+						.applyCondition(Cond.newBuilder() //
 								.when("isYellow") //
 								.then("bright") //
 								.otherwise("dark")))
@@ -450,7 +454,8 @@ public class AggregationUnitTests {
 		Document agg = Aggregation
 				.newAggregation(project()//
 						.and("color")//
-						.applyCondition(conditional(Criteria.where("key").gt(5), "bright", "dark"))) //
+						.applyCondition(Cond.newBuilder().when(Criteria.where("key").gt(5)) //
+								.then("bright").otherwise("dark"))) //
 				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 0, "$project");
@@ -472,7 +477,10 @@ public class AggregationUnitTests {
 				.newAggregation(//
 						project().and("color").as("chroma"),
 						project().and("luminosity") //
-								.applyCondition(conditional(field("chroma"), "bright", "dark"))) //
+								.applyCondition(ConditionalOperators //
+										.when("chroma") //
+										.thenValueOf("bright") //
+										.otherwise("dark"))) //
 				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 1, "$project");
@@ -494,7 +502,10 @@ public class AggregationUnitTests {
 				.newAggregation(//
 						project().and("color").as("chroma"),
 						project().and("luminosity") //
-								.applyCondition(conditional(Criteria.where("chroma").is(100), "bright", "dark"))) //
+								.applyCondition(Cond.newBuilder()
+										.when(Criteria.where("chroma") //
+												.is(100)) //
+										.then("bright").otherwise("dark"))) //
 				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 1, "$project");
@@ -516,7 +527,9 @@ public class AggregationUnitTests {
 				.newAggregation(//
 						project().and("color"), //
 						project().and("luminosity") //
-								.applyCondition(ifNull(field("chroma"), "unknown"))) //
+								.applyCondition(ConditionalOperators //
+										.ifNull("chroma") //
+										.then("unknown"))) //
 				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 1, "$project");
@@ -535,7 +548,8 @@ public class AggregationUnitTests {
 				.newAggregation(//
 						project("fallback").and("color").as("chroma"),
 						project().and("luminosity") //
-								.applyCondition(ifNull(field("chroma"), field("fallback")))) //
+								.applyCondition(ConditionalOperators.ifNull("chroma") //
+										.thenValueOf("fallback"))) //
 				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		Document project = extractPipelineElement(agg, 1, "$project");
