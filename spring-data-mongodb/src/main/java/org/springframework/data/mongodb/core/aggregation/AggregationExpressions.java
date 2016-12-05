@@ -22,7 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.AsBuilder;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Map.ArrayOfBuilder;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
@@ -1782,9 +1781,10 @@ public interface AggregationExpressions {
 	}
 
 	/**
-	 * Gateway to {@literal Date} aggregation operations.
+	 * Gateway to {@literal variable} aggregation operations.
 	 *
 	 * @author Christoph Strobl
+	 * @author Mark Paluch
 	 */
 	class VariableOperators {
 
@@ -1792,10 +1792,22 @@ public interface AggregationExpressions {
 		 * Starts building new {@link Map} that applies an {@link AggregationExpression} to each item of a referenced array
 		 * and returns an array with the applied results.
 		 *
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static ArrayOfBuilder map() {
-			return Map.map();
+		public static Map.AsBuilder mapItemsOf(String fieldReference) {
+			return Map.itemsOf(fieldReference);
+		}
+
+		/**
+		 * Starts building new {@link Map} that applies an {@link AggregationExpression} to each item of a referenced array
+		 * and returns an array with the applied results.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static Map.AsBuilder mapItemsOf(AggregationExpression expression) {
+			return Map.itemsOf(expression);
 		}
 	}
 
@@ -5757,51 +5769,52 @@ public interface AggregationExpressions {
 		 * Starts building new {@link Map} that applies an {@link AggregationExpression} to each item of a referenced array
 		 * and returns an array with the applied results.
 		 *
+		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		static ArrayOfBuilder map() {
+		static AsBuilder itemsOf(final String fieldReference) {
 
-			return new ArrayOfBuilder() {
+			return new AsBuilder() {
 
 				@Override
-				public AsBuilder itemsOf(final String fieldReference) {
+				public FunctionBuilder as(final String variableName) {
 
-					return new AsBuilder() {
+					return new FunctionBuilder() {
 
 						@Override
-						public FunctionBuilder as(final String variableName) {
-
-							return new FunctionBuilder() {
-
-								@Override
-								public Map andApply(final AggregationExpression expression) {
-									return new Map(Fields.field(fieldReference), variableName, expression);
-								}
-							};
+						public Map andApply(final AggregationExpression expression) {
+							return new Map(Fields.field(fieldReference), variableName, expression);
 						}
 					};
 				}
 
-				@Override
-				public AsBuilder itemsOf(final AggregationExpression source) {
+			};
+		};
 
-					return new AsBuilder() {
+		/**
+		 * Starts building new {@link Map} that applies an {@link AggregationExpression} to each item of a referenced array
+		 * and returns an array with the applied results.
+		 *
+		 * @param source must not be {@literal null}.
+		 * @return
+		 */
+		public static AsBuilder itemsOf(final AggregationExpression source) {
+
+			return new AsBuilder() {
+
+				@Override
+				public FunctionBuilder as(final String variableName) {
+
+					return new FunctionBuilder() {
 
 						@Override
-						public FunctionBuilder as(final String variableName) {
-
-							return new FunctionBuilder() {
-
-								@Override
-								public Map andApply(final AggregationExpression expression) {
-									return new Map(source, variableName, expression);
-								}
-							};
+						public Map andApply(final AggregationExpression expression) {
+							return new Map(source, variableName, expression);
 						}
 					};
 				}
 			};
-		};
+		}
 
 		@Override
 		public DBObject toDbObject(final AggregationOperationContext context) {
@@ -5839,26 +5852,6 @@ public interface AggregationExpressions {
 			map.put("in", functionToApply.toDbObject(new NestedDelegatingExpressionAggregationOperationContext(context)));
 
 			return new BasicDBObject("$map", map);
-		}
-
-		interface ArrayOfBuilder {
-
-			/**
-			 * Set the field that resolves to an array on which to apply the {@link AggregationExpression}.
-			 *
-			 * @param fieldReference must not be {@literal null}.
-			 * @return
-			 */
-			AsBuilder itemsOf(String fieldReference);
-
-			/**
-			 * Set the {@link AggregationExpression} that results in an array on which to apply the
-			 * {@link AggregationExpression}.
-			 *
-			 * @param expression must not be {@literal null}.
-			 * @return
-			 */
-			AsBuilder itemsOf(AggregationExpression expression);
 		}
 
 		interface AsBuilder {
