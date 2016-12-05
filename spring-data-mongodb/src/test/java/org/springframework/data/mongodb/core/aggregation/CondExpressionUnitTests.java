@@ -16,48 +16,26 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.aggregation.ConditionalOperator.*;
+import static org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Unit tests for {@link ConditionalOperator}.
+ * Unit tests for {@link Cond}.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-public class ConditionalOperatorUnitTests {
-
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test(expected = IllegalArgumentException.class)
-	public void shouldRejectNullCondition() {
-		new ConditionalOperator((Field) null, "", "");
-	}
-
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test(expected = IllegalArgumentException.class)
-	public void shouldRejectThenValue() {
-		new ConditionalOperator(Fields.field("field"), null, "");
-	}
-
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test(expected = IllegalArgumentException.class)
-	public void shouldRejectOtherwiseValue() {
-		new ConditionalOperator(Fields.field("field"), "", null);
-	}
+public class CondExpressionUnitTests {
 
 	/**
 	 * @see DATAMONGO-861
@@ -92,12 +70,12 @@ public class ConditionalOperatorUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-861
+	 * @see DATAMONGO-861, DATAMONGO-1542
 	 */
 	@Test
 	public void simpleBuilderShouldRenderCorrectly() {
 
-		ConditionalOperator operator = newBuilder().when("isYellow").then("bright").otherwise("dark");
+		Cond operator = ConditionalOperators.when("isYellow").thenValueOf("bright").otherwise("dark");
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
 		DBObject expectedCondition = new BasicDBObject() //
@@ -109,12 +87,12 @@ public class ConditionalOperatorUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-861
+	 * @see DATAMONGO-861, DATAMONGO-1542
 	 */
 	@Test
 	public void simpleCriteriaShouldRenderCorrectly() {
 
-		ConditionalOperator operator = newBuilder().when(Criteria.where("luminosity").gte(100)).then("bright")
+		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100)).thenValueOf("bright")
 				.otherwise("dark");
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
@@ -132,11 +110,10 @@ public class ConditionalOperatorUnitTests {
 	@Test
 	public void andCriteriaShouldRenderCorrectly() {
 
-		ConditionalOperator operator = newBuilder() //
-				.when(Criteria.where("luminosity").gte(100) //
-						.andOperator(Criteria.where("hue").is(50), //
-								Criteria.where("saturation").lt(11)))
-				.then("bright").otherwise("dark");
+		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100) //
+				.andOperator(Criteria.where("hue").is(50), //
+						Criteria.where("saturation").lt(11)))
+				.thenValueOf("bright").otherwiseValueOf("dark-field");
 
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
@@ -147,20 +124,20 @@ public class ConditionalOperatorUnitTests {
 		DBObject expectedCondition = new BasicDBObject() //
 				.append("if", Arrays.<Object> asList(luminosity, new BasicDBObject("$and", Arrays.asList(hue, saturation)))) //
 				.append("then", "bright") //
-				.append("else", "dark");
+				.append("else", "$dark-field");
 
 		assertThat(dbObject, isBsonObject().containing("$cond", expectedCondition));
 	}
 
 	/**
-	 * @see DATAMONGO-861
+	 * @see DATAMONGO-861, DATAMONGO-1542
 	 */
 	@Test
 	public void twoArgsCriteriaShouldRenderCorrectly() {
 
 		Criteria criteria = Criteria.where("luminosity").gte(100) //
 				.and("saturation").and("chroma").is(200);
-		ConditionalOperator operator = newBuilder().when(criteria).then("bright").otherwise("dark");
+		Cond operator = ConditionalOperators.when(criteria).thenValueOf("bright").otherwise("dark");
 
 		DBObject dbObject = operator.toDbObject(Aggregation.DEFAULT_CONTEXT);
 
@@ -176,14 +153,13 @@ public class ConditionalOperatorUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-861
+	 * @see DATAMONGO-861, DATAMONGO-1542
 	 */
 	@Test
 	public void nestedCriteriaShouldRenderCorrectly() {
 
-		ConditionalOperator operator = newBuilder() //
-				.when(Criteria.where("luminosity").gte(100)) //
-				.then(newBuilder() //
+		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100)) //
+				.thenValueOf(newBuilder() //
 						.when(Criteria.where("luminosity").gte(200)) //
 						.then("verybright") //
 						.otherwise("not-so-bright")) //
