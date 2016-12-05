@@ -1702,6 +1702,10 @@ At the time of this writing we provide support for the following Aggregation Ope
 | Date Aggregation Operators
 | dayOfYear, dayOfMonth, dayOfWeek, year, month, week, hour, minute, second, millisecond, dateToString
 
+| Variable Operators
+| map
+
+
 | Conditional Aggregation Operators
 | cond, ifNull
 

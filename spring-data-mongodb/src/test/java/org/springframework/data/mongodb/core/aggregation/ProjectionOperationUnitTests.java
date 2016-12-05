@@ -1674,13 +1674,13 @@ public class ProjectionOperationUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-784
+	 * @see DATAMONGO-1540
 	 */
 	@Test
 	public void shouldRenderMapAggregationExpression() {
 
 		Document agg = Aggregation.project()
-				.and(VariableOperators.map().itemsOf("quizzes").as("grade")
+				.and(VariableOperators.mapItemsOf("quizzes").as("grade")
 						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
 				.as("adjustedGrades").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -1689,13 +1689,13 @@ public class ProjectionOperationUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-784
+	 * @see DATAMONGO-1540
 	 */
 	@Test
 	public void shouldRenderMapAggregationExpressionOnExpression() {
 
 		Document agg = Aggregation.project()
-				.and(VariableOperators.map().itemsOf(AggregationFunctionExpressions.SIZE.of("foo")).as("grade")
+				.and(VariableOperators.mapItemsOf(AggregationFunctionExpressions.SIZE.of("foo")).as("grade")
 						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
 				.as("adjustedGrades").toDocument(Aggregation.DEFAULT_CONTEXT);
 
