@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.util.Assert;
 import org.springframework.util.CompositeIterator;
 import org.springframework.util.ObjectUtils;
@@ -406,6 +407,11 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		 */
 		@Override
 		public String toString() {
+
+			if(getRaw().startsWith("$")) {
+				return getRaw();
+			}
+
 			return String.format("$%s", getRaw());
 		}
 

@@ -28,13 +28,35 @@ import static org.springframework.data.mongodb.util.DBObjectUtils.*;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
+import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.And;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Avg;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.BooleanOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Gte;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Lt;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.RangeOperator;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Reduce.PropertyExpression;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Reduce.Variable;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Switch.CaseOperator;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Type;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.VariableOperators;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.*;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
@@ -1792,7 +1814,296 @@ public class ProjectionOperationUnitTests {
 						"}}}}")));
 	}
 
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderIndexOfBytesCorrectly() {
+
+		DBObject agg = project().and(StringOperators.valueOf("item").indexOf("foo")).as("byteLocation")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project: { byteLocation: { $indexOfBytes: [ \"$item\", \"foo\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderIndexOfBytesWithRangeCorrectly() {
+
+		DBObject agg = project().and(StringOperators.valueOf("item").indexOf("foo").within(new Range<Long>(5L, 9L)))
+				.as("byteLocation").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, isBsonObject().containing("$project.byteLocation.$indexOfBytes.[2]", 5L)
+				.containing("$project.byteLocation.$indexOfBytes.[3]", 9L));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderIndexOfCPCorrectly() {
+
+		DBObject agg = project().and(StringOperators.valueOf("item").indexOfCP("foo")).as("cpLocation")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project: { cpLocation: { $indexOfCP: [ \"$item\", \"foo\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderIndexOfCPWithRangeCorrectly() {
+
+		DBObject agg = project().and(StringOperators.valueOf("item").indexOfCP("foo").within(new Range<Long>(5L, 9L)))
+				.as("cpLocation").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, isBsonObject().containing("$project.cpLocation.$indexOfCP.[2]", 5L)
+				.containing("$project.cpLocation.$indexOfCP.[3]", 9L));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderSplitCorrectly() {
+
+		DBObject agg = project().and(StringOperators.valueOf("city").split(", ")).as("city_state")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { city_state : { $split: [\"$city\", \", \"] }} }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderStrLenBytesCorrectly() {
+
+		DBObject agg = project().and(StringOperators.valueOf("name").length()).as("length")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { \"length\": { $strLenBytes: \"$name\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderStrLenCPCorrectly() {
+
+		DBObject agg = project().and(StringOperators.valueOf("name").lengthCP()).as("length")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { \"length\": { $strLenCP: \"$name\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderSubstrCPCorrectly() {
+
+		DBObject agg = project().and(StringOperators.valueOf("quarter").substringCP(0, 2)).as("yearSubstring")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { yearSubstring: { $substrCP: [ \"$quarter\", 0, 2 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderIndexOfArrayCorrectly() {
+
+		DBObject agg = project().and(ArrayOperators.arrayOf("items").indexOf(2)).as("index")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { index: { $indexOfArray: [ \"$items\", 2 ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderRangeCorrectly() {
+
+		DBObject agg = project().and(RangeOperator.rangeStartingAt(0L).to("distance").withStepSize(25L)).as("rest_stops")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, isBsonObject().containing("$project.rest_stops.$range.[0]", 0L)
+				.containing("$project.rest_stops.$range.[1]", "$distance").containing("$project.rest_stops.$range.[2]", 25L));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderReverseArrayCorrectly() {
+
+		DBObject agg = project().and(ArrayOperators.arrayOf("favorites").reverse()).as("reverseFavorites")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { reverseFavorites: { $reverseArray: \"$favorites\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderReduceWithSimpleObjectCorrectly() {
+
+		DBObject agg = project()
+				.and(ArrayOperators.arrayOf("probabilityArr")
+						.reduce(ArithmeticOperators.valueOf("$$value").multiplyBy("$$this")).startingWith(1))
+				.as("results").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse(
+				"{ $project : { \"results\": { $reduce: { input: \"$probabilityArr\", initialValue: 1, in: { $multiply: [ \"$$value\", \"$$this\" ] } } } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderReduceWithComplexObjectCorrectly() {
+
+		PropertyExpression sum = PropertyExpression.property("sum").definedAs(
+				ArithmeticOperators.valueOf(Variable.VALUE.referingTo("sum").getName()).add(Variable.THIS.getName()));
+		PropertyExpression product = PropertyExpression.property("product").definedAs(ArithmeticOperators
+				.valueOf(Variable.VALUE.referingTo("product").getName()).multiplyBy(Variable.THIS.getName()));
+
+		DBObject agg = project()
+				.and(ArrayOperators.arrayOf("probabilityArr").reduce(sum, product)
+						.startingWith(new BasicDBObjectBuilder().add("sum", 5).add("product", 2).get()))
+				.as("results").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse(
+				"{ $project : { \"results\": { $reduce: { input: \"$probabilityArr\", initialValue:  { \"sum\" : 5 , \"product\" : 2} , in: { \"sum\": { $add : [\"$$value.sum\", \"$$this\"] }, \"product\": { $multiply: [ \"$$value.product\", \"$$this\" ] } } } } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderZipCorrectly() {
+
+		AggregationExpression elemAt0 = ArrayOperators.arrayOf("matrix").elementAt(0);
+		AggregationExpression elemAt1 = ArrayOperators.arrayOf("matrix").elementAt(1);
+		AggregationExpression elemAt2 = ArrayOperators.arrayOf("matrix").elementAt(2);
+
+		DBObject agg = project().and(
+				ArrayOperators.arrayOf(elemAt0).zipWith(elemAt1, elemAt2).useLongestLength().defaultTo(new Object[] { 1, 2 }))
+				.as("transposed").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse(
+				"{ $project : {  transposed: { $zip: { inputs: [ { $arrayElemAt: [ \"$matrix\", 0 ] }, { $arrayElemAt: [ \"$matrix\", 1 ] }, { $arrayElemAt: [ \"$matrix\", 2 ] } ], useLongestLength : true, defaults: [1,2] } } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderInCorrectly() {
+
+		DBObject agg = project().and(ArrayOperators.arrayOf("in_stock").containsValue("bananas")).as("has_bananas")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { has_bananas : { $in : [\"bananas\", \"$in_stock\" ] } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderIsoDayOfWeekCorrectly() {
+
+		DBObject agg = project().and(DateOperators.dateOf("birthday").isoDayOfWeek()).as("dayOfWeek")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { dayOfWeek: { $isoDayOfWeek: \"$birthday\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderIsoWeekCorrectly() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").isoWeek()).as("weekNumber")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { weekNumber: { $isoWeek: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderIsoWeekYearCorrectly() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").isoWeekYear()).as("yearNumber")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { yearNumber: { $isoWeekYear: \"$date\" } } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderSwitchCorrectly() {
+
+		String expected = "$switch:\n" + //
+				"{\n" + //
+				"     branches: [\n" + //
+				"       {\n" + //
+				"         case: { $gte : [ { $avg : \"$scores\" }, 90 ] },\n" + //
+				"         then: \"Doing great!\"\n" + //
+				"       },\n" + //
+				"       {\n" + //
+				"         case: { $and : [ { $gte : [ { $avg : \"$scores\" }, 80 ] },\n" + //
+				"                          { $lt : [ { $avg : \"$scores\" }, 90 ] } ] },\n" + //
+				"         then: \"Doing pretty well.\"\n" + //
+				"       },\n" + //
+				"       {\n" + //
+				"         case: { $lt : [ { $avg : \"$scores\" }, 80 ] },\n" + //
+				"         then: \"Needs improvement.\"\n" + //
+				"       }\n" + //
+				"     ],\n" + //
+				"     default: \"No scores found.\"\n" + //
+				"   }\n" + //
+				"}";
+
+		CaseOperator cond1 = CaseOperator.when(Gte.valueOf(Avg.avgOf("scores")).greaterThanEqualToValue(90))
+				.then("Doing great!");
+		CaseOperator cond2 = CaseOperator.when(And.and(Gte.valueOf(Avg.avgOf("scores")).greaterThanEqualToValue(80),
+				Lt.valueOf(Avg.avgOf("scores")).lessThanValue(90))).then("Doing pretty well.");
+		CaseOperator cond3 = CaseOperator.when(Lt.valueOf(Avg.avgOf("scores")).lessThanValue(80))
+				.then("Needs improvement.");
+
+		DBObject agg = project().and(ConditionalOperators.switchCases(cond1, cond2, cond3).defaultTo("No scores found."))
+				.as("summary").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { summary: {" + expected + "} } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldTypeCorrectly() {
+
+		DBObject agg = project().and(Type.typeOf("a")).as("a")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, Matchers.is(JSON.parse("{ $project : { a: { $type: \"$a\" } } }")));
+	}
+
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
 		return (DBObject) fromProjectClause.get(field);
 	}
+
 }
