@@ -249,7 +249,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceNodeSetEqualsMixedArrays() {
-		assertThat(transform("setEquals(a, new int[]{4,5,6})"), is((Object) Document.parse("{ \"$setEquals\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+		assertThat(transform("setEquals(a, new int[]{4,5,6})"),
+				is((Object) Document.parse("{ \"$setEquals\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
 	}
 
 	/**
@@ -266,7 +267,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceSetUnion() {
-		assertThat(transform("setUnion(a, new int[]{4,5,6})"), is((Object) Document.parse("{ \"$setUnion\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+		assertThat(transform("setUnion(a, new int[]{4,5,6})"),
+				is((Object) Document.parse("{ \"$setUnion\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
 	}
 
 	/**
@@ -274,7 +276,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceSeDifference() {
-		assertThat(transform("setDifference(a, new int[]{4,5,6})"), is((Object) Document.parse("{ \"$setDifference\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+		assertThat(transform("setDifference(a, new int[]{4,5,6})"),
+				is((Object) Document.parse("{ \"$setDifference\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
 	}
 
 	/**
@@ -282,7 +285,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceSetIsSubset() {
-		assertThat(transform("setIsSubset(a, new int[]{4,5,6})"), is((Object) Document.parse("{ \"$setIsSubset\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
+		assertThat(transform("setIsSubset(a, new int[]{4,5,6})"),
+				is((Object) Document.parse("{ \"$setIsSubset\" : [ \"$a\" , [ 4 , 5 , 6]]}")));
 	}
 
 	/**
@@ -483,7 +487,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceNodeConcat() {
-		assertThat(transform("concat(a, b, 'c')"), is((Object) Document.parse("{ \"$concat\" : [ \"$a\" , \"$b\" , \"c\"]}")));
+		assertThat(transform("concat(a, b, 'c')"),
+				is((Object) Document.parse("{ \"$concat\" : [ \"$a\" , \"$b\" , \"c\"]}")));
 	}
 
 	/**
@@ -539,7 +544,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceNodeConcatArrays() {
-		assertThat(transform("concatArrays(a, b, c)"), is((Object) Document.parse("{ \"$concatArrays\" : [ \"$a\" , \"$b\" , \"$c\"]}")));
+		assertThat(transform("concatArrays(a, b, c)"),
+				is((Object) Document.parse("{ \"$concatArrays\" : [ \"$a\" , \"$b\" , \"$c\"]}")));
 	}
 
 	/**
@@ -547,8 +553,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceNodeFilter() {
-		assertThat(transform("filter(a, 'num', '$$num' > 10)"),
-				is((Object) Document.parse("{ \"$filter\" : { \"input\" : \"$a\" , \"as\" : \"num\" , \"cond\" : { \"$gt\" : [ \"$$num\" , 10]}}}")));
+		assertThat(transform("filter(a, 'num', '$$num' > 10)"), is((Object) Document.parse(
+				"{ \"$filter\" : { \"input\" : \"$a\" , \"as\" : \"num\" , \"cond\" : { \"$gt\" : [ \"$$num\" , 10]}}}")));
 	}
 
 	/**
@@ -580,8 +586,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceNodeMap() {
-		assertThat(transform("map(quizzes, 'grade', '$$grade' + 2)"), is(
-				(Object) Document.parse("{ \"$map\" : { \"input\" : \"$quizzes\" , \"as\" : \"grade\" , \"in\" : { \"$add\" : [ \"$$grade\" , 2]}}}")));
+		assertThat(transform("map(quizzes, 'grade', '$$grade' + 2)"), is((Object) Document.parse(
+				"{ \"$map\" : { \"input\" : \"$quizzes\" , \"as\" : \"grade\" , \"in\" : { \"$add\" : [ \"$$grade\" , 2]}}}")));
 	}
 
 	/**
@@ -589,8 +595,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceNodeLet() {
-		assertThat(transform("let({low:1, high:'$$low'}, gt('$$low', '$$high'))"), is(
-				(Object) Document.parse("{ \"$let\" : { \"vars\" : { \"low\" : 1 , \"high\" : \"$$low\"} , \"in\" : { \"$gt\" : [ \"$$low\" , \"$$high\"]}}}")));
+		assertThat(transform("let({low:1, high:'$$low'}, gt('$$low', '$$high'))"), is((Object) Document.parse(
+				"{ \"$let\" : { \"vars\" : { \"low\" : 1 , \"high\" : \"$$low\"} , \"in\" : { \"$gt\" : [ \"$$low\" , \"$$high\"]}}}")));
 	}
 
 	/**
@@ -695,8 +701,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceCond() {
-		assertThat(transform("cond(qty > 250, 30, 20)"),
-				is((Object) Document.parse("{ \"$cond\" : { \"if\" : { \"$gt\" : [ \"$qty\" , 250]} , \"then\" : 30 , \"else\" : 20}}")));
+		assertThat(transform("cond(qty > 250, 30, 20)"), is((Object) Document
+				.parse("{ \"$cond\" : { \"if\" : { \"$gt\" : [ \"$qty\" , 250]} , \"then\" : 30 , \"else\" : 20}}")));
 	}
 
 	/**
@@ -755,13 +761,13 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("min(a, b)"), is((Object) Document.parse("{ \"$min\" : [ \"$a\" , \"$b\"]}")));
 	}
 
-
 	/**
 	 * @see DATAMONGO-1530
 	 */
 	@Test
 	public void shouldRenderMethodReferenceNodePush() {
-		assertThat(transform("push({'item':'$item', 'quantity':'$qty'})"), is((Object) Document.parse("{ \"$push\" : { \"item\" : \"$item\" , \"quantity\" : \"$qty\"}}")));
+		assertThat(transform("push({'item':'$item', 'quantity':'$qty'})"),
+				is((Object) Document.parse("{ \"$push\" : { \"item\" : \"$item\" , \"quantity\" : \"$qty\"}}")));
 	}
 
 	/**
@@ -777,7 +783,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderMethodReferenceNodeStdDevPop() {
-		assertThat(transform("stdDevPop(scores.score)"), is((Object) Document.parse("{ \"$stdDevPop\" : [ \"$scores.score\"]}")));
+		assertThat(transform("stdDevPop(scores.score)"),
+				is((Object) Document.parse("{ \"$stdDevPop\" : [ \"$scores.score\"]}")));
 	}
 
 	/**
@@ -857,8 +864,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderComplexOperationNodeOr() {
-		assertThat(transform("1+2 || concat(a, b) || true"),
-				is((Object) Document.parse("{ \"$or\" : [ { \"$add\" : [ 1 , 2]} , { \"$concat\" : [ \"$a\" , \"$b\"]} , true]}")));
+		assertThat(transform("1+2 || concat(a, b) || true"), is((Object) Document
+				.parse("{ \"$or\" : [ { \"$add\" : [ 1 , 2]} , { \"$concat\" : [ \"$a\" , \"$b\"]} , true]}")));
 	}
 
 	/**
@@ -874,8 +881,8 @@ public class SpelExpressionTransformerUnitTests {
 	 */
 	@Test
 	public void shouldRenderComplexOperationNodeAnd() {
-		assertThat(transform("1+2 && concat(a, b) && true"),
-				is((Object) Document.parse("{ \"$and\" : [ { \"$add\" : [ 1 , 2]} , { \"$concat\" : [ \"$a\" , \"$b\"]} , true]}")));
+		assertThat(transform("1+2 && concat(a, b) && true"), is((Object) Document
+				.parse("{ \"$and\" : [ { \"$add\" : [ 1 , 2]} , { \"$concat\" : [ \"$a\" , \"$b\"]} , true]}")));
 	}
 
 	/**
@@ -892,6 +899,131 @@ public class SpelExpressionTransformerUnitTests {
 	@Test
 	public void shouldRenderComplexNotCorrectly() {
 		assertThat(transform("!(foo > 10)"), is((Object) Document.parse("{ \"$not\" : [ { \"$gt\" : [ \"$foo\" , 10]}]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceIndexOfBytes() {
+		assertThat(transform("indexOfBytes(item, 'foo')"),
+				is(Document.parse("{ \"$indexOfBytes\" : [ \"$item\" , \"foo\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceIndexOfCP() {
+		assertThat(transform("indexOfCP(item, 'foo')"), is(Document.parse("{ \"$indexOfCP\" : [ \"$item\" , \"foo\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceSplit() {
+		assertThat(transform("split(item, ',')"), is(Document.parse("{ \"$split\" : [ \"$item\" , \",\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceStrLenBytes() {
+		assertThat(transform("strLenBytes(item)"), is(Document.parse("{ \"$strLenBytes\" : \"$item\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceStrLenCP() {
+		assertThat(transform("strLenCP(item)"), is(Document.parse("{ \"$strLenCP\" : \"$item\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodSubstrCP() {
+		assertThat(transform("substrCP(item, 0, 5)"), is(Document.parse("{ \"$substrCP\" : [ \"$item\" , 0 , 5]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceReverseArray() {
+		assertThat(transform("reverseArray(array)"), is(Document.parse("{ \"$reverseArray\" : \"$array\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	@Ignore("Document API cannot render String[]")
+	public void shouldRenderMethodReferenceReduce() {
+		assertThat(transform("reduce(field, '', {'$concat':new String[]{'$$value','$$this'}})"), is(Document.parse(
+				"{ \"$reduce\" : { \"input\" : \"$field\" , \"initialValue\" : \"\" , \"in\" : { \"$concat\" : [ \"$$value\" , \"$$this\"]}}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceZip() {
+		assertThat(transform("zip(new String[]{'$array1', '$array2'})"),
+				is(Document.parse("{ \"$zip\" : { \"inputs\" : [ \"$array1\" , \"$array2\"]}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceZipWithOptionalArgs() {
+		assertThat(transform("zip(new String[]{'$array1', '$array2'}, true, new int[]{1,2})"), is(Document.parse(
+				"{ \"$zip\" : { \"inputs\" : [ \"$array1\" , \"$array2\"] , \"useLongestLength\" : true , \"defaults\" : [ 1 , 2]}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodIn() {
+		assertThat(transform("in('item', array)"), is(Document.parse("{ \"$in\" : [ \"item\" , \"$array\"]}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodRefereneIsoDayOfWeek() {
+		assertThat(transform("isoDayOfWeek(date)"), is(Document.parse("{ \"$isoDayOfWeek\" : \"$date\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodRefereneIsoWeek() {
+		assertThat(transform("isoWeek(date)"), is(Document.parse("{ \"$isoWeek\" : \"$date\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodRefereneIsoWeekYear() {
+		assertThat(transform("isoWeekYear(date)"), is(Document.parse("{ \"$isoWeekYear\" : \"$date\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodRefereneType() {
+		assertThat(transform("type(a)"), is(Document.parse("{ \"$type\" : \"$a\"}")));
 	}
 
 	private Object transform(String expression, Object... params) {

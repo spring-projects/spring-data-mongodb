@@ -90,6 +90,12 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("toLower", singleArgumentAggregationMethodReference().forOperator("$toLower"));
 		map.put("toUpper", singleArgumentAggregationMethodReference().forOperator("$toUpper"));
 		map.put("strcasecmp", arrayArgumentAggregationMethodReference().forOperator("$strcasecmp"));
+		map.put("indexOfBytes", arrayArgumentAggregationMethodReference().forOperator("$indexOfBytes"));
+		map.put("indexOfCP", arrayArgumentAggregationMethodReference().forOperator("$indexOfCP"));
+		map.put("split", arrayArgumentAggregationMethodReference().forOperator("$split"));
+		map.put("strLenBytes", singleArgumentAggregationMethodReference().forOperator("$strLenBytes"));
+		map.put("strLenCP", singleArgumentAggregationMethodReference().forOperator("$strLenCP"));
+		map.put("substrCP", arrayArgumentAggregationMethodReference().forOperator("$substrCP"));
 
 		// TEXT SEARCH OPERATORS
 		map.put("meta", singleArgumentAggregationMethodReference().forOperator("$meta"));
@@ -102,6 +108,12 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("isArray", singleArgumentAggregationMethodReference().forOperator("$isArray"));
 		map.put("size", singleArgumentAggregationMethodReference().forOperator("$size"));
 		map.put("slice", arrayArgumentAggregationMethodReference().forOperator("$slice"));
+		map.put("reverseArray", singleArgumentAggregationMethodReference().forOperator("$reverseArray"));
+		map.put("reduce", mapArgumentAggregationMethodReference().forOperator("$reduce").mappingParametersTo("input",
+				"initialValue", "in"));
+		map.put("zip", mapArgumentAggregationMethodReference().forOperator("$zip").mappingParametersTo("inputs",
+				"useLongestLength", "defaults"));
+		map.put("in", arrayArgumentAggregationMethodReference().forOperator("$in"));
 
 		// VARIABLE OPERATORS
 		map.put("map", mapArgumentAggregationMethodReference().forOperator("$map") //
@@ -124,6 +136,9 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("millisecond", singleArgumentAggregationMethodReference().forOperator("$millisecond"));
 		map.put("dateToString", mapArgumentAggregationMethodReference().forOperator("$dateToString") //
 				.mappingParametersTo("format", "date"));
+		map.put("isoDayOfWeek", singleArgumentAggregationMethodReference().forOperator("$isoDayOfWeek"));
+		map.put("isoWeek", singleArgumentAggregationMethodReference().forOperator("$isoWeek"));
+		map.put("isoWeekYear", singleArgumentAggregationMethodReference().forOperator("$isoWeekYear"));
 
 		// CONDITIONAL OPERATORS
 		map.put("cond", mapArgumentAggregationMethodReference().forOperator("$cond") //
@@ -141,6 +156,9 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("addToSet", singleArgumentAggregationMethodReference().forOperator("$addToSet"));
 		map.put("stdDevPop", arrayArgumentAggregationMethodReference().forOperator("$stdDevPop"));
 		map.put("stdDevSamp", arrayArgumentAggregationMethodReference().forOperator("$stdDevSamp"));
+
+		// TYPE OPERATORS
+		map.put("type", singleArgumentAggregationMethodReference().forOperator("$type"));
 
 		FUNCTIONS = Collections.unmodifiableMap(map);
 	}

@@ -1688,26 +1688,28 @@ At the time of this writing we provide support for the following Aggregation Ope
 | abs, add (*via plus), ceil, divide, exp, floor, ln, log, log10, mod, multiply, pow, sqrt, subtract (*via minus), trunc
 
 | String Aggregation Operators
-| concat, substr, toLower, toUpper, stcasecmp
+| concat, substr, toLower, toUpper, stcasecmp, indexOfBytes, indexOfCP, split, strLenBytes, strLenCP, substrCP,
 
 | Comparison Aggregation Operators
 | eq (*via: is), gt, gte, lt, lte, ne
 
 | Array Aggregation Operators
-| arrayElementAt, concatArrays, filter, isArray, size, slice
+| arrayElementAt, concatArrays, filter, in, indexOfArray, isArray, range, reverseArray, reduce, size, slice, zip
 
 | Literal Operators
 | literal
 
 | Date Aggregation Operators
-| dayOfYear, dayOfMonth, dayOfWeek, year, month, week, hour, minute, second, millisecond, dateToString
+| dayOfYear, dayOfMonth, dayOfWeek, year, month, week, hour, minute, second, millisecond, dateToString, isoDayOfWeek, isoWeek, isoWeekYear
 
 | Variable Operators
 | map
 
-
 | Conditional Aggregation Operators
-| cond, ifNull
+| cond, ifNull, switch
+
+| Type Aggregation Operators
+| type
 
 |===
 

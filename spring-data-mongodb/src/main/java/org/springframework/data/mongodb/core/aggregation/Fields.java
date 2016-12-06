@@ -187,13 +187,13 @@ public final class Fields implements Iterable<Field> {
 	}
 
 	/**
-	 *
 	 * @return
 	 * @since 1.10
 	 */
 	public List<Field> asList() {
 		return Collections.unmodifiableList(fields);
 	}
+
 	/**
 	 * Value object to encapsulate a field in an aggregation operation.
 	 * 
@@ -201,6 +201,7 @@ public final class Fields implements Iterable<Field> {
 	 */
 	static class AggregationField implements Field {
 
+		private final String raw;
 		private final String name;
 		private final String target;
 
@@ -225,6 +226,7 @@ public final class Fields implements Iterable<Field> {
 		 */
 		public AggregationField(String name, String target) {
 
+			raw = name;
 			String nameToSet = cleanUp(name);
 			String targetToSet = cleanUp(target);
 
@@ -266,6 +268,11 @@ public final class Fields implements Iterable<Field> {
 		 * @see org.springframework.data.mongodb.core.aggregation.Field#getAlias()
 		 */
 		public String getTarget() {
+
+			if (isLocalVar()) {
+				return this.getRaw();
+			}
+
 			return StringUtils.hasText(this.target) ? this.target : this.name;
 		}
 
@@ -276,6 +283,22 @@ public final class Fields implements Iterable<Field> {
 		@Override
 		public boolean isAliased() {
 			return !getName().equals(getTarget());
+		}
+
+		/**
+		 * @return {@literal true} in case the field name starts with {@code $$}.
+		 * @since 1.10
+		 */
+		public boolean isLocalVar() {
+			return raw.startsWith("$$") && !raw.startsWith("$$$");
+		}
+
+		/**
+		 * @return
+		 * @since 1.10
+		 */
+		public String getRaw() {
+			return raw;
 		}
 
 		/* 
