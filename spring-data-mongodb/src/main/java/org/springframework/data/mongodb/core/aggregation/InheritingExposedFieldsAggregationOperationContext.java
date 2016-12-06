@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-import org.springframework.util.Assert;
 
 /**
  * {@link ExposedFieldsAggregationOperationContext} that inherits fields from its parent
  * {@link AggregationOperationContext}.
  *
  * @author Mark Paluch
+ * @since 1.9
  */
 class InheritingExposedFieldsAggregationOperationContext extends ExposedFieldsAggregationOperationContext {
 
@@ -40,7 +39,7 @@ class InheritingExposedFieldsAggregationOperationContext extends ExposedFieldsAg
 			AggregationOperationContext previousContext) {
 
 		super(exposedFields, previousContext);
-		Assert.notNull(previousContext, "PreviousContext must not be null!");
+
 		this.previousContext = previousContext;
 	}
 
