@@ -1706,10 +1706,6 @@ public class ProjectionOperationUnitTests {
 				"{ $project:{ adjustedGrades:{ $map: { input: { $size : [\"foo\"]}, as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}")));
 	}
 
-	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
-		return (DBObject) fromProjectClause.get(field);
-	}
-
 	/**
 	 * @see DATAMONGO-861, DATAMONGO-1542
 	 */
@@ -1747,5 +1743,9 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { result: { $ifNull: [ \"$optional\", \"$never-null\" ] } } }")));
+	}
+
+	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
+		return (DBObject) fromProjectClause.get(field);
 	}
 }
