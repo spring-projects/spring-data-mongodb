@@ -6436,10 +6436,50 @@ public interface AggregationExpressions {
 		/**
 		 * Get a builder that allows fluent creation of {@link Cond}.
 		 *
-		 * @return a new {@link ConditionalExpressionBuilder}.
+		 * @return never {@literal null}.
 		 */
-		public static ConditionalExpressionBuilder newBuilder() {
+		public static WhenBuilder newBuilder() {
 			return ConditionalExpressionBuilder.newBuilder();
+		}
+
+		/**
+		 * Start creating new {@link Cond} by providing the boolean expression used in {@code if}.
+		 *
+		 * @param booleanExpression must not be {@literal null}.
+		 * @return never {@literal null}.
+		 */
+		public static ThenBuilder when(Document booleanExpression) {
+			return ConditionalExpressionBuilder.newBuilder().when(booleanExpression);
+		}
+
+		/**
+		 * Start creating new {@link Cond} by providing the {@link AggregationExpression} used in {@code if}.
+		 *
+		 * @param expression expression that yields in a boolean result, must not be {@literal null}.
+		 * @return never {@literal null}.
+		 */
+		public static ThenBuilder when(AggregationExpression expression) {
+			return ConditionalExpressionBuilder.newBuilder().when(expression);
+		}
+
+		/**
+		 * Start creating new {@link Cond} by providing the field reference used in {@code if}.
+		 *
+		 * @param booleanField name of a field holding a boolean value, must not be {@literal null}.
+		 * @return never {@literal null}.
+		 */
+		public static ThenBuilder when(String booleanField) {
+			return ConditionalExpressionBuilder.newBuilder().when(booleanField);
+		}
+
+		/**
+		 * Start creating new {@link Cond} by providing the {@link CriteriaDefinition} used in {@code if}.
+		 *
+		 * @param criteria criteria to evaluate, must not be {@literal null}.
+		 * @return the {@link ThenBuilder}
+		 */
+		public static ThenBuilder when(CriteriaDefinition criteria) {
+			return ConditionalExpressionBuilder.newBuilder().when(criteria);
 		}
 
 		/**
