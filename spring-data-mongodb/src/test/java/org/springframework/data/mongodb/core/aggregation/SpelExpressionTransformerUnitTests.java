@@ -745,13 +745,13 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("min(a, b)"), is("{ \"$min\" : [ \"$a\" , \"$b\"]}"));
 	}
 
-
 	/**
 	 * @see DATAMONGO-1530
 	 */
 	@Test
 	public void shouldRenderMethodReferenceNodePush() {
-		assertThat(transform("push({'item':'$item', 'quantity':'$qty'})"), is("{ \"$push\" : { \"item\" : \"$item\" , \"quantity\" : \"$qty\"}}"));
+		assertThat(transform("push({'item':'$item', 'quantity':'$qty'})"),
+				is("{ \"$push\" : { \"item\" : \"$item\" , \"quantity\" : \"$qty\"}}"));
 	}
 
 	/**
@@ -882,6 +882,129 @@ public class SpelExpressionTransformerUnitTests {
 	@Test
 	public void shouldRenderComplexNotCorrectly() {
 		assertThat(transform("!(foo > 10)"), is("{ \"$not\" : [ { \"$gt\" : [ \"$foo\" , 10]}]}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceIndexOfBytes() {
+		assertThat(transform("indexOfBytes(item, 'foo')"), is("{ \"$indexOfBytes\" : [ \"$item\" , \"foo\"]}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceIndexOfCP() {
+		assertThat(transform("indexOfCP(item, 'foo')"), is("{ \"$indexOfCP\" : [ \"$item\" , \"foo\"]}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceSplit() {
+		assertThat(transform("split(item, ',')"), is("{ \"$split\" : [ \"$item\" , \",\"]}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceStrLenBytes() {
+		assertThat(transform("strLenBytes(item)"), is("{ \"$strLenBytes\" : \"$item\"}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceStrLenCP() {
+		assertThat(transform("strLenCP(item)"), is("{ \"$strLenCP\" : \"$item\"}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodSubstrCP() {
+		assertThat(transform("substrCP(item, 0, 5)"), is("{ \"$substrCP\" : [ \"$item\" , 0 , 5]}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceReverseArray() {
+		assertThat(transform("reverseArray(array)"), is("{ \"$reverseArray\" : \"$array\"}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceReduce() {
+		assertThat(transform("reduce(field, '', {'$concat':new String[]{'$$value','$$this'}})"), is(
+				"{ \"$reduce\" : { \"input\" : \"$field\" , \"initialValue\" : \"\" , \"in\" : { \"$concat\" : [ \"$$value\" , \"$$this\"]}}}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceZip() {
+		assertThat(transform("zip(new String[]{'$array1', '$array2'})"),
+				is("{ \"$zip\" : { \"inputs\" : [ \"$array1\" , \"$array2\"]}}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodReferenceZipWithOptionalArgs() {
+		assertThat(transform("zip(new String[]{'$array1', '$array2'}, true, new int[]{1,2})"), is(
+				"{ \"$zip\" : { \"inputs\" : [ \"$array1\" , \"$array2\"] , \"useLongestLength\" : true , \"defaults\" : [ 1 , 2]}}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodIn() {
+		assertThat(transform("in('item', array)"), is("{ \"$in\" : [ \"item\" , \"$array\"]}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodRefereneIsoDayOfWeek() {
+		assertThat(transform("isoDayOfWeek(date)"), is("{ \"$isoDayOfWeek\" : \"$date\"}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodRefereneIsoWeek() {
+		assertThat(transform("isoWeek(date)"), is("{ \"$isoWeek\" : \"$date\"}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodRefereneIsoWeekYear() {
+		assertThat(transform("isoWeekYear(date)"), is("{ \"$isoWeekYear\" : \"$date\"}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1548
+	 */
+	@Test
+	public void shouldRenderMethodRefereneType() {
+		assertThat(transform("type(a)"), is("{ \"$type\" : \"$a\"}"));
 	}
 
 	private String transform(String expression, Object... params) {

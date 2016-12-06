@@ -23,11 +23,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.OtherwiseBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.ThenBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.AsBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Reduce.PropertyExpression;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Switch.CaseOperator;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -260,6 +264,30 @@ public interface AggregationExpressions {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return IfNull.ifNull(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that evaluates a series of {@link CaseOperator} expressions. When it
+		 * finds an expression which evaluates to true, {@code $switch} executes a specified expression and breaks out of
+		 * the control flow.
+		 *
+		 * @param conditions must not be {@literal null}.
+		 * @return
+		 */
+		public static Switch switchCases(CaseOperator... conditions) {
+			return Switch.switchCases(conditions);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that evaluates a series of {@link CaseOperator} expressions. When it
+		 * finds an expression which evaluates to true, {@code $switch} executes a specified expression and breaks out of
+		 * the control flow.
+		 *
+		 * @param conditions must not be {@literal null}.
+		 * @return
+		 */
+		public static Switch switchCases(List<CaseOperator> conditions) {
+			return Switch.switchCases(conditions);
 		}
 
 		public static class ConditionalOperatorFactory {
@@ -1564,6 +1592,184 @@ public interface AggregationExpressions {
 			private StrCaseCmp createStrCaseCmp() {
 				return fieldReference != null ? StrCaseCmp.valueOf(fieldReference) : StrCaseCmp.valueOf(expression);
 			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
+			 * string for an occurence of a given {@literal substring} and returns the UTF-8 byte index (zero-based) of the
+			 * first occurence.
+			 *
+			 * @param substring must not be {@literal null}.
+			 * @return
+			 */
+			public IndexOfBytes indexOf(String substring) {
+
+				Assert.notNull(substring, "Substring must not be null!");
+				return createIndexOfBytesSubstringBuilder().indexOf(substring);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
+			 * string for an occurence of a substring contained in the given {@literal field reference} and returns the UTF-8
+			 * byte index (zero-based) of the first occurence.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 * @return
+			 */
+			public IndexOfBytes indexOf(Field fieldReference) {
+
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createIndexOfBytesSubstringBuilder().indexOf(fieldReference);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
+			 * string for an occurence of a substring resulting from the given {@link AggregationExpression} and returns the
+			 * UTF-8 byte index (zero-based) of the first occurence.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public IndexOfBytes indexOf(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createIndexOfBytesSubstringBuilder().indexOf(expression);
+			}
+
+			private IndexOfBytes.SubstringBuilder createIndexOfBytesSubstringBuilder() {
+				return fieldReference != null ? IndexOfBytes.valueOf(fieldReference) : IndexOfBytes.valueOf(expression);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
+			 * string for an occurence of a given {@literal substring} and returns the UTF-8 code point index (zero-based) of
+			 * the first occurence.
+			 *
+			 * @param substring must not be {@literal null}.
+			 * @return
+			 */
+			public IndexOfCP indexOfCP(String substring) {
+
+				Assert.notNull(substring, "Substring must not be null!");
+				return createIndexOfCPSubstringBuilder().indexOf(substring);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
+			 * string for an occurence of a substring contained in the given {@literal field reference} and returns the UTF-8
+			 * code point index (zero-based) of the first occurence.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 * @return
+			 */
+			public IndexOfCP indexOfCP(Field fieldReference) {
+
+				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				return createIndexOfCPSubstringBuilder().indexOf(fieldReference);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
+			 * string for an occurence of a substring resulting from the given {@link AggregationExpression} and returns the
+			 * UTF-8 code point index (zero-based) of the first occurence.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public IndexOfCP indexOfCP(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return createIndexOfCPSubstringBuilder().indexOf(expression);
+			}
+
+			private IndexOfCP.SubstringBuilder createIndexOfCPSubstringBuilder() {
+				return fieldReference != null ? IndexOfCP.valueOf(fieldReference) : IndexOfCP.valueOf(expression);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpression} that divides the associated string representation into an array of
+			 * substrings based on the given delimiter.
+			 *
+			 * @param delimiter must not be {@literal null}.
+			 * @return
+			 */
+			public Split split(String delimiter) {
+				return createSplit().split(delimiter);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpression} that divides the associated string representation into an array of
+			 * substrings based on the delimiter resulting from the referenced field..
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 * @return
+			 */
+			public Split split(Field fieldReference) {
+				return createSplit().split(fieldReference);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpression} that divides the associated string representation into an array of
+			 * substrings based on a delimiter resulting from the given {@link AggregationExpression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public Split split(AggregationExpression expression) {
+				return createSplit().split(expression);
+			}
+
+			private Split createSplit() {
+				return fieldReference != null ? Split.valueOf(fieldReference) : Split.valueOf(expression);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpression} that returns the number of UTF-8 bytes in the associated string
+			 * representation.
+			 *
+			 * @return
+			 */
+			public StrLenBytes length() {
+				return fieldReference != null ? StrLenBytes.stringLengthOf(fieldReference)
+						: StrLenBytes.stringLengthOf(expression);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpression} that returns the number of UTF-8 code points in the associated string
+			 * representation.
+			 *
+			 * @return
+			 */
+			public StrLenCP lengthCP() {
+				return fieldReference != null ? StrLenCP.stringLengthOfCP(fieldReference)
+						: StrLenCP.stringLengthOfCP(expression);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and returns a
+			 * substring starting at a specified code point index position.
+			 *
+			 * @param codePointStart
+			 * @return
+			 */
+			public SubstrCP substringCP(int codePointStart) {
+				return substringCP(codePointStart, -1);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that takes the associated string representation and returns a
+			 * substring starting at a specified code point index position including the specified number of code points.
+			 *
+			 * @param codePointStart
+			 * @param nrOfCodePoints
+			 * @return
+			 */
+			public SubstrCP substringCP(int codePointStart, int nrOfCodePoints) {
+				return createSubstrCP().substringCP(codePointStart, nrOfCodePoints);
+			}
+
+			private SubstrCP createSubstrCP() {
+				return fieldReference != null ? SubstrCP.valueOf(fieldReference) : SubstrCP.valueOf(expression);
+			}
 		}
 	}
 
@@ -1729,6 +1935,89 @@ public interface AggregationExpressions {
 			 */
 			public Slice slice() {
 				return usesFieldRef() ? Slice.sliceArrayOf(fieldReference) : Slice.sliceArrayOf(expression);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that searches the associated array for an occurence of a specified
+			 * value and returns the array index (zero-based) of the first occurence.
+			 *
+			 * @param value must not be {@literal null}.
+			 * @return
+			 */
+			public IndexOfArray indexOf(Object value) {
+				return usesFieldRef() ? IndexOfArray.arrayOf(fieldReference).indexOf(value)
+						: IndexOfArray.arrayOf(expression).indexOf(value);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that returns an array with the elements in reverse order.
+			 *
+			 * @return
+			 */
+			public ReverseArray reverse() {
+				return usesFieldRef() ? ReverseArray.reverseArrayOf(fieldReference) : ReverseArray.reverseArrayOf(expression);
+			}
+
+			/**
+			 * Start creating new {@link AggregationExpressions} that applies an {@link AggregationExpression} to each element
+			 * in an array and combines them into a single value.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			public ReduceInitialValueBuilder reduce(final AggregationExpression expression) {
+				return new ReduceInitialValueBuilder() {
+					@Override
+					public Reduce startingWith(Object initialValue) {
+						return (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
+								.withInitialValue(initialValue).reduce(expression);
+					}
+				};
+			}
+
+			/**
+			 * Start creating new {@link AggregationExpressions} that applies an {@link AggregationExpression} to each element
+			 * in an array and combines them into a single value.
+			 *
+			 * @param expressions
+			 * @return
+			 */
+			public ReduceInitialValueBuilder reduce(final PropertyExpression... expressions) {
+
+				return new ReduceInitialValueBuilder() {
+					@Override
+					public Reduce startingWith(Object initialValue) {
+						return (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
+								.withInitialValue(initialValue).reduce(expressions);
+					}
+				};
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that transposes an array of input arrays so that the first element
+			 * of the output array would be an array containing, the first element of the first input array, the first element
+			 * of the second input array, etc
+			 *
+			 * @param arrays must not be {@literal null}.
+			 * @return
+			 */
+			public Zip zipWith(Object... arrays) {
+				return (usesFieldRef() ? Zip.arrayOf(fieldReference) : Zip.arrayOf(expression)).zip(arrays);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that returns a boolean indicating whether a specified value is in
+			 * the associcated array.
+			 *
+			 * @param value must not be {@literal null}.
+			 * @return
+			 */
+			public In containsValue(Object value) {
+				return (usesFieldRef() ? In.arrayOf(fieldReference) : In.arrayOf(expression)).containsValue(value);
+			}
+
+			public interface ReduceInitialValueBuilder {
+				Reduce startingWith(Object initialValue);
 			}
 
 			private boolean usesFieldRef() {
@@ -1952,6 +2241,35 @@ public interface AggregationExpressions {
 						.toString(format);
 			}
 
+			/**
+			 * Creates new {@link AggregationExpressions} that returns the weekday number in ISO 8601 format, ranging from 1
+			 * (for Monday) to 7 (for Sunday).
+			 *
+			 * @return
+			 */
+			public IsoDayOfWeek isoDayOfWeek() {
+				return usesFieldRef() ? IsoDayOfWeek.isoDayOfWeek(fieldReference) : IsoDayOfWeek.isoDayOfWeek(expression);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that returns the week number in ISO 8601 format, ranging from 1 to
+			 * 53.
+			 *
+			 * @return
+			 */
+			public IsoWeek isoWeek() {
+				return usesFieldRef() ? IsoWeek.isoWeekOf(fieldReference) : IsoWeek.isoWeekOf(expression);
+			}
+
+			/**
+			 * Creates new {@link AggregationExpressions} that returns the year number in ISO 8601 format.
+			 *
+			 * @return
+			 */
+			public IsoWeekYear isoWeekYear() {
+				return usesFieldRef() ? IsoWeekYear.isoWeekYearOf(fieldReference) : IsoWeekYear.isoWeekYearOf(expression);
+			}
+
 			private boolean usesFieldRef() {
 				return fieldReference != null;
 			}
@@ -2072,6 +2390,17 @@ public interface AggregationExpressions {
 				return context.getReference((Field) value).toString();
 			}
 
+			if (value instanceof List) {
+
+				List<Object> sourceList = (List<Object>) value;
+				List<Object> mappedList = new ArrayList<Object>(sourceList.size());
+
+				for (Object item : sourceList) {
+					mappedList.add(unpack(item, context));
+				}
+				return mappedList;
+			}
+
 			return value;
 		}
 
@@ -2094,15 +2423,27 @@ public interface AggregationExpressions {
 			return Arrays.asList(this.value, value);
 		}
 
-		protected Object append(String key, Object value) {
+		protected java.util.Map<String, Object> append(String key, Object value) {
 
-			if (!(value instanceof java.util.Map)) {
+			if (!(this.value instanceof java.util.Map)) {
 				throw new IllegalArgumentException("o_O");
 			}
-			java.util.Map<String, Object> clone = new LinkedHashMap<String, Object>((java.util.Map<String, Object>) value);
+			java.util.Map<String, Object> clone = new LinkedHashMap<String, Object>(
+					(java.util.Map<String, Object>) this.value);
 			clone.put(key, value);
 			return clone;
 
+		}
+
+		protected List<Object> values() {
+
+			if (value instanceof List) {
+				return new ArrayList<Object>((List) value);
+			}
+			if (value instanceof java.util.Map) {
+				return new ArrayList<Object>(((java.util.Map) value).values());
+			}
+			return new ArrayList<Object>(Arrays.asList(value));
 		}
 
 		protected abstract String getMongoMethod();
@@ -3442,6 +3783,10 @@ public interface AggregationExpressions {
 		}
 	}
 
+	// #########################################
+	// STRING OPERATORS
+	// #########################################
+
 	/**
 	 * {@link AggregationExpression} for {@code $concat}.
 	 *
@@ -3734,6 +4079,342 @@ public interface AggregationExpressions {
 			return new StrCaseCmp(append(expression));
 		}
 	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $indexOfBytes}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class IndexOfBytes extends AbstractAggregationExpression {
+
+		private IndexOfBytes(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$indexOfBytes";
+		}
+
+		/**
+		 * Start creating a new {@link IndexOfBytes}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static SubstringBuilder valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new SubstringBuilder(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Start creating a new {@link IndexOfBytes}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static SubstringBuilder valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SubstringBuilder(expression);
+		}
+
+		/**
+		 * Optionally define the substring search start and end position.
+		 *
+		 * @param range must not be {@literal null}.
+		 * @return
+		 */
+		public IndexOfBytes within(Range<Long> range) {
+
+			Assert.notNull(range, "Range must not be null!");
+
+			List<Long> rangeValues = new ArrayList<Long>(2);
+			rangeValues.add(range.getLowerBound());
+			if (range.getUpperBound() != null) {
+				rangeValues.add(range.getUpperBound());
+			}
+
+			return new IndexOfBytes(append(rangeValues));
+		}
+
+		public static class SubstringBuilder {
+
+			private final Object stringExpression;
+
+			private SubstringBuilder(Object stringExpression) {
+				this.stringExpression = stringExpression;
+			}
+
+			public IndexOfBytes indexOf(String substring) {
+				return new IndexOfBytes(Arrays.asList(stringExpression, substring));
+			}
+
+			public IndexOfBytes indexOf(AggregationExpression expression) {
+				return new IndexOfBytes(Arrays.asList(stringExpression, expression));
+			}
+
+			public IndexOfBytes indexOf(Field fieldReference) {
+				return new IndexOfBytes(Arrays.asList(stringExpression, fieldReference));
+			}
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $indexOfCP}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class IndexOfCP extends AbstractAggregationExpression {
+
+		private IndexOfCP(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$indexOfCP";
+		}
+
+		/**
+		 * Start creating a new {@link IndexOfCP}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static SubstringBuilder valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new SubstringBuilder(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Start creating a new {@link IndexOfCP}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static SubstringBuilder valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SubstringBuilder(expression);
+		}
+
+		/**
+		 * Optionally define the substring search start and end position.
+		 *
+		 * @param range must not be {@literal null}.
+		 * @return
+		 */
+		public IndexOfCP within(Range<Long> range) {
+
+			Assert.notNull(range, "Range must not be null!");
+
+			List<Long> rangeValues = new ArrayList<Long>(2);
+			rangeValues.add(range.getLowerBound());
+			if (range.getUpperBound() != null) {
+				rangeValues.add(range.getUpperBound());
+			}
+
+			return new IndexOfCP(append(rangeValues));
+		}
+
+		public static class SubstringBuilder {
+
+			private final Object stringExpression;
+
+			private SubstringBuilder(Object stringExpression) {
+				this.stringExpression = stringExpression;
+			}
+
+			public IndexOfCP indexOf(String substring) {
+				return new IndexOfCP(Arrays.asList(stringExpression, substring));
+			}
+
+			public IndexOfCP indexOf(AggregationExpression expression) {
+				return new IndexOfCP(Arrays.asList(stringExpression, expression));
+			}
+
+			public IndexOfCP indexOf(Field fieldReference) {
+				return new IndexOfCP(Arrays.asList(stringExpression, fieldReference));
+			}
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $split}.
+	 */
+	class Split extends AbstractAggregationExpression {
+
+		private Split(List<?> values) {
+			super(values);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$split";
+		}
+
+		/**
+		 * Start creating a new {@link Split}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static Split valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Split(asFields(fieldReference));
+		}
+
+		/**
+		 * Start creating a new {@link Split}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static Split valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new Split(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Use given {@link String} as deliminator
+		 *
+		 * @param deliminator must not be {@literal null}.
+		 * @return
+		 */
+		public Split split(String deliminator) {
+
+			Assert.notNull(deliminator, "Deliminator must not be null!");
+			return new Split(append(deliminator));
+		}
+
+		/**
+		 * Usge value of referenced field as deliminator.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public Split split(Field fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Split(append(fieldReference));
+		}
+
+		/**
+		 * Use value resulting from {@link AggregationExpression} as deliminator.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public Split split(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new Split(append(expression));
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $strLenBytes}.
+	 */
+	class StrLenBytes extends AbstractAggregationExpression {
+
+		private StrLenBytes(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$strLenBytes";
+		}
+
+		public static StrLenBytes stringLengthOf(String fieldReference) {
+			return new StrLenBytes(Fields.field(fieldReference));
+		}
+
+		public static StrLenBytes stringLengthOf(AggregationExpression expression) {
+			return new StrLenBytes(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $strLenCP}.
+	 */
+	class StrLenCP extends AbstractAggregationExpression {
+
+		private StrLenCP(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$strLenCP";
+		}
+
+		public static StrLenCP stringLengthOfCP(String fieldReference) {
+			return new StrLenCP(Fields.field(fieldReference));
+		}
+
+		public static StrLenCP stringLengthOfCP(AggregationExpression expression) {
+			return new StrLenCP(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $substrCP}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class SubstrCP extends AbstractAggregationExpression {
+
+		private SubstrCP(List<?> value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$substrCP";
+		}
+
+		/**
+		 * Creates new {@link SubstrCP}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static SubstrCP valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new SubstrCP(asFields(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link SubstrCP}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static SubstrCP valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new SubstrCP(Collections.singletonList(expression));
+		}
+
+		public SubstrCP substringCP(int start) {
+			return substringCP(start, -1);
+		}
+
+		public SubstrCP substringCP(int start, int nrOfChars) {
+			return new SubstrCP(append(Arrays.asList(start, nrOfChars)));
+		}
+	}
+
+	// #########################################
+	// ARRAY OPERATORS
+	// #########################################
 
 	/**
 	 * {@link AggregationExpression} for {@code $arrayElementAt}.
@@ -4232,6 +4913,572 @@ public interface AggregationExpressions {
 			Slice itemCount(int nrElements);
 		}
 	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $indexOfArray}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class IndexOfArray extends AbstractAggregationExpression {
+
+		private IndexOfArray(List<Object> value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$indexOfArray";
+		}
+
+		/**
+		 * Start creating new {@link IndexOfArray}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static IndexOfArrayBuilder arrayOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new IndexOfArrayBuilder(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Start creating new {@link IndexOfArray}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static IndexOfArrayBuilder arrayOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new IndexOfArrayBuilder(expression);
+		}
+
+		public IndexOfArray within(Range<Long> range) {
+
+			Assert.notNull(range, "Range must not be null!");
+
+			List<Long> rangeValues = new ArrayList<Long>(2);
+			rangeValues.add(range.getLowerBound());
+			if (range.getUpperBound() != null) {
+				rangeValues.add(range.getUpperBound());
+			}
+
+			return new IndexOfArray(append(rangeValues));
+		}
+
+		public static class IndexOfArrayBuilder {
+
+			private final Object targetArray;
+
+			private IndexOfArrayBuilder(Object targetArray) {
+				this.targetArray = targetArray;
+			}
+
+			public IndexOfArray indexOf(Object value) {
+
+				Assert.notNull(value, "Value must not be null!");
+				return new IndexOfArray(Arrays.asList(targetArray, value));
+			}
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $range}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class RangeOperator extends AbstractAggregationExpression {
+
+		private RangeOperator(List<Object> values) {
+			super(values);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$range";
+		}
+
+		public static RangeOperatorBuilder rangeStartingAt(String fieldReference) {
+			return new RangeOperatorBuilder(Fields.field(fieldReference));
+		}
+
+		public static RangeOperatorBuilder rangeStartingAt(AggregationExpression expression) {
+			return new RangeOperatorBuilder(expression);
+		}
+
+		public static RangeOperatorBuilder rangeStartingAt(Long value) {
+			return new RangeOperatorBuilder(value);
+		}
+
+		public RangeOperator withStepSize(Long stepSize) {
+			return new RangeOperator(append(stepSize));
+		}
+
+		public static class RangeOperatorBuilder {
+
+			private final Object startPoint;
+
+			private RangeOperatorBuilder(Object startPoint) {
+				this.startPoint = startPoint;
+			}
+
+			public RangeOperator to(Long index) {
+				return new RangeOperator(Arrays.asList(startPoint, index));
+			}
+
+			public RangeOperator to(AggregationExpression expression) {
+				return new RangeOperator(Arrays.asList(startPoint, expression));
+			}
+
+			public RangeOperator to(String fieldReference) {
+				return new RangeOperator(Arrays.asList(startPoint, Fields.field(fieldReference)));
+			}
+		}
+
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $reverseArray}.
+	 */
+	class ReverseArray extends AbstractAggregationExpression {
+
+		private ReverseArray(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$reverseArray";
+		}
+
+		public static ReverseArray reverseArrayOf(String fieldReference) {
+			return new ReverseArray(Fields.field(fieldReference));
+		}
+
+		public static ReverseArray reverseArrayOf(AggregationExpression expression) {
+			return new ReverseArray(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $reduce}.
+	 */
+	class Reduce implements AggregationExpression {
+
+		private final Object input;
+		private final Object initialValue;
+		private final List<AggregationExpression> reduceExpressions;
+
+		private Reduce(Object input, Object initialValue, List<AggregationExpression> reduceExpressions) {
+			this.input = input;
+			this.initialValue = initialValue;
+			this.reduceExpressions = reduceExpressions;
+		}
+
+		@Override
+		public DBObject toDbObject(AggregationOperationContext context) {
+
+			DBObject dbo = new BasicDBObject();
+
+			dbo.put("input", getMappedValue(input, context));
+			dbo.put("initialValue", getMappedValue(initialValue, context));
+
+			if (reduceExpressions.iterator().next() instanceof PropertyExpression) {
+
+				DBObject properties = new BasicDBObject();
+				for (AggregationExpression e : reduceExpressions) {
+					properties.putAll(e.toDbObject(context));
+				}
+				dbo.put("in", properties);
+			} else {
+				dbo.put("in", (reduceExpressions.iterator().next()).toDbObject(context));
+			}
+
+			return new BasicDBObject("$reduce", dbo);
+		}
+
+		private Object getMappedValue(Object value, AggregationOperationContext context) {
+
+			if (value instanceof DBObject) {
+				return value;
+			}
+			if (value instanceof AggregationExpression) {
+				return ((AggregationExpression) value).toDbObject(context);
+			} else if (value instanceof Field) {
+				return context.getReference(((Field) value)).toString();
+			} else {
+				return context.getMappedObject(new BasicDBObject("###val###", value)).get("###val###");
+			}
+		}
+
+		public static InitialValueBuilder arrayOf(final String fieldReference) {
+			return new InitialValueBuilder() {
+
+				@Override
+				public ReduceBuilder withInitialValue(final Object initialValue) {
+					return new ReduceBuilder() {
+						@Override
+						public Reduce reduce(AggregationExpression expression) {
+							return new Reduce(Fields.field(fieldReference), initialValue, Collections.singletonList(expression));
+						}
+
+						@Override
+						public Reduce reduce(PropertyExpression... expressions) {
+							return new Reduce(Fields.field(fieldReference), initialValue,
+									Arrays.<AggregationExpression> asList(expressions));
+						}
+					};
+				}
+			};
+		}
+
+		public static InitialValueBuilder arrayOf(final AggregationExpression expression) {
+			return new InitialValueBuilder() {
+
+				@Override
+				public ReduceBuilder withInitialValue(final Object initialValue) {
+					return new ReduceBuilder() {
+						@Override
+						public Reduce reduce(AggregationExpression expression) {
+							return new Reduce(expression, initialValue, Collections.singletonList(expression));
+						}
+
+						@Override
+						public Reduce reduce(PropertyExpression... expressions) {
+							return new Reduce(expression, initialValue, Arrays.<AggregationExpression> asList(expressions));
+						}
+					};
+				}
+			};
+		}
+
+		public interface InitialValueBuilder {
+
+			/**
+			 * Define the initial cumulative value set before in is applied to the first element of the input array.
+			 *
+			 * @param intialValue must not be {@literal null}.
+			 * @return
+			 */
+			ReduceBuilder withInitialValue(Object intialValue);
+		}
+
+		public interface ReduceBuilder {
+
+			/**
+			 * Define the {@link AggregationExpression} to apply to each element in the input array in left-to-right order.
+			 * <br />
+			 * <b>NOTE:</b> During evaulation of the in expression the variable references {@link Variable#THIS} and
+			 * {@link Variable#VALUE} are availble.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			Reduce reduce(AggregationExpression expression);
+
+			/**
+			 * Define the {@link PropertyExpression}s to apply to each element in the input array in left-to-right order.
+			 * <br />
+			 * <b>NOTE:</b> During evaulation of the in expression the variable references {@link Variable#THIS} and
+			 * {@link Variable#VALUE} are availble.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
+			Reduce reduce(PropertyExpression... expressions);
+		}
+
+		/**
+		 * @author Christoph Strobl
+		 */
+		public static class PropertyExpression implements AggregationExpression {
+
+			private final String propertyName;
+			private final AggregationExpression aggregationExpression;
+
+			public PropertyExpression(String propertyName, AggregationExpression aggregationExpression) {
+				this.propertyName = propertyName;
+				this.aggregationExpression = aggregationExpression;
+			}
+
+			/**
+			 * Define a result property for an {@link AggregationExpression} used in {@link Reduce}.
+			 *
+			 * @param name must not be {@literal null}.
+			 * @return
+			 */
+			public static AsBuilder property(final String name) {
+				return new AsBuilder() {
+					@Override
+					public PropertyExpression definedAs(AggregationExpression expression) {
+						return new PropertyExpression(name, expression);
+					}
+				};
+			}
+
+			@Override
+			public DBObject toDbObject(AggregationOperationContext context) {
+				return new BasicDBObject(propertyName, aggregationExpression.toDbObject(context));
+			}
+
+			interface AsBuilder {
+
+				/**
+				 * Set the {@link AggregationExpression} resulting in the properties value.
+				 *
+				 * @param expression must not be {@literal null}.
+				 * @return
+				 */
+				PropertyExpression definedAs(AggregationExpression expression);
+			}
+		}
+
+		public enum Variable implements Field {
+			THIS {
+				@Override
+				public String getName() {
+					return "$$this";
+				}
+
+				@Override
+				public String getTarget() {
+					return "$$this";
+				}
+
+				@Override
+				public boolean isAliased() {
+					return false;
+				}
+
+				@Override
+				public String toString() {
+					return getName();
+				}
+			},
+			VALUE {
+				@Override
+				public String getName() {
+					return "$$value";
+				}
+
+				@Override
+				public String getTarget() {
+					return "$$value";
+				}
+
+				@Override
+				public boolean isAliased() {
+					return false;
+				}
+
+				@Override
+				public String toString() {
+					return getName();
+				}
+			};
+
+			/**
+			 * Create a {@link Field} reference to a given {@literal property} prefixed with the {@link Variable} identifier.
+			 * eg. {@code $$value.product}
+			 *
+			 * @param property must not be {@literal null}.
+			 * @return
+			 */
+			public Field referingTo(final String property) {
+
+				return new Field() {
+					@Override
+					public String getName() {
+						return Variable.this.getName() + "." + property;
+					}
+
+					@Override
+					public String getTarget() {
+						return Variable.this.getTarget() + "." + property;
+					}
+
+					@Override
+					public boolean isAliased() {
+						return false;
+					}
+
+					@Override
+					public String toString() {
+						return getName();
+					}
+				};
+			}
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $zip}.
+	 */
+	class Zip extends AbstractAggregationExpression {
+
+		protected Zip(java.util.Map<String, Object> value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$zip";
+		}
+
+		/**
+		 * Start creating new {@link Zip}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static ZipBuilder arrayOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ZipBuilder(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Start creating new {@link Zip}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static ZipBuilder arrayOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new ZipBuilder(expression);
+		}
+
+		/**
+		 * Create new {@link Zip} and set the {@code useLongestLength} property to {@literal true}.
+		 *
+		 * @return
+		 */
+		public Zip useLongestLength() {
+			return new Zip(append("useLongestLength", true));
+		}
+
+		/**
+		 * Optionally provide a default value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public Zip defaultTo(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Zip(append("defaults", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Optionally provide a default value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public Zip defaultTo(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new Zip(append("defaults", expression));
+		}
+
+		/**
+		 * Optionally provide a default value.
+		 *
+		 * @param array must not be {@literal null}.
+		 * @return
+		 */
+		public Zip defaultTo(Object[] array) {
+
+			Assert.notNull(array, "Array must not be null!");
+			return new Zip(append("defaults", array));
+		}
+
+		public static class ZipBuilder {
+
+			private final List<Object> sourceArrays;
+
+			public ZipBuilder(Object sourceArray) {
+
+				this.sourceArrays = new ArrayList<Object>();
+				this.sourceArrays.add(sourceArray);
+			}
+
+			/**
+			 * Creates new {@link Zip} that transposes an array of input arrays so that the first element of the output array
+			 * would be an array containing, the first element of the first input array, the first element of the second input
+			 * array, etc
+			 *
+			 * @param arrays arrays to zip the referenced one with. must not be {@literal null}.
+			 * @return
+			 */
+			public Zip zip(Object... arrays) {
+
+				Assert.notNull(arrays, "Arrays must not be null!");
+				for (Object value : arrays) {
+
+					if (value instanceof String) {
+						sourceArrays.add(Fields.field((String) value));
+					} else {
+						sourceArrays.add(value);
+					}
+				}
+
+				return new Zip(Collections.<String, Object> singletonMap("inputs", sourceArrays));
+			}
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $in}.
+	 */
+	class In extends AbstractAggregationExpression {
+
+		private In(List<Object> values) {
+			super(values);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$in";
+		}
+
+		public static InBuilder arrayOf(final String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new InBuilder() {
+				@Override
+				public In containsValue(Object value) {
+
+					Assert.notNull(value, "Value must not be null!");
+					return new In(Arrays.asList(value, Fields.field(fieldReference)));
+				}
+			};
+		}
+
+		public static InBuilder arrayOf(final AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new InBuilder() {
+				@Override
+				public In containsValue(Object value) {
+
+					Assert.notNull(value, "Value must not be null!");
+					return new In(Arrays.asList(value, expression));
+				}
+			};
+		}
+
+		public interface InBuilder {
+			In containsValue(Object value);
+		}
+
+	}
+
+	// ############
+	// LITERAL OPERATORS
+	// ############
 
 	/**
 	 * {@link AggregationExpression} for {@code $literal}.
@@ -4744,6 +5991,129 @@ public interface AggregationExpressions {
 			 * @return
 			 */
 			DateToString toString(String format);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $isoDayOfWeek}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class IsoDayOfWeek extends AbstractAggregationExpression {
+
+		private IsoDayOfWeek(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$isoDayOfWeek";
+		}
+
+		/**
+		 * Creates new {@link IsoDayOfWeek}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoDayOfWeek isoDayOfWeek(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new IsoDayOfWeek(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link IsoDayOfWeek}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoDayOfWeek isoDayOfWeek(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new IsoDayOfWeek(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $isoWeek}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class IsoWeek extends AbstractAggregationExpression {
+
+		private IsoWeek(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$isoWeek";
+		}
+
+		/**
+		 * Creates new {@link IsoWeek}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoWeek isoWeekOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new IsoWeek(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link IsoWeek}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoWeek isoWeekOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new IsoWeek(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $isoWeekYear}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class IsoWeekYear extends AbstractAggregationExpression {
+
+		private IsoWeekYear(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$isoWeekYear";
+		}
+
+		/**
+		 * Creates new {@link IsoWeekYear}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoWeekYear isoWeekYearOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new IsoWeekYear(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link Millisecond}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoWeekYear isoWeekYearOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new IsoWeekYear(expression);
 		}
 	}
 
@@ -6862,6 +8232,113 @@ public interface AggregationExpressions {
 				Assert.notNull(expressionObject, "Expression must not be null!");
 				return new ExpressionVariable(variableName, expressionObject);
 			}
+		}
+	}
+
+
+	/**
+	 * {@link AggregationExpression} for {@code $switch}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Switch extends AbstractAggregationExpression {
+
+		private Switch(java.util.Map<String, Object> values) {
+			super(values);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$switch";
+		}
+
+		public static Switch switchCases(CaseOperator... conditions) {
+
+			Assert.notNull(conditions, "Conditions must not be null!");
+			return switchCases(Arrays.asList(conditions));
+		}
+
+		public static Switch switchCases(List<CaseOperator> conditions) {
+
+			Assert.notNull(conditions, "Conditions must not be null!");
+			return new Switch(Collections.<String, Object> singletonMap("branches", new ArrayList<CaseOperator>(conditions)));
+		}
+
+		public Switch defaultTo(Object value) {
+			return new Switch(append("default", value));
+		}
+
+		public static class CaseOperator implements AggregationExpression {
+
+			private final AggregationExpression when;
+			private final Object then;
+
+			private CaseOperator(AggregationExpression when, Object then) {
+
+				this.when = when;
+				this.then = then;
+			}
+
+			public static ThenBuilder when(final AggregationExpression condition) {
+
+				Assert.notNull(condition, "Condition must not be null!");
+				return new ThenBuilder() {
+					@Override
+					public CaseOperator then(Object value) {
+
+						Assert.notNull(value, "Value must not be null!");
+						return new CaseOperator(condition, value);
+					}
+				};
+			}
+
+			@Override
+			public DBObject toDbObject(AggregationOperationContext context) {
+				DBObject dbo = new BasicDBObject("case", when.toDbObject(context));
+
+				if (then instanceof AggregationExpression) {
+					dbo.put("then", ((AggregationExpression) then).toDbObject(context));
+				} else if (then instanceof Field) {
+					dbo.put("then", context.getReference((Field) then).toString());
+				} else {
+					dbo.put("then", then);
+				}
+
+				return dbo;
+			}
+
+			public interface ThenBuilder {
+				CaseOperator then(Object value);
+			}
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $type}.
+	 *
+	 * @author Christoph Strobl
+	 */
+	class Type extends AbstractAggregationExpression {
+
+		private Type(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$type";
+		}
+
+		/**
+		 * Creates new {@link Type}.
+		 *
+		 * @param field must not be {@literal null}.
+		 * @return
+		 */
+		public static Type typeOf(String field) {
+
+			Assert.notNull(field, "Field must not be null!");
+			return new Type(Fields.field(field));
 		}
 	}
 }

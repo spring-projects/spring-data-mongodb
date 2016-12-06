@@ -491,8 +491,10 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			} else if (ObjectUtils.nullSafeEquals(methodReference.getArgumentType(), ArgumentType.MAP)) {
 
 				DBObject dbo = new BasicDBObject();
-				for (int i = 0; i < methodReference.getArgumentMap().length; i++) {
-					dbo.put(methodReference.getArgumentMap()[i], transform(node.getChild(i), context));
+
+				int i = 0;
+				for(ExpressionNode child : node) {
+					dbo.put(methodReference.getArgumentMap()[i++], transform(child, context));
 				}
 				args = dbo;
 			} else {
