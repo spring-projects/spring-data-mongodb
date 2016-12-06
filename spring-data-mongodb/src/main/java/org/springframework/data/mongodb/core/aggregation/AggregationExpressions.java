@@ -29,7 +29,6 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.AsBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -3903,31 +3902,19 @@ public interface AggregationExpressions {
 		 */
 		@Override
 		public Document toDocument(final AggregationOperationContext context) {
-
-			return toFilter(new ExposedFieldsAggregationOperationContext(ExposedFields.from(as), context) {
-
-				@Override
-				public FieldReference getReference(Field field) {
-
-					FieldReference ref = null;
-					try {
-						ref = context.getReference(field);
-					} catch (Exception e) {
-						// just ignore that one.
-					}
-					return ref != null ? ref : super.getReference(field);
-				}
-			});
+			return toFilter(ExposedFields.from(as), context);
 		}
 
-		private Document toFilter(AggregationOperationContext context) {
+		private Document toFilter(ExposedFields exposedFields, AggregationOperationContext context) {
 
 			Document filterExpression = new Document();
+			InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
+					exposedFields, context);
 
 			filterExpression.putAll(context.getMappedObject(new Document("input", getMappedInput(context))));
 			filterExpression.put("as", as.getTarget());
 
-			filterExpression.putAll(context.getMappedObject(new Document("cond", getMappedCondition(context))));
+			filterExpression.putAll(context.getMappedObject(new Document("cond", getMappedCondition(operationContext))));
 
 			return new Document("$filter", filterExpression);
 		}
@@ -6017,27 +6004,14 @@ public interface AggregationExpressions {
 
 		@Override
 		public Document toDocument(final AggregationOperationContext context) {
-
-			return toMap(new ExposedFieldsAggregationOperationContext(
-					ExposedFields.synthetic(Fields.fields(itemVariableName)), context) {
-
-				@Override
-				public FieldReference getReference(Field field) {
-
-					FieldReference ref = null;
-					try {
-						ref = context.getReference(field);
-					} catch (Exception e) {
-						// just ignore that one.
-					}
-					return ref != null ? ref : super.getReference(field);
-				}
-			});
+			return toMap(ExposedFields.synthetic(Fields.fields(itemVariableName)), context);
 		}
 
-		private Document toMap(AggregationOperationContext context) {
+		private Document toMap(ExposedFields exposedFields, AggregationOperationContext context) {
 
 			Document map = new Document();
+			InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
+					exposedFields, context);
 
 			Document input;
 			if (sourceArray instanceof Field) {
@@ -6048,7 +6022,8 @@ public interface AggregationExpressions {
 
 			map.putAll(context.getMappedObject(input));
 			map.put("as", itemVariableName);
-			map.put("in", functionToApply.toDocument(new NestedDelegatingExpressionAggregationOperationContext(context)));
+			map.put("in",
+					functionToApply.toDocument(new NestedDelegatingExpressionAggregationOperationContext(operationContext)));
 
 			return new Document("$map", map);
 		}
@@ -6790,22 +6765,7 @@ public interface AggregationExpressions {
 
 		@Override
 		public Document toDocument(final AggregationOperationContext context) {
-
-			return toLet(new ExposedFieldsAggregationOperationContext(
-					ExposedFields.synthetic(Fields.fields(getVariableNames())), context) {
-
-				@Override
-				public FieldReference getReference(Field field) {
-
-					FieldReference ref = null;
-					try {
-						ref = context.getReference(field);
-					} catch (Exception e) {
-						// just ignore that one.
-					}
-					return ref != null ? ref : super.getReference(field);
-				}
-			});
+			return toLet(ExposedFields.synthetic(Fields.fields(getVariableNames())), context);
 		}
 
 		private String[] getVariableNames() {
@@ -6814,20 +6774,24 @@ public interface AggregationExpressions {
 			for (int i = 0; i < this.vars.size(); i++) {
 				varNames[i] = this.vars.get(i).variableName;
 			}
+
 			return varNames;
 		}
 
-		private Document toLet(AggregationOperationContext context) {
+		private Document toLet(ExposedFields exposedFields, AggregationOperationContext context) {
 
 			Document letExpression = new Document();
 
 			Document mappedVars = new Document();
+			InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
+					exposedFields, context);
+
 			for (ExpressionVariable var : this.vars) {
 				mappedVars.putAll(getMappedVariable(var, context));
 			}
 
 			letExpression.put("vars", mappedVars);
-			letExpression.put("in", getMappedIn(context));
+			letExpression.put("in", getMappedIn(operationContext));
 
 			return new Document("$let", letExpression);
 		}

@@ -138,6 +138,8 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(MeterData.class);
 		mongoTemplate.dropCollection(LineItem.class);
 		mongoTemplate.dropCollection(InventoryItem.class);
+		mongoTemplate.dropCollection(Sales.class);
+		mongoTemplate.dropCollection(Sales2.class);
 	}
 
 	/**
