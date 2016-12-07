@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.aggregation.CountOperation.CountOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
@@ -394,6 +395,16 @@ public class Aggregation {
 	 */
 	public static LookupOperation lookup(Field from, Field localField, Field foreignField, Field as) {
 		return new LookupOperation(from, localField, foreignField, as);
+	}
+
+	/**
+	 * Creates a new {@link CountOperationBuilder}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public static CountOperationBuilder count() {
+		return new CountOperationBuilder();
 	}
 
 	/**
