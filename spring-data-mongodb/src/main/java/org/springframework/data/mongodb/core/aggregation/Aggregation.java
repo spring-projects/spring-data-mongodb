@@ -29,6 +29,8 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFie
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperationBuilder;
+import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.Fields.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
@@ -214,6 +216,40 @@ public class Aggregation {
 	 */
 	public static UnwindOperation unwind(String field) {
 		return new UnwindOperation(field(field));
+	}
+
+	/**
+	 * Factory method to create a new {@link ReplaceRootOperation} for the field with the given name.
+	 *
+	 * @param fieldName must not be {@literal null} or empty.
+	 * @return
+	 * @since 1.10
+	 */
+	public static ReplaceRootOperation replaceRoot(String fieldName) {
+		return ReplaceRootOperation.builder().withValueOf(fieldName);
+	}
+
+	/**
+	 * Factory method to create a new {@link ReplaceRootOperation} for the field with the given
+	 * {@link AggregationExpression}.
+	 *
+	 * @param aggregationExpression must not be {@literal null}.
+	 * @return
+	 * @since 1.10
+	 */
+	public static ReplaceRootOperation replaceRoot(AggregationExpression aggregationExpression) {
+		return ReplaceRootOperation.builder().withValueOf(aggregationExpression);
+	}
+
+	/**
+	 * Factory method to create a new {@link ReplaceRootDocumentOperationBuilder} to configure a
+	 * {@link ReplaceRootOperation}.
+	 *
+	 * @return the {@literal ReplaceRootDocumentOperationBuilder}.
+	 * @since 1.10
+	 */
+	public static ReplaceRootOperationBuilder replaceRoot() {
+		return ReplaceRootOperation.builder();
 	}
 
 	/**
@@ -468,11 +504,13 @@ public class Aggregation {
 			if (operation instanceof FieldsExposingAggregationOperation) {
 
 				FieldsExposingAggregationOperation exposedFieldsOperation = (FieldsExposingAggregationOperation) operation;
+				ExposedFields fields = exposedFieldsOperation.getFields();
 
 				if (operation instanceof InheritsFieldsAggregationOperation) {
-					context = new InheritingExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields(), context);
+					context = new InheritingExposedFieldsAggregationOperationContext(fields, context);
 				} else {
-					context = new ExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields(), context);
+					context = fields.exposesNoFields() ? DEFAULT_CONTEXT
+							: new ExposedFieldsAggregationOperationContext(fields, context);
 				}
 			}
 		}
