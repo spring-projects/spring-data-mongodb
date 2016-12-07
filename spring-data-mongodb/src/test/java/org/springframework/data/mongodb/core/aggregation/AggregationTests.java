@@ -95,6 +95,7 @@ public class AggregationTests {
 	private static final Version TWO_DOT_FOUR = new Version(2, 4);
 	private static final Version TWO_DOT_SIX = new Version(2, 6);
 	private static final Version THREE_DOT_TWO = new Version(3, 2);
+	private static final Version THREE_DOT_FOUR = new Version(3, 4);
 
 	private static boolean initialized = false;
 
@@ -1291,6 +1292,30 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Reservation.class, Document.class);
 
 		assertThat(result.getMappedResults(), hasSize(2));
+	}
+
+	/**
+	 * @see DATAMONGO-1549
+	 */
+	@Test
+	public void shouldApplyCountCorrectly() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
+
+		mongoTemplate.save(new Reservation("0123", "42", 100));
+		mongoTemplate.save(new Reservation("0360", "43", 200));
+		mongoTemplate.save(new Reservation("0360", "44", 300));
+
+		Aggregation agg = newAggregation( //
+				count().as("documents"), //
+				project("documents") //
+						.andExpression("documents * 2").as("twice"));
+		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Reservation.class, Document.class);
+
+		assertThat(result.getMappedResults(), hasSize(1));
+
+		Document document = result.getMappedResults().get(0);
+		assertThat(document, isBsonObject().containing("documents", 3).containing("twice", 6));
 	}
 
 	/**
