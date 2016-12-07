@@ -1058,6 +1058,32 @@ public class AggregationTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1550
+	 */
+	@Test
+	public void shouldPerformReplaceRootOperatorCorrectly() throws ParseException {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
+
+		Data data = new Data();
+		DataItem dataItem = new DataItem();
+		dataItem.primitiveIntValue = 42;
+		data.item = dataItem;
+		mongoTemplate.insert(data);
+
+		TypedAggregation<Data> agg = newAggregation(Data.class, project("item"), //
+				replaceRoot("item"), //
+				project().and("primitiveIntValue").as("my_primitiveIntValue"));
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
+		DBObject dbo = results.getUniqueMappedResult();
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat((Integer) dbo.get("my_primitiveIntValue"), is(42));
+		assertThat((Integer) dbo.keySet().size(), is(1));
+	}
+
+	/**
 	 * @see DATAMONGO-788
 	 */
 	@Test
