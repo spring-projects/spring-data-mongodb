@@ -159,6 +159,21 @@ public class AggregationUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1550
+	 */
+	@Test
+	public void replaceRootOperationShouldBuildCorrectClause() {
+
+		DBObject agg = newAggregation( //
+				replaceRoot().withDocument().andValue("value").as("field")) //
+						.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		@SuppressWarnings("unchecked")
+		DBObject unwind = ((List<DBObject>) agg.get("pipeline")).get(0);
+		assertThat(unwind, isBsonObject().containing("$replaceRoot.newRoot", new BasicDBObject("field", "value")));
+	}
+
+	/**
 	 * @see DATAMONGO-753
 	 */
 	@Test
