@@ -101,7 +101,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
 	 * 
-	 * @param mongoDbFactory must not be {@literal null}.
+	 * @param dbRefResolver must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	public MappingMongoConverter(DbRefResolver dbRefResolver,
@@ -340,7 +340,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Root entry method into write conversion. Adds a type discriminator to the {@link DBObject}. Shouldn't be called for
 	 * nested conversions.
 	 * 
-	 * @see org.springframework.data.mongodb.core.core.convert.MongoWriter#write(java.lang.Object, com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#write(java.lang.Object, com.mongodb.DBObject)
 	 */
 	public void write(final Object obj, final DBObject dbo) {
 
