@@ -436,15 +436,15 @@ The class `MongoTemplate`, located in the package `org.springframework.data.mong
 
 NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across multiple instances.
 
-The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the interface `MongoConverter`. Spring provides two implementations, `SimpleMappingConverter` and `MongoMappingConverter`, but you can also write your own converter. Please refer to the section on MongoConverters for more detailed information.
+The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the interface `MongoConverter`. Spring provides two implementations, `SimpleMappingConverter` and `MappingMongoConverter`, but you can also write your own converter. Please refer to the section on MongoConverters for more detailed information.
 
 The `MongoTemplate` class implements the interface `MongoOperations`. In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you will find methods such as "find", "findAndModify", "findOne", "insert", "remove", "save", "update" and "updateMulti". The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`. A major difference in between the two APIs is that MongoOperations can be passed domain objects instead of `DBObject` and there are fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `DBObject` to specify the parameters for those operations.
 
 NOTE: The preferred way to reference the operations on `MongoTemplate` instance is via its interface `MongoOperations`.
 
-The default converter implementation used by `MongoTemplate` is MongoMappingConverter. While the `MongoMappingConverter` can make use of additional metadata to specify the mapping of objects to documents it is also capable of converting objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions as well as the use of mapping annotations is explained in the <<mongo.mapping,Mapping chapter>>.
+The default converter implementation used by `MongoTemplate` is MappingMongoConverter. While the `MappingMongoConverter` can make use of additional metadata to specify the mapping of objects to documents it is also capable of converting objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions as well as the use of mapping annotations is explained in the <<mongo.mapping,Mapping chapter>>.
 
-NOTE: In the M2 release `SimpleMappingConverter`, was the default and this class is now deprecated as its functionality has been subsumed by the `MongoMappingConverter`.
+NOTE: In the M2 release `SimpleMappingConverter`, was the default and this class is now deprecated as its functionality has been subsumed by the `MappingMongoConverter`.
 
 Another central feature of MongoTemplate is exception translation of exceptions thrown in the MongoDB Java driver into Spring's portable Data Access Exception hierarchy. Refer to the section on <<mongo.exception,exception translation>> for more information.
 
@@ -659,7 +659,7 @@ The query syntax used in the example is explained in more detail in the section 
 [[mongo-template.id-handling]]
 === How the `_id` field is handled in the mapping layer
 
-MongoDB requires that you have an `_id` field for all documents. If you don't provide one the driver will assign a `ObjectId` with a generated value. When using the `MongoMappingConverter` there are certain rules that govern how properties from the Java class is mapped to this `_id` field.
+MongoDB requires that you have an `_id` field for all documents. If you don't provide one the driver will assign a `ObjectId` with a generated value. When using the `MappingMongoConverter` there are certain rules that govern how properties from the Java class is mapped to this `_id` field.
 
 The following outlines what property will be mapped to the `_id` document field:
 
