@@ -72,6 +72,7 @@ import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.CommandResult;
@@ -146,6 +147,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(InventoryItem.class);
 		mongoTemplate.dropCollection(Sales.class);
 		mongoTemplate.dropCollection(Sales2.class);
+		mongoTemplate.dropCollection(Employee.class);
 	}
 
 	/**
@@ -1631,6 +1633,40 @@ public class AggregationTests {
 						new BasicDBObjectBuilder().add("_id", "2").add("finalTotal", 10.25D).get()));
 	}
 
+	/**
+	 * @see DATAMONGO-1551
+	 */
+	@Test
+	public void graphLookupShouldBeAppliedCorrectly() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
+
+		Employee em1 = Employee.builder().id(1).name("Dev").build();
+		Employee em2 = Employee.builder().id(2).name("Eliot").reportsTo("Dev").build();
+		Employee em4 = Employee.builder().id(4).name("Andrew").reportsTo("Eliot").build();
+
+		mongoTemplate.insert(Arrays.asList(em1, em2, em4), Employee.class);
+
+		TypedAggregation<Employee> agg = Aggregation.newAggregation(Employee.class,
+				match(Criteria.where("name").is("Andrew")), //
+				Aggregation.graphLookup("employee") //
+						.startWith("reportsTo") //
+						.connectFrom("reportsTo") //
+						.connectTo("name") //
+						.depthField("depth") //
+						.maxDepth(5) //
+						.as("reportingHierarchy"));
+
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
+
+		DBObject object = result.getUniqueMappedResult();
+		BasicDBList list = (BasicDBList) object.get("reportingHierarchy");
+
+		assertThat(object, isBsonObject().containing("reportingHierarchy", List.class));
+		assertThat((DBObject) list.get(0), isBsonObject().containing("name", "Dev").containing("depth", 1L));
+		assertThat((DBObject) list.get(1), isBsonObject().containing("name", "Eliot").containing("depth", 0L));
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -1873,7 +1909,7 @@ public class AggregationTests {
 	}
 
 	/**
-	 * @DATAMONGO-1491
+	 * @see DATAMONGO-1491
 	 */
 	@lombok.Data
 	@Builder
@@ -1884,7 +1920,7 @@ public class AggregationTests {
 	}
 
 	/**
-	 * @DATAMONGO-1491
+	 * @see DATAMONGO-1491
 	 */
 	@lombok.Data
 	@Builder
@@ -1897,7 +1933,7 @@ public class AggregationTests {
 	}
 
 	/**
-	 * @DATAMONGO-1538
+	 * @see DATAMONGO-1538
 	 */
 	@lombok.Data
 	@Builder
@@ -1907,5 +1943,17 @@ public class AggregationTests {
 		Integer price;
 		Float tax;
 		boolean applyDiscount;
+	}
+
+	/**
+	 * @see DATAMONGO-1551
+	 */
+	@lombok.Data
+	@Builder
+	static class Employee {
+
+		int id;
+		String name;
+		String reportsTo;
 	}
 }
