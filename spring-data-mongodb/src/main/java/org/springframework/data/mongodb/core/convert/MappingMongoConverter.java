@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
 	 * 
-	 * @param mongoDbFactory must not be {@literal null}.
+	 * @param dbRefResolver must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	public MappingMongoConverter(DbRefResolver dbRefResolver,
@@ -319,12 +319,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#toDBRef(java.lang.Object, org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
 	 */
-	public DBRef toDBRef(Object object, MongoPersistentProperty referingProperty) {
+	public DBRef toDBRef(Object object, MongoPersistentProperty referringProperty) {
 
 		org.springframework.data.mongodb.core.mapping.DBRef annotation = null;
 
-		if (referingProperty != null) {
-			annotation = referingProperty.getDBRef();
+		if (referringProperty != null) {
+			annotation = referringProperty.getDBRef();
 			Assert.isTrue(annotation != null, "The referenced property has to be mapped with @DBRef!");
 		}
 
@@ -333,14 +333,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return ((LazyLoadingProxy) object).toDBRef();
 		}
 
-		return createDBRef(object, referingProperty);
+		return createDBRef(object, referringProperty);
 	}
 
 	/**
 	 * Root entry method into write conversion. Adds a type discriminator to the {@link DBObject}. Shouldn't be called for
 	 * nested conversions.
 	 * 
-	 * @see org.springframework.data.mongodb.core.core.convert.MongoWriter#write(java.lang.Object, com.mongodb.DBObject)
+	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#write(java.lang.Object, com.mongodb.DBObject)
 	 */
 	public void write(final Object obj, final DBObject dbo) {
 
