@@ -319,12 +319,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#toDBRef(java.lang.Object, org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
 	 */
-	public DBRef toDBRef(Object object, MongoPersistentProperty referingProperty) {
+	public DBRef toDBRef(Object object, MongoPersistentProperty referringProperty) {
 
 		org.springframework.data.mongodb.core.mapping.DBRef annotation = null;
 
-		if (referingProperty != null) {
-			annotation = referingProperty.getDBRef();
+		if (referringProperty != null) {
+			annotation = referringProperty.getDBRef();
 			Assert.isTrue(annotation != null, "The referenced property has to be mapped with @DBRef!");
 		}
 
@@ -333,7 +333,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return ((LazyLoadingProxy) object).toDBRef();
 		}
 
-		return createDBRef(object, referingProperty);
+		return createDBRef(object, referringProperty);
 	}
 
 	/**
