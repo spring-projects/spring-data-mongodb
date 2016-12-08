@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFie
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.StartWithBuilder;
 import org.springframework.data.mongodb.core.aggregation.Fields.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
@@ -279,6 +280,17 @@ public class Aggregation {
 	 */
 	public static GroupOperation group(Fields fields) {
 		return new GroupOperation(fields);
+	}
+
+	/**
+	 * Creates a new {@link GraphLookupOperation.FromBuilder} to construct a {@link GraphLookupOperation} given
+	 * {@literal fromCollection}.
+	 *
+	 * @param fromCollection must not be {@literal null} or empty.
+	 * @return
+	 */
+	public static StartWithBuilder graphLookup(String fromCollection) {
+		return GraphLookupOperation.builder().from(fromCollection);
 	}
 
 	/**
