@@ -318,7 +318,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
-	 * Returns the default {@link org.springframework.data.mongodb.core.core.convert.MongoConverter}.
+	 * Returns the default {@link org.springframework.data.mongodb.core.convert.MongoConverter}.
 	 *
 	 * @return
 	 */

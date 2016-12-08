@@ -1,16 +1,16 @@
 [[mapping-chapter]]
 = Mapping
 
-Rich mapping support is provided by the `MongoMappingConverter`. `MongoMappingConverter` has a rich metadata model that provides a full feature set of functionality to map domain objects to MongoDB documents.The mapping metadata model is populated using annotations on your domain objects. However, the infrastructure is not limited to using annotations as the only source of metadata information. The `MongoMappingConverter` also allows you to map objects to documents without providing any additional metadata, by following a set of conventions.
+Rich mapping support is provided by the `MappingMongoConverter`. `MappingMongoConverter` has a rich metadata model that provides a full feature set of functionality to map domain objects to MongoDB documents.The mapping metadata model is populated using annotations on your domain objects. However, the infrastructure is not limited to using annotations as the only source of metadata information. The `MappingMongoConverter` also allows you to map objects to documents without providing any additional metadata, by following a set of conventions.
 
-In this section we will describe the features of the `MongoMappingConverter`. How to use conventions for mapping objects to documents and how to override those conventions with annotation based mapping metadata.
+In this section we will describe the features of the `MappingMongoConverter`. How to use conventions for mapping objects to documents and how to override those conventions with annotation based mapping metadata.
 
 NOTE: `SimpleMongoConverter` has been deprecated in Spring Data MongoDB M3 as all of its functionality has been subsumed into `MappingMongoConverter`.
 
 [[mapping-conventions]]
 == Convention based Mapping
 
-`MongoMappingConverter` has a few conventions for mapping objects to documents when no additional mapping metadata is provided. The conventions are:
+`MappingMongoConverter` has a few conventions for mapping objects to documents when no additional mapping metadata is provided. The conventions are:
 
 * The short Java class name is mapped to the collection name in the following manner. The class `com.bigbank.SavingsAccount` maps to `savingsAccount` collection name.
 * All nested objects are stored as nested objects in the document and *not* as DBRefs
@@ -21,7 +21,7 @@ NOTE: `SimpleMongoConverter` has been deprecated in Spring Data MongoDB M3 as al
 [[mapping.conventions.id-field]]
 === How the `_id` field is handled in the mapping layer
 
-MongoDB requires that you have an `_id` field for all documents. If you don't provide one the driver will assign a ObjectId with a generated value. The "_id" field can be of any type the, other than arrays, so long as it is unique. The driver naturally supports all primitive types and Dates. When using the `MongoMappingConverter` there are certain rules that govern how properties from the Java class is mapped to this `_id` field.
+MongoDB requires that you have an `_id` field for all documents. If you don't provide one the driver will assign a ObjectId with a generated value. The "_id" field can be of any type the, other than arrays, so long as it is unique. The driver naturally supports all primitive types and Dates. When using the `MappingMongoConverter` there are certain rules that govern how properties from the Java class is mapped to this `_id` field.
 
 The following outlines what field will be mapped to the `_id` document field:
 
@@ -246,9 +246,9 @@ calling `get()` before the actual conversion
 [[mapping-configuration]]
 == Mapping Configuration
 
-Unless explicitly configured, an instance of `MongoMappingConverter` is created by default when creating a `MongoTemplate`. You can create your own instance of the `MappingMongoConverter` so as to tell it where to scan the classpath at startup your domain classes in order to extract metadata and construct indexes. Also, by creating your own instance you can register Spring converters to use for mapping specific classes to and from the database.
+Unless explicitly configured, an instance of `MappingMongoConverter` is created by default when creating a `MongoTemplate`. You can create your own instance of the `MappingMongoConverter` so as to tell it where to scan the classpath at startup your domain classes in order to extract metadata and construct indexes. Also, by creating your own instance you can register Spring converters to use for mapping specific classes to and from the database.
 
-You can configure the `MongoMappingConverter` as well as `com.mongodb.Mongo` and MongoTemplate either using Java or XML based metadata. Here is an example using Spring's Java based configuration
+You can configure the `MappingMongoConverter` as well as `com.mongodb.Mongo` and MongoTemplate either using Java or XML based metadata. Here is an example using Spring's Java based configuration
 
 .@Configuration class to configure MongoDB mapping support
 ====
