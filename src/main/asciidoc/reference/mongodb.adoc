@@ -1791,7 +1791,7 @@ At the time of this writing we provide support for the following Aggregation Ope
 [cols="2*"]
 |===
 | Pipeline Aggregation Operators
-| count, geoNear, graphLookup, group, limit, lookup, match, project, replaceRoot, skip, sort, unwind
+| bucket, bucketAuto, count, facet, geoNear, graphLookup, group, limit, lookup, match, project, replaceRoot, skip, sort, unwind
 
 | Set Aggregation Operators
 | setEquals, setIntersection, setUnion, setDifference, setIsSubset, anyElementTrue, allElementsTrue
@@ -1870,10 +1870,88 @@ project().and("foo").as("bar"), sort(ASC, "foo")
 
 More examples for project operations can be found in the `AggregationTests` class. Note that further details regarding the projection expressions can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project[corresponding section] of the MongoDB Aggregation Framework reference documentation.
 
+[[mongo.aggregation.facet]]
+=== Faceted classification
+
+MongoDB supports as of Version 3.4 faceted classification using the Aggregation Framework. A faceted classification uses semantic categories, either general or subject-specific, that are combined to create the full classification entry. Documents flowing through the aggregation pipeline are classificated into buckets. A multi-faceted classification enables various aggregations on the same set of input documents, without needing to retrieve the input documents multiple times.
+
+==== Buckets
+
+Bucket operations categorize incoming documents into groups, called buckets, based on a specified expression and bucket boundaries. Bucket operations require a grouping field or grouping expression. They can be defined via the `bucket()`/`bucketAuto()` methods of the `Aggregate` class. `BucketOperation` and `BucketAutoOperation` can expose accumulations based on aggregation expressions for input documents. The bucket operation can be extended with additional parameters through a fluent API via the `with…()` methods, the `andOutput(String)` method and aliased via the `as(String)` method. Each bucket is represented as a document in the output.
+
+`BucketOperation` takes a defined set of boundaries to group incoming documents into these categories. Boundaries are required to be sorted.
+
+.Bucket operation examples
+====
+[source,java]
+----
+// will generate {$bucket: {groupBy: $price, boundaries: [0, 100, 400]}}
+bucket("price").withBoundaries(0, 100, 400);
+
+// will generate {$bucket: {groupBy: $price, default: "Other" boundaries: [0, 100]}}
+bucket("price").withBoundaries(0, 100).withDefault("Other");
+
+// will generate {$bucket: {groupBy: $price, boundaries: [0, 100], output: { count: { $sum: 1}}}}
+bucket("price").withBoundaries(0, 100).andOutputCount().as("count");
+
+// will generate {$bucket: {groupBy: $price, boundaries: [0, 100], 5, output: { titles: { $push: "$title"}}}
+bucket("price").withBoundaries(0, 100).andOutput("title").push().as("titles");
+----
+====
+
+`BucketAutoOperation` determines boundaries itself in an attempt to evenly distribute documents into a specified number of buckets. `BucketAutoOperation` optionally takes a granularity specifies the https://en.wikipedia.org/wiki/Preferred_number[preferred number] series to use to ensure that the calculated boundary edges end on preferred round numbers or their powers of 10.
+
+.Bucket operation examples
+====
+[source,java]
+----
+// will generate {$bucketAuto: {groupBy: $price, buckets: 5}}
+bucketAuto("price", 5)
+
+// will generate {$bucketAuto: {groupBy: $price, buckets: 5, granularity: "E24"}}
+bucketAuto("price", 5).withGranularity(Granularities.E24).withDefault("Other");
+
+// will generate {$bucketAuto: {groupBy: $price, buckets: 5, output: { titles: { $push: "$title"}}}
+bucketAuto("price", 5).andOutput("title").push().as("titles");
+----
+====
+
+Bucket operations can use `AggregationExpression` via `andOutput()` and <<mongo.aggregation.projection.expressions, SpEL expressions>> via `andOutputExpression()` to create output fields in buckets.
+
+Note that further details regarding bucket expressions can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/bucket/[`$bucket` section] and
+http://docs.mongodb.org/manual/reference/operator/aggregation/bucketAuto/[`$bucketAuto` section] of the MongoDB Aggregation Framework reference documentation.
+
+==== Multi-faceted aggregation
+
+Multiple aggregation pipelines can be used to create multi-faceted aggregations which characterize data across multiple dimensions, or facets, within a single aggregation stage. Multi-faceted aggregations provide multiple filters and categorizations to guide data browsing and analysis. A common implementation of faceting is how many online retailers provide ways to narrow down search results by applying filters on product price, manufacturer, size, etc.
+
+A `FacetOperation` can be defined via the `facet()` method of the `Aggregation` class. It can be customized with multiple aggregation pipelines via the `and()` method. Each sub-pipeline has its own field in the output document where its results are stored as an array of documents.
+
+Sub-pipelines can project and filter input documents prior grouping. Common cases are extraction of date parts or calculations before categorization.
+
+.Facet operation examples
+====
+[source,java]
+----
+// will generate {$facet: {categorizedByPrice: [ { $match: { price: {$exists : true}}}, { $bucketAuto: {groupBy: $price, buckets: 5}}]}}
+facet(match(Criteria.where("price").exists(true)), bucketAuto("price", 5)).as("categorizedByPrice"))
+
+// will generate {$facet: {categorizedByYear: [
+//                            { $project: { title: 1, publicationYear: { $year: "publicationDate"}}},
+//                            { $bucketAuto: {groupBy: $price, buckets: 5, output: { titles: {$push:"$title"}}}
+//                         ]}}
+facet(project("title").and("publicationDate").extractYear().as("publicationYear"),
+      bucketAuto("publicationYear", 5).andOutput("title").push().as("titles"))
+  .as("categorizedByYear"))
+----
+====
+
+Note that further details regarding facet operation can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/facet/[`$facet` section] of the MongoDB Aggregation Framework reference documentation.
+
 [[mongo.aggregation.projection.expressions]]
 ==== Spring Expression Support in Projection Expressions
 
-As of Version 1.4.0 we support the use of SpEL expression in projection expressions via the `andExpression` method of the `ProjectionOperation` class. This allows you to define the desired expression as a SpEL expression which is translated into a corresponding MongoDB projection expression part on query execution. This makes it much easier to express complex calculations.
+We support the use of SpEL expression in projection expressions via the `andExpression` method of the `ProjectionOperation` and `BucketOperation` classes. This allows you to define the desired expression as a SpEL expression which is translated into a corresponding MongoDB projection expression part on query execution. This makes it much easier to express complex calculations.
 
 ===== Complex calculations with SpEL expressions
 

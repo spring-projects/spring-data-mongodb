@@ -27,6 +27,7 @@
 * Support for `$caseSensitive` and `$diacriticSensitive` text search.
 * Support for GeoJSON Polygon with hole.
 * Performance improvements by bulk fetching ``DBRef``s.
+* Multi-faceted aggregations using `$facet`, `$bucket` and `$bucketAuto` via `Aggregation`.
 
 [[new-features.1-9-0]]
 == What's new in Spring Data MongoDB 1.9
