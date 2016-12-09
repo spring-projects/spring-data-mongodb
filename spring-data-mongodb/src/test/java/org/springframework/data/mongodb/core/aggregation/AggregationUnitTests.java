@@ -573,6 +573,23 @@ public class AggregationUnitTests {
 				isBsonObject().containing("$ifNull", Arrays.asList("$chroma", "$fallback")));
 	}
 
+	/**
+	 * @see DATAMONGO-1552
+	 */
+	@Test
+	public void shouldHonorDefaultCountField() {
+
+		Document agg = Aggregation
+				.newAggregation(//
+						bucket("year"), //
+						project("count")) //
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
+
+		Document project = extractPipelineElement(agg, 1, "$project");
+
+		assertThat(project, isBsonObject().containing("count", 1));
+	}
+
 	private Document extractPipelineElement(Document agg, int index, String operation) {
 
 		List<Document> pipeline = (List<Document>) agg.get("pipeline");

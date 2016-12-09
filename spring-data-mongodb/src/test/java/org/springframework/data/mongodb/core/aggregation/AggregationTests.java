@@ -1741,6 +1741,54 @@ public class AggregationTests {
 		assertThat((Double) bound1.get("sum"), is(closeTo(1673.0, 0.1)));
 	}
 
+	/**
+	 * @see DATAMONGO-1552
+	 */
+	@Test
+	public void facetShouldCreateFacets() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
+
+		Art a1 = Art.builder().id(1).title("The Pillars of Society").artist("Grosz").year(1926).price(199.99).build();
+		Art a2 = Art.builder().id(2).title("Melancholy III").artist("Munch").year(1902).price(280.00).build();
+		Art a3 = Art.builder().id(3).title("Dancer").artist("Miro").year(1925).price(76.04).build();
+		Art a4 = Art.builder().id(4).title("The Great Wave off Kanagawa").artist("Hokusai").price(167.30).build();
+
+		mongoTemplate.insert(Arrays.asList(a1, a2, a3, a4), Art.class);
+
+		BucketAutoOperation bucketPrice = bucketAuto(Multiply.valueOf("price").multiplyBy(10), 3) //
+				.withGranularity(Granularities.E12) //
+				.andOutputCount().as("count") //
+				.andOutput("title").push().as("titles") //
+				.andOutputExpression("price * 10") //
+				.sum().as("sum");
+
+		TypedAggregation<Art> aggregation = newAggregation(Art.class, //
+				project("title", "artist", "year", "price"), //
+				facet(bucketPrice).as("categorizeByPrice") //
+						.and(bucketAuto("year", 3)).as("categorizeByYear"));
+
+		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
+		assertThat(result.getMappedResults().size(), is(1));
+
+		Document mappedResult = result.getUniqueMappedResult();
+
+		// [ { "_id" : { "min" : 680.0 , "max" : 820.0} , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
+		// ,
+		// { "_id" : { "min" : 820.0 , "max" : 1800.0} , "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" :
+		// 1673.0} ,
+		// { "_id" : { "min" : 1800.0 , "max" : 3300.0} , "count" : 2 , "titles" : [ "The Pillars of Society" , "Melancholy
+		// III"] , "sum" : 4799.9}]
+		List<Object> categorizeByPrice = (List<Object>) mappedResult.get("categorizeByPrice");
+		assertThat(categorizeByPrice, hasSize(3));
+
+		// [ { "_id" : { "min" : null , "max" : 1902} , "count" : 1} ,
+		// { "_id" : { "min" : 1902 , "max" : 1925} , "count" : 1} ,
+		// { "_id" : { "min" : 1925 , "max" : 1926} , "count" : 2}]
+		List<Object> categorizeByYear = (List<Object>) mappedResult.get("categorizeByYear");
+		assertThat(categorizeByYear, hasSize(3));
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
