@@ -200,7 +200,7 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link ProjectionOperation} includeing the given {@link Fields}.
+	 * Creates a new {@link ProjectionOperation} including the given {@link Fields}.
 	 *
 	 * @param fields must not be {@literal null}.
 	 * @return
@@ -414,6 +414,26 @@ public class Aggregation {
 	 */
 	public static OutOperation out(String outCollectionName) {
 		return new OutOperation(outCollectionName);
+	}
+
+	/**
+	 * Creates a new {@link BucketOperation} using given {@literal groupByField}.
+	 *
+	 * @param groupByField must not be {@literal null} or empty.
+	 * @return
+	 */
+	public static BucketOperation bucket(String groupByField) {
+		return new BucketOperation(field(groupByField));
+	}
+
+	/**
+	 * Creates a new {@link BucketOperation} using given {@link AggregationExpression group-by expression}.
+	 *
+	 * @param groupByExpression must not be {@literal null}.
+	 * @return
+	 */
+	public static BucketOperation bucket(AggregationExpression groupByExpression) {
+		return new BucketOperation(groupByExpression);
 	}
 
 	/**
