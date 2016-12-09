@@ -369,7 +369,7 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link BucketOperation} using given {@literal groupByField}.
+	 * Creates a new {@link BucketOperation} given {@literal groupByField}.
 	 *
 	 * @param groupByField must not be {@literal null} or empty.
 	 * @return
@@ -379,13 +379,35 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link BucketOperation} using given {@link AggregationExpression group-by expression}.
+	 * Creates a new {@link BucketOperation} given {@link AggregationExpression group-by expression}.
 	 *
 	 * @param groupByExpression must not be {@literal null}.
 	 * @return
 	 */
 	public static BucketOperation bucket(AggregationExpression groupByExpression) {
 		return new BucketOperation(groupByExpression);
+	}
+
+	/**
+	 * Creates a new {@link BucketAutoOperation} given {@literal groupByField}.
+	 *
+	 * @param groupByField must not be {@literal null} or empty.
+	 * @param buckets number of buckets, must be a positive integer.
+	 * @return
+	 */
+	public static BucketAutoOperation bucketAuto(String groupByField, int buckets) {
+		return new BucketAutoOperation(field(groupByField), buckets);
+	}
+
+	/**
+	 * Creates a new {@link BucketAutoOperation} given {@link AggregationExpression group-by expression}.
+	 *
+	 * @param groupByExpression must not be {@literal null}.
+	 * @param buckets number of buckets, must be a positive integer.
+	 * @return
+	 */
+	public static BucketAutoOperation bucketAuto(AggregationExpression groupByExpression, int buckets) {
+		return new BucketAutoOperation(groupByExpression, buckets);
 	}
 
 	/**
