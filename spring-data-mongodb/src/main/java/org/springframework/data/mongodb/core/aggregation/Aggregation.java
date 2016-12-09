@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.aggregation.CountOperation.CountOpe
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.data.mongodb.core.aggregation.FacetOperation.FacetOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.StartWithBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperationBuilder;
@@ -68,7 +69,7 @@ public class Aggregation {
 	 */
 	public static final String CURRENT = SystemVariable.CURRENT.toString();
 
-	public static final AggregationOperationContext DEFAULT_CONTEXT = new NoOpAggregationOperationContext();
+	public static final AggregationOperationContext DEFAULT_CONTEXT = AggregationOperationRenderer.DEFAULT_CONTEXT;
 	public static final AggregationOptions DEFAULT_OPTIONS = newAggregationOptions().build();
 
 	protected final List<AggregationOperation> operations;
@@ -461,6 +462,25 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link FacetOperation}.
+	 *
+	 * @return
+	 */
+	public static FacetOperation facet() {
+		return FacetOperation.EMPTY;
+	}
+
+	/**
+	 * Creates a new {@link FacetOperationBuilder} given {@link Aggregation}.
+	 *
+	 * @param aggregationOperations the sub-pipeline, must not be {@literal null}.
+	 * @return
+	 */
+	public static FacetOperationBuilder facet(AggregationOperation... aggregationOperations) {
+		return facet().and(aggregationOperations);
+	}
+
+	/**
 	 * Creates a new {@link LookupOperation}.
 	 *
 	 * @param from must not be {@literal null}.
@@ -551,26 +571,7 @@ public class Aggregation {
 	 */
 	public DBObject toDbObject(String inputCollectionName, AggregationOperationContext rootContext) {
 
-		AggregationOperationContext context = rootContext;
-		List<DBObject> operationDocuments = new ArrayList<DBObject>(operations.size());
-
-		for (AggregationOperation operation : operations) {
-
-			operationDocuments.add(operation.toDBObject(context));
-
-			if (operation instanceof FieldsExposingAggregationOperation) {
-
-				FieldsExposingAggregationOperation exposedFieldsOperation = (FieldsExposingAggregationOperation) operation;
-				ExposedFields fields = exposedFieldsOperation.getFields();
-
-				if (operation instanceof InheritsFieldsAggregationOperation) {
-					context = new InheritingExposedFieldsAggregationOperationContext(fields, context);
-				} else {
-					context = fields.exposesNoFields() ? DEFAULT_CONTEXT
-							: new ExposedFieldsAggregationOperationContext(fields, context);
-				}
-			}
-		}
+		List<DBObject> operationDocuments = AggregationOperationRenderer.toDBObject(operations, rootContext);
 
 		DBObject command = new BasicDBObject("aggregate", inputCollectionName);
 		command.put("pipeline", operationDocuments);
@@ -586,43 +587,7 @@ public class Aggregation {
 	 */
 	@Override
 	public String toString() {
-		return SerializationUtils
-				.serializeToJsonSafely(toDbObject("__collection__", new NoOpAggregationOperationContext()));
-	}
-
-	/**
-	 * Simple {@link AggregationOperationContext} that just returns {@link FieldReference}s as is.
-	 *
-	 * @author Oliver Gierke
-	 */
-	private static class NoOpAggregationOperationContext implements AggregationOperationContext {
-
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.DBObject)
-		 */
-		@Override
-		public DBObject getMappedObject(DBObject dbObject) {
-			return dbObject;
-		}
-
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.ExposedFields.AvailableField)
-		 */
-		@Override
-		public FieldReference getReference(Field field) {
-			return new DirectFieldReference(new ExposedField(field, true));
-		}
-
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
-		 */
-		@Override
-		public FieldReference getReference(String name) {
-			return new DirectFieldReference(new ExposedField(new AggregationField(name), true));
-		}
+		return SerializationUtils.serializeToJsonSafely(toDbObject("__collection__", DEFAULT_CONTEXT));
 	}
 
 	/**
@@ -662,7 +627,7 @@ public class Aggregation {
 			return false;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Enum#toString()
 		 */
