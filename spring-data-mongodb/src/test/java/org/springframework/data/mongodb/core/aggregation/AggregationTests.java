@@ -100,6 +100,7 @@ public class AggregationTests {
 	private static final Version TWO_DOT_FOUR = new Version(2, 4);
 	private static final Version TWO_DOT_SIX = new Version(2, 6);
 	private static final Version THREE_DOT_TWO = new Version(3, 2);
+	private static final Version THREE_DOT_FOUR = new Version(3, 4);
 
 	private static boolean initialized = false;
 
@@ -145,6 +146,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(InventoryItem.class);
 		mongoTemplate.dropCollection(Sales.class);
 		mongoTemplate.dropCollection(Sales2.class);
+		mongoTemplate.dropCollection(Art.class);
 	}
 
 	/**
@@ -1580,6 +1582,46 @@ public class AggregationTests {
 						new BasicDBObjectBuilder().add("_id", "2").add("finalTotal", 10.25D).get()));
 	}
 
+	/**
+	 * @see DATAMONGO-1552
+	 */
+	@Test
+	public void bucketShouldCollectDocumentsIntoABucket() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
+
+		Art a1 = Art.builder().id(1).title("The Pillars of Society").artist("Grosz").year(1926).price(199.99).build();
+		Art a2 = Art.builder().id(2).title("Melancholy III").artist("Munch").year(1902).price(280.00).build();
+		Art a3 = Art.builder().id(3).title("Dancer").artist("Miro").year(1925).price(76.04).build();
+		Art a4 = Art.builder().id(4).title("The Great Wave off Kanagawa").artist("Hokusai").price(167.30).build();
+
+		mongoTemplate.insert(Arrays.asList(a1, a2, a3, a4), Art.class);
+
+		TypedAggregation<Art> aggregation = newAggregation(Art.class, //
+				bucket("price") //
+						.withBoundaries(0, 100, 200) //
+						.withDefaultBucket("other") //
+						.andOutputCount().as("count") //
+						.andOutput("title").push().as("titles") //
+						.andOutputExpression("price * 10").sum().as("sum"));
+
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(aggregation, DBObject.class);
+		assertThat(result.getMappedResults().size(), is(3));
+
+		// { "_id" : 0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
+		DBObject bound0 = result.getMappedResults().get(0);
+		assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer"));
+		assertThat((Double) bound0.get("sum"), is(closeTo(760.40, 0.1)));
+
+		// { "_id" : 100 , "count" : 2 , "titles" : [ "The Pillars of Society" , "The Great Wave off Kanagawa"] , "sum" :
+		// 3672.9}
+		DBObject bound100 = result.getMappedResults().get(1);
+		assertThat(bound100, isBsonObject().containing("count", 2).containing("_id", 100));
+		assertThat((List<String>) bound100.get("titles"),
+				hasItems("The Pillars of Society", "The Great Wave off Kanagawa"));
+		assertThat((Double) bound100.get("sum"), is(closeTo(3672.9, 0.1)));
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -1856,5 +1898,19 @@ public class AggregationTests {
 		Integer price;
 		Float tax;
 		boolean applyDiscount;
+	}
+
+	/**
+	 * @see DATAMONGO-1552
+	 */
+	@lombok.Data
+	@Builder
+	static class Art {
+
+		int id;
+		String title;
+		String artist;
+		Integer year;
+		double price;
 	}
 }
