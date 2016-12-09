@@ -222,7 +222,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 * @param value must not be {@literal null}.
 		 * @param operation must not be {@literal null}.
 		 */
-		public OutputBuilder(Object value, T operation) {
+		protected OutputBuilder(Object value, T operation) {
 
 			Assert.notNull(value, "Value must not be null or empty!");
 			Assert.notNull(operation, "ProjectionOperation must not be null!");
@@ -432,6 +432,11 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 * @return the {@link ExposedFields} derived from {@link Output}.
 		 */
 		protected ExposedFields asExposedFields() {
+
+			// The count field is included by default when the output is not specified.
+			if (isEmpty()) {
+				return ExposedFields.from(new ExposedField("count", true));
+			}
 
 			ExposedFields fields = ExposedFields.from();
 

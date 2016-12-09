@@ -15,8 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.core.Is.*;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.junit.Test;
@@ -248,7 +250,19 @@ public class BucketOperationUnitTests {
 				is(JSON.parse("{ total : { $multiply: [ {$add : [\"$netPrice\", \"$tax\"]}, 5] } }")));
 	}
 
+	/**
+	 * @see DATAMONGO-1552
+	 */
+	@Test
+	public void shouldExposeDefaultCountField() {
+
+		BucketOperation operation = bucket("field");
+
+		assertThat(operation.getFields().exposesSingleFieldOnly(), is(true));
+		assertThat(operation.getFields().getField("count"), is(notNullValue()));
+	}
+
 	private static DBObject extractOutput(DBObject fromBucketClause) {
-		return (DBObject) ((DBObject) fromBucketClause.get("$bucket")).get("output");
+		return getAsDBObject(getAsDBObject(fromBucketClause, "$bucket"), "output");
 	}
 }
