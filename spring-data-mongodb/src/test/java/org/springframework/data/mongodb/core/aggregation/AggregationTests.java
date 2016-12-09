@@ -62,7 +62,9 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Multiply;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
+import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -1700,6 +1702,43 @@ public class AggregationTests {
 		assertThat((List<String>) bound100.get("titles"),
 				hasItems("The Pillars of Society", "The Great Wave off Kanagawa"));
 		assertThat((Double) bound100.get("sum"), is(closeTo(3672.9, 0.1)));
+	}
+
+	/**
+	 * @see DATAMONGO-1552
+	 */
+	@Test
+	public void bucketAutoShouldCollectDocumentsIntoABucket() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
+
+		Art a1 = Art.builder().id(1).title("The Pillars of Society").artist("Grosz").year(1926).price(199.99).build();
+		Art a2 = Art.builder().id(2).title("Melancholy III").artist("Munch").year(1902).price(280.00).build();
+		Art a3 = Art.builder().id(3).title("Dancer").artist("Miro").year(1925).price(76.04).build();
+		Art a4 = Art.builder().id(4).title("The Great Wave off Kanagawa").artist("Hokusai").price(167.30).build();
+
+		mongoTemplate.insert(Arrays.asList(a1, a2, a3, a4), Art.class);
+
+		TypedAggregation<Art> aggregation = newAggregation(Art.class, //
+				bucketAuto(Multiply.valueOf("price").multiplyBy(10), 3) //
+						.withGranularity(Granularities.E12) //
+						.andOutputCount().as("count") //
+						.andOutput("title").push().as("titles") //
+						.andOutputExpression("price * 10").sum().as("sum"));
+
+		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
+		assertThat(result.getMappedResults().size(), is(3));
+
+		// { "min" : 680.0 , "max" : 820.0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
+		Document bound0 = result.getMappedResults().get(0);
+		assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer").containing("min", 680.0)
+				.containing("max"));
+
+		// { "min" : 820.0 , "max" : 1800.0 , "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" : 1673.0}
+		Document bound1 = result.getMappedResults().get(1);
+		assertThat(bound1, isBsonObject().containing("count", 1).containing("min", 820.0));
+		assertThat((List<String>) bound1.get("titles"), hasItems("The Great Wave off Kanagawa"));
+		assertThat((Double) bound1.get("sum"), is(closeTo(1673.0, 0.1)));
 	}
 
 	private void createUsersWithReferencedPersons() {
