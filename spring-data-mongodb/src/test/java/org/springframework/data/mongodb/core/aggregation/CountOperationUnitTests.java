@@ -20,12 +20,11 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link CountOperation}.
- * 
+ *
  * @author Mark Paluch
  */
 public class CountOperationUnitTests {
@@ -45,9 +44,7 @@ public class CountOperationUnitTests {
 	public void shouldRenderCorrectly() {
 
 		CountOperation countOperation = new CountOperation("field");
-		DBObject dbObject = countOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-
-		assertThat(dbObject, is(JSON.parse("{$count : \"field\" }")));
+		assertThat(countOperation.toDBObject(Aggregation.DEFAULT_CONTEXT), is(JSON.parse("{$count : \"field\" }")));
 	}
 
 	/**
