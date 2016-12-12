@@ -23,13 +23,9 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.VariableOperators;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperation;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
-
 /**
  * Unit tests for {@link ReplaceRootOperation}.
- * 
+ *
  * @author Mark Paluch
  */
 public class ReplaceRootOperationUnitTests {
