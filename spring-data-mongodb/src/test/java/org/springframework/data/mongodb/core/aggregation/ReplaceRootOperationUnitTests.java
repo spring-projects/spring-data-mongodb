@@ -28,7 +28,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link ReplaceRootOperation}.
- * 
+ *
  * @author Mark Paluch
  */
 public class ReplaceRootOperationUnitTests {
