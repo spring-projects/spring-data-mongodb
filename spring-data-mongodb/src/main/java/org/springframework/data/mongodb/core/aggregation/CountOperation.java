@@ -20,12 +20,12 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedFi
 import org.springframework.util.Assert;
 
 /**
- * Encapsulates the aggregation framework {@code $count}-operation.
- * <p>
- * We recommend to use the static factory method {@link Aggregation#count()} instead of creating instances of this
- * class directly.
- * 
- * @see https://docs.mongodb.com/manual/reference/operator/aggregation/count/#pipe._S_count
+ * Encapsulates the aggregation framework {@code $count}-operation. <br />
+ * We recommend to use the static factory method {@link Aggregation#count()} instead of creating instances of this class
+ * directly.
+ *
+ * @see <a href=
+ *      "https://docs.mongodb.com/manual/reference/operator/aggregation/count/#pipe._S_count">https://docs.mongodb.com/manual/reference/operator/aggregation/count/</a>
  * @author Mark Paluch
  * @since 1.10
  */

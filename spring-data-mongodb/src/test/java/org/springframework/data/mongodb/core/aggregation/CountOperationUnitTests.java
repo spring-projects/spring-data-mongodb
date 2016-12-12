@@ -43,9 +43,7 @@ public class CountOperationUnitTests {
 	public void shouldRenderCorrectly() {
 
 		CountOperation countOperation = new CountOperation("field");
-		Document dbObject = countOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
-
-		assertThat(dbObject, is(Document.parse("{$count : \"field\" }")));
+		assertThat(countOperation.toDocument(Aggregation.DEFAULT_CONTEXT), is(Document.parse("{$count : \"field\" }")));
 	}
 
 	/**
