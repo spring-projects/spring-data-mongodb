@@ -32,30 +32,12 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.And;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Avg;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.BooleanOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Gte;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Lt;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.RangeOperator;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Reduce.Variable;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Switch.CaseOperator;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Type;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.VariableOperators;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.*;
-
-import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link ProjectionOperation}.
@@ -1827,7 +1809,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("item").indexOf("foo")).as("byteLocation")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project: { byteLocation: { $indexOfBytes: [ \"$item\", \"foo\" ] } } }")));
+		assertThat(agg,
+				Matchers.is(Document.parse("{ $project: { byteLocation: { $indexOfBytes: [ \"$item\", \"foo\" ] } } }")));
 	}
 
 	/**
@@ -1852,7 +1835,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("item").indexOfCP("foo")).as("cpLocation")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project: { cpLocation: { $indexOfCP: [ \"$item\", \"foo\" ] } } }")));
+		assertThat(agg,
+				Matchers.is(Document.parse("{ $project: { cpLocation: { $indexOfCP: [ \"$item\", \"foo\" ] } } }")));
 	}
 
 	/**
@@ -1913,7 +1897,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("quarter").substringCP(0, 2)).as("yearSubstring")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { yearSubstring: { $substrCP: [ \"$quarter\", 0, 2 ] } } }")));
+		assertThat(agg,
+				Matchers.is(Document.parse("{ $project : { yearSubstring: { $substrCP: [ \"$quarter\", 0, 2 ] } } }")));
 	}
 
 	/**
@@ -1950,7 +1935,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("favorites").reverse()).as("reverseFavorites")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { reverseFavorites: { $reverseArray: \"$favorites\" } } }")));
+		assertThat(agg,
+				Matchers.is(Document.parse("{ $project : { reverseFavorites: { $reverseArray: \"$favorites\" } } }")));
 	}
 
 	/**
@@ -1975,9 +1961,9 @@ public class ProjectionOperationUnitTests {
 	public void shouldRenderReduceWithComplexObjectCorrectly() {
 
 		PropertyExpression sum = PropertyExpression.property("sum").definedAs(
-				ArithmeticOperators.valueOf(Variable.VALUE.referingTo("sum").getName()).add(Variable.THIS.getName()));
+				ArithmeticOperators.valueOf(Variable.VALUE.referringTo("sum").getName()).add(Variable.THIS.getName()));
 		PropertyExpression product = PropertyExpression.property("product").definedAs(ArithmeticOperators
-				.valueOf(Variable.VALUE.referingTo("product").getName()).multiplyBy(Variable.THIS.getName()));
+				.valueOf(Variable.VALUE.referringTo("product").getName()).multiplyBy(Variable.THIS.getName()));
 
 		Document agg = project()
 				.and(ArrayOperators.arrayOf("probabilityArr").reduce(sum, product)
@@ -2015,7 +2001,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("in_stock").containsValue("bananas")).as("has_bananas")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { has_bananas : { $in : [\"bananas\", \"$in_stock\" ] } } }")));
+		assertThat(agg,
+				Matchers.is(Document.parse("{ $project : { has_bananas : { $in : [\"bananas\", \"$in_stock\" ] } } }")));
 	}
 
 	/**
@@ -2100,8 +2087,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldTypeCorrectly() {
 
-		Document agg = project().and(Type.typeOf("a")).as("a")
-				.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project().and(Type.typeOf("a")).as("a").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, Matchers.is(Document.parse("{ $project : { a: { $type: \"$a\" } } }")));
 	}
