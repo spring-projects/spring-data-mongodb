@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Range;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators.ArithmeticOperatorFactory;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.OtherwiseBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.ThenBuilder;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.AsBuilder;
@@ -31,7 +32,6 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Switch.CaseOperator;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -268,8 +268,8 @@ public interface AggregationExpressions {
 
 		/**
 		 * Creates new {@link AggregationExpression} that evaluates a series of {@link CaseOperator} expressions. When it
-		 * finds an expression which evaluates to true, {@code $switch} executes a specified expression and breaks out of
-		 * the control flow.
+		 * finds an expression which evaluates to {@literal true}, {@code $switch} executes a specified expression and
+		 * breaks out of the control flow.
 		 *
 		 * @param conditions must not be {@literal null}.
 		 * @return
@@ -280,8 +280,8 @@ public interface AggregationExpressions {
 
 		/**
 		 * Creates new {@link AggregationExpression} that evaluates a series of {@link CaseOperator} expressions. When it
-		 * finds an expression which evaluates to true, {@code $switch} executes a specified expression and breaks out of
-		 * the control flow.
+		 * finds an expression which evaluates to {@literal true}, {@code $switch} executes a specified expression and
+		 * breaks out of the control flow.
 		 *
 		 * @param conditions must not be {@literal null}.
 		 * @return
@@ -1595,8 +1595,8 @@ public interface AggregationExpressions {
 
 			/**
 			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
-			 * string for an occurence of a given {@literal substring} and returns the UTF-8 byte index (zero-based) of the
-			 * first occurence.
+			 * string for an occurrence of a given {@literal substring} and returns the UTF-8 byte index (zero-based) of the
+			 * first occurrence.
 			 *
 			 * @param substring must not be {@literal null}.
 			 * @return
@@ -1609,8 +1609,8 @@ public interface AggregationExpressions {
 
 			/**
 			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
-			 * string for an occurence of a substring contained in the given {@literal field reference} and returns the UTF-8
-			 * byte index (zero-based) of the first occurence.
+			 * string for an occurrence of a substring contained in the given {@literal field reference} and returns the UTF-8
+			 * byte index (zero-based) of the first occurrence.
 			 *
 			 * @param fieldReference must not be {@literal null}.
 			 * @return
@@ -1623,8 +1623,8 @@ public interface AggregationExpressions {
 
 			/**
 			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
-			 * string for an occurence of a substring resulting from the given {@link AggregationExpression} and returns the
-			 * UTF-8 byte index (zero-based) of the first occurence.
+			 * string for an occurrence of a substring resulting from the given {@link AggregationExpression} and returns the
+			 * UTF-8 byte index (zero-based) of the first occurrence.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -1641,8 +1641,8 @@ public interface AggregationExpressions {
 
 			/**
 			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
-			 * string for an occurence of a given {@literal substring} and returns the UTF-8 code point index (zero-based) of
-			 * the first occurence.
+			 * string for an occurrence of a given {@literal substring} and returns the UTF-8 code point index (zero-based) of
+			 * the first occurrence.
 			 *
 			 * @param substring must not be {@literal null}.
 			 * @return
@@ -1655,8 +1655,8 @@ public interface AggregationExpressions {
 
 			/**
 			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
-			 * string for an occurence of a substring contained in the given {@literal field reference} and returns the UTF-8
-			 * code point index (zero-based) of the first occurence.
+			 * string for an occurrence of a substring contained in the given {@literal field reference} and returns the UTF-8
+			 * code point index (zero-based) of the first occurrence.
 			 *
 			 * @param fieldReference must not be {@literal null}.
 			 * @return
@@ -1669,8 +1669,8 @@ public interface AggregationExpressions {
 
 			/**
 			 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a
-			 * string for an occurence of a substring resulting from the given {@link AggregationExpression} and returns the
-			 * UTF-8 code point index (zero-based) of the first occurence.
+			 * string for an occurrence of a substring resulting from the given {@link AggregationExpression} and returns the
+			 * UTF-8 code point index (zero-based) of the first occurrence.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -1938,8 +1938,8 @@ public interface AggregationExpressions {
 			}
 
 			/**
-			 * Creates new {@link AggregationExpressions} that searches the associated array for an occurence of a specified
-			 * value and returns the array index (zero-based) of the first occurence.
+			 * Creates new {@link AggregationExpressions} that searches the associated array for an occurrence of a specified
+			 * value and returns the array index (zero-based) of the first occurrence.
 			 *
 			 * @param value must not be {@literal null}.
 			 * @return
@@ -1967,6 +1967,7 @@ public interface AggregationExpressions {
 			 */
 			public ReduceInitialValueBuilder reduce(final AggregationExpression expression) {
 				return new ReduceInitialValueBuilder() {
+
 					@Override
 					public Reduce startingWith(Object initialValue) {
 						return (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
@@ -1985,6 +1986,7 @@ public interface AggregationExpressions {
 			public ReduceInitialValueBuilder reduce(final PropertyExpression... expressions) {
 
 				return new ReduceInitialValueBuilder() {
+
 					@Override
 					public Reduce startingWith(Object initialValue) {
 						return (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
@@ -1996,7 +1998,7 @@ public interface AggregationExpressions {
 			/**
 			 * Creates new {@link AggregationExpressions} that transposes an array of input arrays so that the first element
 			 * of the output array would be an array containing, the first element of the first input array, the first element
-			 * of the second input array, etc
+			 * of the second input array, etc.
 			 *
 			 * @param arrays must not be {@literal null}.
 			 * @return
@@ -2007,7 +2009,7 @@ public interface AggregationExpressions {
 
 			/**
 			 * Creates new {@link AggregationExpressions} that returns a boolean indicating whether a specified value is in
-			 * the associcated array.
+			 * the associated array.
 			 *
 			 * @param value must not be {@literal null}.
 			 * @return
@@ -2016,7 +2018,17 @@ public interface AggregationExpressions {
 				return (usesFieldRef() ? In.arrayOf(fieldReference) : In.arrayOf(expression)).containsValue(value);
 			}
 
+			/**
+			 * @author Christoph Strobl
+			 */
 			public interface ReduceInitialValueBuilder {
+
+				/**
+				 * Define the initial cumulative value set before in is applied to the first element of the input array.
+				 *
+				 * @param initialValue must not be {@literal null}.
+				 * @return
+				 */
 				Reduce startingWith(Object initialValue);
 			}
 
@@ -2340,6 +2352,9 @@ public interface AggregationExpressions {
 			this.value = value;
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(AggregationOperationContext context) {
 			return toDbObject(this.value, context);
@@ -4147,14 +4162,32 @@ public interface AggregationExpressions {
 				this.stringExpression = stringExpression;
 			}
 
+			/**
+			 * Creates a new {@link IndexOfBytes} given {@literal substring}.
+			 *
+			 * @param substring must not be {@literal null}.
+			 * @return
+			 */
 			public IndexOfBytes indexOf(String substring) {
 				return new IndexOfBytes(Arrays.asList(stringExpression, substring));
 			}
 
+			/**
+			 * Creates a new {@link IndexOfBytes} given {@link AggregationExpression} that resolves to the substring.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
 			public IndexOfBytes indexOf(AggregationExpression expression) {
 				return new IndexOfBytes(Arrays.asList(stringExpression, expression));
 			}
 
+			/**
+			 * Creates a new {@link IndexOfBytes} given {@link Field} that resolves to the substring.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 * @return
+			 */
 			public IndexOfBytes indexOf(Field fieldReference) {
 				return new IndexOfBytes(Arrays.asList(stringExpression, fieldReference));
 			}
@@ -4228,14 +4261,32 @@ public interface AggregationExpressions {
 				this.stringExpression = stringExpression;
 			}
 
+			/**
+			 * Creates a new {@link IndexOfCP} given {@literal substring}.
+			 *
+			 * @param substring must not be {@literal null}.
+			 * @return
+			 */
 			public IndexOfCP indexOf(String substring) {
 				return new IndexOfCP(Arrays.asList(stringExpression, substring));
 			}
 
+			/**
+			 * Creates a new {@link IndexOfCP} given {@link AggregationExpression} that resolves to the substring.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
 			public IndexOfCP indexOf(AggregationExpression expression) {
 				return new IndexOfCP(Arrays.asList(stringExpression, expression));
 			}
 
+			/**
+			 * Creates a new {@link IndexOfCP} given {@link Field} that resolves to the substring.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 * @return
+			 */
 			public IndexOfCP indexOf(Field fieldReference) {
 				return new IndexOfCP(Arrays.asList(stringExpression, fieldReference));
 			}
@@ -4244,6 +4295,8 @@ public interface AggregationExpressions {
 
 	/**
 	 * {@link AggregationExpression} for {@code $split}.
+	 *
+	 * @author Christoph Strobl
 	 */
 	class Split extends AbstractAggregationExpression {
 
@@ -4281,19 +4334,19 @@ public interface AggregationExpressions {
 		}
 
 		/**
-		 * Use given {@link String} as deliminator
+		 * Use given {@link String} as delimiter.
 		 *
-		 * @param deliminator must not be {@literal null}.
+		 * @param delimiter must not be {@literal null}.
 		 * @return
 		 */
-		public Split split(String deliminator) {
+		public Split split(String delimiter) {
 
-			Assert.notNull(deliminator, "Deliminator must not be null!");
-			return new Split(append(deliminator));
+			Assert.notNull(delimiter, "Delimiter must not be null!");
+			return new Split(append(delimiter));
 		}
 
 		/**
-		 * Usge value of referenced field as deliminator.
+		 * Use value of referenced field as delimiter.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
@@ -4305,7 +4358,7 @@ public interface AggregationExpressions {
 		}
 
 		/**
-		 * Use value resulting from {@link AggregationExpression} as deliminator.
+		 * Use value resulting from {@link AggregationExpression} as delimiter.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -4319,6 +4372,8 @@ public interface AggregationExpressions {
 
 	/**
 	 * {@link AggregationExpression} for {@code $strLenBytes}.
+	 *
+	 * @author Christoph Strobl
 	 */
 	class StrLenBytes extends AbstractAggregationExpression {
 
@@ -4331,17 +4386,33 @@ public interface AggregationExpressions {
 			return "$strLenBytes";
 		}
 
+		/**
+		 * Creates new {@link StrLenBytes}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static StrLenBytes stringLengthOf(String fieldReference) {
 			return new StrLenBytes(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link StrLenBytes}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static StrLenBytes stringLengthOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new StrLenBytes(expression);
 		}
 	}
 
 	/**
 	 * {@link AggregationExpression} for {@code $strLenCP}.
+	 *
+	 * @author Christoph Strobl
 	 */
 	class StrLenCP extends AbstractAggregationExpression {
 
@@ -4354,11 +4425,25 @@ public interface AggregationExpressions {
 			return "$strLenCP";
 		}
 
+		/**
+		 * Creates new {@link StrLenCP}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static StrLenCP stringLengthOfCP(String fieldReference) {
 			return new StrLenCP(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link StrLenCP}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static StrLenCP stringLengthOfCP(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
 			return new StrLenCP(expression);
 		}
 	}
@@ -4909,7 +4994,17 @@ public interface AggregationExpressions {
 			};
 		}
 
+		/**
+		 * @author Christoph Strobl
+		 */
 		public interface SliceElementsBuilder {
+
+			/**
+			 * Set the number of elements given {@literal nrElements}.
+			 *
+			 * @param nrElements
+			 * @return
+			 */
 			Slice itemCount(int nrElements);
 		}
 	}
@@ -4967,6 +5062,9 @@ public interface AggregationExpressions {
 			return new IndexOfArray(append(rangeValues));
 		}
 
+		/**
+		 * @author Christoph Strobl
+		 */
 		public static class IndexOfArrayBuilder {
 
 			private final Object targetArray;
@@ -4975,6 +5073,12 @@ public interface AggregationExpressions {
 				this.targetArray = targetArray;
 			}
 
+			/**
+			 * Set the {@literal value} to check for its index in the array.
+			 *
+			 * @param value must not be {@literal null}.
+			 * @return
+			 */
 			public IndexOfArray indexOf(Object value) {
 
 				Assert.notNull(value, "Value must not be null!");
@@ -4999,19 +5103,37 @@ public interface AggregationExpressions {
 			return "$range";
 		}
 
+		/**
+		 * Start creating new {@link RangeOperator}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static RangeOperatorBuilder rangeStartingAt(String fieldReference) {
 			return new RangeOperatorBuilder(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Start creating new {@link RangeOperator}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static RangeOperatorBuilder rangeStartingAt(AggregationExpression expression) {
 			return new RangeOperatorBuilder(expression);
 		}
 
-		public static RangeOperatorBuilder rangeStartingAt(Long value) {
+		/**
+		 * Start creating new {@link RangeOperator}.
+		 *
+		 * @param value
+		 * @return
+		 */
+		public static RangeOperatorBuilder rangeStartingAt(long value) {
 			return new RangeOperatorBuilder(value);
 		}
 
-		public RangeOperator withStepSize(Long stepSize) {
+		public RangeOperator withStepSize(long stepSize) {
 			return new RangeOperator(append(stepSize));
 		}
 
@@ -5023,23 +5145,42 @@ public interface AggregationExpressions {
 				this.startPoint = startPoint;
 			}
 
-			public RangeOperator to(Long index) {
+			/**
+			 * Creates new {@link RangeOperator}.
+			 *
+			 * @param index
+			 * @return
+			 */
+			public RangeOperator to(long index) {
 				return new RangeOperator(Arrays.asList(startPoint, index));
 			}
 
+			/**
+			 * Creates new {@link RangeOperator}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 */
 			public RangeOperator to(AggregationExpression expression) {
 				return new RangeOperator(Arrays.asList(startPoint, expression));
 			}
 
+			/**
+			 * Creates new {@link RangeOperator}.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 * @return
+			 */
 			public RangeOperator to(String fieldReference) {
 				return new RangeOperator(Arrays.asList(startPoint, Fields.field(fieldReference)));
 			}
 		}
-
 	}
 
 	/**
 	 * {@link AggregationExpression} for {@code $reverseArray}.
+	 *
+	 * @author Christoph Strobl
 	 */
 	class ReverseArray extends AbstractAggregationExpression {
 
@@ -5052,10 +5193,22 @@ public interface AggregationExpressions {
 			return "$reverseArray";
 		}
 
+		/**
+		 * Creates new {@link ReverseArray} given {@literal fieldReference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static ReverseArray reverseArrayOf(String fieldReference) {
 			return new ReverseArray(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link ReverseArray} given {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static ReverseArray reverseArrayOf(AggregationExpression expression) {
 			return new ReverseArray(expression);
 		}
@@ -5063,6 +5216,8 @@ public interface AggregationExpressions {
 
 	/**
 	 * {@link AggregationExpression} for {@code $reduce}.
+	 *
+	 * @author Christoph Strobl
 	 */
 	class Reduce implements AggregationExpression {
 
@@ -5071,11 +5226,15 @@ public interface AggregationExpressions {
 		private final List<AggregationExpression> reduceExpressions;
 
 		private Reduce(Object input, Object initialValue, List<AggregationExpression> reduceExpressions) {
+
 			this.input = input;
 			this.initialValue = initialValue;
 			this.reduceExpressions = reduceExpressions;
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(AggregationOperationContext context) {
 
@@ -5112,19 +5271,37 @@ public interface AggregationExpressions {
 			}
 		}
 
+		/**
+		 * Start creating new {@link Reduce}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static InitialValueBuilder arrayOf(final String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+
 			return new InitialValueBuilder() {
 
 				@Override
 				public ReduceBuilder withInitialValue(final Object initialValue) {
+
+					Assert.notNull(initialValue, "Initial value must not be null");
+
 					return new ReduceBuilder() {
+
 						@Override
 						public Reduce reduce(AggregationExpression expression) {
+
+							Assert.notNull(expression, "AggregationExpression must not be null");
 							return new Reduce(Fields.field(fieldReference), initialValue, Collections.singletonList(expression));
 						}
 
 						@Override
 						public Reduce reduce(PropertyExpression... expressions) {
+
+							Assert.notNull(expressions, "PropertyExpressions must not be null");
+
 							return new Reduce(Fields.field(fieldReference), initialValue,
 									Arrays.<AggregationExpression> asList(expressions));
 						}
@@ -5133,19 +5310,36 @@ public interface AggregationExpressions {
 			};
 		}
 
+		/**
+		 * Start creating new {@link Reduce}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static InitialValueBuilder arrayOf(final AggregationExpression expression) {
+
+			Assert.notNull(expression, "AggregationExpression must not be null");
+
 			return new InitialValueBuilder() {
 
 				@Override
 				public ReduceBuilder withInitialValue(final Object initialValue) {
+
+					Assert.notNull(initialValue, "Initial value must not be null");
+
 					return new ReduceBuilder() {
+
 						@Override
 						public Reduce reduce(AggregationExpression expression) {
+
+							Assert.notNull(expression, "AggregationExpression must not be null");
 							return new Reduce(expression, initialValue, Collections.singletonList(expression));
 						}
 
 						@Override
 						public Reduce reduce(PropertyExpression... expressions) {
+
+							Assert.notNull(expressions, "PropertyExpressions must not be null");
 							return new Reduce(expression, initialValue, Arrays.<AggregationExpression> asList(expressions));
 						}
 					};
@@ -5153,24 +5347,30 @@ public interface AggregationExpressions {
 			};
 		}
 
+		/**
+		 * @author Christoph Strobl
+		 */
 		public interface InitialValueBuilder {
 
 			/**
 			 * Define the initial cumulative value set before in is applied to the first element of the input array.
 			 *
-			 * @param intialValue must not be {@literal null}.
+			 * @param initialValue must not be {@literal null}.
 			 * @return
 			 */
-			ReduceBuilder withInitialValue(Object intialValue);
+			ReduceBuilder withInitialValue(Object initialValue);
 		}
 
+		/**
+		 * @author Christoph Strobl
+		 */
 		public interface ReduceBuilder {
 
 			/**
 			 * Define the {@link AggregationExpression} to apply to each element in the input array in left-to-right order.
 			 * <br />
-			 * <b>NOTE:</b> During evaulation of the in expression the variable references {@link Variable#THIS} and
-			 * {@link Variable#VALUE} are availble.
+			 * <b>NOTE:</b> During evaluation of the in expression the variable references {@link Variable#THIS} and
+			 * {@link Variable#VALUE} are available.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -5180,8 +5380,8 @@ public interface AggregationExpressions {
 			/**
 			 * Define the {@link PropertyExpression}s to apply to each element in the input array in left-to-right order.
 			 * <br />
-			 * <b>NOTE:</b> During evaulation of the in expression the variable references {@link Variable#THIS} and
-			 * {@link Variable#VALUE} are availble.
+			 * <b>NOTE:</b> During evaluation of the in expression the variable references {@link Variable#THIS} and
+			 * {@link Variable#VALUE} are available.
 			 *
 			 * @param expression must not be {@literal null}.
 			 * @return
@@ -5197,7 +5397,11 @@ public interface AggregationExpressions {
 			private final String propertyName;
 			private final AggregationExpression aggregationExpression;
 
-			public PropertyExpression(String propertyName, AggregationExpression aggregationExpression) {
+			protected PropertyExpression(String propertyName, AggregationExpression aggregationExpression) {
+
+				Assert.notNull(propertyName, "Property name must not be null!");
+				Assert.notNull(aggregationExpression, "AggregationExpression must not be null!");
+
 				this.propertyName = propertyName;
 				this.aggregationExpression = aggregationExpression;
 			}
@@ -5209,7 +5413,9 @@ public interface AggregationExpressions {
 			 * @return
 			 */
 			public static AsBuilder property(final String name) {
+
 				return new AsBuilder() {
+
 					@Override
 					public PropertyExpression definedAs(AggregationExpression expression) {
 						return new PropertyExpression(name, expression);
@@ -5217,11 +5423,17 @@ public interface AggregationExpressions {
 				};
 			}
 
+			/* (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+			 */
 			@Override
 			public DBObject toDbObject(AggregationOperationContext context) {
 				return new BasicDBObject(propertyName, aggregationExpression.toDbObject(context));
 			}
 
+			/**
+			 * @author Christoph Strobl
+			 */
 			interface AsBuilder {
 
 				/**
@@ -5235,6 +5447,7 @@ public interface AggregationExpressions {
 		}
 
 		public enum Variable implements Field {
+
 			THIS {
 				@Override
 				public String getName() {
@@ -5256,6 +5469,7 @@ public interface AggregationExpressions {
 					return getName();
 				}
 			},
+
 			VALUE {
 				@Override
 				public String getName() {
@@ -5285,7 +5499,7 @@ public interface AggregationExpressions {
 			 * @param property must not be {@literal null}.
 			 * @return
 			 */
-			public Field referingTo(final String property) {
+			public Field referringTo(final String property) {
 
 				return new Field() {
 					@Override
@@ -5314,6 +5528,8 @@ public interface AggregationExpressions {
 
 	/**
 	 * {@link AggregationExpression} for {@code $zip}.
+	 *
+	 * @author Christoph Strobl
 	 */
 	class Zip extends AbstractAggregationExpression {
 
@@ -5399,7 +5615,7 @@ public interface AggregationExpressions {
 
 			private final List<Object> sourceArrays;
 
-			public ZipBuilder(Object sourceArray) {
+			private ZipBuilder(Object sourceArray) {
 
 				this.sourceArrays = new ArrayList<Object>();
 				this.sourceArrays.add(sourceArray);
@@ -5408,7 +5624,7 @@ public interface AggregationExpressions {
 			/**
 			 * Creates new {@link Zip} that transposes an array of input arrays so that the first element of the output array
 			 * would be an array containing, the first element of the first input array, the first element of the second input
-			 * array, etc
+			 * array, etc.
 			 *
 			 * @param arrays arrays to zip the referenced one with. must not be {@literal null}.
 			 * @return
@@ -5432,6 +5648,8 @@ public interface AggregationExpressions {
 
 	/**
 	 * {@link AggregationExpression} for {@code $in}.
+	 *
+	 * @author Christoph Strobl
 	 */
 	class In extends AbstractAggregationExpression {
 
@@ -5444,10 +5662,18 @@ public interface AggregationExpressions {
 			return "$in";
 		}
 
+		/**
+		 * Start creating {@link In}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
 		public static InBuilder arrayOf(final String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
+
 			return new InBuilder() {
+
 				@Override
 				public In containsValue(Object value) {
 
@@ -5457,10 +5683,18 @@ public interface AggregationExpressions {
 			};
 		}
 
+		/**
+		 * Start creating {@link In}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
 		public static InBuilder arrayOf(final AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
+
 			return new InBuilder() {
+
 				@Override
 				public In containsValue(Object value) {
 
@@ -5470,10 +5704,19 @@ public interface AggregationExpressions {
 			};
 		}
 
+		/**
+		 * @author Christoph Strobl
+		 */
 		public interface InBuilder {
+
+			/**
+			 * Set the {@literal value} to check for existence in the array.
+			 *
+			 * @param value must not be {@literal value}.
+			 * @return
+			 */
 			In containsValue(Object value);
 		}
-
 	}
 
 	// ############
@@ -5944,7 +6187,9 @@ public interface AggregationExpressions {
 		public static FormatBuilder dateOf(final String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
+
 			return new FormatBuilder() {
+
 				@Override
 				public DateToString toString(String format) {
 
@@ -5963,12 +6208,13 @@ public interface AggregationExpressions {
 		public static FormatBuilder dateOf(final AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
+
 			return new FormatBuilder() {
+
 				@Override
 				public DateToString toString(String format) {
 
 					Assert.notNull(format, "Format must not be null!");
-
 					return new DateToString(argumentMap(expression, format));
 				}
 			};
@@ -6183,6 +6429,9 @@ public interface AggregationExpressions {
 			return new Sum(append(expression));
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
@@ -6262,6 +6511,9 @@ public interface AggregationExpressions {
 			return new Avg(append(expression));
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
@@ -6341,6 +6593,9 @@ public interface AggregationExpressions {
 			return new Max(append(expression));
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
@@ -6420,6 +6675,9 @@ public interface AggregationExpressions {
 			return new Min(append(expression));
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
@@ -6499,6 +6757,9 @@ public interface AggregationExpressions {
 			return new StdDevPop(append(expression));
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
@@ -6578,6 +6839,9 @@ public interface AggregationExpressions {
 			return new StdDevSamp(append(expression));
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
@@ -7332,15 +7596,21 @@ public interface AggregationExpressions {
 		 */
 		static AsBuilder itemsOf(final String fieldReference) {
 
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+
 			return new AsBuilder() {
 
 				@Override
 				public FunctionBuilder as(final String variableName) {
 
+					Assert.notNull(variableName, "VariableName must not be null!");
+
 					return new FunctionBuilder() {
 
 						@Override
 						public Map andApply(final AggregationExpression expression) {
+
+							Assert.notNull(expression, "AggregationExpression must not be null!");
 							return new Map(Fields.field(fieldReference), variableName, expression);
 						}
 					};
@@ -7358,15 +7628,21 @@ public interface AggregationExpressions {
 		 */
 		public static AsBuilder itemsOf(final AggregationExpression source) {
 
+			Assert.notNull(source, "AggregationExpression must not be null!");
+
 			return new AsBuilder() {
 
 				@Override
 				public FunctionBuilder as(final String variableName) {
 
+					Assert.notNull(variableName, "VariableName must not be null!");
+
 					return new FunctionBuilder() {
 
 						@Override
 						public Map andApply(final AggregationExpression expression) {
+
+							Assert.notNull(expression, "AggregationExpression must not be null!");
 							return new Map(source, variableName, expression);
 						}
 					};
@@ -7374,6 +7650,9 @@ public interface AggregationExpressions {
 			};
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(final AggregationOperationContext context) {
 			return toMap(ExposedFields.synthetic(Fields.fields(itemVariableName)), context);
@@ -7446,8 +7725,8 @@ public interface AggregationExpressions {
 		/**
 		 * Creates new {@link IfNull}.
 		 *
-		 * @param fieldReference the field to check for a {@literal null} value, field reference must not be
-		 *          {@literal null}.
+		 * @param fieldReference the field to check for a {@literal null} value, field reference must not be {@literal null}
+		 *          .
 		 * @return
 		 */
 		public static ThenBuilder ifNull(String fieldReference) {
@@ -8095,6 +8374,7 @@ public interface AggregationExpressions {
 			Assert.notNull(variables, "Variables must not be null!");
 
 			return new LetBuilder() {
+
 				@Override
 				public Let andApply(final AggregationExpression expression) {
 
@@ -8115,6 +8395,7 @@ public interface AggregationExpressions {
 			Assert.notNull(variables, "Variables must not be null!");
 
 			return new LetBuilder() {
+
 				@Override
 				public Let andApply(final AggregationExpression expression) {
 
@@ -8135,6 +8416,9 @@ public interface AggregationExpressions {
 			Let andApply(AggregationExpression expression);
 		}
 
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public DBObject toDbObject(final AggregationOperationContext context) {
 			return toLet(ExposedFields.synthetic(Fields.fields(getVariableNames())), context);
@@ -8235,7 +8519,6 @@ public interface AggregationExpressions {
 		}
 	}
 
-
 	/**
 	 * {@link AggregationExpression} for {@code $switch}.
 	 *
@@ -8252,12 +8535,22 @@ public interface AggregationExpressions {
 			return "$switch";
 		}
 
+		/**
+		 * Creates new {@link Switch}.
+		 *
+		 * @param conditions must not be {@literal null}.
+		 */
 		public static Switch switchCases(CaseOperator... conditions) {
 
 			Assert.notNull(conditions, "Conditions must not be null!");
 			return switchCases(Arrays.asList(conditions));
 		}
 
+		/**
+		 * Creates new {@link Switch}.
+		 *
+		 * @param conditions must not be {@literal null}.
+		 */
 		public static Switch switchCases(List<CaseOperator> conditions) {
 
 			Assert.notNull(conditions, "Conditions must not be null!");
@@ -8268,6 +8561,9 @@ public interface AggregationExpressions {
 			return new Switch(append("default", value));
 		}
 
+		/**
+		 * Encapsulates the aggregation framework case document inside a {@code $switch}-operation.
+		 */
 		public static class CaseOperator implements AggregationExpression {
 
 			private final AggregationExpression when;
@@ -8282,7 +8578,9 @@ public interface AggregationExpressions {
 			public static ThenBuilder when(final AggregationExpression condition) {
 
 				Assert.notNull(condition, "Condition must not be null!");
+
 				return new ThenBuilder() {
+
 					@Override
 					public CaseOperator then(Object value) {
 
@@ -8292,8 +8590,12 @@ public interface AggregationExpressions {
 				};
 			}
 
+			/* (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+			 */
 			@Override
 			public DBObject toDbObject(AggregationOperationContext context) {
+
 				DBObject dbo = new BasicDBObject("case", when.toDbObject(context));
 
 				if (then instanceof AggregationExpression) {
@@ -8307,7 +8609,17 @@ public interface AggregationExpressions {
 				return dbo;
 			}
 
+			/**
+			 * @author Christoph Strobl
+			 */
 			public interface ThenBuilder {
+
+				/**
+				 * Set the then {@literal value}.
+				 *
+				 * @param value must not be {@literal null}.
+				 * @return
+				 */
 				CaseOperator then(Object value);
 			}
 		}
