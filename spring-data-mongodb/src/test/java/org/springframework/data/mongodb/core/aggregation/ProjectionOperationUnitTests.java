@@ -1971,9 +1971,9 @@ public class ProjectionOperationUnitTests {
 	public void shouldRenderReduceWithComplexObjectCorrectly() {
 
 		PropertyExpression sum = PropertyExpression.property("sum").definedAs(
-				ArithmeticOperators.valueOf(Variable.VALUE.referingTo("sum").getName()).add(Variable.THIS.getName()));
+				ArithmeticOperators.valueOf(Variable.VALUE.referringTo("sum").getName()).add(Variable.THIS.getName()));
 		PropertyExpression product = PropertyExpression.property("product").definedAs(ArithmeticOperators
-				.valueOf(Variable.VALUE.referingTo("product").getName()).multiplyBy(Variable.THIS.getName()));
+				.valueOf(Variable.VALUE.referringTo("product").getName()).multiplyBy(Variable.THIS.getName()));
 
 		DBObject agg = project()
 				.and(ArrayOperators.arrayOf("probabilityArr").reduce(sum, product)
