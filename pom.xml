@@ -175,9 +175,18 @@
 
 		<profile>
 
+			<id>mongo34</id>
+			<properties>
+				<mongo>3.4.0</mongo>
+			</properties>
+
+		</profile>
+
+		<profile>
+
 			<id>mongo34-next</id>
 			<properties>
-				<mongo>3.4.0-SNAPSHOT</mongo>
+				<mongo>3.4.1-SNAPSHOT</mongo>
 			</properties>
 
 			<repositories>

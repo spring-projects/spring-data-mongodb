@@ -121,7 +121,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		subscriber.awaitAndAssertNextValueCount(1);
 		subscriber.assertValuesWith(document -> {
 
-			assertThat(document, hasKey("waitedMS"));
+			assertThat(document.get("ok", Double.class), is(closeTo(1D, 0D)));
 			assertThat(document, hasKey("cursor"));
 		});
 	}
