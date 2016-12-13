@@ -15,30 +15,23 @@
  */
 package org.springframework.data.mongodb.log4j;
 
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Map;
-
+import com.mongodb.*;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.MDC;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.spi.LoggingEvent;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
-import com.mongodb.WriteConcern;
+import java.net.UnknownHostException;
+import java.util.*;
 
 /**
  * Log4j appender writing log entries into a MongoDB instance.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
- * @auhtor Christoph Strobl
+ * @author Christoph Strobl
+ * @author Ricardo Espirito Santo
  */
 public class MongoLog4jAppender extends AppenderSkeleton {
 
@@ -56,6 +49,8 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 
 	protected String host = "localhost";
 	protected int port = 27017;
+	protected String username;
+	protected String password;
 	protected String database = "logs";
 	protected String collectionPattern = "%c";
 	protected PatternLayout collectionLayout = new PatternLayout(collectionPattern);
@@ -88,6 +83,22 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 		this.port = port;
 	}
 
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
 	public String getDatabase() {
 		return database;
 	}
@@ -113,12 +124,12 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 		this.applicationId = applicationId;
 	}
 
-	public void setWarnOrHigherWriteConcern(String wc) {
-		this.warnOrHigherWriteConcern = WriteConcern.valueOf(wc);
-	}
-
 	public String getWarnOrHigherWriteConcern() {
 		return warnOrHigherWriteConcern.toString();
+	}
+
+	public void setWarnOrHigherWriteConcern(String wc) {
+		this.warnOrHigherWriteConcern = WriteConcern.valueOf(wc);
 	}
 
 	public String getInfoOrLowerWriteConcern() {
@@ -130,17 +141,26 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 	}
 
 	protected void connectToMongo() throws UnknownHostException {
-		this.mongo = new MongoClient(host, port);
+		ServerAddress serverAddress = new ServerAddress(host, port);
+		connectToMongoHandlingCredentials(serverAddress);
 		this.db = mongo.getDB(database);
+	}
+
+	private void connectToMongoHandlingCredentials(ServerAddress serverAddress) {
+		if (null == password || null == username) {
+			this.mongo = new MongoClient(serverAddress);
+		} else {
+			MongoCredential mongoCredential = MongoCredential.createCredential(username, database, password.toCharArray());
+			List<MongoCredential> credentials = Collections.singletonList(mongoCredential);
+			this.mongo = new MongoClient(serverAddress, credentials);
+		}
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * @see org.apache.log4j.AppenderSkeleton#append(org.apache.log4j.spi.LoggingEvent)
 	 */
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	protected void append(final LoggingEvent event) {
+	@Override @SuppressWarnings({ "unchecked" }) protected void append(final LoggingEvent event) {
 		if (null == db) {
 			try {
 				connectToMongo();
