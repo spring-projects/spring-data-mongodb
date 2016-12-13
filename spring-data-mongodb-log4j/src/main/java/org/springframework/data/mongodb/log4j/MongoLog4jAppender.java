@@ -15,15 +15,27 @@
  */
 package org.springframework.data.mongodb.log4j;
 
-import com.mongodb.*;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.MDC;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.spi.LoggingEvent;
 
-import java.net.UnknownHostException;
-import java.util.*;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
+import com.mongodb.WriteConcern;
 
 /**
  * Log4j appender writing log entries into a MongoDB instance.
@@ -51,6 +63,7 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 	protected int port = 27017;
 	protected String username;
 	protected String password;
+	protected String authenticationDatabase;
 	protected String database = "logs";
 	protected String collectionPattern = "%c";
 	protected PatternLayout collectionLayout = new PatternLayout(collectionPattern);
@@ -60,8 +73,7 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 	protected Mongo mongo;
 	protected DB db;
 
-	public MongoLog4jAppender() {
-	}
+	public MongoLog4jAppender() {}
 
 	public MongoLog4jAppender(boolean isActive) {
 		super(isActive);
@@ -83,20 +95,51 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 		this.port = port;
 	}
 
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
+	/**
+	 * @return
+	 * @since 1.10
+	 */
 	public String getUsername() {
 		return username;
 	}
 
+	/**
+	 * @param username may be {@literal null} for unauthenticated access.
+	 * @since 1.10
+	 */
 	public void setUsername(String username) {
 		this.username = username;
+	}
+
+	/**
+	 * @return
+	 * @since 1.10
+	 */
+	public String getPassword() {
+		return password;
+	}
+
+	/**
+	 * @param password may be {@literal null} for unauthenticated access.
+	 * @since 1.10
+	 */
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getAuthenticationDatabase() {
+		return authenticationDatabase;
+	}
+
+	/**
+	 * @param authenticationDatabase may be {@literal null} to use {@link #getDatabase()} as authentication database.
+	 * @since 1.10
+	 */
+	public void setAuthenticationDatabase(String authenticationDatabase) {
+		this.authenticationDatabase = authenticationDatabase;
 	}
 
 	public String getDatabase() {
@@ -141,26 +184,33 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 	}
 
 	protected void connectToMongo() throws UnknownHostException {
-		ServerAddress serverAddress = new ServerAddress(host, port);
-		connectToMongoHandlingCredentials(serverAddress);
+
+		this.mongo = createMongoClient();
 		this.db = mongo.getDB(database);
 	}
 
-	private void connectToMongoHandlingCredentials(ServerAddress serverAddress) {
+	private MongoClient createMongoClient() throws UnknownHostException {
+
+		ServerAddress serverAddress = new ServerAddress(host, port);
+
 		if (null == password || null == username) {
-			this.mongo = new MongoClient(serverAddress);
-		} else {
-			MongoCredential mongoCredential = MongoCredential.createCredential(username, database, password.toCharArray());
-			List<MongoCredential> credentials = Collections.singletonList(mongoCredential);
-			this.mongo = new MongoClient(serverAddress, credentials);
+			return new MongoClient(serverAddress);
 		}
+
+		String authenticationDatabaseToUse = authenticationDatabase == null ? this.database : authenticationDatabase;
+		MongoCredential mongoCredential = MongoCredential.createCredential(username,
+				authenticationDatabaseToUse, password.toCharArray());
+		List<MongoCredential> credentials = Collections.singletonList(mongoCredential);
+		return new MongoClient(serverAddress, credentials);
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * @see org.apache.log4j.AppenderSkeleton#append(org.apache.log4j.spi.LoggingEvent)
 	 */
-	@Override @SuppressWarnings({ "unchecked" }) protected void append(final LoggingEvent event) {
+	@Override
+	@SuppressWarnings({ "unchecked" })
+	protected void append(final LoggingEvent event) {
 		if (null == db) {
 			try {
 				connectToMongo();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Calendar;
+import java.util.Collections;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -28,43 +29,69 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 
 /**
- * Integration tests for {@link MongoLog4jAppender}.
+ * Integration tests for {@link MongoLog4jAppender} using authentication.
  *
- * @author Jon Brisbin
- * @author Oliver Gierke
- * @author Christoph Strobl
+ * @author Mark Paluch
  */
-public class MongoLog4jAppenderIntegrationTests {
+public class MongoLog4jAppenderAuthenticationIntegrationTests {
+
+	private final static String username = "admin";
+	private final static String password = "test";
+	private final static String authenticationDatabase = "logs";
 
 	MongoClient mongo;
 	DB db;
 	String collection;
 	ServerAddress serverLocation;
+
 	Logger log;
 
 	@Before
 	public void setUp() throws Exception {
+
 		serverLocation = new ServerAddress("localhost", 27017);
 
 		mongo = new MongoClient(serverLocation);
 		db = mongo.getDB("logs");
 
+		BasicDBList roles = new BasicDBList();
+		roles.add("dbOwner");
+		db.command(new BasicDBObjectBuilder().add("createUser", username).add("pwd", password).add("roles", roles).get());
+		mongo.close();
+
+		mongo = new MongoClient(serverLocation, Collections
+				.singletonList(MongoCredential.createCredential(username, authenticationDatabase, password.toCharArray())));
+		db = mongo.getDB("logs");
+
 		Calendar now = Calendar.getInstance();
 		collection = String.valueOf(now.get(Calendar.YEAR)) + String.format("%1$02d", now.get(Calendar.MONTH) + 1);
+
+		LogManager.resetConfiguration();
+		PropertyConfigurator.configure(getClass().getResource("/log4j-with-authentication.properties"));
 
 		log = Logger.getLogger(MongoLog4jAppenderIntegrationTests.class.getName());
 	}
 
 	@After
 	public void tearDown() {
-		db.getCollection(collection).remove(new BasicDBObject());
+
+		if (db != null) {
+			db.getCollection(collection).remove(new BasicDBObject());
+			db.command(new BasicDBObject("dropUser", username));
+		}
+
+		LogManager.resetConfiguration();
+		PropertyConfigurator.configure(getClass().getResource("/log4j.properties"));
 	}
 
 	@Test
