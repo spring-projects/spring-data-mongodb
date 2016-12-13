@@ -97,10 +97,11 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link MappingMongoConverter}.
- * 
+ *
  * @author Oliver Gierke
  * @author Patrik Wasik
  * @author Christoph Strobl
+ * @author Barak Schoster
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoConverterUnitTests {
@@ -999,6 +1000,43 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(values.size(), is(2));
 		assertThat(values, hasItems("1", "2"));
+	}
+
+	/**
+	 * @see DATAMONGO-1554
+	 */
+	@Test(expected = MappingException.class)
+	public void rejectsMapWithKeyStartingWithDollarByDefault() {
+		converter.write(Collections.singletonMap("$foo", "foobar"), new BasicDBObject());
+	}
+	/**
+	 * @see DATAMONGO-1554
+	 */
+	@Test
+	public void escapesDollarPrefixInMapKeysIfReplacementConfigured() {
+
+		converter.setMapKeyDollarPrefixReplacement("~");
+
+		DBObject dbObject = new BasicDBObject();
+		converter.write(Collections.singletonMap("$foobar", "foobar"), dbObject);
+
+		assertThat((String) dbObject.get("~foobar"), is("foobar"));
+		assertThat(dbObject.containsField("$foobar"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-1554
+	 */
+	@Test
+	public void unescapesDollarPrefixInMapKeysIfReplacementConfigured() {
+
+		converter.setMapKeyDollarPrefixReplacement("~");
+
+		DBObject dbObject = new BasicDBObject("~foobar", "foobar");
+		Map<String, String> result = converter.read(Map.class, dbObject);
+
+		assertThat(result.get("$foobar"), is("foobar"));
+		assertThat(result.containsKey("foobar"), is(false));
 	}
 
 	/**

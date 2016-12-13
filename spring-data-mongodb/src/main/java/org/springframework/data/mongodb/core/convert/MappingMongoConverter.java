@@ -73,13 +73,14 @@ import com.mongodb.DBRef;
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
  * {@link DBObject}.
- * 
+ *
  * @author Oliver Gierke
  * @author Jon Brisbin
  * @author Patrik Wasik
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Jordi Llach
+ * @author Barak Schoster
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
 
@@ -95,12 +96,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected ApplicationContext applicationContext;
 	protected MongoTypeMapper typeMapper;
 	protected String mapKeyDotReplacement = null;
+	protected String mapKeyDollarPrefixReplacement = null;
+
 
 	private SpELContext spELContext;
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
-	 * 
+	 *
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 */
@@ -122,7 +125,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
-	 * 
+	 *
 	 * @deprecated use the constructor taking a {@link DbRefResolver} instead.
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
@@ -138,7 +141,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * converter and how to lookup type information from {@link DBObject}s when reading them. Uses a
 	 * {@link DefaultMongoTypeMapper} by default. Setting this to {@literal null} will reset the {@link TypeMapper} to the
 	 * default one.
-	 * 
+	 *
 	 * @param typeMapper the typeMapper to set
 	 */
 	public void setTypeMapper(MongoTypeMapper typeMapper) {
@@ -160,11 +163,23 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * any translation but rather reject a {@link Map} with keys containing dots causing the conversion for the entire
 	 * object to fail. If further customization of the translation is needed, have a look at
 	 * {@link #potentiallyEscapeMapKey(String)} as well as {@link #potentiallyUnescapeMapKey(String)}.
-	 * 
+	 *
 	 * @param mapKeyDotReplacement the mapKeyDotReplacement to set
 	 */
 	public void setMapKeyDotReplacement(String mapKeyDotReplacement) {
 		this.mapKeyDotReplacement = mapKeyDotReplacement;
+	}
+
+	/**
+	 * Configure the dollar character potentially used as prefix in a {@link Map} key shall be replaced with. By default we don't do
+	 * any translation but rather reject a {@link Map} with keys containing dollar prefix causing the conversion for the entire
+	 * object to fail. If further customization of the translation is needed, have a look at
+	 * {@link #potentiallyEscapeMapKey(String)} as well as {@link #potentiallyUnescapeMapKey(String)}.
+	 *
+	 * @param mapKeyDollarPrefixReplacement the mapKeyDollarPrefixReplacement to set
+	 */
+	public void setMapKeyDollarPrefixReplacement(String mapKeyDollarPrefixReplacement) {
+		this.mapKeyDollarPrefixReplacement = mapKeyDollarPrefixReplacement;
 	}
 
 	/*
@@ -315,7 +330,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return result;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#toDBRef(java.lang.Object, org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
 	 */
@@ -339,7 +354,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Root entry method into write conversion. Adds a type discriminator to the {@link DBObject}. Shouldn't be called for
 	 * nested conversions.
-	 * 
+	 *
 	 * @see org.springframework.data.mongodb.core.core.convert.MongoWriter#write(java.lang.Object, com.mongodb.DBObject)
 	 */
 	public void write(final Object obj, final DBObject dbo) {
@@ -363,7 +378,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Internal write conversion method which should be used for nested invocations.
-	 * 
+	 *
 	 * @param obj
 	 * @param dbo
 	 */
@@ -483,7 +498,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			DBRef dbRefObj = null;
 
 			/*
-			 * If we already have a LazyLoadingProxy, we use it's cached DBRef value instead of 
+			 * If we already have a LazyLoadingProxy, we use it's cached DBRef value instead of
 			 * unnecessarily initializing it only to convert it to a DBRef a few instructions later.
 			 */
 			if (obj instanceof LazyLoadingProxy) {
@@ -533,7 +548,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Returns given object as {@link Collection}. Will return the {@link Collection} as is if the source is a
 	 * {@link Collection} already, will convert an array into a {@link Collection} or simply create a single element
 	 * collection for everything else.
-	 * 
+	 *
 	 * @param source
 	 * @return
 	 */
@@ -548,7 +563,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Writes the given {@link Collection} using the given {@link MongoPersistentProperty} information.
-	 * 
+	 *
 	 * @param collection must not be {@literal null}.
 	 * @param property must not be {@literal null}.
 	 * @return
@@ -576,7 +591,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Writes the given {@link Map} using the given {@link MongoPersistentProperty} information.
-	 * 
+	 *
 	 * @param map must not {@literal null}.
 	 * @param property must not be {@literal null}.
 	 * @return
@@ -612,7 +627,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Populates the given {@link BasicDBList} with values from the given {@link Collection}.
-	 * 
+	 *
 	 * @param source the collection to create a {@link BasicDBList} for, must not be {@literal null}.
 	 * @param type the {@link TypeInformation} to consider or {@literal null} if unknown.
 	 * @param sink the {@link BasicDBList} to write to.
@@ -642,7 +657,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Writes the given {@link Map} to the given {@link DBObject} considering the given {@link TypeInformation}.
-	 * 
+	 *
 	 * @param obj must not be {@literal null}.
 	 * @param dbo must not be {@literal null}.
 	 * @param propertyType must not be {@literal null}.
@@ -681,7 +696,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Prepares the given {@link Map} key to be converted into a {@link String}. Will invoke potentially registered custom
 	 * conversions and escape dots from the result as they're not supported as {@link Map} key in MongoDB.
-	 * 
+	 *
 	 * @param key must not be {@literal null}.
 	 * @return
 	 */
@@ -694,32 +709,43 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Potentially replaces dots in the given map key with the configured map key replacement if configured or aborts
+	 * Potentially replaces dots and dollar prefix in the given map key with the configured map key replacement if configured or aborts
 	 * conversion if none is configured.
-	 * 
+	 *
 	 * @see #setMapKeyDotReplacement(String)
+	 * @see #setMapKeyDollarPrefixReplacement(String)
 	 * @param source
 	 * @return
 	 */
 	protected String potentiallyEscapeMapKey(String source) {
-
-		if (!source.contains(".")) {
-			return source;
+		String result = source;
+		if (result.contains(".")) {
+			if (mapKeyDotReplacement == null) {
+				throw new MappingException(String.format(
+						"Map key %s contains dots but no replacement was configured! Make "
+								+ "sure map keys don't contain dots in the first place or configure an appropriate replacement!",
+						source));
+			}
+			result = source.replaceAll("\\.", mapKeyDotReplacement);
 		}
 
-		if (mapKeyDotReplacement == null) {
-			throw new MappingException(String.format(
-					"Map key %s contains dots but no replacement was configured! Make "
-							+ "sure map keys don't contain dots in the first place or configure an appropriate replacement!",
-					source));
+		if(result.startsWith("$"))
+		{
+			if (mapKeyDollarPrefixReplacement == null) {
+				throw new MappingException(String.format(
+						"Map key %s contains dollar prefix but no replacement was configured! Make "
+								+ "sure map keys don't contain dollar prefix in the first place or configure an appropriate replacement!",
+						result));
+			}
+			StringBuilder sb = new StringBuilder();
+			result = sb.append(mapKeyDollarPrefixReplacement).append(result.substring(1,result.length())).toString();
 		}
-
-		return source.replaceAll("\\.", mapKeyDotReplacement);
+		return result;
 	}
 
 	/**
 	 * Returns a {@link String} representation of the given {@link Map} key
-	 * 
+	 *
 	 * @param key
 	 * @return
 	 */
@@ -736,12 +762,25 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Translates the map key replacements in the given key just read with a dot in case a map key replacement has been
 	 * configured.
-	 * 
+	 *
 	 * @param source
 	 * @return
 	 */
 	protected String potentiallyUnescapeMapKey(String source) {
-		return mapKeyDotReplacement == null ? source : source.replaceAll(mapKeyDotReplacement, "\\.");
+		String result = source;
+		if (mapKeyDotReplacement != null )
+		{
+			result = source.replaceAll(mapKeyDotReplacement, "\\.");
+		}
+		if(mapKeyDollarPrefixReplacement != null)
+		{
+			if(result.startsWith(mapKeyDollarPrefixReplacement))
+			{
+				StringBuilder sb = new StringBuilder();
+				result = sb.append("$").append(result.substring(mapKeyDollarPrefixReplacement.length(),result.length())).toString();
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -766,7 +805,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Writes the given simple value to the given {@link DBObject}. Will store enum names for enum values.
-	 * 
+	 *
 	 * @param value
 	 * @param dbObject must not be {@literal null}.
 	 * @param key must not be {@literal null}.
@@ -783,7 +822,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Checks whether we have a custom conversion registered for the given value into an arbitrary simple Mongo type.
 	 * Returns the converted value if so. If not, we perform special enum handling or simply return the value as is.
-	 * 
+	 *
 	 * @param value
 	 * @return
 	 */
@@ -805,7 +844,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Checks whether we have a custom conversion for the given simple object. Converts the given value if so, applies
 	 * {@link Enum} handling or returns the value as is.
-	 * 
+	 *
 	 * @param value
 	 * @param target must not be {@literal null}.
 	 * @return
@@ -878,7 +917,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Reads the given {@link BasicDBList} into a collection of the given {@link TypeInformation}.
-	 * 
+	 *
 	 * @param targetType must not be {@literal null}.
 	 * @param sourceValue must not be {@literal null}.
 	 * @param path must not be {@literal null}.
@@ -925,7 +964,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Reads the given {@link DBObject} into a {@link Map}. will recursively resolve nested {@link Map}s as well.
-	 * 
+	 *
 	 * @param type the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link DBObject}.
 	 * @param dbObject must not be {@literal null}
 	 * @param path must not be {@literal null}
@@ -1070,7 +1109,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Removes the type information from the entire conversion result.
-	 * 
+	 *
 	 * @param object
 	 * @param recursively whether to apply the removal recursively
 	 * @return
@@ -1131,7 +1170,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		/**
 		 * Creates a new {@link MongoDbPropertyValueProvider} for the given source, {@link SpELExpressionEvaluator} and
 		 * {@link ObjectPath}.
-		 * 
+		 *
 		 * @param source must not be {@literal null}.
 		 * @param evaluator must not be {@literal null}.
 		 * @param path can be {@literal null}.
@@ -1146,7 +1185,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			this.path = path;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
 		 */
@@ -1166,7 +1205,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Extension of {@link SpELExpressionParameterValueProvider} to recursively trigger value conversion on the raw
 	 * resolved SpEL value.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	private class ConverterAwareSpELExpressionParameterValueProvider
@@ -1176,7 +1215,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		/**
 		 * Creates a new {@link ConverterAwareSpELExpressionParameterValueProvider}.
-		 * 
+		 *
 		 * @param evaluator must not be {@literal null}.
 		 * @param conversionService must not be {@literal null}.
 		 * @param delegate must not be {@literal null}.
@@ -1189,7 +1228,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			this.path = path;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mapping.model.SpELExpressionParameterValueProvider#potentiallyConvertSpelValue(java.lang.Object, org.springframework.data.mapping.PreferredConstructor.Parameter)
 		 */
@@ -1293,7 +1332,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Performs the fetch operation for the given {@link DBRef}.
-	 * 
+	 *
 	 * @param ref
 	 * @return
 	 */
@@ -1314,7 +1353,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Returns whether the given {@link Iterable} contains {@link DBRef} instances all pointing to the same collection.
-	 * 
+	 *
 	 * @param source must not be {@literal null}.
 	 * @return
 	 */
@@ -1343,7 +1382,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Marker class used to indicate we have a non root document object here that might be used within an update - so we
 	 * need to preserve type hints for potential nested elements but need to remove it on top level.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.8
 	 */
