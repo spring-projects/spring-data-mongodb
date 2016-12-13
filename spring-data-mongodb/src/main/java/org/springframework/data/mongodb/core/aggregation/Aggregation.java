@@ -318,11 +318,12 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link GraphLookupOperation.FromBuilder} to construct a {@link GraphLookupOperation} given
-	 * {@literal fromCollection}.
+	 * Creates a new {@link GraphLookupOperation.GraphLookupOperationFromBuilder} to construct a
+	 * {@link GraphLookupOperation} given {@literal fromCollection}.
 	 *
 	 * @param fromCollection must not be {@literal null} or empty.
 	 * @return
+	 * @since 1.10
 	 */
 	public static StartWithBuilder graphLookup(String fromCollection) {
 		return GraphLookupOperation.builder().from(fromCollection);
