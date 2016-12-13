@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import org.junit.Test;
+import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Literal;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -29,8 +30,9 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link GraphLookupOperation}.
- * 
+ *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class GraphLookupOperationUnitTests {
 
@@ -99,6 +101,40 @@ public class GraphLookupOperationUnitTests {
 		assertThat(dbObject,
 				is(JSON.parse("{ $graphLookup : { from: \"employees\", startWith: [\"$reportsTo\", \"$boss\"], "
 						+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1551
+	 */
+	@Test
+	public void shouldRenderMixedArrayOfStartsWithCorrectly() {
+
+		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
+				.from("employees") //
+				.startWith("reportsTo", Literal.asLiteral("$boss")) //
+				.connectFrom("reportsTo") //
+				.connectTo("name") //
+				.as("reportingHierarchy");
+
+		DBObject dbObject = graphLookupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(dbObject,
+				is(JSON.parse("{ $graphLookup : { from: \"employees\", startWith: [\"$reportsTo\", { $literal: \"$boss\"}], "
+						+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
+	}
+
+	/**
+	 * @see DATAMONGO-1551
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldRejectUnknownTypeInMixedArrayOfStartsWithCorrectly() {
+
+		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
+				.from("employees") //
+				.startWith("reportsTo", new Person()) //
+				.connectFrom("reportsTo") //
+				.connectTo("name") //
+				.as("reportingHierarchy");
 	}
 
 	/**

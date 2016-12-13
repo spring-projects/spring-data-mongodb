@@ -17,31 +17,36 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Encapsulates the aggregation framework {@code $graphLookup}-operation.
- * <p>
+ * Encapsulates the aggregation framework {@code $graphLookup}-operation. <br />
  * Performs a recursive search on a collection, with options for restricting the search by recursion depth and query
- * filter.
- * <p>
+ * filter. <br />
  * We recommend to use the static factory method {@link Aggregation#graphLookup(String)} instead of creating instances
  * of this class directly.
  *
- * @see http://docs.mongodb.org/manual/reference/aggregation/graphLookup/
+ * @see <a href=
+ *      "http://docs.mongodb.org/manual/reference/aggregation/graphLookup/">http://docs.mongodb.org/manual/reference/aggregation/graphLookup/</a>
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.10
  */
 public class GraphLookupOperation implements InheritsFieldsAggregationOperation {
+
+	private static final Set<Class<?>> ALLOWED_START_TYPES = new HashSet<Class<?>>(
+			Arrays.<Class<?>> asList(AggregationExpression.class, String.class, Field.class, DBObject.class));
 
 	private final String from;
 	private final List<Object> startWith;
@@ -67,7 +72,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 	/**
 	 * Creates a new {@link FromBuilder} to build {@link GraphLookupOperation}.
-	 * 
+	 *
 	 * @return a new {@link FromBuilder}.
 	 */
 	public static FromBuilder builder() {
@@ -84,24 +89,20 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 		graphLookup.put("from", from);
 
-		BasicDBList list = new BasicDBList();
+		List<Object> mappedStartWith = new ArrayList<Object>(startWith.size());
 
 		for (Object startWithElement : startWith) {
 
 			if (startWithElement instanceof AggregationExpression) {
-				list.add(((AggregationExpression) startWithElement).toDbObject(context));
-			}
-
-			if (startWithElement instanceof Field) {
-				list.add(context.getReference((Field) startWithElement).toString());
+				mappedStartWith.add(((AggregationExpression) startWithElement).toDbObject(context));
+			} else if (startWithElement instanceof Field) {
+				mappedStartWith.add(context.getReference((Field) startWithElement).toString());
+			} else {
+				mappedStartWith.add(startWithElement);
 			}
 		}
 
-		if (list.size() == 1) {
-			graphLookup.put("startWith", list.get(0));
-		} else {
-			graphLookup.put("startWith", list);
-		}
+		graphLookup.put("startWith", mappedStartWith.size() == 1 ? mappedStartWith.iterator().next() : mappedStartWith);
 
 		graphLookup.put("connectFromField", connectFrom.getName());
 		graphLookup.put("connectToField", connectTo.getName());
@@ -147,6 +148,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 	/**
 	 * @author Mark Paluch
+	 * @author Christoph Strobl
 	 */
 	public interface StartWithBuilder {
 
@@ -165,6 +167,16 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * @return
 		 */
 		ConnectFromBuilder startWith(AggregationExpression... expressions);
+
+		/**
+		 * Set the startWith as either {@literal fieldReferences}, {@link Fields}, {@link DBObject} or
+		 * {@link AggregationExpression} to apply the {@code $graphLookup} to.
+		 *
+		 * @param expressions must not be {@literal null}.
+		 * @return
+		 * @throws IllegalArgumentException
+		 */
+		ConnectFromBuilder startWith(Object... expressions);
 	}
 
 	/**
@@ -198,7 +210,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 	/**
 	 * Builder to build the initial {@link GraphLookupOperationBuilder} that configures the initial mandatory set of
 	 * {@link GraphLookupOperation} properties.
-	 * 
+	 *
 	 * @author Mark Paluch
 	 */
 	static final class GraphLookupOperationFromBuilder
@@ -217,7 +229,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			Assert.hasText(collectionName, "CollectionName must not be null or empty!");
 
 			this.from = collectionName;
-
 			return this;
 		}
 
@@ -237,7 +248,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			}
 
 			this.startWith = fields;
-
 			return this;
 		}
 
@@ -251,8 +261,48 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			Assert.noNullElements(expressions, "AggregationExpressions must not contain null elements!");
 
 			this.startWith = Arrays.asList(expressions);
-
 			return this;
+		}
+
+		@Override
+		public ConnectFromBuilder startWith(Object... expressions) {
+
+			Assert.notNull(expressions, "Expressions must not be null!");
+			Assert.noNullElements(expressions, "Expressions must not contain null elements!");
+
+			this.startWith = verifyAndPotentiallyTransformStartsWithTypes(expressions);
+			return this;
+		}
+
+		private List<Object> verifyAndPotentiallyTransformStartsWithTypes(Object... expressions) {
+
+			List<Object> expressionsToUse = new ArrayList<Object>(expressions.length);
+
+			for (Object expression : expressions) {
+
+				assertStartWithType(expression);
+
+				if (expression instanceof String) {
+					expressionsToUse.add(Fields.field((String) expression));
+				} else {
+					expressionsToUse.add(expression);
+				}
+
+			}
+			return expressionsToUse;
+		}
+
+		private void assertStartWithType(Object expression) {
+
+			for (Class<?> type : ALLOWED_START_TYPES) {
+
+				if (ClassUtils.isAssignable(type, expression.getClass())) {
+					return;
+				}
+			}
+
+			throw new IllegalArgumentException(
+					String.format("Expression must be any of %s but was %s", ALLOWED_START_TYPES, expression.getClass()));
 		}
 
 		/* (non-Javadoc)
@@ -264,7 +314,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			Assert.hasText(fieldName, "ConnectFrom must not be null or empty!");
 
 			this.connectFrom = fieldName;
-
 			return this;
 		}
 
@@ -303,8 +352,8 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		}
 
 		/**
-		 * Limit the number of recursions.
-		 * 
+		 * Optionally limit the number of recursions.
+		 *
 		 * @param numberOfRecursions must be greater or equal to zero.
 		 * @return
 		 */
@@ -313,13 +362,12 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			Assert.isTrue(numberOfRecursions >= 0, "Max depth must be >= 0!");
 
 			this.maxDepth = numberOfRecursions;
-
 			return this;
 		}
 
 		/**
-		 * Add a depth field {@literal fieldName} to each traversed document in the search path.
-		 * 
+		 * Optionally add a depth field {@literal fieldName} to each traversed document in the search path.
+		 *
 		 * @param fieldName must not be {@literal null} or empty.
 		 * @return
 		 */
@@ -328,13 +376,12 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			Assert.hasText(fieldName, "Depth field name must not be null or empty!");
 
 			this.depthField = Fields.field(fieldName);
-
 			return this;
 		}
 
 		/**
-		 * Add a query specifying conditions to the recursive search.
-		 * 
+		 * Optionally add a query specifying conditions to the recursive search.
+		 *
 		 * @param criteriaDefinition must not be {@literal null}.
 		 * @return
 		 */
@@ -343,14 +390,13 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null!");
 
 			this.restrictSearchWithMatch = criteriaDefinition;
-
 			return this;
 		}
 
 		/**
 		 * Set the name of the array field added to each output document and return the final {@link GraphLookupOperation}.
 		 * Contains the documents traversed in the {@literal $graphLookup} stage to reach the document.
-		 * 
+		 *
 		 * @param fieldName must not be {@literal null} or empty.
 		 * @return the final {@link GraphLookupOperation}.
 		 */
