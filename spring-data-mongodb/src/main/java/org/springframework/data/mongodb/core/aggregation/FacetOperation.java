@@ -27,22 +27,20 @@ import org.springframework.util.Assert;
 import org.bson.Document;
 
 /**
- * Encapsulates the aggregation framework {@code $facet}-operation.
- * <p>
+ * Encapsulates the aggregation framework {@code $facet}-operation. <br />
  * Facet of {@link AggregationOperation}s to be used in an {@link Aggregation}. Processes multiple
  * {@link AggregationOperation} pipelines within a single stage on the same set of input documents. Each sub-pipeline
  * has its own field in the output document where its results are stored as an array of documents.
  * {@link FacetOperation} enables various aggregations on the same set of input documents, without needing to retrieve
- * the input documents multiple times.
- * <p>
+ * the input documents multiple times. <br />
  * As of MongoDB 3.4, {@link FacetOperation} cannot be used with nested pipelines containing {@link GeoNearOperation},
- * {@link OutOperation} and {@link FacetOperation}.
- * <p>
+ * {@link OutOperation} and {@link FacetOperation}. <br />
  * We recommend to use the static factory method {@link Aggregation#facet()} instead of creating instances of this class
  * directly.
  *
  * @see http://docs.mongodb.org/manual/reference/aggregation/facet/
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.10
  */
 public class FacetOperation implements FieldsExposingAggregationOperation {
@@ -66,11 +64,10 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Creates a new {@link FacetOperationBuilder} to append a new facet using {@literal operations}.
-	 * <p>
+	 * Creates a new {@link FacetOperationBuilder} to append a new facet using {@literal operations}. <br />
 	 * {@link FacetOperationBuilder} takes a pipeline of {@link AggregationOperation} to categorize documents into a
 	 * single facet.
-	 * 
+	 *
 	 * @param operations must not be {@literal null} or empty.
 	 * @return
 	 */
@@ -117,7 +114,7 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Creates a new {@link FacetOperation} that contains the configured pipeline of {@link AggregationOperation}
 		 * exposed as {@literal fieldName} in the resulting facet document.
-		 * 
+		 *
 		 * @param fieldName must not be {@literal null} or empty.
 		 * @return
 		 */
@@ -131,7 +128,7 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Encapsulates multiple {@link Facet}s
-	 * 
+	 *
 	 * @author Mark Paluch
 	 */
 	private static class Facets {
@@ -142,7 +139,7 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Creates a new {@link Facets} given {@link List} of {@link Facet}.
-		 * 
+		 *
 		 * @param facets
 		 */
 		private Facets(List<Facet> facets) {
@@ -152,7 +149,7 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * @return the {@link ExposedFields} derived from {@link Output}.
 		 */
-		protected ExposedFields asExposedFields() {
+		ExposedFields asExposedFields() {
 
 			ExposedFields fields = ExposedFields.from();
 
@@ -176,12 +173,12 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Adds a facet to this {@link Facets}.
-		 * 
+		 *
 		 * @param fieldName must not be {@literal null}.
 		 * @param operations must not be {@literal null}.
 		 * @return the new {@link Facets}.
 		 */
-		public Facets and(String fieldName, List<AggregationOperation> operations) {
+		Facets and(String fieldName, List<AggregationOperation> operations) {
 
 			Assert.hasText(fieldName, "FieldName must not be null or empty!");
 			Assert.notNull(operations, "AggregationOperations must not be null!");
@@ -196,7 +193,7 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * A single facet with a {@link ExposedField} and its {@link AggregationOperation} pipeline.
-	 * 
+	 *
 	 * @author Mark Paluch
 	 */
 	private static class Facet {
@@ -206,11 +203,11 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Creates a new {@link Facet} given {@link ExposedField} and {@link AggregationOperation} pipeline.
-		 * 
+		 *
 		 * @param exposedField must not be {@literal null}.
 		 * @param operations must not be {@literal null}.
 		 */
-		protected Facet(ExposedField exposedField, List<AggregationOperation> operations) {
+		Facet(ExposedField exposedField, List<AggregationOperation> operations) {
 
 			Assert.notNull(exposedField, "ExposedField must not be null!");
 			Assert.notNull(operations, "AggregationOperations must not be null!");
@@ -219,7 +216,7 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 			this.operations = operations;
 		}
 
-		protected ExposedField getExposedField() {
+		ExposedField getExposedField() {
 			return exposedField;
 		}
 

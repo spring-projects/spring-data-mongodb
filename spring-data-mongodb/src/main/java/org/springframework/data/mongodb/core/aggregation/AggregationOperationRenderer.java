@@ -39,7 +39,7 @@ class AggregationOperationRenderer {
 	/**
 	 * Render a {@link List} of {@link AggregationOperation} given {@link AggregationOperationContext} into their
 	 * {@link Document} representation.
-	 * 
+	 *
 	 * @param operations must not be {@literal null}.
 	 * @param context must not be {@literal null}.
 	 * @return the {@link List} of {@link Document}.

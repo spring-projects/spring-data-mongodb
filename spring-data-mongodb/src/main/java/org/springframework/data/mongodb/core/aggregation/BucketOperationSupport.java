@@ -30,14 +30,12 @@ import org.springframework.util.Assert;
 import org.bson.Document;
 
 /**
- * Base class for bucket operations that support output expressions the aggregation framework.
- * <p>
- * Bucket stages collect documents into buckets and can contribute output fields.
- * <p>
+ * Base class for bucket operations that support output expressions the aggregation framework. <br />
+ * Bucket stages collect documents into buckets and can contribute output fields. <br />
  * Implementing classes are required to provide an {@link OutputBuilder}.
  *
- * @see http://docs.mongodb.org/manual/reference/aggregation/bucket/
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.10
  */
 public abstract class BucketOperationSupport<T extends BucketOperationSupport<T, B>, B extends OutputBuilder<B, T>>
@@ -49,7 +47,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 	/**
 	 * Creates a new {@link BucketOperationSupport} given a {@link Field group-by field}.
-	 * 
+	 *
 	 * @param groupByField must not be {@literal null}.
 	 */
 	protected BucketOperationSupport(Field groupByField) {
@@ -59,7 +57,6 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		this.groupByField = groupByField;
 		this.groupByExpression = null;
 		this.outputs = Outputs.EMPTY;
-
 	}
 
 	/**
@@ -78,7 +75,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 	/**
 	 * Creates a copy of {@link BucketOperationSupport}.
-	 * 
+	 *
 	 * @param operationSupport must not be {@literal null}.
 	 */
 	protected BucketOperationSupport(BucketOperationSupport<?, ?> operationSupport) {
@@ -87,7 +84,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 	/**
 	 * Creates a copy of {@link BucketOperationSupport} and applies the new {@link Outputs}.
-	 * 
+	 *
 	 * @param operationSupport must not be {@literal null}.
 	 * @param outputs must not be {@literal null}.
 	 */
@@ -104,7 +101,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	/**
 	 * Creates a new {@link ExpressionBucketOperationBuilderSupport} given a SpEL {@literal expression} and optional
 	 * {@literal params} to add an output field to the resulting bucket documents.
-	 * 
+	 *
 	 * @param expression the SpEL expression, must not be {@literal null} or empty.
 	 * @param params must not be {@literal null}
 	 * @return
@@ -185,7 +182,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 	/**
 	 * Builder for SpEL expression-based {@link Output}.
-	 * 
+	 *
 	 * @author Mark Paluch
 	 */
 	public abstract static class ExpressionBucketOperationBuilderSupport<B extends OutputBuilder<B, T>, T extends BucketOperationSupport<T, B>>
@@ -231,11 +228,9 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		}
 
 		/**
-		 * Generates a builder for a {@code $sum}-expression.
-		 * <p>
+		 * Generates a builder for a {@code $sum}-expression. <br />
 		 * Count expressions are emulated via {@code $sum: 1}.
-		 * <p>
-		 * 
+		 *
 		 * @return
 		 */
 		public B count() {
@@ -244,7 +239,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		/**
 		 * Generates a builder for a {@code $sum}-expression for the current value.
-		 * 
+		 *
 		 * @return
 		 */
 		public B sum() {
@@ -258,12 +253,12 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 * @return
 		 */
 		public B sum(Number value) {
-			return apply(new OperationOutput(Accumulators.SUM.toString(), Collections.singleton(value)));
+			return apply(new OperationOutput(Accumulators.SUM.getMongoOperator(), Collections.singleton(value)));
 		}
 
 		/**
 		 * Generates a builder for an {@code $last}-expression for the current value..
-		 * 
+		 *
 		 * @return
 		 */
 		public B last() {
@@ -272,7 +267,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		/**
 		 * Generates a builder for a {@code $first}-expression the current value.
-		 * 
+		 *
 		 * @return
 		 */
 		public B first() {
@@ -281,7 +276,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		/**
 		 * Generates a builder for an {@code $avg}-expression for the current value.
-		 * 
+		 *
 		 * @param reference
 		 * @return
 		 */
@@ -291,7 +286,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		/**
 		 * Generates a builder for an {@code $min}-expression for the current value.
-		 * 
+		 *
 		 * @return
 		 */
 		public B min() {
@@ -300,7 +295,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		/**
 		 * Generates a builder for an {@code $max}-expression for the current value.
-		 * 
+		 *
 		 * @return
 		 */
 		public B max() {
@@ -345,14 +340,14 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		/**
 		 * Apply an {@link OperationOutput} to this output.
-		 * 
+		 *
 		 * @param operationOutput must not be {@literal null}.
 		 * @return
 		 */
 		protected abstract B apply(OperationOutput operationOutput);
 
 		private B apply(Accumulators operation) {
-			return this.apply(operation.toString());
+			return this.apply(operation.getMongoOperator());
 		}
 
 		/**
@@ -387,18 +382,14 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 			this.mongoOperator = mongoOperator;
 		}
 
-		/* (non-Javadoc)
-		 * @see java.lang.Enum#toString()
-		 */
-		@Override
-		public String toString() {
+		public String getMongoOperator() {
 			return mongoOperator;
 		}
 	}
 
 	/**
 	 * Encapsulates {@link Output}s.
-	 * 
+	 *
 	 * @author Mark Paluch
 	 */
 	protected static class Outputs implements AggregationExpression {
@@ -416,7 +407,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		/**
 		 * Creates new {@link Outputs} containing all given {@link Output}s.
-		 * 
+		 *
 		 * @param current
 		 * @param output
 		 */
@@ -448,7 +439,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		/**
 		 * Create a new {@link Outputs} that contains the new {@link Output}.
-		 * 
+		 *
 		 * @param output must not be {@literal null}.
 		 * @return the new {@link Outputs} that contains the new {@link Output}
 		 */
@@ -483,11 +474,10 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	}
 
 	/**
-	 * Encapsulates an output field in a bucket aggregation stage.
-	 * <p>
+	 * Encapsulates an output field in a bucket aggregation stage. <br />
 	 * Output fields can be either top-level fields that define a valid field name or nested output fields using
 	 * operators.
-	 * 
+	 *
 	 * @author Mark Paluch
 	 */
 	protected abstract static class Output implements AggregationExpression {
@@ -513,17 +503,10 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		protected ExposedField getExposedField() {
 			return field;
 		}
-
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
-		@Override
-		public abstract Document toDocument(AggregationOperationContext context);
 	}
 
 	/**
-	 * Output field that uses a Mongo operation (expression object) to generate an output field value.
-	 * <p>
+	 * Output field that uses a Mongo operation (expression object) to generate an output field value. <br />
 	 * {@link OperationOutput} is used either with a regular field name or an operation keyword (e.g.
 	 * {@literal $sum, $count}).
 	 *
@@ -623,7 +606,6 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 					// We have to make sure that we use the arguments from the "previous" OperationOutput that we replace
 					// with this new instance.
-
 					return OperationOutput.this.getOperationArguments(context);
 				}
 			};
@@ -633,7 +615,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	/**
 	 * A {@link Output} based on a SpEL expression.
 	 */
-	static class SpelExpressionOutput extends Output {
+	private static class SpelExpressionOutput extends Output {
 
 		private static final SpelExpressionTransformer TRANSFORMER = new SpelExpressionTransformer();
 
@@ -662,11 +644,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
-			return (Document) toMongoExpression(context, expression, params);
-		}
-
-		protected static Object toMongoExpression(AggregationOperationContext context, String expression, Object[] params) {
-			return TRANSFORMER.transform(expression, context, params);
+			return (Document) TRANSFORMER.transform(expression, context, params);
 		}
 	}
 

@@ -22,18 +22,18 @@ import org.springframework.util.Assert;
 import org.bson.Document;
 
 /**
- * Encapsulates the aggregation framework {@code $bucketAuto}-operation.
- * <p>
+ * Encapsulates the aggregation framework {@code $bucketAuto}-operation. <br />
  * Bucket stage is typically used with {@link Aggregation} and {@code $facet}. Categorizes incoming documents into a
  * specific number of groups, called buckets, based on a specified expression. Bucket boundaries are automatically
- * determined in an attempt to evenly distribute the documents into the specified number of buckets.
- * <p>
- * We recommend to use the static factory method {@link Aggregation#bucketAuto(String, int)} instead of creating instances of
- * this class directly.
+ * determined in an attempt to evenly distribute the documents into the specified number of buckets. <br />
+ * We recommend to use the static factory method {@link Aggregation#bucketAuto(String, int)} instead of creating
+ * instances of this class directly.
  *
- * @see http://docs.mongodb.org/manual/reference/aggregation/bucketAuto/
+ * @see <a href=
+ *      "http://docs.mongodb.org/manual/reference/aggregation/bucketAuto/">http://docs.mongodb.org/manual/reference/aggregation/bucketAuto/</a>
  * @see BucketOperationSupport
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.10
  */
 public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperation, BucketAutoOperationOutputBuilder>
@@ -122,8 +122,10 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	}
 
 	/**
-	 * Configures {@literal granularity} that specifies the preferred number series to use to ensure that the calculated
-	 * boundary edges end on preferred round numbers or their powers of 10 and return a new {@link BucketAutoOperation}.
+	 * Configures {@link Granularity granularity} that specifies the preferred number series to use to ensure that the
+	 * calculated boundary edges end on preferred round numbers or their powers of 10 and return a new
+	 * {@link BucketAutoOperation}. <br />
+	 * Use either predefined {@link Granularities} or provide a own one.
 	 *
 	 * @param granularity must not be {@literal null}.
 	 * @return
@@ -132,7 +134,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 
 		Assert.notNull(granularity, "Granularity must not be null!");
 
-		return new BucketAutoOperation(this, buckets, granularity.toMongoGranularity());
+		return new BucketAutoOperation(this, buckets, granularity.getMongoRepresentation());
 	}
 
 	/* (non-Javadoc)
@@ -195,7 +197,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	/**
 	 * {@link ExpressionBucketOperationBuilderSupport} implementation for {@link BucketAutoOperation} using SpEL
 	 * expression based {@link Output}.
-	 * 
+	 *
 	 * @author Mark Paluch
 	 */
 	public static class ExpressionBucketAutoOperationBuilder
@@ -226,19 +228,20 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	/**
 	 * @author Mark Paluch
 	 */
-	public static interface Granularity {
+	public interface Granularity {
 
 		/**
-		 * @return a String that represents a MongoDB granularity to be used with {@link BucketAutoOperation}.
+		 * @return a String that represents a MongoDB granularity to be used with {@link BucketAutoOperation}. Never
+		 *         {@literal null}.
 		 */
-		String toMongoGranularity();
+		String getMongoRepresentation();
 	}
 
 	/**
 	 * Supported MongoDB granularities.
 	 *
-	 * @see https://en.wikipedia.org/wiki/Preferred_number
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/bucketAuto/#granularity
+	 * @see <a
+	 *      href="https://docs.mongodb.com/manual/reference/operator/aggregation/bucketAuto/#granularity>https://docs.mongodb.com/manual/reference/operator/aggregation/bucketAuto/#granularity</a>
 	 * @author Mark Paluch
 	 */
 	public enum Granularities implements Granularity {
@@ -251,7 +254,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 
 		POWERSOF2;
 
-		final String granularity;
+		private final String granularity;
 
 		Granularities() {
 			this.granularity = name();
@@ -265,7 +268,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 		 * @see org.springframework.data.mongodb.core.aggregation.GranularitytoMongoGranularity()
 		 */
 		@Override
-		public String toMongoGranularity() {
+		public String getMongoRepresentation() {
 			return granularity;
 		}
 	}

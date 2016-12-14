@@ -422,6 +422,7 @@ public class Aggregation {
 	 *
 	 * @param groupByField must not be {@literal null} or empty.
 	 * @return
+	 * @since 1.10
 	 */
 	public static BucketOperation bucket(String groupByField) {
 		return new BucketOperation(field(groupByField));
@@ -432,6 +433,7 @@ public class Aggregation {
 	 *
 	 * @param groupByExpression must not be {@literal null}.
 	 * @return
+	 * @since 1.10
 	 */
 	public static BucketOperation bucket(AggregationExpression groupByExpression) {
 		return new BucketOperation(groupByExpression);
@@ -443,6 +445,7 @@ public class Aggregation {
 	 * @param groupByField must not be {@literal null} or empty.
 	 * @param buckets number of buckets, must be a positive integer.
 	 * @return
+	 * @since 1.10
 	 */
 	public static BucketAutoOperation bucketAuto(String groupByField, int buckets) {
 		return new BucketAutoOperation(field(groupByField), buckets);
@@ -454,6 +457,7 @@ public class Aggregation {
 	 * @param groupByExpression must not be {@literal null}.
 	 * @param buckets number of buckets, must be a positive integer.
 	 * @return
+	 * @since 1.10
 	 */
 	public static BucketAutoOperation bucketAuto(AggregationExpression groupByExpression, int buckets) {
 		return new BucketAutoOperation(groupByExpression, buckets);
@@ -463,6 +467,7 @@ public class Aggregation {
 	 * Creates a new {@link FacetOperation}.
 	 *
 	 * @return
+	 * @since 1.10
 	 */
 	public static FacetOperation facet() {
 		return FacetOperation.EMPTY;
@@ -473,6 +478,7 @@ public class Aggregation {
 	 *
 	 * @param aggregationOperations the sub-pipeline, must not be {@literal null}.
 	 * @return
+	 * @since 1.10
 	 */
 	public static FacetOperationBuilder facet(AggregationOperation... aggregationOperations) {
 		return facet().and(aggregationOperations);

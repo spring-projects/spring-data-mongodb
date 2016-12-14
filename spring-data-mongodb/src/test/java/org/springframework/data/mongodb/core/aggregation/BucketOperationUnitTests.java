@@ -27,7 +27,7 @@ import org.bson.Document;
 
 /**
  * Unit tests for {@link BucketOperation}.
- * 
+ *
  * @author Mark Paluch
  */
 public class BucketOperationUnitTests {

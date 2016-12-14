@@ -26,15 +26,15 @@ import org.springframework.util.Assert;
 import org.bson.Document;
 
 /**
- * Encapsulates the aggregation framework {@code $bucket}-operation.
- * <p>
+ * Encapsulates the aggregation framework {@code $bucket}-operation. <br />
+ *
  * Bucket stage is typically used with {@link Aggregation} and {@code $facet}. Categorizes incoming documents into
- * groups, called buckets, based on a specified expression and bucket boundaries.
- * <p>
+ * groups, called buckets, based on a specified expression and bucket boundaries. <br />
+ *
  * We recommend to use the static factory method {@link Aggregation#bucket(String)} instead of creating instances of
  * this class directly.
  *
- * @see http://docs.mongodb.org/manual/reference/aggregation/bucket/
+ * @see <a href="http://docs.mongodb.org/manual/reference/aggregation/bucket/">http://docs.mongodb.org/manual/reference/aggregation/bucket/</a>
  * @see BucketOperationSupport
  * @author Mark Paluch
  * @since 1.10
@@ -108,7 +108,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 
 	/**
 	 * Configures a default bucket {@literal literal} and return a new {@link BucketOperation}.
-	 * 
+	 *
 	 * @param literal must not be {@literal null}.
 	 * @return
 	 */
@@ -121,13 +121,14 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	/**
 	 * Configures {@literal boundaries} and return a new {@link BucketOperation}. Existing {@literal boundaries} are
 	 * preserved and the new {@literal boundaries} are appended.
-	 * 
+	 *
 	 * @param boundaries must not be {@literal null}.
 	 * @return
 	 */
 	public BucketOperation withBoundaries(Object... boundaries) {
 
 		Assert.notNull(boundaries, "Boundaries must not be null!");
+		Assert.noNullElements(boundaries, "Boundaries must not contain null values!");
 
 		List<Object> newBoundaries = new ArrayList<Object>(this.boundaries.size() + boundaries.length);
 		newBoundaries.addAll(this.boundaries);
@@ -196,7 +197,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	/**
 	 * {@link ExpressionBucketOperationBuilderSupport} implementation for {@link BucketOperation} using SpEL expression
 	 * based {@link Output}.
-	 * 
+	 *
 	 * @author Mark Paluch
 	 */
 	public static class ExpressionBucketOperationBuilder
