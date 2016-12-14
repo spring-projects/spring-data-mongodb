@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
+import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 /**
  * Unit tests for {@link Aggregation}.
@@ -593,6 +594,27 @@ public class AggregationUnitTests {
 		DBObject project = extractPipelineElement(agg, 1, "$project");
 
 		assertThat(project, isBsonObject().containing("count", 1));
+	}
+
+	/**
+	 * @see DATAMONGO-1533
+	 */
+	@Test
+	public void groupOperationShouldAllowUsageOfDerivedSpELAggregationExpression() {
+
+		DBObject agg = newAggregation( //
+				project("a"), //
+				group("a").first(AggregationSpELExpression.expressionOf("cond(a >= 42, 'answer', 'no-answer')")).as("foosum") //
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		@SuppressWarnings("unchecked")
+		DBObject secondProjection = ((List<DBObject>) agg.get("pipeline")).get(1);
+		DBObject fields = getAsDBObject(secondProjection, "$group");
+		assertThat(getAsDBObject(fields, "foosum"), isBsonObject().containing("$first"));
+		assertThat(getAsDBObject(fields, "foosum"), isBsonObject().containing("$first.$cond.if",
+				new BasicDBObject("$gte", new BasicDbListBuilder().add("$a").add(42).get())));
+		assertThat(getAsDBObject(fields, "foosum"), isBsonObject().containing("$first.$cond.then", "answer"));
+		assertThat(getAsDBObject(fields, "foosum"), isBsonObject().containing("$first.$cond.else", "no-answer"));
 	}
 
 	private DBObject extractPipelineElement(DBObject agg, int index, String operation) {
