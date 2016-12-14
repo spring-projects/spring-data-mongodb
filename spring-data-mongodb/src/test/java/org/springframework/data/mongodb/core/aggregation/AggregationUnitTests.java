@@ -393,6 +393,7 @@ public class AggregationUnitTests {
 		Document group = extractPipelineElement(agg, 1, "$group");
 		assertThat(getAsDocument(group, "count"), is(new Document().append("$sum", "$tags_count")));
 	}
+
 	/**
 	 * @see DATAMONGO-861
 	 */
@@ -588,6 +589,27 @@ public class AggregationUnitTests {
 		Document project = extractPipelineElement(agg, 1, "$project");
 
 		assertThat(project, isBsonObject().containing("count", 1));
+	}
+
+	/**
+	 * @see DATAMONGO-1533
+	 */
+	@Test
+	public void groupOperationShouldAllowUsageOfDerivedSpELAggregationExpression() {
+
+		Document agg = newAggregation( //
+				project("a"), //
+				group("a").first(AggregationSpELExpression.expressionOf("cond(a >= 42, 'answer', 'no-answer')")).as("foosum") //
+		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
+
+		@SuppressWarnings("unchecked")
+		Document secondProjection = ((List<Document>) agg.get("pipeline")).get(1);
+		Document fields = getAsDocument(secondProjection, "$group");
+		assertThat(getAsDocument(fields, "foosum"), isBsonObject().containing("$first"));
+		assertThat(getAsDocument(fields, "foosum"),
+				isBsonObject().containing("$first.$cond.if", new Document("$gte", new Document("$a", 42))));
+		assertThat(getAsDocument(fields, "foosum"), isBsonObject().containing("$first.$cond.then", "answer"));
+		assertThat(getAsDocument(fields, "foosum"), isBsonObject().containing("$first.$cond.else", "no-answer"));
 	}
 
 	private Document extractPipelineElement(Document agg, int index, String operation) {
