@@ -27,7 +27,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link FacetOperation}.
- * 
+ *
  * @author Mark Paluch
  * @soundtrack Stanley Foort - You Make Me Believe In Magic (Extended Mix)
  */

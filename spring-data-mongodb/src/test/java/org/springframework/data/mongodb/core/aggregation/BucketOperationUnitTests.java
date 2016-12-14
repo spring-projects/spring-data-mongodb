@@ -29,7 +29,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link BucketOperation}.
- * 
+ *
  * @author Mark Paluch
  */
 public class BucketOperationUnitTests {

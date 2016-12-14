@@ -28,7 +28,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link BucketAutoOperation}.
- * 
+ *
  * @author Mark Paluch
  */
 public class BucketAutoOperationUnitTests {

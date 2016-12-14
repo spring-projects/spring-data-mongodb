@@ -28,7 +28,7 @@ import com.mongodb.DBObject;
 
 /**
  * Rendering support for {@link AggregationOperation} into a {@link List} of {@link com.mongodb.DBObject}.
- * 
+ *
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 1.10
@@ -40,7 +40,7 @@ class AggregationOperationRenderer {
 	/**
 	 * Render a {@link List} of {@link AggregationOperation} given {@link AggregationOperationContext} into their
 	 * {@link DBObject} representation.
-	 * 
+	 *
 	 * @param operations must not be {@literal null}.
 	 * @param context must not be {@literal null}.
 	 * @return the {@link List} of {@link DBObject}.
