@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -406,6 +407,10 @@ public class QueryMapper {
 
 		if (isDBObject(source)) {
 			return getMappedObject((BasicDBObject) source, entity);
+		}
+
+		if(source instanceof BsonValue) {
+			return source;
 		}
 
 		return delegateConvertToMongoType(source, entity);

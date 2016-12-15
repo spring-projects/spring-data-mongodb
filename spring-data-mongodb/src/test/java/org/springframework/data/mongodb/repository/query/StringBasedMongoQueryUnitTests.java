@@ -28,6 +28,7 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.bson.BSON;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +45,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.test.util.IsBsonObject;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -52,6 +54,7 @@ import org.springframework.data.repository.query.DefaultEvaluationContextProvide
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.mongodb.DBRef;
+import org.bson.Document;
 
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
@@ -184,7 +187,6 @@ public class StringBasedMongoQueryUnitTests {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields", Document.class,
 				Map.class);
-
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
 		assertThat(query.getQueryObject(),
@@ -280,9 +282,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
 
-		DBRef dbRef = DocumentTestUtils.getTypedValue(query.getQueryObject(), "reference", DBRef.class);
-		assertThat(dbRef.getId(), is((Object) "myid"));
-		assertThat(dbRef.getCollectionName(), is("reference"));
+		Document dbRef = DocumentTestUtils.getTypedValue(query.getQueryObject(), "reference", Document.class);
+		assertThat(dbRef, is(new Document("$ref", "reference").append("$id", "myid")));
 	}
 
 	/**
@@ -360,7 +361,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
-				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : " + BSON.B_GENERAL + "}}");
+				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}}");
 
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
@@ -374,6 +375,97 @@ public class StringBasedMongoQueryUnitTests {
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("existsByLastname", String.class);
 
 		assertThat(mongoQuery.isExistsQuery(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1565
+	 */
+	@Test
+	public void shouldIgnorePlaceholderPatternInReplacementValue() throws Exception {
+
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "argWith?1andText",
+				"nothing-special");
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByStringWithWildcardChar", String.class, String.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		assertThat(query.getQueryObject(),
+				is(Document.parse("{ \"arg0\" : \"argWith?1andText\" , \"arg1\" : \"nothing-special\"}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1565
+	 */
+	@Test
+	public void shouldQuoteStringReplacementCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews', password: 'foo");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		assertThat(query.getQueryObject(),
+				is(not(new Document().append("lastname", "Matthews").append("password", "foo"))));
+		assertThat(query.getQueryObject(), is(new Document("lastname", "Matthews', password: 'foo")));
+	}
+
+	/**
+	 * @see DATAMONGO-1565
+	 */
+	@Test
+	public void shouldQuoteStringReplacementContainingQuotesCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews\", password: \"foo");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		assertThat(query.getQueryObject(),
+				is(not(new Document().append("lastname", "Matthews").append("password", "foo"))));
+		assertThat(query.getQueryObject(), is( new Document("lastname", "Matthews\", password: \"foo")));
+	}
+
+	/**
+	 * @see DATAMONGO-1565
+	 */
+	@Test
+	public void shouldQuoteStringReplacementWithQuotationsCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter,
+				"\"Dave Matthews\", password: 'foo");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		assertThat(query.getQueryObject(),
+				is(new Document("lastname", "\"Dave Matthews\", password: 'foo")));
+	}
+
+	/**
+	 * @see DATAMONGO-1565
+	 */
+	@Test
+	public void shouldQuoteComplexQueryStringCorreclty() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "{ $ne : \"calamity\" }");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		assertThat(query.getQueryObject(),
+				is( new Document("lastname", new Document("$ne", "calamity"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1565
+	 */
+	@Test
+	public void shouldQuotationInQuotedComplexQueryString() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter,
+				"{ $ne : \"\\\"calamity\\\"\" }");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+
+		assertThat(query.getQueryObject(),
+				is(new Document("lastname", new Document("$ne", "\"calamity\""))));
 	}
 
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
@@ -437,5 +529,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query(value = "{ 'lastname' : ?0 }", exists = true)
 		boolean existsByLastname(String lastname);
+
+		@Query("{ 'arg0' : ?0, 'arg1' : ?1 }")
+		List<Person> findByStringWithWildcardChar(String arg0, String arg1);
 	}
 }

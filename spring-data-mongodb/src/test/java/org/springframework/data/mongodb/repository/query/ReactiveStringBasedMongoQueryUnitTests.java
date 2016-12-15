@@ -240,7 +240,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
-				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : " + BSON.B_GENERAL + "}}");
+				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}}");
 
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}

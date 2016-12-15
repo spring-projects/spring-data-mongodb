@@ -119,7 +119,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	Page<Person> findByLastnameLike(String lastname, Pageable pageable);
 
-	@Query("{ 'lastname' : { '$regex' : ?0, '$options' : ''}}")
+	@Query("{ 'lastname' : { '$regex' : '?0', '$options' : 'i'}}")
 	Page<Person> findByLastnameLikeWithPageable(String lastname, Pageable pageable);
 
 	/**
@@ -335,7 +335,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	/**
 	 * @see DATAMONGO-745
 	 */
-	@Query("{lastname:?0, address.street:{$in:?1}}")
+	@Query("{lastname:?0, 'address.street':{$in:?1}}")
 	Page<Person> findByCustomQueryLastnameAndAddressStreetInList(String lastname, List<String> streetNames,
 			Pageable page);
 

@@ -63,8 +63,9 @@ public class BasicQuery extends Query {
 	 * @param fields may be {@literal null}.
 	 */
 	public BasicQuery(String query, String fields) {
-		this.queryObject = query != null ? new Document(((DBObject) JSON.parse(query)).toMap()) : null;
-		this.fieldsObject = fields != null ? new Document(((DBObject) JSON.parse(fields)).toMap()) : null;
+
+		this.queryObject = query != null ? Document.parse(query) : null;
+		this.fieldsObject = fields != null ? Document.parse(fields) : null;
 	}
 
 	/**
