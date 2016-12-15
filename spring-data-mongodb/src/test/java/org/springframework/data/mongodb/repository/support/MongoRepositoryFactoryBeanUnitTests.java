@@ -48,7 +48,7 @@ public class MongoRepositoryFactoryBeanUnitTests {
 	@SuppressWarnings("rawtypes")
 	public void addsIndexEnsuringQueryCreationListenerIfConfigured() {
 
-		MongoRepositoryFactoryBean factory = new MongoRepositoryFactoryBean();
+		MongoRepositoryFactoryBean factory = new MongoRepositoryFactoryBean(ContactRepository.class);
 		factory.setCreateIndexesForQueryMethods(true);
 
 		List<Object> listeners = getListenersFromFactory(factory);
@@ -60,7 +60,7 @@ public class MongoRepositoryFactoryBeanUnitTests {
 	@SuppressWarnings("rawtypes")
 	public void doesNotAddIndexEnsuringQueryCreationListenerByDefault() {
 
-		List<Object> listeners = getListenersFromFactory(new MongoRepositoryFactoryBean());
+		List<Object> listeners = getListenersFromFactory(new MongoRepositoryFactoryBean(ContactRepository.class));
 		assertThat(listeners.size(), is(1));
 	}
 
@@ -72,7 +72,6 @@ public class MongoRepositoryFactoryBeanUnitTests {
 
 		factoryBean.setLazyInit(true);
 		factoryBean.setMongoOperations(operations);
-		factoryBean.setRepositoryInterface(ContactRepository.class);
 		factoryBean.afterPropertiesSet();
 
 		RepositoryFactorySupport factory = factoryBean.createRepositoryFactory();

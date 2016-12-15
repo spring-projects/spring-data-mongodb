@@ -98,9 +98,9 @@ public class PerformanceTests {
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), context);
 		this.operations = new MongoTemplate(new SimpleMongoDbFactory(this.mongo, DATABASE_NAME), converter);
 
-		MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId> factory = new MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId>();
+		MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId> factory = new MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId>(
+				PersonRepository.class);
 		factory.setMongoOperations(operations);
-		factory.setRepositoryInterface(PersonRepository.class);
 		factory.afterPropertiesSet();
 
 		this.repository = factory.getObject();
