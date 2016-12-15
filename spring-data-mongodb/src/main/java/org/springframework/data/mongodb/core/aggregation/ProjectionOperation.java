@@ -22,9 +22,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.IfNull;
+import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
@@ -788,7 +788,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder filter(String as, AggregationExpression condition) {
-			return this.operation.and(AggregationExpressions.Filter.filter(name).as(as).by(condition));
+			return this.operation.and(ArrayOperators.Filter.filter(name).as(as).by(condition));
 		}
 
 		// SET OPERATORS
@@ -893,7 +893,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder absoluteValue() {
-			return this.operation.and(AggregationExpressions.Abs.absoluteValueOf(name));
+			return this.operation.and(ArithmeticOperators.Abs.absoluteValueOf(name));
 		}
 
 		/**
@@ -904,7 +904,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder ceil() {
-			return this.operation.and(AggregationExpressions.Ceil.ceilValueOf(name));
+			return this.operation.and(ArithmeticOperators.Ceil.ceilValueOf(name));
 		}
 
 		/**
@@ -915,7 +915,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder exp() {
-			return this.operation.and(AggregationExpressions.Exp.expValueOf(name));
+			return this.operation.and(ArithmeticOperators.Exp.expValueOf(name));
 		}
 
 		/**
@@ -926,7 +926,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder floor() {
-			return this.operation.and(AggregationExpressions.Floor.floorValueOf(name));
+			return this.operation.and(ArithmeticOperators.Floor.floorValueOf(name));
 		}
 
 		/**
@@ -937,7 +937,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder ln() {
-			return this.operation.and(AggregationExpressions.Ln.lnValueOf(name));
+			return this.operation.and(ArithmeticOperators.Ln.lnValueOf(name));
 		}
 
 		/**
@@ -949,7 +949,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder log(String baseFieldRef) {
-			return this.operation.and(AggregationExpressions.Log.valueOf(name).log(baseFieldRef));
+			return this.operation.and(ArithmeticOperators.Log.valueOf(name).log(baseFieldRef));
 		}
 
 		/**
@@ -961,7 +961,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder log(Number base) {
-			return this.operation.and(AggregationExpressions.Log.valueOf(name).log(base));
+			return this.operation.and(ArithmeticOperators.Log.valueOf(name).log(base));
 		}
 
 		/**
@@ -973,7 +973,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder log(AggregationExpression base) {
-			return this.operation.and(AggregationExpressions.Log.valueOf(name).log(base));
+			return this.operation.and(ArithmeticOperators.Log.valueOf(name).log(base));
 		}
 
 		/**
@@ -984,7 +984,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder log10() {
-			return this.operation.and(AggregationExpressions.Log10.log10ValueOf(name));
+			return this.operation.and(ArithmeticOperators.Log10.log10ValueOf(name));
 		}
 
 		/**
@@ -996,7 +996,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder pow(String exponentFieldRef) {
-			return this.operation.and(AggregationExpressions.Pow.valueOf(name).pow(exponentFieldRef));
+			return this.operation.and(ArithmeticOperators.Pow.valueOf(name).pow(exponentFieldRef));
 		}
 
 		/**
@@ -1008,7 +1008,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder pow(Number exponent) {
-			return this.operation.and(AggregationExpressions.Pow.valueOf(name).pow(exponent));
+			return this.operation.and(ArithmeticOperators.Pow.valueOf(name).pow(exponent));
 		}
 
 		/**
@@ -1020,7 +1020,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder pow(AggregationExpression exponentExpression) {
-			return this.operation.and(AggregationExpressions.Pow.valueOf(name).pow(exponentExpression));
+			return this.operation.and(ArithmeticOperators.Pow.valueOf(name).pow(exponentExpression));
 		}
 
 		/**
@@ -1031,7 +1031,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder sqrt() {
-			return this.operation.and(AggregationExpressions.Sqrt.sqrtOf(name));
+			return this.operation.and(ArithmeticOperators.Sqrt.sqrtOf(name));
 		}
 
 		/**
@@ -1041,7 +1041,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder trunc() {
-			return this.operation.and(AggregationExpressions.Trunc.truncValueOf(name));
+			return this.operation.and(ArithmeticOperators.Trunc.truncValueOf(name));
 		}
 
 		/**
@@ -1088,7 +1088,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder toLower() {
-			return this.operation.and(AggregationExpressions.ToLower.lowerValueOf(name));
+			return this.operation.and(StringOperators.ToLower.lowerValueOf(name));
 		}
 
 		/**
@@ -1099,7 +1099,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder toUpper() {
-			return this.operation.and(AggregationExpressions.ToUpper.upperValueOf(name));
+			return this.operation.and(StringOperators.ToUpper.upperValueOf(name));
 		}
 
 		/**
@@ -1170,7 +1170,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder isArray() {
-			return this.operation.and(AggregationExpressions.IsArray.isArray(name));
+			return this.operation.and(ArrayOperators.IsArray.isArray(name));
 		}
 
 		/**
@@ -1180,7 +1180,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder asLiteral() {
-			return this.operation.and(AggregationExpressions.Literal.asLiteral(name));
+			return this.operation.and(LiteralOperators.Literal.asLiteral(name));
 		}
 
 		/**
@@ -1192,7 +1192,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder dateAsFormattedString(String format) {
-			return this.operation.and(AggregationExpressions.DateToString.dateOf(name).toString(format));
+			return this.operation.and(DateOperators.DateToString.dateOf(name).toString(format));
 		}
 
 		/**
@@ -1207,7 +1207,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder let(AggregationExpression valueExpression, String variableName,
 											  AggregationExpression in) {
-			return this.operation.and(AggregationExpressions.Let.define(ExpressionVariable.newVariable(variableName).forExpression(valueExpression)).andApply(in));
+			return this.operation.and(VariableOperators.Let.define(ExpressionVariable.newVariable(variableName).forExpression(valueExpression)).andApply(in));
 		}
 
 		/**
@@ -1220,7 +1220,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder let(Collection<ExpressionVariable> variables, AggregationExpression in) {
-			return this.operation.and(AggregationExpressions.Let.define(variables).andApply(in));
+			return this.operation.and(VariableOperators.Let.define(variables).andApply(in));
 		}
 
 		/*

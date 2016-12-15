@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 
 /**
- * Rendering support for {@link AggregationOperation} into a {@link List} of {@link com.mongodb.Document}.
+ * Rendering support for {@link AggregationOperation} into a {@link List} of {@link org.bson.Document}.
  *
  * @author Mark Paluch
  * @author Christoph Strobl

@@ -58,11 +58,7 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.Venue;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Multiply;
+import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
@@ -529,7 +525,7 @@ public class AggregationTests {
 		TypedAggregation<InventoryItem> aggregation = newAggregation(InventoryItem.class, //
 				project("item") //
 						.and("discount")//
-						.applyCondition(Cond.newBuilder().when(Criteria.where("qty").gte(250)) //
+						.applyCondition(ConditionalOperators.Cond.newBuilder().when(Criteria.where("qty").gte(250)) //
 								.then(30) //
 								.otherwise(20)));
 
@@ -1616,11 +1612,11 @@ public class AggregationTests {
 		ExpressionVariable total = ExpressionVariable.newVariable("total")
 				.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax")));
 		ExpressionVariable discounted = ExpressionVariable.newVariable("discounted")
-				.forExpression(Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
+				.forExpression(ConditionalOperators.Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
 
 		TypedAggregation<Sales2> agg = Aggregation.newAggregation(Sales2.class,
 				Aggregation.project()
-						.and(Let.define(total, discounted).andApply(
+						.and(VariableOperators.Let.define(total, discounted).andApply(
 								AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted"))))
 						.as("finalTotal"));
 
@@ -1720,7 +1716,7 @@ public class AggregationTests {
 		mongoTemplate.insert(Arrays.asList(a1, a2, a3, a4), Art.class);
 
 		TypedAggregation<Art> aggregation = newAggregation(Art.class, //
-				bucketAuto(Multiply.valueOf("price").multiplyBy(10), 3) //
+				bucketAuto(ArithmeticOperators.Multiply.valueOf("price").multiplyBy(10), 3) //
 						.withGranularity(Granularities.E12) //
 						.andOutputCount().as("count") //
 						.andOutput("title").push().as("titles") //
@@ -1756,7 +1752,7 @@ public class AggregationTests {
 
 		mongoTemplate.insert(Arrays.asList(a1, a2, a3, a4), Art.class);
 
-		BucketAutoOperation bucketPrice = bucketAuto(Multiply.valueOf("price").multiplyBy(10), 3) //
+		BucketAutoOperation bucketPrice = bucketAuto(ArithmeticOperators.Multiply.valueOf("price").multiplyBy(10), 3) //
 				.withGranularity(Granularities.E12) //
 				.andOutputCount().as("count") //
 				.andOutput("title").push().as("titles") //

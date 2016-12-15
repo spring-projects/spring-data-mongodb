@@ -55,7 +55,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.Document)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
 	 */
 	@Override
 	public Document getMappedObject(Document document) {

@@ -16,15 +16,14 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.*;
+import static org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.Arrays;
 
 import org.bson.Document;
 import org.junit.Test;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**

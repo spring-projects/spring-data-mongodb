@@ -20,8 +20,6 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldRefe
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExpressionFieldReference;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBObject;
-
 /**
  * {@link AggregationOperationContext} that delegates {@link FieldReference} resolution and mapping to a parent one, but
  * assures {@link FieldReference} get converted into {@link ExpressionFieldReference} using {@code $$} to ref an inner

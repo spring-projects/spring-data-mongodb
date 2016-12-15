@@ -64,7 +64,7 @@ public class AggregationSpELExpression implements AggregationExpression {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {

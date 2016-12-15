@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
 
 import org.bson.Document;
 

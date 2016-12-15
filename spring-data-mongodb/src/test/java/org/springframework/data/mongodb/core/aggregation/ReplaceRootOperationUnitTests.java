@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 import org.bson.Document;
 import org.junit.Test;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.VariableOperators;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperation;
 
 /**
