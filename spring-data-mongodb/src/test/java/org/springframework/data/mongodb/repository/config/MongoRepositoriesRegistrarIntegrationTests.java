@@ -15,11 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,15 +54,4 @@ public class MongoRepositoriesRegistrarIntegrationTests {
 
 	@Test
 	public void testConfiguration() {}
-
-	/**
-	 * @see DATAMONGO-901
-	 */
-	@Test
-	public void registersTypePredictingPostProcessor() {
-
-		Iterable<String> beanNames = Arrays.asList(context.getBeanDefinitionNames());
-
-		assertThat(beanNames, hasItem(containsString("RepositoryFactoryBeanSupport_Predictor")));
-	}
 }

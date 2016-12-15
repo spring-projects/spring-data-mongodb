@@ -17,8 +17,8 @@
 	</bean>
 
 	<bean class="org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean">
+		<constructor-arg value="org.springframework.data.mongodb.repository.PersonRepository"/>
 		<property name="mongoOperations" ref="mongoTemplate"/>
-		<property name="repositoryInterface" value="org.springframework.data.mongodb.repository.PersonRepository"/>
 		<property name="namedQueries">
 			<bean class="org.springframework.data.repository.core.support.PropertiesBasedNamedQueries">
 				<constructor-arg>
@@ -34,5 +34,5 @@
 			<bean class="org.springframework.data.mongodb.repository.SampleEvaluationContextExtension"/>
 		</constructor-arg>
 	</bean>
-	
+
 </beans>

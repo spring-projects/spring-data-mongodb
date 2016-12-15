@@ -30,12 +30,21 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  */
-public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
-		RepositoryFactoryBeanSupport<T, S, ID> {
+public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
+		extends RepositoryFactoryBeanSupport<T, S, ID> {
 
 	private MongoOperations operations;
 	private boolean createIndexesForQueryMethods = false;
 	private boolean mappingContextConfigured = false;
+
+	/**
+	 * Creates a new {@link MongoRepositoryFactoryBean} for the given repository interface.
+	 * 
+	 * @param repositoryInterface must not be {@literal null}.
+	 */
+	public MongoRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+		super(repositoryInterface);
+	}
 
 	/**
 	 * Configures the {@link MongoOperations} to be used.

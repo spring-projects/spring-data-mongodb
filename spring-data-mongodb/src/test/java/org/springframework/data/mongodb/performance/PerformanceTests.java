@@ -97,9 +97,9 @@ public class PerformanceTests {
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), context);
 		this.operations = new MongoTemplate(new SimpleMongoDbFactory(this.mongo, DATABASE_NAME), converter);
 
-		MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId> factory = new MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId>();
+		MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId> factory = new MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId>(
+				PersonRepository.class);
 		factory.setMongoOperations(operations);
-		factory.setRepositoryInterface(PersonRepository.class);
 		factory.afterPropertiesSet();
 
 		this.repository = factory.getObject();
@@ -125,8 +125,8 @@ public class PerformanceTests {
 	@Test
 	public void plainConversion() throws InterruptedException {
 
-		Statistics statistics = new Statistics("Plain conversion of " + NUMBER_OF_PERSONS * 100
-				+ " persons - After %s iterations");
+		Statistics statistics = new Statistics(
+				"Plain conversion of " + NUMBER_OF_PERSONS * 100 + " persons - After %s iterations");
 
 		List<DBObject> dbObjects = getPersonDBObjects(NUMBER_OF_PERSONS * 100);
 
@@ -842,8 +842,8 @@ public class PerformanceTests {
 		 */
 		@Override
 		public String toString() {
-			return times.isEmpty() ? "" : String.format("%s, %s: %s", api, mode,
-					StringUtils.collectionToCommaDelimitedString(times)) + '\n';
+			return times.isEmpty() ? ""
+					: String.format("%s, %s: %s", api, mode, StringUtils.collectionToCommaDelimitedString(times)) + '\n';
 		}
 	}
 
