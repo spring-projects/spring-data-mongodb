@@ -54,6 +54,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
@@ -179,7 +180,8 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void shouldSupportFindByParameterizedCriteriaAndFields() throws Exception {
 
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new BasicDBObject("firstname", "first").append("lastname", "last"), Collections.singletonMap("lastname", 1));
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
+				new BasicDBObject("firstname", "first").append("lastname", "last"), Collections.singletonMap("lastname", 1));
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields", DBObject.class,
 				Map.class);
 
@@ -373,6 +375,22 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(mongoQuery.isExistsQuery(), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-1565
+	 */
+	@Test
+	public void shouldIgnorePlaceholderPatternInReplacementValue() throws Exception {
+
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "argWith?1andText",
+				"nothing-special");
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByStringWithWildcardChar", String.class, String.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		assertThat(query.getQueryObject(),
+				is(JSON.parse("{ \"arg0\" : \"argWith?1andText\" , \"arg1\" : \"nothing-special\"}")));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -434,5 +452,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query(value = "{ 'lastname' : ?0 }", exists = true)
 		boolean existsByLastname(String lastname);
+
+		@Query("{ 'arg0' : ?0, 'arg1' : ?1 }")
+		List<Person> findByStringWithWildcardChar(String arg0, String arg1);
 	}
 }

@@ -15,8 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -94,47 +99,38 @@ class ExpressionEvaluatingParameterBinder {
 			return input;
 		}
 
-		boolean isCompletlyParameterizedQuery = input.matches("^\\?\\d+$");
-		StringBuilder result = new StringBuilder(input);
-
-		for (ParameterBinding binding : bindingContext.getBindings()) {
-
-			String parameter = binding.getParameter();
-			int idx = result.indexOf(parameter);
-
-			if (idx == -1) {
-				continue;
-			}
-
-			String valueForBinding = getParameterValueForBinding(accessor, bindingContext.getParameters(), binding);
-
-			int start = idx;
-			int end = idx + parameter.length();
-
-			// If the value to bind is an object literal we need to remove the quoting around the expression insertion point.
-			if (valueForBinding.startsWith("{") && !isCompletlyParameterizedQuery) {
-
-				// Is the insertion point actually surrounded by quotes?
-				char beforeStart = result.charAt(start - 1);
-				char afterEnd = result.charAt(end);
-
-				if ((beforeStart == '\'' || beforeStart == '"') && (afterEnd == '\'' || afterEnd == '"')) {
-
-					// Skip preceding and following quote
-					start -= 1;
-					end += 1;
-				}
-			}
-
-			result.replace(start, end, valueForBinding);
+		if (input.matches("^\\?\\d+$")) {
+			return getParameterValueForBinding(accessor, bindingContext.getParameters(),
+					bindingContext.getBindings().iterator().next());
 		}
 
-		return result.toString();
+		Matcher matcher = createReplacementPattern(bindingContext.getBindings()).matcher(input);
+		StringBuffer buffer = new StringBuffer();
+
+		while (matcher.find()) {
+
+			ParameterBinding binding = bindingContext.getBindingFor(extractPlaceholder(matcher.group()));
+			String valueForBinding = getParameterValueForBinding(accessor, bindingContext.getParameters(), binding);
+
+			// appendReplacement does not like unescaped $ sign even in the replacement value
+			matcher.appendReplacement(buffer, valueForBinding.replace("$", "\\$"));
+
+			if (binding.isQuoted()) {
+				if (valueForBinding.startsWith("{")) { // remove quotation char before the complex object string
+					buffer.deleteCharAt(buffer.length() - valueForBinding.length() - 1);
+				} else { // close the quotation
+					buffer.append(matcher.group().charAt(matcher.group().length() - 1));
+				}
+			}
+		}
+
+		matcher.appendTail(buffer);
+		return buffer.toString();
 	}
 
 	/**
 	 * Returns the serialized value to be used for the given {@link ParameterBinding}.
-	 * 
+	 *
 	 * @param accessor must not be {@literal null}.
 	 * @param parameters
 	 * @param binding must not be {@literal null}.
@@ -167,7 +163,7 @@ class ExpressionEvaluatingParameterBinder {
 
 	/**
 	 * Evaluates the given {@code expressionString}.
-	 * 
+	 *
 	 * @param expressionString must not be {@literal null} or empty.
 	 * @param parameters must not be {@literal null}.
 	 * @param parameterValues must not be {@literal null}.
@@ -182,24 +178,58 @@ class ExpressionEvaluatingParameterBinder {
 	}
 
 	/**
+	 * Creates a replacement {@link Pattern} for all {@link ParameterBinding#getParameter() binding parameters} including
+	 * a potentially trailing quotation mark.
+	 *
+	 * @param bindings
+	 * @return
+	 */
+	private Pattern createReplacementPattern(List<ParameterBinding> bindings) {
+
+		StringBuilder regex = new StringBuilder();
+		for (ParameterBinding binding : bindings) {
+			regex.append("|");
+			regex.append(Pattern.quote(binding.getParameter()));
+			regex.append("['\"]?"); // potential quotation char (as in { foo : '?0' }).
+		}
+
+		return Pattern.compile(regex.substring(1));
+	}
+
+	/**
+	 * Extract the placeholder stripping any trailing trailing quotation mark that might have resulted from the
+	 * {@link #createReplacementPattern(List) pattern} used.
+	 *
+	 * @param groupName The actual {@link Matcher#group() group}.
+	 * @return
+	 */
+	private String extractPlaceholder(String groupName) {
+
+		if (!groupName.endsWith("'") && !groupName.endsWith("\"")) {
+			return groupName;
+		}
+		return groupName.substring(0, groupName.length() - 1);
+	}
+
+	/**
 	 * @author Christoph Strobl
 	 * @since 1.9
 	 */
 	static class BindingContext {
 
 		final MongoParameters parameters;
-		final List<ParameterBinding> bindings;
+		final Map<String, ParameterBinding> bindings;
 
 		/**
 		 * Creates new {@link BindingContext}.
-		 * 
+		 *
 		 * @param parameters
 		 * @param bindings
 		 */
 		public BindingContext(MongoParameters parameters, List<ParameterBinding> bindings) {
 
 			this.parameters = parameters;
-			this.bindings = bindings;
+			this.bindings = mapBindings(bindings);
 		}
 
 		/**
@@ -211,11 +241,28 @@ class ExpressionEvaluatingParameterBinder {
 
 		/**
 		 * Get unmodifiable list of {@link ParameterBinding}s.
-		 * 
+		 *
 		 * @return never {@literal null}.
 		 */
 		public List<ParameterBinding> getBindings() {
-			return Collections.unmodifiableList(bindings);
+			return new ArrayList<ParameterBinding>(bindings.values());
+		}
+
+		/**
+		 * Get the concrete {@link ParameterBinding} for a given {@literal placeholder}.
+		 * 
+		 * @param placeholder must not be {@literal null}.
+		 * @return
+		 * @throws java.util.NoSuchElementException
+		 * @since 1.10
+		 */
+		ParameterBinding getBindingFor(String placeholder) {
+
+			if (!bindings.containsKey(placeholder)) {
+				throw new NoSuchElementException(String.format("Could not to find binding for placeholder '%s'.", placeholder));
+			}
+
+			return bindings.get(placeholder);
 		}
 
 		/**
@@ -227,5 +274,13 @@ class ExpressionEvaluatingParameterBinder {
 			return parameters;
 		}
 
+		private static Map<String, ParameterBinding> mapBindings(List<ParameterBinding> bindings) {
+
+			Map<String, ParameterBinding> map = new LinkedHashMap<String, ParameterBinding>(bindings.size(), 1);
+			for (ParameterBinding binding : bindings) {
+				map.put(binding.getParameter(), binding);
+			}
+			return map;
+		}
 	}
 }
