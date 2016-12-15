@@ -22,7 +22,6 @@ import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
 
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
