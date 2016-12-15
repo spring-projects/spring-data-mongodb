@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable.*;
+import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
@@ -32,28 +32,11 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.And;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArithmeticOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ArrayOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Avg;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.BooleanOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ComparisonOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.DateOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Gte;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Let.ExpressionVariable;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.LiteralOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Lt;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.RangeOperator;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Reduce.PropertyExpression;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Reduce.Variable;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.SetOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.StringOperators;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Switch.CaseOperator;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Type;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.VariableOperators;
+import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
+import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
+import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.Variable;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.*;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -1773,7 +1756,7 @@ public class ProjectionOperationUnitTests {
 						.define(
 								newVariable("total")
 										.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax"))),
-								newVariable("discounted").forExpression(Cond.when("applyDiscount").then(0.9D).otherwise(1.0D)))
+								newVariable("discounted").forExpression(ConditionalOperators.Cond.when("applyDiscount").then(0.9D).otherwise(1.0D)))
 						.andApply(AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))) //
 				.as("finalTotal").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
@@ -1797,7 +1780,7 @@ public class ProjectionOperationUnitTests {
 				.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax")));
 
 		ExpressionVariable var2 = newVariable("discounted")
-				.forExpression(Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
+				.forExpression(ConditionalOperators.Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
 
 		DBObject agg = Aggregation.project().and("foo")
 				.let(Arrays.asList(var1, var2),
@@ -1930,7 +1913,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderRangeCorrectly() {
 
-		DBObject agg = project().and(RangeOperator.rangeStartingAt(0L).to("distance").withStepSize(25L)).as("rest_stops")
+		DBObject agg = project().and(ArrayOperators.RangeOperator.rangeStartingAt(0L).to("distance").withStepSize(25L)).as("rest_stops")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, isBsonObject().containing("$project.rest_stops.$range.[0]", 0L)
@@ -2077,11 +2060,11 @@ public class ProjectionOperationUnitTests {
 				"   }\n" + //
 				"}";
 
-		CaseOperator cond1 = CaseOperator.when(Gte.valueOf(Avg.avgOf("scores")).greaterThanEqualToValue(90))
+		CaseOperator cond1 = CaseOperator.when(ComparisonOperators.Gte.valueOf(AccumulatorOperators.Avg.avgOf("scores")).greaterThanEqualToValue(90))
 				.then("Doing great!");
-		CaseOperator cond2 = CaseOperator.when(And.and(Gte.valueOf(Avg.avgOf("scores")).greaterThanEqualToValue(80),
-				Lt.valueOf(Avg.avgOf("scores")).lessThanValue(90))).then("Doing pretty well.");
-		CaseOperator cond3 = CaseOperator.when(Lt.valueOf(Avg.avgOf("scores")).lessThanValue(80))
+		CaseOperator cond2 = CaseOperator.when(BooleanOperators.And.and(ComparisonOperators.Gte.valueOf(AccumulatorOperators.Avg.avgOf("scores")).greaterThanEqualToValue(80),
+				ComparisonOperators.Lt.valueOf(AccumulatorOperators.Avg.avgOf("scores")).lessThanValue(90))).then("Doing pretty well.");
+		CaseOperator cond3 = CaseOperator.when(ComparisonOperators.Lt.valueOf(AccumulatorOperators.Avg.avgOf("scores")).lessThanValue(80))
 				.then("Needs improvement.");
 
 		DBObject agg = project().and(ConditionalOperators.switchCases(cond1, cond2, cond3).defaultTo("No scores found."))
@@ -2096,7 +2079,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldTypeCorrectly() {
 
-		DBObject agg = project().and(Type.typeOf("a")).as("a")
+		DBObject agg = project().and(DataTypeOperators.Type.typeOf("a")).as("a")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, Matchers.is(JSON.parse("{ $project : { a: { $type: \"$a\" } } }")));
