@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -86,9 +87,9 @@ public class StringBasedMongoQueryUnitTests {
 	public void bindsSimplePropertyCorrectly() throws Exception {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastname", String.class);
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews");
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
@@ -100,13 +101,13 @@ public class StringBasedMongoQueryUnitTests {
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByAddress", Address.class);
 
 		Address address = new Address("Foo", "0123", "Bar");
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, address);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, address);
 
 		Document document = new Document();
 		converter.write(address, document);
 		document.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		Document queryObject = new Document("address", document);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
 
@@ -119,7 +120,7 @@ public class StringBasedMongoQueryUnitTests {
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAndAddress", String.class, Address.class);
 
 		Address address = new Address("Foo", "0123", "Bar");
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews", address);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews", address);
 
 		Document addressDocument = new Document();
 		converter.write(address, addressDocument);
@@ -128,7 +129,7 @@ public class StringBasedMongoQueryUnitTests {
 		Document reference = new Document("lastname", "Matthews");
 		reference.append("address", addressDocument);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		assertThat(query.getQueryObject().toJson(), is(reference.toJson()));
 	}
 
@@ -232,10 +233,10 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void bindsSimplePropertyAlreadyQuotedCorrectly() throws Exception {
 
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
@@ -247,10 +248,10 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void bindsSimplePropertyAlreadyQuotedWithRegexCorrectly() throws Exception {
 
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : '^Mat.*'}");
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
@@ -263,9 +264,9 @@ public class StringBasedMongoQueryUnitTests {
 	public void bindsSimplePropertyWithRegexCorrectly() throws Exception {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastname", String.class);
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : '^Mat.*'}");
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
@@ -307,10 +308,10 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void shouldSupportExpressionsInCustomQueries() throws Exception {
 
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpression", String.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
@@ -322,11 +323,11 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() throws Exception {
 
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndNestedObject", boolean.class,
 				String.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{ \"id\" : { \"$exists\" : true}}");
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
@@ -338,11 +339,11 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void shouldSupportExpressionsInCustomQueriesWithMultipleNestedObjects() throws Exception {
 
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndMultipleNestedObjects",
 				boolean.class, String.class, String.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{ \"id\" : { \"$exists\" : true} , \"foo\" : 42 , \"bar\" : { \"$exists\" : false}}");
 
@@ -356,14 +357,34 @@ public class StringBasedMongoQueryUnitTests {
 	public void shouldSupportNonQuotedBinaryDataReplacement() throws Exception {
 
 		byte[] binaryData = "Matthews".getBytes("UTF-8");
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, binaryData);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, binaryData);
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsBinary", byte[].class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
 				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}}");
 
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+	}
+
+	/**
+	 * @see DATAMONGO-1565
+	 */
+	@Test
+	public void bindsPropertyReferenceMultipleTimesCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByAgeQuotedAndUnquoted", Integer.TYPE);
+
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, 3);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		List<Object> or = new ArrayList<>();
+		or.add(new Document("age", 3));
+		or.add(new Document("displayAge", "3"));
+		Document queryObject = new Document("$or", or);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
 	/**
@@ -383,12 +404,12 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void shouldIgnorePlaceholderPatternInReplacementValue() throws Exception {
 
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "argWith?1andText",
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "argWith?1andText",
 				"nothing-special");
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByStringWithWildcardChar", String.class, String.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		assertThat(query.getQueryObject(),
 				is(Document.parse("{ \"arg0\" : \"argWith?1andText\" , \"arg1\" : \"nothing-special\"}")));
 	}
@@ -526,6 +547,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{'id':?#{ [0] ? { $exists :true} : [1] }, 'foo':42, 'bar': ?#{ [0] ? { $exists :false} : [1] }}")
 		List<Person> findByQueryWithExpressionAndMultipleNestedObjects(boolean param0, String param1, String param2);
+
+		@Query(value = "{ $or : [{'age' : ?0 }, {'displayAge' : '?0'}] }")
+		boolean findByAgeQuotedAndUnquoted(int age);
 
 		@Query(value = "{ 'lastname' : ?0 }", exists = true)
 		boolean existsByLastname(String lastname);
