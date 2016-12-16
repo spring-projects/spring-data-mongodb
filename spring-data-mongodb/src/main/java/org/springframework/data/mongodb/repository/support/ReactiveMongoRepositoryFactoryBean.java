@@ -33,8 +33,8 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 2.0
- * @see org.springframework.data.repository.reactive.ReactivePagingAndSortingRepository
- * @see org.springframework.data.repository.reactive.RxJavaPagingAndSortingRepository
+ * @see org.springframework.data.repository.reactive.ReactiveSortingRepository
+ * @see org.springframework.data.repository.reactive.RxJava1SortingRepository
  */
 public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
@@ -42,6 +42,15 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	private ReactiveMongoOperations operations;
 	private boolean createIndexesForQueryMethods = false;
 	private boolean mappingContextConfigured = false;
+
+	/**
+	 * Creates a new {@link ReactiveMongoRepositoryFactoryBean} for the given repository interface.
+	 *
+	 * @param repositoryInterface must not be {@literal null}.
+	 */
+	public ReactiveMongoRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+		super(repositoryInterface);
+	}
 
 	/**
 	 * Configures the {@link ReactiveMongoOperations} to be used.
@@ -85,8 +94,8 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 		RepositoryFactorySupport factory = getFactoryInstance(operations);
 
 		if (createIndexesForQueryMethods) {
-			factory.addQueryCreationListener(
-					new IndexEnsuringQueryCreationListener(collectionName -> IndexOperationsAdapter.blocking(operations.indexOps(collectionName))));
+			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(
+					collectionName -> IndexOperationsAdapter.blocking(operations.indexOps(collectionName))));
 		}
 
 		return factory;

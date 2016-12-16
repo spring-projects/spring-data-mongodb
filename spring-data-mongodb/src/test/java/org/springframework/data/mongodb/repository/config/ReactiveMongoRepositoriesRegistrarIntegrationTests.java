@@ -16,19 +16,14 @@
 
 package org.springframework.data.mongodb.repository.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.repository.ReactivePersonRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -62,15 +57,4 @@ public class ReactiveMongoRepositoriesRegistrarIntegrationTests {
 	 */
 	@Test
 	public void testConfiguration() {}
-
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
-	public void registersTypePredictingPostProcessor() {
-
-		Iterable<String> beanNames = Arrays.asList(context.getBeanDefinitionNames());
-
-		assertThat(beanNames, hasItem(containsString("RepositoryFactoryBeanSupport_Predictor")));
-	}
 }
