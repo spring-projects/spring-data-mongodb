@@ -21,7 +21,6 @@ import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.Person;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Literal;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.mongodb.BasicDBObject;
@@ -111,7 +110,7 @@ public class GraphLookupOperationUnitTests {
 
 		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
 				.from("employees") //
-				.startWith("reportsTo", Literal.asLiteral("$boss")) //
+				.startWith("reportsTo", LiteralOperators.Literal.asLiteral("$boss")) //
 				.connectFrom("reportsTo") //
 				.connectTo("name") //
 				.as("reportingHierarchy");
@@ -145,7 +144,7 @@ public class GraphLookupOperationUnitTests {
 
 		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
 				.from("employees") //
-				.startWith(Literal.asLiteral("hello")) //
+				.startWith(LiteralOperators.Literal.asLiteral("hello")) //
 				.connectFrom("reportsTo") //
 				.connectTo("name") //
 				.as("reportingHierarchy");

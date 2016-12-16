@@ -30,8 +30,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond;
-import org.springframework.data.mongodb.core.aggregation.AggregationExpressions.ConditionalOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.mongodb.BasicDBObject;
@@ -428,7 +426,7 @@ public class AggregationUnitTests {
 	public void shouldRenderProjectionConditionalExpressionCorrectly() {
 
 		DBObject agg = Aggregation.newAggregation(//
-				project().and(Cond.newBuilder() //
+				project().and(ConditionalOperators.Cond.newBuilder() //
 						.when("isYellow") //
 						.then("bright") //
 						.otherwise("dark")).as("color"))
@@ -451,7 +449,7 @@ public class AggregationUnitTests {
 
 		DBObject agg = Aggregation.newAggregation(//
 				project().and("color")
-						.applyCondition(Cond.newBuilder() //
+						.applyCondition(ConditionalOperators.Cond.newBuilder() //
 								.when("isYellow") //
 								.then("bright") //
 								.otherwise("dark")))
@@ -475,7 +473,7 @@ public class AggregationUnitTests {
 		DBObject agg = Aggregation
 				.newAggregation(project()//
 						.and("color")//
-						.applyCondition(Cond.newBuilder().when(Criteria.where("key").gt(5)) //
+						.applyCondition(ConditionalOperators.Cond.newBuilder().when(Criteria.where("key").gt(5)) //
 								.then("bright").otherwise("dark"))) //
 				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
 
@@ -523,7 +521,7 @@ public class AggregationUnitTests {
 				.newAggregation(//
 						project().and("color").as("chroma"),
 						project().and("luminosity") //
-								.applyCondition(Cond.newBuilder()
+								.applyCondition(ConditionalOperators.Cond.newBuilder()
 										.when(Criteria.where("chroma") //
 												.is(100)) //
 										.then("bright").otherwise("dark"))) //

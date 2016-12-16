@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.core.Is.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.*;
+import static org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.*;
 
 import java.util.Arrays;
 import java.util.List;
