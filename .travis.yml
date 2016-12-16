@@ -27,6 +27,7 @@ addons:
     packages:
     - mongodb-org-server
     - mongodb-org-shell
+    - oracle-java8-installer
 
 sudo: false
 
