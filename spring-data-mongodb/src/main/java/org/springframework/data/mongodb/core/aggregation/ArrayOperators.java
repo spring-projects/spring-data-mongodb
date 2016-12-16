@@ -48,7 +48,7 @@ public class ArrayOperators {
 	/**
 	 * Take the array referenced resulting from the given {@link AggregationExpression}.
 	 *
-	 * @param fieldReference must not be {@literal null}.
+	 * @param expression must not be {@literal null}.
 	 * @return
 	 */
 	public static ArrayOperatorFactory arrayOf(AggregationExpression expression) {
@@ -88,7 +88,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated array and returns the element at the
+		 * Creates new {@link AggregationExpression} that takes the associated array and returns the element at the
 		 * specified array {@literal position}.
 		 *
 		 * @param position
@@ -99,8 +99,8 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated array and returns the element at the
-		 * position resulting form the given {@literal expression}.
+		 * Creates new {@link AggregationExpression} that takes the associated array and returns the element at the position
+		 * resulting form the given {@literal expression}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -112,8 +112,8 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated array and returns the element at the
-		 * position defined by the referenced {@literal field}.
+		 * Creates new {@link AggregationExpression} that takes the associated array and returns the element at the position
+		 * defined by the referenced {@literal field}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
@@ -129,7 +129,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated array and concats the given
+		 * Creates new {@link AggregationExpression} that takes the associated array and concats the given
 		 * {@literal arrayFieldReference} to it.
 		 *
 		 * @param arrayFieldReference must not be {@literal null}.
@@ -142,7 +142,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated array and concats the array resulting form
+		 * Creates new {@link AggregationExpression} that takes the associated array and concats the array resulting form
 		 * the given {@literal expression} to it.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -159,7 +159,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated array and selects a subset of the array to
+		 * Creates new {@link AggregationExpression} that takes the associated array and selects a subset of the array to
 		 * return based on the specified condition.
 		 *
 		 * @return
@@ -169,7 +169,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated array and an check if its an array.
+		 * Creates new {@link AggregationExpression} that takes the associated array and an check if its an array.
 		 *
 		 * @return
 		 */
@@ -178,7 +178,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated array and retrieves its length.
+		 * Creates new {@link AggregationExpression} that takes the associated array and retrieves its length.
 		 *
 		 * @return
 		 */
@@ -187,7 +187,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated array and selects a subset from it.
+		 * Creates new {@link AggregationExpression} that takes the associated array and selects a subset from it.
 		 *
 		 * @return
 		 */
@@ -196,7 +196,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that searches the associated array for an occurrence of a specified
+		 * Creates new {@link AggregationExpression} that searches the associated array for an occurrence of a specified
 		 * value and returns the array index (zero-based) of the first occurrence.
 		 *
 		 * @param value must not be {@literal null}.
@@ -208,7 +208,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns an array with the elements in reverse order.
+		 * Creates new {@link AggregationExpression} that returns an array with the elements in reverse order.
 		 *
 		 * @return
 		 */
@@ -217,8 +217,8 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Start creating new {@link AggregationExpressions} that applies an {@link AggregationExpression} to each element
-		 * in an array and combines them into a single value.
+		 * Start creating new {@link AggregationExpression} that applies an {@link AggregationExpression} to each element in
+		 * an array and combines them into a single value.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -235,8 +235,8 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Start creating new {@link AggregationExpressions} that applies an {@link AggregationExpression} to each element
-		 * in an array and combines them into a single value.
+		 * Start creating new {@link AggregationExpression} that applies an {@link AggregationExpression} to each element in
+		 * an array and combines them into a single value.
 		 *
 		 * @param expressions
 		 * @return
@@ -254,9 +254,9 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that transposes an array of input arrays so that the first element
-		 * of the output array would be an array containing, the first element of the first input array, the first element
-		 * of the second input array, etc.
+		 * Creates new {@link AggregationExpression} that transposes an array of input arrays so that the first element of
+		 * the output array would be an array containing, the first element of the first input array, the first element of
+		 * the second input array, etc.
 		 *
 		 * @param arrays must not be {@literal null}.
 		 * @return
@@ -266,8 +266,8 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns a boolean indicating whether a specified value is in
-		 * the associated array.
+		 * Creates new {@link AggregationExpression} that returns a boolean indicating whether a specified value is in the
+		 * associated array.
 		 *
 		 * @param value must not be {@literal null}.
 		 * @return
@@ -573,13 +573,18 @@ public class ArrayOperators {
 				this.filter = new Filter();
 			}
 
+			/**
+			 * Creates new {@link InputBuilder}.
+			 *
+			 * @return
+			 */
 			public static InputBuilder newBuilder() {
 				return new FilterExpressionBuilder();
 			}
 
 			/*
 			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.InputBuilder#filter(java.util.List)
+			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.InputBuilder#filter(java.util.List)
 			 */
 			@Override
 			public AsBuilder filter(List<?> array) {
@@ -591,7 +596,7 @@ public class ArrayOperators {
 
 			/*
 			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.InputBuilder#filter(org.springframework.data.mongodb.core.aggregation.Field)
+			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.InputBuilder#filter(org.springframework.data.mongodb.core.aggregation.Field)
 			 */
 			@Override
 			public AsBuilder filter(Field field) {
@@ -603,7 +608,7 @@ public class ArrayOperators {
 
 			/*
 			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.AsBuilder#as(java.lang.String)
+			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.AsBuilder#as(java.lang.String)
 			 */
 			@Override
 			public ConditionBuilder as(String variableName) {
@@ -615,7 +620,7 @@ public class ArrayOperators {
 
 			/*
 			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.ConditionBuilder#by(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
+			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.ConditionBuilder#by(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
 			 */
 			@Override
 			public Filter by(AggregationExpression condition) {
@@ -627,7 +632,7 @@ public class ArrayOperators {
 
 			/*
 			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.ConditionBuilder#by(java.lang.String)
+			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.ConditionBuilder#by(java.lang.String)
 			 */
 			@Override
 			public Filter by(String expression) {
@@ -639,7 +644,7 @@ public class ArrayOperators {
 
 			/*
 			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Filter.ConditionBuilder#by(org.bson.Document)
+			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.ConditionBuilder#by(org.bson.Document)
 			 */
 			@Override
 			public Filter by(Document expression) {
@@ -1177,7 +1182,7 @@ public class ArrayOperators {
 			 * <b>NOTE:</b> During evaluation of the in expression the variable references {@link Variable#THIS} and
 			 * {@link Variable#VALUE} are available.
 			 *
-			 * @param expression must not be {@literal null}.
+			 * @param expressions must not be {@literal null}.
 			 * @return
 			 */
 			Reduce reduce(PropertyExpression... expressions);

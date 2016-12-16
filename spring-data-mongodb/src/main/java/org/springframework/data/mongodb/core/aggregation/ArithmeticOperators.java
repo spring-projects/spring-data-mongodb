@@ -87,7 +87,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the absolute value of the associated number.
+		 * Creates new {@link AggregationExpression} that returns the absolute value of the associated number.
 		 *
 		 * @return
 		 */
@@ -96,7 +96,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that adds the value of {@literal fieldReference} to the associated
+		 * Creates new {@link AggregationExpression} that adds the value of {@literal fieldReference} to the associated
 		 * number.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -109,7 +109,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that adds the resulting value of the given
+		 * Creates new {@link AggregationExpression} that adds the resulting value of the given
 		 * {@link AggregationExpression} to the associated number.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -122,7 +122,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that adds the given {@literal value} to the associated number.
+		 * Creates new {@link AggregationExpression} that adds the given {@literal value} to the associated number.
 		 *
 		 * @param value must not be {@literal null}.
 		 * @return
@@ -138,7 +138,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the smallest integer greater than or equal to the
+		 * Creates new {@link AggregationExpression} that returns the smallest integer greater than or equal to the
 		 * assoicated number.
 		 *
 		 * @return
@@ -148,7 +148,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that ivides the associated number by number referenced via
+		 * Creates new {@link AggregationExpression} that ivides the associated number by number referenced via
 		 * {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -161,7 +161,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that divides the associated number by number extracted via
+		 * Creates new {@link AggregationExpression} that divides the associated number by number extracted via
 		 * {@literal expression}.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -174,7 +174,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that divides the associated number by given {@literal value}.
+		 * Creates new {@link AggregationExpression} that divides the associated number by given {@literal value}.
 		 *
 		 * @param value
 		 * @return
@@ -190,7 +190,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that raises Euler’s number (i.e. e ) on the associated number.
+		 * Creates new {@link AggregationExpression} that raises Euler’s number (i.e. e ) on the associated number.
 		 *
 		 * @return
 		 */
@@ -199,7 +199,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the largest integer less than or equal to the associated
+		 * Creates new {@link AggregationExpression} that returns the largest integer less than or equal to the associated
 		 * number.
 		 *
 		 * @return
@@ -209,7 +209,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that calculates the natural logarithm ln (i.e loge) of the assoicated
+		 * Creates new {@link AggregationExpression} that calculates the natural logarithm ln (i.e loge) of the assoicated
 		 * number.
 		 *
 		 * @return
@@ -219,7 +219,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that calculates the log of the associated number in the specified base
+		 * Creates new {@link AggregationExpression} that calculates the log of the associated number in the specified base
 		 * referenced via {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -232,7 +232,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that calculates the log of the associated number in the specified base
+		 * Creates new {@link AggregationExpression} that calculates the log of the associated number in the specified base
 		 * extracted by given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -245,7 +245,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that calculates the log of a the associated number in the specified
+		 * Creates new {@link AggregationExpression} that calculates the log of a the associated number in the specified
 		 * {@literal base}.
 		 *
 		 * @param base must not be {@literal null}.
@@ -262,7 +262,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that calculates the log base 10 for the associated number.
+		 * Creates new {@link AggregationExpression} that calculates the log base 10 for the associated number.
 		 *
 		 * @return
 		 */
@@ -271,7 +271,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that divides the associated number by another and returns the
+		 * Creates new {@link AggregationExpression} that divides the associated number by another and returns the
 		 * remainder.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -284,7 +284,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that divides the associated number by another and returns the
+		 * Creates new {@link AggregationExpression} that divides the associated number by another and returns the
 		 * remainder.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -297,7 +297,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that divides the associated number by another and returns the
+		 * Creates new {@link AggregationExpression} that divides the associated number by another and returns the
 		 * remainder.
 		 *
 		 * @param value must not be {@literal null}.
@@ -314,7 +314,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that multiplies the associated number with another.
+		 * Creates new {@link AggregationExpression} that multiplies the associated number with another.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
@@ -326,7 +326,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that multiplies the associated number with another.
+		 * Creates new {@link AggregationExpression} that multiplies the associated number with another.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -338,7 +338,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that multiplies the associated number with another.
+		 * Creates new {@link AggregationExpression} that multiplies the associated number with another.
 		 *
 		 * @param value must not be {@literal null}.
 		 * @return
@@ -354,7 +354,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that raises the associated number to the specified exponent.
+		 * Creates new {@link AggregationExpression} that raises the associated number to the specified exponent.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
@@ -366,7 +366,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that raises the associated number to the specified exponent.
+		 * Creates new {@link AggregationExpression} that raises the associated number to the specified exponent.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -378,7 +378,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that raises the associated number to the specified exponent.
+		 * Creates new {@link AggregationExpression} that raises the associated number to the specified exponent.
 		 *
 		 * @param value must not be {@literal null}.
 		 * @return
@@ -394,7 +394,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that calculates the square root of the associated number.
+		 * Creates new {@link AggregationExpression} that calculates the square root of the associated number.
 		 *
 		 * @return
 		 */
@@ -403,7 +403,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that subtracts value of given from the associated number.
+		 * Creates new {@link AggregationExpression} that subtracts value of given from the associated number.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
@@ -415,7 +415,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that subtracts value of given from the associated number.
+		 * Creates new {@link AggregationExpression} that subtracts value of given from the associated number.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -427,7 +427,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that subtracts value from the associated number.
+		 * Creates new {@link AggregationExpression} that subtracts value from the associated number.
 		 *
 		 * @param value
 		 * @return
@@ -443,7 +443,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that truncates a number to its integer.
+		 * Creates new {@link AggregationExpression} that truncates a number to its integer.
 		 *
 		 * @return
 		 */
@@ -452,7 +452,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that calculates and returns the sum of numeric values.
+		 * Creates new {@link AggregationExpression} that calculates and returns the sum of numeric values.
 		 *
 		 * @return
 		 */
@@ -462,7 +462,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the average value of the numeric values.
+		 * Creates new {@link AggregationExpression} that returns the average value of the numeric values.
 		 *
 		 * @return
 		 */
@@ -472,7 +472,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the maximum value.
+		 * Creates new {@link AggregationExpression} that returns the maximum value.
 		 *
 		 * @return
 		 */
@@ -482,7 +482,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the minimum value.
+		 * Creates new {@link AggregationExpression} that returns the minimum value.
 		 *
 		 * @return
 		 */
@@ -492,7 +492,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that calculates the population standard deviation of the input values.
+		 * Creates new {@link AggregationExpression} that calculates the population standard deviation of the input values.
 		 *
 		 * @return
 		 */
@@ -502,7 +502,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that calculates the sample standard deviation of the input values.
+		 * Creates new {@link AggregationExpression} that calculates the sample standard deviation of the input values.
 		 *
 		 * @return
 		 */

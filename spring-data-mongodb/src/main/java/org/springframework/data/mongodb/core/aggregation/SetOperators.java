@@ -83,7 +83,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares the previously mentioned field to one or more arrays and
+		 * Creates new {@link AggregationExpression} that compares the previously mentioned field to one or more arrays and
 		 * returns {@literal true} if they have the same distinct elements and {@literal false} otherwise.
 		 *
 		 * @param arrayReferences must not be {@literal null}.
@@ -94,7 +94,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares the previously mentioned field to one or more arrays and
+		 * Creates new {@link AggregationExpression} that compares the previously mentioned field to one or more arrays and
 		 * returns {@literal true} if they have the same distinct elements and {@literal false} otherwise.
 		 *
 		 * @param expressions must not be {@literal null}.
@@ -109,7 +109,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and one or more
+		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and one or more
 		 * arrays and returns an array that contains the elements that appear in every of those.
 		 *
 		 * @param arrayReferences must not be {@literal null}.
@@ -120,7 +120,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and one or more
+		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and one or more
 		 * arrays and returns an array that contains the elements that appear in every of those.
 		 *
 		 * @param expressions must not be {@literal null}.
@@ -135,7 +135,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and one or more
+		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and one or more
 		 * arrays and returns an array that contains the elements that appear in any of those.
 		 *
 		 * @param arrayReferences must not be {@literal null}.
@@ -146,7 +146,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and one or more
+		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and one or more
 		 * arrays and returns an array that contains the elements that appear in any of those.
 		 *
 		 * @param expressions must not be {@literal null}.
@@ -161,8 +161,8 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns an
-		 * array containing the elements that do not exist in the given {@literal arrayReference}.
+		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and returns an array
+		 * containing the elements that do not exist in the given {@literal arrayReference}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
 		 * @return
@@ -172,8 +172,8 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns an
-		 * array containing the elements that do not exist in the given {@link AggregationExpression}.
+		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and returns an array
+		 * containing the elements that do not exist in the given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -187,7 +187,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns
+		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and returns
 		 * {@literal true} if it is a subset of the given {@literal arrayReference}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
@@ -198,7 +198,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns
+		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and returns
 		 * {@literal true} if it is a subset of the given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -213,7 +213,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes array of the previously mentioned field and returns
+		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and returns
 		 * {@literal true} if any of the elements are {@literal true} and {@literal false} otherwise.
 		 *
 		 * @return
@@ -223,7 +223,7 @@ public class SetOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that tkes array of the previously mentioned field and returns
+		 * Creates new {@link AggregationExpression} that tkes array of the previously mentioned field and returns
 		 * {@literal true} if no elements is {@literal false}.
 		 *
 		 * @return

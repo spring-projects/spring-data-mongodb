@@ -58,9 +58,9 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.Venue;
-import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
+import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -1621,9 +1621,8 @@ public class AggregationTests {
 						.as("finalTotal"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
-		assertThat(result.getMappedResults(),
-				contains(new Document("_id", "1").append("finalTotal", 9.450000000000001D),
-						new Document("_id", "2").append("finalTotal", 10.25D)));
+		assertThat(result.getMappedResults(), contains(new Document("_id", "1").append("finalTotal", 9.450000000000001D),
+				new Document("_id", "2").append("finalTotal", 10.25D)));
 	}
 
 	/**

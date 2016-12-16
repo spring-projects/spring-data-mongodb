@@ -33,6 +33,7 @@ import org.springframework.util.ClassUtils;
  * Gateway to {@literal conditional expressions} that evaluate their argument expressions as booleans to a value.
  *
  * @author Mark Paluch
+ * @since 1.10
  */
 public class ConditionalOperators {
 
@@ -67,7 +68,7 @@ public class ConditionalOperators {
 	}
 
 	/**
-	 * Creates new {@link AggregationExpressions} that evaluates an expression and returns the value of the expression if
+	 * Creates new {@link AggregationExpression} that evaluates an expression and returns the value of the expression if
 	 * the expression evaluates to a non-null value. If the expression evaluates to a {@literal null} value, including
 	 * instances of undefined values or missing fields, returns the value of the replacement expression.
 	 *
@@ -81,7 +82,7 @@ public class ConditionalOperators {
 	}
 
 	/**
-	 * Creates new {@link AggregationExpressions} that evaluates an expression and returns the value of the expression if
+	 * Creates new {@link AggregationExpression} that evaluates an expression and returns the value of the expression if
 	 * the expression evaluates to a non-null value. If the expression evaluates to a {@literal null} value, including
 	 * instances of undefined values or missing fields, returns the value of the replacement expression.
 	 *
@@ -180,7 +181,7 @@ public class ConditionalOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that evaluates a boolean expression to return one of the two specified
+		 * Creates new {@link AggregationExpression} that evaluates a boolean expression to return one of the two specified
 		 * return expressions.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -193,7 +194,7 @@ public class ConditionalOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that evaluates a boolean expression to return one of the two specified
+		 * Creates new {@link AggregationExpression} that evaluates a boolean expression to return one of the two specified
 		 * return expressions.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -228,7 +229,8 @@ public class ConditionalOperators {
 	 * field references}, {@link AggregationExpression expressions}, values of simple MongoDB types or values that can be
 	 * converted to a simple MongoDB type.
 	 *
-	 * @see http://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/
+	 * @see <a href=
+	 *      "http://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/">http://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/</a>
 	 * @author Mark Paluch
 	 */
 	public static class IfNull implements AggregationExpression {
@@ -306,7 +308,7 @@ public class ConditionalOperators {
 		/**
 		 * @author Mark Paluch
 		 */
-		public static interface IfNullBuilder {
+		public interface IfNullBuilder {
 
 			/**
 			 * @param fieldReference the field to check for a {@literal null} value, field reference must not be
@@ -326,7 +328,7 @@ public class ConditionalOperators {
 		/**
 		 * @author Mark Paluch
 		 */
-		public static interface ThenBuilder {
+		public interface ThenBuilder {
 
 			/**
 			 * @param value the value to be used if the {@code $ifNull} condition evaluates {@literal true}. Can be a
@@ -346,11 +348,11 @@ public class ConditionalOperators {
 			 * @param expression the expression yielding to the replacement value, must not be {@literal null}.
 			 * @return
 			 */
-			public IfNull thenValueOf(AggregationExpression expression);
+			IfNull thenValueOf(AggregationExpression expression);
 		}
 
 		/**
-		 * Builder for fluent {@link IfNullOperator} creation.
+		 * Builder for fluent {@link IfNull} creation.
 		 *
 		 * @author Mark Paluch
 		 */
@@ -361,7 +363,7 @@ public class ConditionalOperators {
 			private IfNullOperatorBuilder() {}
 
 			/**
-			 * Creates a new builder for {@link IfNullOperator}.
+			 * Creates a new builder for {@link IfNull}.
 			 *
 			 * @return never {@literal null}.
 			 */
@@ -370,7 +372,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.IfNull.IfNullBuilder#ifNull(java.lang.String)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.IfNullBuilder#ifNull(java.lang.String)
 			 */
 			public ThenBuilder ifNull(String fieldReference) {
 
@@ -380,7 +382,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.IfNull.IfNullBuilder#ifNull(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.IfNullBuilder#ifNull(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
 			 */
 			@Override
 			public ThenBuilder ifNull(AggregationExpression expression) {
@@ -391,14 +393,14 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.IfNull.ThenBuilder#then(java.lang.Object)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.ThenBuilder#then(java.lang.Object)
 			 */
 			public IfNull then(Object value) {
 				return new IfNull(condition, value);
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.IfNull.ThenBuilder#thenValueOf(java.lang.String)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.ThenBuilder#thenValueOf(java.lang.String)
 			 */
 			public IfNull thenValueOf(String fieldReference) {
 
@@ -407,7 +409,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.IfNull.ThenBuilder#thenValueOf(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.ThenBuilder#thenValueOf(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
 			 */
 			public IfNull thenValueOf(AggregationExpression expression) {
 
@@ -530,7 +532,8 @@ public class ConditionalOperators {
 	 * {@link AggregationExpression expressions}, values of simple MongoDB types or values that can be converted to a
 	 * simple MongoDB type.
 	 *
-	 * @see http://docs.mongodb.com/manual/reference/operator/aggregation/cond/
+	 * @see <a href=
+	 *      "http://docs.mongodb.com/manual/reference/operator/aggregation/cond/">http://docs.mongodb.com/manual/reference/operator/aggregation/cond/</a>
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
@@ -761,7 +764,7 @@ public class ConditionalOperators {
 		/**
 		 * @author Mark Paluch
 		 */
-		public static interface WhenBuilder {
+		public interface WhenBuilder {
 
 			/**
 			 * @param booleanExpression expression that yields in a boolean result, must not be {@literal null}.
@@ -791,7 +794,7 @@ public class ConditionalOperators {
 		/**
 		 * @author Mark Paluch
 		 */
-		public static interface ThenBuilder {
+		public interface ThenBuilder {
 
 			/**
 			 * @param value the value to be used if the condition evaluates {@literal true}. Can be a {@link Document}, a
@@ -817,7 +820,7 @@ public class ConditionalOperators {
 		/**
 		 * @author Mark Paluch
 		 */
-		public static interface OtherwiseBuilder {
+		public interface OtherwiseBuilder {
 
 			/**
 			 * @param value the value to be used if the condition evaluates {@literal false}. Can be a {@link Document}, a
@@ -862,7 +865,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.WhenBuilder#when(org.bson.Document)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.WhenBuilder#when(org.bson.Document)
 			 */
 			@Override
 			public ConditionalExpressionBuilder when(Document booleanExpression) {
@@ -874,7 +877,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.WhenBuilder#when(org.springframework.data.mongodb.core.query.CriteriaDefinition)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.WhenBuilder#when(org.springframework.data.mongodb.core.query.CriteriaDefinition)
 			 */
 			@Override
 			public ThenBuilder when(CriteriaDefinition criteria) {
@@ -885,7 +888,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.WhenBuilder#when(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.WhenBuilder#when(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
 			 */
 			@Override
 			public ThenBuilder when(AggregationExpression expression) {
@@ -896,7 +899,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.WhenBuilder#when(java.lang.String)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.WhenBuilder#when(java.lang.String)
 			 */
 			@Override
 			public ThenBuilder when(String booleanField) {
@@ -907,7 +910,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.ThenBuilder#then(java.lang.Object)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder#then(java.lang.Object)
 			 */
 			@Override
 			public OtherwiseBuilder then(Object thenValue) {
@@ -918,7 +921,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.ThenBuilder#thenValueOf(java.lang.String)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder#thenValueOf(java.lang.String)
 			 */
 			@Override
 			public OtherwiseBuilder thenValueOf(String fieldReference) {
@@ -929,7 +932,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.ThenBuilder#thenValueOf(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder#thenValueOf(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
 			 */
 			@Override
 			public OtherwiseBuilder thenValueOf(AggregationExpression expression) {
@@ -940,7 +943,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.OtherwiseBuilder#otherwise(java.lang.Object)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.OtherwiseBuilder#otherwise(java.lang.Object)
 			 */
 			@Override
 			public Cond otherwise(Object otherwiseValue) {
@@ -950,7 +953,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.OtherwiseBuilder#otherwiseValueOf(java.lang.String)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.OtherwiseBuilder#otherwiseValueOf(java.lang.String)
 			 */
 			@Override
 			public Cond otherwiseValueOf(String fieldReference) {
@@ -960,7 +963,7 @@ public class ConditionalOperators {
 			}
 
 			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.Cond.OtherwiseBuilder#otherwiseValueOf(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
+			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.OtherwiseBuilder#otherwiseValueOf(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
 			 */
 			@Override
 			public Cond otherwiseValueOf(AggregationExpression expression) {
