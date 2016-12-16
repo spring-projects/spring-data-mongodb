@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.repository.query;
+
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -44,6 +47,7 @@ import com.mongodb.util.JSON;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 1.9
  */
 class ExpressionEvaluatingParameterBinder {
@@ -90,7 +94,7 @@ class ExpressionEvaluatingParameterBinder {
 	 * 
 	 * @param input must not be {@literal null} or empty.
 	 * @param accessor must not be {@literal null}.
-	 * @param bindings must not be {@literal null}.
+	 * @param bindingContext must not be {@literal null}.
 	 * @return
 	 */
 	private String replacePlaceholders(String input, MongoParameterAccessor accessor, BindingContext bindingContext) {
@@ -203,22 +207,23 @@ class ExpressionEvaluatingParameterBinder {
 	 * @param groupName The actual {@link Matcher#group() group}.
 	 * @return
 	 */
-	private String extractPlaceholder(String groupName) {
+	private Placeholder extractPlaceholder(String groupName) {
 
 		if (!groupName.endsWith("'") && !groupName.endsWith("\"")) {
-			return groupName;
+			return new Placeholder(groupName, false);
 		}
-		return groupName.substring(0, groupName.length() - 1);
+		return new Placeholder(groupName.substring(0, groupName.length() - 1), true);
 	}
 
 	/**
 	 * @author Christoph Strobl
+	 * @author Mark Paluch
 	 * @since 1.9
 	 */
 	static class BindingContext {
 
 		final MongoParameters parameters;
-		final Map<String, ParameterBinding> bindings;
+		final Map<Placeholder, ParameterBinding> bindings;
 
 		/**
 		 * Creates new {@link BindingContext}.
@@ -250,13 +255,13 @@ class ExpressionEvaluatingParameterBinder {
 
 		/**
 		 * Get the concrete {@link ParameterBinding} for a given {@literal placeholder}.
-		 * 
+		 *
 		 * @param placeholder must not be {@literal null}.
 		 * @return
 		 * @throws java.util.NoSuchElementException
 		 * @since 1.10
 		 */
-		ParameterBinding getBindingFor(String placeholder) {
+		ParameterBinding getBindingFor(Placeholder placeholder) {
 
 			if (!bindings.containsKey(placeholder)) {
 				throw new NoSuchElementException(String.format("Could not to find binding for placeholder '%s'.", placeholder));
@@ -267,20 +272,43 @@ class ExpressionEvaluatingParameterBinder {
 
 		/**
 		 * Get the associated {@link MongoParameters}.
-		 * 
+		 *
 		 * @return
 		 */
 		public MongoParameters getParameters() {
 			return parameters;
 		}
 
-		private static Map<String, ParameterBinding> mapBindings(List<ParameterBinding> bindings) {
+		private static Map<Placeholder, ParameterBinding> mapBindings(List<ParameterBinding> bindings) {
 
-			Map<String, ParameterBinding> map = new LinkedHashMap<String, ParameterBinding>(bindings.size(), 1);
+			Map<Placeholder, ParameterBinding> map = new LinkedHashMap<Placeholder, ParameterBinding>(bindings.size(), 1);
 			for (ParameterBinding binding : bindings) {
-				map.put(binding.getParameter(), binding);
+				map.put(new Placeholder(binding.getParameter(), binding.isQuoted()), binding);
 			}
 			return map;
+		}
+	}
+
+	/**
+	 * Encapsulates a quoted/unquoted parameter placeholder.
+	 *
+	 * @author Mark Paluch
+	 * @since 1.9
+	 */
+	@Data
+	@RequiredArgsConstructor
+	static class Placeholder {
+
+		private final String parameter;
+		private final boolean quoted;
+
+		/*
+		 * (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return quoted ? String.format("'%s'", parameter) : parameter;
 		}
 	}
 }
