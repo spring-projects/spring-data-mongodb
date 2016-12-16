@@ -84,7 +84,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and concats the value
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and concats the value
 		 * of the referenced field to it.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -97,7 +97,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and concats the result
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and concats the result
 		 * of the given {@link AggregationExpression} to it.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -110,7 +110,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and concats given
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and concats given
 		 * {@literal value} to it.
 		 *
 		 * @param value must not be {@literal null}.
@@ -127,8 +127,8 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and returns a
-		 * substring starting at a specified index position.
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and returns a substring
+		 * starting at a specified index position.
 		 *
 		 * @param start
 		 * @return
@@ -138,8 +138,8 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and returns a
-		 * substring starting at a specified index position including the specified number of characters.
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and returns a substring
+		 * starting at a specified index position including the specified number of characters.
 		 *
 		 * @param start
 		 * @param nrOfChars
@@ -154,7 +154,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and lowers it.
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and lowers it.
 		 *
 		 * @return
 		 */
@@ -163,7 +163,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and uppers it.
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and uppers it.
 		 *
 		 * @return
 		 */
@@ -172,7 +172,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and performs
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and performs
 		 * case-insensitive comparison to the given {@literal value}.
 		 *
 		 * @param value must not be {@literal null}.
@@ -185,7 +185,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and performs
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and performs
 		 * case-insensitive comparison to the referenced {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -198,7 +198,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and performs
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and performs
 		 * case-insensitive comparison to the result of the given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -215,7 +215,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a string
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and searches a string
 		 * for an occurrence of a given {@literal substring} and returns the UTF-8 byte index (zero-based) of the first
 		 * occurrence.
 		 *
@@ -229,7 +229,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a string
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and searches a string
 		 * for an occurrence of a substring contained in the given {@literal field reference} and returns the UTF-8 byte
 		 * index (zero-based) of the first occurrence.
 		 *
@@ -243,7 +243,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a string
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and searches a string
 		 * for an occurrence of a substring resulting from the given {@link AggregationExpression} and returns the UTF-8
 		 * byte index (zero-based) of the first occurrence.
 		 *
@@ -261,7 +261,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a string
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and searches a string
 		 * for an occurrence of a given {@literal substring} and returns the UTF-8 code point index (zero-based) of the
 		 * first occurrence.
 		 *
@@ -275,7 +275,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a string
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and searches a string
 		 * for an occurrence of a substring contained in the given {@literal field reference} and returns the UTF-8 code
 		 * point index (zero-based) of the first occurrence.
 		 *
@@ -289,7 +289,7 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and searches a string
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and searches a string
 		 * for an occurrence of a substring resulting from the given {@link AggregationExpression} and returns the UTF-8
 		 * code point index (zero-based) of the first occurrence.
 		 *
@@ -365,8 +365,8 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and returns a
-		 * substring starting at a specified code point index position.
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and returns a substring
+		 * starting at a specified code point index position.
 		 *
 		 * @param codePointStart
 		 * @return
@@ -376,8 +376,8 @@ public class StringOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated string representation and returns a
-		 * substring starting at a specified code point index position including the specified number of code points.
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and returns a substring
+		 * starting at a specified code point index position including the specified number of code points.
 		 *
 		 * @param codePointStart
 		 * @param nrOfCodePoints

@@ -78,7 +78,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values.
+		 * Creates new {@link AggregationExpression} that compares two values.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
@@ -88,7 +88,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values.
+		 * Creates new {@link AggregationExpression} that compares two values.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
@@ -98,7 +98,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values.
+		 * Creates new {@link AggregationExpression} that compares two values.
 		 *
 		 * @param value must not be {@literal null}.
 		 * @return
@@ -112,7 +112,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is equal to the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -123,7 +123,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is equal to the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -134,7 +134,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is equal to the given value.
 		 *
 		 * @param value must not be {@literal null}.
@@ -149,7 +149,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is greater than the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -160,7 +160,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is greater than the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -171,7 +171,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is greater than the given value.
 		 *
 		 * @param value must not be {@literal null}.
@@ -186,7 +186,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is greater than or equivalent to the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -197,7 +197,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is greater than or equivalent to the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -208,7 +208,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is greater than or equivalent to the given value.
 		 *
 		 * @param value must not be {@literal null}.
@@ -223,7 +223,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is less than the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -234,7 +234,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is less than the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -245,7 +245,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is less than to the given value.
 		 *
 		 * @param value must not be {@literal null}.
@@ -260,7 +260,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is less than or equivalent to the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -271,7 +271,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is less than or equivalent to the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -282,7 +282,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the first
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is less than or equivalent to the given value.
 		 *
 		 * @param value
@@ -297,7 +297,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the values
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the values
 		 * are not equivalent.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -308,7 +308,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the values
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the values
 		 * are not equivalent.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -319,7 +319,7 @@ public class ComparisonOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that compares two values and returns {@literal true} when the values
+		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the values
 		 * are not equivalent.
 		 *
 		 * @param value must not be {@literal null}.

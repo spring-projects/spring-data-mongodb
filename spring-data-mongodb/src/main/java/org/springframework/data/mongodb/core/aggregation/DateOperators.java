@@ -85,7 +85,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the day of the year for a date as a number between 1 and
+		 * Creates new {@link AggregationExpression} that returns the day of the year for a date as a number between 1 and
 		 * 366.
 		 *
 		 * @return
@@ -95,7 +95,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the day of the month for a date as a number between 1 and
+		 * Creates new {@link AggregationExpression} that returns the day of the month for a date as a number between 1 and
 		 * 31.
 		 *
 		 * @return
@@ -105,7 +105,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the day of the week for a date as a number between 1
+		 * Creates new {@link AggregationExpression} that returns the day of the week for a date as a number between 1
 		 * (Sunday) and 7 (Saturday).
 		 *
 		 * @return
@@ -115,7 +115,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the year portion of a date.
+		 * Creates new {@link AggregationExpression} that returns the year portion of a date.
 		 *
 		 * @return
 		 */
@@ -124,7 +124,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the month of a date as a number between 1 and 12.
+		 * Creates new {@link AggregationExpression} that returns the month of a date as a number between 1 and 12.
 		 *
 		 * @return
 		 */
@@ -133,7 +133,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the week of the year for a date as a number between 0 and
+		 * Creates new {@link AggregationExpression} that returns the week of the year for a date as a number between 0 and
 		 * 53.
 		 *
 		 * @return
@@ -143,7 +143,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the hour portion of a date as a number between 0 and 23.
+		 * Creates new {@link AggregationExpression} that returns the hour portion of a date as a number between 0 and 23.
 		 *
 		 * @return
 		 */
@@ -152,8 +152,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the minute portion of a date as a number between 0 and
-		 * 59.
+		 * Creates new {@link AggregationExpression} that returns the minute portion of a date as a number between 0 and 59.
 		 *
 		 * @return
 		 */
@@ -162,8 +161,8 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the second portion of a date as a number between 0 and
-		 * 59, but can be 60 to account for leap seconds.
+		 * Creates new {@link AggregationExpression} that returns the second portion of a date as a number between 0 and 59,
+		 * but can be 60 to account for leap seconds.
 		 *
 		 * @return
 		 */
@@ -172,7 +171,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the millisecond portion of a date as an integer between 0
+		 * Creates new {@link AggregationExpression} that returns the millisecond portion of a date as an integer between 0
 		 * and 999.
 		 *
 		 * @return
@@ -182,7 +181,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that converts a date object to a string according to a user-specified
+		 * Creates new {@link AggregationExpression} that converts a date object to a string according to a user-specified
 		 * {@literal format}.
 		 *
 		 * @param format must not be {@literal null}.
@@ -193,8 +192,8 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the weekday number in ISO 8601 format, ranging from 1
-		 * (for Monday) to 7 (for Sunday).
+		 * Creates new {@link AggregationExpression} that returns the weekday number in ISO 8601 format, ranging from 1 (for
+		 * Monday) to 7 (for Sunday).
 		 *
 		 * @return
 		 */
@@ -203,7 +202,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the week number in ISO 8601 format, ranging from 1 to 53.
+		 * Creates new {@link AggregationExpression} that returns the week number in ISO 8601 format, ranging from 1 to 53.
 		 *
 		 * @return
 		 */
@@ -212,7 +211,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the year number in ISO 8601 format.
+		 * Creates new {@link AggregationExpression} that returns the year number in ISO 8601 format.
 		 *
 		 * @return
 		 */

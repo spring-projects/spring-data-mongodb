@@ -44,7 +44,7 @@ public class AccumulatorOperators {
 	/**
 	 * Take the numeric value referenced resulting from given {@link AggregationExpression}.
 	 *
-	 * @param fieldReference must not be {@literal null}.
+	 * @param expression must not be {@literal null}.
 	 * @return
 	 */
 	public static AccumulatorOperatorFactory valueOf(AggregationExpression expression) {
@@ -72,7 +72,7 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link ArrayOperatorFactory} for given {@link AggregationExpression}.
+		 * Creates new {@link AccumulatorOperatorFactory} for given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 */
@@ -84,7 +84,7 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated numeric value expression and calculates and
+		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and calculates and
 		 * returns the sum.
 		 *
 		 * @return
@@ -94,7 +94,7 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated numeric value expression and returns the
+		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and returns the
 		 * average value.
 		 *
 		 * @return
@@ -104,7 +104,7 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated numeric value expression and returns the
+		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and returns the
 		 * maximum value.
 		 *
 		 * @return
@@ -114,7 +114,7 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated numeric value expression and returns the
+		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and returns the
 		 * minimum value.
 		 *
 		 * @return
@@ -124,7 +124,7 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated numeric value expression and calculates the
+		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and calculates the
 		 * population standard deviation of the input values.
 		 *
 		 * @return
@@ -134,7 +134,7 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that takes the associated numeric value expression and calculates the
+		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and calculates the
 		 * sample standard deviation of the input values.
 		 *
 		 * @return
@@ -215,9 +215,10 @@ public class AccumulatorOperators {
 		}
 
 		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
+		@SuppressWarnings("unchecked")
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List) {
@@ -297,9 +298,10 @@ public class AccumulatorOperators {
 		}
 
 		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
+		@SuppressWarnings("unchecked")
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List) {
@@ -379,9 +381,10 @@ public class AccumulatorOperators {
 		}
 
 		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
+		@SuppressWarnings("unchecked")
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List) {
@@ -461,9 +464,10 @@ public class AccumulatorOperators {
 		}
 
 		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
+		@SuppressWarnings("unchecked")
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List) {
@@ -543,9 +547,10 @@ public class AccumulatorOperators {
 		}
 
 		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
+		@SuppressWarnings("unchecked")
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List) {
@@ -625,9 +630,10 @@ public class AccumulatorOperators {
 		}
 
 		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpressions.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDbObject(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
+		@SuppressWarnings("unchecked")
 		public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List) {

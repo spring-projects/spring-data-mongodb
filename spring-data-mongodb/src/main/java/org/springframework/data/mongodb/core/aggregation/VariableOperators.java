@@ -129,7 +129,7 @@ public class VariableOperators {
 				}
 
 			};
-		};
+		}
 
 		/**
 		 * Starts building new {@link Map} that applies an {@link AggregationExpression} to each item of a referenced array

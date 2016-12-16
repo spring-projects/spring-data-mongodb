@@ -21,9 +21,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.springframework.util.ObjectUtils;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
@@ -45,6 +46,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		return toDbObject(this.value, context);
 	}
 
+	@SuppressWarnings("unchecked")
 	public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
 		Object valueToUse;
@@ -80,6 +82,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		return Fields.fields(fieldRefs).asList();
 	}
 
+	@SuppressWarnings("unchecked")
 	private Object unpack(Object value, AggregationOperationContext context) {
 
 		if (value instanceof AggregationExpression) {
@@ -123,13 +126,13 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		return Arrays.asList(this.value, value);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected java.util.Map<String, Object> append(String key, Object value) {
 
 		if (!(this.value instanceof java.util.Map)) {
 			throw new IllegalArgumentException("o_O");
 		}
-		java.util.Map<String, Object> clone = new LinkedHashMap<String, Object>(
-				(java.util.Map<String, Object>) this.value);
+		java.util.Map<String, Object> clone = new LinkedHashMap<String, Object>((java.util.Map<String, Object>) this.value);
 		clone.put(key, value);
 		return clone;
 
@@ -143,7 +146,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		if (value instanceof java.util.Map) {
 			return new ArrayList<Object>(((java.util.Map) value).values());
 		}
-		return new ArrayList<Object>(Arrays.asList(value));
+		return new ArrayList<Object>(Collections.singletonList(value));
 	}
 
 	protected abstract String getMongoMethod();

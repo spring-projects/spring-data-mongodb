@@ -31,7 +31,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @since 1.7
- * @deprecated since 1.10. Please use {@link AggregationExpressions} instead.
+ * @deprecated since 1.10. Please use {@link ArithmeticOperators} and {@link ComparisonOperators} instead.
  */
 @Deprecated
 public enum AggregationFunctionExpressions {

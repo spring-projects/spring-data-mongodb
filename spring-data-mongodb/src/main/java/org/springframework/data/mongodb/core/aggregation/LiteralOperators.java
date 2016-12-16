@@ -56,7 +56,7 @@ public class LiteralOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that returns the associated value without parsing.
+		 * Creates new {@link Literal} that returns the associated value without parsing.
 		 *
 		 * @return
 		 */

@@ -51,7 +51,7 @@ public class BooleanOperators {
 	}
 
 	/**
-	 * Creates new {@link AggregationExpressions} that evaluates the boolean value of the referenced field and returns the
+	 * Creates new {@link AggregationExpression} that evaluates the boolean value of the referenced field and returns the
 	 * opposite boolean value.
 	 *
 	 * @param fieldReference must not be {@literal null}.
@@ -62,7 +62,7 @@ public class BooleanOperators {
 	}
 
 	/**
-	 * Creates new {@link AggregationExpressions} that evaluates the boolean value of {@link AggregationExpression} result
+	 * Creates new {@link AggregationExpression} that evaluates the boolean value of {@link AggregationExpression} result
 	 * and returns the opposite boolean value.
 	 *
 	 * @param expression must not be {@literal null}.
@@ -105,7 +105,7 @@ public class BooleanOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that evaluates one or more expressions and returns {@literal true} if
+		 * Creates new {@link AggregationExpression} that evaluates one or more expressions and returns {@literal true} if
 		 * all of the expressions are {@literal true}.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -118,7 +118,7 @@ public class BooleanOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that evaluates one or more expressions and returns {@literal true} if
+		 * Creates new {@link AggregationExpression} that evaluates one or more expressions and returns {@literal true} if
 		 * all of the expressions are {@literal true}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -135,7 +135,7 @@ public class BooleanOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that evaluates one or more expressions and returns {@literal true} if
+		 * Creates new {@link AggregationExpression} that evaluates one or more expressions and returns {@literal true} if
 		 * any of the expressions are {@literal true}.
 		 *
 		 * @param expression must not be {@literal null}.
@@ -148,7 +148,7 @@ public class BooleanOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpressions} that evaluates one or more expressions and returns {@literal true} if
+		 * Creates new {@link AggregationExpression} that evaluates one or more expressions and returns {@literal true} if
 		 * any of the expressions are {@literal true}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
