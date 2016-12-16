@@ -53,7 +53,7 @@ public class AggregationSpELExpression implements AggregationExpression {
 	/**
 	 * Creates new {@link AggregationSpELExpression} for the given {@literal expressionString} and {@literal parameters}.
 	 *
-	 * @param expression must not be {@literal null}.
+	 * @param expressionString must not be {@literal null}.
 	 * @param parameters can be empty.
 	 * @return
 	 */
@@ -63,6 +63,9 @@ public class AggregationSpELExpression implements AggregationExpression {
 		return new AggregationSpELExpression(expressionString, parameters);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 		return (Document) TRANSFORMER.transform(rawExpression, context, parameters);
