@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.DBObject;
 import org.springframework.util.Assert;
+
+import com.mongodb.DBObject;
 
 /**
  * An {@link AggregationExpression} that renders a MongoDB Aggregation Framework expression from the AST of a
@@ -53,7 +54,7 @@ public class AggregationSpELExpression implements AggregationExpression {
 	/**
 	 * Creates new {@link AggregationSpELExpression} for the given {@literal expressionString} and {@literal parameters}.
 	 *
-	 * @param expression must not be {@literal null}.
+	 * @param expressionString must not be {@literal null}.
 	 * @param parameters can be empty.
 	 * @return
 	 */
@@ -63,6 +64,9 @@ public class AggregationSpELExpression implements AggregationExpression {
 		return new AggregationSpELExpression(expressionString, parameters);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 */
 	@Override
 	public DBObject toDbObject(AggregationOperationContext context) {
 		return (DBObject) TRANSFORMER.transform(rawExpression, context, parameters);
