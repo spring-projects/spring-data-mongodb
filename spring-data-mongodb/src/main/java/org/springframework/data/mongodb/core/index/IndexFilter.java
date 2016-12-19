@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016. the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.springframework.data.mongodb.core.index;
 
-package org.springframework.data.mongodb.core;
-
-import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.bson.Document;
 
 /**
- * TODO: Revisit for a better pattern.
- * @author Mark Paluch
- * @since 2.0
+ * Use {@link IndexFilter} to create the partial filter expression used when creating
+ * <a href="https://docs.mongodb.com/manual/core/index-partial/">Partial Indexes</a>.
+ *
+ * @author Christoph Strobl
+ * @since 1.10
  */
-public interface IndexOperationsProvider {
+public interface IndexFilter {
 
 	/**
-	 * Returns the operations that can be performed on indexes
+	 * Get the raw (unmapped) filter expression.
 	 *
-	 * @return index operations on the named collection
+	 * @return
 	 */
-	IndexOperations indexOps(String collectionName);
+	Document getFilterObject();
+
 }

@@ -55,6 +55,7 @@ import org.springframework.data.mapping.context.MappingContextIsNewStrategyFacto
 import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -125,6 +126,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 			BeanDefinitionBuilder indexOperationsProviderBuilder = BeanDefinitionBuilder.genericBeanDefinition("org.springframework.data.mongodb.core.DefaultIndexOperationsProvider");
 			indexOperationsProviderBuilder.addConstructorArgReference(dbFactoryRef);
+			indexOperationsProviderBuilder.addConstructorArgValue(BeanDefinitionBuilder.genericBeanDefinition(QueryMapper.class).addConstructorArgReference(id).getBeanDefinition());
 			parserContext.registerBeanComponent(new BeanComponentDefinition(indexOperationsProviderBuilder.getBeanDefinition(), "indexOperationsProvider"));
 		}
 

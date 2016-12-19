@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 
 /**
  * {@link IndexOperationsProvider} to obtain {@link IndexOperations} from a given {@link MongoDbFactory}. TODO: Review
@@ -27,12 +28,13 @@ import org.springframework.data.mongodb.MongoDbFactory;
 class DefaultIndexOperationsProvider implements IndexOperationsProvider {
 
 	private final MongoDbFactory mongoDbFactory;
+	private final QueryMapper mapper;
 
 	/**
 	 * @param mongoDbFactory must not be {@literal null}.
 	 */
-	DefaultIndexOperationsProvider(MongoDbFactory mongoDbFactory) {
-		this.mongoDbFactory = mongoDbFactory;
+	DefaultIndexOperationsProvider(MongoDbFactory mongoDbFactory, QueryMapper mapper) {
+		this.mongoDbFactory = mongoDbFactory; this.mapper = mapper;
 	}
 
 	/* (non-Javadoc)
@@ -40,6 +42,6 @@ class DefaultIndexOperationsProvider implements IndexOperationsProvider {
 	 */
 	@Override
 	public IndexOperations indexOps(String collectionName) {
-		return new DefaultIndexOperations(mongoDbFactory, collectionName);
+		return new DefaultIndexOperations(mongoDbFactory, collectionName, mapper);
 	}
 }

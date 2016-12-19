@@ -37,6 +37,7 @@ public class TextIndexDefinition implements IndexDefinition {
 	private Set<TextIndexedFieldSpec> fieldSpecs;
 	private String defaultLanguage;
 	private String languageOverride;
+	private IndexFilter filter;
 
 	TextIndexDefinition() {
 		fieldSpecs = new LinkedHashSet<TextIndexedFieldSpec>();
@@ -125,6 +126,10 @@ public class TextIndexDefinition implements IndexDefinition {
 		}
 		if (StringUtils.hasText(languageOverride)) {
 			options.put("language_override", languageOverride);
+		}
+
+		if (filter != null) {
+			options.put("partialFilterExpression", filter.getFilterObject());
 		}
 
 		return options;
@@ -322,6 +327,21 @@ public class TextIndexDefinition implements IndexDefinition {
 			}
 
 			this.instance.languageOverride = fieldname;
+			return this;
+		}
+
+		/**
+		 * Only index the documents that meet the specified {@link IndexFilter filter expression}.
+		 *
+		 * @param filter can be {@literal null}.
+		 * @return
+		 * @see <a href=
+		 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
+		 * @since 1.10
+		 */
+		public TextIndexDefinitionBuilder partial(IndexFilter filter) {
+
+			this.instance.filter = filter;
 			return this;
 		}
 

@@ -539,11 +539,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	public IndexOperations indexOps(String collectionName) {
-		return new DefaultIndexOperations(getMongoDbFactory(), collectionName);
+		return new DefaultIndexOperations(getMongoDbFactory(), collectionName, queryMapper);
 	}
 
 	public IndexOperations indexOps(Class<?> entityClass) {
-		return new DefaultIndexOperations(getMongoDbFactory(), determineCollectionName(entityClass));
+		return new DefaultIndexOperations(getMongoDbFactory(), determineCollectionName(entityClass), queryMapper);
 	}
 
 	public BulkOperations bulkOps(BulkMode bulkMode, String collectionName) {
@@ -2176,7 +2176,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * 
 	 * @param ids
 	 * @param documents
-	 * @return 
+	 * @return
 	 * TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
 	 */
 	private static List<Object> consolidateIdentifiers(List<ObjectId> ids, List<Document> documents) {

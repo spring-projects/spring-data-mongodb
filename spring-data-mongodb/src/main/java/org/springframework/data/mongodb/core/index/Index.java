@@ -50,6 +50,8 @@ public class Index implements IndexDefinition {
 
 	private long expire = -1;
 
+	private IndexFilter filter;
+
 	public Index() {}
 
 	public Index(String key, Direction direction) {
@@ -126,6 +128,21 @@ public class Index implements IndexDefinition {
 		return this;
 	}
 
+	/**
+	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}.
+	 *
+	 * @param filter can be {@literal null}.
+	 * @return
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
+	 * @since 1.10
+	 */
+	public Index partial(IndexFilter filter) {
+
+		this.filter = filter;
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
@@ -163,6 +180,9 @@ public class Index implements IndexDefinition {
 			document.put("expireAfterSeconds", expire);
 		}
 
+		if (filter != null) {
+			document.put("partialFilterExpression", filter.getFilterObject());
+		}
 		return document;
 	}
 

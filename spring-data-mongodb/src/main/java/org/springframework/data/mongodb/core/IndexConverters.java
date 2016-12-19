@@ -117,6 +117,10 @@ abstract class IndexConverters {
 				}
 			}
 
+			if(indexOptions.containsKey("partialFilterExpression")) {
+				ops = ops.partialFilterExpression((org.bson.Document)indexOptions.get("partialFilterExpression"));
+			}
+
 			return ops;
 		};
 	}
@@ -124,43 +128,7 @@ abstract class IndexConverters {
 	private static Converter<Document, IndexInfo> getDocumentIndexInfoConverter() {
 
 		return ix -> {
-			Document keyDocument = (Document) ix.get("key");
-			int numberOfElements = keyDocument.keySet().size();
-
-			List<IndexField> indexFields = new ArrayList<IndexField>(numberOfElements);
-
-			for (String key : keyDocument.keySet()) {
-
-				Object value = keyDocument.get(key);
-
-				if (TWO_D_IDENTIFIERS.contains(value)) {
-					indexFields.add(IndexField.geo(key));
-				} else if ("text".equals(value)) {
-
-					Document weights = (Document) ix.get("weights");
-					for (String fieldName : weights.keySet()) {
-						indexFields.add(IndexField.text(fieldName, Float.valueOf(weights.get(fieldName).toString())));
-					}
-
-				} else {
-
-					Double keyValue = new Double(value.toString());
-
-					if (ONE.equals(keyValue)) {
-						indexFields.add(IndexField.create(key, ASC));
-					} else if (MINUS_ONE.equals(keyValue)) {
-						indexFields.add(IndexField.create(key, DESC));
-					}
-				}
-			}
-
-			String name = ix.get("name").toString();
-
-			boolean unique = ix.containsKey("unique") ? (Boolean) ix.get("unique") : false;
-			boolean sparse = ix.containsKey("sparse") ? (Boolean) ix.get("sparse") : false;
-
-			String language = ix.containsKey("default_language") ? (String) ix.get("default_language") : "";
-			return new IndexInfo(indexFields, name, unique, sparse, language);
+			return IndexInfo.indexInfoOf(ix);
 		};
 	}
 }

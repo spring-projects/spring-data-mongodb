@@ -37,6 +37,7 @@ public class GeospatialIndex implements IndexDefinition {
 	private GeoSpatialIndexType type = GeoSpatialIndexType.GEO_2D;
 	private Double bucketSize = 1.0;
 	private String additionalField;
+	private IndexFilter filter;
 
 	/**
 	 * Creates a new {@link GeospatialIndex} for the given field.
@@ -117,6 +118,21 @@ public class GeospatialIndex implements IndexDefinition {
 		return this;
 	}
 
+	/**
+	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}.
+	 *
+	 * @param filter can be {@literal null}.
+	 * @return
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
+	 * @since 1.10
+	 */
+	public GeospatialIndex partial(IndexFilter filter) {
+
+		this.filter = filter;
+		return this;
+	}
+
 	public Document getIndexKeys() {
 
 		Document document = new Document();
@@ -182,6 +198,10 @@ public class GeospatialIndex implements IndexDefinition {
 					dbo.put("bucketSize", bucketSize);
 				}
 				break;
+		}
+
+		if (filter != null) {
+			dbo.put("partialFilterExpression", filter.getFilterObject());
 		}
 
 		return dbo;

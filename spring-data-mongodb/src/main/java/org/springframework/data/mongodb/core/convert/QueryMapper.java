@@ -1092,4 +1092,8 @@ public class QueryMapper {
 			return source.getFieldName();
 		}
 	}
+
+	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
+		return mappingContext;
+	}
 }

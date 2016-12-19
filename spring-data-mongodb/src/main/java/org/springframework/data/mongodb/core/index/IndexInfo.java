@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,16 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import static org.springframework.data.domain.Sort.Direction.*;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.mongodb.DBObject;
+import org.bson.Document;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -30,12 +35,17 @@ import org.springframework.util.ObjectUtils;
  */
 public class IndexInfo {
 
+	private static final Double ONE = Double.valueOf(1);
+	private static final Double MINUS_ONE = Double.valueOf(-1);
+	private static final Collection<String> TWO_D_IDENTIFIERS = Arrays.asList("2d", "2dsphere");
+
 	private final List<IndexField> indexFields;
 
 	private final String name;
 	private final boolean unique;
 	private final boolean sparse;
 	private final String language;
+	private String partialFilterExpression;
 
 	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse,
 			String language) {
@@ -45,6 +55,59 @@ public class IndexInfo {
 		this.unique = unique;
 		this.sparse = sparse;
 		this.language = language;
+	}
+
+	/**
+	 * Creates new {@link IndexInfo} parsing required properties from the given {@literal sourceDocument}.
+	 *
+	 * @param sourceDocument
+	 * @return
+	 * @since 1.10
+	 */
+	public static IndexInfo indexInfoOf(Document sourceDocument) {
+
+		Document keyDbObject = (Document) sourceDocument.get("key");
+		int numberOfElements = keyDbObject.keySet().size();
+
+		List<IndexField> indexFields = new ArrayList<IndexField>(numberOfElements);
+
+		for (String key : keyDbObject.keySet()) {
+
+			Object value = keyDbObject.get(key);
+
+			if (TWO_D_IDENTIFIERS.contains(value)) {
+				indexFields.add(IndexField.geo(key));
+			} else if ("text".equals(value)) {
+
+				Document weights = (Document) sourceDocument.get("weights");
+				for (String fieldName : weights.keySet()) {
+					indexFields.add(IndexField.text(fieldName, Float.valueOf(weights.get(fieldName).toString())));
+				}
+
+			} else {
+
+				Double keyValue = new Double(value.toString());
+
+				if (ONE.equals(keyValue)) {
+					indexFields.add(IndexField.create(key, ASC));
+				} else if (MINUS_ONE.equals(keyValue)) {
+					indexFields.add(IndexField.create(key, DESC));
+				}
+			}
+		}
+
+		String name = sourceDocument.get("name").toString();
+
+		boolean unique = sourceDocument.containsKey("unique") ? (Boolean) sourceDocument.get("unique") : false;
+		boolean sparse = sourceDocument.containsKey("sparse") ? (Boolean) sourceDocument.get("sparse") : false;
+		String language = sourceDocument.containsKey("default_language") ? (String) sourceDocument.get("default_language")
+				: "";
+		String partialFilter = sourceDocument.containsKey("partialFilterExpression")
+				? ((Document)sourceDocument.get("partialFilterExpression")).toJson() : "";
+
+		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
+		info.partialFilterExpression = partialFilter;
+		return info;
 	}
 
 	/**
@@ -94,9 +157,18 @@ public class IndexInfo {
 		return language;
 	}
 
+	/**
+	 * @return
+	 * @since 1.0
+	 */
+	public String getPartialFilterExpression() {
+		return partialFilterExpression;
+	}
+
 	@Override
 	public String toString() {
-		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", sparse=" + sparse + ", language=" + language + "]";
+		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", sparse=" + sparse + ", language=" + language + ", partialFilterExpression="
+				+ partialFilterExpression + "]";
 	}
 
 	@Override
@@ -109,6 +181,7 @@ public class IndexInfo {
 		result = prime * result + (sparse ? 1231 : 1237);
 		result = prime * result + (unique ? 1231 : 1237);
 		result = prime * result + ObjectUtils.nullSafeHashCode(language);
+		result = prime * result + ObjectUtils.nullSafeHashCode(partialFilterExpression);
 		return result;
 	}
 
@@ -145,6 +218,9 @@ public class IndexInfo {
 			return false;
 		}
 		if (!ObjectUtils.nullSafeEquals(language, other.language)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(partialFilterExpression, other.partialFilterExpression)) {
 			return false;
 		}
 		return true;
