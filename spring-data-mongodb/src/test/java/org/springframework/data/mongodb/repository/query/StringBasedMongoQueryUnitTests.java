@@ -368,6 +368,17 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1454
+	 */
+	@Test
+	public void shouldSupportExistsProjection() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("existsByLastname", String.class);
+
+		assertThat(mongoQuery.isExistsQuery(), is(true));
+	}
+
+	/**
 	 * @see DATAMONGO-1565
 	 */
 	@Test
@@ -385,17 +396,6 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
-	}
-
-	/**
-	 * @see DATAMONGO-1454
-	 */
-	@Test
-	public void shouldSupportExistsProjection() throws Exception {
-
-		StringBasedMongoQuery mongoQuery = createQueryForMethod("existsByLastname", String.class);
-
-		assertThat(mongoQuery.isExistsQuery(), is(true));
 	}
 
 	/**

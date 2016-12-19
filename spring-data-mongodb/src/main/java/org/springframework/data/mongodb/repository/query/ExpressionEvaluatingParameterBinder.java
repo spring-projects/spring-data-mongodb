@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -144,19 +143,24 @@ class ExpressionEvaluatingParameterBinder {
 		while (quotationMark != '\'' && quotationMark != '"') {
 
 			quotationMarkIndex--;
+
 			if (quotationMarkIndex < 0) {
 				throw new IllegalArgumentException("Could not find opening quotes for quoted parameter");
 			}
+
 			quotationMark = buffer.charAt(quotationMarkIndex);
 		}
 
 		if (valueForBinding.startsWith("{")) { // remove quotation char before the complex object string
+
 			buffer.deleteCharAt(quotationMarkIndex);
+
 		} else {
 
 			if (quotationMark == '\'') {
 				buffer.replace(quotationMarkIndex, quotationMarkIndex + 1, "\"");
 			}
+
 			buffer.append("\"");
 		}
 	}
@@ -220,7 +224,9 @@ class ExpressionEvaluatingParameterBinder {
 	private Pattern createReplacementPattern(List<ParameterBinding> bindings) {
 
 		StringBuilder regex = new StringBuilder();
+
 		for (ParameterBinding binding : bindings) {
+
 			regex.append("|");
 			regex.append(Pattern.quote(binding.getParameter()));
 			regex.append("['\"]?"); // potential quotation char (as in { foo : '?0' }).
@@ -238,10 +244,9 @@ class ExpressionEvaluatingParameterBinder {
 	 */
 	private Placeholder extractPlaceholder(String groupName) {
 
-		if (!groupName.endsWith("'") && !groupName.endsWith("\"")) {
-			return new Placeholder(groupName, false);
-		}
-		return new Placeholder(groupName.substring(0, groupName.length() - 1), true);
+		return !groupName.endsWith("'") && !groupName.endsWith("\"") ? //
+				Placeholder.of(groupName, false) : //
+				Placeholder.of(groupName.substring(0, groupName.length() - 1), true);
 	}
 
 	/**
@@ -311,9 +316,11 @@ class ExpressionEvaluatingParameterBinder {
 		private static Map<Placeholder, ParameterBinding> mapBindings(List<ParameterBinding> bindings) {
 
 			Map<Placeholder, ParameterBinding> map = new LinkedHashMap<Placeholder, ParameterBinding>(bindings.size(), 1);
+
 			for (ParameterBinding binding : bindings) {
-				map.put(new Placeholder(binding.getParameter(), binding.isQuoted()), binding);
+				map.put(Placeholder.of(binding.getParameter(), binding.isQuoted()), binding);
 			}
+
 			return map;
 		}
 	}
@@ -324,8 +331,7 @@ class ExpressionEvaluatingParameterBinder {
 	 * @author Mark Paluch
 	 * @since 1.9
 	 */
-	@Data
-	@RequiredArgsConstructor
+	@Value(staticConstructor = "of")
 	static class Placeholder {
 
 		private final String parameter;
