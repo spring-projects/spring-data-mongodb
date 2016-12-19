@@ -116,20 +116,49 @@ class ExpressionEvaluatingParameterBinder {
 			ParameterBinding binding = bindingContext.getBindingFor(extractPlaceholder(matcher.group()));
 			String valueForBinding = getParameterValueForBinding(accessor, bindingContext.getParameters(), binding);
 
-			// appendReplacement does not like unescaped $ sign even in the replacement value
-			matcher.appendReplacement(buffer, valueForBinding.replace("$", "\\$"));
+			// appendReplacement does not like unescaped $ sign and others, so we need to quote that stuff first
+			matcher.appendReplacement(buffer, Matcher.quoteReplacement(valueForBinding));
 
 			if (binding.isQuoted()) {
-				if (valueForBinding.startsWith("{")) { // remove quotation char before the complex object string
-					buffer.deleteCharAt(buffer.length() - valueForBinding.length() - 1);
-				} else { // close the quotation
-					buffer.append(matcher.group().charAt(matcher.group().length() - 1));
-				}
+				postProcessQuotedBinding(buffer, valueForBinding);
 			}
 		}
 
 		matcher.appendTail(buffer);
 		return buffer.toString();
+	}
+
+	/**
+	 * Sanitize String binding by replacing single quoted values with double quotes which prevents potential single quotes
+	 * contained in replacement to interfere with the Json parsing. Also take care of complex objects by removing the
+	 * quotation entirely.
+	 *
+	 * @param buffer the {@link StringBuffer} to operate upon.
+	 * @param valueForBinding the actual binding value.
+	 */
+	private void postProcessQuotedBinding(StringBuffer buffer, String valueForBinding) {
+
+		int quotationMarkIndex = buffer.length() - valueForBinding.length() - 1;
+		char quotationMark = buffer.charAt(quotationMarkIndex);
+
+		while (quotationMark != '\'' && quotationMark != '"') {
+
+			quotationMarkIndex--;
+			if (quotationMarkIndex < 0) {
+				throw new IllegalArgumentException("Could not find opening quotes for quoted parameter");
+			}
+			quotationMark = buffer.charAt(quotationMarkIndex);
+		}
+
+		if (valueForBinding.startsWith("{")) { // remove quotation char before the complex object string
+			buffer.deleteCharAt(quotationMarkIndex);
+		} else {
+
+			if (quotationMark == '\'') {
+				buffer.replace(quotationMarkIndex, quotationMarkIndex + 1, "\"");
+			}
+			buffer.append("\"");
+		}
 	}
 
 	/**
@@ -148,7 +177,7 @@ class ExpressionEvaluatingParameterBinder {
 				: accessor.getBindableValue(binding.getParameterIndex());
 
 		if (value instanceof String && binding.isQuoted()) {
-			return (String) value;
+			return ((String) value).startsWith("{") ? (String) value : ((String) value).replace("\"", "\\\"");
 		}
 
 		if (value instanceof byte[]) {
