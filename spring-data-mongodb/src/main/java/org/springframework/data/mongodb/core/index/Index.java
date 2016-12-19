@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,6 +62,8 @@ public class Index implements IndexDefinition {
 	private boolean background = false;
 
 	private long expire = -1;
+
+	private IndexFilter filter;
 
 	public Index() {}
 
@@ -176,6 +178,21 @@ public class Index implements IndexDefinition {
 		return unique();
 	}
 
+	/**
+	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}.
+	 *
+	 * @param filter can be {@literal null}.
+	 * @return
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
+	 * @since 1.10
+	 */
+	public Index partial(IndexFilter filter) {
+
+		this.filter = filter;
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
@@ -213,6 +230,9 @@ public class Index implements IndexDefinition {
 			dbo.put("expireAfterSeconds", expire);
 		}
 
+		if (filter != null) {
+			dbo.put("partialFilterExpression", filter.getFilterObject());
+		}
 		return dbo;
 	}
 

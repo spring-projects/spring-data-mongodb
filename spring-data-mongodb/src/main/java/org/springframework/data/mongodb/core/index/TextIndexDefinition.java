@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ public class TextIndexDefinition implements IndexDefinition {
 	private Set<TextIndexedFieldSpec> fieldSpecs;
 	private String defaultLanguage;
 	private String languageOverride;
+	private IndexFilter filter;
 
 	TextIndexDefinition() {
 		fieldSpecs = new LinkedHashSet<TextIndexedFieldSpec>();
@@ -127,6 +128,10 @@ public class TextIndexDefinition implements IndexDefinition {
 		}
 		if (StringUtils.hasText(languageOverride)) {
 			options.put("language_override", languageOverride);
+		}
+
+		if (filter != null) {
+			options.put("partialFilterExpression", filter.getFilterObject());
 		}
 
 		return options;
@@ -288,8 +293,8 @@ public class TextIndexDefinition implements IndexDefinition {
 		public TextIndexDefinitionBuilder onField(String fieldname, Float weight) {
 
 			if (this.instance.fieldSpecs.contains(ALL_FIELDS)) {
-				throw new InvalidDataAccessApiUsageException(String.format("Cannot add %s to field spec for all fields.",
-						fieldname));
+				throw new InvalidDataAccessApiUsageException(
+						String.format("Cannot add %s to field spec for all fields.", fieldname));
 			}
 
 			this.instance.fieldSpecs.add(new TextIndexedFieldSpec(fieldname, weight));
@@ -318,12 +323,27 @@ public class TextIndexDefinition implements IndexDefinition {
 		public TextIndexDefinitionBuilder withLanguageOverride(String fieldname) {
 
 			if (StringUtils.hasText(this.instance.languageOverride)) {
-				throw new InvalidDataAccessApiUsageException(String.format(
-						"Cannot set language override on %s as it is already defined on %s.", fieldname,
-						this.instance.languageOverride));
+				throw new InvalidDataAccessApiUsageException(
+						String.format("Cannot set language override on %s as it is already defined on %s.", fieldname,
+								this.instance.languageOverride));
 			}
 
 			this.instance.languageOverride = fieldname;
+			return this;
+		}
+
+		/**
+		 * Only index the documents that meet the specified {@link IndexFilter filter expression}.
+		 *
+		 * @param filter can be {@literal null}.
+		 * @return
+		 * @see <a href=
+		 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
+		 * @since 1.10
+		 */
+		public TextIndexDefinitionBuilder partial(IndexFilter filter) {
+
+			this.instance.filter = filter;
 			return this;
 		}
 
