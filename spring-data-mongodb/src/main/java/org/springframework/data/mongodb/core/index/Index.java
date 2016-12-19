@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import com.mongodb.util.JSON;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.util.Assert;
@@ -31,6 +32,7 @@ import com.mongodb.DBObject;
 /**
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Christian Schneider
  */
 @SuppressWarnings("deprecation")
 public class Index implements IndexDefinition {
@@ -62,6 +64,8 @@ public class Index implements IndexDefinition {
 	private boolean background = false;
 
 	private long expire = -1;
+
+	private DBObject partialFilter;
 
 	public Index() {}
 
@@ -165,6 +169,19 @@ public class Index implements IndexDefinition {
 	}
 
 	/**
+	 * @see http://docs.mongodb.com/manual/core/index-partial/
+	 * @return
+	 */
+	public Index partialFilter(String partialFilter) {
+		if(StringUtils.hasText(partialFilter)) {
+			this.partialFilter = (DBObject) JSON.parse(partialFilter);
+		} else {
+			this.partialFilter = null;
+		}
+		return this;
+	}
+
+	/**
 	 * @see http://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping
 	 * @param duplicates
 	 * @return
@@ -211,6 +228,9 @@ public class Index implements IndexDefinition {
 		}
 		if (expire >= 0) {
 			dbo.put("expireAfterSeconds", expire);
+		}
+		if (partialFilter != null) {
+			dbo.put("partialFilterExpression", partialFilter);
 		}
 
 		return dbo;

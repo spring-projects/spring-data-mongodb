@@ -27,6 +27,7 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Christian Schneider
  */
 public class IndexInfo {
 
@@ -37,6 +38,7 @@ public class IndexInfo {
 	private final boolean dropDuplicates;
 	private final boolean sparse;
 	private final String language;
+	private final String partialFilter;
 
 	/**
 	 * @deprecated Will be removed in 1.7. Please use {@link #IndexInfo(List, String, boolean, boolean, boolean, String)}
@@ -51,8 +53,23 @@ public class IndexInfo {
 		this(indexFields, name, unique, dropDuplicates, sparse, "");
 	}
 
+	/**
+	 * @deprecated Will be removed in 1.7. Please use {@link #IndexInfo(List, String, boolean, boolean, boolean, String)}
+	 * @param indexFields
+	 * @param name
+	 * @param unique
+	 * @param dropDuplicates
+	 * @param sparse
+	 * @param language
+	 */
+	@Deprecated
 	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean dropDuplicates, boolean sparse,
 			String language) {
+		this(indexFields, name, unique, dropDuplicates, sparse, "", "");
+	}
+
+	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean dropDuplicates, boolean sparse,
+			String language, String partialFilter) {
 
 		this.indexFields = Collections.unmodifiableList(indexFields);
 		this.name = name;
@@ -60,6 +77,7 @@ public class IndexInfo {
 		this.dropDuplicates = dropDuplicates;
 		this.sparse = sparse;
 		this.language = language;
+		this.partialFilter = partialFilter;
 	}
 
 	/**
@@ -105,6 +123,10 @@ public class IndexInfo {
 		return sparse;
 	}
 
+	public String getPartialFilter() {
+		return partialFilter;
+	}
+
 	/**
 	 * @return
 	 * @since 1.6
@@ -116,7 +138,7 @@ public class IndexInfo {
 	@Override
 	public String toString() {
 		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", dropDuplicates="
-				+ dropDuplicates + ", sparse=" + sparse + ", language=" + language + "]";
+				+ dropDuplicates + ", sparse=" + sparse + ", language=" + language + ", partialFilter=" + partialFilter + "]";
 	}
 
 	@Override
@@ -130,6 +152,7 @@ public class IndexInfo {
 		result = prime * result + (sparse ? 1231 : 1237);
 		result = prime * result + (unique ? 1231 : 1237);
 		result = prime * result + ObjectUtils.nullSafeHashCode(language);
+		result = prime * result + ((partialFilter == null) ? 0 : partialFilter.hashCode());
 		return result;
 	}
 
@@ -166,6 +189,13 @@ public class IndexInfo {
 			return false;
 		}
 		if (unique != other.unique) {
+			return false;
+		}
+		if(partialFilter == null) {
+			if(other.partialFilter != null) {
+				return false;
+			}
+		} else if (!partialFilter.equals(other.partialFilter)) {
 			return false;
 		}
 		if (!ObjectUtils.nullSafeEquals(language, other.language)) {

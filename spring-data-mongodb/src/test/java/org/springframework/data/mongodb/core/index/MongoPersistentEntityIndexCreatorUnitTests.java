@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 import java.util.Collections;
 import java.util.Date;
 
+import com.mongodb.util.JSON;
 import org.hamcrest.core.IsEqual;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,6 +57,7 @@ import com.mongodb.MongoException;
  * @author Johno Crawford
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Christian Schneider
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentEntityIndexCreatorUnitTests {
@@ -186,6 +188,19 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1467
+	 */
+	@Test
+	public void indexCreationShouldUsePartialFilterExpression() {
+
+		MongoMappingContext mappingContext = prepareMappingContext(EntityWithPartialFilterIndex.class);
+		new MongoPersistentEntityIndexCreator(mappingContext, factory);
+
+		assertThat(keysCaptor.getValue().keySet(), hasItem("lastname"));
+		assertThat(optionsCaptor.getValue().get("partialFilterExpression"), is(JSON.parse("{ \"lastname\" : { \"$exists\" : true } }")));
+	}
+
+	/**
 	 * @see DATAMONGO-367
 	 */
 	@Test
@@ -312,5 +327,11 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	class EntityWithGeneratedIndexName {
 
 		@Indexed(useGeneratedName = true, name = "ignored") String lastname;
+	}
+
+	@Document
+	class EntityWithPartialFilterIndex {
+
+		@Indexed(unique = true, name = "uniqueLastname", partialFilter = "{ \"lastname\" : { \"$exists\" : true } }") String lastname;
 	}
 }

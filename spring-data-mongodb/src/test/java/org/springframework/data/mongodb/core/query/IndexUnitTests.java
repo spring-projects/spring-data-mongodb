@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.index.Index.Duplicates;
  * 
  * @author Oliver Gierke
  * @author Laurent Canet
+ * @author Christian Schneider
  */
 public class IndexUnitTests {
 
@@ -67,6 +68,17 @@ public class IndexUnitTests {
 		i.sparse().unique();
 		assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
 		assertEquals("{ \"unique\" : true , \"sparse\" : true}", i.getIndexOptions().toString());
+	}
+
+	/**
+	 * @see DATAMONGO-1467
+	 */
+	@Test
+	public void testWithPartialFilter() {
+		Index i = new Index().on("name", Direction.ASC);
+		i.partialFilter("{ \"name\" : { \"$exists\" : true } }").unique();
+		assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
+		assertEquals("{ \"unique\" : true , \"partialFilterExpression\" : { \"name\" : { \"$exists\" : true}}}", i.getIndexOptions().toString());
 	}
 
 	@Test

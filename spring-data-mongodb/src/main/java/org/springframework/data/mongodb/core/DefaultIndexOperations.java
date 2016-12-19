@@ -173,7 +173,9 @@ public class DefaultIndexOperations implements IndexOperations {
 					boolean dropDuplicates = ix.containsField("dropDups") ? (Boolean) ix.get("dropDups") : false;
 					boolean sparse = ix.containsField("sparse") ? (Boolean) ix.get("sparse") : false;
 					String language = ix.containsField("default_language") ? (String) ix.get("default_language") : "";
-					indexInfoList.add(new IndexInfo(indexFields, name, unique, dropDuplicates, sparse, language));
+					String partialFilter = ix.containsField("partialFilterExpression")
+							? ix.get("partialFilterExpression").toString() : "";
+					indexInfoList.add(new IndexInfo(indexFields, name, unique, dropDuplicates, sparse, language, partialFilter));
 				}
 
 				return indexInfoList;
