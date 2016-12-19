@@ -541,7 +541,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public IndexOperations indexOps(Class<?> entityClass) {
-		return new DefaultIndexOperations(this, determineCollectionName(entityClass));
+		return new DefaultIndexOperations(this, determineCollectionName(entityClass), entityClass);
 	}
 
 	public BulkOperations bulkOps(BulkMode bulkMode, String collectionName) {

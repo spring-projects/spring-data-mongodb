@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,15 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.domain.Sort.Direction.*;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
-import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBCollection;
@@ -42,12 +40,11 @@ import com.mongodb.MongoException;
  */
 public class DefaultIndexOperations implements IndexOperations {
 
-	private static final Double ONE = Double.valueOf(1);
-	private static final Double MINUS_ONE = Double.valueOf(-1);
-	private static final Collection<String> TWO_D_IDENTIFIERS = Arrays.asList("2d", "2dsphere");
-
+	public static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
 	private final MongoOperations mongoOperations;
 	private final String collectionName;
+	private final QueryMapper mapper;
+	private final Class<?> type;
 
 	/**
 	 * Creates a new {@link DefaultIndexOperations}.
@@ -56,12 +53,26 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * @param collectionName must not be {@literal null}.
 	 */
 	public DefaultIndexOperations(MongoOperations mongoOperations, String collectionName) {
+		this(mongoOperations, collectionName, null);
+	}
+
+	/**
+	 * Creates a new {@link DefaultIndexOperations}.
+	 *
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 * @param type Type used for mapping potential partial index filter expression. Can be {@literal null}.
+	 * @since 1.10
+	 */
+	public DefaultIndexOperations(MongoOperations mongoOperations, String collectionName, Class<?> type) {
 
 		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
 		Assert.notNull(collectionName, "Collection name can not be null!");
 
 		this.mongoOperations = mongoOperations;
 		this.collectionName = collectionName;
+		this.mapper = new QueryMapper(mongoOperations.getConverter());
+		this.type = type;
 	}
 
 	/*
@@ -69,14 +80,43 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * @see org.springframework.data.mongodb.core.IndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
 	 */
 	public void ensureIndex(final IndexDefinition indexDefinition) {
+
 		mongoOperations.execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject indexOptions = indexDefinition.getIndexOptions();
+
+				if (indexOptions != null && indexOptions.containsField(PARTIAL_FILTER_EXPRESSION_KEY)) {
+
+					Assert.isInstanceOf(DBObject.class, indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
+
+					indexOptions.put(PARTIAL_FILTER_EXPRESSION_KEY,
+							mapper.getMappedObject((DBObject) indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY),
+									lookupPersistentEntity(type, collectionName)));
+				}
+
 				if (indexOptions != null) {
 					collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
 				} else {
 					collection.createIndex(indexDefinition.getIndexKeys());
 				}
+				return null;
+			}
+
+			private MongoPersistentEntity<?> lookupPersistentEntity(Class<?> entityType, String collection) {
+
+				if (entityType != null) {
+					return mongoOperations.getConverter().getMappingContext().getPersistentEntity(entityType);
+				}
+
+				Collection<? extends MongoPersistentEntity<?>> entities = mongoOperations.getConverter().getMappingContext()
+						.getPersistentEntities();
+
+				for (MongoPersistentEntity<?> entity : entities) {
+					if (entity.getCollection().equals(collection)) {
+						return entity;
+					}
+				}
+
 				return null;
 			}
 		});
@@ -136,44 +176,7 @@ public class DefaultIndexOperations implements IndexOperations {
 				List<IndexInfo> indexInfoList = new ArrayList<IndexInfo>();
 
 				for (DBObject ix : dbObjectList) {
-
-					DBObject keyDbObject = (DBObject) ix.get("key");
-					int numberOfElements = keyDbObject.keySet().size();
-
-					List<IndexField> indexFields = new ArrayList<IndexField>(numberOfElements);
-
-					for (String key : keyDbObject.keySet()) {
-
-						Object value = keyDbObject.get(key);
-
-						if (TWO_D_IDENTIFIERS.contains(value)) {
-							indexFields.add(IndexField.geo(key));
-						} else if ("text".equals(value)) {
-
-							DBObject weights = (DBObject) ix.get("weights");
-							for (String fieldName : weights.keySet()) {
-								indexFields.add(IndexField.text(fieldName, Float.valueOf(weights.get(fieldName).toString())));
-							}
-
-						} else {
-
-							Double keyValue = new Double(value.toString());
-
-							if (ONE.equals(keyValue)) {
-								indexFields.add(IndexField.create(key, ASC));
-							} else if (MINUS_ONE.equals(keyValue)) {
-								indexFields.add(IndexField.create(key, DESC));
-							}
-						}
-					}
-
-					String name = ix.get("name").toString();
-
-					boolean unique = ix.containsField("unique") ? (Boolean) ix.get("unique") : false;
-					boolean dropDuplicates = ix.containsField("dropDups") ? (Boolean) ix.get("dropDups") : false;
-					boolean sparse = ix.containsField("sparse") ? (Boolean) ix.get("sparse") : false;
-					String language = ix.containsField("default_language") ? (String) ix.get("default_language") : "";
-					indexInfoList.add(new IndexInfo(indexFields, name, unique, dropDuplicates, sparse, language));
+					indexInfoList.add(IndexInfo.indexInfoOf(ix));
 				}
 
 				return indexInfoList;
