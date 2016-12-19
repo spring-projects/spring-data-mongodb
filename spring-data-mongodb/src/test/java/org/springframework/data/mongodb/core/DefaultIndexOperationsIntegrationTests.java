@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,28 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.core.ReflectiveDBCollectionInvoker.*;
+import static org.springframework.data.mongodb.core.index.PartialIndexFilter.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 
@@ -42,6 +52,9 @@ import com.mongodb.DBObject;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class DefaultIndexOperationsIntegrationTests {
 
+	private static final Version THREE_DOT_TWO = new Version(3, 2);
+	private static Version mongoVersion;
+
 	static final DBObject GEO_SPHERE_2D = new BasicDBObject("loaction", "2dsphere");
 
 	@Autowired MongoTemplate template;
@@ -51,12 +64,21 @@ public class DefaultIndexOperationsIntegrationTests {
 	@Before
 	public void setUp() {
 
+		queryMongoVersionIfNecessary();
 		String collectionName = this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
 
 		this.collection = this.template.getDb().getCollection(collectionName);
 		this.collection.dropIndexes();
 
 		this.indexOps = new DefaultIndexOperations(template, collectionName);
+	}
+
+	private void queryMongoVersionIfNecessary() {
+
+		if (mongoVersion == null) {
+			CommandResult result = template.executeCommand("{ buildInfo: 1 }");
+			mongoVersion = Version.parse(result.get("version").toString());
+		}
 	}
 
 	/**
@@ -69,6 +91,78 @@ public class DefaultIndexOperationsIntegrationTests {
 
 		IndexInfo info = findAndReturnIndexInfo(GEO_SPHERE_2D);
 		assertThat(info.getIndexFields().get(0).isGeo(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1467
+	 */
+	@Test
+	public void shouldApplyPartialFilterCorrectly() {
+
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
+
+		IndexDefinition id = new Index().named("partial-with-criteria").on("k3y", Direction.ASC)
+				.partial(filter(where("q-t-y").gte(10)));
+
+		indexOps.ensureIndex(id);
+
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-criteria");
+		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"q-t-y\" : { \"$gte\" : 10}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1467
+	 */
+	@Test
+	public void shouldApplyPartialFilterWithMappedPropertyCorrectly() {
+
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
+
+		IndexDefinition id = new Index().named("partial-with-mapped-criteria").on("k3y", Direction.ASC)
+				.partial(filter(where("quantity").gte(10)));
+
+		indexOps.ensureIndex(id);
+
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-mapped-criteria");
+		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"qty\" : { \"$gte\" : 10}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1467
+	 */
+	@Test
+	public void shouldApplyPartialDBOFilterCorrectly() {
+
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
+
+		IndexDefinition id = new Index().named("partial-with-dbo").on("k3y", Direction.ASC)
+				.partial(filter(new BasicDBObject("qty", new BasicDBObject("$gte", 10))));
+
+		indexOps.ensureIndex(id);
+
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-dbo");
+		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"qty\" : { \"$gte\" : 10}}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1467
+	 */
+	@Test
+	public void shouldFavorExplicitMappingHintViaClass() {
+
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
+
+		IndexDefinition id = new Index().named("partial-with-inheritance").on("k3y", Direction.ASC)
+				.partial(filter(where("age").gte(10)));
+
+		indexOps = new DefaultIndexOperations(template,
+				this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class),
+				MappingToSameCollection.class);
+
+		indexOps.ensureIndex(id);
+
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-inheritance");
+		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"a_g_e\" : { \"$gte\" : 10}}")));
 	}
 
 	private IndexInfo findAndReturnIndexInfo(DBObject keys) {
@@ -89,5 +183,15 @@ public class DefaultIndexOperationsIntegrationTests {
 		throw new AssertionError(String.format("Index with %s was not found", name));
 	}
 
-	static class DefaultIndexOperationsIntegrationTestsSample {}
+	@Document(collection = "default-index-operations-tests")
+	static class DefaultIndexOperationsIntegrationTestsSample {
+
+		@Field("qty") Integer quantity;
+	}
+
+	@Document(collection = "default-index-operations-tests")
+	static class MappingToSameCollection extends DefaultIndexOperationsIntegrationTestsSample {
+
+		@Field("a_g_e") Integer age;
+	}
 }
