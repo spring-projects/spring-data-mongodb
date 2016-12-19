@@ -40,7 +40,8 @@ import com.mongodb.MongoException;
  */
 public class DefaultIndexOperations implements IndexOperations {
 
-	public static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
+	private static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
+
 	private final MongoOperations mongoOperations;
 	private final String collectionName;
 	private final QueryMapper mapper;
@@ -166,7 +167,9 @@ public class DefaultIndexOperations implements IndexOperations {
 	public List<IndexInfo> getIndexInfo() {
 
 		return mongoOperations.execute(collectionName, new CollectionCallback<List<IndexInfo>>() {
+
 			public List<IndexInfo> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
 				List<DBObject> dbObjectList = collection.getIndexInfo();
 				return getIndexData(dbObjectList);
 			}

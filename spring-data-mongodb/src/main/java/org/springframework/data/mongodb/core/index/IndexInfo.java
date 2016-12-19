@@ -23,9 +23,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.mongodb.DBObject;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
+
+import com.mongodb.DBObject;
 
 /**
  * @author Mark Pollack
@@ -90,10 +91,13 @@ public class IndexInfo {
 			Object value = keyDbObject.get(key);
 
 			if (TWO_D_IDENTIFIERS.contains(value)) {
+
 				indexFields.add(IndexField.geo(key));
+
 			} else if ("text".equals(value)) {
 
 				DBObject weights = (DBObject) sourceDocument.get("weights");
+
 				for (String fieldName : weights.keySet()) {
 					indexFields.add(IndexField.text(fieldName, Float.valueOf(weights.get(fieldName).toString())));
 				}

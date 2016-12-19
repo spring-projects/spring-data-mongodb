@@ -102,7 +102,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
 
 		IndexDefinition id = new Index().named("partial-with-criteria").on("k3y", Direction.ASC)
-				.partial(filter(where("q-t-y").gte(10)));
+				.partial(of(where("q-t-y").gte(10)));
 
 		indexOps.ensureIndex(id);
 
@@ -119,7 +119,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
 
 		IndexDefinition id = new Index().named("partial-with-mapped-criteria").on("k3y", Direction.ASC)
-				.partial(filter(where("quantity").gte(10)));
+				.partial(of(where("quantity").gte(10)));
 
 		indexOps.ensureIndex(id);
 
@@ -136,7 +136,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
 
 		IndexDefinition id = new Index().named("partial-with-dbo").on("k3y", Direction.ASC)
-				.partial(filter(new BasicDBObject("qty", new BasicDBObject("$gte", 10))));
+				.partial(of(new BasicDBObject("qty", new BasicDBObject("$gte", 10))));
 
 		indexOps.ensureIndex(id);
 
@@ -153,7 +153,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
 
 		IndexDefinition id = new Index().named("partial-with-inheritance").on("k3y", Direction.ASC)
-				.partial(filter(where("age").gte(10)));
+				.partial(of(where("age").gte(10)));
 
 		indexOps = new DefaultIndexOperations(template,
 				this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class),
