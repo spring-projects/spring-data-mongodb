@@ -28,6 +28,8 @@ import org.bson.Document;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
+import com.mongodb.DBObject;
+
 /**
  * @author Mark Pollack
  * @author Oliver Gierke
@@ -76,10 +78,13 @@ public class IndexInfo {
 			Object value = keyDbObject.get(key);
 
 			if (TWO_D_IDENTIFIERS.contains(value)) {
+
 				indexFields.add(IndexField.geo(key));
+
 			} else if ("text".equals(value)) {
 
 				Document weights = (Document) sourceDocument.get("weights");
+
 				for (String fieldName : weights.keySet()) {
 					indexFields.add(IndexField.text(fieldName, Float.valueOf(weights.get(fieldName).toString())));
 				}

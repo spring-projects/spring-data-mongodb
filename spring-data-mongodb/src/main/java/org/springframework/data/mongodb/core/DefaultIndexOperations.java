@@ -47,7 +47,7 @@ import com.mongodb.client.model.IndexOptions;
  */
 public class DefaultIndexOperations implements IndexOperations {
 
-	public static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
+	private static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
 
 	private final MongoDbFactory mongoDbFactory;
 	private final String collectionName;
