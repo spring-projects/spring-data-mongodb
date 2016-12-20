@@ -1809,6 +1809,38 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				collectionName);
 	}
 
+	/**
+	 * new one
+	 * @param collectionName
+	 * @param query
+	 * @param fields
+	 * @param sourceClass
+	 * @param targetClass
+	 * @param objectCallback
+	 * @param <S>
+	 * @param <T>
+	 * @return
+	 */
+	 <S, T> List<T> doFind(String collectionName, Document query, Document fields, Class<S> sourceClass, Class<T> targetClass,
+									CursorPreparer preparer) {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
+
+		Document mappedFields = queryMapper.getMappedFields(fields, entity);
+		Document mappedQuery = queryMapper.getMappedObject(query, entity);
+
+		System.out.println(String.format("find using query: %s fields: %s for class: %s in collection: %s returning: %s",
+		 serializeToJsonSafely(mappedQuery), mappedFields, sourceClass, collectionName, targetClass));
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("find using query: {} fields: {} for class: {} in collection: {}",
+					serializeToJsonSafely(mappedQuery), mappedFields, sourceClass, collectionName);
+		}
+
+		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields), preparer, new ReadDocumentCallback<T>(mongoConverter,targetClass, collectionName),
+				collectionName);
+	}
+
 	protected Document convertToDocument(CollectionOptions collectionOptions) {
 		Document document = new Document();
 		if (collectionOptions != null) {
