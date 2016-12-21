@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.9.6.RELEASE (2016-12-21)
+---------------------------------------------
+* DATAMONGO-1565 - Placeholders in manually defined queries not escaped properly.
+* DATAMONGO-1534 - Type hint is missing when using BulkOperations.insert.
+* DATAMONGO-1525 - Reading empty EnumSet fails.
+* DATAMONGO-1522 - Release 1.9.6 (Hopper SR6).
+
+
 Changes in version 1.10.0.RC1 (2016-12-21)
 ------------------------------------------
 * DATAMONGO-1567 - Upgrade to a newer JDK version on TravisCI.
