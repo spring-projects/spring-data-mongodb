@@ -366,7 +366,9 @@ public interface PersonRepository extends MongoRepository<Person, String>
 }
 ----
 
-The placeholder ?0 lets you substitute the value from the method arguments into the JSON query string.
+The placeholder `?0` lets you substitute the value from the method arguments into the JSON query string.
+
+NOTE: `String` parameter values are escaped during the binding process, which means that it is not possible to add MongoDB specific operators via the argument.
 
 You can also use the filter property to restrict the set of properties that will be mapped into the Java object. For example,
 
@@ -381,6 +383,64 @@ public interface PersonRepository extends MongoRepository<Person, String>
 ----
 
 This will return only the firstname, lastname and Id properties of the Person objects. The age property, a java.lang.Integer, will not be set and its value will therefore be null.
+
+[[mongodb.repositories.queries.json-spel]]
+=== JSON based queries with SpEL expressions
+
+Query strings and field definitions can be used together with SpEL expressions to create dynamic queries at runtime.
+SpEL expressions can provide predicate values and can be used to extend predicates with subdocuments.
+
+Expressions expose method arguments through an array that contains all arguments. The the following query uses `[0]`
+to declare the predicate value for `lastname` that is equivalent to the `?0` parameter binding.
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String>
+
+  @Query("{'lastname': ?#{[0]} }")
+  List<Person> findByQueryWithExpression(String param0);
+
+}
+----
+
+Expressions can be used to invoke functions, evaluate conditionals and construct values. SpEL expressions
+reveal in conjunction with JSON a side-effect as Map-like declarations inside of SpEL read like JSON.
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String>
+
+  @Query("{'id': ?#{ [0] ? {$exists :true} : [1] }}")
+  List<Person> findByQueryWithExpressionAndNestedObject(boolean param0, String param1);
+
+}
+----
+
+SpEL in query strings can be a powerful way to enhance queries and can accept a broad range of unwanted arguments.
+You should make sure to sanitize strings before passing these to the query to avoid unwanted changes to your query.
+
+Expression support is extensible through the Query SPI `org.springframework.data.repository.query.spi.EvaluationContextExtension`
+than can contribute properties, functions and customize the root object. Extensions are retrieved from the application context
+at the time of SpEL evaluation when the query is build.
+
+[source,java]
+----
+public class SampleEvaluationContextExtension extends EvaluationContextExtensionSupport {
+
+  @Override
+  public String getExtensionId() {
+    return "security";
+  }
+
+  @Override
+  public Map<String, Object> getProperties() {
+    return Collections.singletonMap("principal", SecurityContextHolder.getCurrent().getPrincipal());
+  }
+}
+----
+
+NOTE: Bootstrapping `MongoRepositoryFactory` yourself is not application context-aware and requires further configuration
+to pick up Query SPI extensions.
 
 [[mongodb.repositories.queries.type-safe]]
 === Type-safe Query methods
