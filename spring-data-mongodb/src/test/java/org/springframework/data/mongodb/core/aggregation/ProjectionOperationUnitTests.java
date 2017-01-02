@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,11 +55,17 @@ public class ProjectionOperationUnitTests {
 	static final String DIVIDE = "$divide";
 	static final String PROJECT = "$project";
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullFields() {
 		new ProjectionOperation(null);
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void declaresBackReferenceCorrectly() {
 
@@ -71,6 +77,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("prop"), is((Object) Fields.UNDERSCORE_ID_REF));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void alwaysUsesExplicitReference() {
 
@@ -83,6 +92,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void aliasesSimpleFieldProjection() {
 
@@ -94,6 +106,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("bar"), is((Object) "$foo"));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void aliasesArithmeticProjection() {
 
@@ -109,6 +124,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(addClause.get(1), is((Object) 41));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationWithoutAlias() {
 
@@ -122,6 +140,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationPlus() {
 
@@ -136,6 +157,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationMinus() {
 
@@ -150,6 +174,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(SUBTRACT), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationMultiply() {
 
@@ -164,6 +191,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(MULTIPLY), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationDivide() {
 
@@ -178,12 +208,18 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(DIVIDE), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void arithmenticProjectionOperationDivideByZeroException() {
 
 		new ProjectionOperation().and("a").divide(0);
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationMod() {
 
