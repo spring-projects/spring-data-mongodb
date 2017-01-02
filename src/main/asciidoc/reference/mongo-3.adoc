@@ -88,7 +88,7 @@ This section covers additional things to keep in mind when using the 3.0 driver.
 
 * `IndexOperations.resetIndexCache()` is no longer supported.
 * Any `MapReduceOptions.extraOption` is silently ignored.
-* `WriteResult` does not longer hold error informations but throws an Exception.
+* `WriteResult` does not longer hold error information but throws an Exception.
 * `MongoOperations.executeInSession(…)` no longer calls `requestStart` / `requestDone`.
 * Index name generation has become a driver internal operations, still we use the 2.x schema to generate names.
 * Some Exception messages differ between the generation 2 and 3 servers as well as between _MMap.v1_ and _WiredTiger_ storage engine.
