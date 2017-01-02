@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,11 +46,17 @@ public class ProjectionOperationUnitTests {
 	static final String DIVIDE = "$divide";
 	static final String PROJECT = "$project";
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullFields() {
 		new ProjectionOperation(null);
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void declaresBackReferenceCorrectly() {
 
@@ -62,6 +68,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("prop"), is((Object) Fields.UNDERSCORE_ID_REF));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void alwaysUsesExplicitReference() {
 
@@ -74,6 +83,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void aliasesSimpleFieldProjection() {
 
@@ -85,6 +97,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("bar"), is((Object) "$foo"));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void aliasesArithmeticProjection() {
 
@@ -100,6 +115,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(addClause.get(1), is((Object) 41));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationWithoutAlias() {
 
@@ -113,6 +131,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationPlus() {
 
@@ -127,6 +148,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationMinus() {
 
@@ -141,6 +165,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(SUBTRACT), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationMultiply() {
 
@@ -155,6 +182,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(MULTIPLY), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationDivide() {
 
@@ -169,12 +199,18 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(DIVIDE), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void arithmenticProjectionOperationDivideByZeroException() {
 
 		new ProjectionOperation().and("a").divide(0);
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationMod() {
 
@@ -274,9 +310,8 @@ public class ProjectionOperationUnitTests {
 				.and("foo").as("bar"); //
 
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		assertThat(
-				dbObject.toString(),
-				is("{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}"));
+		assertThat(dbObject.toString(), is(
+				"{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}"));
 	}
 
 	/**
@@ -331,10 +366,8 @@ public class ProjectionOperationUnitTests {
 		assertThat(dbObject, is(notNullValue()));
 
 		DBObject projected = exctractOperation("$project", dbObject);
-		assertThat(
-				projected.get("dayOfYearPlus1Day"),
-				is((Object) new BasicDBObject("$dayOfYear", Arrays.asList(new BasicDBObject("$add", Arrays.<Object> asList(
-						"$date", 86400000))))));
+		assertThat(projected.get("dayOfYearPlus1Day"), is((Object) new BasicDBObject("$dayOfYear",
+				Arrays.asList(new BasicDBObject("$add", Arrays.<Object> asList("$date", 86400000))))));
 	}
 
 	/**
