@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
+import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 import static org.springframework.data.mongodb.util.DBObjectUtils.*;
 
@@ -32,11 +32,11 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
-import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.Variable;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
+import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -60,11 +60,17 @@ public class ProjectionOperationUnitTests {
 	static final String DIVIDE = "$divide";
 	static final String PROJECT = "$project";
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullFields() {
 		new ProjectionOperation(null);
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void declaresBackReferenceCorrectly() {
 
@@ -76,6 +82,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("prop"), is((Object) Fields.UNDERSCORE_ID_REF));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void alwaysUsesExplicitReference() {
 
@@ -88,6 +97,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void aliasesSimpleFieldProjection() {
 
@@ -99,6 +111,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("bar"), is((Object) "$foo"));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void aliasesArithmeticProjection() {
 
@@ -114,6 +129,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(addClause.get(1), is((Object) 41));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationWithoutAlias() {
 
@@ -127,6 +145,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationPlus() {
 
@@ -141,6 +162,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationMinus() {
 
@@ -155,6 +179,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(SUBTRACT), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationMultiply() {
 
@@ -169,6 +196,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(MULTIPLY), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationDivide() {
 
@@ -183,12 +213,18 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(DIVIDE), is((Object) Arrays.<Object> asList("$a", 1)));
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void arithmenticProjectionOperationDivideByZeroException() {
 
 		new ProjectionOperation().and("a").divide(0);
 	}
 
+	/**
+	 * @see DATAMONGO-586
+	 */
 	@Test
 	public void arithmenticProjectionOperationMod() {
 
@@ -1757,7 +1793,8 @@ public class ProjectionOperationUnitTests {
 						.define(
 								newVariable("total")
 										.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax"))),
-								newVariable("discounted").forExpression(ConditionalOperators.Cond.when("applyDiscount").then(0.9D).otherwise(1.0D)))
+								newVariable("discounted")
+										.forExpression(ConditionalOperators.Cond.when("applyDiscount").then(0.9D).otherwise(1.0D)))
 						.andApply(AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))) //
 				.as("finalTotal").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
@@ -1807,7 +1844,8 @@ public class ProjectionOperationUnitTests {
 		DBObject agg = project().and(StringOperators.valueOf("item").indexOf("foo")).as("byteLocation")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(JSON.parse("{ $project: { byteLocation: { $indexOfBytes: [ \"$item\", \"foo\" ] } } }")));
+		assertThat(agg,
+				Matchers.is(JSON.parse("{ $project: { byteLocation: { $indexOfBytes: [ \"$item\", \"foo\" ] } } }")));
 	}
 
 	/**
@@ -1914,8 +1952,8 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldRenderRangeCorrectly() {
 
-		DBObject agg = project().and(ArrayOperators.RangeOperator.rangeStartingAt(0L).to("distance").withStepSize(25L)).as("rest_stops")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(ArrayOperators.RangeOperator.rangeStartingAt(0L).to("distance").withStepSize(25L))
+				.as("rest_stops").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, isBsonObject().containing("$project.rest_stops.$range.[0]", 0L)
 				.containing("$project.rest_stops.$range.[1]", "$distance").containing("$project.rest_stops.$range.[2]", 25L));
@@ -1995,7 +2033,8 @@ public class ProjectionOperationUnitTests {
 		DBObject agg = project().and(ArrayOperators.arrayOf("in_stock").containsValue("bananas")).as("has_bananas")
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(JSON.parse("{ $project : { has_bananas : { $in : [\"bananas\", \"$in_stock\" ] } } }")));
+		assertThat(agg,
+				Matchers.is(JSON.parse("{ $project : { has_bananas : { $in : [\"bananas\", \"$in_stock\" ] } } }")));
 	}
 
 	/**
@@ -2061,11 +2100,16 @@ public class ProjectionOperationUnitTests {
 				"   }\n" + //
 				"}";
 
-		CaseOperator cond1 = CaseOperator.when(ComparisonOperators.Gte.valueOf(AccumulatorOperators.Avg.avgOf("scores")).greaterThanEqualToValue(90))
+		CaseOperator cond1 = CaseOperator
+				.when(ComparisonOperators.Gte.valueOf(AccumulatorOperators.Avg.avgOf("scores")).greaterThanEqualToValue(90))
 				.then("Doing great!");
-		CaseOperator cond2 = CaseOperator.when(BooleanOperators.And.and(ComparisonOperators.Gte.valueOf(AccumulatorOperators.Avg.avgOf("scores")).greaterThanEqualToValue(80),
-				ComparisonOperators.Lt.valueOf(AccumulatorOperators.Avg.avgOf("scores")).lessThanValue(90))).then("Doing pretty well.");
-		CaseOperator cond3 = CaseOperator.when(ComparisonOperators.Lt.valueOf(AccumulatorOperators.Avg.avgOf("scores")).lessThanValue(80))
+		CaseOperator cond2 = CaseOperator
+				.when(BooleanOperators.And.and(
+						ComparisonOperators.Gte.valueOf(AccumulatorOperators.Avg.avgOf("scores")).greaterThanEqualToValue(80),
+						ComparisonOperators.Lt.valueOf(AccumulatorOperators.Avg.avgOf("scores")).lessThanValue(90)))
+				.then("Doing pretty well.");
+		CaseOperator cond3 = CaseOperator
+				.when(ComparisonOperators.Lt.valueOf(AccumulatorOperators.Avg.avgOf("scores")).lessThanValue(80))
 				.then("Needs improvement.");
 
 		DBObject agg = project().and(ConditionalOperators.switchCases(cond1, cond2, cond3).defaultTo("No scores found."))
@@ -2080,8 +2124,7 @@ public class ProjectionOperationUnitTests {
 	@Test
 	public void shouldTypeCorrectly() {
 
-		DBObject agg = project().and(DataTypeOperators.Type.typeOf("a")).as("a")
-				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject agg = project().and(DataTypeOperators.Type.typeOf("a")).as("a").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, Matchers.is(JSON.parse("{ $project : { a: { $type: \"$a\" } } }")));
 	}
