@@ -3,7 +3,7 @@
 
 == Document Structure
 
-This part of the reference documentation explains the core functionality offered by Spring Data Document.
+This part of the reference documentation explains the core functionality offered by Spring Data MongoDB.
 
 <<mongo.core>> introduces the MongoDB module feature set.
 
