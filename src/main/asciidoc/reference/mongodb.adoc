@@ -387,7 +387,7 @@ You can also provide the host and port for the underlying `com.mongodb.Mongo` in
                   password="secret"/>
 ----
 
-If your mongodb authentication database differs from the target database, use the authentication-dbname attribute, as shown below.
+If your MongoDB authentication database differs from the target database, use the `authentication-dbname` attribute, as shown below.
 
 [source,xml]
 ----
@@ -397,8 +397,8 @@ If your mongodb authentication database differs from the target database, use th
                   dbname="database"
                   username="joe"
                   password="secret"
-				  authentication-dbname="admin"
-				  />
+                  authentication-dbname="admin"
+                  />
 ----
 
 If you need to configure additional options on the `com.mongodb.Mongo` instance that is used to create a `SimpleMongoDbFactory` you can refer to an existing bean using the `mongo-ref` attribute as shown below. To show another common usage pattern, this listing shows the use of a property placeholder to parametrise the configuration and creating `MongoTemplate`.
