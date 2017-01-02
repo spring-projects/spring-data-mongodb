@@ -401,7 +401,6 @@ public interface PersonRepository extends MongoRepository<Person, String>
 
   @Query("{'lastname': ?#{[0]} }")
   List<Person> findByQueryWithExpression(String param0);
-
 }
 ----
 
@@ -414,7 +413,6 @@ public interface PersonRepository extends MongoRepository<Person, String>
 
   @Query("{'id': ?#{ [0] ? {$exists :true} : [1] }}")
   List<Person> findByQueryWithExpressionAndNestedObject(boolean param0, String param1);
-
 }
 ----
 
