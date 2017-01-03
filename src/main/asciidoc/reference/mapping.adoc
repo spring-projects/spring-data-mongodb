@@ -126,6 +126,10 @@ In addition to these types, Spring Data MongoDB provides a set of built-in conve
 | native
 | `{"value" : { … }}`
 
+| `Decimal128`
+| native
+| `{"value" : NumberDecimal(…)}`
+
 | `AtomicInteger` +
 calling `get()` before the actual conversion
 | converter +
