@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
-import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
+import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link Aggregation}.
@@ -283,6 +284,47 @@ public class AggregationUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1585
+	 */
+	@Test
+	public void shouldSupportSortingBySyntheticAndExposedGroupFields() {
+
+		DBObject agg = newAggregation( //
+				group("cmsParameterId").addToSet("title").as("titles"), //
+				sort(Direction.ASC, "cmsParameterId", "titles") //
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(notNullValue()));
+
+		DBObject sort = ((List<DBObject>) agg.get("pipeline")).get(1);
+
+		assertThat(getAsDBObject(sort, "$sort"), is(JSON.parse("{ \"_id.cmsParameterId\" : 1 , \"titles\" : 1}")));
+	}
+
+	/**
+	 * @see DATAMONGO-1585
+	 */
+	@Test
+	public void shouldSupportSortingByProjectedFields() {
+
+		DBObject agg = newAggregation( //
+				project("cmsParameterId") //
+						.and(SystemVariable.CURRENT + ".titles").as("titles") //
+						.and("field").as("alias"), //
+				sort(Direction.ASC, "cmsParameterId", "titles", "alias") //
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(notNullValue()));
+
+		DBObject sort = ((List<DBObject>) agg.get("pipeline")).get(1);
+
+		assertThat(getAsDBObject(sort, "$sort"),
+				isBsonObject().containing("cmsParameterId", 1) //
+						.containing("titles", 1) //
+						.containing("alias", 1));
+	}
+
+	/**
 	 * @see DATAMONGO-924
 	 */
 	@Test
@@ -339,7 +381,7 @@ public class AggregationUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-954
+	 * @see DATAMONGO-954, DATAMONGO-1585
 	 */
 	@Test
 	public void shouldSupportReferencingSystemVariables() {
@@ -348,7 +390,7 @@ public class AggregationUnitTests {
 				project("someKey") //
 						.and("a").as("a1") //
 						.and(Aggregation.CURRENT + ".a").as("a2") //
-				, sort(Direction.DESC, "a") //
+				, sort(Direction.DESC, "a1") //
 				, group("someKey").first(Aggregation.ROOT).as("doc") //
 		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
 
@@ -357,7 +399,7 @@ public class AggregationUnitTests {
 				is((DBObject) new BasicDBObject("someKey", 1).append("a1", "$a").append("a2", "$$CURRENT.a")));
 
 		DBObject sort = extractPipelineElement(agg, 1, "$sort");
-		assertThat(sort, is((DBObject) new BasicDBObject("a", -1)));
+		assertThat(sort, is((DBObject) new BasicDBObject("a1", -1)));
 
 		DBObject group = extractPipelineElement(agg, 2, "$group");
 		assertThat(group,
