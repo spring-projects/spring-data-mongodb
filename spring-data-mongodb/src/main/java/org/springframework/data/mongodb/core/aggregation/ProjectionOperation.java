@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.If
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
+import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.util.Assert;
 
 /**
@@ -1206,8 +1207,9 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @since 1.10
 		 */
 		public ProjectionOperationBuilder let(AggregationExpression valueExpression, String variableName,
-											  AggregationExpression in) {
-			return this.operation.and(VariableOperators.Let.define(ExpressionVariable.newVariable(variableName).forExpression(valueExpression)).andApply(in));
+				AggregationExpression in) {
+			return this.operation.and(VariableOperators.Let
+					.define(ExpressionVariable.newVariable(variableName).forExpression(valueExpression)).andApply(in));
 		}
 
 		/**
@@ -1279,6 +1281,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * 
 		 * @author Oliver Gierke
 		 * @author Thomas Darimont
+		 * @author Mark Paluch
 		 */
 		static class FieldProjection extends Projection {
 
@@ -1297,7 +1300,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			private FieldProjection(Field field, Object value) {
 
-				super(field);
+				super(new ExposedField(field.getName(), true));
 
 				this.field = field;
 				this.value = value;

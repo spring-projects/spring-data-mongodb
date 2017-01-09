@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,7 +103,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	public void aliasesIdFieldCorrectly() {
 
 		AggregationOperationContext context = getContext(Foo.class);
-		assertThat(context.getReference("id"), is((FieldReference) new DirectFieldReference(new ExposedField(field("id", "_id"), true))));
+		assertThat(context.getReference("id"),
+				is((FieldReference) new DirectFieldReference(new ExposedField(field("id", "_id"), true))));
 	}
 
 	/**
@@ -174,6 +175,23 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1585
+	 */
+	@Test
+	public void rendersSortOfProjectedFieldCorrectly() {
+
+		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
+		TypedAggregation<MeterData> agg = newAggregation(MeterData.class, project().and("counterName").as("counter"), //
+				sort(Direction.ASC, "counter"));
+
+		Document dbo = agg.toDocument("meterData", context);
+		Document sort = getPipelineElementFromAggregationAt(dbo, 1);
+
+		Document definition = (Document) sort.get("$sort");
+		assertThat(definition.get("counter"), is(equalTo((Object) 1)));
+	}
+
+	/**
 	 * @see DATAMONGO-1133
 	 */
 	@Test
@@ -192,14 +210,15 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-1326
+	 * @see DATAMONGO-1326, DATAMONGO-1585
 	 */
 	@Test
 	public void lookupShouldInheritFieldsFromInheritingAggregationOperation() {
 
 		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
 		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
-				lookup("OtherCollection", "resourceId", "otherId", "lookup"), sort(Direction.ASC, "resourceId"));
+				lookup("OtherCollection", "resourceId", "otherId", "lookup"), //
+				sort(Direction.ASC, "resourceId", "counterName"));
 
 		org.bson.Document document = agg.toDocument("meterData", context);
 		org.bson.Document sort = getPipelineElementFromAggregationAt(document, 1);
@@ -207,6 +226,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
 		assertThat(definition.get("resourceId"), is(equalTo((Object) 1)));
+		assertThat(definition.get("counter_name"), is(equalTo((Object) 1)));
 	}
 
 	/**

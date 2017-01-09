@@ -1734,8 +1734,8 @@ Note that the aggregation operations not listed here are currently not supported
 [[mongo.aggregation.projection]]
 === Projection Expressions
 
-Projection expressions are used to define the fields that are the outcome of a particular aggregation step. Projection expressions can be defined via the `project` method of the `Aggregate` class either by passing a list of `String` 's or an aggregation framework `Fields` object. The projection can be extended with additional fields through a fluent API via the `and(String)` method and aliased via the `as(String)` method.
-Note that one can also define fields with aliases via the static factory method `Fields.field` of the aggregation framework that can then be used to construct a new `Fields` instance.
+Projection expressions are used to define the fields that are the outcome of a particular aggregation step. Projection expressions can be defined via the `project` method of the `Aggregate` class either by passing a list of ``String``'s or an aggregation framework `Fields` object. The projection can be extended with additional fields through a fluent API via the `and(String)` method and aliased via the `as(String)` method.
+Note that one can also define fields with aliases via the static factory method `Fields.field` of the aggregation framework that can then be used to construct a new `Fields` instance. References to projected fields in later aggregation stages are only valid by using the field name of included fields or their alias of aliased or newly defined fields. Fields not included in the projection cannot be referenced in later aggregation stages.
 
 .Projection expression examples
 ====
@@ -1747,9 +1747,19 @@ project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, b
 ----
 ====
 
-Note that more examples for project operations can be found in the `AggregationTests` class.
+.Multi-Stage Aggregation using Projection and Sorting
+====
+[source,java]
+----
+project("name", "netPrice"), sort(ASC, "name") // will generate {$project: {name: 1, netPrice: 1}}, {$sort: {name: 1}}
 
-Note that further details regarding the projection expressions can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project[corresponding section] of the MongoDB Aggregation Framework reference documentation.
+project().and("foo").as("bar"), sort(ASC, "bar") // will generate {$project: {bar: $foo}}, {$sort: {bar: 1}}
+
+project().and("foo").as("bar"), sort(ASC, "foo") // this will not work
+----
+====
+
+More examples for project operations can be found in the `AggregationTests` class. Note that further details regarding the projection expressions can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project[corresponding section] of the MongoDB Aggregation Framework reference documentation.
 
 [[mongo.aggregation.projection.expressions]]
 ==== Spring Expression Support in Projection Expressions
@@ -1922,7 +1932,7 @@ ZipInfoStats firstZipInfoStats = result.getMappedResults().get(0);
 
 * The class `ZipInfo` maps the structure of the given input-collection. The class `ZipInfoStats` defines the structure in the desired output format.
 * As a first step we use the `group` operation to define a group from the input-collection. The grouping criteria is the combination of the fields `"state"` and `"city"` which forms the id structure of the group. We aggregate the value of the `"population"` property from the grouped elements with by using the `sum` operator saving the result in the field `"pop"`.
-* In a second step we use the `sort` operation to sort the intermediate-result by the fields `"pop"`, `"state"` and `"city"` in ascending order, such that the smallest city is at the top and the biggest city is at the bottom of the result. Note that the sorting on "state" and `"city"` is implicitly performed against the group id fields which Spring Data MongoDB took care of.
+* In a second step we use the `sort` operation to sort the intermediate-result by the fields `"pop"`, `"state"` and `"city"` in ascending order, such that the smallest city is at the top and the biggest city is at the bottom of the result. Note that the sorting on `"state"` and `"city"` is implicitly performed against the group id fields which Spring Data MongoDB took care of.
 * In the third step we use a `group` operation again to group the intermediate result by `"state"`. Note that `"state"` again implicitly references an group-id field. We select the name and the population count of the biggest and smallest city with calls to the `last(…)` and `first(...)` operator respectively via the `project` operation.
 * As the forth step we select the `"state"` field from the previous `group` operation. Note that `"state"` again implicitly references an group-id field. As we do not want an implicitly generated id to appear, we exclude the id from the previous operation via `and(previousOperation()).exclude()`. As we want to populate the nested `City` structures in our output-class accordingly we have to emit appropriate sub-documents with the nested method.
 * Finally as the fifth step we sort the resulting list of `StateStats` by their state name in ascending order via the `sort` operation.
