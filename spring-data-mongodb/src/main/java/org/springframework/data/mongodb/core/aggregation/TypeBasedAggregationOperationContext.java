@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import com.mongodb.DBObject;
  * property references into document field names.
  * 
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 1.3
  */
 public class TypeBasedAggregationOperationContext implements AggregationOperationContext {
@@ -95,7 +96,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 
 		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(
 				field.getTarget(), type);
-		Field mappedField = field(propertyPath.getLeafProperty().getName(),
+		Field mappedField = field(field.getName(),
 				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
 
 		return new FieldReference(new ExposedField(mappedField, true));
