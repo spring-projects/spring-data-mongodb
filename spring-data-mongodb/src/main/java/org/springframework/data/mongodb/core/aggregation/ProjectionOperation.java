@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
@@ -552,7 +553,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates an {@code $mod} expression that divides the value of the given field by the previously mentioned field
 		 * and returns the remainder.
-		 * 
+		 *
 		 * @param fieldReference
 		 * @return
 		 */
@@ -566,7 +567,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return project("size");
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
@@ -622,6 +623,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * 
 		 * @author Oliver Gierke
 		 * @author Thomas Darimont
+		 * @author Mark Paluch
 		 */
 		static class FieldProjection extends Projection {
 
@@ -640,7 +642,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			private FieldProjection(Field field, Object value) {
 
-				super(field);
+				super(new ExposedField(field.getName(), true));
 
 				this.field = field;
 				this.value = value;
@@ -732,7 +734,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				this.values = Arrays.asList(values);
 			}
 
-			/* 
+			/*
 			 * (non-Javadoc)
 			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 			 */
