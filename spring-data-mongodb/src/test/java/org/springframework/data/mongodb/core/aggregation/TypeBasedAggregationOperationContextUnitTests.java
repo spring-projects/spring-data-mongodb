@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
@@ -192,6 +193,27 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1586
+	 */
+	@Test
+	public void rendersFieldAliasingProjectionCorrectly() {
+
+		AggregationOperationContext context = getContext(FooPerson.class);
+		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class,
+				project() //
+						.and("name").as("person_name") //
+						.and("age.value").as("age"));
+
+		Document dbo = agg.toDocument("person", context);
+
+		Document projection = getPipelineElementFromAggregationAt(dbo, 0);
+		assertThat(getAsDocument(projection, "$project"),
+				isBsonObject() //
+						.containing("person_name", "$name") //
+						.containing("age", "$age.value"));
+	}
+
+	/**
 	 * @see DATAMONGO-1133
 	 */
 	@Test
@@ -328,7 +350,9 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(getValue(age, "$cond"), isBsonObject().containing("else", "$age"));
 	}
 
-	/**.AggregationUnitTests
+	/**
+	 * .AggregationUnitTests
+	 * 
 	 * @see DATAMONGO-861, DATAMONGO-1542
 	 */
 	@Test

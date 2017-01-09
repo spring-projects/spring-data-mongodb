@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.3
  */
 public class TypeBasedAggregationOperationContext implements AggregationOperationContext {
@@ -94,9 +95,9 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 
 	private FieldReference getReferenceFor(Field field) {
 
-		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext
-				.getPersistentPropertyPath(field.getTarget(), type);
-		Field mappedField = field(propertyPath.getLeafProperty().getName(),
+		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(
+				field.getTarget(), type);
+		Field mappedField = field(field.getName(),
 				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
 
 		return new DirectFieldReference(new ExposedField(mappedField, true));
