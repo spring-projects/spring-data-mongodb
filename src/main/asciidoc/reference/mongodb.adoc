@@ -1685,9 +1685,14 @@ Note that one can also define fields with aliases via the static factory method 
 ====
 [source,java]
 ----
-project("name", "netPrice") // will generate {$project: {name: 1, netPrice: 1}}
-project().and("foo").as("bar") // will generate {$project: {bar: $foo}}
-project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, bar: $foo}}
+// will generate {$project: {name: 1, netPrice: 1}}
+project("name", "netPrice")
+
+// will generate {$project: {bar: $foo}}
+project().and("foo").as("bar")
+
+// will generate {$project: {a: 1, b: 1, bar: $foo}}
+project("a","b").and("foo").as("bar")
 ----
 ====
 
@@ -1695,11 +1700,14 @@ project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, b
 ====
 [source,java]
 ----
-project("name", "netPrice"), sort(ASC, "name") // will generate {$project: {name: 1, netPrice: 1}}, {$sort: {name: 1}}
+// will generate {$project: {name: 1, netPrice: 1}}, {$sort: {name: 1}}
+project("name", "netPrice"), sort(ASC, "name")
 
-project().and("foo").as("bar"), sort(ASC, "bar") // will generate {$project: {bar: $foo}}, {$sort: {bar: 1}}
+// will generate {$project: {bar: $foo}}, {$sort: {bar: 1}}
+project().and("foo").as("bar"), sort(ASC, "bar")
 
-project().and("foo").as("bar"), sort(ASC, "foo") // this will not work
+// this will not work
+project().and("foo").as("bar"), sort(ASC, "foo")
 ----
 ====
 
