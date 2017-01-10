@@ -2347,6 +2347,8 @@ The list of callback methods that are present in AbstractMappingEventListener ar
 * `onAfterLoad` - called in MongoTemplate find, findAndRemove, findOne and getCollection methods after the Document is retrieved from the database.
 * `onAfterConvert` - called in MongoTemplate find, findAndRemove, findOne and getCollection methods after the Document retrieved from the database was converted to a POJO.
 
+NOTE: Lifecycle events are only emitted for root level types. Complex types used as properties within a document root are not subject of event publication unless they are document references annotated with `@DBRef`.
+
 [[mongo.exception]]
 == Exception Translation
 
