@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,10 +166,7 @@ public class MappingMongoConverterUnitTests {
 		converter.convertToMongoType(date);
 	}
 
-	/**
-	 * @see DATAMONGO-130
-	 */
-	@Test
+	@Test // DATAMONGO-130
 	public void writesMapTypeCorrectly() {
 
 		Map<Locale, String> map = Collections.singletonMap(Locale.US, "Foo");
@@ -180,10 +177,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbObject.get(Locale.US.toString()).toString(), is("Foo"));
 	}
 
-	/**
-	 * @see DATAMONGO-130
-	 */
-	@Test
+	@Test // DATAMONGO-130
 	public void readsMapWithCustomKeyTypeCorrectly() {
 
 		DBObject mapObject = new BasicDBObject(Locale.US.toString(), "Value");
@@ -193,10 +187,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.map.get(Locale.US), is("Value"));
 	}
 
-	/**
-	 * @see DATAMONGO-128
-	 */
-	@Test
+	@Test // DATAMONGO-128
 	public void usesDocumentsStoredTypeIfSubtypeOfRequest() {
 
 		DBObject dbObject = new BasicDBObject();
@@ -206,10 +197,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(Contact.class, dbObject), is(instanceOf(Person.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-128
-	 */
-	@Test
+	@Test // DATAMONGO-128
 	public void ignoresDocumentsStoredTypeIfCompletelyDifferentTypeRequested() {
 
 		DBObject dbObject = new BasicDBObject();
@@ -231,10 +219,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY).toString(), is(Person.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-136
-	 */
-	@Test
+	@Test // DATAMONGO-136
 	public void writesEnumsCorrectly() {
 
 		ClassWithEnumProperty value = new ClassWithEnumProperty();
@@ -247,10 +232,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.get("sampleEnum").toString(), is("FIRST"));
 	}
 
-	/**
-	 * @see DATAMONGO-209
-	 */
-	@Test
+	@Test // DATAMONGO-209
 	public void writesEnumCollectionCorrectly() {
 
 		ClassWithEnumProperty value = new ClassWithEnumProperty();
@@ -266,10 +248,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String) enums.get(0), is("FIRST"));
 	}
 
-	/**
-	 * @see DATAMONGO-136
-	 */
-	@Test
+	@Test // DATAMONGO-136
 	public void readsEnumsCorrectly() {
 		DBObject dbObject = new BasicDBObject("sampleEnum", "FIRST");
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
@@ -277,10 +256,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.sampleEnum, is(SampleEnum.FIRST));
 	}
 
-	/**
-	 * @see DATAMONGO-209
-	 */
-	@Test
+	@Test // DATAMONGO-209
 	public void readsEnumCollectionsCorrectly() {
 
 		BasicDBList enums = new BasicDBList();
@@ -294,10 +270,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.enums, hasItem(SampleEnum.FIRST));
 	}
 
-	/**
-	 * @see DATAMONGO-144
-	 */
-	@Test
+	@Test // DATAMONGO-144
 	public void considersFieldNameWhenWriting() {
 
 		Person person = new Person();
@@ -310,10 +283,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.containsField("firstname"), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-144
-	 */
-	@Test
+	@Test // DATAMONGO-144
 	public void considersFieldNameWhenReading() {
 
 		DBObject dbObject = new BasicDBObject("foo", "Oliver");
@@ -338,10 +308,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.addresses, is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-145
-	 */
-	@Test
+	@Test // DATAMONGO-145
 	public void writesCollectionWithInterfaceCorrectly() {
 
 		Person person = new Person();
@@ -361,10 +328,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String) personDbObject.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(Person.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-145
-	 */
-	@Test
+	@Test // DATAMONGO-145
 	public void readsCollectionWithInterfaceCorrectly() {
 
 		BasicDBObject person = new BasicDBObject(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
@@ -397,10 +361,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(read.locale, is(Locale.US));
 	}
 
-	/**
-	 * @see DATAMONGO-161
-	 */
-	@Test
+	@Test // DATAMONGO-161
 	public void readsNestedMapsCorrectly() {
 
 		Map<String, String> secondLevel = new HashMap<String, String>();
@@ -424,10 +385,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(nestedMap.get("afield"), is(firstLevel));
 	}
 
-	/**
-	 * @see DATACMNS-42, DATAMONGO-171
-	 */
-	@Test
+	@Test // DATACMNS-42, DATAMONGO-171
 	public void writesClassWithBigDecimal() {
 
 		BigDecimalContainer container = new BigDecimalContainer();
@@ -442,10 +400,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(((DBObject) dbObject.get("map")).get("foo"), is(instanceOf(String.class)));
 	}
 
-	/**
-	 * @see DATACMNS-42, DATAMONGO-171
-	 */
-	@Test
+	@Test // DATACMNS-42, DATAMONGO-171
 	public void readsClassWithBigDecimal() {
 
 		DBObject dbObject = new BasicDBObject("value", "2.5");
@@ -478,10 +433,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(typedOuterString.size(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-192
-	 */
-	@Test
+	@Test // DATAMONGO-192
 	public void readsEmptySetsCorrectly() {
 
 		Person person = new Person();
@@ -507,10 +459,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbo2.get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-207
-	 */
-	@Test
+	@Test // DATAMONGO-207
 	public void convertsCustomEmptyMapCorrectly() {
 
 		DBObject map = new BasicDBObject();
@@ -522,10 +471,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.map, is(instanceOf(SortedMap.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-211
-	 */
-	@Test
+	@Test // DATAMONGO-211
 	public void maybeConvertHandlesNullValuesCorrectly() {
 		assertThat(converter.convertToMongoType(null), is(nullValue()));
 	}
@@ -556,10 +502,7 @@ public class MappingMongoConverterUnitTests {
 
 	}
 
-	/**
-	 * @see DATAMONGO-228
-	 */
-	@Test
+	@Test // DATAMONGO-228
 	public void writesNullValuesForMaps() {
 
 		ClassWithMapProperty foo = new ClassWithMapProperty();
@@ -591,10 +534,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.convertToMongoType(id), is((Object) id));
 	}
 
-	/**
-	 * @see DATAMONGO-235
-	 */
-	@Test
+	@Test // DATAMONGO-235
 	public void writesMapOfListsCorrectly() {
 
 		ClassWithMapProperty input = new ClassWithMapProperty();
@@ -615,10 +555,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String) value.get(0), is("Bar"));
 	}
 
-	/**
-	 * @see DATAMONGO-235
-	 */
-	@Test
+	@Test // DATAMONGO-235
 	public void readsMapListValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
@@ -629,10 +566,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.mapOfLists, is(not(nullValue())));
 	}
 
-	/**
-	 * @see DATAMONGO-235
-	 */
-	@Test
+	@Test // DATAMONGO-235
 	public void writesMapsOfObjectsCorrectly() {
 
 		ClassWithMapProperty input = new ClassWithMapProperty();
@@ -654,10 +588,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String) value.get(0), is("Bar"));
 	}
 
-	/**
-	 * @see DATAMONGO-235
-	 */
-	@Test
+	@Test // DATAMONGO-235
 	public void readsMapOfObjectsListValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
@@ -668,10 +599,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.mapOfObjects, is(not(nullValue())));
 	}
 
-	/**
-	 * @see DATAMONGO-245
-	 */
-	@Test
+	@Test // DATAMONGO-245
 	public void readsMapListNestedValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
@@ -684,10 +612,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String) ((Map<?, ?>) firstObjectInFoo).get("Hello"), is(equalTo("World")));
 	}
 
-	/**
-	 * @see DATAMONGO-245
-	 */
-	@Test
+	@Test // DATAMONGO-245
 	public void readsMapDoublyNestedValuesCorrectly() {
 
 		BasicDBObject nested = new BasicDBObject();
@@ -704,10 +629,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String) ((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
 	}
 
-	/**
-	 * @see DATAMONGO-245
-	 */
-	@Test
+	@Test // DATAMONGO-245
 	public void readsMapListDoublyNestedValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
@@ -726,10 +648,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String) ((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
 	}
 
-	/**
-	 * @see DATAMONGO-259
-	 */
-	@Test
+	@Test // DATAMONGO-259
 	public void writesListOfMapsCorrectly() {
 
 		Map<String, Locale> map = Collections.singletonMap("Foo", Locale.ENGLISH);
@@ -750,10 +669,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String) dbObject.get("Foo"), is(Locale.ENGLISH.toString()));
 	}
 
-	/**
-	 * @see DATAMONGO-259
-	 */
-	@Test
+	@Test // DATAMONGO-259
 	public void readsListOfMapsCorrectly() {
 
 		DBObject map = new BasicDBObject("Foo", "en");
@@ -771,10 +687,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(wrapper.listOfMaps.get(0).get("Foo"), is(Locale.ENGLISH));
 	}
 
-	/**
-	 * @see DATAMONGO-259
-	 */
-	@Test
+	@Test // DATAMONGO-259
 	public void writesPlainMapOfCollectionsCorrectly() {
 
 		Map<String, List<Locale>> map = Collections.singletonMap("Foo", Arrays.asList(Locale.US));
@@ -791,10 +704,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(list.get(0), is((Object) Locale.US.toString()));
 	}
 
-	/**
-	 * @see DATAMONGO-285
-	 */
-	@Test
+	@Test // DATAMONGO-285
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void testSaveMapWithACollectionAsValue() {
 
@@ -819,10 +729,7 @@ public class MappingMongoConverterUnitTests {
 		assertEquals(list.get(1), listFromMongo.get(1));
 	}
 
-	/**
-	 * @see DATAMONGO-309
-	 */
-	@Test
+	@Test // DATAMONGO-309
 	@SuppressWarnings({ "unchecked" })
 	public void writesArraysAsMapValuesCorrectly() {
 
@@ -845,10 +752,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(list, hasItem((Object) "bar"));
 	}
 
-	/**
-	 * @see DATAMONGO-324
-	 */
-	@Test
+	@Test // DATAMONGO-324
 	public void writesDbObjectCorrectly() {
 
 		DBObject dbObject = new BasicDBObject();
@@ -862,10 +766,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbObject, is(result));
 	}
 
-	/**
-	 * @see DATAMONGO-324
-	 */
-	@Test
+	@Test // DATAMONGO-324
 	public void readsDbObjectCorrectly() {
 
 		DBObject dbObject = new BasicDBObject();
@@ -876,10 +777,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result, is(dbObject));
 	}
 
-	/**
-	 * @see DATAMONGO-329
-	 */
-	@Test
+	@Test // DATAMONGO-329
 	public void writesMapAsGenericFieldCorrectly() {
 
 		Map<String, A<String>> objectToSave = new HashMap<String, A<String>>();
@@ -915,10 +813,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.get("_id"), is((Object) 5));
 	}
 
-	/**
-	 * @see DATAMONGO-368
-	 */
-	@Test
+	@Test // DATAMONGO-368
 	@SuppressWarnings("unchecked")
 	public void writesNullValuesForCollection() {
 
@@ -934,10 +829,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((Collection<Object>) contacts, hasItem(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-379
-	 */
-	@Test
+	@Test // DATAMONGO-379
 	public void considersDefaultingExpressionsAtConstructorArguments() {
 
 		DBObject dbObject = new BasicDBObject("foo", "bar");
@@ -947,10 +839,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.bar, is(-1));
 	}
 
-	/**
-	 * @see DATAMONGO-379
-	 */
-	@Test
+	@Test // DATAMONGO-379
 	public void usesDocumentFieldIfReferencedInAtValue() {
 
 		DBObject dbObject = new BasicDBObject("foo", "bar");
@@ -961,10 +850,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.bar, is(37));
 	}
 
-	/**
-	 * @see DATAMONGO-379
-	 */
-	@Test(expected = MappingInstantiationException.class)
+	@Test(expected = MappingInstantiationException.class) // DATAMONGO-379
 	public void rejectsNotFoundConstructorParameterForPrimitiveType() {
 
 		DBObject dbObject = new BasicDBObject("foo", "bar");
@@ -972,10 +858,7 @@ public class MappingMongoConverterUnitTests {
 		converter.read(DefaultedConstructorArgument.class, dbObject);
 	}
 
-	/**
-	 * @see DATAMONGO-358
-	 */
-	@Test
+	@Test // DATAMONGO-358
 	public void writesListForObjectPropertyCorrectly() {
 
 		Attribute attribute = new Attribute();
@@ -1001,18 +884,12 @@ public class MappingMongoConverterUnitTests {
 		assertThat(values, hasItems("1", "2"));
 	}
 
-	/**
-	 * @see DATAMONGO-380
-	 */
-	@Test(expected = MappingException.class)
+	@Test(expected = MappingException.class) // DATAMONGO-380
 	public void rejectsMapWithKeyContainingDotsByDefault() {
 		converter.write(Collections.singletonMap("foo.bar", "foobar"), new BasicDBObject());
 	}
 
-	/**
-	 * @see DATAMONGO-380
-	 */
-	@Test
+	@Test // DATAMONGO-380
 	public void escapesDotInMapKeysIfReplacementConfigured() {
 
 		converter.setMapKeyDotReplacement("~");
@@ -1024,10 +901,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbObject.containsField("foo.bar"), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-380
-	 */
-	@Test
+	@Test // DATAMONGO-380
 	@SuppressWarnings("unchecked")
 	public void unescapesDotInMapKeysIfReplacementConfigured() {
 
@@ -1040,10 +914,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.containsKey("foobar"), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-382
-	 */
-	@Test
+	@Test // DATAMONGO-382
 	public void convertsSetToBasicDBList() {
 
 		Address address = new Address();
@@ -1058,10 +929,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(readResult.iterator().next(), is(instanceOf(Address.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-402
-	 */
-	@Test
+	@Test // DATAMONGO-402
 	public void readsMemberClassCorrectly() {
 
 		DBObject dbObject = new BasicDBObject("inner", new BasicDBObject("value", "FOO!"));
@@ -1072,10 +940,7 @@ public class MappingMongoConverterUnitTests {
 		assertSyntheticFieldValueOf(outer.inner, outer);
 	}
 
-	/**
-	 * @see DATAMONGO-458
-	 */
-	@Test
+	@Test // DATAMONGO-458
 	public void readEmptyCollectionIsModifiable() {
 
 		DBObject dbObject = new BasicDBObject("contactsSet", new BasicDBList());
@@ -1085,10 +950,7 @@ public class MappingMongoConverterUnitTests {
 		wrapper.contactsSet.add(new Contact() {});
 	}
 
-	/**
-	 * @see DATAMONGO-424
-	 */
-	@Test
+	@Test // DATAMONGO-424
 	public void readsPlainDBRefObject() {
 
 		DBRef dbRef = new DBRef("foo", 2);
@@ -1098,10 +960,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.ref, is(dbRef));
 	}
 
-	/**
-	 * @see DATAMONGO-424
-	 */
-	@Test
+	@Test // DATAMONGO-424
 	public void readsCollectionOfDBRefs() {
 
 		DBRef dbRef = new DBRef("foo", 2);
@@ -1115,10 +974,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.refs, hasItem(dbRef));
 	}
 
-	/**
-	 * @see DATAMONGO-424
-	 */
-	@Test
+	@Test // DATAMONGO-424
 	public void readsDBRefMap() {
 
 		DBRef dbRef = mock(DBRef.class);
@@ -1131,10 +987,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.refMap.values(), hasItem(dbRef));
 	}
 
-	/**
-	 * @see DATAMONGO-424
-	 */
-	@Test
+	@Test // DATAMONGO-424
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void resolvesDBRefMapValue() {
 
@@ -1152,10 +1005,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.personMap.values(), hasItem(isPerson));
 	}
 
-	/**
-	 * @see DATAMONGO-462
-	 */
-	@Test
+	@Test // DATAMONGO-462
 	public void writesURLsAsStringOutOfTheBox() throws Exception {
 
 		URLWrapper wrapper = new URLWrapper();
@@ -1167,20 +1017,14 @@ public class MappingMongoConverterUnitTests {
 		assertThat(sink.get("url"), is((Object) "http://springsource.org"));
 	}
 
-	/**
-	 * @see DATAMONGO-462
-	 */
-	@Test
+	@Test // DATAMONGO-462
 	public void readsURLFromStringOutOfTheBox() throws Exception {
 		DBObject dbObject = new BasicDBObject("url", "http://springsource.org");
 		URLWrapper result = converter.read(URLWrapper.class, dbObject);
 		assertThat(result.url, is(new URL("http://springsource.org")));
 	}
 
-	/**
-	 * @see DATAMONGO-485
-	 */
-	@Test
+	@Test // DATAMONGO-485
 	public void writesComplexIdCorrectly() {
 
 		ComplexId id = new ComplexId();
@@ -1198,10 +1042,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(((DBObject) idField).get("innerId"), is((Object) 4711L));
 	}
 
-	/**
-	 * @see DATAMONGO-485
-	 */
-	@Test
+	@Test // DATAMONGO-485
 	public void readsComplexIdCorrectly() {
 
 		DBObject innerId = new BasicDBObject("innerId", 4711L);
@@ -1213,10 +1054,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.complexId.innerId, is(4711L));
 	}
 
-	/**
-	 * @see DATAMONGO-489
-	 */
-	@Test
+	@Test // DATAMONGO-489
 	public void readsArraysAsMapValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
@@ -1234,10 +1072,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(values, is(arrayWithSize(2)));
 	}
 
-	/**
-	 * @see DATAMONGO-497
-	 */
-	@Test
+	@Test // DATAMONGO-497
 	public void readsEmptyCollectionIntoConstructorCorrectly() {
 
 		DBObject source = new BasicDBObject("attributes", new BasicDBList());
@@ -1260,10 +1095,7 @@ public class MappingMongoConverterUnitTests {
 		fail(String.format("Didn't find synthetic field on %s!", target));
 	}
 
-	/**
-	 * @see DATAMGONGO-508
-	 */
-	@Test
+	@Test // DATAMGONGO-508
 	public void eagerlyReturnsDBRefObjectIfTargetAlreadyIsOne() {
 
 		DBRef dbRef = new DBRef("collection", "id");
@@ -1273,10 +1105,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.createDBRef(dbRef, property), is(dbRef));
 	}
 
-	/**
-	 * @see DATAMONGO-523
-	 */
-	@Test
+	@Test // DATAMONGO-523
 	public void considersTypeAliasAnnotation() {
 
 		Aliased aliased = new Aliased();
@@ -1290,10 +1119,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(type.toString(), is("_"));
 	}
 
-	/**
-	 * @see DATAMONGO-533
-	 */
-	@Test
+	@Test // DATAMONGO-533
 	public void marshalsThrowableCorrectly() {
 
 		ThrowableWrapper wrapper = new ThrowableWrapper();
@@ -1303,10 +1129,7 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, dbObject);
 	}
 
-	/**
-	 * @see DATAMONGO-592
-	 */
-	@Test
+	@Test // DATAMONGO-592
 	public void recursivelyConvertsSpELReadValue() {
 
 		DBObject input = (DBObject) JSON
@@ -1315,10 +1138,7 @@ public class MappingMongoConverterUnitTests {
 		converter.read(ObjectContainer.class, input);
 	}
 
-	/**
-	 * @see DATAMONGO-724
-	 */
-	@Test
+	@Test // DATAMONGO-724
 	@SuppressWarnings("unchecked")
 	public void mappingConsidersCustomConvertersNotWritingTypeInformation() {
 
@@ -1376,20 +1196,14 @@ public class MappingMongoConverterUnitTests {
 		assertThat(((Person) value).lastname, is("converter"));
 	}
 
-	/**
-	 * @see DATAMONGO-743
-	 */
-	@Test
+	@Test // DATAMONGO-743
 	public void readsIntoStringsOutOfTheBox() {
 
 		DBObject dbObject = new BasicDBObject("firstname", "Dave");
 		assertThat(converter.read(String.class, dbObject), is("{ \"firstname\" : \"Dave\"}"));
 	}
 
-	/**
-	 * @see DATAMONGO-766
-	 */
-	@Test
+	@Test // DATAMONGO-766
 	public void writesProjectingTypeCorrectly() {
 
 		NestedType nested = new NestedType();
@@ -1409,11 +1223,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(aValue.get("c"), is((Object) "C"));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 * @see DATAMONGO-893
-	 */
-	@Test
+	@Test // DATAMONGO-812, DATAMONGO-893
 	public void convertsListToBasicDBListAndRetainsTypeInformationForComplexObjects() {
 
 		Address address = new Address();
@@ -1430,10 +1240,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(getTypedValue(getAsDBObject(dbList, 0), "_class", String.class), equalTo(Address.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
-	@Test
+	@Test // DATAMONGO-812
 	public void convertsListToBasicDBListWithoutTypeInformationForSimpleTypes() {
 
 		Object result = converter.convertToMongoType(Collections.singletonList("foo"));
@@ -1445,10 +1252,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbList.get(0), instanceOf(String.class));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
-	@Test
+	@Test // DATAMONGO-812
 	public void convertsArrayToBasicDBListAndRetainsTypeInformationForComplexObjects() {
 
 		Address address = new Address();
@@ -1464,10 +1268,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(getTypedValue(getAsDBObject(dbList, 0), "_class", String.class), equalTo(Address.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
-	@Test
+	@Test // DATAMONGO-812
 	public void convertsArrayToBasicDBListWithoutTypeInformationForSimpleTypes() {
 
 		Object result = converter.convertToMongoType(new String[] { "foo" });
@@ -1479,10 +1280,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbList.get(0), instanceOf(String.class));
 	}
 
-	/**
-	 * @see DATAMONGO-833
-	 */
-	@Test
+	@Test // DATAMONGO-833
 	public void readsEnumSetCorrectly() {
 
 		BasicDBList enumSet = new BasicDBList();
@@ -1496,10 +1294,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.enumSet, hasItem(SampleEnum.SECOND));
 	}
 
-	/**
-	 * @see DATAMONGO-833
-	 */
-	@Test
+	@Test // DATAMONGO-833
 	public void readsEnumMapCorrectly() {
 
 		BasicDBObject enumMap = new BasicDBObject("FIRST", "Dave");
@@ -1510,10 +1305,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.enumMap.get(SampleEnum.FIRST), is("Dave"));
 	}
 
-	/**
-	 * @see DATAMONGO-887
-	 */
-	@Test
+	@Test // DATAMONGO-887
 	public void readsTreeMapCorrectly() {
 
 		DBObject person = new BasicDBObject("foo", "Dave");
@@ -1527,10 +1319,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.treeMapOfPersons.get("key").firstname, is("Dave"));
 	}
 
-	/**
-	 * @see DATAMONGO-887
-	 */
-	@Test
+	@Test // DATAMONGO-887
 	public void writesTreeMapCorrectly() {
 
 		Person person = new Person();
@@ -1549,10 +1338,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(entry.get("foo"), is((Object) "Dave"));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldWriteEntityWithGeoBoxCorrectly() {
 
 		ClassWithGeoBox object = new ClassWithGeoBox();
@@ -1571,10 +1357,7 @@ public class MappingMongoConverterUnitTests {
 		return new BasicDBObject("x", point.getX()).append("y", point.getY());
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldReadEntityWithGeoBoxCorrectly() {
 
 		ClassWithGeoBox object = new ClassWithGeoBox();
@@ -1589,10 +1372,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.box, is(object.box));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldWriteEntityWithGeoPolygonCorrectly() {
 
 		ClassWithGeoPolygon object = new ClassWithGeoPolygon();
@@ -1614,10 +1394,7 @@ public class MappingMongoConverterUnitTests {
 				toDbObject(object.polygon.getPoints().get(1)), toDbObject(object.polygon.getPoints().get(2))));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldReadEntityWithGeoPolygonCorrectly() {
 
 		ClassWithGeoPolygon object = new ClassWithGeoPolygon();
@@ -1632,10 +1409,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.polygon, is(object.polygon));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldWriteEntityWithGeoCircleCorrectly() {
 
 		ClassWithGeoCircle object = new ClassWithGeoCircle();
@@ -1655,10 +1429,7 @@ public class MappingMongoConverterUnitTests {
 						radius.getMetric().toString())));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldReadEntityWithGeoCircleCorrectly() {
 
 		ClassWithGeoCircle object = new ClassWithGeoCircle();
@@ -1673,10 +1444,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.circle, is(result.circle));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldWriteEntityWithGeoSphereCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
@@ -1696,10 +1464,7 @@ public class MappingMongoConverterUnitTests {
 						radius.getMetric().toString())));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldWriteEntityWithGeoSphereWithMetricDistanceCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
@@ -1719,10 +1484,7 @@ public class MappingMongoConverterUnitTests {
 						radius.getMetric().toString())));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldReadEntityWithGeoSphereCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
@@ -1737,10 +1499,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.sphere, is(object.sphere));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void shouldWriteEntityWithGeoShapeCorrectly() {
 
 		ClassWithGeoShape object = new ClassWithGeoShape();
@@ -1760,10 +1519,7 @@ public class MappingMongoConverterUnitTests {
 						radius.getMetric().toString())));
 	}
 
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	@Ignore
 	public void shouldReadEntityWithGeoShapeCorrectly() {
 
@@ -1780,10 +1536,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.shape, is((Shape) sphere));
 	}
 
-	/**
-	 * @see DATAMONGO-976
-	 */
-	@Test
+	@Test // DATAMONGO-976
 	public void shouldIgnoreTextScorePropertyWhenWriting() {
 
 		ClassWithTextScoreProperty source = new ClassWithTextScoreProperty();
@@ -1795,10 +1548,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbo.get("score"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-976
-	 */
-	@Test
+	@Test // DATAMONGO-976
 	public void shouldIncludeTextScorePropertyWhenReading() {
 
 		ClassWithTextScoreProperty entity = converter
@@ -1806,10 +1556,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(entity.score, equalTo(5F));
 	}
 
-	/**
-	 * @see DATAMONGO-1001
-	 */
-	@Test
+	@Test // DATAMONGO-1001
 	public void shouldWriteCglibProxiedClassTypeInformationCorrectly() {
 
 		ProxyFactory factory = new ProxyFactory();
@@ -1823,10 +1570,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbo.get("_class"), is((Object) GenericType.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-1001
-	 */
-	@Test
+	@Test // DATAMONGO-1001
 	public void shouldUseTargetObjectOfLazyLoadingProxyWhenWriting() {
 
 		LazyLoadingProxy mock = mock(LazyLoadingProxy.class);
@@ -1837,10 +1581,7 @@ public class MappingMongoConverterUnitTests {
 		verify(mock, times(1)).getTarget();
 	}
 
-	/**
-	 * @see DATAMONGO-1034
-	 */
-	@Test
+	@Test // DATAMONGO-1034
 	public void rejectsBasicDbListToBeConvertedIntoComplexType() {
 
 		BasicDBList inner = new BasicDBList();
@@ -1860,10 +1601,7 @@ public class MappingMongoConverterUnitTests {
 		converter.read(Item.class, source);
 	}
 
-	/**
-	 * @see DATAMONGO-1058
-	 */
-	@Test
+	@Test // DATAMONGO-1058
 	public void readShouldRespectExplicitFieldNameForDbRef() {
 
 		BasicDBObject source = new BasicDBObject();
@@ -1875,10 +1613,7 @@ public class MappingMongoConverterUnitTests {
 				Mockito.any(DbRefResolverCallback.class), Mockito.any(DbRefProxyHandler.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1050
-	 */
-	@Test
+	@Test // DATAMONGO-1050
 	public void writeShouldUseExplicitFieldnameForIdPropertyWhenAnnotated() {
 
 		RootForClassWithExplicitlyRenamedIdField source = new RootForClassWithExplicitlyRenamedIdField();
@@ -1893,10 +1628,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat((DBObject) sink.get("nested"), is(new BasicDBObjectBuilder().add("id", "nestedId").get()));
 	}
 
-	/**
-	 * @see DATAMONGO-1050
-	 */
-	@Test
+	@Test // DATAMONGO-1050
 	public void readShouldUseExplicitFieldnameForIdPropertyWhenAnnotated() {
 
 		DBObject source = new BasicDBObjectBuilder().add("_id", "rootId")
@@ -1910,10 +1642,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(sink.nested.id, is("nestedId"));
 	}
 
-	/**
-	 * @see DATAMONGO-1050
-	 */
-	@Test
+	@Test // DATAMONGO-1050
 	public void namedIdFieldShouldExtractValueFromUnderscoreIdField() {
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", "A").add("id", "B").get();
@@ -1923,10 +1652,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(withNamedIdField.id, is("A"));
 	}
 
-	/**
-	 * @see DATAMONGO-1050
-	 */
-	@Test
+	@Test // DATAMONGO-1050
 	public void explicitlyRenamedIfFieldShouldExtractValueFromIdField() {
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", "A").add("id", "B").get();
@@ -1937,10 +1663,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(withExplicitlyRenamedField.id, is("B"));
 	}
 
-	/**
-	 * @see DATAMONGO-1050
-	 */
-	@Test
+	@Test // DATAMONGO-1050
 	public void annotatedIdFieldShouldExtractValueFromUnderscoreIdField() {
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", "A").add("id", "B").get();
@@ -1950,10 +1673,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(withAnnotatedIdField.key, is("A"));
 	}
 
-	/**
-	 * @see DATAMONGO-1102
-	 */
-	@Test
+	@Test // DATAMONGO-1102
 	public void convertsJava8DateTimeTypesToDateAndBack() {
 
 		TypeWithLocalDateTime source = new TypeWithLocalDateTime();
@@ -1966,10 +1686,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(TypeWithLocalDateTime.class, result).date, is(reference));
 	}
 
-	/**
-	 * @see DATAMONGO-1128
-	 */
-	@Test
+	@Test // DATAMONGO-1128
 	public void writesOptionalsCorrectly() {
 
 		TypeWithOptional type = new TypeWithOptional();
@@ -1985,10 +1702,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(localDateTime.get("value"), is(instanceOf(Date.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-1128
-	 */
-	@Test
+	@Test // DATAMONGO-1128
 	public void readsOptionalsCorrectly() {
 
 		LocalDateTime now = LocalDateTime.now();
@@ -2003,10 +1717,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(read.localDateTime, is(Optional.of(now)));
 	}
 
-	/**
-	 * @see DATAMONGO-1118
-	 */
-	@Test
+	@Test // DATAMONGO-1118
 	@SuppressWarnings("unchecked")
 	public void convertsMapKeyUsingCustomConverterForAndBackwards() {
 
@@ -2025,10 +1736,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(ClassWithMapUsingEnumAsKey.class, target).map, is(source.map));
 	}
 
-	/**
-	 * @see DATAMONGO-1118
-	 */
-	@Test
+	@Test // DATAMONGO-1118
 	public void writesMapKeyUsingCustomConverter() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
@@ -2049,10 +1757,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(map.containsField("bar-enum-value"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1118
-	 */
-	@Test
+	@Test // DATAMONGO-1118
 	public void readsMapKeyUsingCustomConverter() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
@@ -2066,18 +1771,12 @@ public class MappingMongoConverterUnitTests {
 		assertThat(target.map.get(FooBarEnum.FOO), is("spring"));
 	}
 
-	/**
-	 * @see DATAMONGO-1471
-	 */
-	@Test
+	@Test // DATAMONGO-1471
 	public void readsDocumentWithPrimitiveIdButNoValue() {
 		assertThat(converter.read(ClassWithIntId.class, new BasicDBObject()), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1497
-	 */
-	@Test
+	@Test // DATAMONGO-1497
 	public void readsPropertyFromNestedFieldCorrectly() {
 
 		DBObject source = new BasicDBObject("nested", new BasicDBObject("sample", "value"));
@@ -2086,10 +1785,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.sample, is("value"));
 	}
 
-	/**
-	 * @see DATAMONGO-1525
-	 */
-	@Test
+	@Test // DATAMONGO-1525
 	public void readsEmptyEnumSet() {
 
 		DBObject source = new BasicDBObject("enumSet", new BasicDBList());

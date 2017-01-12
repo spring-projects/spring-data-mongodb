@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,8 +81,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Tests for {@link MongoTemplate#aggregate(String, AggregationPipeline, Class)}.
- * 
- * @see DATAMONGO-586
+ *
  * @author Tobias Trelle
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -150,10 +149,10 @@ public class AggregationTests {
 	}
 
 	/**
-	 * Imports the sample dataset (zips.json) if necessary (e.g. if it doen't exist yet). The dataset can originally be
+	 * Imports the sample dataset (zips.json) if necessary (e.g. if it doesn't exist yet). The dataset can originally be
 	 * found on the mongodb aggregation framework example website:
 	 * 
-	 * @see http://docs.mongodb.org/manual/tutorial/aggregation-examples/.
+	 * @see <a href="http://docs.mongodb.org/manual/tutorial/aggregation-examples/">MongoDB Aggregation Examples</a>
 	 */
 	private void initSampleDataIfNecessary() {
 
@@ -192,22 +191,22 @@ public class AggregationTests {
 		}
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
 	public void shouldHandleMissingInputCollection() {
 		mongoTemplate.aggregate(newAggregation(), (String) null, TagCount.class);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
 	public void shouldHandleMissingAggregationPipeline() {
 		mongoTemplate.aggregate(null, INPUT_COLLECTION, TagCount.class);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
 	public void shouldHandleMissingEntityClass() {
 		mongoTemplate.aggregate(newAggregation(), INPUT_COLLECTION, null);
 	}
 
-	@Test
+	@Test // DATAMONGO-586
 	public void shouldAggregate() {
 
 		createTagDocuments();
@@ -236,7 +235,7 @@ public class AggregationTests {
 		assertTagCount("nosql", 1, tagCount.get(2));
 	}
 
-	@Test
+	@Test // DATAMONGO-586
 	public void shouldAggregateEmptyCollection() {
 
 		Aggregation aggregation = newAggregation(//
@@ -259,10 +258,7 @@ public class AggregationTests {
 		assertThat(tagCount.size(), is(0));
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void shouldUnwindWithIndex() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
@@ -290,10 +286,7 @@ public class AggregationTests {
 		assertThat(tagCount.size(), is(3));
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void shouldUnwindPreserveEmpty() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
@@ -321,7 +314,7 @@ public class AggregationTests {
 		assertThat(tagCount.get(3), isBsonObject().notContaining("n"));
 	}
 
-	@Test
+	@Test // DATAMONGO-586
 	public void shouldDetectResultMismatch() {
 
 		createTagDocuments();
@@ -346,7 +339,7 @@ public class AggregationTests {
 		assertTagCount(null, 0, tagCount.get(1));
 	}
 
-	@Test
+	@Test // DATAMONGO-586
 	public void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
 		/*
 		 //complex mongodb aggregation framework example from http://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
@@ -454,7 +447,7 @@ public class AggregationTests {
 		assertThat(lastZipInfoStats.biggestCity.population, is(70185));
 	}
 
-	@Test
+	@Test // DATAMONGO-586
 	public void findStatesWithPopulationOver10MillionAggregationExample() {
 		/*
 		 //complex mongodb aggregation framework example from 
@@ -501,10 +494,10 @@ public class AggregationTests {
 	}
 
 	/**
-	 * @see DATAMONGO-861
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/cond/#example
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/cond/#example">MongoDB Aggregation
+	 *      Framework: $cond</a>
 	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void aggregationUsingConditionalProjectionToCalculateDiscount() {
 
 		/*
@@ -554,10 +547,10 @@ public class AggregationTests {
 	}
 
 	/**
-	 * @see DATAMONGO-861
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/#example
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/#example">MongoDB Aggregation
+	 *      Framework: $ifNull</a>
 	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void aggregationUsingIfNullToProjectSaneDefaults() {
 
 		/*
@@ -597,10 +590,7 @@ public class AggregationTests {
 		assertThat(second.get("description"), is((Object) "Unspecified"));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void aggregationUsingConditionalProjection() {
 
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
@@ -622,10 +612,7 @@ public class AggregationTests {
 		assertThat(firstZipInfoStats.get("population"), is((Object) 6055));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void aggregationUsingNestedConditionalProjection() {
 
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
@@ -648,10 +635,7 @@ public class AggregationTests {
 		assertThat(firstZipInfoStats.get("population"), is((Object) 6055));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void aggregationUsingIfNullProjection() {
 
 		mongoTemplate.insert(new LineItem("id", "caption", 0));
@@ -675,10 +659,7 @@ public class AggregationTests {
 		assertThat((String) idonly.get("caption"), is(equalTo("unknown")));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void aggregationUsingIfNullReplaceWithFieldReferenceProjection() {
 
 		mongoTemplate.insert(new LineItem("id", "caption", 0));
@@ -702,10 +683,7 @@ public class AggregationTests {
 		assertThat((String) idonly.get("caption"), is(equalTo("idonly")));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void shouldAllowGroupingUsingConditionalExpressions() {
 
 		mongoTemplate.dropCollection(CarPerson.class);
@@ -749,9 +727,11 @@ public class AggregationTests {
 	}
 
 	/**
-	 * @see http://docs.mongodb.org/manual/tutorial/aggregation-examples/#return-the-five-most-common-likes
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/tutorial/aggregation-with-user-preference-data/#return-the-five-most-common-likes">Return
+	 *      the Five Most Common “Likes”</a>
 	 */
-	@Test
+	@Test // DATAMONGO-586
 	public void returnFiveMostCommonLikesAggregationFrameworkExample() {
 
 		createUserWithLikesDocuments();
@@ -783,7 +763,7 @@ public class AggregationTests {
 		);
 	}
 
-	@Test
+	@Test // DATAMONGO-586
 	public void arithmenticOperatorsInProjectionExample() {
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
@@ -825,10 +805,7 @@ public class AggregationTests {
 		assertThat((Integer) resultList.get(0).get("spaceUnitsModSpaceUnits"), is(product.spaceUnits % product.spaceUnits));
 	}
 
-	/**
-	 * @see DATAMONGO-774
-	 */
-	@Test
+	@Test // DATAMONGO-774
 	public void expressionsInProjectionExample() {
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
@@ -860,10 +837,7 @@ public class AggregationTests {
 				is((product.netPrice * 0.8 + 1.2) * 1.19));
 	}
 
-	/**
-	 * @see DATAMONGO-774
-	 */
-	@Test
+	@Test // DATAMONGO-774
 	public void stringExpressionsInProjectionExample() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR));
@@ -885,10 +859,7 @@ public class AggregationTests {
 		assertThat((String) resultList.get(0).get("name_bubu"), is(product.name + "_bubu"));
 	}
 
-	/**
-	 * @see DATAMONGO-774
-	 */
-	@Test
+	@Test // DATAMONGO-774
 	public void expressionsInProjectionExampleShowcase() {
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
@@ -930,12 +901,11 @@ public class AggregationTests {
 	}
 
 	/**
-	 * @see DATAMONGO-753
-	 * @see http
-	 *      ://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group
-	 *      -operati
+	 * @see <a href=
+	 *      "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
+	 *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
 	 */
-	@Test
+	@Test // DATAMONGO-753
 	public void allowsNestedFieldReferencesAsGroupIdsInGroupExpressions() {
 
 		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("A", 1), new PD("B", 1), new PD("C", 1)));
@@ -960,12 +930,11 @@ public class AggregationTests {
 	}
 
 	/**
-	 * @see DATAMONGO-753
-	 * @see http
-	 *      ://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group
-	 *      -operati
+	 * @see <a href=
+	 *      "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
+	 *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
 	 */
-	@Test
+	@Test // DATAMONGO-753
 	public void aliasesNestedFieldInProjectionImmediately() {
 
 		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("A", 1), new PD("B", 1), new PD("C", 1)));
@@ -984,10 +953,7 @@ public class AggregationTests {
 		}
 	}
 
-	/**
-	 * @DATAMONGO-774
-	 */
-	@Test
+	@Test // DATAMONGO-774
 	public void shouldPerformDateProjectionOperatorsCorrectly() throws ParseException {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR));
@@ -1016,10 +982,7 @@ public class AggregationTests {
 		assertThat((String) dbo.get("toUpper"), is("ABC"));
 	}
 
-	/**
-	 * @DATAMONGO-774
-	 */
-	@Test
+	@Test // DATAMONGO-774
 	public void shouldPerformStringProjectionOperatorsCorrectly() throws ParseException {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR));
@@ -1058,10 +1021,7 @@ public class AggregationTests {
 		assertThat((Integer) dbo.get("millisecond"), is(789));
 	}
 
-	/**
-	 * @see DATAMONGO-1550
-	 */
-	@Test
+	@Test // DATAMONGO-1550
 	public void shouldPerformReplaceRootOperatorCorrectly() throws ParseException {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
@@ -1084,10 +1044,7 @@ public class AggregationTests {
 		assertThat((Integer) dbo.keySet().size(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-788
-	 */
-	@Test
+	@Test // DATAMONGO-788
 	public void referencesToGroupIdsShouldBeRenderedProperly() {
 
 		mongoTemplate.insert(new DATAMONGO788(1, 1));
@@ -1114,10 +1071,7 @@ public class AggregationTests {
 		assertThat((Integer) items.get(1).get("y"), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-806
-	 */
-	@Test
+	@Test // DATAMONGO-806
 	public void shouldAllowGroupByIdFields() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -1148,10 +1102,7 @@ public class AggregationTests {
 		assertThat(String.valueOf(firstItem.get("_id")), is("u1"));
 	}
 
-	/**
-	 * @see DATAMONGO-840
-	 */
-	@Test
+	@Test // DATAMONGO-840
 	public void shouldAggregateOrderDataToAnInvoice() {
 
 		mongoTemplate.dropCollection(Order.class);
@@ -1188,10 +1139,7 @@ public class AggregationTests {
 		assertThat(invoice.getTotalAmount(), is(closeTo(9.877, 000001)));
 	}
 
-	/**
-	 * @see DATAMONGO-924
-	 */
-	@Test
+	@Test // DATAMONGO-924
 	public void shouldAllowGroupingByAliasedFieldDefinedInFormerAggregationStage() {
 
 		mongoTemplate.dropCollection(CarPerson.class);
@@ -1222,10 +1170,7 @@ public class AggregationTests {
 		assertThat(result.getMappedResults(), hasSize(3));
 	}
 
-	/**
-	 * @see DATAMONGO-960
-	 */
-	@Test
+	@Test // DATAMONGO-960
 	public void returnFiveMostCommonLikesAggregationFrameworkExampleWithSortOnDiskOptionEnabled() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
@@ -1250,10 +1195,7 @@ public class AggregationTests {
 		assertLikeStats(result.getMappedResults().get(4), "e", 3);
 	}
 
-	/**
-	 * @see DATAMONGO-960
-	 */
-	@Test
+	@Test // DATAMONGO-960
 	public void returnFiveMostCommonLikesShouldReturnStageExecutionInformationWithExplainOptionEnabled() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
@@ -1273,10 +1215,7 @@ public class AggregationTests {
 		assertThat(rawResult.containsField("stages"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-954
-	 */
-	@Test
+	@Test // DATAMONGO-954
 	public void shouldSupportReturningCurrentAggregationRoot() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
@@ -1301,11 +1240,9 @@ public class AggregationTests {
 	}
 
 	/**
-	 * @see DATAMONGO-954
-	 * @see http
-	 *      ://stackoverflow.com/questions/24185987/using-root-inside-spring-data-mongodb-for-retrieving-whole-document
+	 * {@link http://stackoverflow.com/questions/24185987/using-root-inside-spring-data-mongodb-for-retrieving-whole-document}
 	 */
-	@Test
+	@Test // DATAMONGO-954
 	public void shouldSupportReturningCurrentAggregationRootInReference() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
@@ -1326,10 +1263,7 @@ public class AggregationTests {
 		assertThat(result.getMappedResults(), hasSize(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1549
-	 */
-	@Test
+	@Test // DATAMONGO-1549
 	public void shouldApplyCountCorrectly() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
@@ -1350,10 +1284,7 @@ public class AggregationTests {
 		assertThat(dbObject, isBsonObject().containing("documents", 3).containing("twice", 6));
 	}
 
-	/**
-	 * @see DATAMONGO-975
-	 */
-	@Test
+	@Test // DATAMONGO-975
 	public void shouldRetrieveDateTimeFragementsCorrectly() throws Exception {
 
 		mongoTemplate.dropCollection(ObjectWithDate.class);
@@ -1405,10 +1336,7 @@ public class AggregationTests {
 		assertThat(dbo.get("dayOfYearPlus1DayManually"), is((Object) dateTime.plusDays(1).getDayOfYear()));
 	}
 
-	/**
-	 * @see DATAMONGO-1127
-	 */
-	@Test
+	@Test // DATAMONGO-1127
 	public void shouldSupportGeoNearQueriesForAggregationWithDistanceField() {
 
 		mongoTemplate.insert(new Venue("Penn Station", -73.99408, 40.75057));
@@ -1429,10 +1357,7 @@ public class AggregationTests {
 		assertThat((Double) firstResult.get("distance"), closeTo(117.620092203928, 0.00001));
 	}
 
-	/**
-	 * @see DATAMONGO-1133
-	 */
-	@Test
+	@Test // DATAMONGO-1133
 	public void shouldHonorFieldAliasesForFieldReferences() {
 
 		mongoTemplate.insert(new MeterData("m1", "counter1", 42));
@@ -1452,10 +1377,7 @@ public class AggregationTests {
 		assertThat(result.get("totalValue"), is(equalTo((Object) 100.0)));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test
+	@Test // DATAMONGO-1326
 	public void shouldLookupPeopleCorectly() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
@@ -1476,10 +1398,7 @@ public class AggregationTests {
 		assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test
+	@Test // DATAMONGO-1326
 	public void shouldGroupByAndLookupPeopleCorectly() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
@@ -1501,10 +1420,7 @@ public class AggregationTests {
 		assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
 	}
 
-	/**
-	 * @see DATAMONGO-1418
-	 */
-	@Test
+	@Test // DATAMONGO-1418
 	public void shouldCreateOutputCollection() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
@@ -1533,10 +1449,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(tempOutCollection);
 	}
 
-	/**
-	 * @see DATAMONGO-1418
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1418
 	public void outShouldOutBeTheLastOperation() {
 
 		newAggregation(match(new Criteria()), //
@@ -1545,10 +1458,7 @@ public class AggregationTests {
 				skip(100L));
 	}
 
-	/**
-	 * @see DATAMONGO-1457
-	 */
-	@Test
+	@Test // DATAMONGO-1457
 	public void sliceShouldBeAppliedCorrectly() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
@@ -1566,10 +1476,7 @@ public class AggregationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-1491
-	 */
-	@Test
+	@Test // DATAMONGO-1491
 	public void filterShouldBeAppliedCorrectly() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
@@ -1602,10 +1509,7 @@ public class AggregationTests {
 						Sales.builder().id("2").items(Collections.<Item> emptyList()).build()));
 	}
 
-	/**
-	 * @see DATAMONGO-1538
-	 */
-	@Test
+	@Test // DATAMONGO-1538
 	public void letShouldBeAppliedCorrectly() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
@@ -1632,10 +1536,7 @@ public class AggregationTests {
 						new BasicDBObjectBuilder().add("_id", "2").add("finalTotal", 10.25D).get()));
 	}
 
-	/**
-	 * @see DATAMONGO-1551
-	 */
-	@Test
+	@Test // DATAMONGO-1551
 	public void graphLookupShouldBeAppliedCorrectly() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
@@ -1666,10 +1567,7 @@ public class AggregationTests {
 		assertThat((DBObject) list.get(1), isBsonObject().containing("name", "Eliot").containing("depth", 0L));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void bucketShouldCollectDocumentsIntoABucket() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
@@ -1706,10 +1604,7 @@ public class AggregationTests {
 		assertThat((Double) bound100.get("sum"), is(closeTo(3672.9, 0.1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void bucketAutoShouldCollectDocumentsIntoABucket() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
@@ -1743,10 +1638,7 @@ public class AggregationTests {
 		assertThat((Double) bound1.get("sum"), is(closeTo(1673.0, 0.1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void facetShouldCreateFacets() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
@@ -1895,9 +1787,7 @@ public class AggregationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-806
-	 */
+	// DATAMONGO-806
 	static class User {
 
 		@Id String id;
@@ -1911,9 +1801,7 @@ public class AggregationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-806
-	 */
+	// DATAMONGO-806
 	static class PushMessage {
 
 		@Id String id;
@@ -2003,9 +1891,7 @@ public class AggregationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
+	// DATAMONGO-861
 	@Document(collection = "inventory")
 	static class InventoryItem {
 
@@ -2032,9 +1918,7 @@ public class AggregationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-1491
-	 */
+	// DATAMONGO-1491
 	@lombok.Data
 	@Builder
 	static class Sales {
@@ -2043,9 +1927,7 @@ public class AggregationTests {
 		List<Item> items;
 	}
 
-	/**
-	 * @see DATAMONGO-1491
-	 */
+	// DATAMONGO-1491
 	@lombok.Data
 	@Builder
 	static class Item {
@@ -2056,9 +1938,7 @@ public class AggregationTests {
 		Long price;
 	}
 
-	/**
-	 * @see DATAMONGO-1538
-	 */
+	// DATAMONGO-1538
 	@lombok.Data
 	@Builder
 	static class Sales2 {
@@ -2069,9 +1949,7 @@ public class AggregationTests {
 		boolean applyDiscount;
 	}
 
-	/**
-	 * @see DATAMONGO-1551
-	 */
+	// DATAMONGO-1551
 	@lombok.Data
 	@Builder
 	static class Employee {
@@ -2081,9 +1959,7 @@ public class AggregationTests {
 		String reportsTo;
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
+	// DATAMONGO-1552
 	@lombok.Data
 	@Builder
 	static class Art {

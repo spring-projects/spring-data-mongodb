@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,7 @@ public class ExecutableMongoScriptUnitTests {
 
 	public @Rule ExpectedException expectedException = ExpectedException.none();
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void constructorShouldThrowExceptionWhenRawScriptIsNull() {
 
 		expectException(IllegalArgumentException.class, "must not be", "null");
@@ -42,10 +39,7 @@ public class ExecutableMongoScriptUnitTests {
 		new ExecutableMongoScript(null);
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void constructorShouldThrowExceptionWhenRawScriptIsEmpty() {
 
 		expectException(IllegalArgumentException.class, "must not be", "empty");
@@ -53,10 +47,7 @@ public class ExecutableMongoScriptUnitTests {
 		new ExecutableMongoScript("");
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void getCodeShouldReturnCodeRepresentationOfRawScript() {
 
 		String jsFunction = "function(x) { return x; }";

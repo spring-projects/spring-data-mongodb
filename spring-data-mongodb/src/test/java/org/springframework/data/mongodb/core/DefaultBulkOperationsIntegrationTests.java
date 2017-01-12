@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,34 +65,22 @@ public class DefaultBulkOperationsIntegrationTests {
 		this.collection.remove(new BasicDBObject());
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
 	public void rejectsNullMongoOperations() {
 		new DefaultBulkOperations(null, null, COLLECTION_NAME, null);
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
 	public void rejectsNullCollectionName() {
 		new DefaultBulkOperations(operations, null, null, null);
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
 	public void rejectsEmptyCollectionName() {
 		new DefaultBulkOperations(operations, null, "", null);
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void insertOrdered() {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("2"));
@@ -100,10 +88,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(createBulkOps(BulkMode.ORDERED).insert(documents).execute().getInsertedCount(), is(2));
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void insertOrderedFails() {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("1"), newDoc("2"));
@@ -118,10 +103,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void insertUnOrdered() {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("2"));
@@ -129,10 +111,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(createBulkOps(BulkMode.UNORDERED).insert(documents).execute().getInsertedCount(), is(2));
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void insertUnOrderedContinuesOnError() {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("1"), newDoc("2"));
@@ -147,10 +126,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void upsertDoesUpdate() {
 
 		insertSomeDocuments();
@@ -167,10 +143,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(result.getUpserts().size(), is(0));
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void upsertDoesInsert() {
 
 		BulkWriteResult result = createBulkOps(BulkMode.ORDERED).//
@@ -184,60 +157,40 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(result.getUpserts().size(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void updateOneOrdered() {
 		testUpdate(BulkMode.ORDERED, false, 2);
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void updateMultiOrdered() {
 		testUpdate(BulkMode.ORDERED, true, 4);
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void updateOneUnOrdered() {
 		testUpdate(BulkMode.UNORDERED, false, 2);
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void updateMultiUnOrdered() {
 		testUpdate(BulkMode.UNORDERED, true, 4);
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void removeOrdered() {
 		testRemove(BulkMode.ORDERED);
 	}
 
-	/**
-	 * @see DATAMONGO-934
-	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void removeUnordered() {
 		testRemove(BulkMode.UNORDERED);
 	}
 
 	/**
 	 * If working on the same set of documents, only an ordered bulk operation will yield predictable results.
-	 * 
-	 * @see DATAMONGO-934
 	 */
-	@Test
+	@Test // DATAMONGO-934
 	public void mixedBulkOrdered() {
 
 		BulkWriteResult result = createBulkOps(BulkMode.ORDERED).insert(newDoc("1", "v1")).//
@@ -271,10 +224,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(result.getRemovedCount(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1534
-	 */
-	@Test
+	@Test // DATAMONGO-1534
 	public void insertShouldConsiderInheritance() {
 
 		SpecialDoc specialDoc = new SpecialDoc();

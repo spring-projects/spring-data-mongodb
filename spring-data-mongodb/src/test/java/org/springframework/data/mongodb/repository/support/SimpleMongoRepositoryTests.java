@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,10 +113,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, not(hasItem(dave)));
 	}
 
-	/**
-	 * @see DATAMONGO-1054
-	 */
-	@Test
+	@Test // DATAMONGO-1054
 	public void shouldInsertSingle() {
 
 		String randomId = UUID.randomUUID().toString();
@@ -129,10 +126,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(saved, is(equalTo(person1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1054
-	 */
-	@Test
+	@Test // DATAMONGO-1054
 	public void shouldInsertMultipleFromList() {
 
 		String randomId = UUID.randomUUID().toString();
@@ -151,10 +145,7 @@ public class SimpleMongoRepositoryTests {
 		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
 	}
 
-	/**
-	 * @see DATAMONGO-1054
-	 */
-	@Test
+	@Test // DATAMONGO-1054
 	public void shouldInsertMutlipleFromSet() {
 
 		String randomId = UUID.randomUUID().toString();
@@ -173,10 +164,7 @@ public class SimpleMongoRepositoryTests {
 		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
 	}
 
-	/**
-	 * @see DATAMONGO-1245, DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-1245, DATAMONGO-1464
 	public void findByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
@@ -190,10 +178,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result.getTotalPages(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-1464
 	public void findByExampleMultiplePagesShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
@@ -206,10 +191,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result.getTotalPages(), is(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
@@ -222,10 +204,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, hasSize(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObject() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
@@ -244,10 +223,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, hasSize(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingPartialNestedObject() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
@@ -266,10 +242,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, hasSize(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldNotFindEntriesWhenUsingPartialNestedObjectInStrictMode() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
@@ -285,10 +258,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, empty());
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObjectInStrictMode() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
@@ -305,10 +275,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, hasSize(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldRespectStringMatchMode() {
 
 		Person sample = new Person();
@@ -322,10 +289,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, hasSize(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldResolveDbRefCorrectly() {
 
 		User user = new User();
@@ -348,10 +312,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, hasSize(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldResolveLegacyCoordinatesCorrectly() {
 
 		Person megan = new Person("megan", "tarash");
@@ -369,10 +330,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, hasSize(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldResolveGeoJsonCoordinatesCorrectly() {
 
 		Person megan = new Person("megan", "tarash");
@@ -390,10 +348,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, hasSize(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldProcessInheritanceCorrectly() {
 
 		PersonExtended reference = new PersonExtended();
@@ -412,10 +367,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, hasItem(reference));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findOneByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
@@ -428,10 +380,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, is(equalTo(dave)));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void existsByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
@@ -444,10 +393,7 @@ public class SimpleMongoRepositoryTests {
 		assertThat(result, is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void countByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();

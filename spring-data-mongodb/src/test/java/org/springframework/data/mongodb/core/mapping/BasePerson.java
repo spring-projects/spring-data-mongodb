@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import com.querydsl.core.annotations.QuerySupertype;
 
 /**
  * {@link QuerySupertype} is necessary for Querydsl 2.2.0-beta4 to compile the query classes directly. Can be removed as
- * soon as {@link https://bugs.launchpad.net/querydsl/+bug/776219} is fixed.
+ * soon as <a href="https://bugs.launchpad.net/querydsl/+bug/776219">https://bugs.launchpad.net/querydsl/+bug/776219</a> is fixed.
  * 
- * @see https://bugs.launchpad.net/querydsl/+bug/776219
+ * @see <a href="https://bugs.launchpad.net/querydsl/+bug/776219">https://bugs.launchpad.net/querydsl/+bug/776219</a>
  * @author Jon Brisbin
  * @author Oliver Gierke
  */

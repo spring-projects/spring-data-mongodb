@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,10 +95,7 @@ public class GeoJsonTests {
 		removeCollections();
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void geoNear() {
 
 		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
@@ -109,10 +106,7 @@ public class GeoJsonTests {
 		assertThat(result.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void withinPolygon() {
 
 		Point first = new Point(-73.99756, 40.73083);
@@ -126,10 +120,7 @@ public class GeoJsonTests {
 		assertThat(venues.size(), is(4));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void nearPoint() {
 
 		GeoJsonPoint point = new GeoJsonPoint(-73.99171, 40.738868);
@@ -139,10 +130,7 @@ public class GeoJsonTests {
 		assertThat(venues.size(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void nearSphere() {
 
 		GeoJsonPoint point = new GeoJsonPoint(-73.99171, 40.738868);
@@ -153,10 +141,7 @@ public class GeoJsonTests {
 		assertThat(venues.size(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1137
-	 */
-	@Test
+	@Test // DATAMONGO-1137
 	public void shouleSaveAndRetrieveDocumentWithGeoJsonPointTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
@@ -171,10 +156,7 @@ public class GeoJsonTests {
 		assertThat(result.geoJsonPoint, equalTo(obj.geoJsonPoint));
 	}
 
-	/**
-	 * @see DATAMONGO-1137
-	 */
-	@Test
+	@Test // DATAMONGO-1137
 	public void shouleSaveAndRetrieveDocumentWithGeoJsonPolygonTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
@@ -190,10 +172,7 @@ public class GeoJsonTests {
 		assertThat(result.geoJsonPolygon, equalTo(obj.geoJsonPolygon));
 	}
 
-	/**
-	 * @see DATAMONGO-1137
-	 */
-	@Test
+	@Test // DATAMONGO-1137
 	public void shouleSaveAndRetrieveDocumentWithGeoJsonLineStringTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
@@ -208,10 +187,7 @@ public class GeoJsonTests {
 		assertThat(result.geoJsonLineString, equalTo(obj.geoJsonLineString));
 	}
 
-	/**
-	 * @see DATAMONGO-1137
-	 */
-	@Test
+	@Test // DATAMONGO-1137
 	public void shouleSaveAndRetrieveDocumentWithGeoJsonMultiLineStringTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
@@ -227,10 +203,7 @@ public class GeoJsonTests {
 		assertThat(result.geoJsonMultiLineString, equalTo(obj.geoJsonMultiLineString));
 	}
 
-	/**
-	 * @see DATAMONGO-1137
-	 */
-	@Test
+	@Test // DATAMONGO-1137
 	public void shouleSaveAndRetrieveDocumentWithGeoJsonMultiPointTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
@@ -245,10 +218,7 @@ public class GeoJsonTests {
 		assertThat(result.geoJsonMultiPoint, equalTo(obj.geoJsonMultiPoint));
 	}
 
-	/**
-	 * @see DATAMONGO-1137
-	 */
-	@Test
+	@Test // DATAMONGO-1137
 	public void shouleSaveAndRetrieveDocumentWithGeoJsonMultiPolygonTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
@@ -264,10 +234,7 @@ public class GeoJsonTests {
 		assertThat(result.geoJsonMultiPolygon, equalTo(obj.geoJsonMultiPolygon));
 	}
 
-	/**
-	 * @see DATAMONGO-1137
-	 */
-	@Test
+	@Test // DATAMONGO-1137
 	public void shouleSaveAndRetrieveDocumentWithGeoJsonGeometryCollectionTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
@@ -284,10 +251,7 @@ public class GeoJsonTests {
 		assertThat(result.geoJsonGeometryCollection, equalTo(obj.geoJsonGeometryCollection));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void nearWithMinDistance() {
 
 		Point point = new GeoJsonPoint(-73.99171, 40.738868);
@@ -297,10 +261,7 @@ public class GeoJsonTests {
 		assertThat(venues.size(), is(11));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void nearSphereWithMinDistance() {
 
 		Point point = new GeoJsonPoint(-73.99171, 40.738868);
@@ -310,10 +271,7 @@ public class GeoJsonTests {
 		assertThat(venues.size(), is(11));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void nearWithMinAndMaxDistance() {
 
 		GeoJsonPoint point = new GeoJsonPoint(-73.99171, 40.738868);
@@ -323,10 +281,7 @@ public class GeoJsonTests {
 		assertThat(venues.size(), is(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1453
-	 */
-	@Test
+	@Test // DATAMONGO-1453
 	public void shouldConvertPointRepresentationCorrectlyWhenSourceCoordinatesUsesInteger() {
 
 		this.template.execute(template.getCollectionName(DocumentWithPropertyUsingGeoJsonType.class),
@@ -351,10 +306,7 @@ public class GeoJsonTests {
 				DocumentWithPropertyUsingGeoJsonType.class).geoJsonPoint, is(equalTo(new GeoJsonPoint(0D, 0D))));
 	}
 
-	/**
-	 * @see DATAMONGO-1453
-	 */
-	@Test
+	@Test // DATAMONGO-1453
 	public void shouldConvertLineStringRepresentationCorrectlyWhenSourceCoordinatesUsesInteger() {
 
 		this.template.execute(template.getCollectionName(DocumentWithPropertyUsingGeoJsonType.class),

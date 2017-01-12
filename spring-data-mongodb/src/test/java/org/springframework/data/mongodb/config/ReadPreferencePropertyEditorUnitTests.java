@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,10 +41,7 @@ public class ReadPreferencePropertyEditorUnitTests {
 		editor = new ReadPreferencePropertyEditor();
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void shouldThrowExceptionOnUndefinedPreferenceString() {
 
 		expectedException.expect(IllegalArgumentException.class);
@@ -54,10 +51,7 @@ public class ReadPreferencePropertyEditorUnitTests {
 		editor.setAsText("foo");
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void shouldAllowUsageNativePreferenceStrings() {
 
 		editor.setAsText("secondary");
@@ -65,10 +59,7 @@ public class ReadPreferencePropertyEditorUnitTests {
 		assertThat(editor.getValue(), is((Object) ReadPreference.secondary()));
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void shouldAllowUsageOfUppcaseEnumStringsForPreferences() {
 
 		editor.setAsText("NEAREST");

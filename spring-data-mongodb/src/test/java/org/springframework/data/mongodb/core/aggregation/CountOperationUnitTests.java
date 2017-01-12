@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,28 +29,19 @@ import com.mongodb.util.JSON;
  */
 public class CountOperationUnitTests {
 
-	/**
-	 * @see DATAMONGO-1549
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1549
 	public void rejectsEmptyFieldName() {
 		new CountOperation("");
 	}
 
-	/**
-	 * @see DATAMONGO-1549
-	 */
-	@Test
+	@Test // DATAMONGO-1549
 	public void shouldRenderCorrectly() {
 
 		CountOperation countOperation = new CountOperation("field");
 		assertThat(countOperation.toDBObject(Aggregation.DEFAULT_CONTEXT), is(JSON.parse("{$count : \"field\" }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1549
-	 */
-	@Test
+	@Test // DATAMONGO-1549
 	public void countExposesFields() {
 
 		CountOperation countOperation = new CountOperation("field");

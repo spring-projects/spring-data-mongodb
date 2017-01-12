@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -100,10 +100,7 @@ public class MongoParametersUnitTests {
 		assertThat(parameters.getNearIndex(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void shouldFindTextCriteriaAtItsIndex() throws SecurityException, NoSuchMethodException {
 
 		Method method = PersonRepository.class.getMethod("findByNameAndText", String.class, TextCriteria.class);
@@ -111,10 +108,7 @@ public class MongoParametersUnitTests {
 		assertThat(parameters.getFullTextParameterIndex(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void shouldTreatTextCriteriaParameterAsSpecialParameter() throws SecurityException, NoSuchMethodException {
 
 		Method method = PersonRepository.class.getMethod("findByNameAndText", String.class, TextCriteria.class);
@@ -122,10 +116,7 @@ public class MongoParametersUnitTests {
 		assertThat(parameters.getParameter(parameters.getFullTextParameterIndex()).isSpecialParameter(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void shouldFindMinAndMaxDistanceParameters() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Range.class);
@@ -135,10 +126,7 @@ public class MongoParametersUnitTests {
 		assertThat(parameters.getMaxDistanceIndex(), is(-1));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void shouldNotHaveMinDistanceIfOnlyOneDistanceParameterPresent() throws NoSuchMethodException,
 			SecurityException {
 

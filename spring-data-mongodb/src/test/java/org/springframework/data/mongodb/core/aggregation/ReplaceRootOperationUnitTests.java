@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,26 +32,17 @@ import com.mongodb.util.JSON;
  */
 public class ReplaceRootOperationUnitTests {
 
-	/**
-	 * @see DATAMONGO-1550
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1550
 	public void rejectsNullField() {
 		new ReplaceRootOperation((Field) null);
 	}
 
-	/**
-	 * @see DATAMONGO-1550
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1550
 	public void rejectsNullExpression() {
 		new ReplaceRootOperation((AggregationExpression) null);
 	}
 
-	/**
-	 * @see DATAMONGO-1550
-	 */
-	@Test
+	@Test // DATAMONGO-1550
 	public void shouldRenderCorrectly() {
 
 		ReplaceRootOperation operation = ReplaceRootDocumentOperation.builder()
@@ -61,10 +52,7 @@ public class ReplaceRootOperationUnitTests {
 		assertThat(dbObject, is(JSON.parse("{ $replaceRoot : { newRoot: { hello: \"world\" } } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1550
-	 */
-	@Test
+	@Test // DATAMONGO-1550
 	public void shouldRenderExpressionCorrectly() {
 
 		ReplaceRootOperation operation = new ReplaceRootOperation(VariableOperators //
@@ -78,10 +66,7 @@ public class ReplaceRootOperationUnitTests {
 				+ "$map : { input : \"$array\" , as : \"element\" , in : { $multiply : [ \"$$element\" , 10]} } " + "} } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1550
-	 */
-	@Test
+	@Test // DATAMONGO-1550
 	public void shouldComposeDocument() {
 
 		ReplaceRootOperation operation = ReplaceRootDocumentOperation.builder().withDocument() //
@@ -94,10 +79,7 @@ public class ReplaceRootOperationUnitTests {
 				.parse("{ $replaceRoot : { newRoot: { key: \"value\", multiply: { $multiply : [ \"$$element\" , 10]} } } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1550
-	 */
-	@Test
+	@Test // DATAMONGO-1550
 	public void shouldComposeSubDocument() {
 
 		DBObject partialReplacement = new BasicDBObject("key", "override").append("key2", "value2");
@@ -111,10 +93,7 @@ public class ReplaceRootOperationUnitTests {
 		assertThat(dbObject, is(JSON.parse("{ $replaceRoot : { newRoot: { key: \"override\", key2: \"value2\"} } } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1550
-	 */
-	@Test
+	@Test // DATAMONGO-1550
 	public void shouldNotExposeFields() {
 
 		ReplaceRootOperation operation = new ReplaceRootOperation(Fields.field("field"));

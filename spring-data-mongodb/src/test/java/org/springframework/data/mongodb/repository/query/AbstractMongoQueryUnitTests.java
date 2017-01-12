@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,11 +91,8 @@ public class AbstractMongoQueryUnitTests {
 		doReturn(converter).when(mongoOperationsMock).getConverter();
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
 	@SuppressWarnings("unchecked")
-	@Test
+	@Test // DATAMONGO-566
 	public void testDeleteExecutionCallsRemoveCorreclty() {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
@@ -105,12 +102,8 @@ public class AbstractMongoQueryUnitTests {
 				Matchers.anyString());
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 * @see DATAMONGO-1040
-	 */
 	@SuppressWarnings("unchecked")
-	@Test
+	@Test // DATAMONGO-566, DATAMONGO-1040
 	public void testDeleteExecutionLoadsListOfRemovedDocumentsWhenReturnTypeIsCollectionLike() {
 
 		when(mongoOperationsMock.find(Matchers.any(Query.class), Matchers.any(Class.class), Matchers.anyString()))
@@ -121,10 +114,7 @@ public class AbstractMongoQueryUnitTests {
 		verify(mongoOperationsMock, times(1)).findAllAndRemove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void testDeleteExecutionReturnsZeroWhenWriteResultIsNull() {
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
@@ -133,11 +123,7 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(query.execute(new Object[] { "fake" }), Is.<Object> is(0L));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 * @see DATAMONGO-978
-	 */
-	@Test
+	@Test // DATAMONGO-566, DATAMONGO-978
 	public void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
 
 		when(writeResultMock.getN()).thenReturn(100);
@@ -151,10 +137,7 @@ public class AbstractMongoQueryUnitTests {
 		verify(mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void metadataShouldNotBeAddedToQueryWhenNotPresent() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class);
@@ -167,10 +150,7 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getValue().getMeta().getComment(), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void metadataShouldBeAddedToQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
@@ -182,10 +162,7 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void metadataShouldBeAddedToCountQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
@@ -197,10 +174,7 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void metadataShouldBeAddedToStringBasedQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByAnnotatedQuery", String.class, Pageable.class);
@@ -212,10 +186,7 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
-	/**
-	 * @see DATAMONGO-1057
-	 */
-	@Test
+	@Test // DATAMONGO-1057
 	public void slicedExecutionShouldRetainNrOfElementsToSkip() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
@@ -233,10 +204,7 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getAllValues().get(1).getSkip(), is(10));
 	}
 
-	/**
-	 * @see DATAMONGO-1057
-	 */
-	@Test
+	@Test // DATAMONGO-1057
 	public void slicedExecutionShouldIncrementLimitByOne() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
@@ -254,10 +222,7 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getAllValues().get(1).getLimit(), is(11));
 	}
 
-	/**
-	 * @see DATAMONGO-1057
-	 */
-	@Test
+	@Test // DATAMONGO-1057
 	public void slicedExecutionShouldRetainSort() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
@@ -276,10 +241,7 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getAllValues().get(1).getSortObject(), is(expectedSortObject));
 	}
 
-	/**
-	 * @see DATAMONGO-1080
-	 */
-	@Test
+	@Test // DATAMONGO-1080
 	public void doesNotTryToPostProcessQueryResultIntoWrapperType() {
 
 		Person reference = new Person();
@@ -360,7 +322,7 @@ public class AbstractMongoQueryUnitTests {
 		@org.springframework.data.mongodb.repository.Query("{}")
 		Page<Person> findByAnnotatedQuery(String firstnanme, Pageable pageable);
 
-		/** @see DATAMONGO-1057 */
+		// DATAMONGO-1057
 		Slice<Person> findByLastname(String lastname, Pageable page);
 
 		Optional<Person> findByLastname(String lastname);

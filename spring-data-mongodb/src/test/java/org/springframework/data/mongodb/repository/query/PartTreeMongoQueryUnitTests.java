@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,10 +77,7 @@ public class PartTreeMongoQueryUnitTests {
 		when(mongoOperationsMock.getConverter()).thenReturn(converter);
 	}
 
-	/**
-	 * @see DATAMOGO-952
-	 */
-	@Test
+	@Test // DATAMOGO-952
 	public void rejectsInvalidFieldSpecification() {
 
 		exception.expect(IllegalStateException.class);
@@ -89,10 +86,7 @@ public class PartTreeMongoQueryUnitTests {
 		deriveQueryFromMethod("findByLastname", new Object[] { "foo" });
 	}
 
-	/**
-	 * @see DATAMOGO-952
-	 */
-	@Test
+	@Test // DATAMOGO-952
 	public void singleFieldJsonIncludeRestrictionShouldBeConsidered() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstname",
@@ -101,10 +95,7 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(query.getFieldsObject(), is(new BasicDBObjectBuilder().add("firstname", 1).get()));
 	}
 
-	/**
-	 * @see DATAMOGO-952
-	 */
-	@Test
+	@Test // DATAMOGO-952
 	public void multiFieldJsonIncludeRestrictionShouldBeConsidered() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstnameAndLastname",
@@ -113,10 +104,7 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(query.getFieldsObject(), is(new BasicDBObjectBuilder().add("firstname", 1).add("lastname", 1).get()));
 	}
 
-	/**
-	 * @see DATAMOGO-952
-	 */
-	@Test
+	@Test // DATAMOGO-952
 	public void multiFieldJsonExcludeRestrictionShouldBeConsidered() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstnameAndLastname",
@@ -125,10 +113,7 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(query.getFieldsObject(), is(new BasicDBObjectBuilder().add("firstname", 0).add("lastname", 0).get()));
 	}
 
-	/**
-	 * @see DATAMOGO-973
-	 */
-	@Test
+	@Test // DATAMOGO-973
 	public void shouldAddFullTextParamCorrectlyToDerivedQuery() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstname",
@@ -137,10 +122,7 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(query, isTextQuery().searchingFor("search").where(new Criteria("firstname").is("text")));
 	}
 
-	/**
-	 * @see DATAMONGO-1180
-	 */
-	@Test
+	@Test // DATAMONGO-1180
 	public void propagatesRootExceptionForInvalidQuery() {
 
 		exception.expect(IllegalStateException.class);
@@ -149,18 +131,12 @@ public class PartTreeMongoQueryUnitTests {
 		deriveQueryFromMethod("findByAge", new Object[] { 1 });
 	}
 
-	/**
-	 * @see DATAMONGO-1345
-	 */
-	@Test
+	@Test // DATAMONGO-1345
 	public void doesNotDeriveFieldSpecForNormalDomainType() {
 		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject(), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1345
-	 */
-	@Test
+	@Test // DATAMONGO-1345
 	public void restrictsQueryToFieldsRequiredForProjection() {
 
 		DBObject fieldsObject = deriveQueryFromMethod("findPersonProjectedBy", new Object[0]).getFieldsObject();
@@ -169,10 +145,7 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(fieldsObject.get("lastname"), is((Object) 1));
 	}
 
-	/**
-	 * @see DATAMONGO-1345
-	 */
-	@Test
+	@Test // DATAMONGO-1345
 	public void restrictsQueryToFieldsRequiredForDto() {
 
 		DBObject fieldsObject = deriveQueryFromMethod("findPersonDtoByAge", new Object[] { 42 }).getFieldsObject();
@@ -181,10 +154,7 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(fieldsObject.get("lastname"), is((Object) 1));
 	}
 
-	/**
-	 * @see DATAMONGO-1345
-	 */
-	@Test
+	@Test // DATAMONGO-1345
 	public void usesDynamicProjection() {
 
 		DBObject fields = deriveQueryFromMethod("findDynamicallyProjectedBy", ExtendedProjection.class).getFieldsObject();
@@ -194,10 +164,7 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(fields.get("age"), is((Object) 1));
 	}
 
-	/**
-	 * @see DATAMONGO-1500
-	 */
-	@Test
+	@Test // DATAMONGO-1500
 	public void shouldLeaveParameterConversionToQueryMapper() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findBySex", Sex.FEMALE);

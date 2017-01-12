@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,7 @@ import com.mongodb.DBObject;
  */
 public class MapReduceResultsUnitTests {
 
-	/**
-	 * @see DATAMONGO-428
-	 */
-	@Test
+	@Test // DATAMONGO-428
 	public void resolvesOutputCollectionForPlainResult() {
 
 		DBObject rawResult = new BasicDBObject("result", "FOO");
@@ -44,10 +41,7 @@ public class MapReduceResultsUnitTests {
 		assertThat(results.getOutputCollection(), is("FOO"));
 	}
 
-	/**
-	 * @see DATAMONGO-428
-	 */
-	@Test
+	@Test // DATAMONGO-428
 	public void resolvesOutputCollectionForDBObjectResult() {
 
 		DBObject rawResult = new BasicDBObject("result", new BasicDBObject("collection", "FOO"));
@@ -56,10 +50,7 @@ public class MapReduceResultsUnitTests {
 		assertThat(results.getOutputCollection(), is("FOO"));
 	}
 
-	/**
-	 * @see DATAMONGO-378
-	 */
-	@Test
+	@Test // DATAMONGO-378
 	public void handlesLongTotalInResult() {
 
 		DBObject inner = new BasicDBObject("total", 1L);
@@ -70,10 +61,7 @@ public class MapReduceResultsUnitTests {
 		new MapReduceResults<Object>(Collections.emptyList(), source);
 	}
 
-	/**
-	 * @see DATAMONGO-378
-	 */
-	@Test
+	@Test // DATAMONGO-378
 	public void handlesLongResultsForCounts() {
 
 		DBObject inner = new BasicDBObject("input", 1L);

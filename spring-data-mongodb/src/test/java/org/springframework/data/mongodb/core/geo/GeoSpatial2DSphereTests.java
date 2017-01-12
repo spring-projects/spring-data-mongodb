@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,10 +42,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
  */
 public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 
-	/**
-	 * @see DATAMONGO-360
-	 */
-	@Test
+	@Test // DATAMONGO-360
 	public void indexInfoIsCorrect() {
 
 		IndexOperations operations = template.indexOps(Venue.class);
@@ -62,10 +59,7 @@ public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 		assertThat(fields, hasItem(IndexField.geo("location")));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void geoNearWithMinDistance() {
 
 		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).minDistance(1);
@@ -76,10 +70,7 @@ public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 		assertThat(result.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void nearSphereWithMinDistance() {
 		Point point = new Point(-73.99171, 40.738868);
 		List<Venue> venues = template.find(query(where("location").nearSphere(point).minDistance(0.01)), Venue.class);

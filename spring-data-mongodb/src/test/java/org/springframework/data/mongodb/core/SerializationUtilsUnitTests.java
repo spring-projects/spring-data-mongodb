@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,10 +64,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(serializeToJsonSafely(dbObject), is(expectedOutput));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldFlatOutNestedStructureCorrectly() {
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1).add("nested", new BasicDBObject("value", "conflux")).get();
@@ -76,10 +73,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(flattenMap(dbo), hasEntry("nested.value", (Object) "conflux"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldFlatOutNestedStructureWithListCorrectly() {
 
 		BasicDBList dbl = new BasicDBList();
@@ -91,10 +85,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(flattenMap(dbo), hasEntry("nested.value", (Object) dbl));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldLeaveKeywordsUntouched() {
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1).add("nested", new BasicDBObject("$regex", "^conflux$"))
@@ -107,10 +98,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(((Map<String, Object>) map.get("nested")).get("$regex"), is((Object) "^conflux$"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldAppendCommandsCorrectly() {
 
 		DBObject dbo = new BasicDBObjectBuilder().add("_id", 1)
@@ -124,10 +112,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(((Map<String, Object>) map.get("nested")).get("$options"), is((Object) "i"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldReturnEmptyMapWhenSourceIsNull() {
 		assertThat(flattenMap(null).isEmpty(), is(true));
 	}

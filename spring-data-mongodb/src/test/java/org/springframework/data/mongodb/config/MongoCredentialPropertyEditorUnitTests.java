@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,10 +75,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		this.editor = new MongoCredentialPropertyEditor();
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void shouldReturnNullValueForNullText() {
 
 		editor.setAsText(null);
@@ -86,10 +83,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat(editor.getValue(), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void shouldReturnNullValueForEmptyText() {
 
 		editor.setAsText(" ");
@@ -97,26 +91,17 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat(editor.getValue(), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1158
 	public void shouldThrowExceptionForMalformatedCredentialsString() {
 		editor.setAsText("tyrion");
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1158
 	public void shouldThrowExceptionForMalformatedAuthMechanism() {
 		editor.setAsText(USER_2_AUTH_STRING + "?uri.authMechanism=Targaryen");
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenSingleUserNamePasswordStringWithDatabaseAndNoOptions() {
 
@@ -125,10 +110,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS));
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenSingleUserNamePasswordStringWithDatabaseAndAuthOptions() {
 
@@ -137,10 +119,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS_PLAIN_AUTH));
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleUserNamePasswordStringWithDatabaseAndNoOptions() {
 
@@ -150,10 +129,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS));
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleUserNamePasswordStringWithDatabaseAndAuthOptions() {
 
@@ -164,10 +140,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 				contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS_CR_AUTH));
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleUserNamePasswordStringWithDatabaseAndMixedOptions() {
 
@@ -177,10 +150,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS));
 	}
 
-	/**
-	 * @see DATAMONGO-1257
-	 */
-	@Test
+	@Test // DATAMONGO-1257
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleQuotedUserNamePasswordStringWithDatabaseAndNoOptions() {
 
@@ -190,10 +160,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS));
 	}
 
-	/**
-	 * @see DATAMONGO-1257
-	 */
-	@Test
+	@Test // DATAMONGO-1257
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenSingleQuotedUserNamePasswordStringWithDatabaseAndNoOptions() {
 
@@ -202,10 +169,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS));
 	}
 
-	/**
-	 * @see DATAMONGO-1257
-	 */
-	@Test
+	@Test // DATAMONGO-1257
 	@SuppressWarnings("unchecked")
 	public void shouldReturnX509CredentialsCorrectly() {
 
@@ -214,10 +178,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_3_CREDENTIALS_X509_AUTH));
 	}
 
-	/**
-	 * @see DATAMONGO-1257
-	 */
-	@Test
+	@Test // DATAMONGO-1257
 	@SuppressWarnings("unchecked")
 	public void shouldReturnX509CredentialsCorrectlyWhenNoDbSpecified() {
 
@@ -226,10 +187,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(MongoCredential.createMongoX509Credential("tyrion")));
 	}
 
-	/**
-	 * @see DATAMONGO-1257
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1257
 	public void shouldThrowExceptionWhenNoDbSpecifiedForMongodbCR() {
 
 		editor.setAsText("tyrion?uri.authMechanism=MONGODB-CR");
@@ -237,10 +195,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		editor.getValue();
 	}
 
-	/**
-	 * @see DATAMONGO-1257
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1257
 	public void shouldThrowExceptionWhenDbIsEmptyForMongodbCR() {
 
 		editor.setAsText("tyrion@?uri.authMechanism=MONGODB-CR");

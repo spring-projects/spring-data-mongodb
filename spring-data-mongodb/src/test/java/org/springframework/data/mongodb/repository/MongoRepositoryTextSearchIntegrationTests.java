@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,10 +88,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		template.dropCollection(FullTextDocument.class);
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void findAllByTextCriteriaShouldReturnMatchingDocuments() {
 
 		initRepoWithDefaultDocuments();
@@ -102,10 +99,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		assertThat(result, hasItems(PASSENGER_57, DEMOLITION_MAN));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void derivedFinderWithTextCriteriaReturnsCorrectResult() {
 
 		initRepoWithDefaultDocuments();
@@ -123,10 +117,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		assertThat(result, hasItems(blade));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void findByWithPaginationWorksCorrectlyWhenUsingTextCriteria() {
 
 		initRepoWithDefaultDocuments();
@@ -140,10 +131,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		assertThat(page.getContent().get(0), equalTo(DEMOLITION_MAN));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void findAllByTextCriteriaWithSortWorksCorrectly() {
 
 		initRepoWithDefaultDocuments();
@@ -157,10 +145,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		assertThat(result.get(0), equalTo(snipes));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void findByWithSortByScoreViaPageRequestTriggersSortingCorrectly() {
 
 		initRepoWithDefaultDocuments();
@@ -174,10 +159,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		assertThat(page.getContent().get(0), equalTo(snipes));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void findByWithSortViaPageRequestIgnoresTextScoreWhenSortedByOtherProperty() {
 
 		initRepoWithDefaultDocuments();
@@ -191,10 +173,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		assertThat(page.getContent().get(0), equalTo(PASSENGER_57));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void derivedSortForTextScorePropertyWorksCorrectly() {
 
 		initRepoWithDefaultDocuments();
@@ -206,10 +185,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		assertThat(result.get(0), equalTo(snipes));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void derivedFinderMethodWithoutFullTextShouldNoCauseTroubleWhenHavingEntityWithTextScoreProperty() {
 
 		initRepoWithDefaultDocuments();

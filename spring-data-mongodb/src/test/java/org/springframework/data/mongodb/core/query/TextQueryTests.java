@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,10 +104,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		});
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldOnlyFindDocumentsMatchingAnyWordOfGivenQuery() {
 
 		initWithDefaultDocuments();
@@ -117,10 +114,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		assertThat(result, hasItems(BAKE, COFFEE, CAKE));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldNotFindDocumentsWhenQueryDoesNotMatchAnyDocumentInIndex() {
 
 		initWithDefaultDocuments();
@@ -129,10 +123,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		assertThat(result, hasSize(0));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldApplySortByScoreCorrectly() {
 
 		initWithDefaultDocuments();
@@ -147,10 +138,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		assertThat(result.get(3), equalTo(CAKE));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldFindTextInAnyLanguage() {
 
 		initWithDefaultDocuments();
@@ -159,10 +147,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		assertThat(result, hasItems(SPANISH_MILK, FRENCH_MILK));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldOnlyFindTextInSpecificLanguage() {
 
 		initWithDefaultDocuments();
@@ -172,10 +157,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		assertThat(result.get(0), equalTo(SPANISH_MILK));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldNotFindDocumentsWithNegatedTerms() {
 
 		initWithDefaultDocuments();
@@ -185,10 +167,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		assertThat(result, hasItems(BAKE, COFFEE));
 	}
 
-	/**
-	 * @see DATAMONGO-976
-	 */
-	@Test
+	@Test // DATAMONGO-976
 	public void shouldInlcudeScoreCorreclty() {
 
 		initWithDefaultDocuments();
@@ -202,10 +181,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldApplyPhraseCorrectly() {
 
 		initWithDefaultDocuments();
@@ -217,10 +193,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		assertThat(result, contains(MILK_AND_SUGAR));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldReturnEmptyListWhenNoDocumentsMatchGivenPhrase() {
 
 		initWithDefaultDocuments();
@@ -231,10 +204,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		assertThat(result, empty());
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldApplyPaginationCorrectly() {
 
 		initWithDefaultDocuments();

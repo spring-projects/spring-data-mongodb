@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,18 +35,12 @@ import com.mongodb.util.JSON;
  */
 public class GraphLookupOperationUnitTests {
 
-	/**
-	 * @see DATAMONGO-1551
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1551
 	public void rejectsNullFromCollection() {
 		GraphLookupOperation.builder().from(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1551
-	 */
-	@Test
+	@Test // DATAMONGO-1551
 	public void shouldRenderCorrectly() {
 
 		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
@@ -63,10 +57,7 @@ public class GraphLookupOperationUnitTests {
 				isBsonObject().containing("$graphLookup.depthField", "depth").containing("$graphLookup.maxDepth", 42L));
 	}
 
-	/**
-	 * @see DATAMONGO-1551
-	 */
-	@Test
+	@Test // DATAMONGO-1551
 	public void shouldRenderCriteriaCorrectly() {
 
 		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
@@ -82,10 +73,7 @@ public class GraphLookupOperationUnitTests {
 				isBsonObject().containing("$graphLookup.restrictSearchWithMatch", new BasicDBObject("key", "value")));
 	}
 
-	/**
-	 * @see DATAMONGO-1551
-	 */
-	@Test
+	@Test // DATAMONGO-1551
 	public void shouldRenderArrayOfStartsWithCorrectly() {
 
 		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
@@ -102,10 +90,7 @@ public class GraphLookupOperationUnitTests {
 						+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1551
-	 */
-	@Test
+	@Test // DATAMONGO-1551
 	public void shouldRenderMixedArrayOfStartsWithCorrectly() {
 
 		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
@@ -122,10 +107,7 @@ public class GraphLookupOperationUnitTests {
 						+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1551
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1551
 	public void shouldRejectUnknownTypeInMixedArrayOfStartsWithCorrectly() {
 
 		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
@@ -136,10 +118,7 @@ public class GraphLookupOperationUnitTests {
 				.as("reportingHierarchy");
 	}
 
-	/**
-	 * @see DATAMONGO-1551
-	 */
-	@Test
+	@Test // DATAMONGO-1551
 	public void shouldRenderStartWithAggregationExpressions() {
 
 		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //

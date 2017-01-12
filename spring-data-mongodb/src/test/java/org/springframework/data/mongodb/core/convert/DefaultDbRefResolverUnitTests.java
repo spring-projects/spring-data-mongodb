@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,10 +69,7 @@ public class DefaultDbRefResolverUnitTests {
 		resolver = new DefaultDbRefResolver(factoryMock);
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	@SuppressWarnings("unchecked")
 	public void bulkFetchShouldLoadDbRefsCorrectly() {
 
@@ -91,10 +88,7 @@ public class DefaultDbRefResolverUnitTests {
 		assertThat($in, iterableWithSize(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test(expected = InvalidDataAccessApiUsageException.class)
+	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1194
 	public void bulkFetchShouldThrowExceptionWhenUsingDifferntCollectionsWithinSetOfReferences() {
 
 		DBRef ref1 = new DBRef("collection-1", new ObjectId());
@@ -103,10 +97,7 @@ public class DefaultDbRefResolverUnitTests {
 		resolver.bulkFetch(Arrays.asList(ref1, ref2));
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	public void bulkFetchShouldReturnEarlyForEmptyLists() {
 
 		resolver.bulkFetch(Collections.<DBRef>emptyList());
@@ -114,10 +105,7 @@ public class DefaultDbRefResolverUnitTests {
 		verify(collectionMock, never()).find(Mockito.any(DBObject.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	public void bulkFetchShouldRestoreOriginalOrder() {
 
 		DBObject o1 = new BasicDBObject("_id", new ObjectId());

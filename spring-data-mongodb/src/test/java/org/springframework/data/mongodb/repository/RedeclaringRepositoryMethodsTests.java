@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,10 +34,7 @@ public class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryI
 
 	@Autowired RedeclaringRepositoryMethodsRepository repository;
 
-	/**
-	 * @see DATAMONGO-760
-	 */
-	@Test
+	@Test // DATAMONGO-760
 	public void adjustedWellKnownPagedFindAllMethodShouldReturnOnlyTheUserWithFirstnameOliverAugust() {
 
 		Page<Person> page = repository.findAll(new PageRequest(0, 2));
@@ -46,10 +43,7 @@ public class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryI
 		assertThat(page.getContent().get(0).getFirstname(), is(oliver.getFirstname()));
 	}
 
-	/**
-	 * @see DATAMONGO-760
-	 */
-	@Test
+	@Test // DATAMONGO-760
 	public void adjustedWllKnownFindAllMethodShouldReturnAnEmptyList() {
 
 		List<Person> result = repository.findAll();

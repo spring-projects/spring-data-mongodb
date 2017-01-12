@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,20 +45,14 @@ public class PathUnitTests {
 		when(entityMock.getType()).thenReturn((Class) Object.class);
 	}
 
-	/**
-	 * @see DATAMONGO-962
-	 */
-	@Test
+	@Test // DATAMONGO-962
 	public void shouldIdentifyCycleForOwnerOfSameTypeAndMatchingPath() {
 
 		MongoPersistentProperty property = createPersistentPropertyMock(entityMock, "foo");
 		assertThat(new Path(property, "foo.bar").cycles(property, "foo.bar.bar"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-962
-	 */
-	@Test
+	@Test // DATAMONGO-962
 	@SuppressWarnings("rawtypes")
 	public void shouldAllowMatchingPathForDifferentOwners() {
 
@@ -71,10 +65,7 @@ public class PathUnitTests {
 		assertThat(new Path(existing, "foo.bar").cycles(toBeVerified, "foo.bar.bar"), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-962
-	 */
-	@Test
+	@Test // DATAMONGO-962
 	public void shouldAllowEqaulPropertiesOnDifferentPaths() {
 
 		MongoPersistentProperty property = createPersistentPropertyMock(entityMock, "foo");

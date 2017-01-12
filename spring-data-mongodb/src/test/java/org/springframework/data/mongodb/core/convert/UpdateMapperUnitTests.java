@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -100,10 +100,7 @@ public class UpdateMapperUnitTests {
 		this.mapper = new UpdateMapper(converter);
 	}
 
-	/**
-	 * @see DATAMONGO-721
-	 */
-	@Test
+	@Test // DATAMONGO-721
 	public void updateMapperRetainsTypeInformationForCollectionField() {
 
 		Update update = new Update().push("list", new ConcreteChildClass("2", "BAR"));
@@ -117,10 +114,7 @@ public class UpdateMapperUnitTests {
 		assertThat(list.get("_class"), is((Object) ConcreteChildClass.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-807
-	 */
-	@Test
+	@Test // DATAMONGO-807
 	public void updateMapperShouldRetainTypeInformationForNestedEntities() {
 
 		Update update = Update.update("model", new ModelImpl(1));
@@ -134,10 +128,7 @@ public class UpdateMapperUnitTests {
 		assertThat(modelDbObject.get("_class"), not(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-807
-	 */
-	@Test
+	@Test // DATAMONGO-807
 	public void updateMapperShouldNotPersistTypeInformationForKnownSimpleTypes() {
 
 		Update update = Update.update("model.value", 1);
@@ -150,10 +141,7 @@ public class UpdateMapperUnitTests {
 		assertThat(set.get("_class"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-807
-	 */
-	@Test
+	@Test // DATAMONGO-807
 	public void updateMapperShouldNotPersistTypeInformationForNullValues() {
 
 		Update update = Update.update("model", null);
@@ -166,10 +154,7 @@ public class UpdateMapperUnitTests {
 		assertThat(set.get("_class"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-407
-	 */
-	@Test
+	@Test // DATAMONGO-407
 	public void updateMapperShouldRetainTypeInformationForNestedCollectionElements() {
 
 		Update update = Update.update("list.$", new ConcreteChildClass("42", "bubu"));
@@ -183,10 +168,7 @@ public class UpdateMapperUnitTests {
 		assertThat(modelDbObject.get("_class"), is((Object) ConcreteChildClass.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-407
-	 */
-	@Test
+	@Test // DATAMONGO-407
 	public void updateMapperShouldSupportNestedCollectionElementUpdates() {
 
 		Update update = Update.update("list.$.value", "foo").set("list.$.otherValue", "bar");
@@ -200,10 +182,7 @@ public class UpdateMapperUnitTests {
 		assertThat(set.get("aliased.$.otherValue"), is((Object) "bar"));
 	}
 
-	/**
-	 * @see DATAMONGO-407
-	 */
-	@Test
+	@Test // DATAMONGO-407
 	public void updateMapperShouldWriteTypeInformationForComplexNestedCollectionElementUpdates() {
 
 		Update update = Update.update("list.$.value", "foo").set("list.$.someObject", new ConcreteChildClass("42", "bubu"));
@@ -221,11 +200,8 @@ public class UpdateMapperUnitTests {
 		assertThat(someObject.get("value"), is((Object) "bubu"));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
+	@Test // DATAMONGO-812
 	public void updateMapperShouldConvertPushCorrectlyWhenCalledWithEachUsingSimpleTypes() {
 
 		Update update = new Update().push("values").each("spring", "data", "mongodb");
@@ -241,10 +217,7 @@ public class UpdateMapperUnitTests {
 		assertThat(each.toMap(), (Matcher) allOf(hasValue("spring"), hasValue("data"), hasValue("mongodb")));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
-	@Test
+	@Test // DATAMONGO-812
 	public void updateMapperShouldConvertPushWhithoutAddingClassInformationWhenUsedWithEvery() {
 
 		Update update = new Update().push("values").each("spring", "data", "mongodb");
@@ -257,11 +230,8 @@ public class UpdateMapperUnitTests {
 		assertThat(values.get("_class"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
+	@Test // DATAMONGO-812
 	public void updateMapperShouldConvertPushCorrectlyWhenCalledWithEachUsingCustomTypes() {
 
 		Update update = new Update().push("models").each(new ListModel("spring", "data", "mongodb"));
@@ -276,10 +246,7 @@ public class UpdateMapperUnitTests {
 		assertThat(values.toMap(), (Matcher) allOf(hasValue("spring"), hasValue("data"), hasValue("mongodb")));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
-	@Test
+	@Test // DATAMONGO-812
 	public void updateMapperShouldRetainClassInformationForPushCorrectlyWhenCalledWithEachUsingCustomTypes() {
 
 		Update update = new Update().push("models").each(new ListModel("spring", "data", "mongodb"));
@@ -293,10 +260,7 @@ public class UpdateMapperUnitTests {
 		assertThat(((DBObject) each.get(0)).get("_class").toString(), equalTo(ListModel.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
-	@Test
+	@Test // DATAMONGO-812
 	public void testUpdateShouldAllowMultiplePushEachForDifferentFields() {
 
 		Update update = new Update().push("category").each("spring", "data").push("type").each("mongodb");
@@ -307,10 +271,7 @@ public class UpdateMapperUnitTests {
 		assertThat(getAsDBObject(push, "type").containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-943
-	 */
-	@Test
+	@Test // DATAMONGO-943
 	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositiveIndexParameter() {
 
 		Update update = new Update().push("key").atPosition(2).each(Arrays.asList("Arya", "Arry", "Weasel"));
@@ -325,10 +286,7 @@ public class UpdateMapperUnitTests {
 		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-943
-	 */
-	@Test
+	@Test // DATAMONGO-943
 	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionFirst() {
 
 		Update update = new Update().push("key").atPosition(Position.FIRST).each(Arrays.asList("Arya", "Arry", "Weasel"));
@@ -343,10 +301,7 @@ public class UpdateMapperUnitTests {
 		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-943
-	 */
-	@Test
+	@Test // DATAMONGO-943
 	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionLast() {
 
 		Update update = new Update().push("key").atPosition(Position.LAST).each(Arrays.asList("Arya", "Arry", "Weasel"));
@@ -360,10 +315,7 @@ public class UpdateMapperUnitTests {
 		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-943
-	 */
-	@Test
+	@Test // DATAMONGO-943
 	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionNull() {
 
 		Update update = new Update().push("key").atPosition(null).each(Arrays.asList("Arya", "Arry", "Weasel"));
@@ -377,10 +329,7 @@ public class UpdateMapperUnitTests {
 		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-832
-	 */
-	@Test
+	@Test // DATAMONGO-832
 	public void updatePushEachWithSliceShouldRenderCorrectly() {
 
 		Update update = new Update().push("key").slice(5).each(Arrays.asList("Arya", "Arry", "Weasel"));
@@ -395,10 +344,7 @@ public class UpdateMapperUnitTests {
 		assertThat(key.containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-832
-	 */
-	@Test
+	@Test // DATAMONGO-832
 	public void updatePushEachWithSliceShouldRenderWhenUsingMultiplePushCorrectly() {
 
 		Update update = new Update().push("key").slice(5).each(Arrays.asList("Arya", "Arry", "Weasel")).push("key-2")
@@ -420,10 +366,7 @@ public class UpdateMapperUnitTests {
 		assertThat(key2.containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1141
-	 */
-	@Test
+	@Test // DATAMONGO-1141
 	public void updatePushEachWithValueSortShouldRenderCorrectly() {
 
 		Update update = new Update().push("scores").sort(Direction.DESC).each(42, 23, 68);
@@ -439,10 +382,7 @@ public class UpdateMapperUnitTests {
 		assertThat(key.containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1141
-	 */
-	@Test
+	@Test // DATAMONGO-1141
 	public void updatePushEachWithDocumentSortShouldRenderCorrectly() {
 
 		Update update = new Update().push("list")
@@ -461,10 +401,7 @@ public class UpdateMapperUnitTests {
 		assertThat(key.containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1141
-	 */
-	@Test
+	@Test // DATAMONGO-1141
 	public void updatePushEachWithSortShouldRenderCorrectlyWhenUsingMultiplePush() {
 
 		Update update = new Update().push("authors").sort(Direction.ASC).each("Harry").push("chapters")
@@ -486,10 +423,7 @@ public class UpdateMapperUnitTests {
 		assertThat(key2.containsField("$each"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-410
-	 */
-	@Test
+	@Test // DATAMONGO-410
 	public void testUpdateMapperShouldConsiderCustomWriteTarget() {
 
 		List<NestedEntity> someValues = Arrays.asList(new NestedEntity("spring"), new NestedEntity("data"),
@@ -502,10 +436,7 @@ public class UpdateMapperUnitTests {
 		verify(writingConverterSpy, times(3)).convert(Mockito.any(NestedEntity.class));
 	}
 
-	/**
-	 * @see DATAMONGO-404
-	 */
-	@Test
+	@Test // DATAMONGO-404
 	public void createsDbRefForEntityIdOnPulls() {
 
 		Update update = new Update().pull("dbRefAnnotatedList.id", "2");
@@ -517,10 +448,7 @@ public class UpdateMapperUnitTests {
 		assertThat(pullClause.get("dbRefAnnotatedList"), is((Object) new DBRef("entity", "2")));
 	}
 
-	/**
-	 * @see DATAMONGO-404
-	 */
-	@Test
+	@Test // DATAMONGO-404
 	public void createsDbRefForEntityOnPulls() {
 
 		Entity entity = new Entity();
@@ -534,20 +462,14 @@ public class UpdateMapperUnitTests {
 		assertThat(pullClause.get("dbRefAnnotatedList"), is((Object) new DBRef("entity", entity.id)));
 	}
 
-	/**
-	 * @see DATAMONGO-404
-	 */
-	@Test(expected = MappingException.class)
+	@Test(expected = MappingException.class) // DATAMONGO-404
 	public void rejectsInvalidFieldReferenceForDbRef() {
 
 		Update update = new Update().pull("dbRefAnnotatedList.name", "NAME");
 		mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(DocumentWithDBRefCollection.class));
 	}
 
-	/**
-	 * @see DATAMONGO-404
-	 */
-	@Test
+	@Test // DATAMONGO-404
 	public void rendersNestedDbRefCorrectly() {
 
 		Update update = new Update().pull("nested.dbRefAnnotatedList.id", "2");
@@ -558,10 +480,7 @@ public class UpdateMapperUnitTests {
 		assertThat(pullClause.containsField("mapped.dbRefAnnotatedList"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-468
-	 */
-	@Test
+	@Test // DATAMONGO-468
 	public void rendersUpdateOfDbRefPropertyWithDomainObjectCorrectly() {
 
 		Entity entity = new Entity();
@@ -575,10 +494,7 @@ public class UpdateMapperUnitTests {
 		assertThat(setClause.get("dbRefProperty"), is((Object) new DBRef("entity", entity.id)));
 	}
 
-	/**
-	 * @see DATAMONGO-862
-	 */
-	@Test
+	@Test // DATAMONGO-862
 	public void rendersUpdateAndPreservesKeyForPathsNotPointingToProperty() {
 
 		Update update = new Update().set("listOfInterface.$.value", "expected-value");
@@ -589,10 +505,7 @@ public class UpdateMapperUnitTests {
 		assertThat(setClause.containsField("listOfInterface.$.value"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-863
-	 */
-	@Test
+	@Test // DATAMONGO-863
 	public void doesNotConvertRawDbObjects() {
 
 		Update update = new Update();
@@ -610,11 +523,8 @@ public class UpdateMapperUnitTests {
 		assertThat(inClause, IsIterableContainingInOrder.<Object> contains(1L, 2L));
 	}
 
-	/**
-	 * @see DATAMONG0-471
-	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
+	@Test // DATAMONG0-471
 	public void testUpdateShouldApply$addToSetCorrectlyWhenUsedWith$each() {
 
 		Update update = new Update().addToSet("values").each("spring", "data", "mongodb");
@@ -628,10 +538,7 @@ public class UpdateMapperUnitTests {
 		assertThat(each.toMap(), (Matcher) allOf(hasValue("spring"), hasValue("data"), hasValue("mongodb")));
 	}
 
-	/**
-	 * @see DATAMONG0-471
-	 */
-	@Test
+	@Test // DATAMONG0-471
 	public void testUpdateShouldRetainClassTypeInformationWhenUsing$addToSetWith$eachForCustomTypes() {
 
 		Update update = new Update().addToSet("models").each(new ModelImpl(2014), new ModelImpl(1), new ModelImpl(28));
@@ -649,10 +556,7 @@ public class UpdateMapperUnitTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-897
-	 */
-	@Test
+	@Test // DATAMONGO-897
 	public void updateOnDbrefPropertyOfInterfaceTypeWithoutExplicitGetterForIdShouldBeMappedCorrectly() {
 
 		Update update = new Update().set("referencedDocument", new InterfaceDocumentDefinitionImpl("1", "Foo"));
@@ -666,10 +570,7 @@ public class UpdateMapperUnitTests {
 		assertThat(model, allOf(instanceOf(DBRef.class), IsEqual.<Object> equalTo(expectedDBRef)));
 	}
 
-	/**
-	 * @see DATAMONGO-847
-	 */
-	@Test
+	@Test // DATAMONGO-847
 	public void updateMapperConvertsNestedQueryCorrectly() {
 
 		Update update = new Update().pull("list", Query.query(Criteria.where("value").in("foo", "bar")));
@@ -684,10 +585,7 @@ public class UpdateMapperUnitTests {
 		assertThat($in, IsIterableContainingInOrder.<Object> contains("foo", "bar"));
 	}
 
-	/**
-	 * @see DATAMONGO-847
-	 */
-	@Test
+	@Test // DATAMONGO-847
 	public void updateMapperConvertsPullWithNestedQuerfyOnDBRefCorrectly() {
 
 		Update update = new Update().pull("dbRefAnnotatedList", Query.query(Criteria.where("id").is("1")));
@@ -700,10 +598,7 @@ public class UpdateMapperUnitTests {
 		assertThat(list, equalTo(new BasicDBObjectBuilder().add("_id", "1").get()));
 	}
 
-	/**
-	 * @see DATAMONGO-1077
-	 */
-	@Test
+	@Test // DATAMONGO-1077
 	public void shouldNotRemovePositionalParameter() {
 
 		Update update = new Update();
@@ -717,10 +612,7 @@ public class UpdateMapperUnitTests {
 		assertThat($unset, equalTo(new BasicDBObjectBuilder().add("dbRefAnnotatedList.$", 1).get()));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void mappingEachOperatorShouldNotAddTypeInfoForNonInterfaceNonAbstractTypes() {
 
 		Update update = new Update().addToSet("nestedDocs").each(new NestedDocument("nested-1"),
@@ -733,10 +625,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().notContaining("$addToSet.nestedDocs.$each.[1]._class"));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void mappingEachOperatorShouldAddTypeHintForInterfaceTypes() {
 
 		Update update = new Update().addToSet("models").each(new ModelImpl(1), new ModelImpl(2));
@@ -748,10 +637,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().containing("$addToSet.models.$each.[1]._class", ModelImpl.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void mappingEachOperatorShouldAddTypeHintForAbstractTypes() {
 
 		Update update = new Update().addToSet("list").each(new ConcreteChildClass("foo", "one"),
@@ -766,10 +652,7 @@ public class UpdateMapperUnitTests {
 				isBsonObject().containing("$addToSet.aliased.$each.[1]._class", ConcreteChildClass.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void mappingShouldOnlyRemoveTypeHintFromTopLevelTypeInCaseOfNestedDocument() {
 
 		WrapperAroundInterfaceType wait = new WrapperAroundInterfaceType();
@@ -787,10 +670,7 @@ public class UpdateMapperUnitTests {
 						ModelImpl.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void mappingShouldRetainTypeInformationOfNestedListWhenUpdatingConcreteyParentType() {
 
 		ListModelWrapper lmw = new ListModelWrapper();
@@ -805,10 +685,7 @@ public class UpdateMapperUnitTests {
 				.containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class", ModelImpl.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-1236
-	 */
-	@Test
+	@Test // DATAMONGO-1236
 	public void mappingShouldRetainTypeInformationForObjectValues() {
 
 		Update update = new Update().set("value", new NestedDocument("kaladin"));
@@ -819,10 +696,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().containing("$set.value._class", NestedDocument.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-1236
-	 */
-	@Test
+	@Test // DATAMONGO-1236
 	public void mappingShouldNotRetainTypeInformationForConcreteValues() {
 
 		Update update = new Update().set("concreteValue", new NestedDocument("shallan"));
@@ -833,10 +707,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().notContaining("$set.concreteValue._class"));
 	}
 
-	/**
-	 * @see DATAMONGO-1236
-	 */
-	@Test
+	@Test // DATAMONGO-1236
 	public void mappingShouldRetainTypeInformationForObjectValuesWithAlias() {
 
 		Update update = new Update().set("value", new NestedDocument("adolin"));
@@ -847,10 +718,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().containing("$set.renamed-value._class", NestedDocument.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-1236
-	 */
-	@Test
+	@Test // DATAMONGO-1236
 	public void mappingShouldRetrainTypeInformationWhenValueTypeOfMapDoesNotMatchItsDeclaration() {
 
 		Map<Object, Object> map = Collections.<Object, Object> singletonMap("szeth", new NestedDocument("son-son-vallano"));
@@ -863,10 +731,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().containing("$set.map.szeth._class", NestedDocument.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-1236
-	 */
-	@Test
+	@Test // DATAMONGO-1236
 	public void mappingShouldNotContainTypeInformationWhenValueTypeOfMapMatchesDeclaration() {
 
 		Map<Object, NestedDocument> map = Collections.<Object, NestedDocument> singletonMap("jasnah",
@@ -880,10 +745,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().notContaining("$set.concreteMap.jasnah._class"));
 	}
 
-	/**
-	 * @see DATAMONGO-1250
-	 */
-	@Test
+	@Test // DATAMONGO-1250
 	@SuppressWarnings("unchecked")
 	public void mapsUpdateWithBothReadingAndWritingConverterRegistered() {
 
@@ -907,10 +769,7 @@ public class UpdateMapperUnitTests {
 		assertThat(result, isBsonObject().containing("$set.allocation", Allocation.AVAILABLE.code));
 	}
 
-	/**
-	 * @see DATAMONGO-1251
-	 */
-	@Test
+	@Test // DATAMONGO-1251
 	public void mapsNullValueCorrectlyForSimpleTypes() {
 
 		Update update = new Update().set("value", null);
@@ -923,10 +782,7 @@ public class UpdateMapperUnitTests {
 		assertThat($set.get("value"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-1251
-	 */
-	@Test
+	@Test // DATAMONGO-1251
 	public void mapsNullValueCorrectlyForJava8Date() {
 
 		Update update = new Update().set("date", null);
@@ -939,10 +795,7 @@ public class UpdateMapperUnitTests {
 		assertThat($set.get("value"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-1251
-	 */
-	@Test
+	@Test // DATAMONGO-1251
 	public void mapsNullValueCorrectlyForCollectionTypes() {
 
 		Update update = new Update().set("values", null);
@@ -955,10 +808,7 @@ public class UpdateMapperUnitTests {
 		assertThat($set.get("value"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-1251
-	 */
-	@Test
+	@Test // DATAMONGO-1251
 	public void mapsNullValueCorrectlyForPropertyOfNestedDocument() {
 
 		Update update = new Update().set("concreteValue.name", null);
@@ -971,10 +821,7 @@ public class UpdateMapperUnitTests {
 		assertThat($set.get("concreteValue.name"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-1288
-	 */
-	@Test
+	@Test // DATAMONGO-1288
 	public void mapsAtomicIntegerToIntegerCorrectly() {
 
 		Update update = new Update().set("intValue", new AtomicInteger(10));
@@ -985,10 +832,7 @@ public class UpdateMapperUnitTests {
 		assertThat($set.get("intValue"), Is.<Object> is(10));
 	}
 
-	/**
-	 * @see DATAMONGO-1288
-	 */
-	@Test
+	@Test // DATAMONGO-1288
 	public void mapsAtomicIntegerToPrimitiveIntegerCorrectly() {
 
 		Update update = new Update().set("primIntValue", new AtomicInteger(10));
@@ -999,10 +843,7 @@ public class UpdateMapperUnitTests {
 		assertThat($set.get("primIntValue"), Is.<Object> is(10));
 	}
 
-	/**
-	 * @see DATAMONGO-1404
-	 */
-	@Test
+	@Test // DATAMONGO-1404
 	public void mapsMinCorrectly() {
 
 		Update update = new Update().min("minfield", 10);
@@ -1012,10 +853,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().containing("$min", new BasicDBObject("minfield", 10)));
 	}
 
-	/**
-	 * @see DATAMONGO-1404
-	 */
-	@Test
+	@Test // DATAMONGO-1404
 	public void mapsMaxCorrectly() {
 
 		Update update = new Update().max("maxfield", 999);
@@ -1025,10 +863,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().containing("$max", new BasicDBObject("maxfield", 999)));
 	}
 
-	/**
-	 * @see DATAMONGO-1423
-	 */
-	@Test
+	@Test // DATAMONGO-1423
 	@SuppressWarnings("unchecked")
 	public void mappingShouldConsiderCustomConvertersForEnumMapKeys() {
 
@@ -1052,10 +887,7 @@ public class UpdateMapperUnitTests {
 		assertThat(result, isBsonObject().containing("$set.enumAsMapKey.V", 100));
 	}
 
-	/**
-	 * @see DATAMONGO-1486
-	 */
-	@Test
+	@Test // DATAMONGO-1486
 	public void mappingShouldConvertMapKeysToString() {
 
 		Update update = new Update().set("map", Collections.singletonMap(25, "#StarTrek50"));

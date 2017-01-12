@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,10 +52,7 @@ import com.mongodb.DBObject;
  */
 public class GeoConvertersUnitTests {
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsBoxToDbObjectAndBackCorrectly() {
 
 		Box box = new Box(new Point(1, 2), new Point(3, 4));
@@ -67,10 +64,7 @@ public class GeoConvertersUnitTests {
 		assertThat(result.getClass().equals(Box.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsCircleToDbObjectAndBackCorrectlyNeutralDistance() {
 
 		Circle circle = new Circle(new Point(1, 2), 3);
@@ -81,10 +75,7 @@ public class GeoConvertersUnitTests {
 		assertThat(result, is(circle));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsCircleToDbObjectAndBackCorrectlyMilesDistance() {
 
 		Distance radius = new Distance(3, Metrics.MILES);
@@ -97,10 +88,7 @@ public class GeoConvertersUnitTests {
 		assertThat(result.getRadius(), is(radius));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsPolygonToDbObjectAndBackCorrectly() {
 
 		Polygon polygon = new Polygon(new Point(1, 2), new Point(2, 3), new Point(3, 4), new Point(5, 6));
@@ -112,10 +100,7 @@ public class GeoConvertersUnitTests {
 		assertThat(result.getClass().equals(Polygon.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsSphereToDbObjectAndBackCorrectlyWithNeutralDistance() {
 
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
@@ -127,10 +112,7 @@ public class GeoConvertersUnitTests {
 		assertThat(result.getClass().equals(Sphere.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsSphereToDbObjectAndBackCorrectlyWithKilometerDistance() {
 
 		Distance radius = new Distance(3, Metrics.KILOMETERS);
@@ -144,10 +126,7 @@ public class GeoConvertersUnitTests {
 		assertThat(result.getClass().equals(org.springframework.data.mongodb.core.geo.Sphere.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsPointToListAndBackCorrectly() {
 
 		Point point = new Point(1, 2);
@@ -159,10 +138,7 @@ public class GeoConvertersUnitTests {
 		assertThat(result.getClass().equals(Point.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsGeoCommandToDbObjectCorrectly() {
 
 		Box box = new Box(new double[] { 1, 2 }, new double[] { 3, 4 });

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,10 +43,7 @@ public class GeoJsonModuleUnitTests {
 		mapper.registerModule(new GeoJsonModule());
 	}
 
-	/**
-	 * @see DATAMONGO-1181
-	 */
-	@Test
+	@Test // DATAMONGO-1181
 	public void shouldDeserializeJsonPointCorrectly() throws JsonParseException, JsonMappingException, IOException {
 
 		String json = "{ \"type\": \"Point\", \"coordinates\": [10.0, 20.0] }";
@@ -54,10 +51,7 @@ public class GeoJsonModuleUnitTests {
 		assertThat(mapper.readValue(json, GeoJsonPoint.class), is(new GeoJsonPoint(10D, 20D)));
 	}
 
-	/**
-	 * @see DATAMONGO-1181
-	 */
-	@Test
+	@Test // DATAMONGO-1181
 	public void shouldDeserializeGeoJsonLineStringCorrectly() throws JsonParseException, JsonMappingException,
 			IOException {
 
@@ -67,10 +61,7 @@ public class GeoJsonModuleUnitTests {
 				is(new GeoJsonLineString(Arrays.asList(new Point(10, 20), new Point(30, 40), new Point(50, 60)))));
 	}
 
-	/**
-	 * @see DATAMONGO-1181
-	 */
-	@Test
+	@Test // DATAMONGO-1181
 	public void shouldDeserializeGeoJsonMultiPointCorrectly() throws JsonParseException, JsonMappingException,
 			IOException {
 
@@ -80,10 +71,7 @@ public class GeoJsonModuleUnitTests {
 				is(new GeoJsonMultiPoint(Arrays.asList(new Point(10, 20), new Point(30, 40), new Point(50, 60)))));
 	}
 
-	/**
-	 * @see DATAMONGO-1181
-	 */
-	@Test
+	@Test // DATAMONGO-1181
 	@SuppressWarnings("unchecked")
 	public void shouldDeserializeGeoJsonMultiLineStringCorrectly() throws JsonParseException, JsonMappingException,
 			IOException {
@@ -96,10 +84,7 @@ public class GeoJsonModuleUnitTests {
 						60), new Point(70, 80)))));
 	}
 
-	/**
-	 * @see DATAMONGO-1181
-	 */
-	@Test
+	@Test // DATAMONGO-1181
 	public void shouldDeserializeGeoJsonPolygonCorrectly() throws JsonParseException, JsonMappingException, IOException {
 
 		String json = "{ \"type\": \"Polygon\", \"coordinates\": [ [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0] ] ]}";
@@ -110,10 +95,7 @@ public class GeoJsonModuleUnitTests {
 						new Point(100, 0)))));
 	}
 
-	/**
-	 * @see DATAMONGO-1181
-	 */
-	@Test
+	@Test // DATAMONGO-1181
 	public void shouldDeserializeGeoJsonMultiPolygonCorrectly() throws JsonParseException, JsonMappingException,
 			IOException {
 

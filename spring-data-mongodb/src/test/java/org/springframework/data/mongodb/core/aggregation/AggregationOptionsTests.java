@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,10 +42,7 @@ public class AggregationOptionsTests {
 
 	}
 
-	/**
-	 * @see DATAMONGO-960
-	 */
-	@Test
+	@Test // DATAMONGO-960
 	public void aggregationOptionsBuilderShouldSetOptionsAccordingly() {
 
 		assertThat(aggregationOptions.isAllowDiskUse(), is(true));
@@ -53,10 +50,7 @@ public class AggregationOptionsTests {
 		assertThat(aggregationOptions.getCursor(), is((DBObject) new BasicDBObject("foo", 1)));
 	}
 
-	/**
-	 * @see DATAMONGO-960
-	 */
-	@Test
+	@Test // DATAMONGO-960
 	public void aggregationOptionsToString() {
 		assertThat(aggregationOptions.toString(),
 				is("{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"foo\" : 1}}"));

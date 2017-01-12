@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,10 +62,7 @@ public class IndexingIntegrationTests {
 		operations.dropCollection(IndexedPerson.class);
 	}
 
-	/**
-	 * @see DATAMONGO-237
-	 */
-	@Test
+	@Test // DATAMONGO-237
 	@DirtiesContext
 	public void createsIndexWithFieldName() {
 
@@ -74,10 +71,7 @@ public class IndexingIntegrationTests {
 		assertThat(hasIndex("_firstname", IndexedPerson.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1163
-	 */
-	@Test
+	@Test // DATAMONGO-1163
 	@DirtiesContext
 	public void createsIndexFromMetaAnnotation() {
 

@@ -41,7 +41,6 @@ import com.mongodb.DBObject;
  * Test case to verify correct usage of custom {@link Converter} implementations to be used.
  * 
  * @author Oliver Gierke
- * @see DATADOC-101
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CustomConvertersUnitTests {
@@ -75,7 +74,7 @@ public class CustomConvertersUnitTests {
 		converter.afterPropertiesSet();
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void nestedToDBObjectConverterGetsInvoked() {
 
 		Foo foo = new Foo();
@@ -85,7 +84,7 @@ public class CustomConvertersUnitTests {
 		verify(barToDBObjectConverter).convert(any(Bar.class));
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void nestedFromDBObjectConverterGetsInvoked() {
 
 		BasicDBObject dbObject = new BasicDBObject();
@@ -95,21 +94,21 @@ public class CustomConvertersUnitTests {
 		verify(dbObjectToBarConverter).convert(any(DBObject.class));
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void toDBObjectConverterGetsInvoked() {
 
 		converter.write(new Bar(), new BasicDBObject());
 		verify(barToDBObjectConverter).convert(any(Bar.class));
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void fromDBObjectConverterGetsInvoked() {
 
 		converter.read(Bar.class, new BasicDBObject());
 		verify(dbObjectToBarConverter).convert(any(DBObject.class));
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void foo() {
 		DBObject dbObject = new BasicDBObject();
 		dbObject.put("foo", null);

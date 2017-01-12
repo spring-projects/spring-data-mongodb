@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,10 +51,7 @@ public class DataMongo273Tests {
 		converter.afterPropertiesSet();
 	}
 
-	/**
-	 * @see DATAMONGO-273
-	 */
-	@Test
+	@Test // DATAMONGO-273
 	public void convertMapOfThings() {
 
 		Plane plane = new Plane("Boeing", 4);
@@ -77,10 +74,7 @@ public class DataMongo273Tests {
 		assertTrue(mapOfThings2.get("automobile") instanceof Automobile);
 	}
 
-	/**
-	 * @see DATAMONGO-294
-	 */
-	@Test
+	@Test // DATAMONGO-294
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void convertListOfThings() {
 		Plane plane = new Plane("Boeing", 4);
@@ -102,10 +96,7 @@ public class DataMongo273Tests {
 		assertTrue(listOfThings2.get(2) instanceof Automobile);
 	}
 
-	/**
-	 * @see DATAMONGO-294
-	 */
-	@Test
+	@Test // DATAMONGO-294
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void convertListOfThings_NestedInMap() {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,10 +81,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-1008
-	 */
-	@Test
+	@Test // DATAMONGO-1008
 	public void getIndexInfoShouldBeAbleToRead2dsphereIndex() {
 
 		collection.createIndex(GEO_SPHERE_2D);
@@ -93,10 +90,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		assertThat(info.getIndexFields().get(0).isGeo(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1467
-	 */
-	@Test
+	@Test // DATAMONGO-1467
 	public void shouldApplyPartialFilterCorrectly() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
@@ -110,10 +104,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"q-t-y\" : { \"$gte\" : 10}}")));
 	}
 
-	/**
-	 * @see DATAMONGO-1467
-	 */
-	@Test
+	@Test // DATAMONGO-1467
 	public void shouldApplyPartialFilterWithMappedPropertyCorrectly() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
@@ -127,10 +118,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"qty\" : { \"$gte\" : 10}}")));
 	}
 
-	/**
-	 * @see DATAMONGO-1467
-	 */
-	@Test
+	@Test // DATAMONGO-1467
 	public void shouldApplyPartialDBOFilterCorrectly() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
@@ -144,10 +132,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"qty\" : { \"$gte\" : 10}}")));
 	}
 
-	/**
-	 * @see DATAMONGO-1467
-	 */
-	@Test
+	@Test // DATAMONGO-1467
 	public void shouldFavorExplicitMappingHintViaClass() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));

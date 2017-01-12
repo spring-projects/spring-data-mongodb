@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,10 +33,7 @@ import com.mongodb.util.JSON;
  */
 public class FacetOperationUnitTests {
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderCorrectly() throws Exception {
 
 		FacetOperation facetOperation = new FacetOperation()
@@ -58,10 +55,7 @@ public class FacetOperationUnitTests {
 						+ "categorizedByYears: [ { $bucketAuto: { buckets: 5, groupBy: \"$year\" } } ] } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderEmpty() throws Exception {
 
 		FacetOperation facetOperation = facet();
@@ -71,10 +65,7 @@ public class FacetOperationUnitTests {
 		assertThat(dbObject, is(JSON.parse("{ $facet: { } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
 	public void shouldRejectNonExistingFields() throws Exception {
 
 		FacetOperation facetOperation = new FacetOperation()
@@ -95,10 +86,7 @@ public class FacetOperationUnitTests {
 						+ "categorizedByYears: [ { $bucketAuto: { buckets: 5, groupBy: \"$year\" } } ] } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldHonorProjectedFields() {
 
 		FacetOperation facetOperation = new FacetOperation()

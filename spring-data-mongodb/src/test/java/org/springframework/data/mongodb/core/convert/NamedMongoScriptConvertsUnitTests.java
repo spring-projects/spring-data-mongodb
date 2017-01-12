@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,18 +58,12 @@ public class NamedMongoScriptConvertsUnitTests {
 
 		NamedMongoScriptToDBObjectConverter converter = NamedMongoScriptToDBObjectConverter.INSTANCE;
 
-		/**
-		 * @see DATAMONGO-479
-		 */
-		@Test
+		@Test // DATAMONGO-479
 		public void convertShouldReturnEmptyDboWhenScriptIsNull() {
 			assertThat(converter.convert(null), is((DBObject) new BasicDBObject()));
 		}
 
-		/**
-		 * @see DATAMONGO-479
-		 */
-		@Test
+		@Test // DATAMONGO-479
 		public void convertShouldConvertScriptNameCorreclty() {
 
 			DBObject dbo = converter.convert(ECHO_SCRIPT);
@@ -79,10 +73,7 @@ public class NamedMongoScriptConvertsUnitTests {
 			assertThat(id, is((Object) FUNCTION_NAME));
 		}
 
-		/**
-		 * @see DATAMONGO-479
-		 */
-		@Test
+		@Test // DATAMONGO-479
 		public void convertShouldConvertScriptCodeCorreclty() {
 
 			DBObject dbo = converter.convert(ECHO_SCRIPT);
@@ -100,18 +91,12 @@ public class NamedMongoScriptConvertsUnitTests {
 
 		DBObjectToNamedMongoScriptCoverter converter = DBObjectToNamedMongoScriptCoverter.INSTANCE;
 
-		/**
-		 * @see DATAMONGO-479
-		 */
-		@Test
+		@Test // DATAMONGO-479
 		public void convertShouldReturnNullIfSourceIsNull() {
 			assertThat(converter.convert(null), is(nullValue()));
 		}
 
-		/**
-		 * @see DATAMONGO-479
-		 */
-		@Test
+		@Test // DATAMONGO-479
 		public void convertShouldConvertIdCorreclty() {
 
 			NamedMongoScript script = converter.convert(FUNCTION);
@@ -119,10 +104,7 @@ public class NamedMongoScriptConvertsUnitTests {
 			assertThat(script.getName(), is(FUNCTION_NAME));
 		}
 
-		/**
-		 * @see DATAMONGO-479
-		 */
-		@Test
+		@Test // DATAMONGO-479
 		public void convertShouldConvertScriptValueCorreclty() {
 
 			NamedMongoScript script = converter.convert(FUNCTION);

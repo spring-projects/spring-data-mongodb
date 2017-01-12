@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,10 +61,7 @@ public class GridFsTemplateIntegrationTests {
 		operations.delete(null);
 	}
 
-	/**
-	 * @see DATAMONGO-6
-	 */
-	@Test
+	@Test // DATAMONGO-6
 	public void storesAndFindsSimpleDocument() throws IOException {
 
 		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml");
@@ -74,10 +71,7 @@ public class GridFsTemplateIntegrationTests {
 		assertSame(result.get(0), reference);
 	}
 
-	/**
-	 * @see DATAMONGO-6
-	 */
-	@Test
+	@Test // DATAMONGO-6
 	public void writesMetadataCorrectly() throws IOException {
 
 		DBObject metadata = new BasicDBObject("key", "value");
@@ -88,10 +82,7 @@ public class GridFsTemplateIntegrationTests {
 		assertSame(result.get(0), reference);
 	}
 
-	/**
-	 * @see DATAMONGO-6
-	 */
-	@Test
+	@Test // DATAMONGO-6
 	public void marshalsComplexMetadata() throws IOException {
 
 		Metadata metadata = new Metadata();
@@ -103,10 +94,7 @@ public class GridFsTemplateIntegrationTests {
 		assertSame(result.get(0), reference);
 	}
 
-	/**
-	 * @see DATAMONGO-6
-	 */
-	@Test
+	@Test // DATAMONGO-6
 	public void findsFilesByResourcePattern() throws IOException {
 
 		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml");
@@ -118,10 +106,7 @@ public class GridFsTemplateIntegrationTests {
 		assertThat(resources[0].getContentType(), is(reference.getContentType()));
 	}
 
-	/**
-	 * @see DATAMONGO-6
-	 */
-	@Test
+	@Test // DATAMONGO-6
 	public void findsFilesByResourceLocation() throws IOException {
 
 		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml");
@@ -133,10 +118,7 @@ public class GridFsTemplateIntegrationTests {
 		assertThat(resources[0].getContentType(), is(reference.getContentType()));
 	}
 
-	/**
-	 * @see DATAMONGO-503
-	 */
-	@Test
+	@Test // DATAMONGO-503
 	public void storesContentType() throws IOException {
 
 		GridFSFile reference = operations.store(resource.getInputStream(), "foo2.xml", "application/xml");
@@ -146,10 +128,7 @@ public class GridFsTemplateIntegrationTests {
 		assertSame(result.get(0), reference);
 	}
 
-	/**
-	 * @see DATAMONGO-534
-	 */
-	@Test
+	@Test // DATAMONGO-534
 	public void considersSortWhenQueryingFiles() throws IOException {
 
 		GridFSFile second = operations.store(resource.getInputStream(), "foo.xml");
@@ -165,10 +144,7 @@ public class GridFsTemplateIntegrationTests {
 		assertSame(result.get(2), third);
 	}
 
-	/**
-	 * @see DATAMONGO-534
-	 */
-	@Test
+	@Test // DATAMONGO-534
 	public void queryingWithNullQueryReturnsAllFiles() throws IOException {
 
 		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml");
@@ -179,18 +155,12 @@ public class GridFsTemplateIntegrationTests {
 		assertSame(result.get(0), reference);
 	}
 
-	/**
-	 * @see DATAMONGO-813
-	 */
-	@Test
+	@Test // DATAMONGO-813
 	public void getResourceShouldReturnNullForNonExistingResource() {
 		assertThat(operations.getResource("doesnotexist"), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-809
-	 */
-	@Test
+	@Test // DATAMONGO-809
 	public void storesAndFindsSimpleDocumentWithMetadataDBObject() throws IOException {
 
 		DBObject metadata = new BasicDBObject("key", "value");
@@ -202,10 +172,7 @@ public class GridFsTemplateIntegrationTests {
 		assertSame(result.get(0), reference);
 	}
 
-	/**
-	 * @see DATAMONGO-809
-	 */
-	@Test
+	@Test // DATAMONGO-809
 	public void storesAndFindsSimpleDocumentWithMetadataObject() throws IOException {
 
 		Metadata metadata = new Metadata();

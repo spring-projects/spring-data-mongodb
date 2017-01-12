@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Unit tests for {@link DbObjectAccessor}.
+ * Unit tests for {@link DBObjectAccessor}.
  * 
- * @see DATAMONGO-766
  * @author Oliver Gierke
  */
 public class DBObjectAccessorUnitTests {
@@ -41,7 +40,7 @@ public class DBObjectAccessorUnitTests {
 	MongoPersistentEntity<?> projectingTypeEntity = context.getPersistentEntity(ProjectingType.class);
 	MongoPersistentProperty fooProperty = projectingTypeEntity.getPersistentProperty("foo");
 
-	@Test
+	@Test // DATAMONGO-766
 	public void putsNestedFieldCorrectly() {
 
 		DBObject dbObject = new BasicDBObject();
@@ -53,7 +52,7 @@ public class DBObjectAccessorUnitTests {
 		assertThat(aDbObject.get("b"), is((Object) "FooBar"));
 	}
 
-	@Test
+	@Test // DATAMONGO-766
 	public void getsNestedFieldCorrectly() {
 
 		DBObject source = new BasicDBObject("a", new BasicDBObject("b", "FooBar"));
@@ -62,27 +61,24 @@ public class DBObjectAccessorUnitTests {
 		assertThat(accessor.get(fooProperty), is((Object) "FooBar"));
 	}
 
-	@Test
+	@Test // DATAMONGO-766
 	public void returnsNullForNonExistingFieldPath() {
 
 		DBObjectAccessor accessor = new DBObjectAccessor(new BasicDBObject());
 		assertThat(accessor.get(fooProperty), is(nullValue()));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-766
 	public void rejectsNonBasicDBObjects() {
 		new DBObjectAccessor(new BasicDBList());
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-766
 	public void rejectsNullDBObject() {
 		new DBObjectAccessor(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1335
-	 */
-	@Test
+	@Test // DATAMONGO-1335
 	public void writesAllNestingsCorrectly() {
 
 		MongoPersistentEntity<?> entity = context.getPersistentEntity(TypeWithTwoNestings.class);
@@ -101,10 +97,7 @@ public class DBObjectAccessorUnitTests {
 		assertThat(nestedA.get("c"), is((Object) "c"));
 	}
 
-	/**
-	 * @see DATAMONGO-1471
-	 */
-	@Test
+	@Test // DATAMONGO-1471
 	public void exposesAvailabilityOfFields() {
 
 		DBObjectAccessor accessor = new DBObjectAccessor(new BasicDBObject("a", new BasicDBObject("c", "d")));

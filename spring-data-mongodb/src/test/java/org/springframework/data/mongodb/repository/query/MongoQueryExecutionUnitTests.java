@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,10 +82,7 @@ public class MongoQueryExecutionUnitTests {
 		when(mongoOperationsMock.getConverter()).thenReturn(converter);
 	}
 
-	/**
-	 * @see DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-1464
 	public void pagedExecutionShouldNotGenerateCountQueryIfQueryReportedNoResults() {
 
 		when(mongoOperationsMock.find(any(Query.class), eq(Person.class), eq("person")))
@@ -98,10 +95,7 @@ public class MongoQueryExecutionUnitTests {
 		verify(mongoOperationsMock, never()).count(any(Query.class), eq(Person.class), eq("person"));
 	}
 
-	/**
-	 * @see DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-1464
 	public void pagedExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() {
 
 		when(mongoOperationsMock.find(any(Query.class), eq(Person.class), eq("person")))
@@ -114,10 +108,7 @@ public class MongoQueryExecutionUnitTests {
 		verify(mongoOperationsMock, never()).count(any(Query.class), eq(Person.class), eq("person"));
 	}
 
-	/**
-	 * @see DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-1464
 	public void pagedExecutionRetrievesObjectsForPageableOutOfRange() throws Exception {
 
 		when(mongoOperationsMock.find(any(Query.class), eq(Person.class), eq("person")))
@@ -130,10 +121,7 @@ public class MongoQueryExecutionUnitTests {
 		verify(mongoOperationsMock).count(any(Query.class), eq(Person.class), eq("person"));
 	}
 
-	/**
-	 * @see DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-1464
 	public void pagingGeoExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() throws Exception {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
@@ -153,10 +141,7 @@ public class MongoQueryExecutionUnitTests {
 		verify(mongoOperationsMock, never()).count(any(Query.class), eq("person"));
 	}
 
-	/**
-	 * @see DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-1464
 	public void pagingGeoExecutionRetrievesObjectsForPageableOutOfRange() throws Exception {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,

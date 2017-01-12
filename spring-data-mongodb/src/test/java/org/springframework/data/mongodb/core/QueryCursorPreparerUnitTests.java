@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,10 +55,7 @@ public class QueryCursorPreparerUnitTests {
 		when(cursor.copy()).thenReturn(cursorToUse);
 	}
 
-	/**
-	 * @see DATAMONGO-185
-	 */
-	@Test
+	@Test // DATAMONGO-185
 	public void appliesHintsCorrectly() {
 
 		Query query = query(where("foo").is("bar")).withHint("hint");
@@ -68,10 +65,7 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursorToUse).hint("hint");
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void doesNotApplyMetaWhenEmpty() {
 
 		Query query = query(where("foo").is("bar"));
@@ -83,10 +77,7 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursorToUse, never()).addSpecial(any(String.class), anyObject());
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void appliesMaxScanCorrectly() {
 
 		Query query = query(where("foo").is("bar")).maxScan(100);
@@ -96,10 +87,7 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursorToUse).addSpecial(eq("$maxScan"), eq(100L));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void appliesMaxTimeCorrectly() {
 
 		Query query = query(where("foo").is("bar")).maxTime(1, TimeUnit.SECONDS);
@@ -109,10 +97,7 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursorToUse).addSpecial(eq("$maxTimeMS"), eq(1000L));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void appliesCommentCorrectly() {
 
 		Query query = query(where("foo").is("bar")).comment("spring data");
@@ -122,10 +107,7 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursorToUse).addSpecial(eq("$comment"), eq("spring data"));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void appliesSnapshotCorrectly() {
 
 		Query query = query(where("foo").is("bar")).useSnapshot();
@@ -135,10 +117,7 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursorToUse).addSpecial(eq("$snapshot"), eq(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1480
-	 */
-	@Test
+	@Test // DATAMONGO-1480
 	public void appliesNoCursorTimeoutCorrectly() {
 
 		Query query = query(where("foo").is("bar")).noCursorTimeout();

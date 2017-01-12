@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,10 +70,7 @@ public class QueryDslMongoRepositoryIntegrationTests {
 		repository.save(Arrays.asList(oliver, dave, carter));
 	}
 
-	/**
-	 * @see DATAMONGO-1146
-	 */
-	@Test
+	@Test // DATAMONGO-1146
 	public void shouldSupportExistsWithPredicate() throws Exception {
 
 		assertThat(repository.exists(person.firstname.eq("Dave")), is(true));
@@ -81,10 +78,7 @@ public class QueryDslMongoRepositoryIntegrationTests {
 		assertThat(repository.exists((Predicate) null), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1167
-	 */
-	@Test
+	@Test // DATAMONGO-1167
 	public void shouldSupportFindAllWithPredicateAndSort() {
 
 		List<Person> users = repository.findAll(person.lastname.isNotNull(), new Sort(Direction.ASC, "firstname"));

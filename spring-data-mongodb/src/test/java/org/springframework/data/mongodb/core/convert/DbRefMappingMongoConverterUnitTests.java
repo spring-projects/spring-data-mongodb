@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,10 +87,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		this.converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 	}
 
-	/**
-	 * @see DATAMONGO-347
-	 */
-	@Test
+	@Test // DATAMONGO-347
 	public void createsSimpleDBRefCorrectly() {
 
 		Person person = new Person();
@@ -101,10 +98,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(dbRef.getCollectionName(), is("person"));
 	}
 
-	/**
-	 * @see DATAMONGO-657
-	 */
-	@Test
+	@Test // DATAMONGO-657
 	public void convertDocumentWithMapDBRef() {
 
 		DBObject mapValDBObject = new BasicDBObject();
@@ -146,10 +140,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(read.map.get("test").id, is(BigInteger.ONE));
 	}
 
-	/**
-	 * @see DATAMONGO-347
-	 */
-	@Test
+	@Test // DATAMONGO-347
 	public void createsDBRefWithClientSpecCorrectly() {
 
 		PropertyPath path = PropertyPath.from("person", PersonClient.class);
@@ -163,10 +154,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(dbRef.getCollectionName(), is("person"));
 	}
 
-	/**
-	 * @see DATAMONGO-348
-	 */
-	@Test
+	@Test // DATAMONGO-348
 	public void lazyLoadingProxyForLazyDbRefOnInterface() {
 
 		String id = "42";
@@ -187,10 +175,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToInterface.get(0).getValue(), is(value));
 	}
 
-	/**
-	 * @see DATAMONGO-348
-	 */
-	@Test
+	@Test // DATAMONGO-348
 	public void lazyLoadingProxyForLazyDbRefOnConcreteCollection() {
 
 		String id = "42";
@@ -212,10 +197,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToConcreteCollection.get(0).getValue(), is(value));
 	}
 
-	/**
-	 * @see DATAMONGO-348
-	 */
-	@Test
+	@Test // DATAMONGO-348
 	public void lazyLoadingProxyForLazyDbRefOnConcreteType() {
 
 		String id = "42";
@@ -236,10 +218,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToConcreteType.getValue(), is(value));
 	}
 
-	/**
-	 * @see DATAMONGO-348
-	 */
-	@Test
+	@Test // DATAMONGO-348
 	public void lazyLoadingProxyForLazyDbRefOnConcreteTypeWithPersistenceConstructor() {
 
 		String id = "42";
@@ -261,10 +240,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructor.getValue(), is(value));
 	}
 
-	/**
-	 * @see DATAMONGO-348
-	 */
-	@Test
+	@Test // DATAMONGO-348
 	public void lazyLoadingProxyForLazyDbRefOnConcreteTypeWithPersistenceConstructorButWithoutDefaultConstructor() {
 
 		String id = "42";
@@ -286,10 +262,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor.getValue(), is(value));
 	}
 
-	/**
-	 * @see DATAMONGO-348
-	 */
-	@Test
+	@Test // DATAMONGO-348
 	public void lazyLoadingProxyForSerializableLazyDbRefOnConcreteType() {
 
 		String id = "42";
@@ -311,10 +284,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(deserializedResult.dbRefToSerializableTarget.getValue(), is(value));
 	}
 
-	/**
-	 * @see DATAMONGO-884
-	 */
-	@Test
+	@Test // DATAMONGO-884
 	public void lazyLoadingProxyForToStringObjectMethodOverridingDbref() {
 
 		String id = "42";
@@ -335,10 +305,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(result.dbRefToToStringObjectMethodOverride, true);
 	}
 
-	/**
-	 * @see DATAMONGO-884
-	 */
-	@Test
+	@Test // DATAMONGO-884
 	public void callingToStringObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
 
 		String id = "42";
@@ -366,10 +333,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(result.dbRefToPlainObject, true);
 	}
 
-	/**
-	 * @see DATAMONGO-884
-	 */
-	@Test
+	@Test // DATAMONGO-884
 	public void equalsObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
 
 		String id = "42";
@@ -395,10 +359,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
 	}
 
-	/**
-	 * @see DATAMONGO-884
-	 */
-	@Test
+	@Test // DATAMONGO-884
 	public void hashcodeObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
 
 		String id = "42";
@@ -422,10 +383,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
 	}
 
-	/**
-	 * @see DATAMONGO-884
-	 */
-	@Test
+	@Test // DATAMONGO-884
 	public void lazyLoadingProxyForEqualsAndHashcodeObjectMethodOverridingDbref() {
 
 		String id = "42";
@@ -454,10 +412,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride2, true);
 	}
 
-	/**
-	 * @see DATAMONGO-987
-	 */
-	@Test
+	@Test // DATAMONGO-987
 	public void shouldNotGenerateLazyLoadingProxyForNullValues() {
 
 		DBObject dbo = new BasicDBObject();
@@ -475,10 +430,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor, is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1005
-	 */
-	@Test
+	@Test // DATAMONGO-1005
 	public void shouldBeAbleToStoreDirectReferencesToSelf() {
 
 		DBObject dbo = new BasicDBObject();
@@ -494,10 +446,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(found.reference, is(found));
 	}
 
-	/**
-	 * @see DATAMONGO-1005
-	 */
-	@Test
+	@Test // DATAMONGO-1005
 	public void shouldBeAbleToStoreNestedReferencesToSelf() {
 
 		DBObject dbo = new BasicDBObject();
@@ -516,10 +465,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(found.nested.reference, is(found));
 	}
 
-	/**
-	 * @see DATAMONGO-1012
-	 */
-	@Test
+	@Test // DATAMONGO-1012
 	public void shouldEagerlyResolveIdPropertyWithFieldAccess() {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(ClassWithLazyDbRefs.class);
@@ -540,10 +486,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(result.dbRefToConcreteType, false);
 	}
 
-	/**
-	 * @see DATAMONGO-1012
-	 */
-	@Test
+	@Test // DATAMONGO-1012
 	public void shouldNotEagerlyResolveIdPropertyWithPropertyAccess() {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(ClassWithLazyDbRefs.class);
@@ -561,10 +504,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(proxy, false);
 	}
 
-	/**
-	 * @see DATAMONGO-1076
-	 */
-	@Test
+	@Test // DATAMONGO-1076
 	public void shouldNotTriggerResolvingOfLazyLoadedProxyWhenFinalizeMethodIsInvoked() throws Exception {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(WithObjectMethodOverrideLazyDbRefs.class);
@@ -581,10 +521,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	public void shouldBulkFetchListOfReferences() {
 
 		String id1 = "1";
@@ -611,10 +548,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	public void shouldFallbackToOneByOneFetchingWhenElementsInListOfReferencesPointToDifferentCollections() {
 
 		String id1 = "1";
@@ -643,10 +577,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		verify(converterSpy, never()).bulkReadRefs(anyListOf(DBRef.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	public void shouldBulkFetchMapOfReferences() {
 
 		MapDBRefVal val1 = new MapDBRefVal();
@@ -678,10 +609,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	public void shouldBulkFetchLazyMapOfReferences() {
 
 		MapDBRefVal val1 = new MapDBRefVal();

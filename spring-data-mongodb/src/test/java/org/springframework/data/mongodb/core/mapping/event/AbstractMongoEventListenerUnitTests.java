@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,10 +64,7 @@ public class AbstractMongoEventListenerUnitTests {
 		context.close();
 	}
 
-	/**
-	 * @see DATAMONGO-289
-	 */
-	@Test
+	@Test // DATAMONGO-289
 	public void afterLoadEffectGetsHandledCorrectly() {
 
 		SamplePersonEventListener listener = new SamplePersonEventListener();
@@ -75,10 +72,7 @@ public class AbstractMongoEventListenerUnitTests {
 		assertThat(listener.invokedOnAfterLoad, is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-289
-	 */
-	@Test
+	@Test // DATAMONGO-289
 	public void afterLoadEventGetsFilteredForDomainType() {
 
 		SamplePersonEventListener personListener = new SamplePersonEventListener();
@@ -90,10 +84,7 @@ public class AbstractMongoEventListenerUnitTests {
 		assertThat(accountListener.invokedOnAfterLoad, is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-289
-	 */
-	@Test
+	@Test // DATAMONGO-289
 	public void afterLoadEventGetsFilteredForDomainTypeWorksForSubtypes() {
 
 		SamplePersonEventListener personListener = new SamplePersonEventListener();
@@ -105,10 +96,7 @@ public class AbstractMongoEventListenerUnitTests {
 		assertThat(contactListener.invokedOnAfterLoad, is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-289
-	 */
-	@Test
+	@Test // DATAMONGO-289
 	public void afterLoadEventGetsFilteredForDomainTypeWorksForSubtypes2() {
 
 		SamplePersonEventListener personListener = new SamplePersonEventListener();
@@ -120,10 +108,7 @@ public class AbstractMongoEventListenerUnitTests {
 		assertThat(contactListener.invokedOnAfterLoad, is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-333
-	 */
-	@Test
+	@Test // DATAMONGO-333
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void handlesUntypedImplementations() {
 
@@ -131,10 +116,7 @@ public class AbstractMongoEventListenerUnitTests {
 		listener.onApplicationEvent(new MongoMappingEvent(new Object(), new BasicDBObject(), "collection"));
 	}
 
-	/**
-	 * @see DATAMONGO-545
-	 */
-	@Test
+	@Test // DATAMONGO-545
 	public void invokeContactCallbackForPersonEvent() {
 
 		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class,
@@ -145,10 +127,7 @@ public class AbstractMongoEventListenerUnitTests {
 		assertThat(listener.invokedOnBeforeDelete, is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-545
-	 */
-	@Test
+	@Test // DATAMONGO-545
 	public void invokePersonCallbackForPersonEvent() {
 
 		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class,
@@ -159,10 +138,7 @@ public class AbstractMongoEventListenerUnitTests {
 		assertThat(listener.invokedOnBeforeDelete, is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-545
-	 */
-	@Test
+	@Test // DATAMONGO-545
 	public void dontInvokePersonCallbackForAccountEvent() {
 
 		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Account>(new BasicDBObject(), Account.class,
@@ -173,10 +149,7 @@ public class AbstractMongoEventListenerUnitTests {
 		assertThat(listener.invokedOnBeforeDelete, is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-545
-	 */
-	@Test
+	@Test // DATAMONGO-545
 	public void donInvokePersonCallbackForUntypedEvent() {
 
 		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Account>(new BasicDBObject(), null, "collection-1");

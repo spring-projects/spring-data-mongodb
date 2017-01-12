@@ -29,18 +29,12 @@ import org.springframework.data.mongodb.core.query.Term.Type;
  */
 public class TermToStringConverterUnitTests {
 
-	/**
-	 * @DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void shouldNotConvertNull() {
 		assertThat(TermToStringConverter.INSTANCE.convert(null), nullValue());
 	}
 
-	/**
-	 * @DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void shouldUseFormattedRepresentationForConversion() {
 
 		Term term = spy(new Term("foo", Type.WORD));

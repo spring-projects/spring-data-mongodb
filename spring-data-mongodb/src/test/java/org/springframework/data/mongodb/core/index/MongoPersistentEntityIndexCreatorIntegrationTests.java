@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,10 +83,7 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 		assertThat(indexInfo, hasSize(0));
 	}
 
-	/**
-	 * @see DATAMONGO-1202
-	 */
-	@Test
+	@Test // DATAMONGO-1202
 	public void shouldHonorIndexedPropertiesWithRecursiveMappings() {
 
 		List<IndexInfo> indexInfo = templateOne.indexOps(RecursiveConcreteType.class).getIndexInfo();
@@ -95,10 +92,7 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 		assertThat(indexInfo, Matchers.<IndexInfo> hasItem(hasProperty("name", is("firstName"))));
 	}
 
-	/**
-	 * @DATAMONGO-1125
-	 */
-	@Test
+	@Test // DATAMONGO-1125
 	public void createIndexShouldThrowMeaningfulExceptionWhenIndexCreationFails() throws UnknownHostException {
 
 		expectedException.expect(DataIntegrityViolationException.class);

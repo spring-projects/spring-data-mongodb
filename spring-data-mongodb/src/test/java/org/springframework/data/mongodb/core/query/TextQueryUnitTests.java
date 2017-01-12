@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,34 +32,22 @@ public class TextQueryUnitTests {
 	private static final String QUERY = "bake coffee cake";
 	private static final String LANGUAGE_SPANISH = "spanish";
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldCreateQueryObjectCorrectly() {
 		assertThat(new TextQuery(QUERY), isTextQuery().searchingFor(QUERY));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldIncludeLanguageInQueryObjectWhenNotNull() {
 		assertThat(new TextQuery(QUERY, LANGUAGE_SPANISH), isTextQuery().searchingFor(QUERY).inLanguage(LANGUAGE_SPANISH));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldIncludeScoreFieldCorrectly() {
 		assertThat(new TextQuery(QUERY).includeScore(), isTextQuery().searchingFor(QUERY).returningScore());
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldNotOverrideExistingProjections() {
 
 		TextQuery query = new TextQuery(TextCriteria.forDefaultLanguage().matching(QUERY)).includeScore();
@@ -68,18 +56,12 @@ public class TextQueryUnitTests {
 		assertThat(query, isTextQuery().searchingFor(QUERY).returningScore().includingField("foo"));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldIncludeSortingByScoreCorrectly() {
 		assertThat(new TextQuery(QUERY).sortByScore(), isTextQuery().searchingFor(QUERY).returningScore().sortingByScore());
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldNotOverrideExistingSort() {
 
 		TextQuery query = new TextQuery(QUERY);
@@ -90,10 +72,7 @@ public class TextQueryUnitTests {
 				isTextQuery().searchingFor(QUERY).returningScore().sortingByScore().sortingBy("foo", Direction.DESC));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldUseCustomFieldnameForScoring() {
 		TextQuery query = new TextQuery(QUERY).includeScore("customFieldForScore").sortByScore();
 

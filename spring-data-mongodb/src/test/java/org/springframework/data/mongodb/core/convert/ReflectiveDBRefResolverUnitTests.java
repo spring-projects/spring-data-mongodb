@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,10 +58,7 @@ public class ReflectiveDBRefResolverUnitTests {
 		when(collectionMock.findOne(eq("id-1"))).thenReturn(new BasicDBObject("_id", "id-1"));
 	}
 
-	/**
-	 * @see DATAMONGO-1193
-	 */
-	@Test
+	@Test // DATAMONGO-1193
 	public void fetchShouldNotLookUpDbWhenUsingDriverVersion2() {
 
 		assumeThat(isMongo3Driver(), is(false));
@@ -72,10 +69,7 @@ public class ReflectiveDBRefResolverUnitTests {
 		verify(dbFactoryMock, never()).getDb(anyString());
 	}
 
-	/**
-	 * @see DATAMONGO-1193
-	 */
-	@Test
+	@Test // DATAMONGO-1193
 	public void fetchShouldUseDbToResolveDbRefWhenUsingDriverVersion3() {
 
 		assumeThat(isMongo3Driver(), is(true));
@@ -84,10 +78,7 @@ public class ReflectiveDBRefResolverUnitTests {
 		verify(dbFactoryMock, times(1)).getDb();
 	}
 
-	/**
-	 * @see DATAMONGO-1193
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1193
 	public void fetchShouldThrowExceptionWhenDbFactoryIsNullUsingDriverVersion3() {
 
 		assumeThat(isMongo3Driver(), is(true));

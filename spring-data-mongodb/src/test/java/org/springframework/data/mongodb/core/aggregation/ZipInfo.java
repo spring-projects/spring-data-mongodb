@@ -7,8 +7,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 /**
  * Data model from mongodb reference data set
  * 
- * @see http://docs.mongodb.org/manual/tutorial/aggregation-examples/
- * @see http://media.mongodb.org/zips.json
+ * @see <a href="http://docs.mongodb.org/manual/tutorial/aggregation-examples/">Aggregation Examples</a>
+ * @see <a href="http://media.mongodb.org/zips.json>zips.json</a>
  */
 class ZipInfo {
 

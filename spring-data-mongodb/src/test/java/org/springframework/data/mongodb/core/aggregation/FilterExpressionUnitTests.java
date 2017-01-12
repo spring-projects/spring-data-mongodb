@@ -56,10 +56,7 @@ public class FilterExpressionUnitTests {
 				new QueryMapper(new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), mappingContext)));
 	}
 
-	/**
-	 * @see DATAMONGO-1491
-	 */
-	@Test
+	@Test // DATAMONGO-1491
 	public void shouldConstructFilterExpressionCorrectly() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class,
@@ -83,10 +80,7 @@ public class FilterExpressionUnitTests {
 		assertThat($filter, is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1491
-	 */
-	@Test
+	@Test // DATAMONGO-1491
 	public void shouldConstructFilterExpressionCorrectlyWhenUsingFilterOnProjectionBuilder() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class, Aggregation.project().and("items")
@@ -108,10 +102,7 @@ public class FilterExpressionUnitTests {
 		assertThat($filter, is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1491
-	 */
-	@Test
+	@Test // DATAMONGO-1491
 	public void shouldConstructFilterExpressionCorrectlyWhenInputMapToArray() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class,

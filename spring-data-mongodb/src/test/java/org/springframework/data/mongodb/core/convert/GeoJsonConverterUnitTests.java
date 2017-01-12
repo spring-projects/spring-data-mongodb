@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,26 +185,17 @@ public class GeoJsonConverterUnitTests {
 		DbObjectToGeoJsonPolygonConverter converter = DbObjectToGeoJsonPolygonConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
 			assertThat(converter.convert(POLYGON_DBO), equalTo(POLYGON));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldReturnNullWhenConvertIsGivenNull() {
 			assertThat(converter.convert(null), nullValue());
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPolygon() {
 
 			expectedException.expect(IllegalArgumentException.class);
@@ -213,10 +204,7 @@ public class GeoJsonConverterUnitTests {
 			converter.convert(new BasicDBObject("type", "YouDontKonwMe"));
 		}
 
-		/**
-		 * @see DATAMONGO-1399
-		 */
-		@Test
+		@Test // DATAMONGO-1399
 		public void shouldConvertDboWithMultipleRingsCorrectly() {
 			assertThat(converter.convert(POLYGON_WITH_2_RINGS_DBO), equalTo(POLYGON_WITH_2_RINGS));
 		}
@@ -231,26 +219,17 @@ public class GeoJsonConverterUnitTests {
 		DbObjectToGeoJsonPointConverter converter = DbObjectToGeoJsonPointConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
 			assertThat(converter.convert(SINGLE_POINT_DBO), equalTo(SINGLE_POINT));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldReturnNullWhenConvertIsGivenNull() {
 			assertThat(converter.convert(null), nullValue());
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
 
 			expectedException.expect(IllegalArgumentException.class);
@@ -268,26 +247,17 @@ public class GeoJsonConverterUnitTests {
 		DbObjectToGeoJsonLineStringConverter converter = DbObjectToGeoJsonLineStringConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
 			assertThat(converter.convert(LINE_STRING_DBO), equalTo(LINE_STRING));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldReturnNullWhenConvertIsGivenNull() {
 			assertThat(converter.convert(null), nullValue());
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
 
 			expectedException.expect(IllegalArgumentException.class);
@@ -305,26 +275,17 @@ public class GeoJsonConverterUnitTests {
 		DbObjectToGeoJsonMultiLineStringConverter converter = DbObjectToGeoJsonMultiLineStringConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
 			assertThat(converter.convert(MULTI_LINE_STRING_DBO), equalTo(MULTI_LINE_STRING));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldReturnNullWhenConvertIsGivenNull() {
 			assertThat(converter.convert(null), nullValue());
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
 
 			expectedException.expect(IllegalArgumentException.class);
@@ -342,26 +303,17 @@ public class GeoJsonConverterUnitTests {
 		DbObjectToGeoJsonMultiPointConverter converter = DbObjectToGeoJsonMultiPointConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
 			assertThat(converter.convert(MULTI_POINT_DBO), equalTo(MULTI_POINT));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldReturnNullWhenConvertIsGivenNull() {
 			assertThat(converter.convert(null), nullValue());
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
 
 			expectedException.expect(IllegalArgumentException.class);
@@ -379,26 +331,17 @@ public class GeoJsonConverterUnitTests {
 		DbObjectToGeoJsonMultiPolygonConverter converter = DbObjectToGeoJsonMultiPolygonConverter.INSTANCE;
 		public @Rule ExpectedException expectedException = ExpectedException.none();
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
 			assertThat(converter.convert(MULTI_POLYGON_DBO), equalTo(MULTI_POLYGON));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldReturnNullWhenConvertIsGivenNull() {
 			assertThat(converter.convert(null), nullValue());
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
 
 			expectedException.expect(IllegalArgumentException.class);
@@ -415,73 +358,47 @@ public class GeoJsonConverterUnitTests {
 
 		GeoJsonToDbObjectConverter converter = GeoJsonToDbObjectConverter.INSTANCE;
 
-		/**
-		 * @see DATAMONGO-1135
-		 */
+		// DATAMONGO-1135
 		public void convertShouldReturnNullWhenGivenNull() {
 			assertThat(converter.convert(null), nullValue());
 		}
 
-		/**
-		 * @see DATAMONGO-1135
-		 */
-		@Test
+		@Test // DATAMONGO-1135
 		public void shouldConvertGeoJsonPointCorrectly() {
 			assertThat(converter.convert(SINGLE_POINT), equalTo(SINGLE_POINT_DBO));
 		}
 
-		/**
-		 * @see DATAMONGO-1135
-		 */
-		@Test
+		@Test // DATAMONGO-1135
 		public void shouldConvertGeoJsonPolygonCorrectly() {
 			assertThat(converter.convert(POLYGON), equalTo(POLYGON_DBO));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertGeoJsonLineStringCorrectly() {
 			assertThat(converter.convert(LINE_STRING), equalTo(LINE_STRING_DBO));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertGeoJsonMultiLineStringCorrectly() {
 			assertThat(converter.convert(MULTI_LINE_STRING), equalTo(MULTI_LINE_STRING_DBO));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertGeoJsonMultiPointCorrectly() {
 			assertThat(converter.convert(MULTI_POINT), equalTo(MULTI_POINT_DBO));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertGeoJsonMultiPolygonCorrectly() {
 			assertThat(converter.convert(MULTI_POLYGON), equalTo(MULTI_POLYGON_DBO));
 		}
 
-		/**
-		 * @see DATAMONGO-1137
-		 */
-		@Test
+		@Test // DATAMONGO-1137
 		public void shouldConvertGeometryCollectionCorrectly() {
 			assertThat(converter.convert(GEOMETRY_COLLECTION), equalTo(GEOMETRY_COLLECTION_DBO));
 		}
 
-		/**
-		 * @see DATAMONGO-1399
-		 */
-		@Test
+		@Test // DATAMONGO-1399
 		public void shouldConvertGeoJsonPolygonWithMultipleRingsCorrectly() {
 			assertThat(converter.convert(POLYGON_WITH_2_RINGS), equalTo(POLYGON_WITH_2_RINGS_DBO));
 		}

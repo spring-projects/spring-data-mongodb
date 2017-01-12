@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,20 +45,14 @@ public class MappingMongoEntityInformationUnitTests {
 		when(info.getCollection()).thenReturn("Person");
 	}
 
-	/**
-	 * @see DATAMONGO-248
-	 */
-	@Test
+	@Test // DATAMONGO-248
 	public void usesEntityCollectionIfNoCustomOneGiven() {
 
 		MongoEntityInformation<Person, Long> information = new MappingMongoEntityInformation<Person, Long>(info);
 		assertThat(information.getCollectionName(), is("Person"));
 	}
 
-	/**
-	 * @see DATAMONGO-248
-	 */
-	@Test
+	@Test // DATAMONGO-248
 	public void usesCustomCollectionIfGiven() {
 
 		MongoEntityInformation<Person, Long> information = new MappingMongoEntityInformation<Person, Long>(info, "foobar");

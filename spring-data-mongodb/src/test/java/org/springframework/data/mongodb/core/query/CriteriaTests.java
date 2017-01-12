@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,10 +79,7 @@ public class CriteriaTests {
 		assertThat(right, is(not(left)));
 	}
 
-	/**
-	 * @see DATAMONGO-507
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-507
 	public void shouldThrowExceptionWhenTryingToNegateAndOperation() {
 
 		new Criteria() //
@@ -90,10 +87,7 @@ public class CriteriaTests {
 				.andOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
 	}
 
-	/**
-	 * @see DATAMONGO-507
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-507
 	public void shouldThrowExceptionWhenTryingToNegateOrOperation() {
 
 		new Criteria() //
@@ -101,10 +95,7 @@ public class CriteriaTests {
 				.orOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
 	}
 
-	/**
-	 * @see DATAMONGO-507
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-507
 	public void shouldThrowExceptionWhenTryingToNegateNorOperation() {
 
 		new Criteria() //
@@ -112,10 +103,7 @@ public class CriteriaTests {
 				.norOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
 	}
 
-	/**
-	 * @see DATAMONGO-507
-	 */
-	@Test
+	@Test // DATAMONGO-507
 	public void shouldNegateFollowingSimpleExpression() {
 
 		Criteria c = Criteria.where("age").not().gt(18).and("status").is("student");
@@ -125,10 +113,7 @@ public class CriteriaTests {
 		assertThat(co.toString(), is("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}"));
 	}
 
-	/**
-	 * @see DATAMONGO-1068
-	 */
-	@Test
+	@Test // DATAMONGO-1068
 	public void getCriteriaObjectShouldReturnEmptyDBOWhenNoCriteriaSpecified() {
 
 		DBObject dbo = new Criteria().getCriteriaObject();
@@ -136,10 +121,7 @@ public class CriteriaTests {
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().get()));
 	}
 
-	/**
-	 * @see DATAMONGO-1068
-	 */
-	@Test
+	@Test // DATAMONGO-1068
 	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresent() {
 
 		DBObject dbo = new Criteria().lt("foo").getCriteriaObject();
@@ -147,10 +129,7 @@ public class CriteriaTests {
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$lt", "foo").get()));
 	}
 
-	/**
-	 * @see DATAMONGO-1068
-	 */
-	@Test
+	@Test // DATAMONGO-1068
 	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresentButMultipleCriteriasPresent() {
 
 		DBObject dbo = new Criteria().lt("foo").gt("bar").getCriteriaObject();
@@ -158,10 +137,7 @@ public class CriteriaTests {
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$lt", "foo").add("$gt", "bar").get()));
 	}
 
-	/**
-	 * @see DATAMONGO-1068
-	 */
-	@Test
+	@Test // DATAMONGO-1068
 	public void getCriteriaObjectShouldRespectNotWhenNoKeyPresent() {
 
 		DBObject dbo = new Criteria().lt("foo").not().getCriteriaObject();
@@ -169,10 +145,7 @@ public class CriteriaTests {
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$not", new BasicDBObject("$lt", "foo")).get()));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void geoJsonTypesShouldBeWrappedInGeometry() {
 
 		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).getCriteriaObject();
@@ -180,10 +153,7 @@ public class CriteriaTests {
 		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry", new GeoJsonPoint(100, 200)));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void legacyCoordinateTypesShouldNotBeWrappedInGeometry() {
 
 		DBObject dbo = new Criteria("foo").near(new Point(100, 200)).getCriteriaObject();
@@ -191,10 +161,7 @@ public class CriteriaTests {
 		assertThat(dbo, isBsonObject().notContaining("foo.$near.$geometry"));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void maxDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
 
 		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
@@ -202,10 +169,7 @@ public class CriteriaTests {
 		assertThat(dbo, isBsonObject().containing("foo.$near.$maxDistance", 50D));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void maxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
 		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
@@ -213,10 +177,7 @@ public class CriteriaTests {
 		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$maxDistance", 50D));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void minDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
 
 		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
@@ -224,10 +185,7 @@ public class CriteriaTests {
 		assertThat(dbo, isBsonObject().containing("foo.$near.$minDistance", 50D));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void minDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
 		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
@@ -235,10 +193,7 @@ public class CriteriaTests {
 		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void minAndMaxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
 		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).maxDistance(100D)
@@ -248,18 +203,12 @@ public class CriteriaTests {
 		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$maxDistance", 100D));
 	}
 
-	/**
-	 * @see DATAMONGO-1134
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1134
 	public void intersectsShouldThrowExceptionWhenCalledWihtNullValue() {
 		new Criteria("foo").intersects(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1134
-	 */
-	@Test
+	@Test // DATAMONGO-1134
 	public void intersectsShouldWrapGeoJsonTypeInGeometryCorrectly() {
 
 		GeoJsonLineString lineString = new GeoJsonLineString(new Point(0, 0), new Point(10, 10));

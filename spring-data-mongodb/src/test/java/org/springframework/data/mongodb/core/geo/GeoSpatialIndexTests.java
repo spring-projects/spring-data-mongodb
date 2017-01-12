@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,10 +60,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 	}
 
-	/**
-	 * @see DATAMONGO-778
-	 */
-	@Test
+	@Test // DATAMONGO-778
 	public void test2dIndex() {
 
 		try {
@@ -74,10 +71,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-778
-	 */
-	@Test
+	@Test // DATAMONGO-778
 	public void test2dSphereIndex() {
 
 		try {
@@ -88,10 +82,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-778
-	 */
-	@Test
+	@Test // DATAMONGO-778
 	public void testHaystackIndex() {
 
 		try {
@@ -102,10 +93,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-827
-	 */
-	@Test
+	@Test // DATAMONGO-827
 	public void useGeneratedNameShouldGenerateAnIndexName() {
 
 		try {

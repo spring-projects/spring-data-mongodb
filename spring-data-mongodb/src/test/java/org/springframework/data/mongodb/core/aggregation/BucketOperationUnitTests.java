@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,18 +33,12 @@ import com.mongodb.util.JSON;
  */
 public class BucketOperationUnitTests {
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
 	public void rejectsNullFields() {
 		new BucketOperation((Field) null);
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderBucketOutputExpressions() {
 
 		BucketOperation operation = Aggregation.bucket("field") //
@@ -56,18 +50,12 @@ public class BucketOperationUnitTests {
 				"{ \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"titles\" : { $push: \"$title\" } }}")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test(expected = IllegalStateException.class)
+	@Test(expected = IllegalStateException.class) // DATAMONGO-1552
 	public void shouldRenderEmptyAggregationExpression() {
 		bucket("groupby").andOutput("field").as("alias");
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderBucketOutputOperators() {
 
 		BucketOperation operation = Aggregation.bucket("field") //
@@ -77,10 +65,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ titles : { $sum: 1 } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderSumAggregationExpression() {
 
 		DBObject agg = bucket("field") //
@@ -91,10 +76,7 @@ public class BucketOperationUnitTests {
 				"{ $bucket: { groupBy: \"$field\", boundaries: [],  output : { quizTotal: { $sum: \"$quizzes\"} } } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderDefault() {
 
 		DBObject agg = bucket("field").withDefaultBucket("default bucket").toDBObject(Aggregation.DEFAULT_CONTEXT);
@@ -103,10 +85,7 @@ public class BucketOperationUnitTests {
 				is(JSON.parse("{ $bucket: { groupBy: \"$field\", boundaries: [],  default: \"default bucket\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderBoundaries() {
 
 		DBObject agg = bucket("field") //
@@ -118,10 +97,7 @@ public class BucketOperationUnitTests {
 				is(JSON.parse("{ $bucket: { boundaries: [0, 10, 20],  default: \"default bucket\", groupBy: \"$field\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderSumOperator() {
 
 		BucketOperation operation = bucket("field") //
@@ -131,10 +107,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ cummulated_score : { $sum: \"$score\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderSumWithValueOperator() {
 
 		BucketOperation operation = bucket("field") //
@@ -144,10 +117,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ cummulated_score : { $sum: 4 } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderAvgOperator() {
 
 		BucketOperation operation = bucket("field") //
@@ -157,10 +127,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ average : { $avg: \"$score\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderFirstOperator() {
 
 		BucketOperation operation = bucket("field") //
@@ -170,10 +137,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ first_title : { $first: \"$title\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderLastOperator() {
 
 		BucketOperation operation = bucket("field") //
@@ -183,10 +147,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ last_title : { $last: \"$title\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderMinOperator() {
 
 		BucketOperation operation = bucket("field") //
@@ -196,10 +157,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ min_score : { $min: \"$score\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderPushOperator() {
 
 		BucketOperation operation = bucket("field") //
@@ -209,10 +167,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ titles : { $push: \"$title\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderAddToSetOperator() {
 
 		BucketOperation operation = bucket("field") //
@@ -222,10 +177,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ titles : { $addToSet: \"$title\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderSumWithExpression() {
 
 		BucketOperation operation = bucket("field") //
@@ -235,10 +187,7 @@ public class BucketOperationUnitTests {
 		assertThat(extractOutput(dbObject), is(JSON.parse("{ total : { $sum: { $add : [\"$netPrice\", \"$tax\"]} } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderSumWithOwnOutputExpression() {
 
 		BucketOperation operation = bucket("field") //
@@ -249,10 +198,7 @@ public class BucketOperationUnitTests {
 				is(JSON.parse("{ total : { $multiply: [ {$add : [\"$netPrice\", \"$tax\"]}, 5] } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldExposeDefaultCountField() {
 
 		BucketOperation operation = bucket("field");

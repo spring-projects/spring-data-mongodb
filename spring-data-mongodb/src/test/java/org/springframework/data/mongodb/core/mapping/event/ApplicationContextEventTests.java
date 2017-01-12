@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 by the original author(s).
+ * Copyright (c) 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,10 +135,7 @@ public class ApplicationContextEventTests {
 		comparePersonAndDbo(p, p2, dbo);
 	}
 
-	/**
-	 * @see DATAMONGO-1256
-	 */
-	@Test
+	@Test // DATAMONGO-1256
 	public void loadAndConvertEvents() {
 
 		PersonPojoStringId entity = new PersonPojoStringId("1", "Text");
@@ -156,10 +153,7 @@ public class ApplicationContextEventTests {
 		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
 	}
 
-	/**
-	 * @see DATAMONGO-1256
-	 */
-	@Test
+	@Test // DATAMONGO-1256
 	public void loadEventsOnAggregation() {
 
 		template.insert(new PersonPojoStringId("1", "Text"));
@@ -177,10 +171,7 @@ public class ApplicationContextEventTests {
 		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
 	}
 
-	/**
-	 * @see DATAMONGO-1256
-	 */
-	@Test
+	@Test // DATAMONGO-1256
 	public void deleteEvents() {
 
 		PersonPojoStringId entity = new PersonPojoStringId("1", "Text");
@@ -195,10 +186,7 @@ public class ApplicationContextEventTests {
 		assertThat(simpleMappingEventListener.onAfterDeleteEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
 	}
 
-	/**
-	 * @see DATAMONGO-1271
-	 */
-	@Test
+	@Test // DATAMONGO-1271
 	public void publishesAfterLoadAndAfterConvertEventsForDBRef() throws Exception {
 
 		Related ref1 = new Related(2L, "related desc1");
@@ -226,10 +214,7 @@ public class ApplicationContextEventTests {
 				is(equalTo(ROOT_COLLECTION_NAME)));
 	}
 
-	/**
-	 * @see DATAMONGO-1271
-	 */
-	@Test
+	@Test // DATAMONGO-1271
 	public void publishesAfterLoadAndAfterConvertEventsForLazyLoadingDBRef() throws Exception {
 
 		Related ref1 = new Related(2L, "related desc1");
@@ -263,10 +248,7 @@ public class ApplicationContextEventTests {
 				is(equalTo(RELATED_COLLECTION_NAME)));
 	}
 
-	/**
-	 * @see DATAMONGO-1271
-	 */
-	@Test
+	@Test // DATAMONGO-1271
 	public void publishesAfterLoadAndAfterConvertEventsForListOfDBRef() throws Exception {
 
 		List<Related> references = Arrays.asList(new Related(20L, "ref 1"), new Related(30L, "ref 2"));
@@ -298,10 +280,7 @@ public class ApplicationContextEventTests {
 				is(equalTo(ROOT_COLLECTION_NAME)));
 	}
 
-	/**
-	 * @see DATAMONGO-1271
-	 */
-	@Test
+	@Test // DATAMONGO-1271
 	public void publishesAfterLoadAndAfterConvertEventsForLazyLoadingListOfDBRef() throws Exception {
 
 		List<Related> references = Arrays.asList(new Related(20L, "ref 1"), new Related(30L, "ref 2"));
@@ -338,10 +317,7 @@ public class ApplicationContextEventTests {
 				is(equalTo(RELATED_COLLECTION_NAME)));
 	}
 
-	/**
-	 * @see DATAMONGO-1271
-	 */
-	@Test
+	@Test // DATAMONGO-1271
 	public void publishesAfterLoadAndAfterConvertEventsForMapOfDBRef() throws Exception {
 
 		Map<String, Related> references = new LinkedHashMap<String, Related>();
@@ -375,10 +351,7 @@ public class ApplicationContextEventTests {
 				is(equalTo(ROOT_COLLECTION_NAME)));
 	}
 
-	/**
-	 * @see DATAMONGO-1271
-	 */
-	@Test
+	@Test // DATAMONGO-1271
 	public void publishesAfterLoadAndAfterConvertEventsForLazyLoadingMapOfDBRef() throws Exception {
 
 		Map<String, Related> references = new LinkedHashMap<String, Related>();

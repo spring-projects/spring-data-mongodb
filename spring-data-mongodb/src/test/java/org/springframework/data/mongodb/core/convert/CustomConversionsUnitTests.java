@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,10 +82,7 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.isSimpleType(UUID.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-240
-	 */
-	@Test
+	@Test // DATAMONGO-240
 	public void considersObjectIdToBeSimpleType() {
 
 		CustomConversions conversions = new CustomConversions();
@@ -94,10 +91,7 @@ public class CustomConversionsUnitTests {
 
 	}
 
-	/**
-	 * @see DATAMONGO-240
-	 */
-	@Test
+	@Test // DATAMONGO-240
 	public void considersCustomConverterForSimpleType() {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(new Converter<ObjectId, String>() {
@@ -130,20 +124,14 @@ public class CustomConversionsUnitTests {
 		assertThat(conversionService.canConvert(String.class, Format.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-259
-	 */
-	@Test
+	@Test // DATAMONGO-259
 	public void doesNotConsiderTypeSimpleIfOnlyReadConverterIsRegistered() {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToFormatConverter.INSTANCE));
 		assertThat(conversions.isSimpleType(Format.class), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-298
-	 */
-	@Test
+	@Test // DATAMONGO-298
 	public void discoversConvertersForSubtypesOfMongoTypes() {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToIntegerConverter.INSTANCE));
@@ -151,10 +139,7 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.hasCustomWriteTarget(String.class, Integer.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-342
-	 */
-	@Test
+	@Test // DATAMONGO-342
 	public void doesNotHaveConverterForStringToBigIntegerByDefault() {
 
 		CustomConversions conversions = new CustomConversions();
@@ -166,39 +151,27 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.getCustomWriteTarget(String.class), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-390
-	 */
-	@Test
+	@Test // DATAMONGO-390
 	public void considersBinaryASimpleType() {
 
 		CustomConversions conversions = new CustomConversions();
 		assertThat(conversions.isSimpleType(Binary.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-462
-	 */
-	@Test
+	@Test // DATAMONGO-462
 	public void hasWriteConverterForURL() {
 
 		CustomConversions conversions = new CustomConversions();
 		assertThat(conversions.hasCustomWriteTarget(URL.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-462
-	 */
-	@Test
+	@Test // DATAMONGO-462
 	public void readTargetForURL() {
 		CustomConversions conversions = new CustomConversions();
 		assertThat(conversions.hasCustomReadTarget(String.class, URL.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-795
-	 */
-	@Test
+	@Test // DATAMONGO-795
 	@SuppressWarnings("rawtypes")
 	public void favorsCustomConverterForIndeterminedTargetType() {
 
@@ -206,10 +179,7 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.getCustomWriteTarget(DateTime.class, null), is(equalTo((Class) String.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-881
-	 */
-	@Test
+	@Test // DATAMONGO-881
 	public void customConverterOverridesDefault() {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(CustomDateTimeConverter.INSTANCE));
@@ -219,30 +189,21 @@ public class CustomConversionsUnitTests {
 		assertThat(conversionService.convert(new DateTime(), Date.class), is(new Date(0)));
 	}
 
-	/**
-	 * @see DATAMONGO-1001
-	 */
-	@Test
+	@Test // DATAMONGO-1001
 	public void shouldSelectPropertCustomWriteTargetForCglibProxiedType() {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(FormatToStringConverter.INSTANCE));
 		assertThat(conversions.getCustomWriteTarget(createProxyTypeFor(Format.class)), is(typeCompatibleWith(String.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-1001
-	 */
-	@Test
+	@Test // DATAMONGO-1001
 	public void shouldSelectPropertCustomReadTargetForCglibProxiedType() {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(CustomObjectToStringConverter.INSTANCE));
 		assertThat(conversions.hasCustomReadTarget(createProxyTypeFor(Object.class), String.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1131
-	 */
-	@Test
+	@Test // DATAMONGO-1131
 	public void registersConvertersForJsr310() {
 
 		CustomConversions customConversions = new CustomConversions();
@@ -250,10 +211,7 @@ public class CustomConversionsUnitTests {
 		assertThat(customConversions.hasCustomWriteTarget(java.time.LocalDateTime.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1131
-	 */
-	@Test
+	@Test // DATAMONGO-1131
 	public void registersConvertersForThreeTenBackPort() {
 
 		CustomConversions customConversions = new CustomConversions();
@@ -261,10 +219,7 @@ public class CustomConversionsUnitTests {
 		assertThat(customConversions.hasCustomWriteTarget(LocalDateTime.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1302
-	 */
-	@Test
+	@Test // DATAMONGO-1302
 	public void registersConverterFactoryCorrectly() {
 
 		CustomConversions customConversions = new CustomConversions(Collections.singletonList(new FormatConverterFactory()));
@@ -272,10 +227,7 @@ public class CustomConversionsUnitTests {
 		assertThat(customConversions.getCustomWriteTarget(String.class, SimpleDateFormat.class), notNullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-1372
-	 */
-	@Test
+	@Test // DATAMONGO-1372
 	public void registersConvertersForCurrency() {
 
 		CustomConversions customConversions = new CustomConversions();
