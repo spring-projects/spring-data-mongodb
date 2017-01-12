@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,26 @@ public class MongoClientVersion {
 
 	private static final boolean IS_MONGO_30 = ClassUtils.isPresent("com.mongodb.binding.SingleServerBinding",
 			MongoClientVersion.class.getClassLoader());
+
+	private static final boolean IS_MONGO_34 = ClassUtils.isPresent("org.bson.types.Decimal128",
+			MongoClientVersion.class.getClassLoader());
+
 	private static final boolean IS_ASYNC_CLIENT = ClassUtils.isPresent("com.mongodb.async.client.MongoClient",
 			MongoClientVersion.class.getClassLoader());
 
 	/**
-	 * @return |literal true} if MongoDB Java driver version 3.0 or later is on classpath.
+	 * @return {@literal true} if MongoDB Java driver version 3.0 or later is on classpath.
 	 */
 	public static boolean isMongo3Driver() {
 		return IS_MONGO_30;
+	}
+
+	/**
+	 * @return {@literal true} if MongoDB Java driver version 3.4 or later is on classpath.
+	 * @since 1.10
+	 */
+	public static boolean isMongo34Driver() {
+		return IS_MONGO_34;
 	}
 
 	/**

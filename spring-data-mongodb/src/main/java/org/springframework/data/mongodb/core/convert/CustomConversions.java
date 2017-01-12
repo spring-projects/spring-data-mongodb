@@ -93,7 +93,7 @@ public class CustomConversions {
 
 		this.readingPairs = new LinkedHashSet<ConvertiblePair>();
 		this.writingPairs = new LinkedHashSet<ConvertiblePair>();
-		this.customSimpleTypes = new HashSet<Class<?>>(ReflectiveSimpleTypes.getSupportedSimpleTypes());
+		this.customSimpleTypes = new HashSet<Class<?>>();
 		this.customReadTargetTypes = new ConcurrentHashMap<ConvertiblePair, CacheValue<Class<?>>>();
 		this.customWriteTargetTypes = new ConcurrentHashMap<ConvertiblePair, CacheValue<Class<?>>>();
 		this.rawWriteTargetTypes = new ConcurrentHashMap<Class<?>, CacheValue<Class<?>>>();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright (c) 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import org.bson.types.Binary;
 import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
@@ -34,6 +36,7 @@ import com.mongodb.DBRef;
  * Simple constant holder for a {@link SimpleTypeHolder} enriched with Mongo specific simple types.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public abstract class MongoSimpleTypes {
 
@@ -54,12 +57,17 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(Pattern.class);
 		simpleTypes.add(Binary.class);
 		simpleTypes.add(UUID.class);
+
+		if (MongoClientVersion.isMongo34Driver()) {
+			simpleTypes
+					.add(ClassUtils.resolveClassName("org.bson.types.Decimal128", MongoSimpleTypes.class.getClassLoader()));
+		}
+
 		MONGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
 
 	private static final Set<Class<?>> MONGO_SIMPLE_TYPES;
 	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(MONGO_SIMPLE_TYPES, true);
 
-	private MongoSimpleTypes() {
-	}
+	private MongoSimpleTypes() {}
 }
