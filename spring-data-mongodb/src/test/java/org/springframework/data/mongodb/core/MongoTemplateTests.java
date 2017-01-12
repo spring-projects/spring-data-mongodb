@@ -24,6 +24,10 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
+import lombok.Data;
+
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,10 +82,12 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -116,6 +122,8 @@ public class MongoTemplateTests {
 			.parse("2.4");
 	private static final org.springframework.data.util.Version TWO_DOT_EIGHT = org.springframework.data.util.Version
 			.parse("2.8");
+	private static final org.springframework.data.util.Version THREE_DOT_FOUR = org.springframework.data.util.Version
+			.parse("3.4");
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
@@ -129,8 +137,8 @@ public class MongoTemplateTests {
 	@Autowired
 	public void setMongo(Mongo mongo) throws Exception {
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(DateToDateTimeConverter.INSTANCE,
-				DateTimeToDateConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(
+				Arrays.asList(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE));
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
@@ -2577,7 +2585,7 @@ public class MongoTemplateTests {
 		doc.dbRefAnnotatedList = Arrays.asList( //
 				sample1, //
 				sample2 //
-				);
+		);
 		template.save(doc);
 
 		Update update = new Update().pull("dbRefAnnotatedList", doc.dbRefAnnotatedList.get(1));
@@ -2609,7 +2617,7 @@ public class MongoTemplateTests {
 		doc.dbRefAnnotatedList = Arrays.asList( //
 				sample1, //
 				sample2 //
-				);
+		);
 		template.save(doc);
 
 		Update update = new Update().pull("dbRefAnnotatedList.id", "2");
@@ -2683,8 +2691,8 @@ public class MongoTemplateTests {
 	@Test
 	public void testUpdateShouldWorkForPathsOnInterfaceMethods() {
 
-		DocumentWithCollection document = new DocumentWithCollection(Arrays.<Model> asList(new ModelA("spring"),
-				new ModelA("data")));
+		DocumentWithCollection document = new DocumentWithCollection(
+				Arrays.<Model> asList(new ModelA("spring"), new ModelA("data")));
 
 		template.save(document);
 
@@ -3192,6 +3200,40 @@ public class MongoTemplateTests {
 		assertThat(document.id, is(notNullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-1517
+	 */
+	@Test
+	public void decimal128TypeShouldBeSavedAndLoadedCorrectly()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR), is(true));
+		assumeThat(MongoClientVersion.isMongo34Driver(), is(true));
+
+		Class<?> decimal128Type = ClassUtils.resolveClassName("org.bson.types.Decimal128", null);
+
+		WithObjectTypeProperty source = new WithObjectTypeProperty();
+		source.id = "decimal128-property-value";
+		source.value = decimal128Type.getConstructor(BigDecimal.class).newInstance(new BigDecimal(100));
+
+		template.save(source);
+
+		WithObjectTypeProperty loaded = template.findOne(query(where("id").is(source.id)), WithObjectTypeProperty.class);
+		assertThat(loaded.getValue(), instanceOf(decimal128Type));
+	}
+
+	static class TypeWithNumbers {
+
+		@Id String id;
+		Integer intVal;
+		Float floatVal;
+		Long longVal;
+		Double doubleVal;
+		BigDecimal bigDeciamVal;
+		BigInteger bigIntegerVal;
+		Byte byteVal;
+	}
+
 	static class DoucmentWithNamedIdField {
 
 		@Id String someIdKey;
@@ -3243,11 +3285,11 @@ public class MongoTemplateTests {
 
 		@Id public String id;
 
-		@Field("db_ref_list")/** @see DATAMONGO-1058 */
-		@org.springframework.data.mongodb.core.mapping.DBRef//
+		@Field("db_ref_list") /** @see DATAMONGO-1058 */
+		@org.springframework.data.mongodb.core.mapping.DBRef //
 		public List<Sample> dbRefAnnotatedList;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef//
+		@org.springframework.data.mongodb.core.mapping.DBRef //
 		public Sample dbRefProperty;
 	}
 
@@ -3542,4 +3584,10 @@ public class MongoTemplateTests {
 		GeoJsonPoint point;
 	}
 
+	@Data
+	static class WithObjectTypeProperty {
+
+		@Id String id;
+		Object value;
+	}
 }
