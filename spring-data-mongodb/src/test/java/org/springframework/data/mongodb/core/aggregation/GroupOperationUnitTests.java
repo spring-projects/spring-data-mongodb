@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,10 +40,7 @@ public class GroupOperationUnitTests {
 		new GroupOperation((Fields) null);
 	}
 
-	/**
-	 * @see DATAMONGO-759
-	 */
-	@Test
+	@Test // DATAMONGO-759
 	public void groupOperationWithNoGroupIdFieldsShouldGenerateNullAsGroupId() {
 
 		GroupOperation operation = new GroupOperation(Fields.from());
@@ -55,10 +52,7 @@ public class GroupOperationUnitTests {
 		assertThat(groupClause.get(UNDERSCORE_ID), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-759
-	 */
-	@Test
+	@Test // DATAMONGO-759
 	public void groupOperationWithNoGroupIdFieldsButAdditionalFieldsShouldGenerateNullAsGroupId() {
 
 		GroupOperation operation = new GroupOperation(Fields.from()).count().as("cnt").last("foo").as("foo");
@@ -186,10 +180,7 @@ public class GroupOperationUnitTests {
 		assertThat(push, is((Document) new Document("$addToSet", 42)));
 	}
 
-	/**
-	 * @see DATAMONGO-979
-	 */
-	@Test
+	@Test // DATAMONGO-979
 	public void shouldRenderSizeExpressionInGroup() {
 
 		GroupOperation groupOperation = Aggregation //
@@ -203,10 +194,7 @@ public class GroupOperationUnitTests {
 		assertThat(tagsCount.get("$first"), is((Object) new Document("$size", Arrays.asList("$tags"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1327
-	 */
-	@Test
+	@Test // DATAMONGO-1327
 	public void groupOperationStdDevSampWithValue() {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").stdDevSamp("field").as("fieldStdDevSamp");
@@ -217,10 +205,7 @@ public class GroupOperationUnitTests {
 		assertThat(push, is(new Document("$stdDevSamp", "$field")));
 	}
 
-	/**
-	 * @see DATAMONGO-1327
-	 */
-	@Test
+	@Test // DATAMONGO-1327
 	public void groupOperationStdDevPopWithValue() {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").stdDevPop("field").as("fieldStdDevPop");

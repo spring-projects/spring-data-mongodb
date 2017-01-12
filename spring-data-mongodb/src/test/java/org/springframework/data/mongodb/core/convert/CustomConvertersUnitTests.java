@@ -39,7 +39,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
  * Test case to verify correct usage of custom {@link Converter} implementations to be used.
  * 
  * @author Oliver Gierke
- * @see DATADOC-101
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CustomConvertersUnitTests {
@@ -74,7 +73,7 @@ public class CustomConvertersUnitTests {
 		converter.afterPropertiesSet();
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void nestedToDocumentConverterGetsInvoked() {
 
 		Foo foo = new Foo();
@@ -84,7 +83,7 @@ public class CustomConvertersUnitTests {
 		verify(barToDocumentConverter).convert(any(Bar.class));
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void nestedFromDocumentConverterGetsInvoked() {
 
 		Document document = new Document();
@@ -94,21 +93,21 @@ public class CustomConvertersUnitTests {
 		verify(documentToBarConverter).convert(any(Document.class));
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void toDocumentConverterGetsInvoked() {
 
 		converter.write(new Bar(), new Document());
 		verify(barToDocumentConverter).convert(any(Bar.class));
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void fromDocumentConverterGetsInvoked() {
 
 		converter.read(Bar.class, new Document());
 		verify(documentToBarConverter).convert(any(Document.class));
 	}
 
-	@Test
+	@Test // DATADOC-101
 	public void foo() {
 		Document document = new Document();
 		document.put("foo", null);

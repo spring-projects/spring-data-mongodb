@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,10 +51,7 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
 	}
 
-	/**
-	 * @see DATAMONGO-348
-	 */
-	@Test
+	@Test // DATAMONGO-348
 	public void shouldLoadAssociationWithDbRefOnInterfaceAndLazyLoadingEnabled() throws Exception {
 
 		User thomas = new User();
@@ -77,10 +74,7 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		assertThat(user.getUsername(), is(thomas.getUsername()));
 	}
 
-	/**
-	 * @see DATAMONGO-348
-	 */
-	@Test
+	@Test // DATAMONGO-348
 	public void shouldLoadAssociationWithDbRefOnConcreteCollectionAndLazyLoadingEnabled() throws Exception {
 
 		User thomas = new User();
@@ -108,10 +102,7 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		assertThat(realFan.getUsername(), is(thomas.getUsername()));
 	}
 
-	/**
-	 * @see DATAMONGO-348
-	 */
-	@Test
+	@Test // DATAMONGO-348
 	public void shouldLoadAssociationWithDbRefOnConcreteDomainClassAndLazyLoadingEnabled() throws Exception {
 
 		User thomas = new User();

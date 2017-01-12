@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,26 +58,17 @@ public class ReactiveMongoTemplateUnitTests {
 		this.template = new ReactiveMongoTemplate(factory, converter);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
 	public void rejectsNullDatabaseName() throws Exception {
 		new ReactiveMongoTemplate(mongoClient, null);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
 	public void rejectsNullMongo() throws Exception {
 		new ReactiveMongoTemplate(null, "database");
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void defaultsConverterToMappingMongoConverter() throws Exception {
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(mongoClient, "database");
 		assertTrue(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter);

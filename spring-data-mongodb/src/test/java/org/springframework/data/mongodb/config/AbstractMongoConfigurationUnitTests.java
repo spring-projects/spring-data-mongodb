@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,10 +57,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 	@Rule public ExpectedException exception = ExpectedException.none();
 
-	/**
-	 * @see DATAMONGO-496
-	 */
-	@Test
+	@Test // DATAMONGO-496
 	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
 
 		AbstractMongoConfiguration configuration = new SampleMongoConfiguration();
@@ -69,28 +66,19 @@ public class AbstractMongoConfigurationUnitTests {
 		assertThat(configuration.getInitialEntitySet(), hasItem(Entity.class));
 	}
 
-	/**
-	 * @see DATAMONGO-496
-	 */
-	@Test
+	@Test // DATAMONGO-496
 	public void doesNotScanPackageIfMappingPackageIsNull() throws ClassNotFoundException {
 		assertScanningDisabled(null);
 	}
 
-	/**
-	 * @see DATAMONGO-496
-	 */
-	@Test
+	@Test // DATAMONGO-496
 	public void doesNotScanPackageIfMappingPackageIsEmpty() throws ClassNotFoundException {
 
 		assertScanningDisabled("");
 		assertScanningDisabled(" ");
 	}
 
-	/**
-	 * @see DATAMONGO-569
-	 */
-	@Test
+	@Test // DATAMONGO-569
 	public void containsMongoDbFactoryButNoMongoBean() {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
@@ -113,10 +101,7 @@ public class AbstractMongoConfigurationUnitTests {
 		assertThat(context.getPersistentEntities(), is(not(emptyIterable())));
 	}
 
-	/**
-	 * @see DATAMONGO-717
-	 */
-	@Test
+	@Test // DATAMONGO-717
 	public void lifecycleCallbacksAreInvokedInAppropriateOrder() {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
@@ -128,10 +113,7 @@ public class AbstractMongoConfigurationUnitTests {
 		context.close();
 	}
 
-	/**
-	 * @see DATAMONGO-725
-	 */
-	@Test
+	@Test // DATAMONGO-725
 	public void shouldBeAbleToConfigureCustomTypeMapperViaJavaConfig() {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
@@ -143,18 +125,12 @@ public class AbstractMongoConfigurationUnitTests {
 		context.close();
 	}
 
-	/**
-	 * @see DATAMONGO-789
-	 */
-	@Test
+	@Test // DATAMONGO-789
 	public void authenticationDatabaseShouldDefaultToNull() {
 		assertThat(new SampleMongoConfiguration().getAuthenticationDatabaseName(), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1470
-	 */
-	@Test
+	@Test // DATAMONGO-1470
 	@SuppressWarnings("unchecked")
 	public void allowsMultipleEntityBasePackages() throws ClassNotFoundException {
 

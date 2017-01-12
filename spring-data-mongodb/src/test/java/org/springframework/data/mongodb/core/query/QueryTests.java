@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,10 +113,7 @@ public class QueryTests {
 		Assert.assertEquals(expectedFields, q.getFieldsObject());
 	}
 
-	/**
-	 * @see DATAMONGO-652
-	 */
-	@Test
+	@Test // DATAMONGO-652
 	public void testQueryWithFieldsElemMatchAndPositionalOperator() {
 
 		Query query = query(where("name").gte("M").lte("T").and("age").not().gt(22));
@@ -189,10 +186,7 @@ public class QueryTests {
 		Assert.assertEquals(expected.toJson(), q.getQueryObject().toJson());
 	}
 
-	/**
-	 * @see DATAMONGO-538
-	 */
-	@Test
+	@Test // DATAMONGO-538
 	public void addsSortCorrectly() {
 
 		Query query = new Query().with(new Sort(Direction.DESC, "foo"));
@@ -208,10 +202,7 @@ public class QueryTests {
 		new Query().with(new Sort(new Sort.Order("foo").ignoreCase()));
 	}
 
-	/**
-	 * @see DATAMONGO-709
-	 */
-	@Test
+	@Test // DATAMONGO-709
 	@SuppressWarnings("unchecked")
 	public void shouldReturnClassHierarchyOfRestrictedTypes() {
 

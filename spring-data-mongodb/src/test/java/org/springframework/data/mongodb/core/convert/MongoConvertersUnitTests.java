@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,10 +61,7 @@ public class MongoConvertersUnitTests {
 		assertThat(reference, is(bigDecimal));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsBoxToDocumentAndBackCorrectly() {
 
 		Box box = new Box(new Point(1, 2), new Point(3, 4));
@@ -75,10 +72,7 @@ public class MongoConvertersUnitTests {
 		assertThat(shape, is((org.springframework.data.geo.Shape) box));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsCircleToDocumentAndBackCorrectly() {
 
 		Circle circle = new Circle(new Point(1, 2), 3);
@@ -89,10 +83,7 @@ public class MongoConvertersUnitTests {
 		assertThat(shape, is((org.springframework.data.geo.Shape) circle));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsPolygonToDocumentAndBackCorrectly() {
 
 		Polygon polygon = new Polygon(new Point(1, 2), new Point(2, 3), new Point(3, 4), new Point(5, 6));
@@ -103,10 +94,7 @@ public class MongoConvertersUnitTests {
 		assertThat(shape, is((org.springframework.data.geo.Shape) polygon));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsSphereToDocumentAndBackCorrectly() {
 
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
@@ -117,10 +105,7 @@ public class MongoConvertersUnitTests {
 		assertThat(shape, is((org.springframework.data.geo.Shape) sphere));
 	}
 
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
+	@Test // DATAMONGO-858
 	public void convertsPointToListAndBackCorrectly() {
 
 		Point point = new Point(1, 2);
@@ -131,50 +116,32 @@ public class MongoConvertersUnitTests {
 		assertThat(converted, is((org.springframework.data.geo.Point) point));
 	}
 
-	/**
-	 * @see DATAMONGO-1372
-	 */
-	@Test
+	@Test // DATAMONGO-1372
 	public void convertsCurrencyToStringCorrectly() {
 		assertThat(CurrencyToStringConverter.INSTANCE.convert(Currency.getInstance("USD")), is("USD"));
 	}
 
-	/**
-	 * @see DATAMONGO-1372
-	 */
-	@Test
+	@Test // DATAMONGO-1372
 	public void convertsStringToCurrencyCorrectly() {
 		assertThat(StringToCurrencyConverter.INSTANCE.convert("USD"), is(Currency.getInstance("USD")));
 	}
 
-	/**
-	 * @see DATAMONGO-1416
-	 */
-	@Test
+	@Test // DATAMONGO-1416
 	public void convertsAtomicLongToLongCorrectly() {
 		assertThat(AtomicLongToLongConverter.INSTANCE.convert(new AtomicLong(100L)), is(100L));
 	}
 
-	/**
-	 * @see DATAMONGO-1416
-	 */
-	@Test
+	@Test // DATAMONGO-1416
 	public void convertsAtomicIntegerToIntegerCorrectly() {
 		assertThat(AtomicIntegerToIntegerConverter.INSTANCE.convert(new AtomicInteger(100)), is(100));
 	}
 
-	/**
-	 * @see DATAMONGO-1416
-	 */
-	@Test
+	@Test // DATAMONGO-1416
 	public void convertsLongToAtomicLongCorrectly() {
 		assertThat(LongToAtomicLongConverter.INSTANCE.convert(100L), is(instanceOf(AtomicLong.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-1416
-	 */
-	@Test
+	@Test // DATAMONGO-1416
 	public void convertsIntegerToAtomicIntegerCorrectly() {
 		assertThat(IntegerToAtomicIntegerConverter.INSTANCE.convert(100), is(instanceOf(AtomicInteger.class)));
 	}

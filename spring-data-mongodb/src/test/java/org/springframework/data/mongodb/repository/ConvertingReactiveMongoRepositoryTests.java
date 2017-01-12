@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,10 +89,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		subscriber.await().assertComplete().assertNoError();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void reactiveStreamsMethodsShouldWork() throws Exception {
 
 		TestSubscriber<Boolean> subscriber = TestSubscriber.subscribe(reactivePersonRepostitory.exists(dave.getId()));
@@ -100,10 +97,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		subscriber.awaitAndAssertNextValueCount(1).assertValues(true);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void reactiveStreamsQueryMethodsShouldWork() throws Exception {
 
 		TestSubscriber<ReactivePerson> subscriber = TestSubscriber
@@ -112,10 +106,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		subscriber.awaitAndAssertNextValueCount(1).assertValues(boyd);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void simpleRxJavaMethodsShouldWork() throws Exception {
 
 		rx.observers.TestSubscriber<Boolean> subscriber = new rx.observers.TestSubscriber<>();
@@ -127,10 +118,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		subscriber.assertValue(true);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void existsWithSingleRxJavaIdMethodsShouldWork() throws Exception {
 
 		rx.observers.TestSubscriber<Boolean> subscriber = new rx.observers.TestSubscriber<>();
@@ -142,10 +130,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		subscriber.assertValue(true);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void singleRxJavaQueryMethodShouldWork() throws Exception {
 
 		rx.observers.TestSubscriber<ReactivePerson> subscriber = new rx.observers.TestSubscriber<>();
@@ -157,10 +142,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		subscriber.assertValue(dave);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void singleProjectedRxJavaQueryMethodShouldWork() throws Exception {
 
 		rx.observers.TestSubscriber<ProjectedPerson> subscriber = new rx.observers.TestSubscriber<>();
@@ -174,10 +156,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		assertThat(projectedPerson.getFirstname(), is(equalTo(carter.getFirstname())));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void observableRxJavaQueryMethodShouldWork() throws Exception {
 
 		rx.observers.TestSubscriber<ReactivePerson> subscriber = new rx.observers.TestSubscriber<>();
@@ -189,10 +168,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		subscriber.assertValue(boyd);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void mixedRepositoryShouldWork() throws Exception {
 
 		ReactivePerson value = reactiveRepository.findByLastname(boyd.getLastname()).toBlocking().value();
@@ -200,10 +176,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		assertThat(value, is(equalTo(boyd)));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindOneBySingleOfLastName() throws Exception {
 
 		ReactivePerson carter = reactiveRepository.findByLastname(Single.just("Beauford")).block();
@@ -211,10 +184,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		assertThat(carter.getFirstname(), is(equalTo("Carter")));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindByObservableOfLastNameIn() throws Exception {
 
 		List<ReactivePerson> persons = reactiveRepository.findByLastnameIn(Observable.just("Beauford", "Matthews"))
@@ -223,10 +193,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		assertThat(persons, hasItems(carter, dave, oliver));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindByPublisherOfLastNameInAndAgeGreater() throws Exception {
 
 		List<ReactivePerson> persons = reactiveRepository

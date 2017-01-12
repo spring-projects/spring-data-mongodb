@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,10 +69,7 @@ public class IndexUnitTests {
 		assertEquals(Document.parse("{ \"min\" : 0}"), i.getIndexOptions());
 	}
 
-	/**
-	 * @see DATAMONGO-778
-	 */
-	@Test
+	@Test // DATAMONGO-778
 	public void testGeospatialIndex2DSphere() {
 
 		GeospatialIndex i = new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE);
@@ -80,10 +77,7 @@ public class IndexUnitTests {
 		assertEquals(Document.parse("{ }"), i.getIndexOptions());
 	}
 
-	/**
-	 * @see DATAMONGO-778
-	 */
-	@Test
+	@Test // DATAMONGO-778
 	public void testGeospatialIndexGeoHaystack() {
 
 		GeospatialIndex i = new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_HAYSTACK)

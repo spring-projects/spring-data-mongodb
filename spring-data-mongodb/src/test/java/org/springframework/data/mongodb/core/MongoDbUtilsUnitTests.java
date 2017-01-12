@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,10 +89,7 @@ public class MongoDbUtilsUnitTests {
 		assertThat(MongoDbUtils.getDB(mongo, "first"), is(sameInstance(first)));
 	}
 
-	/**
-	 * @see DATAMONGO-737
-	 */
-	@Test
+	@Test // DATAMONGO-737
 	public void handlesTransactionSynchronizationLifecycle() {
 
 		// ensure transaction synchronization manager has no registered
@@ -121,10 +118,7 @@ public class MongoDbUtilsUnitTests {
 		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-737
-	 */
-	@Test
+	@Test // DATAMONGO-737
 	public void handlesTransactionSynchronizationsLifecycle() {
 
 		// ensure transaction synchronization manager has no registered
@@ -154,10 +148,7 @@ public class MongoDbUtilsUnitTests {
 		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1218
-	 */
-	@Test
+	@Test // DATAMONGO-1218
 	@SuppressWarnings("deprecation")
 	public void getDBDAuthenticateViaAuthDbWhenCalledWithMongoInstance() {
 
@@ -174,10 +165,7 @@ public class MongoDbUtilsUnitTests {
 		verify(mongo, times(1)).getDB("authdb");
 	}
 
-	/**
-	 * @see DATAMONGO-1218
-	 */
-	@Test
+	@Test // DATAMONGO-1218
 	@SuppressWarnings("deprecation")
 	public void getDBDShouldSkipAuthenticationViaAuthDbWhenCalledWithMongoClientInstance() {
 

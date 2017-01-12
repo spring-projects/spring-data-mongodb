@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * Integration tests for {@link SpelExpressionTransformer}.
  * 
- * @see DATAMONGO-774
  * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -57,7 +56,7 @@ public class SpelExpressionTransformerIntegrationTests {
 		this.dbRefResolver = new DefaultDbRefResolver(mongoDbFactory);
 	}
 
-	@Test
+	@Test // DATAMONGO-774
 	public void shouldConvertCompoundExpressionToPropertyPath() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
@@ -67,7 +66,7 @@ public class SpelExpressionTransformerIntegrationTests {
 				is("$item.primitiveIntValue"));
 	}
 
-	@Test
+	@Test // DATAMONGO-774
 	public void shouldThrowExceptionIfNestedPropertyCannotBeFound() {
 
 		exception.expect(MappingException.class);

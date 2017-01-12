@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,42 +34,27 @@ import org.springframework.data.mongodb.core.query.Criteria;
  */
 public class CondExpressionUnitTests {
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
 	public void builderRejectsEmptyFieldName() {
 		newBuilder().when("");
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
 	public void builderRejectsNullFieldName() {
 		newBuilder().when((Document) null);
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
 	public void builderRejectsNullCriteriaName() {
 		newBuilder().when((Criteria) null);
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
 	public void builderRejectsBuilderAsThenValue() {
 		newBuilder().when("isYellow").then(newBuilder().when("field").then("then-value")).otherwise("otherwise");
 	}
 
-	/**
-	 * @see DATAMONGO-861, DATAMONGO-1542
-	 */
-	@Test
+	@Test // DATAMONGO-861, DATAMONGO-1542
 	public void simpleBuilderShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when("isYellow").thenValueOf("bright").otherwise("dark");
@@ -83,10 +68,7 @@ public class CondExpressionUnitTests {
 		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	/**
-	 * @see DATAMONGO-861, DATAMONGO-1542
-	 */
-	@Test
+	@Test // DATAMONGO-861, DATAMONGO-1542
 	public void simpleCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100)).thenValueOf("bright")
@@ -101,10 +83,7 @@ public class CondExpressionUnitTests {
 		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void andCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100) //
@@ -126,10 +105,7 @@ public class CondExpressionUnitTests {
 		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	/**
-	 * @see DATAMONGO-861, DATAMONGO-1542
-	 */
-	@Test
+	@Test // DATAMONGO-861, DATAMONGO-1542
 	public void twoArgsCriteriaShouldRenderCorrectly() {
 
 		Criteria criteria = Criteria.where("luminosity").gte(100) //
@@ -149,10 +125,7 @@ public class CondExpressionUnitTests {
 		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	/**
-	 * @see DATAMONGO-861, DATAMONGO-1542
-	 */
-	@Test
+	@Test // DATAMONGO-861, DATAMONGO-1542
 	public void nestedCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100)) //

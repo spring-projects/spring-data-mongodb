@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,10 +90,7 @@ public class MongoNamespaceTests {
 				options.getSocketFactory() instanceof SSLSocketFactory);
 	}
 
-	/**
-	 * @see DATAMONGO-764
-	 */
-	@Test
+	@Test // DATAMONGO-764
 	public void testMongoSingletonWithSslEnabled() throws Exception {
 
 		assertTrue(ctx.containsBean("mongoSsl"));
@@ -103,10 +100,7 @@ public class MongoNamespaceTests {
 		assertTrue("socketFactory should be a SSLSocketFactory", options.getSocketFactory() instanceof SSLSocketFactory);
 	}
 
-	/**
-	 * @see DATAMONGO-1490
-	 */
-	@Test
+	@Test // DATAMONGO-1490
 	public void testMongoClientSingletonWithSslEnabled() {
 
 		assertTrue(ctx.containsBean("mongoClientSsl"));
@@ -116,10 +110,7 @@ public class MongoNamespaceTests {
 		assertTrue("socketFactory should be a SSLSocketFactory", options.getSocketFactory() instanceof SSLSocketFactory);
 	}
 
-	/**
-	 * @see DATAMONGO-764
-	 */
-	@Test
+	@Test // DATAMONGO-764
 	public void testMongoSingletonWithSslEnabledAndCustomSslSocketFactory() throws Exception {
 
 		assertTrue(ctx.containsBean("mongoSslWithCustomSslFactory"));
@@ -145,10 +136,7 @@ public class MongoNamespaceTests {
 		assertEquals("database", getField(dbf, "databaseName"));
 	}
 
-	/**
-	 * @see DATAMONGO-789
-	 */
-	@Test
+	@Test // DATAMONGO-789
 	public void testThirdMongoDbFactory() {
 
 		assertTrue(ctx.containsBean("thirdMongoDbFactory"));
@@ -163,10 +151,7 @@ public class MongoNamespaceTests {
 		assertEquals("admin", getField(dbf, "authenticationDatabaseName"));
 	}
 
-	/**
-	 * @see DATAMONGO-140
-	 */
-	@Test
+	@Test // DATAMONGO-140
 	public void testMongoTemplateFactory() {
 
 		assertTrue(ctx.containsBean("mongoTemplate"));
@@ -179,10 +164,7 @@ public class MongoNamespaceTests {
 		assertNotNull(converter);
 	}
 
-	/**
-	 * @see DATAMONGO-140
-	 */
-	@Test
+	@Test // DATAMONGO-140
 	public void testSecondMongoTemplateFactory() {
 
 		assertTrue(ctx.containsBean("anotherMongoTemplate"));
@@ -195,10 +177,7 @@ public class MongoNamespaceTests {
 		assertEquals(WriteConcern.SAFE, writeConcern);
 	}
 
-	/**
-	 * @see DATAMONGO-628
-	 */
-	@Test
+	@Test // DATAMONGO-628
 	public void testGridFsTemplateFactory() {
 
 		assertTrue(ctx.containsBean("gridFsTemplate"));
@@ -211,10 +190,7 @@ public class MongoNamespaceTests {
 		assertNotNull(converter);
 	}
 
-	/**
-	 * @see DATAMONGO-628
-	 */
-	@Test
+	@Test // DATAMONGO-628
 	public void testSecondGridFsTemplateFactory() {
 
 		assertTrue(ctx.containsBean("secondGridFsTemplate"));
@@ -228,10 +204,7 @@ public class MongoNamespaceTests {
 		assertNotNull(converter);
 	}
 
-	/**
-	 * @see DATAMONGO-823
-	 */
-	@Test
+	@Test // DATAMONGO-823
 	public void testThirdGridFsTemplateFactory() {
 
 		assertTrue(ctx.containsBean("thirdGridFsTemplate"));

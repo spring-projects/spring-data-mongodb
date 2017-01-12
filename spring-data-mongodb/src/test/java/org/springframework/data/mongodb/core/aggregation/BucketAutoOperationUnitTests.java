@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,26 +32,17 @@ import org.bson.Document;
  */
 public class BucketAutoOperationUnitTests {
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
 	public void rejectsNullFields() {
 		new BucketAutoOperation((Field) null, 0);
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
 	public void rejectsNonPositiveIntegerNullFields() {
 		new BucketAutoOperation(Fields.field("field"), 0);
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderBucketOutputExpressions() {
 
 		BucketAutoOperation operation = Aggregation.bucketAuto("field", 5) //
@@ -63,18 +54,12 @@ public class BucketAutoOperationUnitTests {
 				"{ \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"titles\" : { $push: \"$title\" } }}")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test(expected = IllegalStateException.class)
+	@Test(expected = IllegalStateException.class) // DATAMONGO-1552
 	public void shouldRenderEmptyAggregationExpression() {
 		bucket("groupby").andOutput("field").as("alias");
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderBucketOutputOperators() {
 
 		BucketAutoOperation operation = Aggregation.bucketAuto("field", 5) //
@@ -84,10 +69,7 @@ public class BucketAutoOperationUnitTests {
 		assertThat(extractOutput(agg), is(Document.parse("{ titles : { $sum: 1 } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderCorrectly() {
 
 		Document agg = bucketAuto("field", 1).withBuckets(5).toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -95,10 +77,7 @@ public class BucketAutoOperationUnitTests {
 		assertThat(agg, is(Document.parse("{ $bucketAuto: { groupBy: \"$field\", buckets: 5 } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderGranulariy() {
 
 		Document agg = bucketAuto("field", 1) //
@@ -108,10 +87,7 @@ public class BucketAutoOperationUnitTests {
 		assertThat(agg, is(Document.parse("{ $bucketAuto: { buckets: 1, granularity: \"E24\", groupBy: \"$field\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderSumOperator() {
 
 		BucketAutoOperation operation = bucketAuto("field", 5) //
@@ -121,10 +97,7 @@ public class BucketAutoOperationUnitTests {
 		assertThat(extractOutput(agg), is(Document.parse("{ cummulated_score : { $sum: \"$score\" } }")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldRenderSumWithOwnOutputExpression() {
 
 		BucketAutoOperation operation = bucketAuto("field", 5) //

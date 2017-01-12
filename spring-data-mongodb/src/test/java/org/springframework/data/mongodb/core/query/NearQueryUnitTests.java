@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,10 +83,7 @@ public class NearQueryUnitTests {
 		assertThat(query.getMetric(), is((Metric) Metrics.MILES));
 	}
 
-	/**
-	 * @see DATAMONGO-445
-	 */
-	@Test
+	@Test // DATAMONGO-445
 	public void shouldTakeSkipAndLimitSettingsFromGivenPageable() {
 
 		Pageable pageable = new PageRequest(3, 5);
@@ -96,10 +93,7 @@ public class NearQueryUnitTests {
 		assertThat((Integer) query.toDocument().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
 	}
 
-	/**
-	 * @see DATAMONGO-445
-	 */
-	@Test
+	@Test // DATAMONGO-445
 	public void shouldTakeSkipAndLimitSettingsFromGivenQuery() {
 
 		int limit = 10;
@@ -111,10 +105,7 @@ public class NearQueryUnitTests {
 		assertThat((Integer) query.toDocument().get("num"), is(limit));
 	}
 
-	/**
-	 * @see DATAMONGO-445
-	 */
-	@Test
+	@Test // DATAMONGO-445
 	public void shouldTakeSkipAndLimitSettingsFromPageableEvenIfItWasSpecifiedOnQuery() {
 
 		int limit = 10;
@@ -127,28 +118,19 @@ public class NearQueryUnitTests {
 		assertThat((Integer) query.toDocument().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
 	}
 
-	/**
-	 * @see DATAMONGO-829
-	 */
-	@Test
+	@Test // DATAMONGO-829
 	public void nearQueryShouldInoreZeroLimitFromQuery() {
 
 		NearQuery query = NearQuery.near(new Point(1, 2)).query(Query.query(Criteria.where("foo").is("bar")));
 		assertThat(query.toDocument().get("num"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONOGO-829
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONOGO-829
 	public void nearQueryShouldThrowExceptionWhenGivenANullQuery() {
 		NearQuery.near(new Point(1, 2)).query(null);
 	}
 
-	/**
-	 * @see DATAMONGO-829
-	 */
-	@Test
+	@Test // DATAMONGO-829
 	public void numShouldNotBeAlteredByQueryWithoutPageable() {
 
 		int num = 100;

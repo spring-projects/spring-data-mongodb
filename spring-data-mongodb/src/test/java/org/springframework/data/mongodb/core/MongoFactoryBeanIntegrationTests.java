@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,10 +37,7 @@ import com.mongodb.WriteConcern;
  */
 public class MongoFactoryBeanIntegrationTests {
 
-	/**
-	 * @see DATAMONGO-408
-	 */
-	@Test
+	@Test // DATAMONGO-408
 	public void convertsWriteConcernCorrectly() {
 
 		RootBeanDefinition definition = new RootBeanDefinition(MongoFactoryBean.class);
@@ -54,10 +51,7 @@ public class MongoFactoryBeanIntegrationTests {
 		assertThat(ReflectionTestUtils.getField(bean, "writeConcern"), is((Object) WriteConcern.SAFE));
 	}
 
-	/**
-	 * @see DATAMONGO-693
-	 */
-	@Test
+	@Test // DATAMONGO-693
 	public void createMongoInstanceWithHostAndEmptyReplicaSets() {
 
 		RootBeanDefinition definition = new RootBeanDefinition(MongoFactoryBean.class);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,10 +126,7 @@ public class QueryMapperUnitTests {
 		assertThat(result.get("_id"), is((Object) id));
 	}
 
-	/**
-	 * @see DATAMONGO-278
-	 */
-	@Test
+	@Test // DATAMONGO-278
 	public void translates$NeCorrectly() {
 
 		Criteria criteria = where("foo").ne(new ObjectId().toString());
@@ -142,10 +139,7 @@ public class QueryMapperUnitTests {
 		assertThat(document.get("$ne"), is(instanceOf(ObjectId.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-326
-	 */
-	@Test
+	@Test // DATAMONGO-326
 	public void handlesEnumsCorrectly() {
 		Query query = query(where("foo").is(Enum.INSTANCE));
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), null);
@@ -185,20 +179,14 @@ public class QueryMapperUnitTests {
 		assertThat(list.get(0).toString(), is(Enum.INSTANCE.name()));
 	}
 
-	/**
-	 * @see DATAMONGO-373
-	 */
-	@Test
+	@Test // DATAMONGO-373
 	public void handlesNativelyBuiltQueryCorrectly() {
 
 		DBObject query = new QueryBuilder().or(new BasicDBObject("foo", "bar")).get();
 		mapper.getMappedObject(new org.bson.Document(query.toMap()), null);
 	}
 
-	/**
-	 * @see DATAMONGO-369
-	 */
-	@Test
+	@Test // DATAMONGO-369
 	public void handlesAllPropertiesIfDocument() {
 
 		org.bson.Document query = new org.bson.Document();
@@ -209,10 +197,7 @@ public class QueryMapperUnitTests {
 		assertThat(result.get("bar"), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-429
-	 */
-	@Test
+	@Test // DATAMONGO-429
 	public void transformsArraysCorrectly() {
 
 		Query query = new BasicQuery("{ 'tags' : { '$all' : [ 'green', 'orange']}}");
@@ -234,10 +219,7 @@ public class QueryMapperUnitTests {
 		assertThat(((org.bson.Document) result.get("nested")).get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-493
-	 */
-	@Test
+	@Test // DATAMONGO-493
 	public void doesNotTranslateNonIdPropertiesFor$NeCriteria() {
 
 		ObjectId accidentallyAnObjectId = new ObjectId();
@@ -254,10 +236,7 @@ public class QueryMapperUnitTests {
 		assertThat(publishers.get("$ne"), is(instanceOf(String.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-494
-	 */
-	@Test
+	@Test // DATAMONGO-494
 	public void usesEntityMetadataInOr() {
 
 		Query query = query(new Criteria().orOperator(where("foo").is("bar")));
@@ -359,10 +338,7 @@ public class QueryMapperUnitTests {
 		assertThat(inClause.get(1), is(instanceOf(com.mongodb.DBRef.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-570
-	 */
-	@Test
+	@Test // DATAMONGO-570
 	public void correctlyConvertsNullReference() {
 
 		Query query = query(where("reference").is(null));
@@ -372,10 +348,7 @@ public class QueryMapperUnitTests {
 		assertThat(object.get("reference"), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-629
-	 */
-	@Test
+	@Test // DATAMONGO-629
 	public void doesNotMapIdIfNoEntityMetadataAvailable() {
 
 		String id = new ObjectId().toString();
@@ -388,10 +361,7 @@ public class QueryMapperUnitTests {
 		assertThat(object.containsKey("_id"), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-677
-	 */
-	@Test
+	@Test // DATAMONGO-677
 	public void handleMapWithDBRefCorrectly() {
 
 		org.bson.Document mapDocument = new org.bson.Document();
@@ -417,10 +387,7 @@ public class QueryMapperUnitTests {
 		assertThat(mapped.get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-705
-	 */
-	@Test
+	@Test // DATAMONGO-705
 	public void convertsDBRefWithExistsQuery() {
 
 		Query query = query(where("reference").exists(false));
@@ -433,10 +400,7 @@ public class QueryMapperUnitTests {
 		assertThat(reference.get("$exists"), is((Object) false));
 	}
 
-	/**
-	 * @see DATAMONGO-706
-	 */
-	@Test
+	@Test // DATAMONGO-706
 	public void convertsNestedDBRefsCorrectly() {
 
 		Reference reference = new Reference();
@@ -457,10 +421,7 @@ public class QueryMapperUnitTests {
 		assertThat(inClause.get(0), is(instanceOf(com.mongodb.DBRef.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-752
-	 */
-	@Test
+	@Test // DATAMONGO-752
 	public void mapsSimpleValuesStartingWith$Correctly() {
 
 		Query query = query(where("myvalue").is("$334"));
@@ -471,10 +432,7 @@ public class QueryMapperUnitTests {
 		assertThat(result.get("myvalue"), is((Object) "$334"));
 	}
 
-	/**
-	 * @see DATAMONGO-752
-	 */
-	@Test
+	@Test // DATAMONGO-752
 	public void mapsKeywordAsSimpleValuesCorrectly() {
 
 		Query query = query(where("myvalue").is("$center"));
@@ -485,10 +443,7 @@ public class QueryMapperUnitTests {
 		assertThat(result.get("myvalue"), is((Object) "$center"));
 	}
 
-	/**
-	 * @DATAMONGO-805
-	 */
-	@Test
+	@Test // DATAMONGO-805
 	public void shouldExcludeDBRefAssociation() {
 
 		Query query = query(where("someString").is("foo"));
@@ -502,10 +457,7 @@ public class QueryMapperUnitTests {
 		assertThat(fieldsResult.get("reference"), is((Object) 0));
 	}
 
-	/**
-	 * @see DATAMONGO-686
-	 */
-	@Test
+	@Test // DATAMONGO-686
 	public void queryMapperShouldNotChangeStateInGivenQueryObjectWhenIdConstrainedByInList() {
 
 		BasicMongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(Sample.class);
@@ -519,10 +471,7 @@ public class QueryMapperUnitTests {
 		assertThat(idValuesAfter, is(idValuesBefore));
 	}
 
-	/**
-	 * @see DATAMONGO-821
-	 */
-	@Test
+	@Test // DATAMONGO-821
 	public void queryMapperShouldNotTryToMapDBRefListPropertyIfNestedInsideDocumentWithinDocument() {
 
 		org.bson.Document queryObject = query(
@@ -537,10 +486,7 @@ public class QueryMapperUnitTests {
 		assertThat(nestedObject, is((org.bson.Document) new org.bson.Document("$keys", 0L)));
 	}
 
-	/**
-	 * @see DATAMONGO-821
-	 */
-	@Test
+	@Test // DATAMONGO-821
 	public void queryMapperShouldNotTryToMapDBRefPropertyIfNestedInsideDocumentWithinDocument() {
 
 		org.bson.Document queryObject = query(
@@ -553,10 +499,7 @@ public class QueryMapperUnitTests {
 		assertThat(nestedObject, is((org.bson.Document) new org.bson.Document("$keys", 0L)));
 	}
 
-	/**
-	 * @see DATAMONGO-821
-	 */
-	@Test
+	@Test // DATAMONGO-821
 	public void queryMapperShouldMapDBRefPropertyIfNestedInDocument() {
 
 		Reference sample = new Reference();
@@ -572,10 +515,7 @@ public class QueryMapperUnitTests {
 		assertThat(inObject.get(0), is(instanceOf(com.mongodb.DBRef.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-773
-	 */
-	@Test
+	@Test // DATAMONGO-773
 	public void queryMapperShouldBeAbleToProcessQueriesThatIncludeDbRefFields() {
 
 		BasicMongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(WithDBRef.class);
@@ -587,10 +527,7 @@ public class QueryMapperUnitTests {
 		assertThat(mappedFields, is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-893
-	 */
-	@Test
+	@Test // DATAMONGO-893
 	public void classInformationShouldNotBePresentInDocumentUsedInFinderMethods() {
 
 		EmbeddedClass embedded = new EmbeddedClass();
@@ -605,10 +542,7 @@ public class QueryMapperUnitTests {
 				equalTo(org.bson.Document.parse("{ \"embedded\" : { \"$in\" : [ { \"_id\" : \"1\"} , { \"_id\" : \"2\"}]}}")));
 	}
 
-	/**
-	 * @see DATAMONGO-1406
-	 */
-	@Test
+	@Test // DATAMONGO-1406
 	public void shouldMapQueryForNestedCustomizedPropertiesUsingConfiguredFieldNames() {
 
 		EmbeddedClass embeddedClass = new EmbeddedClass();
@@ -627,10 +561,7 @@ public class QueryMapperUnitTests {
 				new BasicDbListBuilder().add(new BasicDBObject("fancy_custom_name", embeddedClass.customizedField)).get()));
 	}
 
-	/**
-	 * @see DATAMONGO-647
-	 */
-	@Test
+	@Test // DATAMONGO-647
 	public void customizedFieldNameShouldBeMappedCorrectlyWhenApplyingSort() {
 
 		Query query = query(where("field").is("bar")).with(new Sort(Direction.DESC, "field"));
@@ -639,10 +570,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, equalTo(new org.bson.Document().append("foo", -1)));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void getMappedFieldsAppendsTextScoreFieldProperlyCorrectlyWhenNotPresent() {
 
 		Query query = new Query();
@@ -653,10 +581,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void getMappedFieldsReplacesTextScoreFieldProperlyCorrectlyWhenPresent() {
 
 		Query query = new Query();
@@ -668,10 +593,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void getMappedSortAppendsTextScoreProperlyWhenSortedByScore() {
 
 		Query query = new Query().with(new Sort("textScore"));
@@ -682,10 +604,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void getMappedSortIgnoresTextScoreWhenNotSortedByScore() {
 
 		Query query = new Query().with(new Sort("id"));
@@ -696,10 +615,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, equalTo(new org.bson.Document().append("_id", 1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1070
-	 */
-	@Test
+	@Test // DATAMONGO-1070
 	public void mapsIdReferenceToDBRefCorrectly() {
 
 		ObjectId id = new ObjectId();
@@ -712,10 +628,7 @@ public class QueryMapperUnitTests {
 		assertThat(reference.getId(), is(instanceOf(ObjectId.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-1050
-	 */
-	@Test
+	@Test // DATAMONGO-1050
 	public void shouldUseExplicitlySetFieldnameForIdPropertyCandidates() {
 
 		Query query = query(where("nested.id").is("bar"));
@@ -726,10 +639,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, equalTo(new org.bson.Document().append("nested.id", "bar")));
 	}
 
-	/**
-	 * @see DATAMONGO-1050
-	 */
-	@Test
+	@Test // DATAMONGO-1050
 	public void shouldUseExplicitlySetFieldnameForIdPropertyCandidatesUsedInSortClause() {
 
 		Query query = new Query().with(new Sort("nested.id"));
@@ -740,10 +650,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, equalTo(new org.bson.Document().append("nested.id", 1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void nearShouldUseGeoJsonRepresentationOnUnmappedProperty() {
 
 		Query query = query(where("foo").near(new GeoJsonPoint(100, 50)));
@@ -756,10 +663,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, isBsonObject().containing("foo.$near.$geometry.coordinates.[1]", 50D));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void nearShouldUseGeoJsonRepresentationWhenMappingToGoJsonType() {
 
 		Query query = query(where("geoJsonPoint").near(new GeoJsonPoint(100, 50)));
@@ -770,10 +674,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, isBsonObject().containing("geoJsonPoint.$near.$geometry.type", "Point"));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void nearSphereShouldUseGeoJsonRepresentationWhenMappingToGoJsonType() {
 
 		Query query = query(where("geoJsonPoint").nearSphere(new GeoJsonPoint(100, 50)));
@@ -784,10 +685,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, isBsonObject().containing("geoJsonPoint.$nearSphere.$geometry.type", "Point"));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void shouldMapNameCorrectlyForGeoJsonType() {
 
 		Query query = query(where("namedGeoJsonPoint").nearSphere(new GeoJsonPoint(100, 50)));
@@ -799,10 +697,7 @@ public class QueryMapperUnitTests {
 				isBsonObject().containing("geoJsonPointWithNameViaFieldAnnotation.$nearSphere.$geometry.type", "Point"));
 	}
 
-	/**
-	 * @see DATAMONGO-1135
-	 */
-	@Test
+	@Test // DATAMONGO-1135
 	public void withinShouldUseGeoJsonPolygonWhenMappingPolygonOn2DSphereIndex() {
 
 		Query query = query(where("geoJsonPoint")
@@ -814,10 +709,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, isBsonObject().containing("geoJsonPoint.$geoWithin.$geometry.type", "Polygon"));
 	}
 
-	/**
-	 * @see DATAMONGO-1134
-	 */
-	@Test
+	@Test // DATAMONGO-1134
 	public void intersectsShouldUseGeoJsonRepresentationCorrectly() {
 
 		Query query = query(where("geoJsonPoint")
@@ -830,10 +722,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.coordinates"));
 	}
 
-	/**
-	 * @see DATAMONGO-1269
-	 */
-	@Test
+	@Test // DATAMONGO-1269
 	public void mappingShouldRetainNumericMapKey() {
 
 		Query query = query(where("map.1.stringProperty").is("ba'alzamon"));
@@ -844,10 +733,7 @@ public class QueryMapperUnitTests {
 		assertThat(document.containsKey("map.1.stringProperty"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1269
-	 */
-	@Test
+	@Test // DATAMONGO-1269
 	public void mappingShouldRetainNumericPositionInList() {
 
 		Query query = query(where("list.1.stringProperty").is("ba'alzamon"));
@@ -858,10 +744,7 @@ public class QueryMapperUnitTests {
 		assertThat(document.containsKey("list.1.stringProperty"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectly() {
 
 		Foo probe = new Foo();
@@ -875,10 +758,7 @@ public class QueryMapperUnitTests {
 		assertThat(document, isBsonObject().containing("embedded\\._id", "conflux"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyWhenContainingLegacyPoint() {
 
 		ClassWithGeoTypes probe = new ClassWithGeoTypes();

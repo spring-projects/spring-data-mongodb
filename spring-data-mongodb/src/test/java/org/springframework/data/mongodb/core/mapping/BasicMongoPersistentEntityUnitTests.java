@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,10 +61,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection(), is("35"));
 	}
 
-	/**
-	 * @see DATAMONGO-65, DATAMONGO-1108
-	 */
-	@Test
+	@Test // DATAMONGO-65, DATAMONGO-1108
 	public void collectionAllowsReferencingSpringBean() {
 
 		CollectionProvider provider = new CollectionProvider();
@@ -83,10 +80,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection(), is("otherReference"));
 	}
 
-	/**
-	 * @see DATAMONGO-937
-	 */
-	@Test
+	@Test // DATAMONGO-937
 	public void shouldDetectLanguageCorrectly() {
 
 		BasicMongoPersistentEntity<DocumentWithLanguage> entity = new BasicMongoPersistentEntity<DocumentWithLanguage>(
@@ -94,11 +88,8 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getLanguage(), is("spanish"));
 	}
 
-	/**
-	 * @see DATAMONGO-1053
-	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test(expected = MappingException.class)
+	@Test(expected = MappingException.class) // DATAMONGO-1053
 	public void verifyShouldThrowExceptionForInvalidTypeOfExplicitLanguageProperty() {
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
@@ -111,11 +102,8 @@ public class BasicMongoPersistentEntityUnitTests {
 		entity.verify();
 	}
 
-	/**
-	 * @see DATAMONGO-1053
-	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
+	@Test // DATAMONGO-1053
 	public void verifyShouldPassForStringAsExplicitLanguageProperty() {
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
@@ -130,11 +118,8 @@ public class BasicMongoPersistentEntityUnitTests {
 		verify(propertyMock, times(1)).getActualType();
 	}
 
-	/**
-	 * @see DATAMONGO-1053
-	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
+	@Test // DATAMONGO-1053
 	public void verifyShouldIgnoreNonExplicitLanguageProperty() {
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
@@ -149,11 +134,8 @@ public class BasicMongoPersistentEntityUnitTests {
 		verify(propertyMock, never()).getActualType();
 	}
 
-	/**
-	 * @see DATAMONGO-1157
-	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test(expected = MappingException.class)
+	@Test(expected = MappingException.class) // DATAMONGO-1157
 	public void verifyShouldThrowErrorForLazyDBRefOnFinalClass() {
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
@@ -169,10 +151,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		entity.verify();
 	}
 
-	/**
-	 * @see DATAMONGO-1157
-	 */
-	@Test(expected = MappingException.class)
+	@Test(expected = MappingException.class) // DATAMONGO-1157
 	public void verifyShouldThrowErrorForLazyDBRefArray() {
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
@@ -188,10 +167,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		entity.verify();
 	}
 
-	/**
-	 * @see DATAMONGO-1157
-	 */
-	@Test
+	@Test // DATAMONGO-1157
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void verifyShouldPassForLazyDBRefOnNonArrayNonFinalClass() {
 
@@ -210,10 +186,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		verify(propertyMock, times(1)).isDbReference();
 	}
 
-	/**
-	 * @see DATAMONGO-1157
-	 */
-	@Test
+	@Test // DATAMONGO-1157
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void verifyShouldPassForNonLazyDBRefOnFinalClass() {
 
@@ -232,10 +205,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		verify(dbRefMock, times(1)).lazy();
 	}
 
-	/**
-	 * @see DATAMONGO-1291
-	 */
-	@Test
+	@Test // DATAMONGO-1291
 	public void metaInformationShouldBeReadCorrectlyFromInheritedDocumentAnnotation() {
 
 		BasicMongoPersistentEntity<DocumentWithCustomAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithCustomAnnotation>(
@@ -244,10 +214,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection(), is("collection-1"));
 	}
 
-	/**
-	 * @see DATAMONGO-1373
-	 */
-	@Test
+	@Test // DATAMONGO-1373
 	public void metaInformationShouldBeReadCorrectlyFromComposedDocumentAnnotation() {
 
 		BasicMongoPersistentEntity<DocumentWithComposedAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithComposedAnnotation>(

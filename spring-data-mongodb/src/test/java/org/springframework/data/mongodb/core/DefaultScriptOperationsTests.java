@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,18 +82,12 @@ public class DefaultScriptOperationsTests {
 		this.scriptOps = new DefaultScriptOperations(template);
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void executeShouldDirectlyRunExecutableMongoScript() {
 		assertThat(scriptOps.execute(EXECUTABLE_SCRIPT, 10), is((Object) 10D));
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void saveShouldStoreCallableScriptCorrectly() {
 
 		Query query = query(where("_id").is(SCRIPT_NAME));
@@ -104,10 +98,7 @@ public class DefaultScriptOperationsTests {
 		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void saveShouldStoreExecutableScriptCorrectly() {
 
 		NamedMongoScript script = scriptOps.register(EXECUTABLE_SCRIPT);
@@ -116,10 +107,7 @@ public class DefaultScriptOperationsTests {
 		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void executeShouldRunCallableScriptThatHasBeenSavedBefore() {
 
 		scriptOps.register(CALLABLE_SCRIPT);
@@ -132,10 +120,7 @@ public class DefaultScriptOperationsTests {
 		assertThat(result, is((Object) 10D));
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void existsShouldReturnTrueIfScriptAvailableOnServer() {
 
 		scriptOps.register(CALLABLE_SCRIPT);
@@ -143,18 +128,12 @@ public class DefaultScriptOperationsTests {
 		assertThat(scriptOps.exists(SCRIPT_NAME), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void existsShouldReturnFalseIfScriptNotAvailableOnServer() {
 		assertThat(scriptOps.exists(SCRIPT_NAME), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void callShouldExecuteExistingScript() {
 
 		scriptOps.register(CALLABLE_SCRIPT);
@@ -164,18 +143,12 @@ public class DefaultScriptOperationsTests {
 		assertThat(result, is((Object) 10D));
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = UncategorizedDataAccessException.class)
+	@Test(expected = UncategorizedDataAccessException.class) // DATAMONGO-479
 	public void callShouldThrowExceptionWhenCallingScriptThatDoesNotExist() {
 		scriptOps.call(SCRIPT_NAME, 10);
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void scriptNamesShouldContainNameOfRegisteredScript() {
 
 		scriptOps.register(CALLABLE_SCRIPT);
@@ -183,18 +156,12 @@ public class DefaultScriptOperationsTests {
 		assertThat(scriptOps.getScriptNames(), hasItems("echo"));
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void scriptNamesShouldReturnEmptySetWhenNoScriptRegistered() {
 		assertThat(scriptOps.getScriptNames(), is(empty()));
 	}
 
-	/**
-	 * @see DATAMONGO-1465
-	 */
-	@Test
+	@Test // DATAMONGO-1465
 	public void executeShouldNotQuoteStrings() {
 		assertThat(scriptOps.execute(EXECUTABLE_SCRIPT, "spring-data"), is((Object) "spring-data"));
 	}

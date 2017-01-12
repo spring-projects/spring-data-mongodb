@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,7 @@ import org.junit.Test;
  */
 public class MapReduceResultsUnitTests {
 
-	/**
-	 * @see DATAMONGO-428
-	 */
-	@Test
+	@Test // DATAMONGO-428
 	public void resolvesOutputCollectionForPlainResult() {
 
 		Document rawResult = new Document("result", "FOO");
@@ -42,10 +39,7 @@ public class MapReduceResultsUnitTests {
 		assertThat(results.getOutputCollection(), is("FOO"));
 	}
 
-	/**
-	 * @see DATAMONGO-428
-	 */
-	@Test
+	@Test // DATAMONGO-428
 	public void resolvesOutputCollectionForDocumentResult() {
 
 		Document rawResult = new Document("result", new Document("collection", "FOO"));
@@ -54,10 +48,7 @@ public class MapReduceResultsUnitTests {
 		assertThat(results.getOutputCollection(), is("FOO"));
 	}
 
-	/**
-	 * @see DATAMONGO-378
-	 */
-	@Test
+	@Test // DATAMONGO-378
 	public void handlesLongTotalInResult() {
 
 		Document inner = new Document("total", 1L);
@@ -68,10 +59,7 @@ public class MapReduceResultsUnitTests {
 		new MapReduceResults<Object>(Collections.emptyList(), source);
 	}
 
-	/**
-	 * @see DATAMONGO-378
-	 */
-	@Test
+	@Test // DATAMONGO-378
 	public void handlesLongResultsForCounts() {
 
 		Document inner = new Document("input", 1L);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,26 +47,17 @@ public class DefaultScriptOperationsUnitTests {
 		this.scriptOps = new DefaultScriptOperations(mongoOperations);
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void rejectsNullExecutableMongoScript() {
 		scriptOps.register((ExecutableMongoScript) null);
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void rejectsNullNamedMongoScript() {
 		scriptOps.register((NamedMongoScript) null);
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void saveShouldUseCorrectCollectionName() {
 
 		scriptOps.register(new NamedMongoScript("foo", "function..."));
@@ -74,10 +65,7 @@ public class DefaultScriptOperationsUnitTests {
 		verify(mongoOperations, times(1)).save(any(NamedMongoScript.class), eq("system.js"));
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void saveShouldGenerateScriptNameForExecutableMongoScripts() {
 
 		scriptOps.register(new ExecutableMongoScript("function..."));
@@ -88,42 +76,27 @@ public class DefaultScriptOperationsUnitTests {
 		Assert.assertThat(captor.getValue().getName(), notNullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void executeShouldThrowExceptionWhenScriptIsNull() {
 		scriptOps.execute(null);
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void existsShouldThrowExceptionWhenScriptNameIsNull() {
 		scriptOps.exists(null);
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void existsShouldThrowExceptionWhenScriptNameIsEmpty() {
 		scriptOps.exists("");
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void callShouldThrowExceptionWhenScriptNameIsNull() {
 		scriptOps.call(null);
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void callShouldThrowExceptionWhenScriptNameIsEmpty() {
 		scriptOps.call("");
 	}

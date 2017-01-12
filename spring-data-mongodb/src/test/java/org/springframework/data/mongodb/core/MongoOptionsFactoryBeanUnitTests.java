@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,11 +43,7 @@ public class MongoOptionsFactoryBeanUnitTests {
 		assumeFalse(isMongo3Driver());
 	}
 
-	/**
-	 * @throws Exception
-	 * @see DATADOC-280
-	 */
-	@Test
+	@Test // DATADOC-280
 	public void setsMaxConnectRetryTime() throws Exception {
 
 		MongoOptionsFactoryBean bean = new MongoOptionsFactoryBean();
@@ -58,11 +54,7 @@ public class MongoOptionsFactoryBeanUnitTests {
 		assertThat(getMaxAutoConnectRetryTime(options), is(27L));
 	}
 
-	/**
-	 * @throws Exception
-	 * @see DATAMONGO-764
-	 */
-	@Test
+	@Test // DATAMONGO-764
 	public void testSslConnection() throws Exception {
 
 		MongoOptionsFactoryBean bean = new MongoOptionsFactoryBean();

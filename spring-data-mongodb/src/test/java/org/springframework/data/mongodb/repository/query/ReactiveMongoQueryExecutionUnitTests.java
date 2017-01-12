@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,10 +53,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 	@Mock private ReactiveMongoOperations operations;
 	@Mock private MongoParameterAccessor parameterAccessor;
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void geoNearExecutionShouldApplyQuerySettings() throws Exception {
 
 		Method geoNear = ClassUtils.getMethod(GeoRepo.class, "geoNear");
@@ -78,10 +75,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		assertThat(nearQuery.getMaxDistance(), is(equalTo(new Distance(15))));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void geoNearExecutionShouldApplyMinimalSettings() throws Exception {
 
 		Method geoNear = ClassUtils.getMethod(GeoRepo.class, "geoNear");

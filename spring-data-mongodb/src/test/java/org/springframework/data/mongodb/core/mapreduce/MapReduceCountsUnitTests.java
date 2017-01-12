@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,7 @@ import org.junit.Test;
  */
 public class MapReduceCountsUnitTests {
 
-	/**
-	 * @see DATACMNS-378
-	 */
-	@Test
+	@Test // DATACMNS-378
 	public void equalsForSameNumberValues() {
 
 		MapReduceCounts left = new MapReduceCounts(1L, 1L, 1L);
@@ -41,10 +38,7 @@ public class MapReduceCountsUnitTests {
 		assertThat(left.hashCode(), is(right.hashCode()));
 	}
 
-	/**
-	 * @see DATACMNS-378
-	 */
-	@Test
+	@Test // DATACMNS-378
 	public void notEqualForDifferentNumberValues() {
 
 		MapReduceCounts left = new MapReduceCounts(1L, 1L, 1L);

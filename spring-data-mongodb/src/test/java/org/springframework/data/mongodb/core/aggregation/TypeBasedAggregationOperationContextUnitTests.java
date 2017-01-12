@@ -82,10 +82,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		getContext(Foo.class).getReference("foo");
 	}
 
-	/**
-	 * @see DATAMONGO-741
-	 */
-	@Test
+	@Test // DATAMONGO-741
 	public void returnsReferencesToNestedFieldsCorrectly() {
 
 		AggregationOperationContext context = getContext(Foo.class);
@@ -97,10 +94,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(context.getReference(field), is(context.getReference("bar.name")));
 	}
 
-	/**
-	 * @see DATAMONGO-806
-	 */
-	@Test
+	@Test // DATAMONGO-806
 	public void aliasesIdFieldCorrectly() {
 
 		AggregationOperationContext context = getContext(Foo.class);
@@ -108,10 +102,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				is((FieldReference) new DirectFieldReference(new ExposedField(field("id", "_id"), true))));
 	}
 
-	/**
-	 * @see DATAMONGO-912
-	 */
-	@Test
+	@Test // DATAMONGO-912
 	public void shouldUseCustomConversionIfPresentAndConversionIsRequiredInFirstStage() {
 
 		CustomConversions customConversions = customAgeConversions();
@@ -130,10 +121,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(age, is(new org.bson.Document("v", 10)));
 	}
 
-	/**
-	 * @see DATAMONGO-912
-	 */
-	@Test
+	@Test // DATAMONGO-912
 	public void shouldUseCustomConversionIfPresentAndConversionIsRequiredInLaterStage() {
 
 		CustomConversions customConversions = customAgeConversions();
@@ -152,10 +140,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(age, is(new org.bson.Document("v", 10)));
 	}
 
-	/**
-	 * @see DATAMONGO-960
-	 */
-	@Test
+	@Test // DATAMONGO-960
 	public void rendersAggregationOptionsInTypedAggregationContextCorrectly() {
 
 		AggregationOperationContext context = getContext(FooPerson.class);
@@ -175,10 +160,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(document.get("cursor"), is((Object) new org.bson.Document("foo", 1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1585
-	 */
-	@Test
+	@Test // DATAMONGO-1585
 	public void rendersSortOfProjectedFieldCorrectly() {
 
 		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
@@ -192,10 +174,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(definition.get("counter"), is(equalTo((Object) 1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1586
-	 */
-	@Test
+	@Test // DATAMONGO-1586
 	public void rendersFieldAliasingProjectionCorrectly() {
 
 		AggregationOperationContext context = getContext(FooPerson.class);
@@ -213,10 +192,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 						.containing("age", "$age.value"));
 	}
 
-	/**
-	 * @see DATAMONGO-1133
-	 */
-	@Test
+	@Test // DATAMONGO-1133
 	public void shouldHonorAliasedFieldsInGroupExpressions() {
 
 		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
@@ -231,10 +207,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(definition.get("_id"), is(equalTo((Object) "$counter_name")));
 	}
 
-	/**
-	 * @see DATAMONGO-1326, DATAMONGO-1585
-	 */
-	@Test
+	@Test // DATAMONGO-1326, DATAMONGO-1585
 	public void lookupShouldInheritFieldsFromInheritingAggregationOperation() {
 
 		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
@@ -251,10 +224,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(definition.get("counter_name"), is(equalTo((Object) 1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test
+	@Test // DATAMONGO-1326
 	public void groupLookupShouldInheritFieldsFromPreviousAggregationOperation() {
 
 		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
@@ -269,10 +239,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(definition.get("foreignKey"), is(equalTo((Object) 1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test
+	@Test // DATAMONGO-1326
 	public void lookupGroupAggregationShouldUseCorrectGroupField() {
 
 		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
@@ -289,10 +256,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(field.get("$min"), is(equalTo((Object) "$lookup.otherkey")));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test
+	@Test // DATAMONGO-1326
 	public void lookupGroupAggregationShouldOverwriteExposedFields() {
 
 		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
@@ -309,10 +273,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(definition.get("something_totally_different"), is(equalTo((Object) 1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
 	public void lookupGroupAggregationShouldFailInvalidFieldReference() {
 
 		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
@@ -323,10 +284,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		agg.toDocument("meterData", context);
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void rendersAggregationConditionalInTypedAggregationContextCorrectly() {
 
 		AggregationOperationContext context = getContext(FooPerson.class);
@@ -352,10 +310,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 	/**
 	 * .AggregationUnitTests
-	 * 
-	 * @see DATAMONGO-861, DATAMONGO-1542
 	 */
-	@Test
+	@Test // DATAMONGO-861, DATAMONGO-1542
 	public void rendersAggregationIfNullInTypedAggregationContextCorrectly() {
 
 		AggregationOperationContext context = getContext(FooPerson.class);

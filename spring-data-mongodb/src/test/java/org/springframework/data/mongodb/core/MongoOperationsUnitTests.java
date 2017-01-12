@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -292,10 +292,7 @@ public abstract class MongoOperationsUnitTests {
 		}.assertDataAccessException();
 	}
 
-	/**
-	 * @see DATAMONGO-341
-	 */
-	@Test
+	@Test // DATAMONGO-341
 	public void geoNearRejectsNullNearQuery() {
 
 		new Execution() {
@@ -306,10 +303,7 @@ public abstract class MongoOperationsUnitTests {
 		}.assertDataAccessException();
 	}
 
-	/**
-	 * @see DATAMONGO-341
-	 */
-	@Test
+	@Test // DATAMONGO-341
 	public void geoNearRejectsNullNearQueryifCollectionGiven() {
 
 		new Execution() {
@@ -320,10 +314,7 @@ public abstract class MongoOperationsUnitTests {
 		}.assertDataAccessException();
 	}
 
-	/**
-	 * @see DATAMONGO-341
-	 */
-	@Test
+	@Test // DATAMONGO-341
 	public void geoNearRejectsNullEntityClass() {
 
 		final NearQuery query = NearQuery.near(new Point(10, 20));
@@ -336,10 +327,7 @@ public abstract class MongoOperationsUnitTests {
 		}.assertDataAccessException();
 	}
 
-	/**
-	 * @see DATAMONGO-341
-	 */
-	@Test
+	@Test // DATAMONGO-341
 	public void geoNearRejectsNullEntityClassIfCollectionGiven() {
 
 		final NearQuery query = NearQuery.near(new Point(10, 20));

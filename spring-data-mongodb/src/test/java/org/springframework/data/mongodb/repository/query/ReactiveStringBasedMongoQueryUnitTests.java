@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,10 +75,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void bindsSimplePropertyCorrectly() throws Exception {
 
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastname", String.class);
@@ -90,10 +87,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void bindsComplexPropertyCorrectly() throws Exception {
 
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByAddress", Address.class);
@@ -112,28 +106,19 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void constructsDeleteQueryCorrectly() throws Exception {
 
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("removeByLastname", String.class);
 		assertThat(mongoQuery.isDeleteQuery(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
 	public void preventsDeleteAndCountFlagAtTheSameTime() throws Exception {
 		createQueryForMethod("invalidMethod", String.class);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldSupportFindByParameterizedCriteriaAndFields() throws Exception {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
@@ -148,10 +133,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getFieldsObject(), is(new BasicQuery(null, "{ \"lastname\": 1}").getFieldsObject()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldParseQueryWithParametersInExpression() throws Exception {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, 1, 2, 3, 4);
@@ -165,10 +147,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 						.getQueryObject()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldParseJsonKeyReplacementCorrectly() throws Exception {
 
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("methodWithPlaceholderInKeyOfJsonStructure",
@@ -180,10 +159,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(new Document().append("key", "value")));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldSupportExpressionsInCustomQueries() throws Exception {
 
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
@@ -195,10 +171,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() throws Exception {
 
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
@@ -211,10 +184,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldSupportExpressionsInCustomQueriesWithMultipleNestedObjects() throws Exception {
 
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
@@ -228,10 +198,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldSupportNonQuotedBinaryDataReplacement() throws Exception {
 
 		byte[] binaryData = "Matthews".getBytes("UTF-8");

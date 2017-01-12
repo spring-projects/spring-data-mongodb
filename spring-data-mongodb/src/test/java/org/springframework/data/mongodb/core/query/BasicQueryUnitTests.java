@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,10 +63,7 @@ public class BasicQueryUnitTests {
 		assertThat(query.getSortObject(), is(sortReference));
 	}
 
-	/**
-	 * @see DATAMONGO-1093
-	 */
-	@Test
+	@Test // DATAMONGO-1093
 	public void equalsContract() {
 
 		BasicQuery query1 = new BasicQuery("{ \"name\" : \"Thomas\"}", "{\"name\":1, \"age\":1}");
@@ -81,10 +78,7 @@ public class BasicQueryUnitTests {
 				.verify();
 	}
 
-	/**
-	 * @see DATAMONGO-1093
-	 */
-	@Test
+	@Test // DATAMONGO-1093
 	public void handlesEqualsAndHashCodeCorrectlyForExactCopies() {
 
 		String qry = "{ \"name\" : \"Thomas\"}";
@@ -101,10 +95,7 @@ public class BasicQueryUnitTests {
 		assertThat(query1.hashCode(), is(query2.hashCode()));
 	}
 
-	/**
-	 * @see DATAMONGO-1093
-	 */
-	@Test
+	@Test // DATAMONGO-1093
 	public void handlesEqualsAndHashCodeCorrectlyWhenBasicQuerySettingsDiffer() {
 
 		String qry = "{ \"name\" : \"Thomas\"}";
@@ -120,10 +111,7 @@ public class BasicQueryUnitTests {
 		assertThat(query1.hashCode(), is(not(query2.hashCode())));
 	}
 
-	/**
-	 * @see DATAMONGO-1093
-	 */
-	@Test
+	@Test // DATAMONGO-1093
 	public void handlesEqualsAndHashCodeCorrectlyWhenQuerySettingsDiffer() {
 
 		String qry = "{ \"name\" : \"Thomas\"}";
@@ -139,10 +127,7 @@ public class BasicQueryUnitTests {
 		assertThat(query1.hashCode(), is(not(query2.hashCode())));
 	}
 
-	/**
-	 * @see DATAMONGO-1387
-	 */
-	@Test
+	@Test // DATAMONGO-1387
 	public void returnsFieldsCorrectly() {
 
 		String qry = "{ \"name\" : \"Thomas\"}";
@@ -153,10 +138,7 @@ public class BasicQueryUnitTests {
 		assertThat(query1.getFieldsObject(), isBsonObject().containing("name").containing("age"));
 	}
 
-	/**
-	 * @see DATAMONGO-1387
-	 */
-	@Test
+	@Test // DATAMONGO-1387
 	public void handlesFieldsIncludeCorrectly() {
 
 		String qry = "{ \"name\" : \"Thomas\"}";
@@ -167,10 +149,7 @@ public class BasicQueryUnitTests {
 		assertThat(query1.getFieldsObject(), isBsonObject().containing("name"));
 	}
 
-	/**
-	 * @see DATAMONGO-1387
-	 */
-	@Test
+	@Test // DATAMONGO-1387
 	public void combinesFieldsIncludeCorrectly() {
 
 		String qry = "{ \"name\" : \"Thomas\"}";

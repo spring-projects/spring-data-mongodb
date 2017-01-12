@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,10 +124,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		subscriber.await().assertComplete().assertNoError();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindByLastName() {
 
 		List<Person> list = repository.findByLastname("Matthews").collectList().block();
@@ -135,10 +132,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		assertThat(list, hasSize(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindOneByLastName() {
 
 		Person carter = repository.findOneByLastname("Beauford").block();
@@ -146,10 +140,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		assertThat(carter.getFirstname(), is(equalTo("Carter")));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindOneByPublisherOfLastName() {
 
 		Person carter = repository.findByLastname(Mono.just("Beauford")).block();
@@ -157,10 +148,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		assertThat(carter.getFirstname(), is(equalTo("Carter")));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindByPublisherOfLastNameIn() {
 
 		List<Person> persons = repository.findByLastnameIn(Flux.just("Beauford", "Matthews")).collectList().block();
@@ -168,10 +156,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		assertThat(persons, hasItems(carter, dave, oliver));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindByPublisherOfLastNameInAndAgeGreater() {
 
 		List<Person> persons = repository.findByLastnameInAndAgeGreaterThan(Flux.just("Beauford", "Matthews"), 41)
@@ -180,10 +165,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		assertThat(persons, hasItems(carter, dave));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindUsingPublishersInStringQuery() {
 
 		List<Person> persons = repository.findStringQuery(Flux.just("Beauford", "Matthews"), Mono.just(41)).collectList()
@@ -192,10 +174,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		assertThat(persons, hasItems(carter, dave));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldFindByLastNameAndSort() {
 
 		List<Person> persons = repository.findByLastname("Matthews", new Sort(new Order(ASC, "age"))).collectList().block();
@@ -205,10 +184,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		assertThat(persons, contains(dave, oliver));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldUseInfiniteStream() throws Exception {
 
 		template.dropCollection(Capped.class).block();
@@ -228,10 +204,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		cancellation.dispose();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldUseInfiniteStreamWithProjection() throws Exception {
 
 		template.dropCollection(Capped.class).block();
@@ -257,10 +230,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		cancellation.dispose();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findsPeopleByLocationWithinCircle() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -272,10 +242,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 				.awaitAndAssertNextValues(dave);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findsPeopleByPageableLocationWithinCircle() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -287,10 +254,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 				.awaitAndAssertNextValues(dave);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findsPeopleGeoresultByLocationWithinBox() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -306,10 +270,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 				});
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findsPeoplePageableGeoresultByLocationWithinBox() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -325,10 +286,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 				});
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findsPeopleByLocationWithinBox() {
 
 		Point point = new Point(-73.99171, 40.738868);

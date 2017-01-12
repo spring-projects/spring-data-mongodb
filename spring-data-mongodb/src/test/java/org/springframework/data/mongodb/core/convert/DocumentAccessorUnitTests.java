@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 /**
  * Unit tests for {@link DocumentAccessor}.
  * 
- * @see DATAMONGO-766
  * @author Oliver Gierke
  */
 public class DocumentAccessorUnitTests {
@@ -40,7 +39,7 @@ public class DocumentAccessorUnitTests {
 	MongoPersistentEntity<?> projectingTypeEntity = context.getPersistentEntity(ProjectingType.class);
 	MongoPersistentProperty fooProperty = projectingTypeEntity.getPersistentProperty("foo");
 
-	@Test
+	@Test // DATAMONGO-766
 	public void putsNestedFieldCorrectly() {
 
 		Document document = new Document();
@@ -52,7 +51,7 @@ public class DocumentAccessorUnitTests {
 		assertThat(aDocument.get("b"), is((Object) "FooBar"));
 	}
 
-	@Test
+	@Test // DATAMONGO-766
 	public void getsNestedFieldCorrectly() {
 
 		Document source = new Document("a", new Document("b", "FooBar"));
@@ -61,27 +60,24 @@ public class DocumentAccessorUnitTests {
 		assertThat(accessor.get(fooProperty), is((Object) "FooBar"));
 	}
 
-	@Test
+	@Test // DATAMONGO-766
 	public void returnsNullForNonExistingFieldPath() {
 
 		DocumentAccessor accessor = new DocumentAccessor(new Document());
 		assertThat(accessor.get(fooProperty), is(nullValue()));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-766
 	public void rejectsNonDocuments() {
 		new DocumentAccessor(new BsonDocument());
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-766
 	public void rejectsNullDocument() {
 		new DocumentAccessor(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1335
-	 */
-	@Test
+	@Test // DATAMONGO-1335
 	public void writesAllNestingsCorrectly() {
 
 		MongoPersistentEntity<?> entity = context.getPersistentEntity(TypeWithTwoNestings.class);
@@ -100,10 +96,7 @@ public class DocumentAccessorUnitTests {
 		assertThat(nestedA.get("c"), is((Object) "c"));
 	}
 
-	/**
-	 * @see DATAMONGO-1471
-	 */
-	@Test
+	@Test // DATAMONGO-1471
 	public void exposesAvailabilityOfFields() {
 
 		DocumentAccessor accessor = new DocumentAccessor(new Document("a", new BasicDBObject("c", "d")));

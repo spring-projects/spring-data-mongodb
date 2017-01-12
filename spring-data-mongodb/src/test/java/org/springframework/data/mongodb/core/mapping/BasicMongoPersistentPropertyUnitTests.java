@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,20 +84,14 @@ public class BasicMongoPersistentPropertyUnitTests {
 		getPropertyFor(ReflectionUtils.findField(Person.class, "ssn"));
 	}
 
-	/**
-	 * @see DATAMONGO-553
-	 */
-	@Test
+	@Test // DATAMONGO-553
 	public void usesPropertyAccessForThrowableCause() {
 
 		MongoPersistentProperty property = getPropertyFor(ReflectionUtils.findField(Throwable.class, "cause"));
 		assertThat(property.usePropertyAccess(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-607
-	 */
-	@Test
+	@Test // DATAMONGO-607
 	public void usesCustomFieldNamingStrategyByDefault() throws Exception {
 
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
@@ -113,10 +107,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.getFieldName(), is("foo"));
 	}
 
-	/**
-	 * @see DATAMONGO-607
-	 */
-	@Test
+	@Test // DATAMONGO-607
 	public void rejectsInvalidValueReturnedByFieldNamingStrategy() {
 
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
@@ -130,60 +121,42 @@ public class BasicMongoPersistentPropertyUnitTests {
 		property.getFieldName();
 	}
 
-	/**
-	 * @see DATAMONGO-937
-	 */
-	@Test
+	@Test // DATAMONGO-937
 	public void shouldDetectAnnotatedLanguagePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithLanguageProperty.class, "lang");
 		assertThat(property.isLanguageProperty(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-937
-	 */
-	@Test
+	@Test // DATAMONGO-937
 	public void shouldDetectIplicitLanguagePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithImplicitLanguageProperty.class, "language");
 		assertThat(property.isLanguageProperty(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-976
-	 */
-	@Test
+	@Test // DATAMONGO-976
 	public void shouldDetectTextScorePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
 		assertThat(property.isTextScoreProperty(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-976
-	 */
-	@Test
+	@Test // DATAMONGO-976
 	public void shouldDetectTextScoreAsReadOnlyProperty() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
 		assertThat(property.isWritable(), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-1050
-	 */
-	@Test
+	@Test // DATAMONGO-1050
 	public void shouldNotConsiderExplicitlyNameFieldAsIdProperty() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdProperty.class, "id");
 		assertThat(property.isIdProperty(), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-1050
-	 */
-	@Test
+	@Test // DATAMONGO-1050
 	public void shouldConsiderPropertyAsIdWhenExplicitlyAnnotatedWithIdEvenWhenExplicitlyNamePresent() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdPropertyHavingIdAnnotation.class,
@@ -191,10 +164,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.isIdProperty(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1373
-	 */
-	@Test
+	@Test // DATAMONGO-1373
 	public void shouldConsiderComposedAnnotationsForIdField() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myId");
@@ -202,10 +172,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.getFieldName(), is("_id"));
 	}
 
-	/**
-	 * @see DATAMONGO-1373
-	 */
-	@Test
+	@Test // DATAMONGO-1373
 	public void shouldConsiderComposedAnnotationsForFields() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myField");

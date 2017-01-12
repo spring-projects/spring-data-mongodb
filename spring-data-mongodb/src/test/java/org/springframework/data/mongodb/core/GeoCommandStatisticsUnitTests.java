@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,18 +29,12 @@ import org.junit.Test;
  */
 public class GeoCommandStatisticsUnitTests {
 
-	/**
-	 * @see DATAMONGO-1361
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1361
 	public void rejectsNullCommandResult() {
 		GeoCommandStatistics.from(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1361
-	 */
-	@Test
+	@Test // DATAMONGO-1361
 	public void fallsBackToNanIfNoAverageDistanceIsAvailable() {
 
 		GeoCommandStatistics statistics = GeoCommandStatistics.from(new Document("stats", null));
@@ -50,10 +44,7 @@ public class GeoCommandStatisticsUnitTests {
 		assertThat(statistics.getAverageDistance(), is(Double.NaN));
 	}
 
-	/**
-	 * @see DATAMONGO-1361
-	 */
-	@Test
+	@Test // DATAMONGO-1361
 	public void returnsAverageDistanceIfPresent() {
 
 		GeoCommandStatistics statistics = GeoCommandStatistics

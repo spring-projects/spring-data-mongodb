@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -244,10 +244,7 @@ public class MongoTemplateTests {
 		mongoTemplate.updateFirst(q, u, Person.class);
 	}
 
-	/**
-	 * @see DATAMONGO-480
-	 */
-	@Test
+	@Test // DATAMONGO-480
 	public void throwsExceptionForDuplicateIds() {
 
 		MongoTemplate template = new MongoTemplate(factory);
@@ -266,11 +263,7 @@ public class MongoTemplateTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-480
-	 * @see DATAMONGO-799
-	 */
-	@Test
+	@Test // DATAMONGO-480, DATAMONGO-799
 	public void throwsExceptionForUpdateWithInvalidPushOperator() {
 
 		MongoTemplate template = new MongoTemplate(factory);
@@ -292,10 +285,7 @@ public class MongoTemplateTests {
 		template.updateFirst(query, upd, Person.class);
 	}
 
-	/**
-	 * @see DATAMONGO-480
-	 */
-	@Test
+	@Test // DATAMONGO-480
 	public void throwsExceptionForIndexViolationIfConfigured() {
 
 		MongoTemplate template = new MongoTemplate(factory);
@@ -318,10 +308,7 @@ public class MongoTemplateTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-480
-	 */
-	@Test
+	@Test // DATAMONGO-480
 	public void rejectsDuplicateIdInInsertAll() {
 
 		thrown.expect(DataIntegrityViolationException.class);
@@ -385,10 +372,7 @@ public class MongoTemplateTests {
 		assertThat(field, is(IndexField.create("age", Direction.DESC)));
 	}
 
-	/**
-	 * @see DATAMONGO-746
-	 */
-	@Test
+	@Test // DATAMONGO-746
 	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() throws Exception {
 
 		String command = "db." + template.getCollectionName(Person.class)
@@ -576,9 +560,7 @@ public class MongoTemplateTests {
 		assertThat(p9q.getId(), is(p9.getId()));
 		checkCollectionContents(PersonWithIdPropertyOfTypeInteger.class, 1);
 
-		/*
-		 * @see DATAMONGO-602
-		 */
+		// DATAMONGO-602
 		// BigInteger id - provided
 		PersonWithIdPropertyOfTypeBigInteger p9bi = new PersonWithIdPropertyOfTypeBigInteger();
 		p9bi.setFirstName("Sven_9bi");
@@ -648,10 +630,7 @@ public class MongoTemplateTests {
 		assertThat(template.findAll(entityClass).size(), is(count));
 	}
 
-	/**
-	 * @see DATAMONGO-234
-	 */
-	@Test
+	@Test // DATAMONGO-234
 	public void testFindAndUpdate() {
 
 		template.insert(new Person("Tom", 21));
@@ -819,10 +798,7 @@ public class MongoTemplateTests {
 		assertThat(results3.size(), is(2));
 	}
 
-	/**
-	 * @see DATAMONGO-602
-	 */
-	@Test
+	@Test // DATAMONGO-602
 	public void testUsingAnInQueryWithBigIntegerId() throws Exception {
 
 		template.remove(new Query(), PersonWithIdPropertyOfTypeBigInteger.class);
@@ -1142,18 +1118,12 @@ public class MongoTemplateTests {
 		});
 	}
 
-	/**
-	 * @see DATADOC-166
-	 */
-	@Test
+	@Test // DATADOC-166
 	public void removingNullIsANoOp() {
 		template.remove(null);
 	}
 
-	/**
-	 * @see DATADOC-240, DATADOC-212
-	 */
-	@Test
+	@Test // DATADOC-240, DATADOC-212
 	public void updatesObjectIdsCorrectly() {
 
 		PersonWithIdPropertyOfTypeObjectId person = new PersonWithIdPropertyOfTypeObjectId();
@@ -1212,10 +1182,7 @@ public class MongoTemplateTests {
 		}
 	}
 
-	/**
-	 * @see DATADOC-246
-	 */
-	@Test
+	@Test // DATADOC-246
 	public void updatesDBRefsCorrectly() {
 
 		DBRef first = new DBRef("foo", new ObjectId());
@@ -1228,10 +1195,7 @@ public class MongoTemplateTests {
 		List<DBRef> dbrefs;
 	}
 
-	/**
-	 * @see DATADOC-202
-	 */
-	@Test
+	@Test // DATADOC-202
 	public void executeDocument() {
 		template.insert(new Person("Tom"));
 		template.insert(new Person("Dick"));
@@ -1249,10 +1213,7 @@ public class MongoTemplateTests {
 		// template.remove(new Query(), Person.class);
 	}
 
-	/**
-	 * @see DATADOC-202
-	 */
-	@Test
+	@Test // DATADOC-202
 	public void executeDocumentWithCursorPreparer() {
 		template.insert(new Person("Tom"));
 		template.insert(new Person("Dick"));
@@ -1277,10 +1238,7 @@ public class MongoTemplateTests {
 		template.remove(new Query(), Person.class);
 	}
 
-	/**
-	 * @see DATADOC-183
-	 */
-	@Test
+	@Test // DATADOC-183
 	public void countsDocumentsCorrectly() {
 
 		assertThat(template.count(new Query(), Person.class), is(0L));
@@ -1295,26 +1253,17 @@ public class MongoTemplateTests {
 		assertThat(template.count(query(where("firstName").is("Carter")), Person.class), is(1L));
 	}
 
-	/**
-	 * @see DATADOC-183
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATADOC-183
 	public void countRejectsNullEntityClass() {
 		template.count(null, (Class<?>) null);
 	}
 
-	/**
-	 * @see DATADOC-183
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATADOC-183
 	public void countRejectsEmptyCollectionName() {
 		template.count(null, "");
 	}
 
-	/**
-	 * @see DATADOC-183
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATADOC-183
 	public void countRejectsNullCollectionName() {
 		template.count(null, (String) null);
 	}
@@ -1332,10 +1281,7 @@ public class MongoTemplateTests {
 		assertThat(testClassList.get(0).myDate, is(testClass.myDate));
 	}
 
-	/**
-	 * @see DATADOC-230
-	 */
-	@Test
+	@Test // DATADOC-230
 	public void removesEntityFromCollection() {
 
 		template.remove(new Query(), "mycollection");
@@ -1349,10 +1295,7 @@ public class MongoTemplateTests {
 		assertThat(template.findAll(Person.class, "mycollection").isEmpty(), is(true));
 	}
 
-	/**
-	 * @see DATADOC-349
-	 */
-	@Test
+	@Test // DATADOC-349
 	public void removesEntityWithAnnotatedIdIfIdNeedsMassaging() {
 
 		String id = new ObjectId().toString();
@@ -1368,10 +1311,7 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query(where("id").is(id)), Sample.class), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-423
-	 */
-	@Test
+	@Test // DATAMONGO-423
 	public void executesQueryWithNegatedRegexCorrectly() {
 
 		Sample first = new Sample();
@@ -1390,10 +1330,7 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).field, is("Beauford"));
 	}
 
-	/**
-	 * @see DATAMONGO-447
-	 */
-	@Test
+	@Test // DATAMONGO-447
 	public void storesAndRemovesTypeWithComplexId() {
 
 		MyId id = new MyId();
@@ -1407,10 +1344,7 @@ public class MongoTemplateTests {
 		template.remove(query(where("id").is(id)), TypeWithMyId.class);
 	}
 
-	/**
-	 * @see DATAMONGO-506
-	 */
-	@Test
+	@Test // DATAMONGO-506
 	public void exceutesBasicQueryCorrectly() {
 
 		Address address = new Address();
@@ -1436,10 +1370,7 @@ public class MongoTemplateTests {
 		assertThat(result.get(0), hasProperty("name", is("Oleg")));
 	}
 
-	/**
-	 * @see DATAMONGO-279
-	 */
-	@Test(expected = OptimisticLockingFailureException.class)
+	@Test(expected = OptimisticLockingFailureException.class) // DATAMONGO-279
 	public void optimisticLockingHandling() {
 
 		// Init version
@@ -1474,10 +1405,7 @@ public class MongoTemplateTests {
 		template.save(person);
 	}
 
-	/**
-	 * @see DATAMONGO-562
-	 */
-	@Test
+	@Test // DATAMONGO-562
 	public void optimisticLockingHandlingWithExistingId() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
@@ -1487,10 +1415,7 @@ public class MongoTemplateTests {
 		template.save(person);
 	}
 
-	/**
-	 * @see DATAMONGO-617
-	 */
-	@Test
+	@Test // DATAMONGO-617
 	public void doesNotFailOnVersionInitForUnversionedEntity() {
 
 		org.bson.Document document = new org.bson.Document();
@@ -1499,10 +1424,7 @@ public class MongoTemplateTests {
 		template.insert(document, template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class));
 	}
 
-	/**
-	 * @see DATAMONGO-539
-	 */
-	@Test
+	@Test // DATAMONGO-539
 	public void removesObjectFromExplicitCollection() {
 
 		String collectionName = "explicit";
@@ -1517,9 +1439,7 @@ public class MongoTemplateTests {
 		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).isEmpty(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-549
-	 */
+	// DATAMONGO-549
 	public void savesMapCorrectly() {
 
 		Map<String, String> map = new HashMap<String, String>();
@@ -1528,26 +1448,17 @@ public class MongoTemplateTests {
 		template.save(map, "maps");
 	}
 
-	/**
-	 * @see DATAMONGO-549
-	 */
-	@Test(expected = MappingException.class)
+	@Test(expected = MappingException.class) // DATAMONGO-549
 	public void savesMongoPrimitiveObjectCorrectly() {
 		template.save(new Object(), "collection");
 	}
 
-	/**
-	 * @see DATAMONGO-549
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-549
 	public void rejectsNullObjectToBeSaved() {
 		template.save(null);
 	}
 
-	/**
-	 * @see DATAMONGO-550
-	 */
-	@Test
+	@Test // DATAMONGO-550
 	public void savesPlainDocumentCorrectly() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
@@ -1556,10 +1467,7 @@ public class MongoTemplateTests {
 		assertThat(document.containsKey("_id"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-550
-	 */
-	@Test(expected = InvalidDataAccessApiUsageException.class)
+	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-550
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
@@ -1568,10 +1476,7 @@ public class MongoTemplateTests {
 		template.findById(document.get("_id"), org.bson.Document.class);
 	}
 
-	/**
-	 * @see DATAMONGO-550
-	 */
-	@Test
+	@Test // DATAMONGO-550
 	public void readsPlainDocumentById() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
@@ -1582,26 +1487,17 @@ public class MongoTemplateTests {
 		assertThat(result.get("_id"), is(document.get("_id")));
 	}
 
-	/**
-	 * @see DATAMONGO-551
-	 */
-	@Test
+	@Test // DATAMONGO-551
 	public void writesPlainString() {
 		template.save("{ 'foo' : 'bar' }", "collection");
 	}
 
-	/**
-	 * @see DATAMONGO-551
-	 */
-	@Test(expected = MappingException.class)
+	@Test(expected = MappingException.class) // DATAMONGO-551
 	public void rejectsNonJsonStringForSave() {
 		template.save("Foobar!", "collection");
 	}
 
-	/**
-	 * @see DATAMONGO-588
-	 */
-	@Test
+	@Test // DATAMONGO-588
 	public void initializesVersionOnInsert() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
@@ -1612,10 +1508,7 @@ public class MongoTemplateTests {
 		assertThat(person.version, is(0));
 	}
 
-	/**
-	 * @see DATAMONGO-588
-	 */
-	@Test
+	@Test // DATAMONGO-588
 	public void initializesVersionOnBatchInsert() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
@@ -1626,20 +1519,14 @@ public class MongoTemplateTests {
 		assertThat(person.version, is(0));
 	}
 
-	/**
-	 * @see DATAMONGO-568
-	 */
-	@Test
+	@Test // DATAMONGO-568
 	public void queryCantBeNull() {
 
 		List<PersonWithIdPropertyOfTypeObjectId> result = template.findAll(PersonWithIdPropertyOfTypeObjectId.class);
 		assertThat(template.find(null, PersonWithIdPropertyOfTypeObjectId.class), is(result));
 	}
 
-	/**
-	 * @see DATAMONGO-620
-	 */
-	@Test
+	@Test // DATAMONGO-620
 	public void versionsObjectIntoDedicatedCollection() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
@@ -1652,10 +1539,7 @@ public class MongoTemplateTests {
 		assertThat(person.version, is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-621
-	 */
-	@Test
+	@Test // DATAMONGO-621
 	public void correctlySetsLongVersionProperty() {
 
 		PersonWithVersionPropertyOfTypeLong person = new PersonWithVersionPropertyOfTypeLong();
@@ -1665,10 +1549,7 @@ public class MongoTemplateTests {
 		assertThat(person.version, is(0L));
 	}
 
-	/**
-	 * @see DATAMONGO-622
-	 */
-	@Test(expected = DuplicateKeyException.class)
+	@Test(expected = DuplicateKeyException.class) // DATAMONGO-622
 	public void preventsDuplicateInsert() {
 
 		template.setWriteConcern(WriteConcern.SAFE);
@@ -1683,10 +1564,7 @@ public class MongoTemplateTests {
 		template.save(person);
 	}
 
-	/**
-	 * @see DATAMONGO-629
-	 */
-	@Test
+	@Test // DATAMONGO-629
 	public void countAndFindWithoutTypeInformation() {
 
 		Person person = new Person();
@@ -1699,10 +1577,7 @@ public class MongoTemplateTests {
 		assertThat(template.count(query, collectionName), is(1L));
 	}
 
-	/**
-	 * @see DATAMONGO-571
-	 */
-	@Test
+	@Test // DATAMONGO-571
 	public void nullsPropertiesForVersionObjectUpdates() {
 
 		VersionedPerson person = new VersionedPerson();
@@ -1719,10 +1594,7 @@ public class MongoTemplateTests {
 		assertThat(person.lastname, is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-571
-	 */
-	@Test
+	@Test // DATAMONGO-571
 	public void nullsValuesForUpdatesOfUnversionedEntity() {
 
 		Person person = new Person("Dave");
@@ -1735,10 +1607,7 @@ public class MongoTemplateTests {
 		assertThat(person.getFirstName(), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-679
-	 */
-	@Test
+	@Test // DATAMONGO-679
 	public void savesJsonStringCorrectly() {
 
 		org.bson.Document document = new org.bson.Document().append("first", "first").append("second", "second");
@@ -1763,10 +1632,7 @@ public class MongoTemplateTests {
 		assertThat(template.exists(query, Sample.class, template.getCollectionName(Sample.class)), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-675
-	 */
-	@Test
+	@Test // DATAMONGO-675
 	public void updateConsidersMappingAnnotations() {
 
 		TypeWithFieldAnnotation entity = new TypeWithFieldAnnotation();
@@ -1782,10 +1648,7 @@ public class MongoTemplateTests {
 		assertThat(result.emailAddress, is("new"));
 	}
 
-	/**
-	 * @see DATAMONGO-671
-	 */
-	@Test
+	@Test // DATAMONGO-671
 	public void findsEntityByDateReference() {
 
 		TypeWithDate entity = new TypeWithDate();
@@ -1799,10 +1662,7 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).date, is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-540
-	 */
-	@Test
+	@Test // DATAMONGO-540
 	public void findOneAfterUpsertForNonExistingObjectReturnsTheInsertedObject() {
 
 		String idValue = "4711";
@@ -1819,10 +1679,7 @@ public class MongoTemplateTests {
 		assertThat(result.id, is(idValue));
 	}
 
-	/**
-	 * @see DATAMONGO-392
-	 */
-	@Test
+	@Test // DATAMONGO-392
 	public void updatesShouldRetainTypeInformation() {
 
 		Document doc = new Document();
@@ -1843,10 +1700,7 @@ public class MongoTemplateTests {
 		assertThat(result.model.value(), is(newModelValue));
 	}
 
-	/**
-	 * @see DATAMONGO-702
-	 */
-	@Test
+	@Test // DATAMONGO-702
 	public void queryShouldSupportRealAndAliasedPropertyNamesForFieldInclusions() {
 
 		ObjectWith3AliasedFields obj = new ObjectWith3AliasedFields();
@@ -1870,10 +1724,7 @@ public class MongoTemplateTests {
 		assertThat(result.property3, is(obj.property3));
 	}
 
-	/**
-	 * @see DATAMONGO-702
-	 */
-	@Test
+	@Test // DATAMONGO-702
 	public void queryShouldSupportRealAndAliasedPropertyNamesForFieldExclusions() {
 
 		ObjectWith3AliasedFields obj = new ObjectWith3AliasedFields();
@@ -1897,10 +1748,7 @@ public class MongoTemplateTests {
 		assertThat(result.property3, is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-702
-	 */
-	@Test
+	@Test // DATAMONGO-702
 	public void findMultipleWithQueryShouldSupportRealAndAliasedPropertyNamesForFieldExclusions() {
 
 		ObjectWith3AliasedFields obj0 = new ObjectWith3AliasedFields();
@@ -1942,10 +1790,7 @@ public class MongoTemplateTests {
 		assertThat(result1.property3, is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-702
-	 */
-	@Test
+	@Test // DATAMONGO-702
 	public void queryShouldSupportNestedPropertyNamesForFieldInclusions() {
 
 		ObjectWith3AliasedFieldsAndNestedAddress obj = new ObjectWith3AliasedFieldsAndNestedAddress();
@@ -1978,10 +1823,7 @@ public class MongoTemplateTests {
 		assertThat(result.address.state, is(stateValue));
 	}
 
-	/**
-	 * @see DATAMONGO-709
-	 */
-	@Test
+	@Test // DATAMONGO-709
 	public void aQueryRestrictedWithOneRestrictedResultTypeShouldReturnOnlyInstancesOfTheRestrictedType() {
 
 		BaseDoc doc0 = new BaseDoc();
@@ -2007,10 +1849,7 @@ public class MongoTemplateTests {
 		assertThat(result.get(0), is(instanceOf(SpecialDoc.class)));
 	}
 
-	/**
-	 * @see DATAMONGO-709
-	 */
-	@Test
+	@Test // DATAMONGO-709
 	public void aQueryRestrictedWithMultipleRestrictedResultTypesShouldReturnOnlyInstancesOfTheRestrictedTypes() {
 
 		BaseDoc doc0 = new BaseDoc();
@@ -2037,10 +1876,7 @@ public class MongoTemplateTests {
 		assertThat(result.get(1).getClass(), is((Object) VerySpecialDoc.class));
 	}
 
-	/**
-	 * @see DATAMONGO-709
-	 */
-	@Test
+	@Test // DATAMONGO-709
 	public void aQueryWithNoRestrictedResultTypesShouldReturnAllInstancesWithinTheGivenCollection() {
 
 		BaseDoc doc0 = new BaseDoc();
@@ -2068,10 +1904,7 @@ public class MongoTemplateTests {
 		assertThat(result.get(2).getClass(), is((Object) VerySpecialDoc.class));
 	}
 
-	/**
-	 * @see DATAMONGO-771
-	 */
-	@Test
+	@Test // DATAMONGO-771
 	public void allowInsertWithPlainJsonString() {
 
 		String id = "4711";
@@ -2086,10 +1919,7 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).field, is(value));
 	}
 
-	/**
-	 * @see DATAMONGO-816
-	 */
-	@Test
+	@Test // DATAMONGO-816
 	public void shouldExecuteQueryShouldMapQueryBeforeQueryExecution() {
 
 		ObjectWithEnumValue o = new ObjectWithEnumValue();
@@ -2113,10 +1943,7 @@ public class MongoTemplateTests {
 				});
 	}
 
-	/**
-	 * @see DATAMONGO-811
-	 */
-	@Test
+	@Test // DATAMONGO-811
 	public void updateFirstShouldIncreaseVersionForVersionedEntity() {
 
 		VersionedPerson person = new VersionedPerson();
@@ -2136,10 +1963,7 @@ public class MongoTemplateTests {
 		assertThat(personAfterUpdateFirst.lastname, is("Bubu"));
 	}
 
-	/**
-	 * @see DATAMONGO-811
-	 */
-	@Test
+	@Test // DATAMONGO-811
 	public void updateFirstShouldIncreaseVersionOnlyForFirstMatchingEntity() {
 
 		VersionedPerson person1 = new VersionedPerson();
@@ -2163,10 +1987,7 @@ public class MongoTemplateTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-811
-	 */
-	@Test
+	@Test // DATAMONGO-811
 	public void updateMultiShouldIncreaseVersionOfAllUpdatedEntities() {
 
 		VersionedPerson person1 = new VersionedPerson();
@@ -2186,10 +2007,7 @@ public class MongoTemplateTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-686
-	 */
-	@Test
+	@Test // DATAMONGO-686
 	public void itShouldBePossibleToReuseAnExistingQuery() {
 
 		Sample sample = new Sample();
@@ -2209,10 +2027,7 @@ public class MongoTemplateTests {
 		assertThat(template.find(query, Sample.class), is(not(empty())));
 	}
 
-	/**
-	 * @see DATAMONGO-807
-	 */
-	@Test
+	@Test // DATAMONGO-807
 	public void findAndModifyShouldRetrainTypeInformationWithinUpdatedType() {
 
 		Document document = new Document();
@@ -2229,10 +2044,7 @@ public class MongoTemplateTests {
 		assertThat(retrieved.model.value(), equalTo("value2"));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnDocumentWithNestedCollectionWhenWholeCollectionIsReplaced() {
 
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
@@ -2266,10 +2078,7 @@ public class MongoTemplateTests {
 		assertThat(retrieved.models.get(0).get("key2").value(), equalTo("value2"));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnDocumentWithNestedCollectionWhenFirstElementIsReplaced() {
 
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
@@ -2303,10 +2112,7 @@ public class MongoTemplateTests {
 		assertThat(retrieved.models.get(0).get("key2").value(), equalTo("value2"));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void findAndModifyShouldAddTypeInformationOnDocumentWithNestedCollectionObjectInsertedAtSecondIndex() {
 
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
@@ -2339,10 +2145,7 @@ public class MongoTemplateTests {
 		assertThat(retrieved.models.get(1).get("key2").value(), equalTo("value2"));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenUpdatingPositionedElement()
 			throws Exception {
 
@@ -2369,10 +2172,7 @@ public class MongoTemplateTests {
 		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value2"));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenUpdatingSecondElement()
 			throws Exception {
 
@@ -2400,10 +2200,7 @@ public class MongoTemplateTests {
 		assertThat(retrieved.embeddedDocument.models.get(1).value(), is("value2"));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenRewriting()
 			throws Exception {
 
@@ -2430,10 +2227,7 @@ public class MongoTemplateTests {
 		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value2"));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnDocumentWithNestedLists() {
 
 		DocumentWithNestedList doc = new DocumentWithNestedList();
@@ -2466,10 +2260,7 @@ public class MongoTemplateTests {
 		assertThat(retrieved.models.get(0).get(1).value(), equalTo("value2"));
 	}
 
-	/**
-	 * @see DATAMONGO-407
-	 */
-	@Test
+	@Test // DATAMONGO-407
 	public void updatesShouldRetainTypeInformationEvenForCollections() {
 
 		List<Model> models = Arrays.<Model> asList(new ModelA("foo"));
@@ -2494,10 +2285,7 @@ public class MongoTemplateTests {
 		assertThat(result.models.get(0).value(), is(newModelValue));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
-	@Test
+	@Test // DATAMONGO-812
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithComplexTypes() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
@@ -2513,10 +2301,7 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query, DocumentWithCollection.class).models, hasSize(3));
 	}
 
-	/**
-	 * @see DATAMONGO-812
-	 */
-	@Test
+	@Test // DATAMONGO-812
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithSimpleTypes() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
@@ -2534,10 +2319,7 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(3));
 	}
 
-	/**
-	 * @see DATAMONOGO-828
-	 */
-	@Test
+	@Test // DATAMONOGO-828
 	public void updateFirstShouldDoNothingWhenCalledForEntitiesThatDoNotExist() {
 
 		Query q = query(where("id").is(Long.MIN_VALUE));
@@ -2546,10 +2328,7 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(q, VersionedPerson.class), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-354
-	 */
-	@Test
+	@Test // DATAMONGO-354
 	public void testUpdateShouldAllowMultiplePushAll() {
 
 		DocumentWithMultipleCollections doc = new DocumentWithMultipleCollections();
@@ -2571,10 +2350,7 @@ public class MongoTemplateTests {
 
 	}
 
-	/**
-	 * @see DATAMONGO-404
-	 */
-	@Test
+	@Test // DATAMONGO-404
 	public void updateWithPullShouldRemoveNestedItemFromDbRefAnnotatedCollection() {
 
 		Sample sample1 = new Sample("1", "A");
@@ -2603,10 +2379,7 @@ public class MongoTemplateTests {
 		assertThat(result.dbRefAnnotatedList.get(0).id, is((Object) "1"));
 	}
 
-	/**
-	 * @see DATAMONGO-404
-	 */
-	@Test
+	@Test // DATAMONGO-404
 	public void updateWithPullShouldRemoveNestedItemFromDbRefAnnotatedCollectionWhenGivenAnIdValueOfComponentTypeEntity() {
 
 		Sample sample1 = new Sample("1", "A");
@@ -2635,10 +2408,7 @@ public class MongoTemplateTests {
 		assertThat(result.dbRefAnnotatedList.get(0).id, is((Object) "1"));
 	}
 
-	/**
-	 * @see DATAMONGO-852
-	 */
-	@Test
+	@Test // DATAMONGO-852
 	public void updateShouldNotBumpVersionNumberIfVersionPropertyIncludedInUpdate() {
 
 		VersionedPerson person = new VersionedPerson();
@@ -2658,10 +2428,7 @@ public class MongoTemplateTests {
 		assertThat(personAfterUpdateFirst.lastname, is("Bubu"));
 	}
 
-	/**
-	 * @see DATAMONGO-468
-	 */
-	@Test
+	@Test // DATAMONGO-468
 	public void shouldBeAbleToUpdateDbRefPropertyWithDomainObject() {
 
 		Sample sample1 = new Sample("1", "A");
@@ -2687,10 +2454,7 @@ public class MongoTemplateTests {
 		assertThat(updatedDoc.dbRefProperty.field, is(sample2.field));
 	}
 
-	/**
-	 * @see DATAMONGO-862
-	 */
-	@Test
+	@Test // DATAMONGO-862
 	public void testUpdateShouldWorkForPathsOnInterfaceMethods() {
 
 		DocumentWithCollection document = new DocumentWithCollection(
@@ -2706,10 +2470,7 @@ public class MongoTemplateTests {
 		assertThat(result.models.get(0).value(), is("mongodb"));
 	}
 
-	/**
-	 * @see DATAMONGO-773
-	 */
-	@Test
+	@Test // DATAMONGO-773
 	public void testShouldSupportQueryWithIncludedDbRefField() {
 
 		Sample sample = new Sample("47111", "foo");
@@ -2733,10 +2494,7 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).dbRefProperty.field, is(sample.field));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void testFindAllAndRemoveFullyReturnsAndRemovesDocuments() {
 
 		Sample spring = new Sample("100", "spring");
@@ -2754,10 +2512,7 @@ public class MongoTemplateTests {
 		assertThat(template.getDb().getCollection("sample").count(new org.bson.Document("field", "data")), is(1L));
 	}
 
-	/**
-	 * @see DATAMONGO-1001
-	 */
-	@Test
+	@Test // DATAMONGO-1001
 	public void shouldAllowSavingOfLazyLoadedDbRefs() {
 
 		template.dropCollection(SomeTemplate.class);
@@ -2785,10 +2540,7 @@ public class MongoTemplateTests {
 
 	}
 
-	/**
-	 * @see DATAMONGO-880
-	 */
-	@Test
+	@Test // DATAMONGO-880
 	public void savingAndReassigningLazyLoadingProxies() {
 
 		template.dropCollection(SomeTemplate.class);
@@ -2821,10 +2573,7 @@ public class MongoTemplateTests {
 		assertThat(savedMessage.normalContent.text, is(content.text));
 	}
 
-	/**
-	 * @see DATAMONGO-884
-	 */
-	@Test
+	@Test // DATAMONGO-884
 	public void callingNonObjectMethodsOnLazyLoadingProxyShouldReturnNullIfUnderlyingDbrefWasDeletedInbetween() {
 
 		template.dropCollection(SomeTemplate.class);
@@ -2850,10 +2599,7 @@ public class MongoTemplateTests {
 		assertThat(savedTmpl.getContent().getText(), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-471
-	 */
-	@Test
+	@Test // DATAMONGO-471
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingAddToSetWithEach() {
 
 		DocumentWithCollectionOfSimpleType document = new DocumentWithCollectionOfSimpleType();
@@ -2869,10 +2615,7 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(3));
 	}
 
-	/**
-	 * @see DATAMONGO-1210
-	 */
-	@Test
+	@Test // DATAMONGO-1210
 	public void findAndModifyAddToSetWithEachShouldNotAddDuplicatesNorTypeHintForSimpleDocuments() {
 
 		DocumentWithCollectionOfSamples doc = new DocumentWithCollectionOfSamples();
@@ -2896,10 +2639,7 @@ public class MongoTemplateTests {
 		assertThat(retrieved.samples.get(1).field, is("sample2"));
 	}
 
-	/**
-	 * @see DATAMONGO-888
-	 */
-	@Test
+	@Test // DATAMONGO-888
 	public void sortOnIdFieldPropertyShouldBeMappedCorrectly() {
 
 		DoucmentWithNamedIdField one = new DoucmentWithNamedIdField();
@@ -2917,10 +2657,7 @@ public class MongoTemplateTests {
 		assertThat(template.find(query, DoucmentWithNamedIdField.class), contains(two, one));
 	}
 
-	/**
-	 * @see DATAMONGO-888
-	 */
-	@Test
+	@Test // DATAMONGO-888
 	public void sortOnAnnotatedFieldPropertyShouldBeMappedCorrectly() {
 
 		DoucmentWithNamedIdField one = new DoucmentWithNamedIdField();
@@ -2938,10 +2675,7 @@ public class MongoTemplateTests {
 		assertThat(template.find(query, DoucmentWithNamedIdField.class), contains(two, one));
 	}
 
-	/**
-	 * @see DATAMONGO-913
-	 */
-	@Test
+	@Test // DATAMONGO-913
 	public void shouldRetrieveInitializedValueFromDbRefAssociationAfterLoad() {
 
 		SomeContent content = new SomeContent();
@@ -2966,10 +2700,7 @@ public class MongoTemplateTests {
 		assertThat(result.getContent().getText(), is(content.getText()));
 	}
 
-	/**
-	 * @see DATAMONGO-913
-	 */
-	@Test
+	@Test // DATAMONGO-913
 	public void shouldReuseExistingDBRefInQueryFromDbRefAssociationAfterLoad() {
 
 		SomeContent content = new SomeContent();
@@ -2994,10 +2725,7 @@ public class MongoTemplateTests {
 		assertThat(result.getContent().getName(), is(content.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-970
-	 */
-	@Test
+	@Test // DATAMONGO-970
 	public void insertsAndRemovesBasicDocumentCorrectly() {
 
 		org.bson.Document object = new org.bson.Document("key", "value");
@@ -3010,10 +2738,7 @@ public class MongoTemplateTests {
 		assertThat(template.findAll(Document.class, "collection"), hasSize(0));
 	}
 
-	/**
-	 * @see DATAMONGO-1207
-	 */
-	@Test
+	@Test // DATAMONGO-1207
 	public void ignoresNullElementsForInsertAll() {
 
 		Address newYork = new Address("NY", "New York");
@@ -3027,10 +2752,7 @@ public class MongoTemplateTests {
 		assertThat(result, hasItems(newYork, washington));
 	}
 
-	/**
-	 * @see DATAMONGO-1176
-	 */
-	@Test
+	@Test // DATAMONGO-1176
 	public void generatesIdForInsertAll() {
 
 		Person walter = new Person(null, "Walter");
@@ -3045,10 +2767,7 @@ public class MongoTemplateTests {
 		assertThat(jesse.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1208
-	 */
-	@Test
+	@Test // DATAMONGO-1208
 	public void takesSortIntoAccountWhenStreaming() {
 
 		Person youngestPerson = new Person("John", 20);
@@ -3064,10 +2783,7 @@ public class MongoTemplateTests {
 		assertThat(stream.next().getAge(), is(oldestPerson.getAge()));
 	}
 
-	/**
-	 * @see DATAMONGO-1208
-	 */
-	@Test
+	@Test // DATAMONGO-1208
 	public void takesLimitIntoAccountWhenStreaming() {
 
 		Person youngestPerson = new Person("John", 20);
@@ -3083,10 +2799,7 @@ public class MongoTemplateTests {
 		assertThat(stream.hasNext(), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-1204
-	 */
-	@Test
+	@Test // DATAMONGO-1204
 	public void resolvesCyclicDBRefCorrectly() {
 
 		SomeMessage message = new SomeMessage();
@@ -3108,10 +2821,7 @@ public class MongoTemplateTests {
 		assertThat(contentLoaded.dbrefMessage.id, is(messageLoaded.id));
 	}
 
-	/**
-	 * @see DATAMONGO-1287
-	 */
-	@Test
+	@Test // DATAMONGO-1287
 	public void shouldReuseAlreadyResolvedLazyLoadedDBRefWhenUsedAsPersistenceConstrcutorArgument() {
 
 		Document docInCtor = new Document();
@@ -3129,10 +2839,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.refToDocNotUsedInCtor, nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-1287
-	 */
-	@Test
+	@Test // DATAMONGO-1287
 	public void shouldNotReuseLazyLoadedDBRefWhenTypeUsedInPersistenceConstrcutorButValueRefersToAnotherProperty() {
 
 		Document docNotUsedInCtor = new Document();
@@ -3151,10 +2858,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.refToDocUsedInCtor, nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-1287
-	 */
-	@Test
+	@Test // DATAMONGO-1287
 	public void shouldRespectParamterValueWhenAttemptingToReuseLazyLoadedDBRefUsedInPersistenceConstrcutor() {
 
 		Document docInCtor = new Document();
@@ -3177,10 +2881,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.refToDocNotUsedInCtor, instanceOf(LazyLoadingProxy.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1401
-	 */
-	@Test
+	@Test // DATAMONGO-1401
 	public void updateShouldWorkForTypesContainingGeoJsonTypes() {
 
 		WithGeoJson wgj = new WithGeoJson();
@@ -3196,10 +2897,7 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query(where("id").is(wgj.id)), WithGeoJson.class).point, is(equalTo(wgj.point)));
 	}
 
-	/**
-	 * @see DATAMONGO-1404
-	 */
-	@Test
+	@Test // DATAMONGO-1404
 	public void updatesDateValueCorrectlyWhenUsingMinOperator() {
 
 		Calendar cal = Calendar.getInstance(Locale.US);
@@ -3214,10 +2912,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.date, equalTo(cal.getTime()));
 	}
 
-	/**
-	 * @see DATAMONGO-1404
-	 */
-	@Test
+	@Test // DATAMONGO-1404
 	public void updatesNumericValueCorrectlyWhenUsingMinOperator() {
 
 		TypeWithNumbers twn = new TypeWithNumbers();
@@ -3256,10 +2951,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("690")));
 	}
 
-	/**
-	 * @see DATAMONGO-1404
-	 */
-	@Test
+	@Test // DATAMONGO-1404
 	public void updatesDateValueCorrectlyWhenUsingMaxOperator() {
 
 		Calendar cal = Calendar.getInstance(Locale.US);
@@ -3276,10 +2968,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.date, equalTo(cal.getTime()));
 	}
 
-	/**
-	 * @see DATAMONGO-1404
-	 */
-	@Test
+	@Test // DATAMONGO-1404
 	public void updatesNumericValueCorrectlyWhenUsingMaxOperator() {
 
 		TypeWithNumbers twn = new TypeWithNumbers();
@@ -3318,10 +3007,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("790")));
 	}
 
-	/**
-	 * @see DATAMONGO-1404
-	 */
-	@Test
+	@Test // DATAMONGO-1404
 	public void updatesBigNumberValueUsingStringComparisonWhenUsingMaxOperator() {
 
 		TypeWithNumbers twn = new TypeWithNumbers();
@@ -3345,10 +3031,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("80")));
 	}
 
-	/**
-	 * @see DATAMONGO-1404
-	 */
-	@Test
+	@Test // DATAMONGO-1404
 	public void updatesBigNumberValueUsingStringComparisonWhenUsingMinOperator() {
 
 		TypeWithNumbers twn = new TypeWithNumbers();
@@ -3372,10 +3055,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("800")));
 	}
 
-	/**
-	 * @see DATAMONGO-1431
-	 */
-	@Test
+	@Test // DATAMONGO-1431
 	public void streamExecutionUsesExplicitCollectionName() {
 
 		template.remove(new Query(), "some_special_collection");
@@ -3396,10 +3076,7 @@ public class MongoTemplateTests {
 		assertThat(stream.hasNext(), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	public void shouldFetchListOfReferencesCorrectly() {
 
 		Sample one = new Sample("1", "jon snow");
@@ -3416,10 +3093,7 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query(where("id").is(source.id)), DocumentWithDBRefCollection.class), is(source));
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	public void shouldFetchListOfLazyReferencesCorrectly() {
 
 		Sample one = new Sample("1", "jon snow");
@@ -3440,10 +3114,7 @@ public class MongoTemplateTests {
 		assertThat(target.getLazyDbRefAnnotatedList(), contains(two, one));
 	}
 
-	/**
-	 * @see DATAMONGO-1194
-	 */
-	@Test
+	@Test // DATAMONGO-1194
 	public void shouldFetchMapOfLazyReferencesCorrectly() {
 
 		Sample one = new Sample("1", "jon snow");
@@ -3465,10 +3136,7 @@ public class MongoTemplateTests {
 		assertThat(target.lazyDbRefAnnotatedMap.values(), contains(two, one));
 	}
 
-	/**
-	 * @see DATAMONGO-1513
-	 */
-	@Test
+	@Test // DATAMONGO-1513
 	@DirtiesContext
 	public void populatesIdsAddedByEventListener() {
 
@@ -3488,10 +3156,7 @@ public class MongoTemplateTests {
 	}
 
 
-	/**
-	 * @see DATAMONGO-1509
-	 */
-	@Test
+	@Test // DATAMONGO-1509
 	public void findsByGenericNestedListElements() {
 
 		List<Model> modelList = Collections.singletonList(new ModelA("value"));
@@ -3567,18 +3232,18 @@ public class MongoTemplateTests {
 
 		@Id public String id;
 
-		@Field("db_ref_list") /** @see DATAMONGO-1058 */
+		@Field("db_ref_list") // DATAMONGO-1058
 		@org.springframework.data.mongodb.core.mapping.DBRef //
 		public List<Sample> dbRefAnnotatedList;
 
 		@org.springframework.data.mongodb.core.mapping.DBRef //
 		public Sample dbRefProperty;
 
-		@Field("lazy_db_ref_list") /** @see DATAMONGO-1194 */
+		@Field("lazy_db_ref_list") // DATAMONGO-1194
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
 		public List<Sample> lazyDbRefAnnotatedList;
 
-		@Field("lazy_db_ref_map") /** @see DATAMONGO-1194 */
+		@Field("lazy_db_ref_map") // DATAMONGO-1194
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
 	}
 

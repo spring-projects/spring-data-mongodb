@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,10 +105,7 @@ public class DefaultMongoTypeMapperUnitTests {
 		readsTypeFromField(new Document(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Object.class.getName()), Object.class);
 	}
 
-	/**
-	 * @see DATAMONGO-709
-	 */
-	@Test
+	@Test // DATAMONGO-709
 	public void writesTypeRestrictionsCorrectly() {
 
 		Document result = new Document();

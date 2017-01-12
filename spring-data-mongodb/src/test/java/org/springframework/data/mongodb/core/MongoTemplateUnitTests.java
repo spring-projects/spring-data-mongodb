@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -149,20 +149,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.mapReduce("foo", "classpath:doesNotExist.js", "function() {}", Person.class);
 	}
 
-	/**
-	 * @see DATAMONGO-322
-	 */
-	@Test(expected = InvalidDataAccessApiUsageException.class)
+	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-322
 	public void rejectsEntityWithNullIdIfNotSupportedIdType() {
 
 		Object entity = new NotAutogenerateableId();
 		template.save(entity);
 	}
 
-	/**
-	 * @see DATAMONGO-322
-	 */
-	@Test
+	@Test // DATAMONGO-322
 	public void storesEntityWithSetIdAlthoughNotAutogenerateable() {
 
 		NotAutogenerateableId entity = new NotAutogenerateableId();
@@ -171,10 +165,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.save(entity);
 	}
 
-	/**
-	 * @see DATAMONGO-322
-	 */
-	@Test
+	@Test // DATAMONGO-322
 	public void autogeneratesIdForEntityWithAutogeneratableId() {
 
 		this.converter.afterPropertiesSet();
@@ -189,10 +180,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(entity.id, is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-374
-	 */
-	@Test
+	@Test // DATAMONGO-374
 	public void convertsUpdateConstraintsUsingConverters() {
 
 		CustomConversions conversions = new CustomConversions(Collections.singletonList(MyConverter.INSTANCE));
@@ -212,10 +200,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 																						// anyBoolean());
 	}
 
-	/**
-	 * @see DATAMONGO-474
-	 */
-	@Test
+	@Test // DATAMONGO-474
 	public void setsUnpopulatedIdField() {
 
 		NotAutogenerateableId entity = new NotAutogenerateableId();
@@ -224,10 +209,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(entity.id, is(5));
 	}
 
-	/**
-	 * @see DATAMONGO-474
-	 */
-	@Test
+	@Test // DATAMONGO-474
 	public void doesNotSetAlreadyPopulatedId() {
 
 		NotAutogenerateableId entity = new NotAutogenerateableId();
@@ -237,10 +219,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(entity.id, is(5));
 	}
 
-	/**
-	 * @see DATAMONGO-868
-	 */
-	@Test
+	@Test // DATAMONGO-868
 	public void findAndModifyShouldBumpVersionByOneWhenVersionFieldNotIncludedInUpdate() {
 
 		VersionedEntity v = new VersionedEntity();
@@ -259,10 +238,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		Assert.assertThat(captor.getValue().get("$inc"), Is.<Object> is(new org.bson.Document("version", 1L)));
 	}
 
-	/**
-	 * @see DATAMONGO-868
-	 */
-	@Test
+	@Test // DATAMONGO-868
 	public void findAndModifyShouldNotBumpVersionByOneWhenVersionFieldAlreadyIncludedInUpdate() {
 
 		VersionedEntity v = new VersionedEntity();
@@ -283,10 +259,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		Assert.assertThat(captor.getValue().get("$inc"), nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-533
-	 */
-	@Test
+	@Test // DATAMONGO-533
 	public void registersDefaultEntityIndexCreatorIfApplicationContextHasOneForDifferentMappingContext() {
 
 		GenericApplicationContext applicationContext = new GenericApplicationContext();
@@ -313,10 +286,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		}));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void findAllAndRemoveShouldRetrieveMatchingDocumentsPriorToRemoval() {
 
 		BasicQuery query = new BasicQuery("{'foo':'bar'}");
@@ -324,10 +294,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection, times(1)).find(Matchers.eq(query.getQueryObject()));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void findAllAndRemoveShouldRemoveDocumentsReturedByFindQuery() {
 
 		Mockito.when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
@@ -345,20 +312,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				IsIterableContainingInOrder.<Object> contains(Integer.valueOf(0), Integer.valueOf(1)));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void findAllAndRemoveShouldNotTriggerRemoveIfFindResultIsEmpty() {
 
 		template.findAllAndRemove(new BasicQuery("{'foo':'bar'}"), VersionedEntity.class);
 		verify(collection, never()).deleteMany(Mockito.any(org.bson.Document.class));
 	}
 
-	/**
-	 * @see DATAMONGO-948
-	 */
-	@Test
+	@Test // DATAMONGO-948
 	public void sortShouldBeTakenAsIsWhenExecutingQueryWithoutSpecificTypeInformation() {
 
 		Query query = Query.query(Criteria.where("foo").is("bar")).with(new Sort("foo"));
@@ -376,10 +337,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(captor.getValue(), equalTo(new org.bson.Document("foo", 1)));
 	}
 
-	/**
-	 * @see DATAMONGO-1166
-	 */
-	@Test
+	@Test // DATAMONGO-1166
 	public void aggregateShouldHonorReadPreferenceWhenSet() {
 
 		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class)))
@@ -394,10 +352,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				eq(Document.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1166
-	 */
-	@Test
+	@Test // DATAMONGO-1166
 	public void aggregateShouldIgnoreReadPreferenceWhenNotSet() {
 
 		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class)))
@@ -410,10 +365,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(this.db, times(1)).runCommand(Mockito.any(org.bson.Document.class), eq(org.bson.Document.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1166
-	 */
-	@Test
+	@Test // DATAMONGO-1166
 	public void geoNearShouldHonorReadPreferenceWhenSet() {
 
 		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class)))
@@ -429,10 +381,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				eq(Document.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1166
-	 */
-	@Test
+	@Test // DATAMONGO-1166
 	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
 
 		when(db.runCommand(Mockito.any(Document.class), Mockito.any(ReadPreference.class)))
@@ -445,10 +394,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(this.db, times(1)).runCommand(Mockito.any(Document.class), eq(Document.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1334
-	 */
-	@Test
+	@Test // DATAMONGO-1334
 	@Ignore("TODO: mongo3 - a bit hard to tests with the immutable object stuff")
 	public void mapReduceShouldUseZeroAsDefaultLimit() {
 
@@ -469,10 +415,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(output, times(1)).limit(1);
 	}
 
-	/**
-	 * @see DATAMONGO-1334
-	 */
-	@Test
+	@Test // DATAMONGO-1334
 	public void mapReduceShouldPickUpLimitFromQuery() {
 
 		MongoCursor cursor = mock(MongoCursor.class);
@@ -493,10 +436,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(output, times(1)).limit(100);
 	}
 
-	/**
-	 * @see DATAMONGO-1334
-	 */
-	@Test
+	@Test // DATAMONGO-1334
 	public void mapReduceShouldPickUpLimitFromOptions() {
 
 		MongoCursor cursor = mock(MongoCursor.class);
@@ -517,10 +457,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(output, times(1)).limit(1000);
 	}
 
-	/**
-	 * @see DATAMONGO-1334
-	 */
-	@Test
+	@Test // DATAMONGO-1334
 	public void mapReduceShouldPickUpLimitFromOptionsWhenQueryIsNotPresent() {
 
 		MongoCursor cursor = mock(MongoCursor.class);
@@ -539,10 +476,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(output, times(1)).limit(1000);
 	}
 
-	/**
-	 * @see DATAMONGO-1334
-	 */
-	@Test
+	@Test // DATAMONGO-1334
 	public void mapReduceShouldPickUpLimitFromOptionsEvenWhenQueryDefinesItDifferently() {
 
 		MongoCursor cursor = mock(MongoCursor.class);

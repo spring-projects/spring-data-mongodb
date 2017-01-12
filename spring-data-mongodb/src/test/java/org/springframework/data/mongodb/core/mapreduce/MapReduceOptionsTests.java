@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,7 @@ public class MapReduceOptionsTests {
 		new MapReduceOptions().finalizeFunction("code");
 	}
 
-	/**
-	 * @see DATAMONGO-1334
-	 */
-	@Test
+	@Test // DATAMONGO-1334
 	public void limitShouldBeIncludedCorrectly() {
 
 		MapReduceOptions options = new MapReduceOptions();
@@ -44,10 +41,7 @@ public class MapReduceOptionsTests {
 		assertThat(options.getOptionsObject(), isBsonObject().containing("limit", 10));
 	}
 
-	/**
-	 * @see DATAMONGO-1334
-	 */
-	@Test
+	@Test // DATAMONGO-1334
 	public void limitShouldNotBePresentInDocumentWhenNotSet() {
 		assertThat(new MapReduceOptions().getOptionsObject(), isBsonObject().notContaining("limit"));
 	}

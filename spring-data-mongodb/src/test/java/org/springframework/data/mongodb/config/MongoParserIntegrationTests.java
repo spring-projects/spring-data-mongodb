@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,10 +66,7 @@ public class MongoParserIntegrationTests {
 		factory.getBean("mongo");
 	}
 
-	/**
-	 * @see DATAMONGO-343
-	 */
-	@Test
+	@Test // DATAMONGO-343
 	public void readsServerAddressesCorrectly() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-bean.xml"));

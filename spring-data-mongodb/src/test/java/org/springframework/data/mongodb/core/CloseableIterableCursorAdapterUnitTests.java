@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import com.mongodb.client.MongoCursor;
  * Unit tests for {@link CloseableIterableCursorAdapter}.
  * 
  * @author Oliver Gierke
- * @see DATAMONGO-1276
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CloseableIterableCursorAdapterUnitTests {
@@ -52,30 +51,21 @@ public class CloseableIterableCursorAdapterUnitTests {
 		this.adapter = new CloseableIterableCursorAdapter<Object>(cursor, exceptionTranslator, callback);
 	}
 
-	/**
-	 * @see DATAMONGO-1276
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1276
 	public void propagatesOriginalExceptionFromAdapterDotNext() {
 
 		cursor.next();
 		adapter.next();
 	}
 
-	/**
-	 * @see DATAMONGO-1276
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1276
 	public void propagatesOriginalExceptionFromAdapterDotHasNext() {
 
 		cursor.hasNext();
 		adapter.hasNext();
 	}
 
-	/**
-	 * @see DATAMONGO-1276
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1276
 	public void propagatesOriginalExceptionFromAdapterDotClose() {
 
 		cursor.close();

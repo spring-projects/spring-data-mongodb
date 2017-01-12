@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,10 +58,7 @@ public class ReactiveMongoQueryMethodUnitTests {
 		context = new MongoMappingContext();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void detectsCollectionFromRepoTypeIfReturnTypeNotAssignable() throws Exception {
 
 		ReactiveMongoQueryMethod queryMethod = queryMethod(SampleRepository.class, "method");
@@ -71,10 +68,7 @@ public class ReactiveMongoQueryMethodUnitTests {
 		assertThat(metadata.getCollectionName(), is("contact"));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void detectsCollectionFromReturnTypeIfReturnTypeAssignable() throws Exception {
 
 		MongoQueryMethod queryMethod = queryMethod(SampleRepository2.class, "method");
@@ -84,10 +78,7 @@ public class ReactiveMongoQueryMethodUnitTests {
 		assertThat(entityInformation.getCollectionName(), is("person"));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void discoversUserAsDomainTypeForGeoPagingQueryMethod() throws Exception {
 
 		MongoQueryMethod queryMethod = queryMethod(PersonRepository.class, "findByLocationNear", Point.class,
@@ -108,10 +99,7 @@ public class ReactiveMongoQueryMethodUnitTests {
 				is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
 	public void rejectsNullMappingContext() throws Exception {
 
 		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, Point.class);
@@ -120,26 +108,17 @@ public class ReactiveMongoQueryMethodUnitTests {
 				new SpelAwareProxyProjectionFactory(), null);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = IllegalStateException.class)
+	@Test(expected = IllegalStateException.class) // DATAMONGO-1444
 	public void rejectsMonoPageableResult() throws Exception {
 		queryMethod(PersonRepository.class, "findMonoByLastname", String.class, Pageable.class);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void createsMongoQueryMethodObjectForMethodReturningAnInterface() throws Exception {
 		queryMethod(SampleRepository2.class, "methodReturningAnInterface");
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void createsMongoQueryMethodWithEmptyMetaCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "emptyMetaAnnotation");
@@ -148,10 +127,7 @@ public class ReactiveMongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().hasValues(), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void createsMongoQueryMethodWithMaxExecutionTimeCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMaxExecutionTime");
@@ -160,26 +136,17 @@ public class ReactiveMongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = InvalidDataAccessApiUsageException.class)
+	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1444
 	public void throwsExceptionOnWrappedPage() throws Exception {
 		queryMethod(PersonRepository.class, "findMonoPageByLastname", String.class, Pageable.class);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = InvalidDataAccessApiUsageException.class)
+	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1444
 	public void throwsExceptionOnWrappedSlice() throws Exception {
 		queryMethod(PersonRepository.class, "findMonoSliceByLastname", String.class, Pageable.class);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void fallsBackToRepositoryDomainTypeIfMethodDoesNotReturnADomainType() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);

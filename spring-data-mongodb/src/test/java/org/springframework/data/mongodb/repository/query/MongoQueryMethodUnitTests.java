@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -128,10 +128,7 @@ public class MongoQueryMethodUnitTests {
 		queryMethod(SampleRepository2.class, "methodReturningAnInterface");
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void createsMongoQueryMethodWithEmptyMetaCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "emptyMetaAnnotation");
@@ -140,10 +137,7 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().hasValues(), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void createsMongoQueryMethodWithMaxExecutionTimeCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMaxExecutionTime");
@@ -152,10 +146,7 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
 	}
 
-	/**
-	 * @see DATAMONGO-1403
-	 */
-	@Test
+	@Test // DATAMONGO-1403
 	public void createsMongoQueryMethodWithSpellFixedMaxExecutionTimeCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithSpellFixedMaxExecutionTime");
@@ -164,10 +155,7 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void createsMongoQueryMethodWithMaxScanCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMaxScan");
@@ -176,10 +164,7 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getMaxScan(), is(10L));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void createsMongoQueryMethodWithCommentCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithComment");
@@ -188,10 +173,7 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getComment(), is("foo bar"));
 	}
 
-	/**
-	 * @see DATAMONGO-957
-	 */
-	@Test
+	@Test // DATAMONGO-957
 	public void createsMongoQueryMethodWithSnapshotCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithSnapshotUsage");
@@ -200,10 +182,7 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getSnapshot(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1480
-	 */
-	@Test
+	@Test // DATAMONGO-1480
 	public void createsMongoQueryMethodWithNoCursorTimeoutCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithNoCursorTimeout");
@@ -213,10 +192,7 @@ public class MongoQueryMethodUnitTests {
 				containsInAnyOrder(org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT));
 	}
 
-	/**
-	 * @see DATAMONGO-1480
-	 */
-	@Test
+	@Test // DATAMONGO-1480
 	public void createsMongoQueryMethodWithMultipleFlagsCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMultipleFlags");
@@ -226,10 +202,7 @@ public class MongoQueryMethodUnitTests {
 				containsInAnyOrder(org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT, org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK));
 	}
 
-	/**
-	 * @see DATAMONGO-1266
-	 */
-	@Test
+	@Test // DATAMONGO-1266
 	public void fallsBackToRepositoryDomainTypeIfMethodDoesNotReturnADomainType() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
@@ -281,9 +254,7 @@ public class MongoQueryMethodUnitTests {
 		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT, org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK })
 		List<User> metaWithMultipleFlags();
 
-		/**
-		 * @see DATAMONGO-1266
-		 */
+		// DATAMONGO-1266
 		void deleteByUserName(String userName);
 	}
 

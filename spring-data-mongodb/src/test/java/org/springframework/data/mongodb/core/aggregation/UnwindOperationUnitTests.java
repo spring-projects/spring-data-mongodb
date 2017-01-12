@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,7 @@ import org.springframework.data.mongodb.core.DocumentTestUtils;
  */
 public class UnwindOperationUnitTests {
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void unwindWithPathOnlyShouldUsePreMongo32Syntax() {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a");
@@ -44,10 +41,7 @@ public class UnwindOperationUnitTests {
 		assertThat(pipeline, isBsonObject().containing("$unwind", "$a"));
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void unwindWithArrayIndexShouldUseMongo32Syntax() {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a", "index");
@@ -60,10 +54,7 @@ public class UnwindOperationUnitTests {
 						containing("includeArrayIndex", "index"));
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void unwindWithArrayIndexShouldExposeArrayIndex() {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a", "index");
@@ -71,10 +62,7 @@ public class UnwindOperationUnitTests {
 		assertThat(unwindOperation.getFields().getField("index"), is(not(nullValue())));
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void plainUnwindShouldNotExposeIndex() {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a");
@@ -82,10 +70,7 @@ public class UnwindOperationUnitTests {
 		assertThat(unwindOperation.getFields().exposesNoFields(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void unwindWithPreserveNullShouldUseMongo32Syntax() {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a", true);
@@ -98,10 +83,7 @@ public class UnwindOperationUnitTests {
 						notContaining("includeArrayIndex"));
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void lookupBuilderBuildsCorrectClause() {
 
 		UnwindOperation unwindOperation = UnwindOperation.newUnwind().path("$foo").noArrayIndex().skipNullAndEmptyArrays();
@@ -110,10 +92,7 @@ public class UnwindOperationUnitTests {
 		assertThat(pipeline, isBsonObject().containing("$unwind", "$foo"));
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void lookupBuilderBuildsCorrectClauseForMongo32() {
 
 		UnwindOperation unwindOperation = UnwindOperation.newUnwind().path("$foo").arrayIndex("myindex")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,10 +72,7 @@ public class MongoParametersParameterAccessorUnitTests {
 		assertThat(accessor.getDistanceRange().getUpperBound(), is(DISTANCE));
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void shouldReturnAsFullTextStringWhenNoneDefinedForMethod() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
@@ -86,10 +83,7 @@ public class MongoParametersParameterAccessorUnitTests {
 		assertThat(accessor.getFullText(), IsNull.nullValue());
 	}
 
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
+	@Test // DATAMONGO-973
 	public void shouldProperlyConvertTextCriteria() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, TextCriteria.class);
@@ -101,10 +95,7 @@ public class MongoParametersParameterAccessorUnitTests {
 				equalTo(Document.parse("{ \"$text\" : { \"$search\" : \"data\"}}").toJson()));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void shouldDetectMinAndMaxDistance() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Range.class);

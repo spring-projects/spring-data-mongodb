@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import org.springframework.core.io.ClassPathResource;
  * {@link org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener} by defining
  * {@code <mongo:mapping-converter />} in context XML.
  * 
- * @see DATAMONGO-36
  * @author Maciej Walkowiak
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -47,40 +46,28 @@ public class MappingMongoConverterParserValidationIntegrationTests {
 		reader = new XmlBeanDefinitionReader(factory);
 	}
 
-	/**
-	 * @see DATAMONGO-36
-	 */
-	@Test
+	@Test // DATAMONGO-36
 	public void validatingEventListenerCreatedWithDefaultConfig() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-default.xml"));
 		assertThat(factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER_BEAN_NAME), is(not(nullValue())));
 	}
 
-	/**
-	 * @see DATAMONGO-36
-	 */
-	@Test
+	@Test // DATAMONGO-36
 	public void validatingEventListenerCreatedWhenValidationEnabled() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-validation-enabled.xml"));
 		assertThat(factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER_BEAN_NAME), is(not(nullValue())));
 	}
 
-	/**
-	 * @see DATAMONGO-36
-	 */
-	@Test(expected = NoSuchBeanDefinitionException.class)
+	@Test(expected = NoSuchBeanDefinitionException.class) // DATAMONGO-36
 	public void validatingEventListenersIsNotCreatedWhenDisabled() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-validation-disabled.xml"));
 		factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER_BEAN_NAME);
 	}
 
-	/**
-	 * @see DATAMONGO-36
-	 */
-	@Test
+	@Test // DATAMONGO-36
 	public void validatingEventListenerCreatedWithCustomTypeMapperConfig() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-custom-typeMapper.xml"));

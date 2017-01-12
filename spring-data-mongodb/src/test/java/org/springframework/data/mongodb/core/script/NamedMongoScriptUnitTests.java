@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,34 +29,22 @@ import org.junit.Test;
  */
 public class NamedMongoScriptUnitTests {
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void shouldThrowExceptionWhenScriptNameIsNull() {
 		new NamedMongoScript(null, "return 1;");
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void shouldThrowExceptionWhenScriptNameIsEmptyString() {
 		new NamedMongoScript("", "return 1");
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
 	public void shouldThrowExceptionWhenRawScriptIsEmptyString() {
 		new NamedMongoScript("foo", "");
 	}
 
-	/**
-	 * @see DATAMONGO-479
-	 */
-	@Test
+	@Test // DATAMONGO-479
 	public void getCodeShouldReturnCodeRepresentationOfRawScript() {
 
 		String jsFunction = "function(x) { return x; }";

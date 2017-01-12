@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,10 +63,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(serializeToJsonSafely(document), is(expectedOutput));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldFlatOutNestedStructureCorrectly() {
 
 		Document document = new Document();
@@ -77,10 +74,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(flattenMap(document), hasEntry("nested.value", (Object) "conflux"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldFlatOutNestedStructureWithListCorrectly() {
 
 		BasicDBList dbl = new BasicDBList();
@@ -94,10 +88,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(flattenMap(document), hasEntry("nested.value", (Object) dbl));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldLeaveKeywordsUntouched() {
 
 		Document document = new Document();
@@ -111,10 +102,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(((Map<String, Object>) map.get("nested")).get("$regex"), is((Object) "^conflux$"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldAppendCommandsCorrectly() {
 
 		Document document = new Document();
@@ -132,10 +120,7 @@ public class SerializationUtilsUnitTests {
 		assertThat(((Map<String, Object>) map.get("nested")).get("$options"), is((Object) "i"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void flattenMapShouldReturnEmptyMapWhenSourceIsNull() {
 		assertThat(flattenMap(null).isEmpty(), is(true));
 	}

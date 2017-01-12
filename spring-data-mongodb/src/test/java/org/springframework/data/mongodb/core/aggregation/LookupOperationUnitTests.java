@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,42 +32,27 @@ import org.springframework.data.mongodb.core.DocumentTestUtils;
  */
 public class LookupOperationUnitTests {
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
 	public void rejectsNullForFrom() {
 		new LookupOperation(null, Fields.field("localField"), Fields.field("foreignField"), Fields.field("as"));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
 	public void rejectsNullLocalFieldField() {
 		new LookupOperation(Fields.field("from"), null, Fields.field("foreignField"), Fields.field("as"));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
 	public void rejectsNullForeignField() {
 		new LookupOperation(Fields.field("from"), Fields.field("localField"), null, Fields.field("as"));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
 	public void rejectsNullForAs() {
 		new LookupOperation(Fields.field("from"), Fields.field("localField"), Fields.field("foreignField"), null);
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test
+	@Test // DATAMONGO-1326
 	public void lookupOperationWithValues() {
 
 		LookupOperation lookupOperation = Aggregation.lookup("a", "b", "c", "d");
@@ -81,10 +66,7 @@ public class LookupOperationUnitTests {
 						.containing("as", "d"));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test
+	@Test // DATAMONGO-1326
 	public void lookupOperationExposesAsField() {
 
 		LookupOperation lookupOperation = Aggregation.lookup("a", "b", "c", "d");
@@ -101,42 +83,27 @@ public class LookupOperationUnitTests {
 		return lookupClause;
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
 	public void builderRejectsNullFromField() {
 		LookupOperation.newLookup().from(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
 	public void builderRejectsNullLocalField() {
 		LookupOperation.newLookup().from("a").localField(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
 	public void builderRejectsNullForeignField() {
 		LookupOperation.newLookup().from("a").localField("b").foreignField(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
 	public void builderRejectsNullAsField() {
 		LookupOperation.newLookup().from("a").localField("b").foreignField("c").as(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test
+	@Test // DATAMONGO-1326
 	public void lookupBuilderBuildsCorrectClause() {
 
 		LookupOperation lookupOperation = LookupOperation.newLookup().from("a").localField("b").foreignField("c").as("d");
@@ -150,10 +117,7 @@ public class LookupOperationUnitTests {
 						.containing("as", "d"));
 	}
 
-	/**
-	 * @see DATAMONGO-1326
-	 */
-	@Test
+	@Test // DATAMONGO-1326
 	public void lookupBuilderExposesFields() {
 
 		LookupOperation lookupOperation = LookupOperation.newLookup().from("a").localField("b").foreignField("c").as("d");

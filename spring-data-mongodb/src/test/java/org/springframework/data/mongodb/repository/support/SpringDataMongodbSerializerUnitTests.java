@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,20 +105,14 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat(value, is(reference));
 	}
 
-	/**
-	 * @see DATAMONGO-376
-	 */
-	@Test
+	@Test // DATAMONGO-376
 	public void returnsEmptyStringIfNoPathExpressionIsGiven() {
 
 		QAddress address = QPerson.person.shippingAddresses.any();
 		assertThat(serializer.getKeyForPath(address, address.getMetadata()), is(""));
 	}
 
-	/**
-	 * @see DATAMONGO-467
-	 */
-	@Test
+	@Test // DATAMONGO-467
 	public void convertsIdPropertyCorrectly() {
 
 		ObjectId id = new ObjectId();
@@ -132,10 +126,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat(result.get("_id"), is((Object) id));
 	}
 
-	/**
-	 * @see DATAMONGO-761
-	 */
-	@Test
+	@Test // DATAMONGO-761
 	public void looksUpKeyForNonPropertyPath() {
 
 		PathBuilder<Address> builder = new PathBuilder<Address>(Address.class, "address");
@@ -145,10 +136,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat(path, is("0"));
 	}
 
-	/**
-	 * @see DATAMONGO-969
-	 */
-	@Test
+	@Test // DATAMONGO-969
 	public void shouldConvertObjectIdEvenWhenNestedInOperatorDbObject() {
 
 		ObjectId value = new ObjectId("53bb9fd14438765b29c2d56e");
@@ -159,10 +147,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat($ne, is(value));
 	}
 
-	/**
-	 * @see DATAMONGO-969
-	 */
-	@Test
+	@Test // DATAMONGO-969
 	public void shouldConvertCollectionOfObjectIdEvenWhenNestedInOperatorDocument() {
 
 		ObjectId firstId = new ObjectId("53bb9fd14438765b29c2d56e");
@@ -180,10 +165,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat($in, IsIterableContainingInOrder.<Object> contains(firstId, secondId));
 	}
 
-	/**
-	 * @see DATAMONGO-1485
-	 */
-	@Test
+	@Test // DATAMONGO-1485
 	public void takesCustomConversionForEnumsIntoAccount() {
 
 		MongoMappingContext context = new MongoMappingContext();

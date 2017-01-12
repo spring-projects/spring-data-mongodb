@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,10 +72,7 @@ public class QueryByExampleTests {
 		operations.save(p3);
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findByExampleShouldWorkForSimpleProperty() {
 
 		Person sample = new Person();
@@ -88,10 +85,7 @@ public class QueryByExampleTests {
 		assertThat(result, hasItems(p1, p3));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findByExampleShouldWorkForMultipleProperties() {
 
 		Person sample = new Person();
@@ -105,10 +99,7 @@ public class QueryByExampleTests {
 		assertThat(result, hasItem(p3));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findByExampleShouldWorkForIdProperty() {
 
 		Person p4 = new Person();
@@ -124,10 +115,7 @@ public class QueryByExampleTests {
 		assertThat(result, hasItem(p4));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findByExampleShouldReturnEmptyListIfNotMatching() {
 
 		Person sample = new Person();
@@ -140,10 +128,7 @@ public class QueryByExampleTests {
 		assertThat(result, is(empty()));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findByExampleShouldReturnEverythingWhenSampleIsEmpty() {
 
 		Person sample = new Person();
@@ -155,10 +140,7 @@ public class QueryByExampleTests {
 		assertThat(result, hasItems(p1, p2, p3));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findByExampleWithCriteria() {
 
 		Person sample = new Person();
@@ -170,10 +152,7 @@ public class QueryByExampleTests {
 		assertThat(result.size(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1459
-	 */
-	@Test
+	@Test // DATAMONGO-1459
 	public void findsExampleUsingAnyMatch() {
 
 		Person probe = new Person();

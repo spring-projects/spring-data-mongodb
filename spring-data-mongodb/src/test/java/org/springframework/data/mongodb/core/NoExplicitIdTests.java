@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,10 +68,7 @@ public class NoExplicitIdTests {
 		mongoOps.dropCollection(TypeWithoutIdProperty.class);
 	}
 
-	/**
-	 * @see DATAMONGO-1289
-	 */
-	@Test
+	@Test // DATAMONGO-1289
 	public void saveAndRetrieveTypeWithoutIdPorpertyViaTemplate() {
 
 		TypeWithoutIdProperty noid = new TypeWithoutIdProperty();
@@ -85,10 +82,7 @@ public class NoExplicitIdTests {
 		assertThat(retrieved.someString, is(noid.someString));
 	}
 
-	/**
-	 * @see DATAMONGO-1289
-	 */
-	@Test
+	@Test // DATAMONGO-1289
 	public void saveAndRetrieveTypeWithoutIdPorpertyViaRepository() {
 
 		TypeWithoutIdProperty noid = new TypeWithoutIdProperty();
@@ -100,10 +94,7 @@ public class NoExplicitIdTests {
 		assertThat(retrieved.someString, is(noid.someString));
 	}
 
-	/**
-	 * @see DATAMONGO-1289
-	 */
-	@Test
+	@Test // DATAMONGO-1289
 	@SuppressWarnings("unchecked")
 	public void saveAndRetrieveTypeWithoutIdPorpertyViaRepositoryFindOne() {
 

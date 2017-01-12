@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -448,10 +448,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		assertEquals(12L, p2.getPersonPojoLongId().getId());
 	}
 
-	/**
-	 * @see DATADOC-275
-	 */
-	@Test
+	@Test // DATADOC-275
 	public void readsAndWritesDBRefsCorrectly() {
 
 		template.dropCollection(Item.class);
@@ -474,10 +471,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		assertThat(result.items.get(0).id, is(items.id));
 	}
 
-	/**
-	 * @see DATAMONGO-805
-	 */
-	@Test
+	@Test // DATAMONGO-805
 	public void supportExcludeDbRefAssociation() {
 
 		template.dropCollection(Item.class);
@@ -499,10 +493,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		assertThat(result.item, is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-805
-	 */
-	@Test
+	@Test // DATAMONGO-805
 	public void shouldMapFieldsOfIterableEntity() {
 
 		template.dropCollection(IterableItem.class);

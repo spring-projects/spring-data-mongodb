@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,10 +82,7 @@ public class ComplexIdRepositoryIntegrationTests {
 		userWithId.id = id;
 	}
 
-	/**
-	 * @see DATAMONGO-1078
-	 */
-	@Test
+	@Test // DATAMONGO-1078
 	public void annotatedFindQueryShouldWorkWhenUsingComplexId() {
 
 		repo.save(userWithId);
@@ -93,10 +90,7 @@ public class ComplexIdRepositoryIntegrationTests {
 		assertThat(repo.getUserByComplexId(id), is(userWithId));
 	}
 
-	/**
-	 * @see DATAMONGO-1078
-	 */
-	@Test
+	@Test // DATAMONGO-1078
 	public void annotatedFindQueryShouldWorkWhenUsingComplexIdWithinCollection() {
 
 		repo.save(userWithId);
@@ -107,10 +101,7 @@ public class ComplexIdRepositoryIntegrationTests {
 		assertThat(loaded, contains(userWithId));
 	}
 
-	/**
-	 * @see DATAMONGO-1078
-	 */
-	@Test
+	@Test // DATAMONGO-1078
 	public void findOneShouldWorkWhenUsingComplexId() {
 
 		repo.save(userWithId);
@@ -118,10 +109,7 @@ public class ComplexIdRepositoryIntegrationTests {
 		assertThat(repo.findOne(id), is(userWithId));
 	}
 
-	/**
-	 * @see DATAMONGO-1078
-	 */
-	@Test
+	@Test // DATAMONGO-1078
 	public void findAllShouldWorkWhenUsingComplexId() {
 
 		repo.save(userWithId);
@@ -132,10 +120,7 @@ public class ComplexIdRepositoryIntegrationTests {
 		assertThat(loaded, contains(userWithId));
 	}
 
-	/**
-	 * @see DATAMONGO-1373
-	 */
-	@Test
+	@Test // DATAMONGO-1373
 	public void composedAnnotationFindQueryShouldWorkWhenUsingComplexId() {
 
 		repo.save(userWithId);
@@ -143,10 +128,7 @@ public class ComplexIdRepositoryIntegrationTests {
 		assertThat(repo.getUserUsingComposedAnnotationByComplexId(id), is(userWithId));
 	}
 
-	/**
-	 * @see DATAMONGO-1373
-	 */
-	@Test
+	@Test // DATAMONGO-1373
 	public void composedAnnotationFindMetaShouldWorkWhenUsingComplexId() {
 
 		repo.save(userWithId);

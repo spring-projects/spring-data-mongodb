@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,30 +46,21 @@ public class MongoRepositoryConfigurationExtensionUnitTests {
 	RepositoryConfigurationSource configurationSource = new AnnotationRepositoryConfigurationSource(metadata,
 			EnableMongoRepositories.class, loader, environment);
 
-	/**
-	 * @see DATAMONGO-1009
-	 */
-	@Test
+	@Test // DATAMONGO-1009
 	public void isStrictMatchIfDomainTypeIsAnnotatedWithDocument() {
 
 		MongoRepositoryConfigurationExtension extension = new MongoRepositoryConfigurationExtension();
 		assertHasRepo(SampleRepository.class, extension.getRepositoryConfigurations(configurationSource, loader, true));
 	}
 
-	/**
-	 * @see DATAMONGO-1009
-	 */
-	@Test
+	@Test // DATAMONGO-1009
 	public void isStrictMatchIfRepositoryExtendsStoreSpecificBase() {
 
 		MongoRepositoryConfigurationExtension extension = new MongoRepositoryConfigurationExtension();
 		assertHasRepo(StoreRepository.class, extension.getRepositoryConfigurations(configurationSource, loader, true));
 	}
 
-	/**
-	 * @see DATAMONGO-1009
-	 */
-	@Test
+	@Test // DATAMONGO-1009
 	public void isNotStrictMatchIfDomainTypeIsNotAnnotatedWithDocument() {
 
 		MongoRepositoryConfigurationExtension extension = new MongoRepositoryConfigurationExtension();

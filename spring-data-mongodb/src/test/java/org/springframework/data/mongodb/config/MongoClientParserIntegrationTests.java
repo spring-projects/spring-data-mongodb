@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,10 +51,7 @@ public class MongoClientParserIntegrationTests {
 		this.reader = new XmlBeanDefinitionReader(factory);
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void createsMongoClientCorrectlyWhenGivenHostAndPort() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
@@ -62,10 +59,7 @@ public class MongoClientParserIntegrationTests {
 		assertThat(factory.getBean("mongo-client-with-host-and-port"), instanceOf(MongoClient.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void createsMongoClientWithOptionsCorrectly() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
@@ -84,10 +78,7 @@ public class MongoClientParserIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void createsMongoClientWithDefaultsCorrectly() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
@@ -105,10 +96,7 @@ public class MongoClientParserIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void createsMongoClientWithCredentialsCorrectly() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));

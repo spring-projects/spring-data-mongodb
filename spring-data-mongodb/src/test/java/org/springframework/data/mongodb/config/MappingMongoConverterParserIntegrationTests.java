@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,10 +57,7 @@ public class MappingMongoConverterParserIntegrationTests {
 
 	DefaultListableBeanFactory factory;
 
-	/**
-	 * @see DATAMONGO-243
-	 */
-	@Test
+	@Test // DATAMONGO-243
 	public void allowsDbFactoryRefAttribute() {
 
 		loadValidConfiguration();
@@ -68,10 +65,7 @@ public class MappingMongoConverterParserIntegrationTests {
 		factory.getBean("converter");
 	}
 
-	/**
-	 * @see DATAMONGO-725
-	 */
-	@Test
+	@Test // DATAMONGO-725
 	public void hasCustomTypeMapper() {
 
 		loadValidConfiguration();
@@ -81,10 +75,7 @@ public class MappingMongoConverterParserIntegrationTests {
 		assertThat(converter.getTypeMapper(), is(customMongoTypeMapper));
 	}
 
-	/**
-	 * @see DATAMONGO-301
-	 */
-	@Test
+	@Test // DATAMONGO-301
 	public void scansForConverterAndSetsUpCustomConversionsAccordingly() {
 
 		loadValidConfiguration();
@@ -93,10 +84,7 @@ public class MappingMongoConverterParserIntegrationTests {
 		assertThat(conversions.hasCustomWriteTarget(Account.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-607
-	 */
-	@Test
+	@Test // DATAMONGO-607
 	public void activatesAbbreviatingPropertiesCorrectly() {
 
 		loadValidConfiguration();
@@ -108,10 +96,7 @@ public class MappingMongoConverterParserIntegrationTests {
 		assertThat(strategy.getBeanClassName(), is(CamelCaseAbbreviatingFieldNamingStrategy.class.getName()));
 	}
 
-	/**
-	 * @see DATAMONGO-866
-	 */
-	@Test
+	@Test // DATAMONGO-866
 	public void rejectsInvalidFieldNamingStrategyConfiguration() {
 
 		exception.expect(BeanDefinitionParsingException.class);
@@ -123,10 +108,7 @@ public class MappingMongoConverterParserIntegrationTests {
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-invalid.xml"));
 	}
 
-	/**
-	 * @see DATAMONGO-892
-	 */
-	@Test
+	@Test // DATAMONGO-892
 	public void shouldThrowBeanDefinitionParsingExceptionIfConverterDefinedAsNestedBean() {
 
 		exception.expect(BeanDefinitionParsingException.class);
@@ -135,18 +117,12 @@ public class MappingMongoConverterParserIntegrationTests {
 		loadNestedBeanConfiguration();
 	}
 
-	/**
-	 * @see DATAMONGO-925, DATAMONGO-928
-	 */
-	@Test
+	@Test // DATAMONGO-925, DATAMONGO-928
 	public void shouldSupportCustomFieldNamingStrategy() {
 		assertStrategyReferenceSetFor("mappingConverterWithCustomFieldNamingStrategy");
 	}
 
-	/**
-	 * @see DATAMONGO-925, DATAMONGO-928
-	 */
-	@Test
+	@Test // DATAMONGO-925, DATAMONGO-928
 	public void shouldNotFailLoadingConfigIfAbbreviationIsDisabledAndStrategySet() {
 		assertStrategyReferenceSetFor("mappingConverterWithCustomFieldNamingStrategyAndAbbreviationDisabled");
 	}

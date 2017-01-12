@@ -67,10 +67,7 @@ public class AggregationUnitTests {
 		newAggregation(String.class, new AggregationOperation[0]);
 	}
 
-	/**
-	 * @see DATAMONGO-753
-	 */
-	@Test
+	@Test // DATAMONGO-753
 	public void checkForCorrectFieldScopeTransfer() {
 
 		exception.expect(IllegalArgumentException.class);
@@ -84,10 +81,7 @@ public class AggregationUnitTests {
 		).toDocument("foo", Aggregation.DEFAULT_CONTEXT); // -> triggers IllegalArgumentException
 	}
 
-	/**
-	 * @see DATAMONGO-753
-	 */
-	@Test
+	@Test // DATAMONGO-753
 	public void unwindOperationShouldNotChangeAvailableFields() {
 
 		newAggregation( //
@@ -97,10 +91,7 @@ public class AggregationUnitTests {
 		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void unwindOperationWithIndexShouldPreserveFields() {
 
 		newAggregation( //
@@ -110,10 +101,7 @@ public class AggregationUnitTests {
 		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void unwindOperationWithIndexShouldAddIndexField() {
 
 		newAggregation( //
@@ -123,10 +111,7 @@ public class AggregationUnitTests {
 		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void fullUnwindOperationShouldBuildCorrectClause() {
 
 		Document agg = newAggregation( //
@@ -140,10 +125,7 @@ public class AggregationUnitTests {
 						containing("preserveNullAndEmptyArrays", true));
 	}
 
-	/**
-	 * @see DATAMONGO-1391
-	 */
-	@Test
+	@Test // DATAMONGO-1391
 	public void unwindOperationWithPreserveNullShouldBuildCorrectClause() {
 
 		Document agg = newAggregation( //
@@ -155,10 +137,7 @@ public class AggregationUnitTests {
 				isBsonObject().notContaining("includeArrayIndex").containing("preserveNullAndEmptyArrays", true));
 	}
 
-	/**
-	 * @see DATAMONGO-1550
-	 */
-	@Test
+	@Test // DATAMONGO-1550
 	public void replaceRootOperationShouldBuildCorrectClause() {
 
 		Document agg = newAggregation( //
@@ -170,10 +149,7 @@ public class AggregationUnitTests {
 		assertThat(unwind, isBsonObject().containing("$replaceRoot.newRoot", new Document("field", "value")));
 	}
 
-	/**
-	 * @see DATAMONGO-753
-	 */
-	@Test
+	@Test // DATAMONGO-753
 	public void matchOperationShouldNotChangeAvailableFields() {
 
 		newAggregation( //
@@ -183,10 +159,7 @@ public class AggregationUnitTests {
 		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 	}
 
-	/**
-	 * @see DATAMONGO-788
-	 */
-	@Test
+	@Test // DATAMONGO-788
 	public void referencesToGroupIdsShouldBeRenderedAsReferences() {
 
 		Document agg = newAggregation( //
@@ -202,10 +175,7 @@ public class AggregationUnitTests {
 		assertThat(fields.get("a"), is((Object) "$_id.a"));
 	}
 
-	/**
-	 * @see DATAMONGO-791
-	 */
-	@Test
+	@Test // DATAMONGO-791
 	public void allowAggregationOperationsToBePassedAsIterable() {
 
 		List<AggregationOperation> ops = new ArrayList<AggregationOperation>();
@@ -222,10 +192,7 @@ public class AggregationUnitTests {
 		assertThat(fields.get("a"), is((Object) "$_id.a"));
 	}
 
-	/**
-	 * @see DATAMONGO-791
-	 */
-	@Test
+	@Test // DATAMONGO-791
 	public void allowTypedAggregationOperationsToBePassedAsIterable() {
 
 		List<AggregationOperation> ops = new ArrayList<AggregationOperation>();
@@ -242,10 +209,7 @@ public class AggregationUnitTests {
 		assertThat(fields.get("a"), is((Object) "$_id.a"));
 	}
 
-	/**
-	 * @see DATAMONGO-838
-	 */
-	@Test
+	@Test // DATAMONGO-838
 	public void expressionBasedFieldsShouldBeReferencableInFollowingOperations() {
 
 		Document agg = newAggregation( //
@@ -259,10 +223,7 @@ public class AggregationUnitTests {
 		assertThat(fields.get("foosum"), is((Object) new Document("$sum", "$foo")));
 	}
 
-	/**
-	 * @see DATAMONGO-908
-	 */
-	@Test
+	@Test // DATAMONGO-908
 	public void shouldSupportReferingToNestedPropertiesInGroupOperation() {
 
 		Document agg = newAggregation( //
@@ -280,10 +241,7 @@ public class AggregationUnitTests {
 		assertThat(id.get("ruleType"), is((Object) "$rules.ruleType"));
 	}
 
-	/**
-	 * @see DATAMONGO-1585
-	 */
-	@Test
+	@Test // DATAMONGO-1585
 	public void shouldSupportSortingBySyntheticAndExposedGroupFields() {
 
 		Document agg = newAggregation( //
@@ -298,10 +256,7 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(sort, "$sort"), is(Document.parse("{ \"_id.cmsParameterId\" : 1 , \"titles\" : 1}")));
 	}
 
-	/**
-	 * @see DATAMONGO-1585
-	 */
-	@Test
+	@Test // DATAMONGO-1585
 	public void shouldSupportSortingByProjectedFields() {
 
 		Document agg = newAggregation( //
@@ -321,10 +276,7 @@ public class AggregationUnitTests {
 						.containing("alias", 1));
 	}
 
-	/**
-	 * @see DATAMONGO-924
-	 */
-	@Test
+	@Test // DATAMONGO-924
 	public void referencingProjectionAliasesFromPreviousStepShouldReferToTheSameFieldTarget() {
 
 		Document agg = newAggregation( //
@@ -339,10 +291,7 @@ public class AggregationUnitTests {
 		assertThat(projection1, is((Document) new Document("b", "$ba")));
 	}
 
-	/**
-	 * @see DATAMONGO-960
-	 */
-	@Test
+	@Test // DATAMONGO-960
 	public void shouldRenderAggregationWithDefaultOptionsCorrectly() {
 
 		Document agg = newAggregation( //
@@ -353,10 +302,7 @@ public class AggregationUnitTests {
 				is(Document.parse("{ \"aggregate\" : \"foo\" , \"pipeline\" : [ { \"$project\" : { \"aa\" : \"$a\"}}]}")));
 	}
 
-	/**
-	 * @see DATAMONGO-960
-	 */
-	@Test
+	@Test // DATAMONGO-960
 	public void shouldRenderAggregationWithCustomOptionsCorrectly() {
 
 		AggregationOptions aggregationOptions = newAggregationOptions().explain(true).cursor(new Document("foo", 1))
@@ -377,10 +323,7 @@ public class AggregationUnitTests {
 				));
 	}
 
-	/**
-	 * @see DATAMONGO-954, DATAMONGO-1585
-	 */
-	@Test
+	@Test // DATAMONGO-954, DATAMONGO-1585
 	public void shouldSupportReferencingSystemVariables() {
 
 		Document agg = newAggregation( //
@@ -401,10 +344,7 @@ public class AggregationUnitTests {
 		assertThat(group, is((Document) new Document("_id", "$someKey").append("doc", new Document("$first", "$$ROOT"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1254
-	 */
-	@Test
+	@Test // DATAMONGO-1254
 	public void shouldExposeAliasedFieldnameForProjectionsIncludingOperationsDownThePipeline() {
 
 		Document agg = Aggregation.newAggregation(//
@@ -418,10 +358,7 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(group, "count"), is(new Document().append("$sum", "$tags_count")));
 	}
 
-	/**
-	 * @see DATAMONGO-1254
-	 */
-	@Test
+	@Test // DATAMONGO-1254
 	public void shouldUseAliasedFieldnameForProjectionsIncludingOperationsDownThePipelineWhenUsingSpEL() {
 
 		Document agg = Aggregation.newAggregation(//
@@ -435,10 +372,7 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(group, "count"), is(new Document().append("$sum", "$tags_count")));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void conditionExpressionBasedFieldsShouldBeReferencableInFollowingOperations() {
 
 		Document agg = newAggregation( //
@@ -457,10 +391,7 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(fields, "foosum"), isBsonObject().containing("$first.$cond.else", "no-answer"));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void shouldRenderProjectionConditionalExpressionCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
@@ -479,10 +410,7 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(project, "color"), isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void shouldRenderProjectionConditionalCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
@@ -502,10 +430,7 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(project, "color"), isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void shouldRenderProjectionConditionalWithCriteriaCorrectly() {
 
 		Document agg = Aggregation
@@ -524,10 +449,7 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(project, "color"), isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void referencingProjectionAliasesShouldRenderProjectionConditionalWithFieldReferenceCorrectly() {
 
 		Document agg = Aggregation
@@ -549,10 +471,7 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(project, "luminosity"), isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void referencingProjectionAliasesShouldRenderProjectionConditionalWithCriteriaReferenceCorrectly() {
 
 		Document agg = Aggregation
@@ -574,10 +493,7 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(project, "luminosity"), isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void shouldRenderProjectionIfNullWithFieldReferenceCorrectly() {
 
 		Document agg = Aggregation
@@ -595,10 +511,7 @@ public class AggregationUnitTests {
 				isBsonObject().containing("$ifNull", Arrays.<Object> asList("$chroma", "unknown")));
 	}
 
-	/**
-	 * @see DATAMONGO-861
-	 */
-	@Test
+	@Test // DATAMONGO-861
 	public void shouldRenderProjectionIfNullWithFallbackFieldReferenceCorrectly() {
 
 		Document agg = Aggregation
@@ -615,10 +528,7 @@ public class AggregationUnitTests {
 				isBsonObject().containing("$ifNull", Arrays.asList("$chroma", "$fallback")));
 	}
 
-	/**
-	 * @see DATAMONGO-1552
-	 */
-	@Test
+	@Test // DATAMONGO-1552
 	public void shouldHonorDefaultCountField() {
 
 		Document agg = Aggregation
@@ -632,10 +542,7 @@ public class AggregationUnitTests {
 		assertThat(project, isBsonObject().containing("count", 1));
 	}
 
-	/**
-	 * @see DATAMONGO-1533
-	 */
-	@Test
+	@Test // DATAMONGO-1533
 	public void groupOperationShouldAllowUsageOfDerivedSpELAggregationExpression() {
 
 		Document agg = newAggregation( //

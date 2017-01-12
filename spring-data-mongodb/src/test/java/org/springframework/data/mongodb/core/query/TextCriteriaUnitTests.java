@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,50 +31,35 @@ import org.springframework.data.mongodb.core.DocumentTestUtils;
  */
 public class TextCriteriaUnitTests {
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldNotHaveLanguageField() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage();
 		assertThat(criteria.getCriteriaObject(), equalTo(searchObject("{ }")));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldNotHaveLanguageForNonDefaultLanguageField() {
 
 		TextCriteria criteria = TextCriteria.forLanguage("spanish");
 		assertThat(criteria.getCriteriaObject(), equalTo(searchObject("{ \"$language\" : \"spanish\" }")));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldCreateSearchFieldForSingleTermCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("cake");
 		assertThat(criteria.getCriteriaObject(), equalTo(searchObject("{ \"$search\" : \"cake\" }")));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldCreateSearchFieldCorrectlyForMultipleTermsCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny("bake", "coffee", "cake");
 		assertThat(criteria.getCriteriaObject(), equalTo(searchObject("{ \"$search\" : \"bake coffee cake\" }")));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldCreateSearchFieldForPhraseCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingPhrase("coffee cake");
@@ -82,30 +67,21 @@ public class TextCriteriaUnitTests {
 				IsEqual.<Document> equalTo(new Document("$search", "\"coffee cake\"")));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldCreateNotFieldCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().notMatching("cake");
 		assertThat(criteria.getCriteriaObject(), equalTo(searchObject("{ \"$search\" : \"-cake\" }")));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldCreateSearchFieldCorrectlyForNotMultipleTermsCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().notMatchingAny("bake", "coffee", "cake");
 		assertThat(criteria.getCriteriaObject(), equalTo(searchObject("{ \"$search\" : \"-bake -coffee -cake\" }")));
 	}
 
-	/**
-	 * @see DATAMONGO-850
-	 */
-	@Test
+	@Test // DATAMONGO-850
 	public void shouldCreateSearchFieldForNotPhraseCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().notMatchingPhrase("coffee cake");
@@ -113,10 +89,7 @@ public class TextCriteriaUnitTests {
 				IsEqual.<Document> equalTo(new Document("$search", "-\"coffee cake\"")));
 	}
 
-	/**
-	 * @see DATAMONGO-1455
-	 */
-	@Test
+	@Test // DATAMONGO-1455
 	public void caseSensitiveOperatorShouldBeSetCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("coffee").caseSensitive(true);
@@ -124,10 +97,7 @@ public class TextCriteriaUnitTests {
 				equalTo(new Document("$search", "coffee").append("$caseSensitive", true)));
 	}
 
-	/**
-	 * @see DATAMONGO-1456
-	 */
-	@Test
+	@Test // DATAMONGO-1456
 	public void diacriticSensitiveOperatorShouldBeSetCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("coffee").diacriticSensitive(true);

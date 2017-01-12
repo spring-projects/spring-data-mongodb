@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,10 +106,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		subscriber.await().assertComplete().assertNoError();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void existsByIdShouldReturnTrueForExistingObject() {
 
 		Boolean exists = repository.exists(dave.id).block();
@@ -117,10 +114,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(exists, is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void existsByIdShouldReturnFalseForAbsentObject() {
 
 		TestSubscriber<Boolean> testSubscriber = TestSubscriber.subscribe(repository.exists("unknown"));
@@ -128,20 +122,14 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		testSubscriber.await().assertComplete().assertValues(false).assertNoError();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void existsByMonoOfIdShouldReturnTrueForExistingObject() {
 
 		Boolean exists = repository.exists(Mono.just(dave.id)).block();
 		assertThat(exists, is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void existsByEmptyMonoOfIdShouldReturnEmptyMono() {
 
 		TestSubscriber<Boolean> testSubscriber = TestSubscriber.subscribe(repository.exists(Mono.empty()));
@@ -149,10 +137,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		testSubscriber.await().assertComplete().assertNoValues().assertNoError();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findOneShouldReturnObject() {
 
 		ReactivePerson person = repository.findOne(dave.id).block();
@@ -160,10 +145,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(person.getFirstname(), is(equalTo("Dave")));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findOneShouldCompleteWithoutValueForAbsentObject() {
 
 		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.findOne("unknown"));
@@ -171,10 +153,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		testSubscriber.await().assertComplete().assertNoValues().assertNoError();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findOneByMonoOfIdShouldReturnTrueForExistingObject() {
 
 		ReactivePerson person = repository.findOne(Mono.just(dave.id)).block();
@@ -182,10 +161,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(person.id, is(equalTo(dave.id)));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findOneByEmptyMonoOfIdShouldReturnEmptyMono() {
 
 		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.findOne(Mono.empty()));
@@ -193,10 +169,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		testSubscriber.await().assertComplete().assertNoValues().assertNoError();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findAllShouldReturnAllResults() {
 
 		List<ReactivePerson> persons = repository.findAll().collectList().block();
@@ -204,10 +177,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(persons, hasSize(7));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findAllByIterableOfIdShouldReturnResults() {
 
 		List<ReactivePerson> persons = repository.findAll(Arrays.asList(dave.id, boyd.id)).collectList().block();
@@ -215,10 +185,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(persons, hasSize(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findAllByPublisherOfIdShouldReturnResults() {
 
 		List<ReactivePerson> persons = repository.findAll(Flux.just(dave.id, boyd.id)).collectList().block();
@@ -226,10 +193,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(persons, hasSize(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findAllByEmptyPublisherOfIdShouldReturnResults() {
 
 		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.findAll(Flux.empty()));
@@ -237,10 +201,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		testSubscriber.await().assertComplete().assertNoValues().assertNoError();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void findAllWithSortShouldReturnResults() {
 
 		List<ReactivePerson> persons = repository.findAll(new Sort(new Order(Direction.ASC, "age"))).collectList().block();
@@ -249,10 +210,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(persons.get(0).getId(), is(equalTo(oliver.getId())));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void countShouldReturnNumberOfRecords() {
 
 		TestSubscriber<Long> testSubscriber = TestSubscriber.subscribe(repository.count());
@@ -260,10 +218,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		testSubscriber.await().assertComplete().assertValueCount(1).assertValues(7L).assertNoError();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertEntityShouldInsertEntity() {
 
 		repository.deleteAll().block();
@@ -277,10 +232,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(person.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertShouldDeferredWrite() {
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
@@ -290,10 +242,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(person.getId(), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertIterableOfEntitiesShouldInsertEntity() {
 
 		repository.deleteAll().block();
@@ -312,10 +261,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(boyd.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertPublisherOfEntitiesShouldInsertEntity() {
 
 		repository.deleteAll().block();
@@ -334,10 +280,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(boyd.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void saveEntityShouldUpdateExistingEntity() {
 
 		dave.setFirstname("Hello, Dave");
@@ -358,10 +301,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(reactivePerson.getLastname(), is(equalTo(dave.getLastname())));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void saveEntityShouldInsertNewEntity() {
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
@@ -376,10 +316,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(reactivePerson.getLastname(), is(equalTo(person.getLastname())));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void saveIterableOfNewEntitiesShouldInsertEntity() {
 
 		repository.deleteAll().block();
@@ -398,10 +335,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(boyd.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void saveIterableOfMixedEntitiesShouldInsertEntity() {
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
@@ -422,10 +356,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(persistentHomer, is(equalTo(person)));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void savePublisherOfEntitiesShouldInsertEntity() {
 
 		repository.deleteAll().block();
@@ -444,10 +375,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(boyd.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void deleteAllShouldRemoveEntities() {
 
 		repository.deleteAll().block();
@@ -457,10 +385,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		testSubscriber.await().assertComplete().assertValueCount(0);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void deleteByIdShouldRemoveEntity() {
 
 		TestSubscriber<Void> testSubscriber = TestSubscriber.subscribe(repository.delete(dave.id));
@@ -472,10 +397,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		verificationSubscriber.await().assertComplete().assertNoValues();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void deleteShouldRemoveEntity() {
 
 		TestSubscriber<Void> testSubscriber = TestSubscriber.subscribe(repository.delete(dave));
@@ -487,10 +409,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		verificationSubscriber.await().assertComplete().assertNoValues();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void deleteIterableOfEntitiesShouldRemoveEntities() {
 
 		TestSubscriber<Void> testSubscriber = TestSubscriber.subscribe(repository.delete(Arrays.asList(dave, boyd)));
@@ -506,10 +425,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void deletePublisherOfEntitiesShouldRemoveEntities() {
 
 		TestSubscriber<Void> testSubscriber = TestSubscriber.subscribe(repository.delete(Flux.just(dave, boyd)));

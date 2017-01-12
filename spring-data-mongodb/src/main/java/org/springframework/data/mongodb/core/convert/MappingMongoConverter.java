@@ -339,7 +339,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Assert.isTrue(annotation != null, "The referenced property has to be mapped with @DBRef!");
 		}
 
-		// @see DATAMONGO-913
+		// DATAMONGO-913
 		if (object instanceof LazyLoadingProxy) {
 			return ((LazyLoadingProxy) object).toDBRef();
 		}

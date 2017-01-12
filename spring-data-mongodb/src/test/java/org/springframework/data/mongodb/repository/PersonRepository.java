@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,9 +77,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Query(value = "{ 'firstname' : ?0 }", fields = "{ 'firstname': 1, 'lastname': 1}")
 	List<Person> findByThePersonsFirstname(String firstname);
 
-	/**
-	 * @see DATAMONGO-871
-	 */
+	// DATAMONGO-871
 	@Query(value = "{ 'firstname' : ?0 }")
 	Person[] findByThePersonsFirstnameAsArray(String firstname);
 
@@ -187,197 +185,125 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	GeoResults<Person> findByLocationNear(Point point, Distance maxDistance);
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
+	// DATAMONGO-1110
 	GeoResults<Person> findPersonByLocationNear(Point point, Range<Distance> distance);
 
 	GeoPage<Person> findByLocationNear(Point point, Distance maxDistance, Pageable pageable);
 
 	List<Person> findByCreator(User user);
 
-	/**
-	 * @see DATAMONGO-425
-	 */
+	// DATAMONGO-425
 	List<Person> findByCreatedAtLessThan(Date date);
 
-	/**
-	 * @see DATAMONGO-425
-	 */
+	// DATAMONGO-425
 	List<Person> findByCreatedAtGreaterThan(Date date);
 
-	/**
-	 * @see DATAMONGO-425
-	 */
+	// DATAMONGO-425
 	@Query("{ 'createdAt' : { '$lt' : ?0 }}")
 	List<Person> findByCreatedAtLessThanManually(Date date);
 
-	/**
-	 * @see DATAMONGO-427
-	 */
+	// DATAMONGO-427
 	List<Person> findByCreatedAtBefore(Date date);
 
-	/**
-	 * @see DATAMONGO-427
-	 */
+	// DATAMONGO-427
 	List<Person> findByCreatedAtAfter(Date date);
 
-	/**
-	 * @see DATAMONGO-472
-	 * @param lastname
-	 * @return
-	 */
+	// DATAMONGO-472
 	List<Person> findByLastnameNot(String lastname);
 
-	/**
-	 * @see DATAMONGO-600
-	 * @param credentials
-	 * @return
-	 */
+	// DATAMONGO-600
 	List<Person> findByCredentials(Credentials credentials);
 
-	/**
-	 * @see DATAMONGO-636
-	 */
+	// DATAMONGO-636
 	long countByLastname(String lastname);
 
-	/**
-	 * @see DATAMONGO-636
-	 */
+	// DATAMONGO-636
 	int countByFirstname(String firstname);
 
-	/**
-	 * @see DATAMONGO-636
-	 */
+	// DATAMONGO-636
 	@Query(value = "{ 'lastname' : ?0 }", count = true)
 	long someCountQuery(String lastname);
 
-	/**
-	 * @see DATAMONGO-1454
-	 */
+	// DATAMONGO-1454
 	boolean existsByFirstname(String firstname);
 
-	/**
-	 * @see DATAMONGO-1454
-	 */
+	// DATAMONGO-1454
 	@ExistsQuery(value = "{ 'lastname' : ?0 }")
 	boolean someExistQuery(String lastname);
 
-	/**
-	 * @see DATAMONGO-770
-	 */
+	// DATAMONGO-770
 	List<Person> findByFirstnameIgnoreCase(String firstName);
 
-	/**
-	 * @see DATAMONGO-770
-	 */
+	// DATAMONGO-770
 	List<Person> findByFirstnameNotIgnoreCase(String firstName);
 
-	/**
-	 * @see DATAMONGO-770
-	 */
+	// DATAMONGO-770
 	List<Person> findByFirstnameStartingWithIgnoreCase(String firstName);
 
-	/**
-	 * @see DATAMONGO-770
-	 */
+	// DATAMONGO-770
 	List<Person> findByFirstnameEndingWithIgnoreCase(String firstName);
 
-	/**
-	 * @see DATAMONGO-770
-	 */
+	// DATAMONGO-770
 	List<Person> findByFirstnameContainingIgnoreCase(String firstName);
 
-	/**
-	 * @see DATAMONGO-870
-	 */
+	// DATAMONGO-870
 	Slice<Person> findByAgeGreaterThan(int age, Pageable pageable);
 
-	/**
-	 * @see DATAMONGO-821
-	 */
+	// DATAMONGO-821
 	@Query("{ creator : { $exists : true } }")
 	Page<Person> findByHavingCreator(Pageable page);
 
-	/**
-	 * @see DATAMONGO-566
-	 */
+	// DATAMONGO-566
 	List<Person> deleteByLastname(String lastname);
 
-	/**
-	 * @see DATAMONGO-566
-	 */
+	// DATAMONGO-566
 	Long deletePersonByLastname(String lastname);
 
-	/**
-	 * @see DATAMONGO-566
-	 */
+	// DATAMONGO-566
 	@Query(value = "{ 'lastname' : ?0 }", delete = true)
 	List<Person> removeByLastnameUsingAnnotatedQuery(String lastname);
 
-	/**
-	 * @see DATAMONGO-566
-	 */
+	// DATAMONGO-566
 	@Query(value = "{ 'lastname' : ?0 }", delete = true)
 	Long removePersonByLastnameUsingAnnotatedQuery(String lastname);
 
-	/**
-	 * @see DATAMONGO-893
-	 */
+	// DATAMONGO-893
 	Page<Person> findByAddressIn(List<Address> address, Pageable page);
 
-	/**
-	 * @see DATAMONGO-745
-	 */
+	// DATAMONGO-745
 	@Query("{firstname:{$in:?0}, lastname:?1}")
 	Page<Person> findByCustomQueryFirstnamesAndLastname(List<String> firstnames, String lastname, Pageable page);
 
-	/**
-	 * @see DATAMONGO-745
-	 */
+	// DATAMONGO-745
 	@Query("{lastname:?0, 'address.street':{$in:?1}}")
 	Page<Person> findByCustomQueryLastnameAndAddressStreetInList(String lastname, List<String> streetNames,
 			Pageable page);
 
-	/**
-	 * @see DATAMONGO-950
-	 */
+	// DATAMONGO-950
 	List<Person> findTop3ByLastnameStartingWith(String lastname);
 
-	/**
-	 * @see DATAMONGO-950
-	 */
+	// DATAMONGO-950
 	Page<Person> findTop3ByLastnameStartingWith(String lastname, Pageable pageRequest);
 
-	/**
-	 * @see DATAMONGO-1030
-	 */
+	// DATAMONGO-1030
 	PersonSummary findSummaryByLastname(String lastname);
 
 	@Query("{ ?0 : ?1 }")
 	List<Person> findByKeyValue(String key, String value);
 
-	/**
-	 * @see DATAMONGO-1165
-	 */
+	// DATAMONGO-1165
 	@Query("{ firstname : { $in : ?0 }}")
 	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
 
-	/**
-	 * @see DATAMONGO-990
-	 */
+	// DATAMONGO-990
 	@Query("{ firstname : ?#{[0]}}")
 	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly(String firstname);
 
-	/**
-	 * @see DATAMONGO-990
-	 */
+	// DATAMONGO-990
 	@Query("{ firstname : ?#{[0]}, email: ?#{principal.email} }")
 	List<Person> findWithSpelByFirstnameAndCurrentUserWithCustomQuery(String firstname);
 
-	/**
-	 * @see DATAMONGO-990
-	 */
+	// DATAMONGO-990
 	@Query("{ firstname : :#{#firstname}}")
 	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterVariableOnly(@Param("firstname") String firstname);
 
@@ -385,20 +311,18 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * Returns the count of {@link Person} with the given firstname. Uses {@link CountQuery} annotation to define the
 	 * query to be executed.
 	 *
-	 * @see DATAMONGO-1539
 	 * @param firstname
 	 * @return
 	 */
-	@CountQuery("{ 'firstname' : ?0 }")
+	@CountQuery("{ 'firstname' : ?0 }") // DATAMONGO-1539
 	long countByThePersonsFirstname(String firstname);
 
 	/**
 	 * Deletes {@link Person} entities with the given firstname. Uses {@link DeleteQuery} annotation to define the query
 	 * to be executed.
 	 *
-	 * @see DATAMONGO-1539
 	 * @param firstname
 	 */
-	@DeleteQuery("{ 'firstname' : ?0 }")
+	@DeleteQuery("{ 'firstname' : ?0 }") // DATAMONGO-1539
 	void deleteByThePersonsFirstname(String firstname);
 }

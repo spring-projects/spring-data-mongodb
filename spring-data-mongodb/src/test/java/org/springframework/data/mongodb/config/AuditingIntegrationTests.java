@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,10 +35,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
  */
 public class AuditingIntegrationTests {
 
-	/**
-	 * @see DATAMONGO-577, DATAMONGO-800, DATAMONGO-883
-	 */
-	@Test
+	@Test // DATAMONGO-577, DATAMONGO-800, DATAMONGO-883
 	public void enablesAuditingAndSetsPropertiesAccordingly() throws Exception {
 
 		AbstractApplicationContext context = new ClassPathXmlApplicationContext("auditing.xml", getClass());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,28 +106,19 @@ public class FieldsUnitTests {
 		fields("b", "a.b");
 	}
 
-	/**
-	 * @see DATAMONGO-774
-	 */
-	@Test
+	@Test // DATAMONGO-774
 	public void stripsLeadingDollarsFromName() {
 
 		assertThat(Fields.field("$name").getName(), is("name"));
 		assertThat(Fields.field("$$$$name").getName(), is("name"));
 	}
 
-	/**
-	 * @see DATAMONGO-774
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-774
 	public void rejectsNameConsistingOfDollarOnly() {
 		Fields.field("$");
 	}
 
-	/**
-	 * @see DATAMONGO-774
-	 */
-	@Test
+	@Test // DATAMONGO-774
 	public void stripsLeadingDollarsFromTarget() {
 
 		assertThat(Fields.field("$target").getTarget(), is("target"));

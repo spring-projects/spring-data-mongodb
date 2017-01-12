@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,10 +95,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("firstName").is("Oliver"))));
 	}
 
-	/**
-	 * @see DATAMONGO-469
-	 */
-	@Test
+	@Test // DATAMONGO-469
 	public void createsAndQueryCorrectly() {
 
 		Person person = new Person();
@@ -169,10 +166,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(creator.createQuery(), is(reference));
 	}
 
-	/**
-	 * @see DATAMONGO-338
-	 */
-	@Test
+	@Test // DATAMONGO-338
 	public void createsExistsClauseCorrectly() {
 
 		PartTree tree = new PartTree("findByAgeExists", Person.class);
@@ -181,10 +175,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(creator.createQuery(), is(query));
 	}
 
-	/**
-	 * @see DATAMONGO-338
-	 */
-	@Test
+	@Test // DATAMONGO-338
 	public void createsRegexClauseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
@@ -193,10 +184,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(creator.createQuery(), is(query));
 	}
 
-	/**
-	 * @see DATAMONGO-338
-	 */
-	@Test
+	@Test // DATAMONGO-338
 	public void createsTrueClauseCorrectly() {
 
 		PartTree tree = new PartTree("findByActiveTrue", Person.class);
@@ -205,10 +193,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(creator.createQuery(), is(query));
 	}
 
-	/**
-	 * @see DATAMONGO-338
-	 */
-	@Test
+	@Test // DATAMONGO-338
 	public void createsFalseClauseCorrectly() {
 
 		PartTree tree = new PartTree("findByActiveFalse", Person.class);
@@ -217,10 +202,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(creator.createQuery(), is(query));
 	}
 
-	/**
-	 * @see DATAMONGO-413
-	 */
-	@Test
+	@Test // DATAMONGO-413
 	public void createsOrQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameOrAge", Person.class);
@@ -230,10 +212,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(new Criteria().orOperator(where("firstName").is("Dave"), where("age").is(42)))));
 	}
 
-	/**
-	 * @see DATAMONGO-347
-	 */
-	@Test
+	@Test // DATAMONGO-347
 	public void createsQueryReferencingADBRefCorrectly() {
 
 		User user = new User();
@@ -246,10 +225,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(queryObject.get("creator"), is((Object) user));
 	}
 
-	/**
-	 * @see DATAMONGO-418
-	 */
-	@Test
+	@Test // DATAMONGO-418
 	public void createsQueryWithStartingWithPredicateCorrectly() {
 
 		PartTree tree = new PartTree("findByUsernameStartingWith", User.class);
@@ -259,10 +235,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex("^Matt"))));
 	}
 
-	/**
-	 * @see DATAMONGO-418
-	 */
-	@Test
+	@Test // DATAMONGO-418
 	public void createsQueryWithEndingWithPredicateCorrectly() {
 
 		PartTree tree = new PartTree("findByUsernameEndingWith", User.class);
@@ -272,10 +245,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex("ews$"))));
 	}
 
-	/**
-	 * @see DATAMONGO-418
-	 */
-	@Test
+	@Test // DATAMONGO-418
 	public void createsQueryWithContainingPredicateCorrectly() {
 
 		PartTree tree = new PartTree("findByUsernameContaining", User.class);
@@ -301,10 +271,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void createsQueryWithFindByIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByfirstNameIgnoreCase", Person.class);
@@ -314,10 +281,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("firstName").regex("^dave$", "i"))));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void createsQueryWithFindByNotIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameNotIgnoreCase", Person.class);
@@ -327,10 +291,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query.toString(), is(query(where("firstName").not().regex("^dave$", "i")).toString()));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void createsQueryWithFindByStartingWithIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameStartingWithIgnoreCase", Person.class);
@@ -340,10 +301,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("firstName").regex("^dave", "i"))));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void createsQueryWithFindByEndingWithIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameEndingWithIgnoreCase", Person.class);
@@ -353,10 +311,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("firstName").regex("dave$", "i"))));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void createsQueryWithFindByContainingIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameContainingIgnoreCase", Person.class);
@@ -366,10 +321,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("firstName").regex(".*dave.*", "i"))));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void shouldThrowExceptionForQueryWithFindByIgnoreCaseOnNonStringProperty() {
 
 		expection.expect(IllegalArgumentException.class);
@@ -381,10 +333,7 @@ public class MongoQueryCreatorUnitTests {
 		creator.createQuery();
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void shouldOnlyGenerateLikeExpressionsForStringPropertiesIfAllIgnoreCase() {
 
 		PartTree tree = new PartTree("findByFirstNameAndAgeAllIgnoreCase", Person.class);
@@ -394,10 +343,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("firstName").regex("^dave$", "i").and("age").is(42))));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void shouldCreateDeleteByQueryCorrectly() {
 
 		PartTree tree = new PartTree("deleteByFirstName", Person.class);
@@ -409,10 +355,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("firstName").is("dave"))));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void shouldCreateDeleteByQueryCorrectlyForMultipleCriteriaAndCaseExpressions() {
 
 		PartTree tree = new PartTree("deleteByFirstNameAndAgeAllIgnoreCase", Person.class);
@@ -424,10 +367,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("firstName").regex("^dave$", "i").and("age").is(42))));
 	}
 
-	/**
-	 * @see DATAMONGO-1075
-	 */
-	@Test
+	@Test // DATAMONGO-1075
 	public void shouldCreateInClauseWhenUsingContainsOnCollectionLikeProperty() {
 
 		PartTree tree = new PartTree("findByEmailAddressesContaining", User.class);
@@ -438,10 +378,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("emailAddresses").in("dave"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1075
-	 */
-	@Test
+	@Test // DATAMONGO-1075
 	public void shouldCreateInClauseWhenUsingNotContainsOnCollectionLikeProperty() {
 
 		PartTree tree = new PartTree("findByEmailAddressesNotContaining", User.class);
@@ -452,11 +389,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("emailAddresses").not().in("dave"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1075
-	 * @see DATAMONGO-1425
-	 */
-	@Test
+	@Test // DATAMONGO-1075, DATAMONGO-1425
 	public void shouldCreateRegexWhenUsingNotContainsOnStringProperty() {
 
 		PartTree tree = new PartTree("findByUsernameNotContaining", User.class);
@@ -466,10 +399,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query.getQueryObject().toJson(), is(query(where("username").not().regex(".*thew.*")).getQueryObject().toJson()));
 	}
 
-	/**
-	 * @see DATAMONGO-1139
-	 */
-	@Test
+	@Test // DATAMONGO-1139
 	public void createsNonShericalNearForDistanceWithDefaultMetric() {
 
 		Point point = new Point(1.0, 1.0);
@@ -482,10 +412,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("location").near(point).maxDistance(1.0))));
 	}
 
-	/**
-	 * @see DATAMONGO-1136
-	 */
-	@Test
+	@Test // DATAMONGO-1136
 	public void shouldCreateWithinQueryCorrectly() {
 
 		Point first = new Point(1, 1);
@@ -500,10 +427,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("address.geo").within(shape))));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void shouldCreateNearSphereQueryForSphericalProperty() {
 
 		Point point = new Point(10, 20);
@@ -515,10 +439,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("address2dSphere.geo").nearSphere(point))));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void shouldCreateNearSphereQueryForSphericalPropertyHavingDistanceWithDefaultMetric() {
 
 		Point point = new Point(1.0, 1.0);
@@ -531,10 +452,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("address2dSphere.geo").nearSphere(point).maxDistance(1.0))));
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void shouldCreateNearQueryForMinMaxDistance() {
 
 		Point point = new Point(10, 20);
@@ -547,10 +465,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("address.geo").near(point).minDistance(10D).maxDistance(20D))));
 	}
 
-	/**
-	 * @see DATAMONGO-1229
-	 */
-	@Test
+	@Test // DATAMONGO-1229
 	public void appliesIgnoreCaseToLeafProperty() {
 
 		PartTree tree = new PartTree("findByAddressStreetIgnoreCase", User.class);
@@ -559,10 +474,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(new MongoQueryCreator(tree, accessor, context).createQuery(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1232
-	 */
-	@Test
+	@Test // DATAMONGO-1232
 	public void ignoreCaseShouldEscapeSource() {
 
 		PartTree tree = new PartTree("findByUsernameIgnoreCase", User.class);
@@ -573,10 +485,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex("^\\Qcon.flux+\\E$", "i"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1232
-	 */
-	@Test
+	@Test // DATAMONGO-1232
 	public void ignoreCaseShouldEscapeSourceWhenUsedForStartingWith() {
 
 		PartTree tree = new PartTree("findByUsernameStartingWithIgnoreCase", User.class);
@@ -587,10 +496,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex("^\\Qdawns.light+\\E", "i"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1232
-	 */
-	@Test
+	@Test // DATAMONGO-1232
 	public void ignoreCaseShouldEscapeSourceWhenUsedForEndingWith() {
 
 		PartTree tree = new PartTree("findByUsernameEndingWithIgnoreCase", User.class);
@@ -601,10 +507,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex("\\Qnew.ton+\\E$", "i"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1232
-	 */
-	@Test
+	@Test // DATAMONGO-1232
 	public void likeShouldEscapeSourceWhenUsedWithLeadingAndTrailingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameLike", User.class);
@@ -615,10 +518,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex(".*\\Qfire.fight+\\E.*"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1232
-	 */
-	@Test
+	@Test // DATAMONGO-1232
 	public void likeShouldEscapeSourceWhenUsedWithLeadingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameLike", User.class);
@@ -629,10 +529,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex(".*\\Qsteel.heart+\\E"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1232
-	 */
-	@Test
+	@Test // DATAMONGO-1232
 	public void likeShouldEscapeSourceWhenUsedWithTrailingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameLike", User.class);
@@ -642,10 +539,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex("\\Qcala.mity+\\E.*"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1232
-	 */
-	@Test
+	@Test // DATAMONGO-1232
 	public void likeShouldBeTreatedCorrectlyWhenUsedWithWildcardOnly() {
 
 		PartTree tree = new PartTree("findByUsernameLike", User.class);
@@ -655,10 +549,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex(".*"))));
 	}
 
-	/**
-	 * @see DATAMONGO-1342
-	 */
-	@Test
+	@Test // DATAMONGO-1342
 	public void bindsNullValueToContainsClause() {
 
 		PartTree partTree = new PartTree("emailAddressesContains", User.class);
@@ -669,10 +560,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("emailAddresses").in((Object) null))));
 	}
 
-	/**
-	 * @see DATAMONGO-1424
-	 */
-	@Test
+	@Test // DATAMONGO-1424
 	public void notLikeShouldEscapeSourceWhenUsedWithLeadingAndTrailingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
@@ -684,10 +572,7 @@ public class MongoQueryCreatorUnitTests {
 				is(query(where("username").not().regex(".*\\Qfire.fight+\\E.*")).getQueryObject().toJson()));
 	}
 
-	/**
-	 * @see DATAMONGO-1424
-	 */
-	@Test
+	@Test // DATAMONGO-1424
 	public void notLikeShouldEscapeSourceWhenUsedWithLeadingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
@@ -699,10 +584,7 @@ public class MongoQueryCreatorUnitTests {
 				is(query(where("username").not().regex(".*\\Qsteel.heart+\\E")).getQueryObject().toJson()));
 	}
 
-	/**
-	 * @see DATAMONGO-1424
-	 */
-	@Test
+	@Test // DATAMONGO-1424
 	public void notLikeShouldEscapeSourceWhenUsedWithTrailingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
@@ -712,10 +594,7 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query.getQueryObject().toJson(), is(query(where("username").not().regex("\\Qcala.mity+\\E.*")).getQueryObject().toJson()));
 	}
 
-	/**
-	 * @see DATAMONGO-1424
-	 */
-	@Test
+	@Test // DATAMONGO-1424
 	public void notLikeShouldBeTreatedCorrectlyWhenUsedWithWildcardOnly() {
 
 		PartTree tree = new PartTree("findByUsernameNotLike", User.class);

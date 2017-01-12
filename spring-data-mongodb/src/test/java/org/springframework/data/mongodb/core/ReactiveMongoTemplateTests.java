@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,10 +107,7 @@ public class ReactiveMongoTemplateTests {
 				.and(template.dropCollection(Sample.class)).block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertSetsId() throws Exception {
 
 		PersonWithAList person = new PersonWithAList();
@@ -121,10 +118,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertAllSetsId() throws Exception {
 
 		PersonWithAList person = new PersonWithAList();
@@ -135,10 +129,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertCollectionSetsId() throws Exception {
 
 		PersonWithAList person = new PersonWithAList();
@@ -149,10 +140,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void saveSetsId() throws Exception {
 
 		PersonWithAList person = new PersonWithAList();
@@ -163,10 +151,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.getId(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertsSimpleEntityCorrectly() throws Exception {
 
 		Person person = new Person("Mark");
@@ -181,10 +166,7 @@ public class ReactiveMongoTemplateTests {
 		testSubscriber.assertValues(person);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void simpleInsertDoesNotAllowArrays() throws Exception {
 
 		thrown.expect(IllegalArgumentException.class);
@@ -194,10 +176,7 @@ public class ReactiveMongoTemplateTests {
 		template.insert(new Person[] { person });
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void simpleInsertDoesNotAllowCollections() throws Exception {
 
 		thrown.expect(IllegalArgumentException.class);
@@ -207,10 +186,7 @@ public class ReactiveMongoTemplateTests {
 		template.insert(Collections.singletonList(person));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertsSimpleEntityWithSuppliedCollectionNameCorrectly() throws Exception {
 
 		Person person = new Person("Homer");
@@ -225,10 +201,7 @@ public class ReactiveMongoTemplateTests {
 		testSubscriber.assertValues(person);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertBatchCorrectly() throws Exception {
 
 		List<Person> persons = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
@@ -243,10 +216,7 @@ public class ReactiveMongoTemplateTests {
 		testSubscriber.assertValues(persons.toArray(new Person[persons.size()]));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertBatchWithSuppliedCollectionNameCorrectly() throws Exception {
 
 		List<Person> persons = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
@@ -261,10 +231,7 @@ public class ReactiveMongoTemplateTests {
 		testSubscriber.assertValues(persons.toArray(new Person[persons.size()]));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void insertBatchWithSuppliedEntityTypeCorrectly() throws Exception {
 
 		List<Person> persons = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
@@ -279,10 +246,7 @@ public class ReactiveMongoTemplateTests {
 		testSubscriber.assertValues(persons.toArray(new Person[persons.size()]));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void testAddingToList() {
 
 		PersonWithAList p = new PersonWithAList();
@@ -317,10 +281,7 @@ public class ReactiveMongoTemplateTests {
 
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void testFindOneWithSort() {
 		PersonWithAList p = new PersonWithAList();
 		p.setFirstName("Sven");
@@ -344,10 +305,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(p5.getFirstName(), is("Mark"));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void bogusUpdateDoesNotTriggerException() throws Exception {
 
 		ReactiveMongoTemplate mongoTemplate = new ReactiveMongoTemplate(factory);
@@ -362,10 +320,7 @@ public class ReactiveMongoTemplateTests {
 		mongoTemplate.updateFirst(q, u, Person.class).block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void updateFirstByEntityTypeShouldUpdateObject() throws Exception {
 
 		Person person = new Person("Oliver2", 25);
@@ -379,10 +334,7 @@ public class ReactiveMongoTemplateTests {
 				});
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void updateFirstByCollectionNameShouldUpdateObjects() throws Exception {
 
 		Person person = new Person("Oliver2", 25);
@@ -396,10 +348,7 @@ public class ReactiveMongoTemplateTests {
 				});
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void updateMultiByEntityTypeShouldUpdateObjects() throws Exception {
 
 		Query query = new Query(
@@ -412,10 +361,7 @@ public class ReactiveMongoTemplateTests {
 				.awaitAndAssertNextValueCount(2);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void updateMultiByCollectionNameShouldUpdateObject() throws Exception {
 
 		Query query = new Query(
@@ -430,10 +376,7 @@ public class ReactiveMongoTemplateTests {
 				.awaitAndAssertNextValueCount(2);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void throwsExceptionForDuplicateIds() {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
@@ -452,10 +395,7 @@ public class ReactiveMongoTemplateTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void throwsExceptionForUpdateWithInvalidPushOperator() {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
@@ -477,10 +417,7 @@ public class ReactiveMongoTemplateTests {
 		template.updateFirst(query, upd, Person.class).block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void rejectsDuplicateIdInInsertAll() {
 
 		thrown.expect(DataIntegrityViolationException.class);
@@ -500,10 +437,7 @@ public class ReactiveMongoTemplateTests {
 		template.insertAll(records).next().block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void testFindAndUpdate() {
 
 		template.insertAll(Arrays.asList(new Person("Tom", 21), new Person("Dick", 22), new Person("Harry", 23))).next()
@@ -538,10 +472,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(p.getAge(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void testFindAllAndRemoveFullyReturnsAndRemovesDocuments() {
 
 		Sample spring = new Sample("100", "spring");
@@ -560,10 +491,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(template.findOne(new Query(), Sample.class).block(), is(equalTo(data)));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = OptimisticLockingFailureException.class)
+	@Test(expected = OptimisticLockingFailureException.class) // DATAMONGO-1444
 	public void optimisticLockingHandling() {
 
 		// Init version
@@ -598,10 +526,7 @@ public class ReactiveMongoTemplateTests {
 		template.save(person).block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void optimisticLockingHandlingWithExistingId() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
@@ -611,10 +536,7 @@ public class ReactiveMongoTemplateTests {
 		template.save(person);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void doesNotFailOnVersionInitForUnversionedEntity() {
 
 		Document dbObject = new Document();
@@ -623,10 +545,7 @@ public class ReactiveMongoTemplateTests {
 		template.insert(dbObject, template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void removesObjectFromExplicitCollection() {
 
 		String collectionName = "explicit";
@@ -641,10 +560,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).next().block(), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void savesMapCorrectly() {
 
 		Map<String, String> map = new HashMap<>();
@@ -653,26 +569,17 @@ public class ReactiveMongoTemplateTests {
 		template.save(map, "maps").block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = MappingException.class)
+	@Test(expected = MappingException.class) // DATAMONGO-1444
 	public void savesMongoPrimitiveObjectCorrectly() {
 		template.save(new Object(), "collection").block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
 	public void rejectsNullObjectToBeSaved() {
 		template.save((Object) null);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void savesPlainDbObjectCorrectly() {
 
 		Document dbObject = new Document("foo", "bar");
@@ -681,10 +588,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(dbObject.containsKey("_id"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = InvalidDataAccessApiUsageException.class)
+	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1444
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		Document dbObject = new Document("foo", "bar");
@@ -693,10 +597,7 @@ public class ReactiveMongoTemplateTests {
 		template.findById(dbObject.get("_id"), Document.class).block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void readsPlainDbObjectById() {
 
 		Document dbObject = new Document("foo", "bar");
@@ -707,10 +608,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(result.get("_id"), is(dbObject.get("_id")));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void geoNear() {
 
 		List<Venue> venues = Arrays.asList(new Venue("Penn Station", -73.99408, 40.75057), //
@@ -736,26 +634,17 @@ public class ReactiveMongoTemplateTests {
 				.assertValueCount(3);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void writesPlainString() {
 		template.save("{ 'foo' : 'bar' }", "collection").block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = MappingException.class)
+	@Test(expected = MappingException.class) // DATAMONGO-1444
 	public void rejectsNonJsonStringForSave() {
 		template.save("Foobar!", "collection").block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void initializesVersionOnInsert() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
@@ -766,10 +655,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.version, is(0));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void initializesVersionOnBatchInsert() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
@@ -780,10 +666,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.version, is(0));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void queryCantBeNull() {
 
 		List<PersonWithIdPropertyOfTypeObjectId> result = Flux
@@ -791,10 +674,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(template.find(null, PersonWithIdPropertyOfTypeObjectId.class).collectList().block(), is(result));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void versionsObjectIntoDedicatedCollection() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
@@ -807,10 +687,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.version, is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void correctlySetsLongVersionProperty() {
 
 		PersonWithVersionPropertyOfTypeLong person = new PersonWithVersionPropertyOfTypeLong();
@@ -820,10 +697,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.version, is(0L));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void throwsExceptionForIndexViolationIfConfigured() {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
@@ -846,10 +720,7 @@ public class ReactiveMongoTemplateTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test(expected = DuplicateKeyException.class)
+	@Test(expected = DuplicateKeyException.class) // DATAMONGO-1444
 	public void preventsDuplicateInsert() {
 
 		template.setWriteConcern(WriteConcern.MAJORITY);
@@ -864,10 +735,7 @@ public class ReactiveMongoTemplateTests {
 		template.save(person).block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void countAndFindWithoutTypeInformation() {
 
 		Person person = new Person();
@@ -880,10 +748,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(template.count(query, collectionName).block(), is(1L));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void nullsPropertiesForVersionObjectUpdates() {
 
 		VersionedPerson person = new VersionedPerson();
@@ -900,10 +765,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.lastname, is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void nullsValuesForUpdatesOfUnversionedEntity() {
 
 		Person person = new Person("Dave");
@@ -916,10 +778,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.getFirstName(), is(nullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void savesJsonStringCorrectly() {
 
 		Document dbObject = new Document().append("first", "first").append("second", "second");
@@ -930,10 +789,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(result.containsKey("first"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executesExistsCorrectly() {
 
 		Sample sample = new Sample();
@@ -947,10 +803,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(template.exists(query, Sample.class, template.getCollectionName(Sample.class)).block(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void tailStreamsData() throws InterruptedException {
 
 		template.dropCollection("capped").block();
@@ -969,10 +822,7 @@ public class ReactiveMongoTemplateTests {
 		cancellation.dispose();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void tailStreamsDataUntilCancellation() throws InterruptedException {
 
 		template.dropCollection("capped").block();

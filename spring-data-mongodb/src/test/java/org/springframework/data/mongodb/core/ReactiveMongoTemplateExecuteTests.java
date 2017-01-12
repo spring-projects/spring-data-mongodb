@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,10 +83,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		operations.dropCollection("execute_index_test").block();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeCommandJsonCommandShouldReturnSingleResponse() throws Exception {
 
 		Document document = operations.executeCommand("{ buildInfo: 1 }").block();
@@ -94,10 +91,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		assertThat(document, hasKey("version"));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeCommandDocumentCommandShouldReturnSingleResponse() throws Exception {
 
 		Document document = operations.executeCommand(new Document("buildInfo", 1)).block();
@@ -105,10 +99,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		assertThat(document, hasKey("version"));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeCommandJsonCommandShouldReturnMultipleResponses() throws Exception {
 
 		assumeTrue(mongoVersion.isGreaterThan(THREE));
@@ -126,10 +117,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		});
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeCommandJsonCommandShouldTranslateExceptions() throws Exception {
 
 		TestSubscriber<Document> testSubscriber = TestSubscriber.subscribe(operations.executeCommand("{ unknown: 1 }"));
@@ -137,10 +125,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		testSubscriber.await().assertError(InvalidDataAccessApiUsageException.class);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeCommandDocumentCommandShouldTranslateExceptions() throws Exception {
 
 		TestSubscriber<Document> testSubscriber = TestSubscriber
@@ -149,10 +134,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		testSubscriber.await().assertError(InvalidDataAccessApiUsageException.class);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeCommandWithReadPreferenceCommandShouldTranslateExceptions() throws Exception {
 
 		TestSubscriber<Document> testSubscriber = TestSubscriber
@@ -161,10 +143,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		testSubscriber.await().assertError(InvalidDataAccessApiUsageException.class);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeOnDatabaseShouldExecuteCommand() throws Exception {
 
 		operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}").block();
@@ -179,10 +158,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		assertThat(documents, hasSize(3));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeOnDatabaseShouldDeferExecution() throws Exception {
 
 		operations.execute(db -> {
@@ -192,10 +168,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		// the assertion here is that the exception is not thrown
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeOnDatabaseShouldShouldTranslateExceptions() throws Exception {
 
 		TestSubscriber<Document> testSubscriber = TestSubscriber.create();
@@ -209,10 +182,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		testSubscriber.await().assertError(UncategorizedMongoDbException.class);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeOnCollectionWithTypeShouldReturnFindResults() throws Exception {
 
 		operations.executeCommand("{ insert: 'person', documents: [{},{},{}]}").block();
@@ -225,10 +195,7 @@ public class ReactiveMongoTemplateExecuteTests {
 		testSubscriber.awaitAndAssertNextValueCount(3).assertComplete();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void executeOnCollectionWithNameShouldReturnFindResults() throws Exception {
 
 		operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}").block();

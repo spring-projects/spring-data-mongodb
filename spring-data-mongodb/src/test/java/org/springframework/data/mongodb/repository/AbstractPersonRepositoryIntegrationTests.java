@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -325,10 +325,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(page, hasItems(carter, stefan));
 	}
 
-	/**
-	 * @see DATADOC-136
-	 */
-	@Test
+	@Test // DATADOC-136
 	public void findsPeopleBySexCorrectly() {
 
 		List<Person> females = repository.findBySex(Sex.FEMALE);
@@ -336,10 +333,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(females.get(0), is(alicia));
 	}
 
-	/**
-	 * @see DATAMONGO-446
-	 */
-	@Test
+	@Test // DATAMONGO-446
 	public void findsPeopleBySexPaginated() {
 
 		List<Person> males = repository.findBySex(Sex.MALE, new PageRequest(0, 2));
@@ -353,10 +347,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItem(dave));
 	}
 
-	/**
-	 * @see DATADOC-190
-	 */
-	@Test
+	@Test // DATADOC-190
 	public void existsWorksCorrectly() {
 		assertThat(repository.exists(dave.getId()), is(true));
 	}
@@ -372,10 +363,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		repository.save(daveSyer);
 	}
 
-	/**
-	 * @see DATADOC-236
-	 */
-	@Test
+	@Test // DATADOC-236
 	public void findsPeopleByLastnameAndOrdersCorrectly() {
 		List<Person> result = repository.findByLastnameOrderByFirstnameAsc("Matthews");
 		assertThat(result.size(), is(2));
@@ -383,10 +371,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(1), is(oliver));
 	}
 
-	/**
-	 * @see DATADOC-236
-	 */
-	@Test
+	@Test // DATADOC-236
 	public void appliesStaticAndDynamicSorting() {
 		List<Person> result = repository.findByFirstnameLikeOrderByLastnameAsc("*e*", new Sort("age"));
 		assertThat(result.size(), is(5));
@@ -424,10 +409,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
-	/**
-	 * @see DATAMONGO-323
-	 */
-	@Test
+	@Test // DATAMONGO-323
 	public void considersSortForAnnotatedQuery() {
 
 		List<Person> result = repository.findByAgeLessThan(60, new Sort("firstname"));
@@ -442,10 +424,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(6), is(stefan));
 	}
 
-	/**
-	 * @see DATAMONGO-347
-	 */
-	@Test
+	@Test // DATAMONGO-347
 	public void executesQueryWithDBRefReferenceCorrectly() {
 
 		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
@@ -463,10 +442,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItem(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-425
-	 */
-	@Test
+	@Test // DATAMONGO-425
 	public void bindsDateParameterForLessThanPredicateCorrectly() {
 
 		List<Person> result = repository.findByCreatedAtLessThan(boyd.createdAt);
@@ -474,10 +450,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItems(dave, oliver, carter));
 	}
 
-	/**
-	 * @see DATAMONGO-425
-	 */
-	@Test
+	@Test // DATAMONGO-425
 	public void bindsDateParameterForGreaterThanPredicateCorrectly() {
 
 		List<Person> result = repository.findByCreatedAtGreaterThan(carter.createdAt);
@@ -485,10 +458,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItems(boyd, stefan, leroi, alicia));
 	}
 
-	/**
-	 * @see DATAMONGO-427
-	 */
-	@Test
+	@Test // DATAMONGO-427
 	public void bindsDateParameterToBeforePredicateCorrectly() {
 
 		List<Person> result = repository.findByCreatedAtBefore(boyd.createdAt);
@@ -496,10 +466,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItems(dave, oliver, carter));
 	}
 
-	/**
-	 * @see DATAMONGO-427
-	 */
-	@Test
+	@Test // DATAMONGO-427
 	public void bindsDateParameterForAfterPredicateCorrectly() {
 
 		List<Person> result = repository.findByCreatedAtAfter(carter.createdAt);
@@ -507,20 +474,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItems(boyd, stefan, leroi, alicia));
 	}
 
-	/**
-	 * @see DATAMONGO-425
-	 */
-	@Test
+	@Test // DATAMONGO-425
 	public void bindsDateParameterForManuallyDefinedQueryCorrectly() {
 
 		List<Person> result = repository.findByCreatedAtLessThanManually(boyd.createdAt);
 		assertThat(result.isEmpty(), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-472
-	 */
-	@Test
+	@Test // DATAMONGO-472
 	public void findsPeopleUsingNotPredicate() {
 
 		List<Person> result = repository.findByLastnameNot("Matthews");
@@ -528,10 +489,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasSize(5));
 	}
 
-	/**
-	 * @see DATAMONGO-521
-	 */
-	@Test
+	@Test // DATAMONGO-521
 	public void executesAndQueryCorrectly() {
 
 		List<Person> result = repository.findByFirstnameAndLastname("Dave", "Matthews");
@@ -545,10 +503,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItem(oliver));
 	}
 
-	/**
-	 * @see DATAMONGO-600
-	 */
-	@Test
+	@Test // DATAMONGO-600
 	public void readsDocumentsWithNestedPolymorphismCorrectly() {
 
 		UsernameAndPassword usernameAndPassword = new UsernameAndPassword();
@@ -564,52 +519,34 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItem(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-636
-	 */
-	@Test
+	@Test // DATAMONGO-636
 	public void executesDerivedCountProjection() {
 		assertThat(repository.countByLastname("Matthews"), is(2L));
 	}
 
-	/**
-	 * @see DATAMONGO-636
-	 */
-	@Test
+	@Test // DATAMONGO-636
 	public void executesDerivedCountProjectionToInt() {
 		assertThat(repository.countByFirstname("Oliver August"), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-636
-	 */
-	@Test
+	@Test // DATAMONGO-636
 	public void executesAnnotatedCountProjection() {
 		assertThat(repository.someCountQuery("Matthews"), is(2L));
 	}
 
-	/**
-	 * @see DATAMONGO-1454
-	 */
-	@Test
+	@Test // DATAMONGO-1454
 	public void executesDerivedExistsProjectionToBoolean() {
 
 		assertThat(repository.existsByFirstname("Oliver August"), is(true));
 		assertThat(repository.existsByFirstname("Hans Peter"), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-1454
-	 */
-	@Test
+	@Test // DATAMONGO-1454
 	public void executesAnnotatedExistProjection() {
 		assertThat(repository.someExistQuery("Matthews"), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-701
-	 */
-	@Test
+	@Test // DATAMONGO-701
 	public void executesDerivedStartsWithQueryCorrectly() {
 
 		List<Person> result = repository.findByLastnameStartsWith("Matt");
@@ -617,10 +554,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItems(dave, oliver));
 	}
 
-	/**
-	 * @see DATAMONGO-701
-	 */
-	@Test
+	@Test // DATAMONGO-701
 	public void executesDerivedEndsWithQueryCorrectly() {
 
 		List<Person> result = repository.findByLastnameEndsWith("thews");
@@ -628,10 +562,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItems(dave, oliver));
 	}
 
-	/**
-	 * @see DATAMONGO-445
-	 */
-	@Test
+	@Test // DATAMONGO-445
 	public void executesGeoPageQueryForWithPageRequestForPageInBetween() {
 
 		Point farAway = new Point(-73.9, 40.7);
@@ -656,10 +587,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getAverageDistance().getNormalizedValue(), is(0.0));
 	}
 
-	/**
-	 * @see DATAMONGO-445
-	 */
-	@Test
+	@Test // DATAMONGO-445
 	public void executesGeoPageQueryForWithPageRequestForPageAtTheEnd() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -679,10 +607,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
-	/**
-	 * @see DATAMONGO-445
-	 */
-	@Test
+	@Test // DATAMONGO-445
 	public void executesGeoPageQueryForWithPageRequestForJustOneElement() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -699,10 +624,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
-	/**
-	 * @see DATAMONGO-445
-	 */
-	@Test
+	@Test // DATAMONGO-445
 	public void executesGeoPageQueryForWithPageRequestForJustOneElementEmptyPage() {
 
 		dave.setLocation(new Point(-73.99171, 40.738868));
@@ -718,10 +640,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void findByFirstNameIgnoreCase() {
 
 		List<Person> result = repository.findByFirstnameIgnoreCase("dave");
@@ -730,10 +649,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(0), is(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void findByFirstnameNotIgnoreCase() {
 
 		List<Person> result = repository.findByFirstnameNotIgnoreCase("dave");
@@ -742,10 +658,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, not(hasItem(dave)));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void findByFirstnameStartingWithIgnoreCase() {
 
 		List<Person> result = repository.findByFirstnameStartingWithIgnoreCase("da");
@@ -753,10 +666,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(0), is(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void findByFirstnameEndingWithIgnoreCase() {
 
 		List<Person> result = repository.findByFirstnameEndingWithIgnoreCase("VE");
@@ -764,10 +674,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(0), is(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-770
-	 */
-	@Test
+	@Test // DATAMONGO-770
 	public void findByFirstnameContainingIgnoreCase() {
 
 		List<Person> result = repository.findByFirstnameContainingIgnoreCase("AV");
@@ -775,10 +682,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(0), is(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-870
-	 */
-	@Test
+	@Test // DATAMONGO-870
 	public void findsSliceOfPersons() {
 
 		Slice<Person> result = repository.findByAgeGreaterThan(40, new PageRequest(0, 2, Direction.DESC, "firstname"));
@@ -786,10 +690,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.hasNext(), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-871
-	 */
-	@Test
+	@Test // DATAMONGO-871
 	public void findsPersonsByFirstnameAsArray() {
 
 		Person[] result = repository.findByThePersonsFirstnameAsArray("Leroi");
@@ -798,10 +699,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, is(arrayContaining(leroi)));
 	}
 
-	/**
-	 * @see DATAMONGO-821
-	 */
-	@Test
+	@Test // DATAMONGO-821
 	public void findUsingAnnotatedQueryOnDBRef() {
 
 		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
@@ -819,10 +717,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getContent().get(0), is(alicia));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void deleteByShouldReturnListOfDeletedElementsWhenRetunTypeIsCollectionLike() {
 
 		List<Person> result = repository.deleteByLastname("Beauford");
@@ -831,10 +726,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasSize(1));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void deleteByShouldRemoveElementsMatchingDerivedQuery() {
 
 		repository.deleteByLastname("Beauford");
@@ -842,34 +734,22 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(operations.count(new BasicQuery("{'lastname':'Beauford'}"), Person.class), is(0L));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void deleteByShouldReturnNumberOfDocumentsRemovedIfReturnTypeIsLong() {
 		assertThat(repository.deletePersonByLastname("Beauford"), is(1L));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void deleteByShouldReturnZeroInCaseNoDocumentHasBeenRemovedAndReturnTypeIsNumber() {
 		assertThat(repository.deletePersonByLastname("dorfuaeB"), is(0L));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void deleteByShouldReturnEmptyListInCaseNoDocumentHasBeenRemovedAndReturnTypeIsCollectionLike() {
 		assertThat(repository.deleteByLastname("dorfuaeB"), empty());
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void deleteByUsingAnnotatedQueryShouldReturnListOfDeletedElementsWhenRetunTypeIsCollectionLike() {
 
 		List<Person> result = repository.removeByLastnameUsingAnnotatedQuery("Beauford");
@@ -878,10 +758,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasSize(1));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void deleteByUsingAnnotatedQueryShouldRemoveElementsMatchingDerivedQuery() {
 
 		repository.removeByLastnameUsingAnnotatedQuery("Beauford");
@@ -889,18 +766,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(operations.count(new BasicQuery("{'lastname':'Beauford'}"), Person.class), is(0L));
 	}
 
-	/**
-	 * @see DATAMONGO-566
-	 */
-	@Test
+	@Test // DATAMONGO-566
 	public void deleteByUsingAnnotatedQueryShouldReturnNumberOfDocumentsRemovedIfReturnTypeIsLong() {
 		assertThat(repository.removePersonByLastnameUsingAnnotatedQuery("Beauford"), is(1L));
 	}
 
-	/**
-	 * @see DATAMONGO-893
-	 */
-	@Test
+	@Test // DATAMONGO-893
 	public void findByNestedPropertyInCollectionShouldFindMatchingDocuments() {
 
 		Person p = new Person("Mary", "Poppins");
@@ -914,10 +785,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getContent(), hasSize(1));
 	}
 
-	/**
-	 * @see DATAMONGO-745
-	 */
-	@Test
+	@Test // DATAMONGO-745
 	public void findByCustomQueryFirstnamesInListAndLastname() {
 
 		repository.save(new Person("foo", "bar"));
@@ -933,10 +801,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getTotalElements(), is(3L));
 	}
 
-	/**
-	 * @see DATAMONGO-745
-	 */
-	@Test
+	@Test // DATAMONGO-745
 	public void findByCustomQueryLastnameAndStreetInList() {
 
 		repository.save(new Person("foo", "bar").withAddress(new Address("street1", "1", "SB")));
@@ -953,10 +818,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	}
 
-	/**
-	 * @see DATAMONGO-950
-	 */
-	@Test
+	@Test // DATAMONGO-950
 	public void shouldLimitCollectionQueryToMaxResultsWhenPresent() {
 
 		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
@@ -965,10 +827,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.size(), is(3));
 	}
 
-	/**
-	 * @see DATAMONGO-950, DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-950, DATAMONGO-1464
 	public void shouldNotLimitPagedQueryWhenPageRequestWithinBounds() {
 
 		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
@@ -978,10 +837,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getTotalElements(), is(3L));
 	}
 
-	/**
-	 * @see DATAMONGO-950
-	 */
-	@Test
+	@Test // DATAMONGO-950
 	public void shouldLimitPagedQueryWhenPageRequestExceedsUpperBoundary() {
 
 		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
@@ -990,10 +846,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getContent().size(), is(1));
 	}
 
-	/**
-	 * @see DATAMONGO-950, DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-950, DATAMONGO-1464
 	public void shouldReturnEmptyWhenPageRequestedPageIsTotallyOutOfScopeForLimit() {
 
 		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
@@ -1003,10 +856,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getTotalElements(), is(3L));
 	}
 
-	/**
-	 * @see DATAMONGO-996, DATAMONGO-950, DATAMONGO-1464
-	 */
-	@Test
+	@Test // DATAMONGO-996, DATAMONGO-950, DATAMONGO-1464
 	public void gettingNonFirstPageWorksWithoutLimitBeingSet() {
 
 		Page<Person> slice = repository.findByLastnameLike("Matthews", new PageRequest(1, 1));
@@ -1017,10 +867,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(slice.getTotalElements(), is(2L));
 	}
 
-	/**
-	 * @see DATAMONGO-972
-	 */
-	@Test
+	@Test // DATAMONGO-972
 	public void shouldExecuteFindOnDbRefCorrectly() {
 
 		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
@@ -1036,18 +883,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(repository.findOne(QPerson.person.creator.eq(user)), is(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-969
-	 */
-	@Test
+	@Test // DATAMONGO-969
 	public void shouldFindPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
 		assertThat(repository.findAll(person.id.in(Arrays.asList(dave.id, carter.id))), containsInAnyOrder(dave, carter));
 	}
 
-	/**
-	 * @see DATAMONGO-1030
-	 */
-	@Test
+	@Test // DATAMONGO-1030
 	public void executesSingleEntityQueryWithProjectionCorrectly() {
 
 		PersonSummary result = repository.findSummaryByLastname("Beauford");
@@ -1057,10 +898,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.lastname, is("Beauford"));
 	}
 
-	/**
-	 * @see DATAMONGO-1057
-	 */
-	@Test
+	@Test // DATAMONGO-1057
 	public void sliceShouldTraverseElementsWithoutSkippingOnes() {
 
 		repository.deleteAll();
@@ -1080,10 +918,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(slice, contains(persons.subList(20, 40).toArray()));
 	}
 
-	/**
-	 * @see DATAMONGO-1072
-	 */
-	@Test
+	@Test // DATAMONGO-1072
 	public void shouldBindPlaceholdersUsedAsKeysCorrectly() {
 
 		List<Person> persons = repository.findByKeyValue("firstname", alicia.getFirstname());
@@ -1092,10 +927,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(persons, hasItem(alicia));
 	}
 
-	/**
-	 * @see DATAMONGO-1105
-	 */
-	@Test
+	@Test // DATAMONGO-1105
 	public void returnsOrderedResultsForQuerydslOrderSpecifier() {
 
 		Iterable<Person> result = repository.findAll(person.firstname.asc());
@@ -1103,10 +935,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, contains(alicia, boyd, carter, dave, leroi, oliver, stefan));
 	}
 
-	/**
-	 * @see DATAMONGO-1085
-	 */
-	@Test
+	@Test // DATAMONGO-1085
 	public void shouldSupportSortingByQueryDslOrderSpecifier() {
 
 		repository.deleteAll();
@@ -1129,10 +958,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.iterator().next().getFirstname(), is(persons.get(2).getFirstname()));
 	}
 
-	/**
-	 * @see DATAMONGO-1085
-	 */
-	@Test
+	@Test // DATAMONGO-1085
 	public void shouldSupportSortingWithQSortByQueryDslOrderSpecifier() throws Exception {
 
 		repository.deleteAll();
@@ -1154,10 +980,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.iterator().next().getFirstname(), is("Siggi 2"));
 	}
 
-	/**
-	 * @see DATAMONGO-1085
-	 */
-	@Test
+	@Test // DATAMONGO-1085
 	public void shouldSupportSortingWithQSort() throws Exception {
 
 		repository.deleteAll();
@@ -1178,10 +1001,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.iterator().next().getFirstname(), is("Siggi 2"));
 	}
 
-	/**
-	 * @see DATAMONGO-1165
-	 */
-	@Test
+	@Test // DATAMONGO-1165
 	public void shouldAllowReturningJava8StreamInCustomQuery() throws Exception {
 
 		Stream<Person> result = repository.findByCustomQueryWithStreamingCursorByFirstnames(Arrays.asList("Dave"));
@@ -1193,10 +1013,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		}
 	}
 
-	/**
-	 * @see DATAMONGO-1110
-	 */
-	@Test
+	@Test // DATAMONGO-1110
 	public void executesGeoNearQueryForResultsCorrectlyWhenGivenMinAndMaxDistance() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -1209,10 +1026,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getContent().isEmpty(), is(false));
 	}
 
-	/**
-	 * @see DATAMONGO-990
-	 */
-	@Test
+	@Test // DATAMONGO-990
 	public void shouldFindByFirstnameForSpELExpressionWithParameterIndexOnly() {
 
 		List<Person> users = repository.findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly("Dave");
@@ -1221,10 +1035,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(users.get(0), is(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-990
-	 */
-	@Test
+	@Test // DATAMONGO-990
 	public void shouldFindByFirstnameAndCurrentUserWithCustomQuery() {
 
 		SampleSecurityContextHolder.getCurrent().setPrincipal(dave);
@@ -1234,10 +1045,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(users.get(0), is(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-990
-	 */
-	@Test
+	@Test // DATAMONGO-990
 	public void shouldFindByFirstnameForSpELExpressionWithParameterVariableOnly() {
 
 		List<Person> users = repository.findWithSpelByFirstnameForSpELExpressionWithParameterVariableOnly("Dave");
@@ -1246,10 +1054,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(users.get(0), is(dave));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findByExampleShouldResolveStuffCorrectly() {
 
 		Person sample = new Person();
@@ -1264,10 +1069,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getNumberOfElements(), is(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void findAllByExampleShouldResolveStuffCorrectly() {
 
 		Person sample = new Person();
@@ -1282,10 +1084,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.size(), is(2));
 	}
 
-	/**
-	 * @see DATAMONGO-1425
-	 */
-	@Test
+	@Test // DATAMONGO-1425
 	public void findsPersonsByFirstnameNotContains() throws Exception {
 
 		List<Person> result = repository.findByFirstnameNotContains("Boyd");
@@ -1293,10 +1092,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, not(hasItem(boyd)));
 	}
 
-	/**
-	 * @see DATAMONGO-1425
-	 */
-	@Test
+	@Test // DATAMONGO-1425
 	public void findBySkillsContains() throws Exception {
 
 		List<Person> result = repository.findBySkillsContains(Arrays.asList("Drums"));
@@ -1304,10 +1100,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasItem(carter));
 	}
 
-	/**
-	 * @see DATAMONGO-1425
-	 */
-	@Test
+	@Test // DATAMONGO-1425
 	public void findBySkillsNotContains() throws Exception {
 
 		List<Person> result = repository.findBySkillsNotContains(Arrays.asList("Drums"));
@@ -1315,10 +1108,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, not(hasItem(carter)));
 	}
 
-	/*
-	 * @see DATAMONGO-1424
-	 */
-	@Test
+	@Test // DATAMONGO-1424
 	public void findsPersonsByFirstnameNotLike() throws Exception {
 
 		List<Person> result = repository.findByFirstnameNotLike("Bo*");
@@ -1326,18 +1116,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, not(hasItem(boyd)));
 	}
 
-	/**
-	 * @see DATAMONGO-1539
-	 */
-	@Test
+	@Test // DATAMONGO-1539
 	public void countsPersonsByFirstname() {
 		assertThat(repository.countByThePersonsFirstname("Dave"), is(1L));
 	}
 
-	/**
-	 * @see DATAMONGO-1539
-	 */
-	@Test
+	@Test // DATAMONGO-1539
 	public void deletesPersonsByFirstname() {
 
 		repository.deleteByThePersonsFirstname("Dave");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,10 +72,7 @@ public class MongoExampleMapperUnitTests {
 		this.mapper = new MongoExampleMapper(converter);
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIdIsSet() {
 
 		FlatDocument probe = new FlatDocument();
@@ -86,10 +83,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenMultipleValuesSet() {
 
 		FlatDocument probe = new FlatDocument();
@@ -105,10 +99,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIdIsNotSet() {
 
 		FlatDocument probe = new FlatDocument();
@@ -122,10 +113,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenListHasValues() {
 
 		FlatDocument probe = new FlatDocument();
@@ -139,10 +127,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenFieldNameIsCustomized() {
 
 		FlatDocument probe = new FlatDocument();
@@ -153,10 +138,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void typedExampleShouldContainTypeRestriction() {
 
 		WrapperDocument probe = new WrapperDocument();
@@ -170,10 +152,7 @@ public class MongoExampleMapperUnitTests {
 				isBsonObject().containing("_class", new org.bson.Document("$in", new String[] { probe.getClass().getName() })));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedAsFlatMapWhenGivenNestedElementsWithLenientMatchMode() {
 
 		WrapperDocument probe = new WrapperDocument();
@@ -185,10 +164,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(of(probe), context.getPersistentEntity(WrapperDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedAsExactObjectWhenGivenNestedElementsWithStrictMatchMode() {
 
 		WrapperDocument probe = new WrapperDocument();
@@ -201,10 +177,7 @@ public class MongoExampleMapperUnitTests {
 				isBsonObject().containing("flatDoc.stringValue", "conflux"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeIsStarting() {
 
 		FlatDocument probe = new FlatDocument();
@@ -220,10 +193,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeContainingDotsWhenStringMatchModeIsStarting() {
 
 		FlatDocument probe = new FlatDocument();
@@ -239,10 +209,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeIsEnding() {
 
 		FlatDocument probe = new FlatDocument();
@@ -258,10 +225,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeRegex() {
 
 		FlatDocument probe = new FlatDocument();
@@ -277,10 +241,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIgnoreCaseEnabledAndMatchModeSet() {
 
 		FlatDocument probe = new FlatDocument();
@@ -296,10 +257,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIgnoreCaseEnabled() {
 
 		FlatDocument probe = new FlatDocument();
@@ -315,10 +273,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedWhenContainingDBRef() {
 
 		FlatDocument probe = new FlatDocument();
@@ -333,10 +288,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(reference.getCollectionName(), is("refDoc"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedWhenDBRefIsNull() {
 
 		FlatDocument probe = new FlatDocument();
@@ -347,10 +299,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(document, isBsonObject().containing("stringValue", "steelheart"));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void exampleShouldBeMappedCorrectlyWhenContainingLegacyPoint() {
 
 		ClassWithGeoTypes probe = new ClassWithGeoTypes();
@@ -362,10 +311,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(document.get("legacyPoint.y"), Is.<Object>is(20D));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void mappingShouldExcludeFieldWithCustomNameCorrectly() {
 
 		FlatDocument probe = new FlatDocument();
@@ -382,10 +328,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void mappingShouldExcludeFieldCorrectly() {
 
 		FlatDocument probe = new FlatDocument();
@@ -402,10 +345,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void mappingShouldExcludeNestedFieldCorrectly() {
 
 		WrapperDocument probe = new WrapperDocument();
@@ -423,10 +363,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void mappingShouldExcludeNestedFieldWithCustomNameCorrectly() {
 
 		WrapperDocument probe = new WrapperDocument();
@@ -444,10 +381,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void mappingShouldFavorFieldSpecificationStringMatcherOverDefaultStringMatcher() {
 
 		FlatDocument probe = new FlatDocument();
@@ -463,10 +397,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class)), is(expected));
 	}
 
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
+	@Test // DATAMONGO-1245
 	public void mappingShouldIncludePropertiesFromHierarchicalDocument() {
 
 		HierachicalDocument probe = new HierachicalDocument();
@@ -479,10 +410,7 @@ public class MongoExampleMapperUnitTests {
 		assertThat(document, isBsonObject().containing("anotherStringValue", "calamity"));
 	}
 
-	/**
-	 * @see DATAMONGO-1459
-	 */
-	@Test
+	@Test // DATAMONGO-1459
 	public void mapsAnyMatchingExampleCorrectly() {
 
 		FlatDocument probe = new FlatDocument();

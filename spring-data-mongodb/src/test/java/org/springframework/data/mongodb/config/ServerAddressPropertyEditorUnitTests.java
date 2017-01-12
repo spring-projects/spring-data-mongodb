@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,11 +48,7 @@ public class ServerAddressPropertyEditorUnitTests {
 		editor = new ServerAddressPropertyEditor();
 	}
 
-	/**
-	 * @see DATAMONGO-454
-	 * @see DATAMONGO-1062
-	 */
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-454, DATAMONGO-1062
 	public void rejectsAddressConfigWithoutASingleParsableAndResolvableServerAddress() {
 
 		String unknownHost1 = "gugu.nonexistant.example.org";
@@ -63,40 +59,28 @@ public class ServerAddressPropertyEditorUnitTests {
 		editor.setAsText(unknownHost1 + "," + unknownHost2);
 	}
 
-	/**
-	 * @see DATAMONGO-454
-	 */
-	@Test
+	@Test // DATAMONGO-454
 	public void skipsUnparsableAddressIfAtLeastOneIsParsable() throws UnknownHostException {
 
 		editor.setAsText("foo, localhost");
 		assertSingleAddressOfLocalhost(editor.getValue());
 	}
 
-	/**
-	 * @see DATAMONGO-454
-	 */
-	@Test
+	@Test // DATAMONGO-454
 	public void handlesEmptyAddressAsParseError() throws UnknownHostException {
 
 		editor.setAsText(", localhost");
 		assertSingleAddressOfLocalhost(editor.getValue());
 	}
 
-	/**
-	 * @see DATAMONGO-693
-	 */
-	@Test
+	@Test // DATAMONGO-693
 	public void interpretEmptyStringAsNull() {
 
 		editor.setAsText("");
 		assertNull(editor.getValue());
 	}
 
-	/**
-	 * @see DATAMONGO-808
-	 */
-	@Test
+	@Test // DATAMONGO-808
 	public void handleIPv6HostaddressLoopbackShort() throws UnknownHostException {
 
 		String hostAddress = "::1";
@@ -105,10 +89,7 @@ public class ServerAddressPropertyEditorUnitTests {
 		assertSingleAddressWithPort(hostAddress, null, editor.getValue());
 	}
 
-	/**
-	 * @see DATAMONGO-808
-	 */
-	@Test
+	@Test // DATAMONGO-808
 	public void handleIPv6HostaddressLoopbackShortWithPort() throws UnknownHostException {
 
 		String hostAddress = "::1";
@@ -120,10 +101,8 @@ public class ServerAddressPropertyEditorUnitTests {
 
 	/**
 	 * Here we detect no port since the last segment of the address contains leading zeros.
-	 * 
-	 * @see DATAMONGO-808
 	 */
-	@Test
+	@Test // DATAMONGO-808
 	public void handleIPv6HostaddressLoopbackLong() throws UnknownHostException {
 
 		String hostAddress = "0000:0000:0000:0000:0000:0000:0000:0001";
@@ -132,10 +111,7 @@ public class ServerAddressPropertyEditorUnitTests {
 		assertSingleAddressWithPort(hostAddress, null, editor.getValue());
 	}
 
-	/**
-	 * @see DATAMONGO-808
-	 */
-	@Test
+	@Test // DATAMONGO-808
 	public void handleIPv6HostaddressLoopbackLongWithBrackets() throws UnknownHostException {
 
 		String hostAddress = "[0000:0000:0000:0000:0000:0000:0000:0001]";
@@ -146,10 +122,8 @@ public class ServerAddressPropertyEditorUnitTests {
 
 	/**
 	 * We can't tell whether the last part of the hostAddress represents a port or not.
-	 * 
-	 * @see DATAMONGO-808
 	 */
-	@Test
+	@Test // DATAMONGO-808
 	public void shouldFailToHandleAmbiguousIPv6HostaddressLongWithoutPortAndWithoutBrackets() throws UnknownHostException {
 
 		expectedException.expect(IllegalArgumentException.class);
@@ -158,10 +132,7 @@ public class ServerAddressPropertyEditorUnitTests {
 		editor.setAsText(hostAddress);
 	}
 
-	/**
-	 * @see DATAMONGO-808
-	 */
-	@Test
+	@Test // DATAMONGO-808
 	public void handleIPv6HostaddressExampleAddressWithPort() throws UnknownHostException {
 
 		String hostAddress = "0000:0000:0000:0000:0000:0000:0000:0001";
@@ -171,10 +142,7 @@ public class ServerAddressPropertyEditorUnitTests {
 		assertSingleAddressWithPort(hostAddress, port, editor.getValue());
 	}
 
-	/**
-	 * @see DATAMONGO-808
-	 */
-	@Test
+	@Test // DATAMONGO-808
 	public void handleIPv6HostaddressExampleAddressInBracketsWithPort() throws UnknownHostException {
 
 		String hostAddress = "[0000:0000:0000:0000:0000:0000:0000:0001]";

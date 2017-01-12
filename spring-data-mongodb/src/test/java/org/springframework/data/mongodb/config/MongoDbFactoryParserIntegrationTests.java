@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,10 +91,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertWriteConcern(ctx, new WriteConcern("rack1"));
 	}
 
-	/**
-	 * @see DATAMONGO-331
-	 */
-	@Test
+	@Test // DATAMONGO-331
 	public void readsReplicasWriteConcernCorrectly() {
 
 		AbstractApplicationContext ctx = new ClassPathXmlApplicationContext(
@@ -122,10 +119,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		factory.getBean("first");
 	}
 
-	/**
-	 * @see DATAMONGO-280
-	 */
-	@Test
+	@Test // DATAMONGO-280
 	@SuppressWarnings("deprecation")
 	public void parsesMaxAutoConnectRetryTimeCorrectly() {
 
@@ -134,10 +128,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(ReflectiveMongoOptionsInvokerTestUtil.getMaxAutoConnectRetryTime(mongo.getMongoOptions()), is(27L));
 	}
 
-	/**
-	 * @see DATAMONGO-295
-	 */
-	@Test
+	@Test // DATAMONGO-295
 	public void setsUpMongoDbFactoryUsingAMongoUri() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri.xml"));
@@ -149,10 +140,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(argument, is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-306
-	 */
-	@Test
+	@Test // DATAMONGO-306
 	public void setsUpMongoDbFactoryUsingAMongoUriWithoutCredentials() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-no-credentials.xml"));
@@ -168,18 +156,12 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(db.getName(), is("database"));
 	}
 
-	/**
-	 * @see DATAMONGO-295
-	 */
-	@Test(expected = BeanDefinitionParsingException.class)
+	@Test(expected = BeanDefinitionParsingException.class) // DATAMONGO-295
 	public void rejectsUriPlusDetailedConfiguration() {
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-and-details.xml"));
 	}
 
-	/**
-	 * @see DATAMONGO-1218
-	 */
-	@Test
+	@Test // DATAMONGO-1218
 	public void setsUpMongoDbFactoryUsingAMongoClientUri() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri.xml"));
@@ -191,18 +173,12 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(argument, is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1218
-	 */
-	@Test(expected = BeanDefinitionParsingException.class)
+	@Test(expected = BeanDefinitionParsingException.class) // DATAMONGO-1218
 	public void rejectsClientUriPlusDetailedConfiguration() {
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-and-details.xml"));
 	}
 
-	/**
-	 * @see DATAMONGO-1293
-	 */
-	@Test
+	@Test // DATAMONGO-1293
 	public void setsUpClientUriWithId() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-and-id.xml"));
@@ -214,10 +190,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(argument, is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1293
-	 */
-	@Test
+	@Test // DATAMONGO-1293
 	public void setsUpUriWithId() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-and-id.xml"));
@@ -229,18 +202,12 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(argument, is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-1293
-	 */
-	@Test(expected = BeanDefinitionParsingException.class)
+	@Test(expected = BeanDefinitionParsingException.class) // DATAMONGO-1293
 	public void rejectsClientUriPlusDetailedConfigurationAndWriteConcern() {
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-write-concern-and-details.xml"));
 	}
 
-	/**
-	 * @see DATAMONGO-1293
-	 */
-	@Test(expected = BeanDefinitionParsingException.class)
+	@Test(expected = BeanDefinitionParsingException.class) // DATAMONGO-1293
 	public void rejectsUriPlusDetailedConfigurationAndWriteConcern() {
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-write-concern-and-details.xml"));
 	}

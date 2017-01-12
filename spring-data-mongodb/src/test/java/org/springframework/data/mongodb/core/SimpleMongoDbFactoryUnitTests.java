@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,19 +49,13 @@ public class SimpleMongoDbFactoryUnitTests {
 	public @Rule ExpectedException expectedException = ExpectedException.none();
 	@Mock Mongo mongo;
 
-	/**
-	 * @see DATADOC-254
-	 */
-	@Test
+	@Test // DATADOC-254
 	public void rejectsIllegalDatabaseNames() {
 		rejectsDatabaseName("foo.bar");
 		rejectsDatabaseName("foo!bar");
 	}
 
-	/**
-	 * @see DATADOC-254
-	 */
-	@Test
+	@Test // DATADOC-254
 	@SuppressWarnings("deprecation")
 	public void allowsDatabaseNames() {
 		new SimpleMongoDbFactory(mongo, "foo-bar");
@@ -69,11 +63,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		new SimpleMongoDbFactory(mongo, "foo01231bar");
 	}
 
-	/**
-	 * @see DATADOC-295
-	 * @throws UnknownHostException
-	 */
-	@Test
+	@Test // DATADOC-295
 	@SuppressWarnings("deprecation")
 	public void mongoUriConstructor() throws UnknownHostException {
 
@@ -84,10 +74,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		assertThat(getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
 	}
 
-	/**
-	 * @see DATAMONGO-789
-	 */
-	@Test
+	@Test // DATAMONGO-789
 	@SuppressWarnings("deprecation")
 	public void defaultsAuthenticationDatabaseToDatabase() {
 
@@ -95,10 +82,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		assertThat(getField(factory, "authenticationDatabaseName"), is((Object) "foo"));
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void constructsMongoClientAccordingToMongoUri() throws UnknownHostException {
 
 		MongoClientURI uri = new MongoClientURI("mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
@@ -107,10 +91,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		assertThat(getField(factory, "databaseName").toString(), is("myDataBase"));
 	}
 
-	/**
-	 * @see DATAMONGO-1158
-	 */
-	@Test
+	@Test // DATAMONGO-1158
 	public void shouldDefaultAuthenticationDbNameToDbNameWhenUsingMongoClient() throws UnknownHostException {
 
 		MongoClient clientMock = mock(MongoClient.class);
@@ -119,10 +100,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		assertThat(getField(factory, "authenticationDatabaseName").toString(), is("FooBar"));
 	}
 
-	/**
-	 * @see DATAMONGO-1260
-	 */
-	@Test
+	@Test // DATAMONGO-1260
 	public void rejectsMongoClientWithUserCredentials() {
 
 		expectedException.expect(InvalidDataAccessApiUsageException.class);
@@ -131,10 +109,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		new SimpleMongoDbFactory(mock(MongoClient.class), "cairhienin", new UserCredentials("moiraine", "sedai"));
 	}
 
-	/**
-	 * @see DATAMONGO-1260
-	 */
-	@Test
+	@Test // DATAMONGO-1260
 	public void rejectsMongoClientWithUserCredentialsAndAuthDb() {
 
 		expectedException.expect(InvalidDataAccessApiUsageException.class);
@@ -143,18 +118,12 @@ public class SimpleMongoDbFactoryUnitTests {
 		new SimpleMongoDbFactory(mock(MongoClient.class), "malkieri", new UserCredentials("lan", "mandragoran"), "authdb");
 	}
 
-	/**
-	 * @see DATAMONGO-1260
-	 */
-	@Test
+	@Test // DATAMONGO-1260
 	public void shouldNotRejectMongoClientWithNoCredentials() {
 		new SimpleMongoDbFactory(mock(MongoClient.class), "andoran", UserCredentials.NO_CREDENTIALS);
 	}
 
-	/**
-	 * @see DATAMONGO-1260
-	 */
-	@Test
+	@Test // DATAMONGO-1260
 	public void shouldNotRejectMongoClientWithEmptyUserCredentials() {
 		new SimpleMongoDbFactory(mock(MongoClient.class), "shangtai", new UserCredentials("", ""));
 	}

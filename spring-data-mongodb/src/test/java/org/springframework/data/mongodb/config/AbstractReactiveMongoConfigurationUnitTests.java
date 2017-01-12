@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,10 +57,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 
 	@Rule public ExpectedException exception = ExpectedException.none();
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
 
 		AbstractReactiveMongoConfiguration configuration = new SampleMongoConfiguration();
@@ -69,28 +66,19 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		assertThat(configuration.getInitialEntitySet(), hasItem(Entity.class));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void doesNotScanPackageIfMappingPackageIsNull() throws ClassNotFoundException {
 		assertScanningDisabled(null);
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void doesNotScanPackageIfMappingPackageIsEmpty() throws ClassNotFoundException {
 
 		assertScanningDisabled("");
 		assertScanningDisabled(" ");
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void containsMongoDbFactoryButNoMongoBean() {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
@@ -102,10 +90,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		context.close();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void returnsUninitializedMappingContext() throws Exception {
 
 		SampleMongoConfiguration configuration = new SampleMongoConfiguration();
@@ -116,10 +101,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		assertThat(context.getPersistentEntities(), is(not(emptyIterable())));
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void lifecycleCallbacksAreInvokedInAppropriateOrder() {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
@@ -131,10 +113,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		context.close();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	public void shouldBeAbleToConfigureCustomTypeMapperViaJavaConfig() {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
@@ -146,10 +125,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		context.close();
 	}
 
-	/**
-	 * @see DATAMONGO-1444
-	 */
-	@Test
+	@Test // DATAMONGO-1444
 	@SuppressWarnings("unchecked")
 	public void allowsMultipleEntityBasePackages() throws ClassNotFoundException {
 

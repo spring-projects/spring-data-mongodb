@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,10 +79,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		this.auditor = auditablePersonRepository.save(new AuditablePerson("auditor"));
 	}
 
-	/**
-	 * @see DATAMONGO-792, DATAMONGO-883
-	 */
-	@Test
+	@Test // DATAMONGO-792, DATAMONGO-883
 	public void basicAuditing() {
 
 		doReturn(this.auditor).when(this.auditorAware).getCurrentAuditor();
@@ -96,19 +93,13 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		assertThat(savedUser.getCreatedAt(), is(notNullValue()));
 	}
 
-	/**
-	 * @see DATAMONGO-843
-	 */
-	@Test
+	@Test // DATAMONGO-843
 	@SuppressWarnings("resource")
 	public void auditingUsesFallbackMappingContextIfNoneConfiguredWithRepositories() {
 		new AnnotationConfigApplicationContext(SimpleConfigWithRepositories.class);
 	}
 
-	/**
-	 * @see DATAMONGO-843
-	 */
-	@Test
+	@Test // DATAMONGO-843
 	@SuppressWarnings("resource")
 	public void auditingUsesFallbackMappingContextIfNoneConfigured() {
 		new AnnotationConfigApplicationContext(SimpleConfig.class);
