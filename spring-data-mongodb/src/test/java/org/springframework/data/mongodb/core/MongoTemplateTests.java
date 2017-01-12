@@ -24,6 +24,11 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -82,10 +87,12 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -100,10 +107,6 @@ import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
-
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -125,6 +128,9 @@ public class MongoTemplateTests {
 			.parse("2.4");
 	private static final org.springframework.data.util.Version TWO_DOT_EIGHT = org.springframework.data.util.Version
 			.parse("2.8");
+	private static final org.springframework.data.util.Version THREE_DOT_FOUR= org.springframework.data.util.Version
+			.parse("3.4");
+
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
@@ -3470,6 +3476,28 @@ public class MongoTemplateTests {
 		assertThat(document.id, is(notNullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-1517
+	 */
+	@Test
+	public void decimal128TypeShouldBeSavedAndLoadedCorrectly()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR), is(true));
+		assumeThat(MongoClientVersion.isMongo34Driver(), is(true));
+
+		Class<?> decimal128Type = ClassUtils.resolveClassName("org.bson.types.Decimal128", null);
+
+		WithObjectTypeProperty source = new WithObjectTypeProperty();
+		source.id = "decimal128-property-value";
+		source.value = decimal128Type.getConstructor(BigDecimal.class).newInstance(new BigDecimal(100));
+
+		template.save(source);
+
+		WithObjectTypeProperty loaded = template.findOne(query(where("id").is(source.id)), WithObjectTypeProperty.class);
+		assertThat(loaded.getValue(), instanceOf(decimal128Type));
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;
@@ -3838,5 +3866,12 @@ public class MongoTemplateTests {
 		Integer version;
 		String description;
 		GeoJsonPoint point;
+	}
+
+	@Data
+	static class WithObjectTypeProperty {
+
+		@Id String id;
+		Object value;
 	}
 }
