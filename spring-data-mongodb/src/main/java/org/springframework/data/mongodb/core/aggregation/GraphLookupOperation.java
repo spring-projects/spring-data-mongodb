@@ -36,7 +36,7 @@ import org.springframework.util.ClassUtils;
  * of this class directly.
  *
  * @see <a href=
- *      "http://docs.mongodb.org/manual/reference/aggregation/graphLookup/">http://docs.mongodb.org/manual/reference/aggregation/graphLookup/</a>
+ *      "https://docs.mongodb.org/manual/reference/aggregation/graphLookup/">https://docs.mongodb.org/manual/reference/aggregation/graphLookup/</a>
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 1.10

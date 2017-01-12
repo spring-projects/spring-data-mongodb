@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * Returns all files matching the given query. Note, that currently {@link Sort} criterias defined at the
 	 * {@link Query} will not be regarded as MongoDB does not support ordering for GridFS file access.
 	 * 
-	 * @see https://jira.mongodb.org/browse/JAVA-431
+	 * @see <a href="https://jira.mongodb.org/browse/JAVA-431">MongoDB Jira: JAVA-431</a>
 	 * @param query
 	 * @return
 	 */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,9 +70,9 @@ public class Index implements IndexDefinition {
 
 	/**
 	 * Reject all documents that contain a duplicate value for the indexed field.
-	 * 
-	 * @see http://docs.mongodb.org/manual/core/index-unique/
+	 *
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
 	public Index unique() {
 		this.unique = true;
@@ -81,9 +81,9 @@ public class Index implements IndexDefinition {
 
 	/**
 	 * Skip over any document that is missing the indexed field.
-	 * 
-	 * @see http://docs.mongodb.org/manual/core/index-sparse/
+	 *
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
 	public Index sparse() {
 		this.sparse = true;

@@ -30,7 +30,7 @@ import org.bson.Document;
  * instances of this class directly.
  *
  * @see <a href=
- *      "http://docs.mongodb.org/manual/reference/aggregation/bucketAuto/">http://docs.mongodb.org/manual/reference/aggregation/bucketAuto/</a>
+ *      "https://docs.mongodb.org/manual/reference/aggregation/bucketAuto/">https://docs.mongodb.org/manual/reference/aggregation/bucketAuto/</a>
  * @see BucketOperationSupport
  * @author Mark Paluch
  * @author Christoph Strobl

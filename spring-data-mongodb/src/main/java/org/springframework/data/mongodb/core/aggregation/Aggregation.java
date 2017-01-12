@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -598,7 +598,7 @@ public class Aggregation {
 	 * Describes the system variables available in MongoDB aggregation framework pipeline expressions.
 	 *
 	 * @author Thomas Darimont
-	 * @see http://docs.mongodb.org/manual/reference/aggregation-variables
+	 * @see <a href="https://docs.mongodb.org/manual/reference/aggregation-variables">Aggregation Variables</a>
 	 */
 	enum SystemVariable {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -303,8 +303,8 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * Define the default language to be used when indexing documents.
 		 * 
 		 * @param language
-		 * @see http://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index
 		 * @return
+		 * @see <a href="https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index">https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index</a>
 		 */
 		public TextIndexDefinitionBuilder withDefaultLanguage(String language) {
 

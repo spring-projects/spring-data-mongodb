@@ -40,13 +40,13 @@ import org.springframework.util.Assert;
  * We recommend to use the static factory method {@link Aggregation#project(Fields)} instead of creating instances of
  * this class directly.
  * 
- * @see http://docs.mongodb.org/manual/reference/aggregation/project/
  * @author Tobias Trelle
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.3
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/project/">MongoDB Aggregation Framework: $project</a>
  */
 public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
