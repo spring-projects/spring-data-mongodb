@@ -24,6 +24,11 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -44,7 +49,6 @@ import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -73,7 +77,6 @@ import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -84,10 +87,12 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -101,10 +106,6 @@ import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.result.UpdateResult;
-
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -126,6 +127,8 @@ public class MongoTemplateTests {
 			.parse("2.4");
 	private static final org.springframework.data.util.Version TWO_DOT_EIGHT = org.springframework.data.util.Version
 			.parse("2.8");
+	private static final org.springframework.data.util.Version THREE_DOT_FOUR = org.springframework.data.util.Version
+			.parse("3.4");
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
@@ -2937,7 +2940,7 @@ public class MongoTemplateTests {
 				.min("longVal", 490) //
 				.min("bigIntegerVal", new BigInteger("590")) //
 				.min("bigDeciamVal", new BigDecimal("690")) //
-				;
+		;
 
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
@@ -2993,7 +2996,7 @@ public class MongoTemplateTests {
 				.max("longVal", 590) //
 				.max("bigIntegerVal", new BigInteger("690")) //
 				.max("bigDeciamVal", new BigDecimal("790")) //
-				;
+		;
 
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
@@ -3022,7 +3025,7 @@ public class MongoTemplateTests {
 		Update update = new Update()//
 				.max("bigIntegerVal", new BigInteger("70")) //
 				.max("bigDeciamVal", new BigDecimal("80")) //
-				;
+		;
 
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
@@ -3046,7 +3049,7 @@ public class MongoTemplateTests {
 		Update update = new Update()//
 				.min("bigIntegerVal", new BigInteger("700")) //
 				.min("bigDeciamVal", new BigDecimal("800")) //
-				;
+		;
 
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
@@ -3155,7 +3158,6 @@ public class MongoTemplateTests {
 		assertThat(document.id, is(notNullValue()));
 	}
 
-
 	@Test // DATAMONGO-1509
 	public void findsByGenericNestedListElements() {
 
@@ -3166,6 +3168,28 @@ public class MongoTemplateTests {
 
 		Query query = query(where("models").is(modelList));
 		assertThat(template.findOne(query, DocumentWithCollection.class), is(equalTo(dwc)));
+	}
+
+	/**
+	 * @see DATAMONGO-1517
+	 */
+	@Test
+	public void decimal128TypeShouldBeSavedAndLoadedCorrectly()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR), is(true));
+		assumeThat(MongoClientVersion.isMongo34Driver(), is(true));
+
+		Class<?> decimal128Type = ClassUtils.resolveClassName("org.bson.types.Decimal128", null);
+
+		WithObjectTypeProperty source = new WithObjectTypeProperty();
+		source.id = "decimal128-property-value";
+		source.value = decimal128Type.getConstructor(BigDecimal.class).newInstance(new BigDecimal(100));
+
+		template.save(source);
+
+		WithObjectTypeProperty loaded = template.findOne(query(where("id").is(source.id)), WithObjectTypeProperty.class);
+		assertThat(loaded.getValue(), instanceOf(decimal128Type));
 	}
 
 	static class TypeWithNumbers {
@@ -3538,5 +3562,12 @@ public class MongoTemplateTests {
 		Integer version;
 		String description;
 		GeoJsonPoint point;
+	}
+
+	@Data
+	static class WithObjectTypeProperty {
+
+		@Id String id;
+		Object value;
 	}
 }
