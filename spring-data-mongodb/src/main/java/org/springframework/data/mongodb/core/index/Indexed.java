@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,8 +38,8 @@ public @interface Indexed {
 	/**
 	 * If set to true reject all documents that contain a duplicate value for the indexed field.
 	 * 
-	 * @see http://docs.mongodb.org/manual/core/index-unique/
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
 	boolean unique() default false;
 
@@ -48,14 +48,14 @@ public @interface Indexed {
 	/**
 	 * If set to true index will skip over any document that is missing the indexed field.
 	 * 
-	 * @see http://docs.mongodb.org/manual/core/index-sparse/
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
 	boolean sparse() default false;
 
 	/**
-	 * @see http://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping">https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping</a>
 	 */
 	boolean dropDups() default false;
 
@@ -122,16 +122,16 @@ public @interface Indexed {
 	/**
 	 * If {@literal true} the index will be created in the background.
 	 * 
-	 * @see http://docs.mongodb.org/manual/core/indexes/#background-construction
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
 	 */
 	boolean background() default false;
 
 	/**
 	 * Configures the number of seconds after which the collection should expire. Defaults to -1 for no expiry.
 	 * 
-	 * @see http://docs.mongodb.org/manual/tutorial/expire-data/
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
 	 */
 	int expireAfterSeconds() default -1;
 }

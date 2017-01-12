@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,11 +32,10 @@ import com.mongodb.DBObject;
  * We recommend to use the static factory method {@link Aggregation#replaceRoot(String)} instead of creating instances
  * of this class directly.
  *
- * @see <a href=
- *      "https://docs.mongodb.com/manual/reference/operator/aggregation/replaceRoot/">https://docs.mongodb.com/manual/reference/operator/aggregation/replaceRoot/</a>
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 1.10
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/replaceRoot/">MongoDB Aggregation Framework: $replaceRoot</a>
  */
 public class ReplaceRootOperation implements FieldsExposingAggregationOperation {
 

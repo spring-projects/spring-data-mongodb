@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@ import com.mongodb.DBObject;
  * We recommend to use the static factory method {@link Aggregation#limit(long)} instead of creating instances of this
  * class directly.
  * 
- * @see http://docs.mongodb.org/manual/reference/aggregation/limit/
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @since 1.3
+ * @see <a href="https://docs.mongodb.org/manual/reference/aggregation/limit/">MongoDB Aggregation Framework: $limit</a>
  */
 public class LimitOperation implements AggregationOperation {
 

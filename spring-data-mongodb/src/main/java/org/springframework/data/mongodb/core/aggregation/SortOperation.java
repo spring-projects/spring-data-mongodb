@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,10 @@ import com.mongodb.DBObject;
  * We recommend to use the static factory method {@link Aggregation#sort(Direction, String...)} instead of creating
  * instances of this class directly.
  * 
- * @see http://docs.mongodb.org/manual/reference/aggregation/sort/#pipe._S_sort
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @since 1.3
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/sort/">MongoDB Aggregation Framework: $sort</a>
  */
 public class SortOperation implements AggregationOperation {
 

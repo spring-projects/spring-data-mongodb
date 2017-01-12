@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,10 +106,10 @@ public class Update {
 	/**
 	 * Update using the {@literal $set} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/set/
 	 * @param key
 	 * @param value
 	 * @return
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/update/set/">MongoDB Update operator: $set</a>
 	 */
 	public Update set(String key, Object value) {
 		addMultiFieldOperation("$set", key, value);
@@ -119,10 +119,10 @@ public class Update {
 	/**
 	 * Update using the {@literal $setOnInsert} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/setOnInsert/
 	 * @param key
 	 * @param value
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/setOnInsert/">MongoDB Update operator: $setOnInsert</a>
 	 */
 	public Update setOnInsert(String key, Object value) {
 		addMultiFieldOperation("$setOnInsert", key, value);
@@ -132,9 +132,9 @@ public class Update {
 	/**
 	 * Update using the {@literal $unset} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/unset/
 	 * @param key
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/unset/">MongoDB Update operator: $unset</a>
 	 */
 	public Update unset(String key) {
 		addMultiFieldOperation("$unset", key, 1);
@@ -144,10 +144,10 @@ public class Update {
 	/**
 	 * Update using the {@literal $inc} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/inc/
 	 * @param key
 	 * @param inc
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/inc/">MongoDB Update operator: $inc</a>
 	 */
 	public Update inc(String key, Number inc) {
 		addMultiFieldOperation("$inc", key, inc);
@@ -157,10 +157,10 @@ public class Update {
 	/**
 	 * Update using the {@literal $push} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/push/
 	 * @param key
 	 * @param value
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/push/">MongoDB Update operator: $push</a>
 	 */
 	public Update push(String key, Object value) {
 		addMultiFieldOperation("$push", key, value);
@@ -172,10 +172,10 @@ public class Update {
 	 * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values as well as using
 	 * {@code $position}.
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/push/
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/each/
 	 * @param key
 	 * @return {@link PushOperatorBuilder} for given key
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/push/">MongoDB Update operator: $push</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/each/">MongoDB Update operator: $each</a>
 	 */
 	public PushOperatorBuilder push(String key) {
 
@@ -190,10 +190,10 @@ public class Update {
 	 * <b>Note</b>: In mongodb 2.4 the usage of {@code $pushAll} has been deprecated in favor of {@code $push $each}.
 	 * {@link #push(String)}) returns a builder that can be used to populate the {@code $each} object.
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/pushAll/
 	 * @param key
 	 * @param values
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pushAll/">MongoDB Update operator: $pushAll</a>
 	 */
 	public Update pushAll(String key, Object[] values) {
 		addMultiFieldOperation("$pushAll", key, Arrays.copyOf(values, values.length));
@@ -215,10 +215,10 @@ public class Update {
 	/**
 	 * Update using the {@literal $addToSet} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/addToSet/
 	 * @param key
 	 * @param value
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/addToSet/">MongoDB Update operator: $addToSet</a>
 	 */
 	public Update addToSet(String key, Object value) {
 		addMultiFieldOperation("$addToSet", key, value);
@@ -228,10 +228,10 @@ public class Update {
 	/**
 	 * Update using the {@literal $pop} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/pop/
 	 * @param key
 	 * @param pos
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pop/">MongoDB Update operator: $pop</a>
 	 */
 	public Update pop(String key, Position pos) {
 		addMultiFieldOperation("$pop", key, pos == Position.FIRST ? -1 : 1);
@@ -241,10 +241,10 @@ public class Update {
 	/**
 	 * Update using the {@literal $pull} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/pull/
 	 * @param key
 	 * @param value
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pull/">MongoDB Update operator: $pull</a>
 	 */
 	public Update pull(String key, Object value) {
 		addMultiFieldOperation("$pull", key, value);
@@ -254,10 +254,10 @@ public class Update {
 	/**
 	 * Update using the {@literal $pullAll} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/pullAll/
 	 * @param key
 	 * @param values
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pullAll/">MongoDB Update operator: $pullAll</a>
 	 */
 	public Update pullAll(String key, Object[] values) {
 		addMultiFieldOperation("$pullAll", key, Arrays.copyOf(values, values.length));
@@ -267,10 +267,10 @@ public class Update {
 	/**
 	 * Update using the {@literal $rename} update modifier
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/rename/
 	 * @param oldName
 	 * @param newName
 	 * @return
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/rename/">MongoDB Update operator: $rename</a>
 	 */
 	public Update rename(String oldName, String newName) {
 		addMultiFieldOperation("$rename", oldName, newName);
@@ -280,10 +280,10 @@ public class Update {
 	/**
 	 * Update given key to current date using {@literal $currentDate} modifier.
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/currentDate/
 	 * @param key
 	 * @return
 	 * @since 1.6
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator: $currentDate</a>
 	 */
 	public Update currentDate(String key) {
 
@@ -294,10 +294,10 @@ public class Update {
 	/**
 	 * Update given key to current date using {@literal $currentDate : &#123; $type : "timestamp" &#125;} modifier.
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/currentDate/
 	 * @param key
 	 * @return
 	 * @since 1.6
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator: $currentDate</a>
 	 */
 	public Update currentTimestamp(String key) {
 
@@ -308,11 +308,11 @@ public class Update {
 	/**
 	 * Multiply the value of given key by the given number.
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/mul/
 	 * @param key must not be {@literal null}.
 	 * @param multiplier must not be {@literal null}.
 	 * @return
 	 * @since 1.7
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/mul/">MongoDB Update operator: $mul</a>
 	 */
 	public Update multiply(String key, Number multiplier) {
 
@@ -324,12 +324,12 @@ public class Update {
 	/**
 	 * Update given key to the {@code value} if the {@code value} is greater than the current value of the field.
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/max/
-	 * @see https://docs.mongodb.org/manual/reference/bson-types/#faq-dev-compare-order-for-bson-types
 	 * @param key must not be {@literal null}.
 	 * @param value must not be {@literal null}.
 	 * @return
 	 * @since 1.10
+	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/max/">MongoDB Update operator: $max</a>
 	 */
 	public Update max(String key, Object value) {
 
@@ -341,12 +341,12 @@ public class Update {
 	/**
 	 * Update given key to the {@code value} if the {@code value} is less than the current value of the field.
 	 *
-	 * @see http://docs.mongodb.org/manual/reference/operator/update/min/
-	 * @see https://docs.mongodb.org/manual/reference/bson-types/#faq-dev-compare-order-for-bson-types
 	 * @param key must not be {@literal null}.
 	 * @param value must not be {@literal null}.
 	 * @return
 	 * @since 1.10
+	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/min/">MongoDB Update operator: $min</a>
 	 */
 	public Update min(String key, Object value) {
 

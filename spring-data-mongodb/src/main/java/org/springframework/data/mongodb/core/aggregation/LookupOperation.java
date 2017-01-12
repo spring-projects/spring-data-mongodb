@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,8 @@ import com.mongodb.DBObject;
  * @author Alessio Fachechi
  * @author Christoph Strobl
  * @author Mark Paluch
- * @see http://docs.mongodb.org/manual/reference/aggregation/lookup/#stage._S_lookup
  * @since 1.9
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/lookup/">MongoDB Aggregation Framework: $lookup</a>
  */
 public class LookupOperation implements FieldsExposingAggregationOperation, InheritsFieldsAggregationOperation {
 

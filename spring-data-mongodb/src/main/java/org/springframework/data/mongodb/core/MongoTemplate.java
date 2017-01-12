@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -700,7 +700,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			 * As MongoDB currently (2.4.4) doesn't support the skipping of elements in near queries
 			 * we skip the elements ourselves to avoid at least the document 2 object mapping overhead.
 			 *
-			 * @see https://jira.mongodb.org/browse/SERVER-3925
+			 * @see <a href="https://jira.mongodb.org/browse/SERVER-3925">MongoDB Jira: SERVER-3925</a>
 			 */
 			if (index >= elementsToSkip) {
 				result.add(callback.doWith((DBObject) element));

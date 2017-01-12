@@ -21,7 +21,7 @@ import com.mongodb.DBObject;
 /**
  * Holds a set of configurable aggregation options that can be used within an aggregation pipeline. A list of support
  * aggregation options can be found in the MongoDB reference documentation
- * http://docs.mongodb.org/manual/reference/command/aggregate/#aggregate
+ * https://docs.mongodb.org/manual/reference/command/aggregate/#aggregate
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke

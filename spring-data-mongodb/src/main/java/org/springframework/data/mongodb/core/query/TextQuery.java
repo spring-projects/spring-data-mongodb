@@ -48,7 +48,7 @@ public class TextQuery extends Query {
 	/**
 	 * Creates new {@link TextQuery} in {@code language}. <br />
 	 * For a full list of supported languages see the mongdodb reference manual for <a
-	 * href="http://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
+	 * href="https://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
 	 * 
 	 * @param wordsAndPhrases
 	 * @param language
@@ -62,7 +62,7 @@ public class TextQuery extends Query {
 	/**
 	 * Creates new {@link TextQuery} using the {@code locale}s language.<br />
 	 * For a full list of supported languages see the mongdodb reference manual for <a
-	 * href="http://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
+	 * href="https://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
 	 * 
 	 * @param wordsAndPhrases
 	 * @param locale

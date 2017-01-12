@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ public interface GeoJson<T extends Iterable<?>> {
 	 * String value representing the type of the {@link GeoJson} object.
 	 * 
 	 * @return will never be {@literal null}.
-	 * @see http://geojson.org/geojson-spec.html#geojson-objects
+	 * @see <a href="http://geojson.org/geojson-spec.html#geojson-objects">http://geojson.org/geojson-spec.html#geojson-objects</a>
 	 */
 	String getType();
 
@@ -36,7 +36,7 @@ public interface GeoJson<T extends Iterable<?>> {
 	 * determined by {@link #getType()} of geometry.
 	 * 
 	 * @return will never be {@literal null}.
-	 * @see http://geojson.org/geojson-spec.html#geometry-objects
+	 * @see <a href="http://geojson.org/geojson-spec.html#geometry-objects">http://geojson.org/geojson-spec.html#geometry-objects</a>
 	 */
 	T getCoordinates();
 }

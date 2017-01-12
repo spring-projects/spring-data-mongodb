@@ -35,7 +35,7 @@ import com.mongodb.DBObject;
  * We recommend to use the static factory method {@link Aggregation#bucket(String)} instead of creating instances of
  * this class directly.
  *
- * @see <a href="http://docs.mongodb.org/manual/reference/aggregation/bucket/">http://docs.mongodb.org/manual/reference/aggregation/bucket/</a>
+ * @see <a href="https://docs.mongodb.org/manual/reference/aggregation/bucket/">https://docs.mongodb.org/manual/reference/aggregation/bucket/</a>
  * @see BucketOperationSupport
  * @author Mark Paluch
  * @since 1.10

@@ -232,7 +232,7 @@ public class ConditionalOperators {
 	 * converted to a simple MongoDB type.
 	 *
 	 * @see <a href=
-	 *      "http://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/">http://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/">https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/</a>
 	 * @author Mark Paluch
 	 */
 	public static class IfNull implements AggregationExpression {
@@ -535,7 +535,7 @@ public class ConditionalOperators {
 	 * simple MongoDB type.
 	 *
 	 * @see <a href=
-	 *      "http://docs.mongodb.com/manual/reference/operator/aggregation/cond/">http://docs.mongodb.com/manual/reference/operator/aggregation/cond/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/cond/">https://docs.mongodb.com/manual/reference/operator/aggregation/cond/</a>
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
