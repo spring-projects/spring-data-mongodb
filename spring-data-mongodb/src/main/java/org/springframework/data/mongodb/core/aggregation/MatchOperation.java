@@ -25,12 +25,13 @@ import com.mongodb.DBObject;
  * Encapsulates the {@code $match}-operation.
  * <p>
  * We recommend to use the static factory method
- * {@link Aggregation#match(org.springframework.data.mongodb.core.query.Criteria)} instead of creating instances of this
+ * {@link Aggregation#match(org.springframework.data.mongodb.core.query.CriteriaDefinition)} instead of creating instances of this
  * class directly.
  * 
  * @author Sebastian Herold
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Pavel Vodrazka
  * @since 1.3
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/match/">MongoDB Aggregation Framework: $match</a>
  */
