@@ -44,6 +44,8 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -604,6 +606,29 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query.getQueryObject().toJson(), is(query(where("username").not().regex(".*")).getQueryObject().toJson()));
 	}
 
+	@Test // DATAMONGO-1588
+	public void queryShouldAcceptSubclassOfDeclaredArgument() {
+
+		PartTree tree = new PartTree("findByLocationNear", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, new GeoJsonPoint(-74.044502D, 40.689247D));
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+		assertThat(query.getQueryObject().containsKey("location"), is(true));
+	}
+
+	@Test // DATAMONGO-1588
+	public void queryShouldThrowExceptionWhenArgumentDoesNotMatchDeclaration() {
+
+		expection.expect(IllegalArgumentException.class);
+		expection.expectMessage("Expected parameter type of " + Point.class);
+
+		PartTree tree = new PartTree("findByLocationNear", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter,
+				new GeoJsonLineString(new Point(-74.044502D, 40.689247D), new Point(-73.997330D, 40.730824D)));
+
+		new MongoQueryCreator(tree, accessor, context).createQuery();
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
@@ -622,6 +647,8 @@ public class MongoQueryCreatorUnitTests {
 		Address address;
 
 		Address2dSphere address2dSphere;
+
+		Point location;
 	}
 
 	static class Address {

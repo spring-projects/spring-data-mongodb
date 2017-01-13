@@ -50,6 +50,7 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
@@ -264,6 +265,18 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsPeopleByLocationNear() {
 		Point point = new Point(-73.99171, 40.738868);
+		dave.setLocation(point);
+		repository.save(dave);
+
+		List<Person> result = repository.findByLocationNear(point);
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(dave));
+	}
+
+	@Test // DATAMONGO-1588
+	public void findsPeopleByLocationNearUsingGeoJsonType() {
+
+		GeoJsonPoint point = new GeoJsonPoint(-73.99171, 40.738868);
 		dave.setLocation(point);
 		repository.save(dave);
 
