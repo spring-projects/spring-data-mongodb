@@ -43,11 +43,6 @@ public abstract class MongoDbUtils {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoDbUtils.class);
 
 	/**
-	 * Private constructor to prevent instantiation.
-	 */
-	private MongoDbUtils() {}
-
-	/**
 	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
 	 * 
 	 * @param mongo the {@link Mongo} instance, must not be {@literal null}.
