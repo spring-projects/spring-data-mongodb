@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 /**
  * Custom query creator to create Mongo criterias.
@@ -369,8 +370,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 */
 	@SuppressWarnings("unchecked")
 	private <T> T nextAs(Iterator<Object> iterator, Class<T> type) {
+
 		Object parameter = iterator.next();
-		if (parameter.getClass().isAssignableFrom(type)) {
+
+		if (ClassUtils.isAssignable(type, parameter.getClass())) {
 			return (T) parameter;
 		}
 
