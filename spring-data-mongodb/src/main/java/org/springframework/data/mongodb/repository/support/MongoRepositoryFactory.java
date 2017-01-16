@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -148,8 +149,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 					String.format("Could not lookup mapping metadata for domain class %s!", domainClass.getName()));
 		}
 
-		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity,
-				information != null ? (Class<ID>) information.getIdType() : null);
+		return MongoEntityInformationSupport.<T, ID> entityInformationFor(entity,
+				information != null ? information.getIdType() : null);
 	}
 
 	/**
