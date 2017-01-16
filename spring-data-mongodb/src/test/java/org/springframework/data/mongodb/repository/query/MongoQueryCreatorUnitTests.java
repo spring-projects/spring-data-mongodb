@@ -71,8 +71,6 @@ import org.bson.Document;
  */
 public class MongoQueryCreatorUnitTests {
 
-	Method findByFirstname, findByFirstnameAndFriend, findByFirstnameNotNull;
-
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
 	MongoConverter converter;
 
@@ -402,7 +400,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1139
-	public void createsNonShericalNearForDistanceWithDefaultMetric() {
+	public void createsNonSphericalNearForDistanceWithDefaultMetric() {
 
 		Point point = new Point(1.0, 1.0);
 		Distance distance = new Distance(1.0);
@@ -654,11 +652,14 @@ public class MongoQueryCreatorUnitTests {
 	static class Address {
 
 		String street;
+
 		Point geo;
 	}
 
 	static class Address2dSphere {
+
 		String street;
+
 		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE) Point geo;
 	}
 }
