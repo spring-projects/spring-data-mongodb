@@ -20,6 +20,7 @@ import static org.springframework.data.querydsl.QueryDslUtils.*;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -42,6 +43,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 /**
  * Factory to create {@link MongoRepository} instances.
@@ -123,8 +125,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 					String.format("Could not lookup mapping metadata for domain class %s!", domainClass.getName()));
 		}
 
-		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity,
-				information != null ? (Class<ID>) information.getIdType() : null);
+		return MongoEntityInformationSupport.<T, ID> entityInformationFor(entity,
+				information != null ? information.getIdType() : null);
 	}
 
 	/**
