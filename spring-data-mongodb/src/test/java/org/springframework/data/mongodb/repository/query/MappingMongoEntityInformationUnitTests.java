@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.support.MappingMongoEntityInformation;
@@ -32,17 +33,20 @@ import org.springframework.data.mongodb.repository.support.MappingMongoEntityInf
  * Unit tests for {@link MappingMongoEntityInformation}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoEntityInformationUnitTests {
 
 	@Mock MongoPersistentEntity<Person> info;
+	@Mock MongoPersistentEntity<TypeImplementingPersistable> persistableImplementingEntityTypeInfo;
 
 	@Before
 	public void setUp() {
 
 		when(info.getType()).thenReturn(Person.class);
 		when(info.getCollection()).thenReturn("Person");
+		when(persistableImplementingEntityTypeInfo.getType()).thenReturn(TypeImplementingPersistable.class);
 	}
 
 	@Test // DATAMONGO-248
@@ -57,5 +61,35 @@ public class MappingMongoEntityInformationUnitTests {
 
 		MongoEntityInformation<Person, Long> information = new MappingMongoEntityInformation<Person, Long>(info, "foobar");
 		assertThat(information.getCollectionName(), is("foobar"));
+	}
+
+	@Test // DATAMONGO-1590
+	public void considersPersistableIsNew() {
+
+		MongoEntityInformation<TypeImplementingPersistable, Long> information = new MappingMongoEntityInformation<TypeImplementingPersistable, Long>(
+				persistableImplementingEntityTypeInfo);
+		assertThat(information.isNew(new TypeImplementingPersistable(100L, true)), is(true));
+		assertThat(information.isNew(new TypeImplementingPersistable(100L, false)), is(false));
+	}
+
+	static class TypeImplementingPersistable implements Persistable<Long> {
+
+		final Long id;
+		final boolean isNew;
+
+		public TypeImplementingPersistable(Long id, boolean isNew) {
+			this.id = id;
+			this.isNew = isNew;
+		}
+
+		@Override
+		public Long getId() {
+			return id;
+		}
+
+		@Override
+		public boolean isNew() {
+			return isNew;
+		}
 	}
 }
