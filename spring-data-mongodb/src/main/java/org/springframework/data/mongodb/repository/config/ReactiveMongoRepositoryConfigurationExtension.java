@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.repository.config;
 
 import java.util.Collection;
@@ -38,7 +37,7 @@ import org.w3c.dom.Element;
  * @author Oliver Gierke
  * @since 2.0
  */
-class ReactiveMongoRepositoryConfigurationExtension extends MongoRepositoryConfigurationExtension {
+public class ReactiveMongoRepositoryConfigurationExtension extends MongoRepositoryConfigurationExtension {
 
 	private static final String MONGO_TEMPLATE_REF = "reactive-mongo-template-ref";
 	private static final String CREATE_QUERY_INDEXES = "create-query-indexes";
