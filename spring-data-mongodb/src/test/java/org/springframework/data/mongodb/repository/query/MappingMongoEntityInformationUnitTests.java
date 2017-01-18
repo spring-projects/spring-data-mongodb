@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.repository.support.MappingMongoEntityInf
  * Unit tests for {@link MappingMongoEntityInformation}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoEntityInformationUnitTests {
