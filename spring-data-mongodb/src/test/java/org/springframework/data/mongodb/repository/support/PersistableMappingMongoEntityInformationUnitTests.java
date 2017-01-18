@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.repository.query;
+package org.springframework.data.mongodb.repository.support;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+
+import lombok.Value;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,13 +28,12 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.repository.support.MappingMongoEntityInformation;
-import org.springframework.data.mongodb.repository.support.PersistableMongoEntityInformation;
 
 /**
  * Tests for {@link PersistableMongoEntityInformation}.
  *
  * @author Christoph Strobl
+ * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PersistableMappingMongoEntityInformationUnitTests {
@@ -53,24 +54,12 @@ public class PersistableMappingMongoEntityInformationUnitTests {
 		assertThat(information.isNew(new TypeImplementingPersistable(100L, false)), is(false));
 	}
 
+	@Value
 	static class TypeImplementingPersistable implements Persistable<Long> {
 
-		final Long id;
-		final boolean isNew;
+		private static final long serialVersionUID = -1619090149320971099L;
 
-		public TypeImplementingPersistable(Long id, boolean isNew) {
-			this.id = id;
-			this.isNew = isNew;
-		}
-
-		@Override
-		public Long getId() {
-			return id;
-		}
-
-		@Override
-		public boolean isNew() {
-			return isNew;
-		}
+		Long id;
+		boolean isNew;
 	}
 }
