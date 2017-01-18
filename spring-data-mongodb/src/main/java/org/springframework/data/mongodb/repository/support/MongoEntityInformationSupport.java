@@ -41,15 +41,16 @@ final class MongoEntityInformationSupport {
 	 * @param idType can be {@literal null}.
 	 * @return never {@literal null}.
 	 */
+	@SuppressWarnings("unchecked")
 	static <T, ID extends Serializable> MongoEntityInformation<T, ID> entityInformationFor(
 			MongoPersistentEntity<?> entity, Class<?> idType) {
 
 		Assert.notNull(entity, "Entity must not be null!");
 
-		MappingMongoEntityInformation entityInformation = new MappingMongoEntityInformation<T, ID>(
+		MappingMongoEntityInformation<T, ID> entityInformation = new MappingMongoEntityInformation<T, ID>(
 				(MongoPersistentEntity<T>) entity, (Class<ID>) idType);
+
 		return ClassUtils.isAssignable(Persistable.class, entity.getType())
 				? new PersistableMongoEntityInformation<T, ID>(entityInformation) : entityInformation;
 	}
-
 }

@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
 import java.io.Serializable;
 
 import org.springframework.data.domain.Persistable;
@@ -26,15 +29,13 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
  * {@link Persistable#isNew()} and {@link Persistable#getId()} implementations.
  *
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.10
  */
-public class PersistableMongoEntityInformation<T, ID extends Serializable> implements MongoEntityInformation<T, ID> {
+@RequiredArgsConstructor
+class PersistableMongoEntityInformation<T, ID extends Serializable> implements MongoEntityInformation<T, ID> {
 
-	private final MongoEntityInformation<T, ID> delegate;
-
-	public PersistableMongoEntityInformation(MongoEntityInformation<T, ID> delegate) {
-		this.delegate = delegate;
-	}
+	private final @NonNull MongoEntityInformation<T, ID> delegate;
 
 	/*
 	 * (non-Javadoc)
@@ -59,10 +60,11 @@ public class PersistableMongoEntityInformation<T, ID extends Serializable> imple
 	 * @see org.springframework.data.repository.core.EntityInformation#isNew(java.lang.Object)
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public boolean isNew(T t) {
 
 		if (t instanceof Persistable) {
-			return ((Persistable) t).isNew();
+			return ((Persistable<ID>) t).isNew();
 		}
 
 		return delegate.isNew(t);
@@ -73,10 +75,11 @@ public class PersistableMongoEntityInformation<T, ID extends Serializable> imple
 	 * @see org.springframework.data.repository.core.EntityInformation#getId(java.lang.Object)
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public ID getId(T t) {
 
 		if (t instanceof Persistable) {
-			return (ID) ((Persistable) t).getId();
+			return (ID) ((Persistable<ID>) t).getId();
 		}
 
 		return delegate.getId(t);
