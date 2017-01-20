@@ -9,8 +9,15 @@
 
 [[new-features.1-10-0]]
 == What's new in Spring Data MongoDB 1.10
-* Support for `$min`, `$max` and `$slice` operators via `Update`.
-* Support for `$cond` and `$ifNull` operators via `Aggregation`.
+* Compatible with MongoDB Server 3.4 and the MongoDB Java Driver 3.4.
+* New annotations for `@CountQuery`, `@DeleteQuery` and `@ExistsQuery`.
+* Extended support for MongoDB 3.2 and MongoDB 3.4 aggregation operators (see <<mongo.aggregation.supported-aggregation-operations>>).
+* Support partial filter expression when creating indexes.
+* Publish lifecycle events when loading/converting ``DBRef``s.
+* Added any-match mode for Query By Example.
+* Support for `$caseSensitive` and `$diacriticSensitive` text search.
+* Support for GeoJSON Polygon with hole.
+* Performance improvements by bulk fetching ``DBRef``s.
 
 [[new-features.1-9-0]]
 == What's new in Spring Data MongoDB 1.9
