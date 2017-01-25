@@ -31,7 +31,6 @@ import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -141,6 +140,7 @@ import com.mongodb.util.JSONParseException;
  * @author Doménique Tilleuil
  * @author Niko Schmuck
  * @author Mark Paluch
+ * @author Faycal Ihabritane
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -1055,9 +1055,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		});
 	}
 
-	// TODO: 2.0 - Change method signature to return List<Object> and return all identifiers (DATAMONGO-1513,
-	// DATAMONGO-1519)
-	protected List<ObjectId> insertDBObjectList(final String collectionName, final List<DBObject> dbDocList) {
+	protected List<Object> insertDBObjectList(final String collectionName, final List<DBObject> dbDocList) {
 		if (dbDocList.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -1078,15 +1076,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 		});
 
-		List<ObjectId> ids = new ArrayList<ObjectId>();
+		List<Object> ids = new ArrayList<Object>();
 		for (DBObject dbo : dbDocList) {
 			Object id = dbo.get(ID_FIELD);
-			if (id instanceof ObjectId) {
-				ids.add((ObjectId) id);
-			} else {
-				// no id was generated
-				ids.add(null);
-			}
+			ids.add(id);
 		}
 		return ids;
 	}
@@ -2144,13 +2137,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param documents
 	 * @return TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
 	 */
-	private static List<Object> consolidateIdentifiers(List<ObjectId> ids, List<DBObject> documents) {
+	private static List<Object> consolidateIdentifiers(List<Object> ids, List<DBObject> documents) {
 
 		List<Object> result = new ArrayList<Object>(ids.size());
 
 		for (int i = 0; i < ids.size(); i++) {
 
-			ObjectId objectId = ids.get(i);
+			Object objectId = ids.get(i);
 			result.add(objectId == null ? documents.get(i).get(ID_FIELD) : objectId);
 		}
 
