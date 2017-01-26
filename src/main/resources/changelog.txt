@@ -1,6 +1,24 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.0.RELEASE (2017-01-26)
+----------------------------------------------
+* DATAMONGO-1596 - Reference to wrong annotation in cross-store reference documentation.
+* DATAMONGO-1594 - Update "what’s new" section in reference documentation.
+* DATAMONGO-1590 - Entity new detection doesn't consider Persistable.isNew().
+* DATAMONGO-1589 - Update project documentation with the CLA tool integration.
+* DATAMONGO-1588 - Repository will not accept Point subclass in spatial query.
+* DATAMONGO-1587 - Migrate ticket references in test code to Spring Framework style.
+* DATAMONGO-1586 - TypeBasedAggregationOperationContext.getReferenceFor(…) exposes fields with their leaf property name.
+* DATAMONGO-1585 - Aggregation sort references target field of projected and aliased fields.
+* DATAMONGO-1578 - Add missing @Test annotation to ProjectionOperationUnitTests.
+* DATAMONGO-1577 - Fix Reference and JavaDoc spelling issues.
+* DATAMONGO-1576 - AbstractMongoEventListener methods not called when working with member fields.
+* DATAMONGO-1575 - Treat String replacement values in StringBased queries as such unless they are SpEL expressions.
+* DATAMONGO-1574 - Release 1.10 GA (Ingalls).
+* DATAMONGO-1508 - Documentation lacking for db-factory authentication-dbname.
+
+
 Changes in version 1.9.6.RELEASE (2016-12-21)
 ---------------------------------------------
 * DATAMONGO-1565 - Placeholders in manually defined queries not escaped properly.
