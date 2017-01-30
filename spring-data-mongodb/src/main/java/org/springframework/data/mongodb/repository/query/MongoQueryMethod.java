@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -134,18 +135,18 @@ public class MongoQueryMethod extends QueryMethod {
 			if (ClassUtils.isPrimitiveOrWrapper(returnedObjectType)) {
 
 				this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) domainClass,
-						mappingContext.getPersistentEntity(domainClass));
+						mappingContext.getRequiredPersistentEntity(domainClass));
 
 			} else {
 
-				MongoPersistentEntity<?> returnedEntity = mappingContext.getPersistentEntity(returnedObjectType);
-				MongoPersistentEntity<?> managedEntity = mappingContext.getPersistentEntity(domainClass);
-				returnedEntity = returnedEntity == null || returnedEntity.getType().isInterface() ? managedEntity
+				Optional<? extends MongoPersistentEntity<?>> returnedEntity = mappingContext.getPersistentEntity(returnedObjectType);
+				MongoPersistentEntity<?> managedEntity = mappingContext.getRequiredPersistentEntity(domainClass);
+				returnedEntity = !returnedEntity.isPresent() || returnedEntity.get().getType().isInterface() ? Optional.of(managedEntity)
 						: returnedEntity;
-				MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity
+				MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity.get()
 						: managedEntity;
 
-				this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.getType(),
+				this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.get().getType(),
 						collectionEntity);
 			}
 		}
@@ -183,7 +184,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 		if (Iterable.class.isAssignableFrom(returnType)) {
 			TypeInformation<?> from = ClassTypeInformation.fromReturnTypeOf(method);
-			return GeoResult.class.equals(from.getComponentType().getType());
+			return GeoResult.class.equals(from.getComponentType().get().getType());
 		}
 
 		return false;

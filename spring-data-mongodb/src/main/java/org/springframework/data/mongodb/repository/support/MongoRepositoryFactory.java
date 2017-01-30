@@ -15,10 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.springframework.data.querydsl.QueryDslUtils.*;
+import static org.springframework.data.querydsl.QuerydslUtils.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.context.MappingContext;
@@ -32,7 +33,7 @@ import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery;
 import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.querydsl.QueryDslPredicateExecutor;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -96,7 +97,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 				   RXJAVA_OBSERVABLE_PRESENT && RxJava1CrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()));
 
 		boolean isQueryDslRepository = QUERY_DSL_PRESENT
-				&& QueryDslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
+				&& QuerydslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
 
 		if (isReactiveRepository) {
 
@@ -126,8 +127,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getQueryLookupStrategy(org.springframework.data.repository.query.QueryLookupStrategy.Key, org.springframework.data.repository.query.EvaluationContextProvider)
 	 */
 	@Override
-	protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
-		return new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext);
+	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
+		return Optional.of(new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext));
 	}
 
 	/*
@@ -142,13 +143,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	private <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
 			RepositoryInformation information) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(domainClass);
-
-		if (entity == null) {
-			throw new MappingException(
-					String.format("Could not lookup mapping metadata for domain class %s!", domainClass.getName()));
-		}
-
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
 		return MongoEntityInformationSupport.<T, ID> entityInformationFor(entity,
 				information != null ? information.getIdType() : null);
 	}

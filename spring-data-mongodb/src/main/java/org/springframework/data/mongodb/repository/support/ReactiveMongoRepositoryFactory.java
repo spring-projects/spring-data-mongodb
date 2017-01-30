@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
@@ -97,8 +98,8 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getQueryLookupStrategy(org.springframework.data.repository.query.QueryLookupStrategy.Key, org.springframework.data.repository.query.EvaluationContextProvider)
 	 */
 	@Override
-	protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
-		return new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext);
+	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
+		return Optional.of(new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext));
 	}
 
 	/*
@@ -113,14 +114,14 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	private <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
 			RepositoryInformation information) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(domainClass);
+		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(domainClass);
 
-		if (entity == null) {
+		if (!entity.isPresent()) {
 			throw new MappingException(
 					String.format("Could not lookup mapping metadata for domain class %s!", domainClass.getName()));
 		}
 
-		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity,
+		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity.get(),
 				information != null ? (Class<ID>) information.getIdType() : null);
 	}
 

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Optional;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
@@ -163,8 +165,8 @@ interface ReactiveMongoQueryExecution {
 				return false;
 			}
 
-			TypeInformation<?> componentType = returnType.getComponentType();
-			return componentType != null && GeoResult.class.equals(componentType.getType());
+			Optional<TypeInformation<?>> componentType = returnType.getComponentType();
+			return componentType.isPresent() && GeoResult.class.equals(componentType.get().getType());
 		}
 	}
 

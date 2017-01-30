@@ -57,8 +57,7 @@ public abstract class QuerydslRepositorySupport {
 	protected <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path) {
 
 		Assert.notNull(path, "EntityPath must not be null!");
-
-		MongoPersistentEntity<?> entity = context.getPersistentEntity(path.getType());
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(path.getType());
 		return from(path, entity.getCollection());
 	}
 

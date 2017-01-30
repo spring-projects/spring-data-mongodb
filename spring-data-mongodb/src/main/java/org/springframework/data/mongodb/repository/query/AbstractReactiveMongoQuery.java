@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Optional;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -102,7 +104,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		applyQueryMetaAttributesWhenPresent(query);
 
-		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(parameterAccessor);
+		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(Optional.of(parameterAccessor));
 		String collection = method.getEntityInformation().getCollectionName();
 
 		ReactiveMongoQueryExecution execution = getExecution(query, parameterAccessor,

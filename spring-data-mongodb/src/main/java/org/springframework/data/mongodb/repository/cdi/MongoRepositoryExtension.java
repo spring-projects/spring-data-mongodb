@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.enterprise.event.Observes;
@@ -112,6 +113,6 @@ public class MongoRepositoryExtension extends CdiRepositoryExtensionSupport {
 
 		// Construct and return the repository bean.
 		return new MongoRepositoryBean<T>(mongoOperations, qualifiers, repositoryType, beanManager,
-				getCustomImplementationDetector());
+				Optional.ofNullable(getCustomImplementationDetector()));
 	}
 }

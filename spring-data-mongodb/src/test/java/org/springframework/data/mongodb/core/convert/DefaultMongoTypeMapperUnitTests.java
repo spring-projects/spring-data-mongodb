@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -186,13 +187,13 @@ public class DefaultMongoTypeMapperUnitTests {
 
 	private void readsTypeFromField(Document document, Class<?> type) {
 
-		TypeInformation<?> typeInfo = typeMapper.readType(document);
+		Optional<TypeInformation<?>> typeInfo = typeMapper.readType(document);
 
 		if (type != null) {
 			assertThat(typeInfo, is(notNullValue()));
-			assertThat(typeInfo.getType(), is(typeCompatibleWith(type)));
+			assertThat(typeInfo.get().getType(), is(typeCompatibleWith(type)));
 		} else {
-			assertThat(typeInfo, is(nullValue()));
+			assertThat(typeInfo, is(Optional.empty()));
 		}
 	}
 

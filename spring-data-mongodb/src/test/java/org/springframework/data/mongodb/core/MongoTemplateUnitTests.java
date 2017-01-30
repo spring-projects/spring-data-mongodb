@@ -17,12 +17,12 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
@@ -196,7 +196,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.updateFirst(query, update, Wrapper.class);
 
 		QueryMapper queryMapper = new QueryMapper(converter);
-		Document reference = queryMapper.getMappedObject(update.getUpdateObject(), null);
+		Document reference = queryMapper.getMappedObject(update.getUpdateObject(), Optional.empty());
 
 		verify(collection, times(1)).updateOne(Mockito.any(org.bson.Document.class), eq(reference),
 				Mockito.any(UpdateOptions.class)); // .update(Mockito.any(Document.class), eq(reference), anyBoolean(),
@@ -278,13 +278,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(spy, times(1)).addApplicationListener(argThat(new ArgumentMatcher<MongoPersistentEntityIndexCreator>() {
 
 			@Override
-			public boolean matches(Object argument) {
-
-				if (!(argument instanceof MongoPersistentEntityIndexCreator)) {
-					return false;
-				}
-
-				return ((MongoPersistentEntityIndexCreator) argument).isIndexCreatorFor(mappingContext);
+			public boolean matches(MongoPersistentEntityIndexCreator argument) {
+				return argument.isIndexCreatorFor(mappingContext);
 			}
 		}));
 	}
@@ -574,7 +569,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	private MongoTemplate mockOutGetDb() {
 
 		MongoTemplate template = spy(this.template);
-		stub(template.getDb()).toReturn(db);
+		when(template.getDb()).thenReturn(db);
 		return template;
 	}
 
@@ -584,7 +579,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Override
 	protected MongoOperations getOperationsForExceptionHandling() {
 		MongoTemplate template = spy(this.template);
-		stub(template.getDb()).toThrow(new MongoException("Error!"));
+		when(template.getDb()).thenThrow(new MongoException("Error!"));
 		return template;
 	}
 

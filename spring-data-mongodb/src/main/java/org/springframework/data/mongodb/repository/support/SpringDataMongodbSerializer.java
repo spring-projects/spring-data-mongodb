@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -106,10 +107,10 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		}
 
 		Path<?> parent = metadata.getParent();
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
-		MongoPersistentProperty property = entity.getPersistentProperty(metadata.getName());
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(parent.getType());
+		Optional<MongoPersistentProperty> property = entity.getPersistentProperty(metadata.getName());
 
-		return property == null ? super.getKeyForPath(expr, metadata) : property.getFieldName();
+		return !property.isPresent() ? super.getKeyForPath(expr, metadata) : property.get().getFieldName();
 	}
 
 	/*
@@ -121,7 +122,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 		if (ID_KEY.equals(key)) {
 			DBObject superIdValue = super.asDBObject(key, value);
-			Document mappedIdValue = mapper.getMappedObject((BasicDBObject) superIdValue, null);
+			Document mappedIdValue = mapper.getMappedObject((BasicDBObject) superIdValue, Optional.empty());
 			return (DBObject) JSON.parse(mappedIdValue.toJson());
 		}
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
@@ -200,8 +201,8 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 			return null;
 		}
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
-		return entity != null ? entity.getPersistentProperty(path.getMetadata().getName()) : null;
+		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(parent.getType());
+		return entity.isPresent() ? entity.get().getRequiredPersistentProperty(path.getMetadata().getName()) : null;
 	}
 
 	/**

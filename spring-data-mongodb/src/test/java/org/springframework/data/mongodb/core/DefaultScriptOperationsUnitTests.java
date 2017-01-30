@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.core.IsNull.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.Assert;

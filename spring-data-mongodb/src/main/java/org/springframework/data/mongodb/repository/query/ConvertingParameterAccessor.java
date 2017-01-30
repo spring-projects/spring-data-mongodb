@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -96,7 +97,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @see org.springframework.data.repository.query.ParameterAccessor#getDynamicProjection()
 	 */
 	@Override
-	public Class<?> getDynamicProjection() {
+	public Optional<Class<?>> getDynamicProjection() {
 		return delegate.getDynamicProjection();
 	}
 

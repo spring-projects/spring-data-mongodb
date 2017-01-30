@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -67,7 +68,7 @@ public class MongoRepositoryFactoryUnitTests {
 	@SuppressWarnings("unchecked")
 	public void usesMappingMongoEntityInformationIfMappingContextSet() {
 
-		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);
+		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(Optional.of(entity));
 		when(entity.getType()).thenReturn(Person.class);
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
@@ -79,7 +80,7 @@ public class MongoRepositoryFactoryUnitTests {
 	@SuppressWarnings("unchecked")
 	public void createsRepositoryWithIdTypeLong() {
 
-		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);
+		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(Optional.of(entity));
 		when(entity.getType()).thenReturn(Person.class);
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);

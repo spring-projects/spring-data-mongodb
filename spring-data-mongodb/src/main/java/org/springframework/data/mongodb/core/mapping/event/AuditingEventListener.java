@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.Ordered;
@@ -52,7 +54,7 @@ public class AuditingEventListener implements ApplicationListener<BeforeConvertE
 	public void onApplicationEvent(BeforeConvertEvent<Object> event) {
 
 		Object entity = event.getSource();
-		auditingHandlerFactory.getObject().markAudited(entity);
+		auditingHandlerFactory.getObject().markAudited(Optional.ofNullable(entity));
 	}
 
 	/* 

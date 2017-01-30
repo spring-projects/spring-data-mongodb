@@ -33,7 +33,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.repository.Person.Sex;
-import org.springframework.data.querydsl.QueryDslPredicateExecutor;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 
 /**
@@ -45,7 +45,7 @@ import org.springframework.data.repository.query.Param;
  * @author Fırat KÜÇÜK
  * @author Mark Paluch
  */
-public interface PersonRepository extends MongoRepository<Person, String>, QueryDslPredicateExecutor<Person> {
+public interface PersonRepository extends MongoRepository<Person, String>, QuerydslPredicateExecutor<Person> {
 
 	/**
 	 * Returns all {@link Person}s with the given lastname.

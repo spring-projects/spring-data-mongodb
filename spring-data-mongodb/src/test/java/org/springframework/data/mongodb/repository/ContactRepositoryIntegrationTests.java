@@ -49,7 +49,7 @@ public class ContactRepositoryIntegrationTests {
 		Person person = new Person("Oliver", "Gierke");
 		Contact result = repository.save(person);
 
-		assertTrue(repository.findOne(result.getId().toString()) instanceof Person);
+		assertTrue(repository.findOne(result.getId().toString()).get() instanceof Person);
 	}
 
 	@Test // DATAMONGO-1245

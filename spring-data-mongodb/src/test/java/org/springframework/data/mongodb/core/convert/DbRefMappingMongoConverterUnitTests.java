@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
 
@@ -473,9 +471,9 @@ public class DbRefMappingMongoConverterUnitTests {
 	@Test // DATAMONGO-1012
 	public void shouldEagerlyResolveIdPropertyWithFieldAccess() {
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(ClassWithLazyDbRefs.class);
-		MongoPersistentProperty property = entity.getPersistentProperty("dbRefToConcreteType");
-		MongoPersistentEntity<?> propertyEntity = mappingContext.getPersistentEntity(property);
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(ClassWithLazyDbRefs.class);
+		MongoPersistentProperty property = entity.getRequiredPersistentProperty("dbRefToConcreteType");
+		MongoPersistentEntity<?> propertyEntity = mappingContext.getRequiredPersistentEntity(property);
 
 		String idValue = new ObjectId().toString();
 		DBRef dbRef = converter.toDBRef(new LazyDbRefTarget(idValue), property);
@@ -485,7 +483,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, object);
 
 		PersistentPropertyAccessor accessor = propertyEntity.getPropertyAccessor(result.dbRefToConcreteType);
-		MongoPersistentProperty idProperty = mappingContext.getPersistentEntity(LazyDbRefTarget.class).getIdProperty();
+		MongoPersistentProperty idProperty = mappingContext.getRequiredPersistentEntity(LazyDbRefTarget.class).getIdProperty().get();
 
 		assertThat(accessor.getProperty(idProperty), is(notNullValue()));
 		assertProxyIsResolved(result.dbRefToConcreteType, false);
@@ -494,8 +492,8 @@ public class DbRefMappingMongoConverterUnitTests {
 	@Test // DATAMONGO-1012
 	public void shouldNotEagerlyResolveIdPropertyWithPropertyAccess() {
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(ClassWithLazyDbRefs.class);
-		MongoPersistentProperty property = entity.getPersistentProperty("dbRefToConcreteTypeWithPropertyAccess");
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(ClassWithLazyDbRefs.class);
+		MongoPersistentProperty property = entity.getRequiredPersistentProperty("dbRefToConcreteTypeWithPropertyAccess");
 
 		String idValue = new ObjectId().toString();
 		DBRef dbRef = converter.toDBRef(new LazyDbRefTargetPropertyAccess(idValue), property);
@@ -512,8 +510,8 @@ public class DbRefMappingMongoConverterUnitTests {
 	@Test // DATAMONGO-1076
 	public void shouldNotTriggerResolvingOfLazyLoadedProxyWhenFinalizeMethodIsInvoked() throws Exception {
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(WithObjectMethodOverrideLazyDbRefs.class);
-		MongoPersistentProperty property = entity.getPersistentProperty("dbRefToConcreteTypeWithPropertyAccess");
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(WithObjectMethodOverrideLazyDbRefs.class);
+		MongoPersistentProperty property = entity.getRequiredPersistentProperty("dbRefToConcreteTypeWithPropertyAccess");
 
 		String idValue = new ObjectId().toString();
 		DBRef dbRef = converter.toDBRef(new LazyDbRefTargetPropertyAccess(idValue), property);

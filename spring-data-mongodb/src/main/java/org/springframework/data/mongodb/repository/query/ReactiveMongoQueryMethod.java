@@ -70,8 +70,8 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 
 			boolean multiWrapper = ReactiveWrappers.isMultiValueType(returnType.getType());
 			boolean singleWrapperWithWrappedPageableResult = ReactiveWrappers.isSingleValueType(returnType.getType())
-					&& (PAGE_TYPE.isAssignableFrom(returnType.getComponentType())
-							|| SLICE_TYPE.isAssignableFrom(returnType.getComponentType()));
+					&& (PAGE_TYPE.isAssignableFrom(returnType.getComponentType().get())
+							|| SLICE_TYPE.isAssignableFrom(returnType.getComponentType().get()));
 
 			if (singleWrapperWithWrappedPageableResult) {
 				throw new InvalidDataAccessApiUsageException(
@@ -125,7 +125,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 
 		if (ReactiveWrappers.supports(method.getReturnType())) {
 			TypeInformation<?> from = ClassTypeInformation.fromReturnTypeOf(method);
-			return GeoResult.class.equals(from.getComponentType().getType());
+			return GeoResult.class.equals(from.getComponentType().get().getType());
 		}
 
 		return false;

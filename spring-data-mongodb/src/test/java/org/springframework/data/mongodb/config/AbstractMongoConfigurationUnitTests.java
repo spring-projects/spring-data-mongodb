@@ -106,7 +106,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 		MongoMappingContext mappingContext = context.getBean(MongoMappingContext.class);
-		BasicMongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(Entity.class);
+		BasicMongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(Entity.class);
 		StandardEvaluationContext spElContext = (StandardEvaluationContext) ReflectionTestUtils.getField(entity, "context");
 
 		assertThat(spElContext.getBeanResolver(), is(notNullValue()));

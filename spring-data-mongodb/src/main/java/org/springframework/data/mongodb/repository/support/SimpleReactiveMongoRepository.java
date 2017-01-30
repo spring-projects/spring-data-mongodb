@@ -272,7 +272,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entity, "The given entity must not be null!");
 
-		return delete(entityInformation.getId(entity));
+		return delete(entityInformation.getId(entity).get());
 	}
 
 	// TODO: should this one really be void?
@@ -280,7 +280,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
-		return Flux.fromIterable(entities).flatMap(entity -> delete(entityInformation.getId(entity))).then();
+		return Flux.fromIterable(entities).flatMap(entity -> delete(entityInformation.getId(entity).get())).then();
 	}
 
 	// TODO: should this one really be void?
@@ -289,7 +289,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entityStream, "The given Publisher of entities must not be null!");
 
-		return Flux.from(entityStream).flatMap(entity -> delete(entityInformation.getId(entity))).then();
+		return Flux.from(entityStream).flatMap(entity -> delete(entityInformation.getId(entity).get())).then();
 	}
 
 	// TODO: should this one really be void?

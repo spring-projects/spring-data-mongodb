@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Optional;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -99,7 +101,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 		if (!StringUtils.hasText(fieldSpec)) {
 
-			ReturnedType returnedType = processor.withDynamicProjection(accessor).getReturnedType();
+			ReturnedType returnedType = processor.withDynamicProjection(Optional.of(accessor)).getReturnedType();
 
 			if (returnedType.isProjecting()) {
 

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Optional;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -85,7 +87,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		applyQueryMetaAttributesWhenPresent(query);
 
-		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
+		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(Optional.of(accessor));
 		String collection = method.getEntityInformation().getCollectionName();
 
 		MongoQueryExecution execution = getExecution(query, accessor,

@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.core.IsEqual.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;

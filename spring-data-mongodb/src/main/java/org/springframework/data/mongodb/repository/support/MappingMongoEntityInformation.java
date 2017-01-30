@@ -98,7 +98,7 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends P
 	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getIdAttribute()
 	 */
 	public String getIdAttribute() {
-		return entityMetadata.getIdProperty().getName();
+		return entityMetadata.getIdProperty().get().getName();
 	}
 
 	/*

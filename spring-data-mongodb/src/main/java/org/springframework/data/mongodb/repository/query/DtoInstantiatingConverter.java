@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Optional;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
@@ -58,7 +60,7 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 
 		this.targetType = dtoType;
 		this.context = context;
-		this.instantiator = instantiator.getInstantiatorFor(context.getPersistentEntity(dtoType));
+		this.instantiator = instantiator.getInstantiatorFor(context.getRequiredPersistentEntity(dtoType));
 	}
 
 	/* 
@@ -72,18 +74,18 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 			return source;
 		}
 
-		final PersistentEntity<?, ?> sourceEntity = context.getPersistentEntity(source.getClass());
+		final PersistentEntity<?, ?> sourceEntity = context.getRequiredPersistentEntity(source.getClass());
 		final PersistentPropertyAccessor sourceAccessor = sourceEntity.getPropertyAccessor(source);
-		final PersistentEntity<?, ?> targetEntity = context.getPersistentEntity(targetType);
+		final PersistentEntity<?, ?> targetEntity = context.getRequiredPersistentEntity(targetType);
 		final PreferredConstructor<?, ? extends PersistentProperty<?>> constructor = targetEntity
-				.getPersistenceConstructor();
+				.getPersistenceConstructor().get();
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		Object dto = instantiator.createInstance(targetEntity, new ParameterValueProvider() {
 
 			@Override
-			public Object getParameterValue(Parameter parameter) {
-				return sourceAccessor.getProperty(sourceEntity.getPersistentProperty(parameter.getName()));
+			public Optional<Object> getParameterValue(Parameter parameter) {
+				return sourceAccessor.getProperty(sourceEntity.getPersistentProperty(parameter.getName().get().toString()).get());
 			}
 		});
 
@@ -99,7 +101,7 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 				}
 
 				dtoAccessor.setProperty(property,
-						sourceAccessor.getProperty(sourceEntity.getPersistentProperty(property.getName())));
+						sourceAccessor.getProperty(sourceEntity.getPersistentProperty(property.getName()).get()));
 			}
 		});
 

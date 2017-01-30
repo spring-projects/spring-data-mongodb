@@ -41,8 +41,8 @@ public final class NearQuery {
 	private Distance minDistance;
 	private Metric metric;
 	private boolean spherical;
-	private Integer num;
-	private Integer skip;
+	private Long num;
+	private Long skip;
 
 	/**
 	 * Creates a new {@link NearQuery}.
@@ -125,7 +125,7 @@ public final class NearQuery {
 	 * @param num
 	 * @return
 	 */
-	public NearQuery num(int num) {
+	public NearQuery num(long num) {
 		this.num = num;
 		return this;
 	}
@@ -136,7 +136,7 @@ public final class NearQuery {
 	 * @param skip
 	 * @return
 	 */
-	public NearQuery skip(int skip) {
+	public NearQuery skip(long skip) {
 		this.skip = skip;
 		return this;
 	}
@@ -380,7 +380,7 @@ public final class NearQuery {
 		this.skip = query.getSkip();
 
 		if (query.getLimit() != 0) {
-			this.num = query.getLimit();
+			this.num = (long) query.getLimit();
 		}
 		return this;
 	}
@@ -388,7 +388,7 @@ public final class NearQuery {
 	/**
 	 * @return the number of elements to skip.
 	 */
-	public Integer getSkip() {
+	public Long getSkip() {
 		return skip;
 	}
 

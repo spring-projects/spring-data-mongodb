@@ -19,6 +19,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.springframework.core.convert.converter.Converter;
@@ -39,7 +40,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-import org.springframework.data.repository.support.PageableExecutionUtils.TotalSupplier;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.TypeInformation;
@@ -140,17 +140,14 @@ interface MongoQueryExecution {
 
 			// Adjust limit if page would exceed the overall limit
 			if (overallLimit != 0 && pageable.getOffset() + pageable.getPageSize() > overallLimit) {
-				query.limit(overallLimit - pageable.getOffset());
+				query.limit((int)(overallLimit - pageable.getOffset()));
 			}
 
-			return PageableExecutionUtils.getPage(operations.find(query, type, collection), pageable, new TotalSupplier() {
-
-				@Override
-				public long get() {
+			return PageableExecutionUtils.getPage(operations.find(query, type, collection), pageable, () -> {
 
 					long count = operations.count(query, type, collection);
 					return overallLimit != 0 ? Math.min(count, overallLimit) : count;
-				}
+
 			});
 		}
 	}
@@ -279,8 +276,8 @@ interface MongoQueryExecution {
 				return false;
 			}
 
-			TypeInformation<?> componentType = returnType.getComponentType();
-			return componentType != null && GeoResult.class.equals(componentType.getType());
+			Optional<TypeInformation<?>> componentType = returnType.getComponentType();
+			return componentType.isPresent() && GeoResult.class.equals(componentType.get().getType());
 		}
 	}
 
@@ -316,10 +313,8 @@ interface MongoQueryExecution {
 			GeoResults<Object> geoResults = doExecuteQuery(query, type, collection);
 
 			Page<GeoResult<Object>> page = PageableExecutionUtils.getPage(geoResults.getContent(), accessor.getPageable(),
-					new TotalSupplier() {
+					() -> {
 
-						@Override
-						public long get() {
 
 							ConvertingParameterAccessor parameterAccessor = new ConvertingParameterAccessor(operations.getConverter(),
 									accessor);
@@ -327,7 +322,7 @@ interface MongoQueryExecution {
 									.applyQueryMetaAttributesWhenPresent(mongoQuery.createCountQuery(parameterAccessor));
 
 							return operations.count(countQuery, collection);
-						}
+
 					});
 
 			// transform to GeoPage after applying optimization

@@ -49,7 +49,7 @@ public class Query {
 	private final Map<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
 	private Field fieldSpec;
 	private Sort sort;
-	private int skip;
+	private long skip;
 	private int limit;
 	private String hint;
 
@@ -114,7 +114,7 @@ public class Query {
 	 * @param skip
 	 * @return
 	 */
-	public Query skip(int skip) {
+	public Query skip(long skip) {
 		this.skip = skip;
 		return this;
 	}
@@ -255,7 +255,7 @@ public class Query {
 	 *
 	 * @return
 	 */
-	public int getSkip() {
+	public long getSkip() {
 		return this.skip;
 	}
 

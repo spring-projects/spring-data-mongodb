@@ -113,7 +113,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		MongoPersistentEntityIndexCreator creator = new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		MongoPersistentEntity<?> entity = personMappingContext.getPersistentEntity(Person.class);
+		MongoPersistentEntity<?> entity = personMappingContext.getRequiredPersistentEntity(Person.class);
 		MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> event = new MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>(
 				personMappingContext, entity);
 

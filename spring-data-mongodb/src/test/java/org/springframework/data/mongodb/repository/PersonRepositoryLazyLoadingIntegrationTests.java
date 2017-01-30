@@ -64,7 +64,7 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		person.setRealFans(new ArrayList<User>(Arrays.asList(thomas)));
 		repository.save(person);
 
-		Person oliver = repository.findOne(person.id);
+		Person oliver = repository.findOne(person.id).get();
 		List<User> fans = oliver.getFans();
 
 		assertProxyIsResolved(fans, false);
@@ -87,7 +87,7 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		person.setRealFans(new ArrayList<User>(Arrays.asList(thomas)));
 		repository.save(person);
 
-		Person oliver = repository.findOne(person.id);
+		Person oliver = repository.findOne(person.id).get();
 		List<User> realFans = oliver.getRealFans();
 
 		assertProxyIsResolved(realFans, false);
@@ -114,7 +114,7 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		person.setCoworker(thomas);
 		repository.save(person);
 
-		Person oliver = repository.findOne(person.id);
+		Person oliver = repository.findOne(person.id).get();
 
 		User coworker = oliver.getCoworker();
 

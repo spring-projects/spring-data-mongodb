@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -91,7 +92,7 @@ public class SimpleMongoRepositoryTests {
 
 	@Test
 	public void findOneFromCustomCollectionName() {
-		Person result = repository.findOne(dave.getId());
+		Person result = repository.findOne(dave.getId()).get();
 		assertThat(result, is(dave));
 	}
 
@@ -121,7 +122,7 @@ public class SimpleMongoRepositoryTests {
 		Person person1 = new Person("First1" + randomId, "Last2" + randomId, 42);
 		person1 = repository.insert(person1);
 
-		Person saved = repository.findOne(person1.getId());
+		Person saved = repository.findOne(person1.getId()).get();
 
 		assertThat(saved, is(equalTo(person1)));
 	}
@@ -428,8 +429,8 @@ public class SimpleMongoRepositoryTests {
 		}
 
 		@Override
-		public String getId(Person entity) {
-			return entity.getId();
+		public Optional<String> getId(Person entity) {
+			return Optional.ofNullable(entity.getId());
 		}
 
 		@Override

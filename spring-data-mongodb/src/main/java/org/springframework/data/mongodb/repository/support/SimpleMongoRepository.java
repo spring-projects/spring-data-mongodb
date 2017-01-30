@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.domain.Example;
@@ -37,7 +38,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-import org.springframework.data.repository.support.PageableExecutionUtils.TotalSupplier;
 import org.springframework.util.Assert;
 
 /**
@@ -118,9 +118,9 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findOne(java.io.Serializable)
 	 */
-	public T findOne(ID id) {
+	public Optional<T> findOne(ID id) {
 		Assert.notNull(id, "The given id must not be null!");
-		return mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName());
+		return Optional.ofNullable(mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
 	}
 
 	private Query getIdQuery(Object id) {
@@ -165,7 +165,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 */
 	public void delete(T entity) {
 		Assert.notNull(entity, "The given entity must not be null!");
-		delete(entityInformation.getId(entity));
+		delete(entityInformation.getId(entity).orElse(null));
 	}
 
 	/*
@@ -275,13 +275,9 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		final Query q = new Query(new Criteria().alike(example)).with(pageable);
 
 		List<S> list = mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName());
-		return PageableExecutionUtils.getPage(list, pageable, new TotalSupplier() {
-
-			@Override
-			public long get() {
-				return mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName());
-			}
-		});
+		return PageableExecutionUtils.getPage(list, pageable, () ->
+			 mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName())
+		);
 	}
 
 	/*

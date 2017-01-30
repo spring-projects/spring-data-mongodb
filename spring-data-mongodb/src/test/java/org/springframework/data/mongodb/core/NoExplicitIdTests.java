@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -106,8 +107,8 @@ public class NoExplicitIdTests {
 		Map<String, Object> map = mongoOps.findOne(query(where("someString").is(noid.someString)), Map.class,
 				"typeWithoutIdProperty");
 
-		TypeWithoutIdProperty retrieved = repo.findOne(map.get("_id").toString());
-		assertThat(retrieved.someString, is(noid.someString));
+		Optional<TypeWithoutIdProperty> retrieved = repo.findOne(map.get("_id").toString());
+		assertThat(retrieved.get().someString, is(noid.someString));
 	}
 
 	static class TypeWithoutIdProperty {

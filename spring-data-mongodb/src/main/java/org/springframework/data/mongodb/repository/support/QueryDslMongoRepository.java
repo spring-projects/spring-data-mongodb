@@ -27,12 +27,11 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
 import org.springframework.data.querydsl.QSort;
-import org.springframework.data.querydsl.QueryDslPredicateExecutor;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.EntityMetadata;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-import org.springframework.data.repository.support.PageableExecutionUtils.TotalSupplier;
 import org.springframework.util.Assert;
 
 import com.querydsl.core.types.EntityPath;
@@ -50,7 +49,7 @@ import com.querydsl.mongodb.AbstractMongodbQuery;
  * @author Mark Paluch
  */
 public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID>
-		implements QueryDslPredicateExecutor<T> {
+		implements QuerydslPredicateExecutor<T> {
 
 	private final PathBuilder<T> builder;
 	private final EntityInformation<T, ID> entityInformation;
@@ -144,13 +143,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQueryFor(predicate);
 
-		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, new TotalSupplier() {
-
-			@Override
-			public long get() {
-				return createQueryFor(predicate).fetchCount();
-			}
-		});
+		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, () -> createQueryFor(predicate).fetchCount());
 	}
 
 	/*
@@ -162,13 +155,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQuery();
 
-		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, new TotalSupplier() {
-
-			@Override
-			public long get() {
-				return createQuery().fetchCount();
-			}
-		});
+		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, () -> createQuery().fetchCount());
 	}
 
 	/*

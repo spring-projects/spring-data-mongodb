@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.cdi;
 
 import java.lang.annotation.Annotation;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.enterprise.context.spi.CreationalContext;
@@ -49,7 +50,7 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
 	 */
 	public MongoRepositoryBean(Bean<MongoOperations> operations, Set<Annotation> qualifiers, Class<T> repositoryType,
-			BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
+			BeanManager beanManager, Optional<CustomRepositoryImplementationDetector> detector) {
 
 		super(qualifiers, repositoryType, beanManager, detector);
 
@@ -62,7 +63,7 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(javax.enterprise.context.spi.CreationalContext, java.lang.Class)
 	 */
 	@Override
-	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType, Object customImplementation) {
+	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType, Optional<Object> customImplementation) {
 
 		MongoOperations mongoOperations = getDependencyInstance(operations, MongoOperations.class);
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(mongoOperations);

@@ -120,7 +120,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	private MongoPersistentEntity<?> lookupPersistentEntity(Class<?> entityType, String collection) {
 
 		if (entityType != null) {
-			return mapper.getMappingContext().getPersistentEntity(entityType);
+			return mapper.getMappingContext().getRequiredPersistentEntity(entityType);
 		}
 
 		Collection<? extends MongoPersistentEntity<?>> entities = mapper.getMappingContext().getPersistentEntities();

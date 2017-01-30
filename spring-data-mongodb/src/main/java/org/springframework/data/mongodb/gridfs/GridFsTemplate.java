@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.bson.BsonObjectId;
 import org.bson.Document;
@@ -262,7 +263,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	}
 
 	private Document getMappedQuery(Document query) {
-		return query == null ? null : queryMapper.getMappedObject(query, null);
+		return query == null ? null : queryMapper.getMappedObject(query, Optional.empty());
 	}
 
 	private GridFSBucket getGridFs() {

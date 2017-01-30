@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -407,7 +408,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private boolean isSpherical(MongoPersistentProperty property) {
 
-		GeoSpatialIndexed index = property.findAnnotation(GeoSpatialIndexed.class);
-		return index != null && index.type().equals(GeoSpatialIndexType.GEO_2DSPHERE);
+		Optional<GeoSpatialIndexed> index = property.findAnnotation(GeoSpatialIndexed.class);
+		return index.isPresent() && index.get().type().equals(GeoSpatialIndexType.GEO_2DSPHERE);
 	}
 }

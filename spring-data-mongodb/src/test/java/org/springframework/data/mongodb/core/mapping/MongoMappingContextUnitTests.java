@@ -86,8 +86,8 @@ public class MongoMappingContextUnitTests {
 			}
 		});
 
-		MongoPersistentEntity<?> entity = context.getPersistentEntity(Person.class);
-		assertThat(entity.getPersistentProperty("firstname").getFieldName(), is("FIRSTNAME"));
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(Person.class);
+		assertThat(entity.getRequiredPersistentProperty("firstname").getFieldName(), is("FIRSTNAME"));
 	}
 
 	@Test // DATAMONGO-607
@@ -116,27 +116,27 @@ public class MongoMappingContextUnitTests {
 	public void mappingContextShouldAcceptClassWithImplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		BasicMongoPersistentEntity<?> pe = context.getPersistentEntity(ClassWithImplicitId.class);
+		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithImplicitId.class);
 
 		assertThat(pe, is(not(nullValue())));
-		assertThat(pe.isIdProperty(pe.getPersistentProperty("id")), is(true));
+		assertThat(pe.isIdProperty(pe.getRequiredPersistentProperty("id")), is(true));
 	}
 
 	@Test // DATAMONGO-688
 	public void mappingContextShouldAcceptClassWithExplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		BasicMongoPersistentEntity<?> pe = context.getPersistentEntity(ClassWithExplicitId.class);
+		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitId.class);
 
 		assertThat(pe, is(not(nullValue())));
-		assertThat(pe.isIdProperty(pe.getPersistentProperty("myId")), is(true));
+		assertThat(pe.isIdProperty(pe.getRequiredPersistentProperty("myId")), is(true));
 	}
 
 	@Test // DATAMONGO-688
 	public void mappingContextShouldAcceptClassWithExplicitAndImplicitIdPropertyByGivingPrecedenceToExplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		BasicMongoPersistentEntity<?> pe = context.getPersistentEntity(ClassWithExplicitIdAndImplicitId.class);
+		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitIdAndImplicitId.class);
 		assertThat(pe, is(not(nullValue())));
 	}
 

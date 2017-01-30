@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;

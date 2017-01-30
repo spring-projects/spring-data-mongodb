@@ -684,7 +684,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
 
 		int index = 0;
-		int elementsToSkip = near.getSkip() != null ? near.getSkip() : 0;
+		long elementsToSkip = near.getSkip() != null ? near.getSkip() : 0;
 
 		for (Object element : results) {
 
@@ -2521,7 +2521,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			try {
 				if (query.getSkip() > 0) {
-					cursorToUse = cursorToUse.skip(query.getSkip());
+					cursorToUse = cursorToUse.skip((int)query.getSkip());
 				}
 				if (query.getLimit() > 0) {
 					cursorToUse = cursorToUse.limit(query.getLimit());

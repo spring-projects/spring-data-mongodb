@@ -126,8 +126,8 @@ public class ConvertingParameterAccessorUnitTests {
 		MongoParameterAccessor delegate = new StubParameterAccessor(parameters);
 		PotentiallyConvertingIterator iterator = new ConvertingParameterAccessor(converter, delegate).iterator();
 
-		MongoPersistentEntity<?> entity = context.getPersistentEntity(Entity.class);
-		MongoPersistentProperty property = entity.getPersistentProperty("property");
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(Entity.class);
+		MongoPersistentProperty property = entity.getRequiredPersistentProperty("property");
 
 		return iterator.nextConverted(property);
 	}

@@ -1178,7 +1178,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		MongoMappingContext mappingContext = prepareMappingContext(type);
 		MongoPersistentEntityIndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
-		return resolver.resolveIndexForEntity(mappingContext.getPersistentEntity(type));
+		return resolver.resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(type));
 	}
 
 	private static MongoMappingContext prepareMappingContext(Class<?> type) {

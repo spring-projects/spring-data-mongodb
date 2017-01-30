@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,8 +57,8 @@ public class AuditingEventListenerUnitTests {
 		mappingContext.getPersistentEntity(Sample.class);
 
 		handler = spy(new IsNewAwareAuditingHandler(new PersistentEntities(Arrays.asList(mappingContext))));
-		doNothing().when(handler).markCreated(Mockito.any(Object.class));
-		doNothing().when(handler).markModified(Mockito.any(Object.class));
+		doNothing().when(handler).markCreated(Mockito.any(Optional.class));
+		doNothing().when(handler).markModified(Mockito.any(Optional.class));
 
 		listener = new AuditingEventListener(new ObjectFactory<IsNewAwareAuditingHandler>() {
 
@@ -79,8 +80,8 @@ public class AuditingEventListenerUnitTests {
 		Sample sample = new Sample();
 		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample, "collection-1"));
 
-		verify(handler, times(1)).markCreated(sample);
-		verify(handler, times(0)).markModified(Mockito.any(Sample.class));
+		verify(handler, times(1)).markCreated(Optional.of(sample));
+		verify(handler, times(0)).markModified(Mockito.any(Optional.class));
 	}
 
 	@Test // DATAMONGO-577
@@ -90,8 +91,8 @@ public class AuditingEventListenerUnitTests {
 		sample.id = "id";
 		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample, "collection-1"));
 
-		verify(handler, times(0)).markCreated(Mockito.any(Sample.class));
-		verify(handler, times(1)).markModified(sample);
+		verify(handler, times(0)).markCreated(Mockito.any(Optional.class));
+		verify(handler, times(1)).markModified(Optional.of(sample));
 	}
 
 	@Test

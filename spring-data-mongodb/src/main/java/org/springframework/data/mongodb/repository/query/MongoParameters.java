@@ -190,7 +190,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 				if (componentType == null) {
 					return i;
-				} else if (componentType.equals(candidate.getComponentType().getType())) {
+				} else if (componentType.equals(candidate.getComponentType().get().getType())) {
 					return i;
 				}
 			}

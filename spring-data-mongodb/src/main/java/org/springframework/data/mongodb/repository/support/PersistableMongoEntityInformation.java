@@ -19,6 +19,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -76,10 +77,10 @@ class PersistableMongoEntityInformation<T, ID extends Serializable> implements M
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public ID getId(T t) {
+	public Optional<ID> getId(T t) {
 
 		if (t instanceof Persistable) {
-			return (ID) ((Persistable<ID>) t).getId();
+			return Optional.ofNullable(((Persistable<ID>) t).getId());
 		}
 
 		return delegate.getId(t);
