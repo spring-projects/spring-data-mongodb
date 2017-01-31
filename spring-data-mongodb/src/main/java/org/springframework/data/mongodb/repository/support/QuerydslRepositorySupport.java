@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.querydsl.mongodb.AbstractMongodbQuery;
  * Base class to create repository implementations based on Querydsl.
  * 
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public abstract class QuerydslRepositorySupport {
 
@@ -40,7 +41,7 @@ public abstract class QuerydslRepositorySupport {
 	 */
 	public QuerydslRepositorySupport(MongoOperations operations) {
 
-		Assert.notNull(operations);
+		Assert.notNull(operations, "MongoOperations must not be null!");
 
 		this.template = operations;
 		this.context = operations.getConverter().getMappingContext();
@@ -54,7 +55,9 @@ public abstract class QuerydslRepositorySupport {
 	 * @return
 	 */
 	protected <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path) {
-		Assert.notNull(path);
+
+		Assert.notNull(path, "EntityPath must not be null!");
+
 		MongoPersistentEntity<?> entity = context.getPersistentEntity(path.getType());
 		return from(path, entity.getCollection());
 	}
@@ -68,8 +71,8 @@ public abstract class QuerydslRepositorySupport {
 	 */
 	protected <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path, String collection) {
 
-		Assert.notNull(path);
-		Assert.hasText(collection);
+		Assert.notNull(path, "EntityPath must not be null!");
+		Assert.hasText(collection, "Collection name must not be null or empty!");
 
 		return new SpringDataMongodbQuery<T>(template, path.getType(), collection);
 	}

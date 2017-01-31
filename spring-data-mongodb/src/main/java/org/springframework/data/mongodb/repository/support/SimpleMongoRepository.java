@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,8 +59,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 */
 	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
 
-		Assert.notNull(mongoOperations);
-		Assert.notNull(metadata);
+		Assert.notNull(metadata, "MongoEntityInformation must not be null!");
+		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
 
 		this.entityInformation = metadata;
 		this.mongoOperations = mongoOperations;
@@ -195,7 +195,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		return findAll(new Query());
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findAll(java.lang.Iterable)
 	 */
@@ -229,7 +229,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		return findAll(new Query().with(sort));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#insert(java.lang.Object)
 	 */
@@ -242,7 +242,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		return entity;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#insert(java.lang.Iterable)
 	 */

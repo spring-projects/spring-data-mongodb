@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.performance;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.util.Assert.*;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -47,6 +46,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
+import org.springframework.util.Assert;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 
@@ -66,6 +66,7 @@ import com.mongodb.WriteConcern;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class PerformanceTests {
 
@@ -622,7 +623,7 @@ public class PerformanceTests {
 
 	private static <T> List<T> pickRandomNumerOfItemsFrom(List<T> source) {
 
-		isTrue(!source.isEmpty());
+		Assert.isTrue(!source.isEmpty(), "Source must not be empty!");
 
 		Random random = new Random();
 		int numberOfItems = random.nextInt(source.size());
@@ -836,7 +837,7 @@ public class PerformanceTests {
 					String.format(" %s%%", DEVIATION_FORMAT.format(getMediaDeviationFrom(referenceMedian)))) + '\n';
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */
@@ -895,7 +896,7 @@ public class PerformanceTests {
 			return builder.toString();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */

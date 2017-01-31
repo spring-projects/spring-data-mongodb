@@ -1,11 +1,11 @@
 /*
- * Copyright 2011-2017 by the original author(s).
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -310,7 +310,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return result;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#toDBRef(java.lang.Object, org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
 	 */
@@ -478,7 +478,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			DBRef dbRefObj = null;
 
 			/*
-			 * If we already have a LazyLoadingProxy, we use it's cached DBRef value instead of 
+			 * If we already have a LazyLoadingProxy, we use it's cached DBRef value instead of
 			 * unnecessarily initializing it only to convert it to a DBRef a few instructions later.
 			 */
 			if (obj instanceof LazyLoadingProxy) {
@@ -825,7 +825,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	protected DBRef createDBRef(Object target, MongoPersistentProperty property) {
 
-		Assert.notNull(target);
+		Assert.notNull(target, "Target object must not be null!");
 
 		if (target instanceof DBRef) {
 			return (DBRef) target;
@@ -1053,7 +1053,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Removes the type information from the entire conversion result.
-	 * 
+	 *
 	 * @param object
 	 * @param recursively whether to apply the removal recursively
 	 * @return
@@ -1114,22 +1114,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		/**
 		 * Creates a new {@link MongoDbPropertyValueProvider} for the given source, {@link SpELExpressionEvaluator} and
 		 * {@link ObjectPath}.
-		 * 
+		 *
 		 * @param source must not be {@literal null}.
 		 * @param evaluator must not be {@literal null}.
 		 * @param path can be {@literal null}.
 		 */
 		public MongoDbPropertyValueProvider(DBObject source, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
-			Assert.notNull(source);
-			Assert.notNull(evaluator);
+			Assert.notNull(source, "DBObject must not be null!");
+			Assert.notNull(evaluator, "SpELExpressionEvaluator must not be null!");
 
 			this.source = new DBObjectAccessor(source);
 			this.evaluator = evaluator;
 			this.path = path;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
 		 */
@@ -1172,7 +1172,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			this.path = path;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mapping.model.SpELExpressionParameterValueProvider#potentiallyConvertSpelValue(java.lang.Object, org.springframework.data.mapping.PreferredConstructor.Parameter)
 		 */
