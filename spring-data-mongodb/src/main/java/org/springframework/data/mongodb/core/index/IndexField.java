@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,13 @@ public final class IndexField {
 
 	private IndexField(String key, Direction direction, Type type, Float weight) {
 
-		Assert.hasText(key);
-		Assert.isTrue(direction != null ^ (Type.GEO.equals(type) || Type.TEXT.equals(type)));
+		Assert.hasText(key, "Key must not be null or empty");
+
+		if (Type.GEO.equals(type) || Type.TEXT.equals(type)) {
+			Assert.isTrue(direction == null, "Geo/Text indexes must not have a direction!");
+		} else {
+			Assert.notNull(direction, "Default indexes require a direction");
+		}
 
 		this.key = key;
 		this.direction = direction;
@@ -53,7 +58,9 @@ public final class IndexField {
 	}
 
 	public static IndexField create(String key, Direction order) {
-		Assert.notNull(order);
+		
+		Assert.notNull(order, "Direction must not be null!");
+
 		return new IndexField(key, order, Type.DEFAULT);
 	}
 
@@ -102,7 +109,7 @@ public final class IndexField {
 	}
 
 	/**
-	 * Returns wheter the {@link IndexField} is a text index field.
+	 * Returns whether the {@link IndexField} is a text index field.
 	 * 
 	 * @return true if type is {@link Type#TEXT}
 	 * @since 1.6
@@ -132,7 +139,7 @@ public final class IndexField {
 				&& this.type == that.type;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -147,7 +154,7 @@ public final class IndexField {
 		return result;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

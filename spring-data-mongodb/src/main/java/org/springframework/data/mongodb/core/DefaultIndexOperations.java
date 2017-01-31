@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core;
 import static org.springframework.data.mongodb.core.MongoTemplate.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -189,7 +188,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	public <T> T execute(CollectionCallback<T> callback) {
 
-		Assert.notNull(callback);
+		Assert.notNull(callback, "CollectionCallback must not be null!");
 
 		try {
 			MongoCollection<Document> collection = mongoDbFactory.getDb().getCollection(collectionName);

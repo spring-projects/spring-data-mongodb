@@ -25,8 +25,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.Mongo;
 
@@ -35,6 +33,7 @@ import com.mongodb.Mongo;
  * 
  * @author Mark Pollack
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -46,7 +45,6 @@ public class MongoMonitorIntegrationTests {
 	public void serverInfo() {
 		ServerInfo serverInfo = new ServerInfo(mongo);
 		serverInfo.getVersion();
-		Assert.isTrue(StringUtils.hasText("1."));
 	}
 
 	@Test // DATAMONGO-685

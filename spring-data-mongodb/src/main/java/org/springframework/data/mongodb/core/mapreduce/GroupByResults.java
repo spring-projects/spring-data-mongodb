@@ -1,11 +1,11 @@
 /*
- * Copyright 2011 - 2016O the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *			http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ import org.springframework.util.Assert;
  * 
  * @author Mark Pollack
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @param <T> The class in which the results are mapped onto, accessible via an {@link Iterator}.
  */
 public class GroupByResults<T> implements Iterable<T> {
@@ -39,10 +40,12 @@ public class GroupByResults<T> implements Iterable<T> {
 
 	public GroupByResults(List<T> mappedResults, Document rawResults) {
 
-		Assert.notNull(mappedResults);
-		Assert.notNull(rawResults);
+		Assert.notNull(mappedResults, "List of mapped results must not be null!");
+		Assert.notNull(rawResults, "Raw results must not be null!");
+
 		this.mappedResults = mappedResults;
 		this.rawResults = rawResults;
+
 		parseKeys();
 		parseCount();
 		parseServerUsed();

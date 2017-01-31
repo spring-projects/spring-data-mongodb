@@ -218,7 +218,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	public MongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter) {
 
-		Assert.notNull(mongoDbFactory);
+		Assert.notNull(mongoDbFactory, "MongoDbFactory must not be null!");
 
 		this.mongoDbFactory = mongoDbFactory;
 		this.exceptionTranslator = mongoDbFactory.getExceptionTranslator();
@@ -438,7 +438,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch,
 			CursorPreparer preparer) {
 
-		Assert.notNull(query);
+		Assert.notNull(query, "Query must not be null!");
 
 		Document queryObject = queryMapper.getMappedObject(query.getQueryObject(), null);
 		Document sortObject = query.getSortObject();
@@ -454,7 +454,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	public <T> T execute(DbCallback<T> action) {
 
-		Assert.notNull(action);
+		Assert.notNull(action, "DbCallbackmust not be null!");
 
 		try {
 			MongoDatabase db = this.getDb();
@@ -470,7 +470,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	public <T> T execute(String collectionName, CollectionCallback<T> callback) {
 
-		Assert.notNull(callback);
+		Assert.notNull(callback, "CollectionCallback must not be null!");
 
 		try {
 			MongoCollection<Document> collection = getAndPrepareCollection(getDb(), collectionName);
@@ -735,7 +735,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	public long count(Query query, Class<?> entityClass) {
-		Assert.notNull(entityClass);
+
+		Assert.notNull(entityClass, "Entity class must not be null!");
 		return count(query, entityClass, determineCollectionName(entityClass));
 	}
 
@@ -749,7 +750,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	public long count(Query query, Class<?> entityClass, String collectionName) {
 
-		Assert.hasText(collectionName);
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+
 		final Document document = query == null ? null
 				: queryMapper.getMappedObject(query.getQueryObject(),
 						entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
@@ -932,7 +934,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> void doInsertBatch(String collectionName, Collection<? extends T> batchToSave, MongoWriter<T> writer) {
 
-		Assert.notNull(writer);
+		Assert.notNull(writer, "MongoWriter must not be null!");
 
 		List<Document> documentList = new ArrayList<Document>();
 		for (T o : batchToSave) {
@@ -960,14 +962,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	public void save(Object objectToSave) {
 
-		Assert.notNull(objectToSave);
+		Assert.notNull(objectToSave, "Object to save must not be null!");
 		save(objectToSave, determineEntityCollectionName(objectToSave));
 	}
 
 	public void save(Object objectToSave, String collectionName) {
 
-		Assert.notNull(objectToSave);
-		Assert.hasText(collectionName);
+		Assert.notNull(objectToSave, "Object to save must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(objectToSave.getClass());
 
@@ -1240,7 +1242,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	public DeleteResult remove(Object object, String collection) {
 
-		Assert.hasText(collection);
+		Assert.hasText(collection, "Collection name must not be null or empty!");
 
 		if (object == null) {
 			return null;
@@ -2348,8 +2350,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		public ReadDocumentCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
 
-			Assert.notNull(reader);
-			Assert.notNull(type);
+			Assert.notNull(reader, "EntityReader must not be null!");
+			Assert.notNull(type, "Entity type must not be null!");
+
 			this.reader = reader;
 			this.type = type;
 			this.collectionName = collectionName;
@@ -2491,7 +2494,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 * @param delegate must not be {@literal null}.
 		 */
 		public GeoNearResultDocumentCallback(DocumentCallback<T> delegate, Metric metric) {
-			Assert.notNull(delegate);
+
+			Assert.notNull(delegate, "DocumentCallback must not be null!");
+
 			this.delegate = delegate;
 			this.metric = metric;
 		}

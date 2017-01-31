@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @param <T> The class in which the results are mapped onto.
  * @since 1.3
  */
@@ -46,8 +47,8 @@ public class AggregationResults<T> implements Iterable<T> {
 	 */
 	public AggregationResults(List<T> mappedResults, Document rawResults) {
 
-		Assert.notNull(mappedResults);
-		Assert.notNull(rawResults);
+		Assert.notNull(mappedResults, "List of mapped results must not be null!");
+		Assert.notNull(rawResults, "Raw results must not be null!");
 
 		this.mappedResults = Collections.unmodifiableList(mappedResults);
 		this.rawResults = rawResults;

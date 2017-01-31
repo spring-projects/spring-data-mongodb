@@ -1,11 +1,11 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *			http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,11 +47,11 @@ public final class NearQuery {
 	/**
 	 * Creates a new {@link NearQuery}.
 	 * 
-	 * @param point
+	 * @param point must not be {@literal null}.
 	 */
 	private NearQuery(Point point, Metric metric) {
 
-		Assert.notNull(point);
+		Assert.notNull(point, "Point must not be null!");
 
 		this.point = point;
 		this.spherical = false;
@@ -106,7 +106,6 @@ public final class NearQuery {
 	 * @return
 	 */
 	public static NearQuery near(Point point, Metric metric) {
-		Assert.notNull(point);
 		return new NearQuery(point, metric);
 	}
 
@@ -183,7 +182,8 @@ public final class NearQuery {
 	 */
 	public NearQuery maxDistance(double maxDistance, Metric metric) {
 
-		Assert.notNull(metric);
+		Assert.notNull(metric, "Metric must not be null!");
+
 		return maxDistance(new Distance(maxDistance, metric));
 	}
 
@@ -196,7 +196,7 @@ public final class NearQuery {
 	 */
 	public NearQuery maxDistance(Distance distance) {
 
-		Assert.notNull(distance);
+		Assert.notNull(distance, "Distance must not be null!");
 
 		if (distance.getMetric() != Metrics.NEUTRAL) {
 			this.spherical(true);
@@ -239,7 +239,8 @@ public final class NearQuery {
 	 */
 	public NearQuery minDistance(double minDistance, Metric metric) {
 
-		Assert.notNull(metric);
+		Assert.notNull(metric, "Metric must not be null!");
+
 		return minDistance(new Distance(minDistance, metric));
 	}
 
@@ -253,7 +254,7 @@ public final class NearQuery {
 	 */
 	public NearQuery minDistance(Distance distance) {
 
-		Assert.notNull(distance);
+		Assert.notNull(distance, "Distance must not be null!");
 
 		if (distance.getMetric() != Metrics.NEUTRAL) {
 			this.spherical(true);

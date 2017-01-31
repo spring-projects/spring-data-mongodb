@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
@@ -82,9 +81,10 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	 */
 	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, IndexOperationsProvider indexOperationsProvider,
 											 IndexResolver indexResolver) {
-		Assert.notNull(indexOperationsProvider);
-		Assert.notNull(mappingContext);
-		Assert.notNull(indexResolver);
+
+		Assert.notNull(mappingContext, "MongoMappingContext must not be null!");
+		Assert.notNull(indexOperationsProvider, "IndexOperationsProvider must not be null!");
+		Assert.notNull(indexResolver, "IndexResolver must not be null!");
 
 		this.indexOperationsProvider = indexOperationsProvider;
 		this.mappingContext = mappingContext;

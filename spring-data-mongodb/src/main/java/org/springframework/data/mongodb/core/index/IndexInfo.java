@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,17 +23,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.mongodb.DBObject;
 import org.bson.Document;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
-
-import com.mongodb.DBObject;
 
 /**
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class IndexInfo {
 
@@ -132,7 +130,8 @@ public class IndexInfo {
 	 */
 	public boolean isIndexForFields(Collection<String> keys) {
 
-		Assert.notNull(keys);
+		Assert.notNull(keys, "Collection of keys must not be null!");
+
 		List<String> indexKeys = new ArrayList<String>(indexFields.size());
 
 		for (IndexField field : indexFields) {

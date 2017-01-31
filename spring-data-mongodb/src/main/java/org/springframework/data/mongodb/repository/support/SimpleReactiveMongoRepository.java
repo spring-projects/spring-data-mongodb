@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,6 @@ import java.util.Set;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -61,8 +59,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	public SimpleReactiveMongoRepository(MongoEntityInformation<T, ID> metadata,
 			ReactiveMongoOperations mongoOperations) {
 
-		Assert.notNull(mongoOperations);
-		Assert.notNull(metadata);
+		Assert.notNull(metadata, "MongoEntityInformation must not be null!");
+		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null!");
 
 		this.entityInformation = metadata;
 		this.mongoOperations = mongoOperations;

@@ -50,6 +50,7 @@ import com.mongodb.BasicDBList;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class Criteria implements CriteriaDefinition {
 
@@ -386,7 +387,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria regex(Pattern pattern) {
 
-		Assert.notNull(pattern);
+		Assert.notNull(pattern, "Pattern must not be null!");
 
 		if (lastOperatorWasNot()) {
 			return not(pattern);
@@ -407,7 +408,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	private Pattern toPattern(String regex, String options) {
-		Assert.notNull(regex);
+
+		Assert.notNull(regex, "Regex string must not be null!");
+
 		return Pattern.compile(regex, options == null ? 0 : BSON.regexFlags(options));
 	}
 
@@ -421,7 +424,9 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/centerSphere/">MongoDB Query operator: $centerSphere</a>
 	 */
 	public Criteria withinSphere(Circle circle) {
-		Assert.notNull(circle);
+
+		Assert.notNull(circle, "Circle must not be null!");
+
 		criteria.put("$geoWithin", new GeoCommand(new Sphere(circle)));
 		return this;
 	}
@@ -435,7 +440,8 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria within(Shape shape) {
 
-		Assert.notNull(shape);
+		Assert.notNull(shape, "Shape must not be null!");
+
 		criteria.put("$geoWithin", new GeoCommand(shape));
 		return this;
 	}
@@ -448,7 +454,9 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/near/">MongoDB Query operator: $near</a>
 	 */
 	public Criteria near(Point point) {
-		Assert.notNull(point);
+
+		Assert.notNull(point, "Point must not be null!");
+
 		criteria.put("$near", point);
 		return this;
 	}
@@ -462,7 +470,9 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nearSphere/">MongoDB Query operator: $nearSphere</a>
 	 */
 	public Criteria nearSphere(Point point) {
-		Assert.notNull(point);
+
+		Assert.notNull(point, "Point must not be null!");
+
 		criteria.put("$nearSphere", point);
 		return this;
 	}
@@ -716,7 +726,7 @@ public class Criteria implements CriteriaDefinition {
 		return false;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
@@ -779,7 +789,7 @@ public class Criteria implements CriteriaDefinition {
 		return ObjectUtils.nullSafeEquals(left, right);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */

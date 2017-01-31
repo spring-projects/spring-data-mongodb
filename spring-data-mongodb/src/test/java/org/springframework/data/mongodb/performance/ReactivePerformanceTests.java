@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.performance;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.util.Assert.*;
 
+import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -670,7 +670,7 @@ public class ReactivePerformanceTests {
 
 	private static <T> List<T> pickRandomNumerOfItemsFrom(List<T> source) {
 
-		isTrue(!source.isEmpty());
+		Assert.isTrue(!source.isEmpty(), "Source must not be empty!");
 
 		Random random = new Random();
 		int numberOfItems = random.nextInt(source.size());
@@ -884,7 +884,7 @@ public class ReactivePerformanceTests {
 					String.format(" %s%%", DEVIATION_FORMAT.format(getMediaDeviationFrom(referenceMedian)))) + '\n';
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */
@@ -943,7 +943,7 @@ public class ReactivePerformanceTests {
 			return builder.toString();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */

@@ -92,7 +92,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		super(tree, accessor);
 
-		Assert.notNull(context);
+		Assert.notNull(context, "MappingContext must not be null!");
 
 		this.accessor = accessor;
 		this.isGeoNearQuery = isGeoNearQuery;

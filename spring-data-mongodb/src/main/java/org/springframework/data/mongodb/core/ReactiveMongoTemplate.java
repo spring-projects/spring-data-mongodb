@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -373,7 +373,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#execute(java.lang.String, org.springframework.data.mongodb.core.ReactiveCollectionCallback)
 	 */
 	public <T> Flux<T> execute(String collectionName, ReactiveCollectionCallback<T> callback) {
-		Assert.notNull(callback);
+
+		Assert.notNull(callback, "ReactiveCollectionCallback must not be null!");
 		return createFlux(collectionName, callback);
 	}
 
@@ -386,7 +387,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Flux<T> createFlux(ReactiveDatabaseCallback<T> callback) {
 
-		Assert.notNull(callback);
+		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
 		return Flux.defer(() -> callback.doInDB(getMongoDatabase())).onErrorResumeWith(translateFluxException());
 	}
@@ -400,7 +401,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Mono<T> createMono(final ReactiveDatabaseCallback<T> callback) {
 
-		Assert.notNull(callback);
+		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
 		return Mono.defer(() -> Mono.from(callback.doInDB(getMongoDatabase()))).otherwise(translateMonoException());
 	}
@@ -414,8 +415,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Flux<T> createFlux(String collectionName, ReactiveCollectionCallback<T> callback) {
 
-		Assert.hasText(collectionName);
-		Assert.notNull(callback);
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
 				.fromCallable(() -> getAndPrepareCollection(getMongoDatabase(), collectionName));
@@ -433,8 +434,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Mono<T> createMono(String collectionName, ReactiveCollectionCallback<T> callback) {
 
-		Assert.hasText(collectionName);
-		Assert.notNull(callback);
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(callback, "ReactiveCollectionCallback must not be null!");
 
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
 				.fromCallable(() -> getAndPrepareCollection(getMongoDatabase(), collectionName));
@@ -729,7 +730,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
 	 */
 	public Mono<Long> count(Query query, Class<?> entityClass) {
-		Assert.notNull(entityClass);
+
+		Assert.notNull(entityClass, "Entity class must not be null!");
+
 		return count(query, entityClass, determineCollectionName(entityClass));
 	}
 
@@ -745,7 +748,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public Mono<Long> count(final Query query, final Class<?> entityClass, String collectionName) {
 
-		Assert.hasText(collectionName);
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		return createMono(collectionName, collection -> {
 
@@ -880,7 +883,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected <T> Flux<T> doInsertBatch(final String collectionName, final Collection<? extends T> batchToSave,
 			final MongoWriter<Object> writer) {
 
-		Assert.notNull(writer);
+		Assert.notNull(writer, "MongoWriter must not be null!");
 
 		Mono<List<Tuple2<T, Document>>> prepareDocuments = Flux.fromIterable(batchToSave)
 				.flatMap(new Function<T, Flux<Tuple2<T, Document>>>() {
@@ -933,7 +936,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Mono<T> save(T objectToSave) {
 
-		Assert.notNull(objectToSave);
+		Assert.notNull(objectToSave, "Object to save must not be null!");
 		return save(objectToSave, determineEntityCollectionName(objectToSave));
 	}
 
@@ -942,8 +945,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Mono<T> save(T objectToSave, String collectionName) {
 
-		Assert.notNull(objectToSave);
-		Assert.hasText(collectionName);
+		Assert.notNull(objectToSave, "Object to save must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(objectToSave.getClass());
 
@@ -1275,7 +1278,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public Mono<DeleteResult> remove(Object object, String collection) {
 
-		Assert.hasText(collection);
+		Assert.hasText(collection, "Collection name must not be null or empty!");
 
 		if (object == null) {
 			return null;
@@ -1839,7 +1842,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	private <T> T execute(MongoDatabaseCallback<T> action) {
 
-		Assert.notNull(action);
+		Assert.notNull(action, "MongoDatabaseCallback must not be null!");
 
 		try {
 			MongoDatabase db = this.getMongoDatabase();
@@ -2202,8 +2205,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		ReadDocumentCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
 
-			Assert.notNull(reader);
-			Assert.notNull(type);
+			Assert.notNull(reader, "EntityReader must not be null!");
+			Assert.notNull(type, "Entity type must not be null!");
+
 			this.reader = reader;
 			this.type = type;
 			this.collectionName = collectionName;
@@ -2240,7 +2244,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		 */
 		GeoNearResultDbObjectCallback(DocumentCallback<T> delegate, Metric metric) {
 
-			Assert.notNull(delegate);
+			Assert.notNull(delegate, "DocumentCallback must not be null!");
+
 			this.delegate = delegate;
 			this.metric = metric;
 		}
