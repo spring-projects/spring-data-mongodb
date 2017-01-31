@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,9 +79,9 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoDbFactory mongoDbFactory,
 			IndexResolver indexResolver) {
 
-		Assert.notNull(mongoDbFactory);
-		Assert.notNull(mappingContext);
-		Assert.notNull(indexResolver);
+		Assert.notNull(mappingContext, "MongoMappingContext must not be null!");
+		Assert.notNull(mongoDbFactory, "MongoDbFactory must not be null!");
+		Assert.notNull(indexResolver, "IndexResolver must not be null!");
 
 		this.mongoDbFactory = mongoDbFactory;
 		this.mappingContext = mappingContext;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,7 +80,8 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		super(entityInformation, mongoOperations);
 
-		Assert.notNull(resolver);
+		Assert.notNull(resolver, "EntityPathResolver must not be null!");
+
 		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
 
 		this.builder = new PathBuilder<T>(path.getType(), path.getMetadata());
@@ -124,7 +125,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 		return applySorting(createQueryFor(predicate), sort).fetchResults().getResults();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.OrderSpecifier[])
 	 */
@@ -187,7 +188,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 		return createQueryFor(predicate).fetchCount();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#exists(com.mysema.query.types.Predicate)
 	 */

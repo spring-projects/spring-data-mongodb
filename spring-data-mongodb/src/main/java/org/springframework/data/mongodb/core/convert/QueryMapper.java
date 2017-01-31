@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ public class QueryMapper {
 	 */
 	public QueryMapper(MongoConverter converter) {
 
-		Assert.notNull(converter);
+		Assert.notNull(converter, "MongoConverter must not be null!");
 
 		this.conversionService = converter.getConversionService();
 		this.converter = converter;

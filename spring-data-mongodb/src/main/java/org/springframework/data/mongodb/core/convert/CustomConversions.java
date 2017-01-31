@@ -89,7 +89,7 @@ public class CustomConversions {
 	 */
 	public CustomConversions(List<?> converters) {
 
-		Assert.notNull(converters);
+		Assert.notNull(converters, "List of converters must not be null!");
 
 		this.readingPairs = new LinkedHashSet<ConvertiblePair>();
 		this.writingPairs = new LinkedHashSet<ConvertiblePair>();
@@ -346,8 +346,8 @@ public class CustomConversions {
 	private static Class<?> getCustomTarget(Class<?> sourceType, Class<?> requestedTargetType,
 			Collection<ConvertiblePair> pairs) {
 
-		Assert.notNull(sourceType);
-		Assert.notNull(pairs);
+		Assert.notNull(sourceType, "Source Class must not be null!");
+		Assert.notNull(pairs, "Collection of ConvertiblePair must not be null!");
 
 		if (requestedTargetType != null && pairs.contains(new ConvertiblePair(sourceType, requestedTargetType))) {
 			return requestedTargetType;

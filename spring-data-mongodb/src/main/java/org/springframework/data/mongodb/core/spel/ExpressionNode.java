@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class ExpressionNode implements Iterable<ExpressionNode> {
 
@@ -173,7 +174,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 */
 	public ExpressionNode getChild(int index) {
 
-		Assert.isTrue(index >= 0);
+		Assert.isTrue(index >= 0, "Index must be greater or equal to zero!");
 		return from(node.getChild(index), state);
 	}
 
@@ -199,7 +200,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 		return from(node, state);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Iterable#iterator()
 	 */
