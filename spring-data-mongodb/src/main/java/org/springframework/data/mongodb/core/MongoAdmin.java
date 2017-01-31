@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import com.mongodb.Mongo;
  * 
  * @author Mark Pollack
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @ManagedResource(description = "Mongo Admin Operations")
 public class MongoAdmin implements MongoAdminOperations {
@@ -38,7 +39,8 @@ public class MongoAdmin implements MongoAdminOperations {
 	private String authenticationDatabaseName;
 
 	public MongoAdmin(Mongo mongo) {
-		Assert.notNull(mongo);
+
+		Assert.notNull(mongo, "Mongo must not be null!");
 		this.mongo = mongo;
 	}
 

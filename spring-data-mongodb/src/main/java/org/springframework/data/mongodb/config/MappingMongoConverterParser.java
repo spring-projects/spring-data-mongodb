@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -361,7 +361,9 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		 * @param filters
 		 */
 		public NegatingFilter(TypeFilter... filters) {
-			Assert.notNull(filters);
+
+			Assert.notNull(filters, "TypeFilters must not be null");
+
 			this.delegates = new HashSet<TypeFilter>(Arrays.asList(filters));
 		}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.springframework.util.Assert;
  * Conversion registration information.
  * 
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 class ConverterRegistration {
 
@@ -39,7 +40,7 @@ class ConverterRegistration {
 	 */
 	public ConverterRegistration(ConvertiblePair convertiblePair, boolean isReading, boolean isWriting) {
 
-		Assert.notNull(convertiblePair);
+		Assert.notNull(convertiblePair, "ConvertiblePair must not be null!");
 
 		this.convertiblePair = convertiblePair;
 		this.reading = isReading;

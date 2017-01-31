@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ import org.springframework.util.StringUtils;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
 		MongoPersistentEntity<T>, ApplicationContextAware {
@@ -138,7 +139,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return getTextScoreProperty() != null;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#verify()
 	 */
@@ -200,7 +201,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	@Override
 	protected MongoPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(MongoPersistentProperty property) {
 
-		Assert.notNull(property);
+		Assert.notNull(property, "MongoPersistentProperty must not be null!");
 
 		if (!property.isIdProperty()) {
 			return null;

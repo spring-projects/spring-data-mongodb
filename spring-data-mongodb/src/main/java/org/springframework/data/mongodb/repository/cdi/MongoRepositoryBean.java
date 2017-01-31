@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,11 +53,11 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 
 		super(qualifiers, repositoryType, beanManager, detector);
 
-		Assert.notNull(operations);
+		Assert.notNull(operations, "MongoOperations bean must not be null!");
 		this.operations = operations;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(javax.enterprise.context.spi.CreationalContext, java.lang.Class)
 	 */
