@@ -70,7 +70,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 
 		NearQuery nearQuery = queryArgumentCaptor.getValue();
 		assertThat(nearQuery.toDocument().get("near"), is(equalTo(Arrays.asList(1d, 2d))));
-		assertThat(nearQuery.getSkip(), is(10));
+		assertThat(nearQuery.getSkip(), is(10L));
 		assertThat(nearQuery.getMinDistance(), is(equalTo(new Distance(10))));
 		assertThat(nearQuery.getMaxDistance(), is(equalTo(new Distance(15))));
 	}
@@ -91,7 +91,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 
 		NearQuery nearQuery = queryArgumentCaptor.getValue();
 		assertThat(nearQuery.toDocument().get("near"), is(equalTo(Arrays.asList(1d, 2d))));
-		assertThat(nearQuery.getSkip(), is(0));
+		assertThat(nearQuery.getSkip(), is(0L));
 		assertThat(nearQuery.getMinDistance(), is(nullValue()));
 		assertThat(nearQuery.getMaxDistance(), is(nullValue()));
 	}

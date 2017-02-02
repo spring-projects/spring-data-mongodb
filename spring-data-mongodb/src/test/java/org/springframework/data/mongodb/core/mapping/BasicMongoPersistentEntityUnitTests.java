@@ -125,7 +125,6 @@ public class BasicMongoPersistentEntityUnitTests {
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
 				ClassTypeInformation.from(AnyDocument.class));
 		when(propertyMock.isExplicitLanguageProperty()).thenReturn(false);
-		when(propertyMock.getActualType()).thenReturn((Class) Number.class);
 		entity.addPersistentProperty(propertyMock);
 
 		entity.verify();
@@ -197,7 +196,6 @@ public class BasicMongoPersistentEntityUnitTests {
 		when(propertyMock.isDbReference()).thenReturn(true);
 		when(propertyMock.getDBRef()).thenReturn(dbRefMock);
 		when(dbRefMock.lazy()).thenReturn(false);
-		when(propertyMock.getActualType()).thenReturn((Class) Class.class);
 		entity.addPersistentProperty(propertyMock);
 
 		entity.verify();

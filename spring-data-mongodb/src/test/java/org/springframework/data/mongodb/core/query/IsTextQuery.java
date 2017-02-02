@@ -103,7 +103,7 @@ public class IsTextQuery<T extends Query> extends IsQuery<T> {
 	}
 
 	@Override
-	public IsQuery<T> skippig(int skip) {
+	public IsQuery<T> skippig(long skip) {
 
 		super.skippig(skip);
 		return this;

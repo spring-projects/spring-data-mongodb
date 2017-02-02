@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Pattern;
@@ -98,9 +99,9 @@ public class MongoExampleMapper {
 
 		Document reference = (Document) converter.convertToMongoType(example.getProbe());
 
-		Optionals.ifAllPresent(entity.getIdProperty(), //
-				entity.getIdentifierAccessor(example.getProbe()).getIdentifier(), //
-				(property, identifier) -> reference.remove(property.getFieldName()));
+		if(entity.getIdProperty().isPresent() && !entity.getIdentifierAccessor(example.getProbe()).getIdentifier().isPresent()) {
+			reference.remove(entity.getIdProperty().get().getFieldName());
+		}
 
 		ExampleMatcherAccessor matcherAccessor = new ExampleMatcherAccessor(example.getMatcher());
 
@@ -241,7 +242,7 @@ public class MongoExampleMapper {
 	}
 
 	private boolean isEmptyIdProperty(Entry<String, Object> entry) {
-		return entry.getKey().equals("_id") && entry.getValue() == null;
+		return entry.getKey().equals("_id") && entry.getValue() == null || entry.getValue().equals(Optional.empty());
 	}
 
 	private void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher, boolean ignoreCase) {

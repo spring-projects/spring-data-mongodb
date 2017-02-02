@@ -25,6 +25,7 @@ import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Builder class to build near-queries.
@@ -150,8 +151,10 @@ public final class NearQuery {
 	public NearQuery with(Pageable pageable) {
 
 		Assert.notNull(pageable, "Pageable must not be 'null'.");
-		this.num = pageable.getOffset() + pageable.getPageSize();
-		this.skip = pageable.getOffset();
+		if(!ObjectUtils.nullSafeEquals(Pageable.NONE, pageable)) {
+			this.num = pageable.getOffset() + pageable.getPageSize();
+			this.skip = pageable.getOffset();
+		}
 		return this;
 	}
 

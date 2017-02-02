@@ -68,6 +68,6 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 		MongoOperations mongoOperations = getDependencyInstance(operations, MongoOperations.class);
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(mongoOperations);
 
-		return factory.getRepository(repositoryType, customImplementation);
+		return customImplementation.isPresent() ? factory.getRepository(repositoryType, customImplementation.get()) : factory.getRepository(repositoryType);
 	}
 }

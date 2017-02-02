@@ -261,13 +261,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "")
 							+ persistentProperty.getFieldName();
 
-					Float weight = indexed != null ? indexed.get().weight()
+					Float weight = indexed.isPresent() ? indexed.get().weight()
 							: (includeOptions.getParentFieldSpec() != null ? includeOptions.getParentFieldSpec().getWeight() : 1.0F);
 
 					if (persistentProperty.isEntity()) {
 
 						TextIndexIncludeOptions optionsForNestedType = includeOptions;
-						if (!IncludeStrategy.FORCE.equals(includeOptions.getStrategy()) && indexed != null) {
+						if (!IncludeStrategy.FORCE.equals(includeOptions.getStrategy()) && indexed.isPresent()) {
 							optionsForNestedType = new TextIndexIncludeOptions(IncludeStrategy.FORCE,
 									new TextIndexedFieldSpec(propertyDotPath, weight));
 						}
@@ -281,7 +281,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 							LOGGER.info(String.format("Potentially invalid index structure discovered. Breaking operation for %s.",
 									entity.getName()), e);
 						}
-					} else if (includeOptions.isForce() || indexed != null) {
+					} else if (includeOptions.isForce() || indexed.isPresent()) {
 						indexDefinitionBuilder.onField(propertyDotPath, weight);
 					}
 				}

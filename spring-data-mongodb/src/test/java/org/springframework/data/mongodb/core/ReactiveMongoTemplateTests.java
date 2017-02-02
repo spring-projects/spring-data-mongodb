@@ -569,7 +569,7 @@ public class ReactiveMongoTemplateTests {
 		template.save(map, "maps").block();
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-1444
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
 	public void savesMongoPrimitiveObjectCorrectly() {
 		template.save(new Object(), "collection").block();
 	}
@@ -588,7 +588,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(dbObject.containsKey("_id"), is(true));
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1444
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		Document dbObject = new Document("foo", "bar");

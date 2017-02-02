@@ -23,6 +23,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,7 +57,7 @@ public class ReflectiveDBRefResolverUnitTests {
 		when(dbRefMock.getId()).thenReturn("id-1");
 		when(dbFactoryMock.getDb()).thenReturn(dbMock);
 		when(dbMock.getCollection(eq("collection-1"), eq(Document.class))).thenReturn(collectionMock);
-		when(collectionMock.find(any(org.bson.Document.class))).thenReturn(fi);
+		when(collectionMock.find(any(Bson.class))).thenReturn(fi);
 		when(fi.first()).thenReturn(new Document("_id", "id-1"));
 	}
 

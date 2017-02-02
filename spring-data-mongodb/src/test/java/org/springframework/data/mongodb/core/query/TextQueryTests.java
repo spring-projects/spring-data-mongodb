@@ -26,6 +26,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.List;
 
+import lombok.ToString;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -228,6 +229,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "fullTextDoc")
+	@ToString
 	static class FullTextDoc {
 
 		@Id String id;

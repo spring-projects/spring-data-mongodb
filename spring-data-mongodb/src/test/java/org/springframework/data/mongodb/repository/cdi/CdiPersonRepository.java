@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.cdi;
 
+import java.util.Optional;
+
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.repository.Repository;
 
@@ -24,5 +26,5 @@ public interface CdiPersonRepository extends Repository<Person, String> {
 
 	Person save(Person person);
 
-	Person findOne(String id);
+	Optional<Person> findOne(String id);
 }

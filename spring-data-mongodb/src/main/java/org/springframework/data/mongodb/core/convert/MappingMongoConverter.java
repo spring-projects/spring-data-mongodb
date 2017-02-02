@@ -55,6 +55,7 @@ import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
@@ -240,7 +241,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 		// Retrieve persistent entity info
 
-		return read((MongoPersistentEntity<S>) mappingContext.getRequiredPersistentEntity(typeToUse), (Document) bson,
+		Document target = bson instanceof BasicDBObject ? new Document((BasicDBObject)bson) : (Document) bson;
+
+		return read((MongoPersistentEntity<S>) mappingContext.getRequiredPersistentEntity(typeToUse), target,
 				path);
 	}
 
@@ -271,7 +274,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		DocumentAccessor documentAccessor = new DocumentAccessor(bson);
 
 		// make sure id property is set before all other properties
-		Object idValue = idProperty.filter(it -> documentAccessor.hasValue(it)).map(it -> {
+		Optional<Object> idValue = idProperty.filter(it -> documentAccessor.hasValue(it)).map(it -> {
 
 			Optional<Object> value = getValueInternal(it, bson, evaluator, path);
 			accessor.setProperty(it, value);
@@ -280,7 +283,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		});
 
 		final ObjectPath currentPath = path.push(result, entity,
-				idValue != null ? idProperty.map(it -> bson.get(it.getFieldName())).orElse(null) : null);
+				idValue.isPresent() ? idProperty.map(it -> bson.get(it.getFieldName())).orElse(null) : null);
 
 		// Set properties not already set in the constructor
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
@@ -867,7 +870,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			return dbRefResolver.createDbRef(property == null ? null : property.getDBRef(), entity,
-					idMapper.convertId(Optional.of(id)));
+					idMapper.convertId(id instanceof Optional ? (Optional)id : Optional.ofNullable(id)).orElse(null));
 
 		}).orElseThrow(() -> new MappingException("No id property found on class " + entity.getType()));
 	}

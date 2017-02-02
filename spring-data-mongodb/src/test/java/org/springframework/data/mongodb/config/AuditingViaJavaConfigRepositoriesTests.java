@@ -19,6 +19,8 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -82,7 +84,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	@Test // DATAMONGO-792, DATAMONGO-883
 	public void basicAuditing() {
 
-		doReturn(this.auditor).when(this.auditorAware).getCurrentAuditor();
+		doReturn(Optional.of(this.auditor)).when(this.auditorAware).getCurrentAuditor();
 
 		AuditablePerson savedUser = auditablePersonRepository.save(new AuditablePerson("user"));
 

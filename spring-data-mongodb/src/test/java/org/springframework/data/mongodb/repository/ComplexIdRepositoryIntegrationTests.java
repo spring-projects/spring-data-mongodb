@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -106,7 +107,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		assertThat(repo.findOne(id), is(userWithId));
+		assertThat(repo.findOne(id), is(Optional.of(userWithId)));
 	}
 
 	@Test // DATAMONGO-1078

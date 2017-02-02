@@ -131,7 +131,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 	private void checkForAndCreateIndexes(MongoPersistentEntity<?> entity) {
 
-		if (entity.findAnnotation(Document.class) != null) {
+		if (entity.findAnnotation(Document.class).isPresent()) {
 			for (IndexDefinitionHolder indexToCreate : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 				createIndex(indexToCreate);
 			}

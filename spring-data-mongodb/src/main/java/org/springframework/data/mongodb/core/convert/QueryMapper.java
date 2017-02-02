@@ -318,11 +318,11 @@ public class QueryMapper {
 					String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
 					List<Object> ids = new ArrayList<Object>();
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-						ids.add(convertId(id));
+						ids.add(convertId(id).get());
 					}
 					resultDbo.put(inKey, ids);
 				} else if (valueDbo.containsField("$ne")) {
-					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
+					resultDbo.put("$ne", convertId(valueDbo.get("$ne")).get());
 				} else {
 					return getMappedObject(resultDbo, Optional.empty());
 				}
@@ -337,18 +337,18 @@ public class QueryMapper {
 					String inKey = valueDbo.containsKey("$in") ? "$in" : "$nin";
 					List<Object> ids = new ArrayList<Object>();
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-						ids.add(convertId(id));
+						ids.add(convertId(id).orElse(null));
 					}
 					resultDbo.put(inKey, ids);
 				} else if (valueDbo.containsKey("$ne")) {
-					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
+					resultDbo.put("$ne", convertId(valueDbo.get("$ne")).orElse(null));
 				} else {
 					return getMappedObject(resultDbo, Optional.empty());
 				}
 				return resultDbo;
 
 			} else {
-				return convertId(value);
+				return convertId(value).orElse(null);
 			}
 		}
 
@@ -461,7 +461,7 @@ public class QueryMapper {
 		if (source instanceof DBRef) {
 
 			DBRef ref = (DBRef) source;
-			return new DBRef(ref.getCollectionName(), convertId(ref.getId()));
+			return new DBRef(ref.getCollectionName(), convertId(ref.getId()).get());
 		}
 
 		if (source instanceof Iterable) {
@@ -538,7 +538,7 @@ public class QueryMapper {
 	}
 
 	private Optional<Object> convertId(Object id) {
-		return convertId(Optional.of(id));
+		return convertId(Optional.ofNullable(id));
 	}
 
 	/**
@@ -857,7 +857,7 @@ public class QueryMapper {
 		@Override
 		public MongoPersistentEntity<?> getPropertyEntity() {
 			MongoPersistentProperty property = getProperty();
-			return property == null ? null : mappingContext.getRequiredPersistentEntity(property);
+			return property == null ? null : mappingContext.getPersistentEntity(property).orElse(null);
 		}
 
 		/* 

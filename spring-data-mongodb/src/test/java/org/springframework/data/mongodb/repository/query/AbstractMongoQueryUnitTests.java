@@ -81,7 +81,8 @@ public class AbstractMongoQueryUnitTests {
 	public void setUp() {
 
 		doReturn("persons").when(persitentEntityMock).getCollection();
-		doReturn(persitentEntityMock).when(mappingContextMock).getPersistentEntity(Matchers.any(Class.class));
+		doReturn(Optional.of(persitentEntityMock)).when(mappingContextMock).getPersistentEntity(Mockito.any(Class.class));
+		doReturn(persitentEntityMock).when(mappingContextMock).getRequiredPersistentEntity(Mockito.any(Class.class));
 		doReturn(Person.class).when(persitentEntityMock).getType();
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
@@ -106,12 +107,9 @@ public class AbstractMongoQueryUnitTests {
 	@Test // DATAMONGO-566, DATAMONGO-1040
 	public void testDeleteExecutionLoadsListOfRemovedDocumentsWhenReturnTypeIsCollectionLike() {
 
-		when(mongoOperationsMock.find(Matchers.any(Query.class), Matchers.any(Class.class), Matchers.anyString()))
-				.thenReturn(Arrays.asList(new Person(new ObjectId(new Date()), "bar")));
-
 		createQueryForMethod("deleteByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(mongoOperationsMock, times(1)).findAllAndRemove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(1)).findAllAndRemove(Mockito.any(Query.class), eq(Person.class), eq("persons"));
 	}
 
 	@Test // DATAMONGO-566
@@ -200,8 +198,8 @@ public class AbstractMongoQueryUnitTests {
 
 		verify(mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
 
-		assertThat(captor.getAllValues().get(0).getSkip(), is(0));
-		assertThat(captor.getAllValues().get(1).getSkip(), is(10));
+		assertThat(captor.getAllValues().get(0).getSkip(), is(0L));
+		assertThat(captor.getAllValues().get(1).getSkip(), is(10L));
 	}
 
 	@Test // DATAMONGO-1057

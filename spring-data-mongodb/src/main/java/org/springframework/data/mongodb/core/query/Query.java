@@ -33,6 +33,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Thomas Risberg
@@ -151,7 +152,7 @@ public class Query {
 	 */
 	public Query with(Pageable pageable) {
 
-		if (pageable == null) {
+		if (pageable == null || ObjectUtils.nullSafeEquals(Pageable.NONE, pageable)) {
 			return this;
 		}
 
@@ -169,7 +170,7 @@ public class Query {
 	 */
 	public Query with(Sort sort) {
 
-		if (sort == null) {
+		if (sort == null || ObjectUtils.nullSafeEquals(Sort.unsorted(), sort)) {
 			return this;
 		}
 

@@ -120,6 +120,8 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	@Override
 	protected DBObject asDBObject(String key, Object value) {
 
+		value = value instanceof Optional ? ((Optional)value).orElse(null) : value;
+
 		if (ID_KEY.equals(key)) {
 			DBObject superIdValue = super.asDBObject(key, value);
 			Document mappedIdValue = mapper.getMappedObject((BasicDBObject) superIdValue, Optional.empty());

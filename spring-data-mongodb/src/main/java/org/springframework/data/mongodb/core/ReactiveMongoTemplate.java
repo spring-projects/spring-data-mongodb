@@ -755,7 +755,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			final Document Document = query == null ? null
 					: queryMapper.getMappedObject(query.getQueryObject(),
-							entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
+							entityClass == null ? Optional.empty() : mappingContext.getPersistentEntity(entityClass));
 
 			return collection.count(Document);
 		});
@@ -976,8 +976,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			ReactiveMongoTemplate.this.assertUpdateableIdIfNotSet(objectToSave);
 
 			// Create query for entity with the id and old version
-			Object id = convertingAccessor.getProperty(idProperty);
-			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(versionProperty.getName()).is(version));
+			Optional<Object> id = convertingAccessor.getProperty(idProperty);
+			Query query = new Query(Criteria.where(idProperty.getName()).is(id.get()).and(versionProperty.getName()).is(version.get()));
 
 			// Bump version number
 			convertingAccessor.setProperty(versionProperty, Optional.of(versionNumber.orElse(0).longValue() + 1));
@@ -1308,8 +1308,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			throw new MappingException("No id property found for object of type " + objectType);
 		}
 
-		Object idValue = entity.get().getPropertyAccessor(object).getProperty(idProp);
-		return Collections.singletonMap(idProp.getFieldName(), idValue).entrySet().iterator().next();
+		Optional<Object> idValue = entity.get().getPropertyAccessor(object).getProperty(idProp);
+		return Collections.singletonMap(idProp.getFieldName(), idValue.get()).entrySet().iterator().next();
 	}
 
 	/**
@@ -1706,7 +1706,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(savedObject.getClass());
 		PersistentPropertyAccessor accessor = entity.getPropertyAccessor(savedObject);
 
-		if (accessor.getProperty(idProp) != null) {
+		if (accessor.getProperty(idProp).isPresent()) {
 			return;
 		}
 

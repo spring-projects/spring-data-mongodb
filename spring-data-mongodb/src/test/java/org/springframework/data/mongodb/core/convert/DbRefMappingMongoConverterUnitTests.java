@@ -31,7 +31,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.mongodb.BasicDBObject;
+import org.bson.BsonDocument;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,6 +107,8 @@ public class DbRefMappingMongoConverterUnitTests {
 		mapValDocument.put("_id", BigInteger.ONE);
 
 		DBRef dbRef = mock(DBRef.class);
+		when(dbRef.getId()).thenReturn(BigInteger.ONE);
+		when(dbRef.getCollectionName()).thenReturn("collection-1");
 
 		if (MongoClientVersion.isMongo3Driver()) {
 			MongoDatabase dbMock = mock(MongoDatabase.class);
@@ -114,7 +118,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 			FindIterable fi = mock(FindIterable.class);
 			when(fi.first()).thenReturn(mapValDocument);
-			when(collectionMock.find(Matchers.any(Document.class))).thenReturn(fi);
+			when(collectionMock.find(Mockito.any(Bson.class))).thenReturn(fi);
 		} else {
 			when(dbRefResolver.fetch(dbRef)).thenReturn(mapValDocument);
 		}
@@ -342,7 +346,6 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
 		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
@@ -368,7 +371,6 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
 
 		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
@@ -511,7 +513,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	public void shouldNotTriggerResolvingOfLazyLoadedProxyWhenFinalizeMethodIsInvoked() throws Exception {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(WithObjectMethodOverrideLazyDbRefs.class);
-		MongoPersistentProperty property = entity.getRequiredPersistentProperty("dbRefToConcreteTypeWithPropertyAccess");
+		MongoPersistentProperty property = entity.getRequiredPersistentProperty("dbRefToPlainObject");
 
 		String idValue = new ObjectId().toString();
 		DBRef dbRef = converter.toDBRef(new LazyDbRefTargetPropertyAccess(idValue), property);

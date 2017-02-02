@@ -104,13 +104,11 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Before
 	public void setUp() {
 
-		// when(cursor.copy()).thenReturn(cursor);
 		when(findIterable.iterator()).thenReturn(cursor);
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(Mockito.any(String.class), eq(Document.class))).thenReturn(collection);
 		when(collection.find(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
-		when(findIterable.limit(anyInt())).thenReturn(findIterable);
 		when(findIterable.sort(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.modifiers(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 
@@ -131,8 +129,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	@Test(expected = DataAccessException.class)
 	public void removeHandlesMongoExceptionProperly() throws Exception {
+
 		MongoTemplate template = mockOutGetDb();
-		when(db.getCollection("collection")).thenThrow(new MongoException("Exception!"));
 
 		template.remove(null, "collection");
 	}
@@ -338,8 +336,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void aggregateShouldHonorReadPreferenceWhenSet() {
 
-		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class)))
-				.thenReturn(mock(Document.class));
 		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class), eq(Document.class)))
 				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
@@ -353,8 +349,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void aggregateShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class)))
-				.thenReturn(mock(Document.class));
 		when(db.runCommand(Mockito.any(org.bson.Document.class), eq(org.bson.Document.class)))
 				.thenReturn(mock(Document.class));
 
@@ -366,8 +360,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void geoNearShouldHonorReadPreferenceWhenSet() {
 
-		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class)))
-				.thenReturn(mock(Document.class));
 		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class), eq(Document.class)))
 				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
@@ -382,8 +374,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.runCommand(Mockito.any(Document.class), Mockito.any(ReadPreference.class)))
-				.thenReturn(mock(Document.class));
 		when(db.runCommand(Mockito.any(Document.class), eq(Document.class))).thenReturn(mock(Document.class));
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
@@ -461,8 +451,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
 		when(output.limit(anyInt())).thenReturn(output);
-		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
-		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 

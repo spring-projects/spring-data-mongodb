@@ -57,12 +57,8 @@ public class QueryCursorPreparerUnitTests {
 	public void setUp() {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslatorMock);
-		when(cursor.batchSize(anyInt())).thenReturn(cursor);
-		when(cursor.filter(any(Document.class))).thenReturn(cursor);
-		when(cursor.limit(anyInt())).thenReturn(cursor);
 		when(cursor.modifiers(any(Document.class))).thenReturn(cursor);
 		when(cursor.noCursorTimeout(anyBoolean())).thenReturn(cursor);
-		when(cursor.partial(anyBoolean())).thenReturn(cursor);
 	}
 
 	@Test // DATAMONGO-185

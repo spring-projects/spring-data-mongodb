@@ -60,7 +60,7 @@ public class CdiExtensionIntegrationTests {
 		Person result = repository.save(person);
 
 		assertThat(result, is(notNullValue()));
-		assertThat(repository.findOne(person.getId()).getId(), is(result.getId()));
+		assertThat(repository.findOne(person.getId()).get().getId(), is(result.getId()));
 	}
 
 	@Test // DATAMONGO-1017

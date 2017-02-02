@@ -89,20 +89,20 @@ public class NearQueryUnitTests {
 		Pageable pageable = new PageRequest(3, 5);
 		NearQuery query = NearQuery.near(new Point(1, 1)).with(pageable);
 
-		assertThat(query.getSkip(), is(pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat((Integer) query.toDocument().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
+		assertThat(query.getSkip(), is((long)pageable.getPageNumber() * pageable.getPageSize()));
+		assertThat((Long) query.toDocument().get("num"), is((long)(pageable.getPageNumber() + 1) * pageable.getPageSize()));
 	}
 
 	@Test // DATAMONGO-445
 	public void shouldTakeSkipAndLimitSettingsFromGivenQuery() {
 
 		int limit = 10;
-		int skip = 5;
+		long skip = 5;
 		NearQuery query = NearQuery.near(new Point(1, 1))
 				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip));
 
 		assertThat(query.getSkip(), is(skip));
-		assertThat((Integer) query.toDocument().get("num"), is(limit));
+		assertThat((Long) query.toDocument().get("num"), is((long)limit));
 	}
 
 	@Test // DATAMONGO-445
@@ -114,8 +114,8 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new Point(1, 1))
 				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip)).with(pageable);
 
-		assertThat(query.getSkip(), is(pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat((Integer) query.toDocument().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
+		assertThat(query.getSkip(), is((long)pageable.getPageNumber() * pageable.getPageSize()));
+		assertThat((Long) query.toDocument().get("num"), is((long)(pageable.getPageNumber() + 1) * pageable.getPageSize()));
 	}
 
 	@Test // DATAMONGO-829
@@ -133,11 +133,11 @@ public class NearQueryUnitTests {
 	@Test // DATAMONGO-829
 	public void numShouldNotBeAlteredByQueryWithoutPageable() {
 
-		int num = 100;
+		long num = 100;
 		NearQuery query = NearQuery.near(new Point(1, 2));
 		query.num(num);
 		query.query(Query.query(Criteria.where("foo").is("bar")));
 
-		assertThat(DocumentTestUtils.getTypedValue(query.toDocument(), "num", Integer.class), is(num));
+		assertThat(DocumentTestUtils.getTypedValue(query.toDocument(), "num", Long.class), is(num));
 	}
 }

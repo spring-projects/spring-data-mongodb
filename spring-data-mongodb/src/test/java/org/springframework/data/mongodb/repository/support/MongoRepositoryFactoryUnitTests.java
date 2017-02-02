@@ -68,7 +68,7 @@ public class MongoRepositoryFactoryUnitTests {
 	@SuppressWarnings("unchecked")
 	public void usesMappingMongoEntityInformationIfMappingContextSet() {
 
-		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(Optional.of(entity));
+		when(mappingContext.getRequiredPersistentEntity(Person.class)).thenReturn(entity);
 		when(entity.getType()).thenReturn(Person.class);
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
@@ -80,7 +80,7 @@ public class MongoRepositoryFactoryUnitTests {
 	@SuppressWarnings("unchecked")
 	public void createsRepositoryWithIdTypeLong() {
 
-		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(Optional.of(entity));
+		when(mappingContext.getRequiredPersistentEntity(Person.class)).thenReturn(entity);
 		when(entity.getType()).thenReturn(Person.class);
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);

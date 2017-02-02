@@ -57,6 +57,6 @@ class DefaultDbRefResolverCallback implements DbRefResolverCallback {
 	 */
 	@Override
 	public Object resolve(MongoPersistentProperty property) {
-		return resolver.getValueInternal(property, surroundingObject, evaluator, path);
+		return resolver.getValueInternal(property, surroundingObject, evaluator, path).orElse(null);
 	}
 }

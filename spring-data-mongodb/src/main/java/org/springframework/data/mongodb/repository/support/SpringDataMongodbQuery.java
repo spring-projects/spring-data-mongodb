@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -58,7 +59,9 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 
 					@Override
 					public T apply(DBObject input) {
-						return operations.getConverter().read(type, (BasicDBObject) input);
+
+						;
+						return operations.getConverter().read(type, new Document((BasicDBObject) input));
 					}
 				}, new SpringDataMongodbSerializer(operations.getConverter()));
 

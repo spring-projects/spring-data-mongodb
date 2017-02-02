@@ -22,6 +22,7 @@ import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,14 +65,14 @@ public class MongoMappingContextUnitTests {
 	public void doesNotReturnPersistentEntityForMongoSimpleType() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		assertThat(context.getPersistentEntity(DBRef.class), is(nullValue()));
+		assertThat(context.getPersistentEntity(DBRef.class), is(Optional.empty()));
 	}
 
 	@Test // DATAMONGO-638
 	public void doesNotCreatePersistentEntityForAbstractMap() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		assertThat(context.getPersistentEntity(AbstractMap.class), is(nullValue()));
+		assertThat(context.getPersistentEntity(AbstractMap.class), is(Optional.empty()));
 	}
 
 	@Test // DATAMONGO-607

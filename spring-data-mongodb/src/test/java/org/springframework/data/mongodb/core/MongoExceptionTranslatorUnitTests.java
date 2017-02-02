@@ -22,6 +22,9 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import com.mongodb.WriteConcern;
+import org.bson.BsonDocument;
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,14 +51,9 @@ import com.mongodb.ServerAddress;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
 public class MongoExceptionTranslatorUnitTests {
 
 	MongoExceptionTranslator translator;
-
-	@Mock com.mongodb.DuplicateKeyException exception;
-	@Mock MongoSocketException socketException;
-	@Mock MongoCursorNotFoundException cursorNotFoundException;
 
 	@Before
 	public void setUp() {
@@ -65,30 +63,27 @@ public class MongoExceptionTranslatorUnitTests {
 	@Test
 	public void translateDuplicateKey() {
 
-		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
-		expectExceptionWithCauseMessage(translatedException, DuplicateKeyException.class, null);
+		expectExceptionWithCauseMessage(
+				translator.translateExceptionIfPossible(
+						new com.mongodb.DuplicateKeyException(new BsonDocument(), new ServerAddress(), null)),
+				DuplicateKeyException.class, null);
 	}
 
 	@Test
 	public void translateSocketException() {
 
-		when(socketException.getMessage()).thenReturn("IOException");
-		when(socketException.getCause()).thenReturn(new IOException("IOException"));
-		DataAccessException translatedException = translator.translateExceptionIfPossible(socketException);
-
-		expectExceptionWithCauseMessage(translatedException, DataAccessResourceFailureException.class, "IOException");
+		expectExceptionWithCauseMessage(
+				translator.translateExceptionIfPossible(new MongoSocketException("IOException", new ServerAddress())),
+				DataAccessResourceFailureException.class, "IOException");
 
 	}
 
 	@Test
 	public void translateCursorNotFound() throws UnknownHostException {
 
-		when(cursorNotFoundException.getCode()).thenReturn(1);
-		when(cursorNotFoundException.getServerAddress()).thenReturn(new ServerAddress());
-
-		DataAccessException translatedException = translator.translateExceptionIfPossible(cursorNotFoundException);
-
-		expectExceptionWithCauseMessage(translatedException, DataAccessResourceFailureException.class);
+		expectExceptionWithCauseMessage(
+				translator.translateExceptionIfPossible(new MongoCursorNotFoundException(1L, new ServerAddress())),
+				DataAccessResourceFailureException.class);
 	}
 
 	@Test

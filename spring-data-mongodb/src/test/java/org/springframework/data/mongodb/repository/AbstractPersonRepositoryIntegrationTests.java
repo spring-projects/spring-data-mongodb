@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -109,7 +110,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsPersonById() throws Exception {
 
-		assertThat(repository.findOne(dave.getId().toString()), is(dave));
+		assertThat(repository.findOne(dave.getId().toString()), is(Optional.of(dave)));
 	}
 
 	@Test

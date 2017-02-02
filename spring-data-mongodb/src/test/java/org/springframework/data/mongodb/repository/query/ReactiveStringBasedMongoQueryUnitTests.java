@@ -69,9 +69,6 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 	@Before
 	public void setUp() {
-
-		when(operations.getConverter()).thenReturn(converter);
-
 		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
 	}
 

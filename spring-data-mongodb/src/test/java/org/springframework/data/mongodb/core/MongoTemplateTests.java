@@ -1493,7 +1493,7 @@ public class MongoTemplateTests {
 		template.save(map, "maps");
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-549
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-549
 	public void savesMongoPrimitiveObjectCorrectly() {
 		template.save(new Object(), "collection");
 	}
@@ -1512,7 +1512,7 @@ public class MongoTemplateTests {
 		assertThat(document.containsKey("_id"), is(true));
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-550
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-550
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
@@ -2507,7 +2507,7 @@ public class MongoTemplateTests {
 
 		template.save(document);
 
-		Query query = query(where("id").is(document.id).and("models._id").exists(true));
+		Query query = query(where("id").is(document.id).and("models.value").exists(true));
 		Update update = new Update().set("models.$.value", "mongodb");
 		template.findAndModify(query, update, DocumentWithCollection.class);
 

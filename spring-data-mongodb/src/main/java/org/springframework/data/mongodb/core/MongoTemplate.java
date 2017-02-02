@@ -1172,7 +1172,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			public UpdateResult doInCollection(MongoCollection<Document> collection)
 					throws MongoException, DataAccessException {
 
-				Optional<? extends MongoPersistentEntity<?>> entity = entityClass == null ? null
+				Optional<? extends MongoPersistentEntity<?>> entity = entityClass == null ? Optional.empty()
 						: getPersistentEntity(entityClass);
 
 				increaseVersionForUpdateIfNecessary(entity, update);
@@ -2011,7 +2011,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			PersistentPropertyAccessor accessor = entity.getPropertyAccessor(savedObject);
 
 			Optional<Object> value = accessor.getProperty(idProp);
-			value.ifPresent(it -> new ConvertingPropertyAccessor(accessor, conversionService).setProperty(idProp, value));
+			if(!value.isPresent()) {
+				new ConvertingPropertyAccessor(accessor, conversionService).setProperty(idProp, Optional.of(id));
+			}
 		});
 	}
 

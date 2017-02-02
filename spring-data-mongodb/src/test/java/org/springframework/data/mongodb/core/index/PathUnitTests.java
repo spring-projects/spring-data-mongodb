@@ -39,12 +39,6 @@ public class PathUnitTests {
 
 	@Mock MongoPersistentEntity<?> entityMock;
 
-	@Before
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void setUp() {
-		when(entityMock.getType()).thenReturn((Class) Object.class);
-	}
-
 	@Test // DATAMONGO-962
 	public void shouldIdentifyCycleForOwnerOfSameTypeAndMatchingPath() {
 
@@ -59,7 +53,6 @@ public class PathUnitTests {
 		MongoPersistentProperty existing = createPersistentPropertyMock(entityMock, "foo");
 
 		MongoPersistentEntity entityOfDifferentType = Mockito.mock(MongoPersistentEntity.class);
-		when(entityOfDifferentType.getType()).thenReturn(String.class);
 		MongoPersistentProperty toBeVerified = createPersistentPropertyMock(entityOfDifferentType, "foo");
 
 		assertThat(new Path(existing, "foo.bar").cycles(toBeVerified, "foo.bar.bar"), is(false));
@@ -77,7 +70,6 @@ public class PathUnitTests {
 
 		MongoPersistentProperty property = Mockito.mock(MongoPersistentProperty.class);
 		when(property.getOwner()).thenReturn(owner);
-		when(property.getFieldName()).thenReturn(fieldname);
 		return property;
 	}
 }

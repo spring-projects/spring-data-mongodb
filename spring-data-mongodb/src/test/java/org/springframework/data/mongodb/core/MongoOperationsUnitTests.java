@@ -209,7 +209,7 @@ public abstract class MongoOperationsUnitTests {
 			public void doWith(MongoOperations operations) {
 				operations.findAll(Object.class);
 			}
-		}.assertDataAccessException();
+		}.assertException(IllegalArgumentException.class);
 	}
 
 	@Test

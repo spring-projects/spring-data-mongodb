@@ -35,6 +35,7 @@ import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Default implementation of {@link MongoTypeMapper} allowing configuration of the key to lookup and store type
@@ -108,10 +109,10 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 
 		for (Class<?> restrictedType : restrictedTypes) {
 
-			Object typeAlias = getAliasFor(ClassTypeInformation.from(restrictedType));
+			Alias typeAlias = getAliasFor(ClassTypeInformation.from(restrictedType));
 
-			if (typeAlias != null) {
-				restrictedMappedTypes.add(typeAlias);
+			if (typeAlias != null && !ObjectUtils.nullSafeEquals(Alias.NONE, typeAlias) && typeAlias.getValue().isPresent()) {
+				restrictedMappedTypes.add(typeAlias.getValue().get());
 			}
 		}
 

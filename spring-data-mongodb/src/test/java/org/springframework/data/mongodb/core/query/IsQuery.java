@@ -34,7 +34,7 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 	protected Document sort;
 	protected Document fields;
 
-	private int skip;
+	private long skip;
 	private int limit;
 	private String hint;
 
@@ -52,7 +52,7 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 		return this;
 	}
 
-	public IsQuery<T> skippig(int skip) {
+	public IsQuery<T> skippig(long skip) {
 		this.skip = skip;
 		return this;
 	}
@@ -121,7 +121,7 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 			return false;
 		}
 
-		if (item.getSortObject() == null && !sort.isEmpty()) {
+		if ((item.getSortObject() == null || item.getSortObject().isEmpty()) && !sort.isEmpty()) {
 			if (!new IsEqual<Document>(sort).matches(item.getSortObject())) {
 				return false;
 			}
@@ -135,7 +135,7 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 			return false;
 		}
 
-		if (!new IsEqual<Integer>(this.skip).matches(item.getSkip())) {
+		if (!new IsEqual(this.skip).matches(item.getSkip())) {
 			return false;
 		}
 
