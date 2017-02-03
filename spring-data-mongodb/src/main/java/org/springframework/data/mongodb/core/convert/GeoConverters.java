@@ -52,6 +52,7 @@ import com.mongodb.BasicDBList;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thiago Diniz da Silveira
  * @since 1.5
  */
 abstract class GeoConverters {
@@ -120,7 +121,10 @@ abstract class GeoConverters {
 				return DocumentToGeoJsonPointConverter.INSTANCE.convert(source);
 			}
 
-			return new Point((Double) source.get("x"), (Double) source.get("y"));
+			Number x = (Number) source.get("x");
+			Number y = (Number) source.get("y");
+
+			return new Point(x.doubleValue(), y.doubleValue());
 		}
 	}
 
@@ -254,7 +258,8 @@ abstract class GeoConverters {
 			}
 
 			Document center = (Document) source.get("center");
-			Double radius = (Double) source.get("radius");
+			Number radiusNumber = (Number) source.get("radius");
+			Double radius = radiusNumber.doubleValue();
 
 			Distance distance = new Distance(radius);
 
@@ -325,7 +330,9 @@ abstract class GeoConverters {
 			}
 
 			Document center = (Document) source.get("center");
-			Double radius = (Double) source.get("radius");
+			Number radiusNumber = (Number) source.get("radius");
+			Double radius = radiusNumber.doubleValue();
+
 
 			Distance distance = new Distance(radius);
 
