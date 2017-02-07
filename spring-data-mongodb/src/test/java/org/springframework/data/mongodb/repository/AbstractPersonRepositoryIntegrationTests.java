@@ -67,6 +67,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Fırat KÜÇÜK
+ * @author Edward Prentice
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
@@ -652,6 +653,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.isFirst(), is(false));
 		assertThat(results.isLast(), is(true));
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+	}
+
+	@Test // DATAMONGO-1608
+	public void findByFirstNameIgnoreCaseWithNull() {
+
+		List<Person> result = repository.findByFirstnameIgnoreCase(null);
+
+		assertThat(result.size(), is(0));
 	}
 
 	@Test // DATAMONGO-770
