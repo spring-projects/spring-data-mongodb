@@ -66,6 +66,8 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Fırat KÜÇÜK
+ * @author Edward Prentice
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
@@ -712,6 +714,17 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
+	/***
+	 * @see DATAMONGO-1608
+	 */
+	@Test
+	public void findByFirstNameIgnoreCaseWithNull() {
+
+		List<Person> result = repository.findByFirstnameIgnoreCase(null);
+
+		assertThat(result.size(), is(0));
+	}
+
 	/**
 	 * @see DATAMONGO-770
 	 */
@@ -1010,7 +1023,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	/**
 	 * Ignored for now as this requires Querydsl 3.4.1 to succeed.
-	 * 
+	 *
 	 * @see DATAMONGO-972
 	 */
 	@Test
