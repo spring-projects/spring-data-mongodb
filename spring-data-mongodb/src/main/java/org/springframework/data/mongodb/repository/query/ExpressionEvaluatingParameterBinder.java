@@ -247,7 +247,7 @@ class ExpressionEvaluatingParameterBinder {
 
 			regex.append("|");
 			regex.append("(" + Pattern.quote(binding.getParameter()) + ")");
-			regex.append("(\\W?['\"])?"); // potential quotation char (as in { foo : '?0' }).
+			regex.append("(\\W?['\"]|\\w*')?");
 		}
 
 		return Pattern.compile(regex.substring(1));
@@ -271,9 +271,16 @@ class ExpressionEvaluatingParameterBinder {
 			if (!StringUtils.hasText(rawPlaceholder)) {
 
 				rawPlaceholder = matcher.group();
-				suffix = "" + rawPlaceholder.charAt(rawPlaceholder.length() - 1);
+				if(rawPlaceholder.matches(".*\\d$")) {
+					suffix = "";
+				} else {
+					int index = rawPlaceholder.replaceAll("[^\\?a-zA-Z0-9]*$", "").length() - 1;
+					if(index > 1) {
+						suffix = rawPlaceholder.substring(index);
+					}
+				}
 				if (QuotedString.endsWithQuote(rawPlaceholder)) {
-					rawPlaceholder = QuotedString.unquoteSuffix(rawPlaceholder);
+					rawPlaceholder = rawPlaceholder.substring(0, rawPlaceholder.length() - (StringUtils.hasText(suffix) ? suffix.length() : 1));
 				}
 			}
 
@@ -284,6 +291,7 @@ class ExpressionEvaluatingParameterBinder {
 				return Placeholder.of(parameterIndex, rawPlaceholder, quoted,
 						quoted ? QuotedString.unquoteSuffix(suffix) : suffix);
 			}
+			return Placeholder.of(parameterIndex, rawPlaceholder, false, null);
 		}
 
 		return Placeholder.of(parameterIndex, matcher.group(), false, null);
