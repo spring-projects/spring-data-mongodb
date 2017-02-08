@@ -339,8 +339,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			while (valueMatcher.find()) {
 
 				int paramIndex = Integer.parseInt(valueMatcher.group(PARAMETER_INDEX_GROUP));
-				boolean quoted = (source.startsWith("'") && source.endsWith("'"))
-						|| (source.startsWith("\"") && source.endsWith("\""));
+				boolean quoted = source.startsWith("'") || source.startsWith("\"");
 
 				bindings.add(new ParameterBinding(paramIndex, quoted));
 			}
