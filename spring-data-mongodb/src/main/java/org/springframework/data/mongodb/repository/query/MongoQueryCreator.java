@@ -55,6 +55,7 @@ import org.springframework.util.ClassUtils;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Edward Prentice
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
@@ -299,7 +300,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 					criteria = criteria.not();
 				}
 
-				return addAppropriateLikeRegexTo(criteria, part, parameters.next().toString());
+				Object next = parameters.next();
+
+				return addAppropriateLikeRegexTo(criteria, part, next != null ? next.toString() : "");
 
 			case NEVER:
 				// intentional no-op
