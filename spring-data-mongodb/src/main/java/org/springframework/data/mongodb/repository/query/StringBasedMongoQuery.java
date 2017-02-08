@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,10 +38,11 @@ import com.mongodb.util.JSON;
 
 /**
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public class StringBasedMongoQuery extends AbstractMongoQuery {
 
@@ -59,7 +60,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery} for the given {@link MongoQueryMethod} and {@link MongoOperations}.
-	 * 
+	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
@@ -126,7 +127,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return query;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isCountQuery()
 	 */
@@ -146,10 +147,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	/**
 	 * A parser that extracts the parameter bindings from a given query string.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 */
-	private static enum ParameterBindingParser {
+	private enum ParameterBindingParser {
 
 		INSTANCE;
 
@@ -169,7 +170,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		/**
 		 * Returns a list of {@link ParameterBinding}s found in the given {@code input} or an
 		 * {@link Collections#emptyList()}.
-		 * 
+		 *
 		 * @param input can be {@literal null} or empty.
 		 * @param bindings must not be {@literal null}.
 		 * @return
@@ -256,7 +257,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 			} else if (value instanceof Pattern) {
 
-				String string = ((Pattern) value).toString().trim();
+				String string = value.toString().trim();
 				Matcher valueMatcher = PARSEABLE_BINDING_PATTERN.matcher(string);
 
 				while (valueMatcher.find()) {
@@ -264,7 +265,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 					int paramIndex = Integer.parseInt(valueMatcher.group(PARAMETER_INDEX_GROUP));
 
 					/*
-					 * The pattern is used as a direct parameter replacement, e.g. 'field': ?1, 
+					 * The pattern is used as a direct parameter replacement, e.g. 'field': ?1,
 					 * therefore we treat it as not quoted to remain backwards compatible.
 					 */
 					boolean quoted = !string.equals(PARAMETER_PREFIX + paramIndex);
@@ -297,8 +298,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			while (valueMatcher.find()) {
 
 				int paramIndex = Integer.parseInt(valueMatcher.group(PARAMETER_INDEX_GROUP));
-				boolean quoted = (source.startsWith("'") && source.endsWith("'"))
-						|| (source.startsWith("\"") && source.endsWith("\""));
+				boolean quoted = source.startsWith("'") || source.startsWith("\"");
 
 				bindings.add(new ParameterBinding(paramIndex, quoted));
 			}
@@ -315,7 +315,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	/**
 	 * A generic parameter binding with name or position information.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 */
 	static class ParameterBinding {
@@ -326,7 +326,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 		/**
 		 * Creates a new {@link ParameterBinding} with the given {@code parameterIndex} and {@code quoted} information.
-		 * 
+		 *
 		 * @param parameterIndex
 		 * @param quoted whether or not the parameter is already quoted.
 		 */

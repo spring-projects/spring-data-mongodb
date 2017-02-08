@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -37,12 +39,13 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
 /**
- * {@link ExpressionEvaluatingParameterBinder} allows to evaluate, convert and bind parameters to placholders within a
+ * {@link ExpressionEvaluatingParameterBinder} allows to evaluate, convert and bind parameters to placeholders within a
  * {@link String}.
- * 
+ *
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -56,7 +59,7 @@ class ExpressionEvaluatingParameterBinder {
 
 	/**
 	 * Creates new {@link ExpressionEvaluatingParameterBinder}
-	 * 
+	 *
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
@@ -73,7 +76,7 @@ class ExpressionEvaluatingParameterBinder {
 	/**
 	 * Bind values provided by {@link MongoParameterAccessor} to placeholders in {@literal raw} while considering
 	 * potential conversions and parameter types.
-	 * 
+	 *
 	 * @param raw can be {@literal null} or empty.
 	 * @param accessor must not be {@literal null}.
 	 * @param bindingContext must not be {@literal null}.
@@ -90,7 +93,7 @@ class ExpressionEvaluatingParameterBinder {
 
 	/**
 	 * Replaced the parameter placeholders with the actual parameter values from the given {@link ParameterBinding}s.
-	 * 
+	 *
 	 * @param input must not be {@literal null} or empty.
 	 * @param accessor must not be {@literal null}.
 	 * @param bindingContext must not be {@literal null}.
@@ -110,16 +113,23 @@ class ExpressionEvaluatingParameterBinder {
 		Matcher matcher = createReplacementPattern(bindingContext.getBindings()).matcher(input);
 		StringBuffer buffer = new StringBuffer();
 
+		int parameterIndex = 0;
 		while (matcher.find()) {
 
-			ParameterBinding binding = bindingContext.getBindingFor(extractPlaceholder(matcher.group()));
+			Placeholder placeholder = extractPlaceholder(parameterIndex++, matcher);
+			ParameterBinding binding = bindingContext.getBindingFor(placeholder);
 			String valueForBinding = getParameterValueForBinding(accessor, bindingContext.getParameters(), binding);
 
 			// appendReplacement does not like unescaped $ sign and others, so we need to quote that stuff first
 			matcher.appendReplacement(buffer, Matcher.quoteReplacement(valueForBinding));
+			if (StringUtils.hasText(placeholder.getSuffix())) {
+				buffer.append(placeholder.getSuffix());
+			}
 
-			if (binding.isQuoted()) {
-				postProcessQuotedBinding(buffer, valueForBinding);
+			if (placeholder.isQuoted()) {
+				postProcessQuotedBinding(buffer, valueForBinding,
+						!binding.isExpression() ? accessor.getBindableValue(binding.getParameterIndex()) : null,
+						binding.isExpression());
 			}
 		}
 
@@ -134,8 +144,10 @@ class ExpressionEvaluatingParameterBinder {
 	 *
 	 * @param buffer the {@link StringBuffer} to operate upon.
 	 * @param valueForBinding the actual binding value.
+	 * @param raw the raw binding value
+	 * @param isExpression {@literal true} if the binding value results from a SpEL expression.
 	 */
-	private void postProcessQuotedBinding(StringBuffer buffer, String valueForBinding) {
+	private void postProcessQuotedBinding(StringBuffer buffer, String valueForBinding, Object raw, boolean isExpression) {
 
 		int quotationMarkIndex = buffer.length() - valueForBinding.length() - 1;
 		char quotationMark = buffer.charAt(quotationMarkIndex);
@@ -151,7 +163,8 @@ class ExpressionEvaluatingParameterBinder {
 			quotationMark = buffer.charAt(quotationMarkIndex);
 		}
 
-		if (valueForBinding.startsWith("{")) { // remove quotation char before the complex object string
+		// remove quotation char before the complex object string
+		if (valueForBinding.startsWith("{") && (raw instanceof DBObject || isExpression)) {
 
 			buffer.deleteCharAt(quotationMarkIndex);
 
@@ -181,7 +194,12 @@ class ExpressionEvaluatingParameterBinder {
 				: accessor.getBindableValue(binding.getParameterIndex());
 
 		if (value instanceof String && binding.isQuoted()) {
-			return ((String) value).startsWith("{") ? (String) value : ((String) value).replace("\"", "\\\"");
+
+			if (binding.isExpression() && ((String) value).startsWith("{")) {
+				return (String) value;
+			}
+
+			return QuotedString.unquote(JSON.serialize(value));
 		}
 
 		if (value instanceof byte[]) {
@@ -228,8 +246,9 @@ class ExpressionEvaluatingParameterBinder {
 		for (ParameterBinding binding : bindings) {
 
 			regex.append("|");
-			regex.append(Pattern.quote(binding.getParameter()));
-			regex.append("['\"]?"); // potential quotation char (as in { foo : '?0' }).
+			regex.append("(" + Pattern.quote(binding.getParameter()) + ")");
+			regex.append("([\\w.]*");
+			regex.append("(\\W?['\"]|\\w*')?)");
 		}
 
 		return Pattern.compile(regex.substring(1));
@@ -239,14 +258,40 @@ class ExpressionEvaluatingParameterBinder {
 	 * Extract the placeholder stripping any trailing trailing quotation mark that might have resulted from the
 	 * {@link #createReplacementPattern(List) pattern} used.
 	 *
-	 * @param groupName The actual {@link Matcher#group() group}.
+	 * @param parameterIndex The actual parameter index.
+	 * @param matcher The actual {@link Matcher}.
 	 * @return
 	 */
-	private Placeholder extractPlaceholder(String groupName) {
+	private Placeholder extractPlaceholder(int parameterIndex, Matcher matcher) {
 
-		return !groupName.endsWith("'") && !groupName.endsWith("\"") ? //
-				Placeholder.of(groupName, false) : //
-				Placeholder.of(groupName.substring(0, groupName.length() - 1), true);
+		String rawPlaceholder = matcher.group(parameterIndex * 3 + 1);
+		String suffix = matcher.group(parameterIndex * 3 + 2);
+
+		if (!StringUtils.hasText(rawPlaceholder)) {
+
+			rawPlaceholder = matcher.group();
+			if (rawPlaceholder.matches(".*\\d$")) {
+				suffix = "";
+			} else {
+				int index = rawPlaceholder.replaceAll("[^\\?0-9]*$", "").length() - 1;
+				if (index > 0 && rawPlaceholder.length() > index) {
+					suffix = rawPlaceholder.substring(index + 1);
+				}
+			}
+			if (QuotedString.endsWithQuote(rawPlaceholder)) {
+				rawPlaceholder = rawPlaceholder.substring(0,
+						rawPlaceholder.length() - (StringUtils.hasText(suffix) ? suffix.length() : 1));
+			}
+		}
+
+		if (StringUtils.hasText(suffix)) {
+
+			boolean quoted = QuotedString.endsWithQuote(suffix);
+
+			return Placeholder.of(parameterIndex, rawPlaceholder, quoted,
+					quoted ? QuotedString.unquoteSuffix(suffix) : suffix);
+		}
+		return Placeholder.of(parameterIndex, rawPlaceholder, false, null);
 	}
 
 	/**
@@ -317,8 +362,9 @@ class ExpressionEvaluatingParameterBinder {
 
 			Map<Placeholder, ParameterBinding> map = new LinkedHashMap<Placeholder, ParameterBinding>(bindings.size(), 1);
 
+			int parameterIndex = 0;
 			for (ParameterBinding binding : bindings) {
-				map.put(Placeholder.of(binding.getParameter(), binding.isQuoted()), binding);
+				map.put(Placeholder.of(parameterIndex++, binding.getParameter(), binding.isQuoted(), null), binding);
 			}
 
 			return map;
@@ -332,10 +378,13 @@ class ExpressionEvaluatingParameterBinder {
 	 * @since 1.9
 	 */
 	@Value(staticConstructor = "of")
+	@EqualsAndHashCode(exclude = { "quoted", "suffix" })
 	static class Placeholder {
 
+		private int parameterIndex;
 		private final String parameter;
 		private final boolean quoted;
+		private final String suffix;
 
 		/*
 		 * (non-Javadoc)
@@ -343,7 +392,46 @@ class ExpressionEvaluatingParameterBinder {
 		 */
 		@Override
 		public String toString() {
-			return quoted ? String.format("'%s'", parameter) : parameter;
+			return quoted ? String.format("'%s'", parameter + (suffix != null ? suffix : ""))
+					: parameter + (suffix != null ? suffix : "");
+		}
+
+	}
+
+	/**
+	 * Utility to handle quoted strings using single/double quotes.
+	 *
+	 * @author Mark Paluch
+	 */
+	@UtilityClass
+	static class QuotedString {
+
+		/**
+		 * @param string
+		 * @return {@literal true} if {@literal string} ends with a single/double quote.
+		 */
+		static boolean endsWithQuote(String string) {
+			return string.endsWith("'") || string.endsWith("\"");
+		}
+
+		/**
+		 * Remove trailing quoting from {@literal quoted}.
+		 *
+		 * @param quoted
+		 * @return {@literal quoted} with removed quotes.
+		 */
+		public static String unquoteSuffix(String quoted) {
+			return quoted.substring(0, quoted.length() - 1);
+		}
+
+		/**
+		 * Remove leading and trailing quoting from {@literal quoted}.
+		 *
+		 * @param quoted
+		 * @return {@literal quoted} with removed quotes.
+		 */
+		public static String unquote(String quoted) {
+			return quoted.substring(1, quoted.length() - 1);
 		}
 	}
 }
