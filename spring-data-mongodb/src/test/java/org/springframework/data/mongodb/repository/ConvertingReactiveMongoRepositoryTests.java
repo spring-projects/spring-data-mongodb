@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.repository;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.observers.TestObserver;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -42,6 +45,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 import org.springframework.data.repository.reactive.RxJava1SortingRepository;
+import org.springframework.data.repository.reactive.RxJava2SortingRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -62,7 +66,8 @@ public class ConvertingReactiveMongoRepositoryTests {
 
 	@Autowired MixedReactivePersonRepostitory reactiveRepository;
 	@Autowired ReactivePersonRepostitory reactivePersonRepostitory;
-	@Autowired RxJavaPersonRepostitory rxJavaPersonRepostitory;
+	@Autowired RxJava1PersonRepostitory rxJava1PersonRepostitory;
+	@Autowired RxJava2PersonRepostitory rxJava2PersonRepostitory;
 
 	ReactivePerson dave, oliver, carter, boyd, stefan, leroi, alicia;
 
@@ -95,9 +100,9 @@ public class ConvertingReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void simpleRxJavaMethodsShouldWork() {
+	public void simpleRxJava1MethodsShouldWork() throws Exception {
 
-		rxJavaPersonRepostitory.exists(dave.getId()) //
+		rxJava1PersonRepostitory.exists(dave.getId()) //
 				.test() //
 				.awaitTerminalEvent() //
 				.assertValue(true) //
@@ -106,9 +111,9 @@ public class ConvertingReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void existsWithSingleRxJavaIdMethodsShouldWork() {
+	public void existsWithSingleRxJava1IdMethodsShouldWork() throws Exception {
 
-		rxJavaPersonRepostitory.exists(Single.just(dave.getId())) //
+		rxJava1PersonRepostitory.exists(Single.just(dave.getId())) //
 				.test() //
 				.awaitTerminalEvent() //
 				.assertValue(true) //
@@ -117,9 +122,9 @@ public class ConvertingReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void singleRxJavaQueryMethodShouldWork() {
+	public void singleRxJava1QueryMethodShouldWork() throws Exception {
 
-		rxJavaPersonRepostitory.findByFirstnameAndLastname(dave.getFirstname(), dave.getLastname()) //
+		rxJava1PersonRepostitory.findByFirstnameAndLastname(dave.getFirstname(), dave.getLastname()) //
 				.test() //
 				.awaitTerminalEvent() //
 				.assertValue(dave) //
@@ -128,9 +133,9 @@ public class ConvertingReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void singleProjectedRxJavaQueryMethodShouldWork() {
+	public void singleProjectedRxJava1QueryMethodShouldWork() throws Exception {
 
-		List<ProjectedPerson> people = rxJavaPersonRepostitory.findProjectedByLastname(carter.getLastname()) //
+		List<ProjectedPerson> people = rxJava1PersonRepostitory.findProjectedByLastname(carter.getLastname()) //
 				.test() //
 				.awaitTerminalEvent() //
 				.assertValueCount(1) //
@@ -143,15 +148,92 @@ public class ConvertingReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void observableRxJavaQueryMethodShouldWork() {
+	public void observableRxJava1QueryMethodShouldWork() throws Exception {
 
-		rxJavaPersonRepostitory.findByLastname(boyd.getLastname()) //
+		rxJava1PersonRepostitory.findByLastname(boyd.getLastname()) //
 				.test() //
 				.awaitTerminalEvent() //
 				.assertValue(boyd) //
 				.assertNoErrors() //
 				.assertCompleted() //
 				.getOnNextEvents();
+	}
+
+	@Test // DATAMONGO-1610
+	public void simpleRxJava2MethodsShouldWork() throws Exception {
+
+		TestObserver<Boolean> testObserver = rxJava2PersonRepostitory.exists(dave.getId()).test();
+
+		testObserver.awaitTerminalEvent();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+		testObserver.assertValue(true);
+	}
+
+	@Test // DATAMONGO-1610
+	public void existsWithSingleRxJava2IdMethodsShouldWork() throws Exception {
+
+		TestObserver<Boolean> testObserver = rxJava2PersonRepostitory.exists(io.reactivex.Single.just(dave.getId())).test();
+
+		testObserver.awaitTerminalEvent();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+		testObserver.assertValue(true);
+	}
+
+	@Test // DATAMONGO-1610
+	public void flowableRxJava2QueryMethodShouldWork() throws Exception {
+
+		io.reactivex.subscribers.TestSubscriber<ReactivePerson> testSubscriber = rxJava2PersonRepostitory
+				.findByFirstnameAndLastname(dave.getFirstname(), dave.getLastname()).test();
+
+		testSubscriber.awaitTerminalEvent();
+		testSubscriber.assertComplete();
+		testSubscriber.assertNoErrors();
+		testSubscriber.assertValue(dave);
+	}
+
+	@Test // DATAMONGO-1610
+	public void singleProjectedRxJava2QueryMethodShouldWork() throws Exception {
+
+		TestObserver<ProjectedPerson> testObserver = rxJava2PersonRepostitory
+				.findProjectedByLastname(Maybe.just(carter.getLastname())).test();
+
+		testObserver.awaitTerminalEvent();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+
+		testObserver.assertValue(actual -> {
+			assertThat(actual.getFirstname(), is(equalTo(carter.getFirstname())));
+			return true;
+		});
+	}
+
+	@Test // DATAMONGO-1610
+	public void observableProjectedRxJava2QueryMethodShouldWork() throws Exception {
+
+		TestObserver<ProjectedPerson> testObserver = rxJava2PersonRepostitory
+				.findProjectedByLastname(Single.just(carter.getLastname())).test();
+
+		testObserver.awaitTerminalEvent();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+
+		testObserver.assertValue(actual -> {
+			assertThat(actual.getFirstname(), is(equalTo(carter.getFirstname())));
+			return true;
+		});
+	}
+
+	@Test // DATAMONGO-1610
+	public void maybeRxJava2QueryMethodShouldWork() throws Exception {
+
+		TestObserver<ReactivePerson> testObserver = rxJava2PersonRepostitory.findByLastname(boyd.getLastname()).test();
+
+		testObserver.awaitTerminalEvent();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+		testObserver.assertValue(boyd);
 	}
 
 	@Test // DATAMONGO-1444
@@ -203,13 +285,25 @@ public class ConvertingReactiveMongoRepositoryTests {
 	}
 
 	@Repository
-	interface RxJavaPersonRepostitory extends RxJava1SortingRepository<ReactivePerson, String> {
+	interface RxJava1PersonRepostitory extends RxJava1SortingRepository<ReactivePerson, String> {
 
 		Observable<ReactivePerson> findByFirstnameAndLastname(String firstname, String lastname);
 
 		Single<ReactivePerson> findByLastname(String lastname);
 
 		Single<ProjectedPerson> findProjectedByLastname(String lastname);
+	}
+
+	@Repository
+	interface RxJava2PersonRepostitory extends RxJava2SortingRepository<ReactivePerson, String> {
+
+		Flowable<ReactivePerson> findByFirstnameAndLastname(String firstname, String lastname);
+
+		Maybe<ReactivePerson> findByLastname(String lastname);
+
+		io.reactivex.Single<ProjectedPerson> findProjectedByLastname(Maybe<String> lastname);
+
+		io.reactivex.Observable<ProjectedPerson> findProjectedByLastname(Single<String> lastname);
 	}
 
 	@Repository
