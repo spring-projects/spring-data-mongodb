@@ -437,6 +437,78 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is((DBObject) new BasicDBObject("lastname", Pattern.compile("^(calamity)"))));
 	}
 
+	@Test // DATAMONGO-1603
+	public void shouldAllowReuseOfPlaceholderWithinQuery() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByReusingPlaceholdersMultipleTimes", String.class,
+				String.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		assertThat(query.getQueryObject(), is((DBObject) new BasicDBObject().append("arg0", "calamity")
+				.append("arg1", "regalia").append("arg2", "calamity")));
+	}
+
+	@Test // DATAMONGO-1603
+	public void shouldAllowReuseOfQuotedPlaceholderWithinQuery() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByReusingPlaceholdersMultipleTimesWhenQuoted",
+				String.class, String.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		assertThat(query.getQueryObject(), is((DBObject) new BasicDBObject().append("arg0", "calamity")
+				.append("arg1", "regalia").append("arg2", "calamity")));
+	}
+
+	@Test // DATAMONGO-1603
+	public void shouldAllowReuseOfQuotedPlaceholderWithinQueryAndIncludeSuffixCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod(
+				"findByReusingPlaceholdersMultipleTimesWhenQuotedAndSomeStuffAppended", String.class, String.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		assertThat(query.getQueryObject(), is((DBObject) new BasicDBObject().append("arg0", "calamity")
+				.append("arg1", "regalia").append("arg2", "calamitys")));
+	}
+
+	@Test // DATAMONGO-1603
+	public void shouldAllowQuotedParameterWithSuffixAppended() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByWhenQuotedAndSomeStuffAppended", String.class,
+				String.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		assertThat(query.getQueryObject(),
+				is((DBObject) new BasicDBObject().append("arg0", "calamity").append("arg1", "regalias")));
+	}
+
+	@Test // DATAMONGO-1603
+	public void shouldCaptureReplacementWithComplexSuffixCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByMultiRegex", String.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getQueryObject(), is((DBObject) JSON.parse(
+				"{ \"$or\" : [ { \"firstname\" : { \"$regex\" : \".*calamity.*\" , \"$options\" : \"i\"}} , { \"lastname\" : { \"$regex\" : \".*calamityxyz.*\" , \"$options\" : \"i\"}}]}")));
+	}
+
+	@Test // DATAMONGO-1603
+	public void shouldAllowPlaceholderReuseInQuotedValue() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameRegex", String.class, String.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getQueryObject(),
+				is((DBObject) JSON.parse("{ 'lastname' : { '$regex' : '^(calamity|John regalia|regalia)'} }")));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -459,6 +531,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'lastname' : { '$regex' : '^(?0)'} }")
 		Person findByLastnameRegex(String lastname);
+
+		@Query("{'$or' : [{'firstname': {'$regex': '.*?0.*', '$options': 'i'}}, {'lastname' : {'$regex': '.*?0xyz.*', '$options': 'i'}} ]}")
+		Person findByMultiRegex(String arg0);
 
 		@Query("{ 'address' : ?0 }")
 		Person findByAddress(Address address);
@@ -510,5 +585,20 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'arg0' : ?0 }")
 		List<Person> findByWithBsonArgument(DBObject arg0);
+
+		@Query("{ 'arg0' : ?0, 'arg1' : ?1, 'arg2' : ?0 }")
+		List<Person> findByReusingPlaceholdersMultipleTimes(String arg0, String arg1);
+
+		@Query("{ 'arg0' : ?0, 'arg1' : ?1, 'arg2' : '?0' }")
+		List<Person> findByReusingPlaceholdersMultipleTimesWhenQuoted(String arg0, String arg1);
+
+		@Query("{ 'arg0' : '?0', 'arg1' : ?1, 'arg2' : '?0s' }")
+		List<Person> findByReusingPlaceholdersMultipleTimesWhenQuotedAndSomeStuffAppended(String arg0, String arg1);
+
+		@Query("{ 'arg0' : '?0', 'arg1' : '?1s' }")
+		List<Person> findByWhenQuotedAndSomeStuffAppended(String arg0, String arg1);
+
+		@Query("{ 'lastname' : { '$regex' : '^(?0|John ?1|?1)'} }") // use spel or some regex string this is fucking bad
+		Person findByLastnameRegex(String lastname, String alternative);
 	}
 }
