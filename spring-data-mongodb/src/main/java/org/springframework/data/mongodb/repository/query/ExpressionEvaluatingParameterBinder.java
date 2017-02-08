@@ -45,7 +45,7 @@ import com.mongodb.util.JSON;
 /**
  * {@link ExpressionEvaluatingParameterBinder} allows to evaluate, convert and bind parameters to placeholders within a
  * {@link String}.
- * 
+ *
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -59,7 +59,7 @@ class ExpressionEvaluatingParameterBinder {
 
 	/**
 	 * Creates new {@link ExpressionEvaluatingParameterBinder}
-	 * 
+	 *
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
@@ -76,7 +76,7 @@ class ExpressionEvaluatingParameterBinder {
 	/**
 	 * Bind values provided by {@link MongoParameterAccessor} to placeholders in {@literal raw} while considering
 	 * potential conversions and parameter types.
-	 * 
+	 *
 	 * @param raw can be {@literal null} or empty.
 	 * @param accessor must not be {@literal null}.
 	 * @param bindingContext must not be {@literal null}.
@@ -93,7 +93,7 @@ class ExpressionEvaluatingParameterBinder {
 
 	/**
 	 * Replaced the parameter placeholders with the actual parameter values from the given {@link ParameterBinding}s.
-	 * 
+	 *
 	 * @param input must not be {@literal null} or empty.
 	 * @param accessor must not be {@literal null}.
 	 * @param bindingContext must not be {@literal null}.
@@ -126,7 +126,7 @@ class ExpressionEvaluatingParameterBinder {
 				buffer.append(placeholder.getSuffix());
 			}
 
-			if (binding.isQuoted() || placeholder.isQuoted()) {
+			if (placeholder.isQuoted()) {
 				postProcessQuotedBinding(buffer, valueForBinding,
 						!binding.isExpression() ? accessor.getBindableValue(binding.getParameterIndex()) : null,
 						binding.isExpression());
@@ -247,7 +247,8 @@ class ExpressionEvaluatingParameterBinder {
 
 			regex.append("|");
 			regex.append("(" + Pattern.quote(binding.getParameter()) + ")");
-			regex.append("(\\W?['\"])?"); // potential quotation char (as in { foo : '?0' }).
+			regex.append("([\\w.]*");
+			regex.append("(\\W?['\"]|\\w*')?)");
 		}
 
 		return Pattern.compile(regex.substring(1));
@@ -265,15 +266,22 @@ class ExpressionEvaluatingParameterBinder {
 
 		if (matcher.groupCount() > 1) {
 
-			String rawPlaceholder = matcher.group(parameterIndex * 2 + 1);
-			String suffix = matcher.group(parameterIndex * 2 + 2);
+			String rawPlaceholder = matcher.group(parameterIndex * 3 + 1);
+			String suffix = matcher.group(parameterIndex * 3 + 2);
 
 			if (!StringUtils.hasText(rawPlaceholder)) {
 
 				rawPlaceholder = matcher.group();
-				suffix = "" + rawPlaceholder.charAt(rawPlaceholder.length() - 1);
+				if(rawPlaceholder.matches(".*\\d$")) {
+					suffix = "";
+				} else {
+					int index = rawPlaceholder.replaceAll("[^\\?0-9]*$", "").length() - 1;
+					if (index > 0 && rawPlaceholder.length() > index) {
+						suffix = rawPlaceholder.substring(index+1);
+					}
+				}
 				if (QuotedString.endsWithQuote(rawPlaceholder)) {
-					rawPlaceholder = QuotedString.unquoteSuffix(rawPlaceholder);
+					rawPlaceholder = rawPlaceholder.substring(0, rawPlaceholder.length() - (StringUtils.hasText(suffix) ? suffix.length() : 1));
 				}
 			}
 
@@ -284,6 +292,7 @@ class ExpressionEvaluatingParameterBinder {
 				return Placeholder.of(parameterIndex, rawPlaceholder, quoted,
 						quoted ? QuotedString.unquoteSuffix(suffix) : suffix);
 			}
+			return Placeholder.of(parameterIndex, rawPlaceholder, false, null);
 		}
 
 		return Placeholder.of(parameterIndex, matcher.group(), false, null);
