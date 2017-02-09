@@ -505,6 +505,26 @@ public class StringBasedMongoQueryUnitTests {
 				is(Document.parse("{ 'lastname' : { '$regex' : '^(calamity|John regalia|regalia)'} }")));
 	}
 
+	@Test // DATAMONGO-1605
+	public void findUsingSpelShouldRetainParameterType() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByUsingSpel", Object.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, 100.01D);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		assertThat(query.getQueryObject(), is(new Document("arg0", 100.01D)));
+	}
+
+	@Test // DATAMONGO-1605
+	public void findUsingSpelShouldRetainNullValues() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByUsingSpel", Object.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[]{null});
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		assertThat(query.getQueryObject(), is(new Document("arg0", null)));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -596,5 +616,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'lastname' : { '$regex' : '^(?0|John ?1|?1)'} }") // use spel or some regex string this is fucking bad
 		Person findByLastnameRegex(String lastname, String alternative);
+
+		@Query("{ arg0 : ?#{[0]} }")
+		List<Person> findByUsingSpel(Object arg0);
 	}
 }
