@@ -170,6 +170,12 @@ class ExpressionEvaluatingParameterBinder {
 
 		} else {
 
+			if (isExpression) {
+
+				buffer.deleteCharAt(quotationMarkIndex);
+				return;
+			}
+
 			if (quotationMark == '\'') {
 				buffer.replace(quotationMarkIndex, quotationMarkIndex + 1, "\"");
 			}
@@ -199,7 +205,7 @@ class ExpressionEvaluatingParameterBinder {
 				return (String) value;
 			}
 
-			return QuotedString.unquote(JSON.serialize(value));
+			return binding.isExpression() ? JSON.serialize(value) : QuotedString.unquote(JSON.serialize(value));
 		}
 
 		if (value instanceof byte[]) {
@@ -211,6 +217,10 @@ class ExpressionEvaluatingParameterBinder {
 			}
 
 			return base64representation;
+		}
+
+		if (binding.isExpression() && value instanceof String) {
+			return "\"" + JSON.serialize(value) + "\"";
 		}
 
 		return JSON.serialize(value);
