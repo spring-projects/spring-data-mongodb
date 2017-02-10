@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBList;
@@ -121,11 +122,8 @@ abstract class GeoConverters {
 			if (source.containsField("type")) {
 				return DbObjectToGeoJsonPointConverter.INSTANCE.convert(source);
 			}
-			
-			Number x = (Number) source.get("x");
-			Number y = (Number) source.get("y");
 
-			return new Point(x.doubleValue(), y.doubleValue());
+			return new Point(toPrimitiveDoubleValue(source.get("x")), toPrimitiveDoubleValue(source.get("y")));
 		}
 	}
 
@@ -259,10 +257,12 @@ abstract class GeoConverters {
 			}
 
 			DBObject center = (DBObject) source.get("center");
-			Number radiusNumber = (Number) source.get("radius");
-			Double radius = radiusNumber.doubleValue();
+			Number radius = (Number) source.get("radius");
 
-			Distance distance = new Distance(radius);
+			Assert.notNull(center, "Center must not be null!");
+			Assert.notNull(radius, "Radius must not be null!");
+
+			Distance distance = new Distance(toPrimitiveDoubleValue(radius));
 
 			if (source.containsField("metric")) {
 
@@ -271,9 +271,6 @@ abstract class GeoConverters {
 
 				distance = distance.in(Metrics.valueOf(metricString));
 			}
-
-			Assert.notNull(center, "Center must not be null!");
-			Assert.notNull(radius, "Radius must not be null!");
 
 			return new Circle(DbObjectToPointConverter.INSTANCE.convert(center), distance);
 		}
@@ -331,11 +328,12 @@ abstract class GeoConverters {
 			}
 
 			DBObject center = (DBObject) source.get("center");
-			Number radiusNumber = (Number) source.get("radius");
-			Double radius = radiusNumber.doubleValue();
+			Number radius = (Number) source.get("radius");
 
+			Assert.notNull(center, "Center must not be null!");
+			Assert.notNull(radius, "Radius must not be null!");
 
-			Distance distance = new Distance(radius);
+			Distance distance = new Distance(toPrimitiveDoubleValue(radius));
 
 			if (source.containsField("metric")) {
 
@@ -344,9 +342,6 @@ abstract class GeoConverters {
 
 				distance = distance.in(Metrics.valueOf(metricString));
 			}
-
-			Assert.notNull(center, "Center must not be null!");
-			Assert.notNull(radius, "Radius must not be null!");
 
 			return new Sphere(DbObjectToPointConverter.INSTANCE.convert(center), distance);
 		}
@@ -607,7 +602,7 @@ abstract class GeoConverters {
 					String.format("Cannot convert type '%s' to Point.", source.get("type")));
 
 			List<Number> dbl = (List<Number>) source.get("coordinates");
-			return new GeoJsonPoint(dbl.get(0).doubleValue(), dbl.get(1).doubleValue());
+			return new GeoJsonPoint(toPrimitiveDoubleValue(dbl.get(0)), toPrimitiveDoubleValue(dbl.get(1)));
 		}
 	}
 
@@ -841,7 +836,8 @@ abstract class GeoConverters {
 
 			List<Number> coordinatesList = (List<Number>) point;
 
-			points.add(new GeoJsonPoint(coordinatesList.get(0).doubleValue(), coordinatesList.get(1).doubleValue()));
+			points.add(new GeoJsonPoint(toPrimitiveDoubleValue(coordinatesList.get(0)),
+					toPrimitiveDoubleValue(coordinatesList.get(1))));
 		}
 		return points;
 	}
@@ -855,5 +851,11 @@ abstract class GeoConverters {
 	 */
 	static GeoJsonPolygon toGeoJsonPolygon(BasicDBList dbList) {
 		return new GeoJsonPolygon(toListOfPoint((BasicDBList) dbList.get(0)));
+	}
+
+	private static double toPrimitiveDoubleValue(Object value) {
+
+		Assert.isInstanceOf(Number.class, value, "Argument must be a Number.");
+		return NumberUtils.convertNumberToTargetClass((Number) value, Double.class).doubleValue();
 	}
 }
