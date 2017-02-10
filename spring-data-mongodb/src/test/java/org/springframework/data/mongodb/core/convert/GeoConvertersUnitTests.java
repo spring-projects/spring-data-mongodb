@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.convert.GeoConverters.SphereToDbObj
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
@@ -48,6 +49,7 @@ import com.mongodb.DBObject;
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.5
  */
 public class GeoConvertersUnitTests {
@@ -177,4 +179,32 @@ public class GeoConvertersUnitTests {
 		assertThat(boxObject,
 				is((Object) Arrays.asList(GeoConverters.toList(box.getFirst()), GeoConverters.toList(box.getSecond()))));
 	}
+
+	@Test // DATAMONGO-1607
+	public void convertsPointCorrectlyWhenUsingNonDoubleForCoordinates() {
+
+		assertThat(DbObjectToPointConverter.INSTANCE.convert(new BasicDBObject().append("x", 1L).append("y", 2L)),
+				is(new Point(1, 2)));
+	}
+
+	@Test // DATAMONGO-1607
+	public void convertsCircleCorrectlyWhenUsingNonDoubleForCoordinates() {
+
+		DBObject circle = new BasicDBObject();
+		circle.put("center", new BasicDBObject().append("x", 1).append("y", 2));
+		circle.put("radius", 3L);
+
+		assertThat(DbObjectToCircleConverter.INSTANCE.convert(circle), is(new Circle(new Point(1, 2), new Distance(3))));
+	}
+
+	@Test // DATAMONGO-1607
+	public void convertsSphereCorrectlyWhenUsingNonDoubleForCoordinates() {
+
+		DBObject sphere = new BasicDBObject();
+		sphere.put("center", new BasicDBObject().append("x", 1).append("y", 2));
+		sphere.put("radius", 3L);
+
+		assertThat(DbObjectToSphereConverter.INSTANCE.convert(sphere), is(new Sphere(new Point(1, 2), new Distance(3))));
+	}
+
 }
