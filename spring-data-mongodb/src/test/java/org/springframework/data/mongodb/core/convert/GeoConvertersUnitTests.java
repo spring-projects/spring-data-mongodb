@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.core.query.GeoCommand;
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.5
  */
 public class GeoConvertersUnitTests {
@@ -153,4 +154,32 @@ public class GeoConvertersUnitTests {
 		assertThat(boxObject,
 				is((Object) Arrays.asList(GeoConverters.toList(box.getFirst()), GeoConverters.toList(box.getSecond()))));
 	}
+
+	@Test // DATAMONGO-1607
+	public void convertsPointCorrectlyWhenUsingNonDoubleForCoordinates() {
+
+		assertThat(DocumentToPointConverter.INSTANCE.convert(new Document().append("x", 1L).append("y", 2L)),
+				is(new Point(1, 2)));
+	}
+
+	@Test // DATAMONGO-1607
+	public void convertsCircleCorrectlyWhenUsingNonDoubleForCoordinates() {
+
+		Document circle = new Document();
+		circle.put("center", new Document().append("x", 1).append("y", 2));
+		circle.put("radius", 3L);
+
+		assertThat(DocumentToCircleConverter.INSTANCE.convert(circle), is(new Circle(new Point(1, 2), new Distance(3))));
+	}
+
+	@Test // DATAMONGO-1607
+	public void convertsSphereCorrectlyWhenUsingNonDoubleForCoordinates() {
+
+		Document sphere = new Document();
+		sphere.put("center", new Document().append("x", 1).append("y", 2));
+		sphere.put("radius", 3L);
+
+		assertThat(DocumentToSphereConverter.INSTANCE.convert(sphere), is(new Sphere(new Point(1, 2), new Distance(3))));
+	}
+
 }
