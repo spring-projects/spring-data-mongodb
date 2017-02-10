@@ -300,9 +300,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 					criteria = criteria.not();
 				}
 
-				Object next = parameters.next();
-
-				return addAppropriateLikeRegexTo(criteria, part, next != null ? next.toString() : "");
+				return addAppropriateLikeRegexTo(criteria, part, parameters.next());
 
 			case NEVER:
 				// intentional no-op
@@ -330,7 +328,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			return criteria.in(nextAsArray(parameters));
 		}
 
-		return addAppropriateLikeRegexTo(criteria, part, parameters.next().toString());
+		return addAppropriateLikeRegexTo(criteria, part, parameters.next());
 	}
 
 	/**
@@ -341,9 +339,15 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param value
 	 * @return the criteria extended with the regex.
 	 */
-	private Criteria addAppropriateLikeRegexTo(Criteria criteria, Part part, String value) {
+	private Criteria addAppropriateLikeRegexTo(Criteria criteria, Part part, Object value) {
 
-		return criteria.regex(toLikeRegex(value, part), toRegexOptions(part));
+		if (value == null) {
+
+			throw new IllegalArgumentException(String.format(
+					"Argument for creating $regex pattern for property '%s' must not be null!", part.getProperty().getSegment()));
+		}
+
+		return criteria.regex(toLikeRegex(value.toString(), part), toRegexOptions(part));
 	}
 
 	/**

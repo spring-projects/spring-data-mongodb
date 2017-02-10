@@ -29,7 +29,9 @@ import java.util.stream.Stream;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -70,6 +72,8 @@ import org.springframework.test.util.ReflectionTestUtils;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
+
+	public @Rule ExpectedException expectedException = ExpectedException.none();
 
 	@Autowired protected PersonRepository repository;
 
@@ -168,6 +172,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = repository.findByFirstnameLike("Bo*");
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(boyd));
+	}
+
+	@Test // DATAMONGO-1608
+	public void findByFirstnameLikeWithNull() {
+
+		expectedException.expect(IllegalArgumentException.class);
+		expectedException.expectMessage("property 'firstname'");
+
+		repository.findByFirstnameLike(null);
 	}
 
 	@Test
@@ -657,9 +670,10 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-1608
 	public void findByFirstNameIgnoreCaseWithNull() {
 
-		List<Person> result = repository.findByFirstnameIgnoreCase(null);
+		expectedException.expect(IllegalArgumentException.class);
+		expectedException.expectMessage("property 'firstname'");
 
-		assertThat(result.size(), is(0));
+		repository.findByFirstnameIgnoreCase(null);
 	}
 
 	@Test // DATAMONGO-770
