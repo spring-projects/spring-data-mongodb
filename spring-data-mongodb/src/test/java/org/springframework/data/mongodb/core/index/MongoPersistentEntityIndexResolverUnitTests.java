@@ -637,11 +637,10 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					TextIndexOnNestedWithMostSpecificValueRoot.class);
 			assertThat(indexDefinitions.size(), equalTo(1));
-			assertIndexPathAndCollection(new String[] { "nested.foo", "nested.bar" },
+			assertIndexPathAndCollection(new String[] { "nested.bar" },
 					"textIndexOnNestedWithMostSpecificValueRoot", indexDefinitions.get(0));
 
 			DBObject weights = DBObjectTestUtils.getAsDBObject(indexDefinitions.get(0).getIndexOptions(), "weights");
-			assertThat(weights.get("nested.foo"), is((Object) 5F));
 			assertThat(weights.get("nested.bar"), is((Object) 10F));
 		}
 

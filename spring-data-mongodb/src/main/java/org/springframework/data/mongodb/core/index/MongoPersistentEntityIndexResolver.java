@@ -47,6 +47,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 
 /**
  * {@link IndexResolver} implementation inspecting {@link MongoPersistentEntity} for {@link MongoPersistentEntity} to be
@@ -253,16 +254,17 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 							: (includeOptions.getParentFieldSpec() != null ? includeOptions.getParentFieldSpec().getWeight() : 1.0F);
 
 					if (persistentProperty.isEntity()) {
-
+                        BasicMongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(persistentProperty.getActualType());
+                        
 						TextIndexIncludeOptions optionsForNestedType = includeOptions;
-						if (!IncludeStrategy.FORCE.equals(includeOptions.getStrategy()) && indexed != null) {
-							optionsForNestedType = new TextIndexIncludeOptions(IncludeStrategy.FORCE,
-									new TextIndexedFieldSpec(propertyDotPath, weight));
+						if (!MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy.FORCE.equals(includeOptions.getStrategy()) && indexed != null) {
+                            //DATAMONGO-1561
+                            IncludeStrategy strategy = persistentEntity.getPersistentProperty(TextIndexed.class) != null ? IncludeStrategy.DEFAULT : IncludeStrategy.FORCE;
+							optionsForNestedType = new TextIndexIncludeOptions(strategy, new TextIndexedFieldSpec(propertyDotPath, weight));
 						}
 
 						try {
-							appendTextIndexInformation(propertyDotPath, indexDefinitionBuilder,
-									mappingContext.getPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
+							appendTextIndexInformation(propertyDotPath, indexDefinitionBuilder, persistentEntity, optionsForNestedType, guard);
 						} catch (CyclicPropertyReferenceException e) {
 							LOGGER.info(e.getMessage(), e);
 						} catch (InvalidDataAccessApiUsageException e) {
