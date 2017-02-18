@@ -57,6 +57,7 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
  * 
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Jordi Llach
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -258,7 +259,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
                         
 						TextIndexIncludeOptions optionsForNestedType = includeOptions;
 						if (!IncludeStrategy.FORCE.equals(includeOptions.getStrategy()) && indexed != null) {
-                            //DATAMONGO-1561
                             IncludeStrategy strategy = persistentEntity.getPersistentProperty(TextIndexed.class) != null ? IncludeStrategy.DEFAULT : IncludeStrategy.FORCE;
 							optionsForNestedType = new TextIndexIncludeOptions(strategy, new TextIndexedFieldSpec(propertyDotPath, weight));
 						}
