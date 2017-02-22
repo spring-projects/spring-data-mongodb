@@ -143,6 +143,7 @@ import com.mongodb.util.JSONParseException;
  * @author Doménique Tilleuil
  * @author Niko Schmuck
  * @author Mark Paluch
+ * @author Laszlo Csontos
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
@@ -832,11 +833,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
+		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 		assertUpdateableIdIfNotSet(objectToSave);
 
 		initializeVersionProperty(objectToSave);
-
-		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 
 		Document dbDoc = toDocument(objectToSave, writer);
 
@@ -998,6 +998,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			doInsert(collectionName, objectToSave, this.mongoConverter);
 		} else {
 
+			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 			assertUpdateableIdIfNotSet(objectToSave);
 
 			// Create query for entity with the id and old version
@@ -1009,7 +1010,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			Document document = new Document();
 
-			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 			this.mongoConverter.write(objectToSave, document);
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, document, collectionName));
@@ -1028,9 +1028,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> void doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
-		assertUpdateableIdIfNotSet(objectToSave);
-
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
+		assertUpdateableIdIfNotSet(objectToSave);
 
 		Document dbDoc = toDocument(objectToSave, writer);
 
