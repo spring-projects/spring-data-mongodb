@@ -119,6 +119,7 @@ import com.mongodb.WriteResult;
  * @author Komi Innocent
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Laszlo Csontos
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -152,7 +153,8 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
 				PersonWithIdPropertyOfTypeString.class, PersonWithIdPropertyOfTypeInteger.class,
 				PersonWithIdPropertyOfTypeBigInteger.class, PersonWithIdPropertyOfPrimitiveInt.class,
-				PersonWithIdPropertyOfTypeLong.class, PersonWithIdPropertyOfPrimitiveLong.class)));
+				PersonWithIdPropertyOfTypeLong.class, PersonWithIdPropertyOfPrimitiveLong.class,
+				PersonWithIdPropertyOfTypeUUID.class)));
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		mappingContext.initialize();
 
@@ -195,6 +197,7 @@ public class MongoTemplateTests {
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveInt.class);
 		template.dropCollection(PersonWithIdPropertyOfTypeLong.class);
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveLong.class);
+		template.dropCollection(PersonWithIdPropertyOfTypeUUID.class);
 		template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class);
 		template.dropCollection(TestClass.class);
 		template.dropCollection(Sample.class);
@@ -632,6 +635,23 @@ public class MongoTemplateTests {
 		assertThat(p12q, notNullValue());
 		assertThat(p12q.getId(), is(p12.getId()));
 		checkCollectionContents(PersonWithIdPropertyOfPrimitiveLong.class, 1);
+
+		// DATAMONGO-1617
+		// UUID id - provided
+		PersonWithIdPropertyOfTypeUUID p13 = new PersonWithIdPropertyOfTypeUUID();
+		p13.setFirstName("Sven_10");
+		p13.setAge(22);
+		p13.setId(UUID.randomUUID());
+		// insert
+		mongoTemplate.insert(p13);
+		// also try save
+		mongoTemplate.save(p13);
+		assertThat(p13.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeUUID p13q = mongoTemplate.findOne(new Query(where("id").in(p13.getId())),
+				PersonWithIdPropertyOfTypeUUID.class);
+		assertThat(p13q, notNullValue());
+		assertThat(p13q.getId(), is(p13.getId()));
+		checkCollectionContents(PersonWithIdPropertyOfTypeUUID.class, 1);
 	}
 
 	private void checkCollectionContents(Class<?> entityClass, int count) {
