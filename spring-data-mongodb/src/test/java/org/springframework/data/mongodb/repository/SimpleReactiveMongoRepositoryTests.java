@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.domain.ExampleMatcher.*;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,6 +36,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -351,6 +353,54 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		StepVerifier.create(repository.findById(boyd.id)).verifyComplete();
 
 		StepVerifier.create(repository.findByLastname("Matthews")).expectNext(oliver).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1619
+	public void findOneByExampleShouldReturnObject() {
+
+		Example<ReactivePerson> example = Example.of(dave);
+
+		StepVerifier.create(repository.findOne(example)).expectNext(dave).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1619
+	public void findAllByExampleShouldReturnObjects() {
+
+		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
+
+		StepVerifier.create(repository.findAll(example)).expectNextCount(2).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1619
+	public void findAllByExampleAndSortShouldReturnObjects() {
+
+		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
+
+		StepVerifier.create(repository.findAll(example, Sort.by("firstname"))).expectNext(dave, oliver).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1619
+	public void countByExampleShouldCountObjects() {
+
+		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
+
+		StepVerifier.create(repository.count(example)).expectNext(2L).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1619
+	public void existsByExampleShouldReturnExisting() {
+
+		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
+
+		StepVerifier.create(repository.exists(example)).expectNext(true).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1619
+	public void existsByExampleShouldReturnNonExisting() {
+
+		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
+
+		StepVerifier.create(repository.exists(example)).expectNext(false).verifyComplete();
 	}
 
 	interface ReactivePersonRepostitory extends ReactiveMongoRepository<ReactivePerson, String> {
