@@ -82,6 +82,7 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -135,12 +136,18 @@ public class MongoTemplateTests {
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
-	@Autowired ConfigurableApplicationContext context;
 
+	ConfigurableApplicationContext context;
 	MongoTemplate mappingTemplate;
 	org.springframework.data.util.Version mongoVersion;
 
 	@Rule public ExpectedException thrown = ExpectedException.none();
+
+	@Autowired
+	public void setApplicationContext(ConfigurableApplicationContext context) {
+		context.addApplicationListener(new PersonWithIdPropertyOfTypeUUIDListener());
+		this.context = context;
+	}
 
 	@Autowired
 	public void setMongo(Mongo mongo) throws Exception {
@@ -1447,6 +1454,17 @@ public class MongoTemplateTests {
 		dbObject.put("firstName", "Oliver");
 
 		template.insert(dbObject, template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class));
+	}
+
+	@Test // DATAMONGO-1617
+	public void doesNotFailOnInsertForEntityWithNonAutogeneratableId() {
+
+		PersonWithIdPropertyOfTypeUUID person = new PersonWithIdPropertyOfTypeUUID();
+		person.setFirstName("Laszlo");
+		person.setAge(33);
+
+		template.insert(person);
+		assertThat(person.getId(), is(notNullValue()));
 	}
 
 	@Test // DATAMONGO-539
@@ -3564,5 +3582,20 @@ public class MongoTemplateTests {
 
 		@Id String id;
 		Object value;
+	}
+
+	static class PersonWithIdPropertyOfTypeUUIDListener extends AbstractMongoEventListener<PersonWithIdPropertyOfTypeUUID> {
+
+		@Override
+		public void onBeforeConvert(BeforeConvertEvent<PersonWithIdPropertyOfTypeUUID> event) {
+			PersonWithIdPropertyOfTypeUUID person = event.getSource();
+
+			if (person.getId() != null) {
+				return;
+			}
+
+			person.setId(UUID.randomUUID());
+		}
+
 	}
 }
