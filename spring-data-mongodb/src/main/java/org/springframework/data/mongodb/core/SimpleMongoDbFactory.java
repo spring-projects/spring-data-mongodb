@@ -210,6 +210,17 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	}
 
 	/**
+	 * Return whether the given DB instance is transactional, that is, bound to the current thread by Spring's transaction
+	 * facilities.
+	 * 
+	 * @param db the DB to check
+	 * @return whether the DB is transactional
+	 */
+	public boolean isDBTransactional(DB db) {
+		return MongoDbUtils.isDBTransactional(db, mongo);
+	}
+
+	/**
 	 * Clean up the Mongo instance if it was created by the factory itself.
 	 * 
 	 * @see DisposableBean#destroy()

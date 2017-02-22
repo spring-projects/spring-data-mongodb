@@ -490,6 +490,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		return execute(new DbCallback<T>() {
 			public T doInDB(DB db) throws MongoException, DataAccessException {
+				boolean inTransaction = false;
+				if (mongoDbFactory instanceof SimpleMongoDbFactory) {
+					inTransaction = ((SimpleMongoDbFactory) mongoDbFactory).isDBTransactional(db);
+				}
+				if (inTransaction) {
+					throw new IllegalStateException("executeInSession cannot be used with a transactional Mongo DB instance");
+				}
 				try {
 					ReflectiveDbInvoker.requestStart(db);
 					return action.doInDB(db);
