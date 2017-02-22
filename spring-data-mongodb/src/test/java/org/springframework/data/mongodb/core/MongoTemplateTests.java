@@ -82,6 +82,7 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -119,6 +120,7 @@ import com.mongodb.WriteResult;
  * @author Komi Innocent
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Laszlo Csontos
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -134,12 +136,18 @@ public class MongoTemplateTests {
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
-	@Autowired ConfigurableApplicationContext context;
 
+	ConfigurableApplicationContext context;
 	MongoTemplate mappingTemplate;
 	org.springframework.data.util.Version mongoVersion;
 
 	@Rule public ExpectedException thrown = ExpectedException.none();
+
+	@Autowired
+	public void setApplicationContext(ConfigurableApplicationContext context) {
+		context.addApplicationListener(new PersonWithIdPropertyOfTypeUUIDListener());
+		this.context = context;
+	}
 
 	@Autowired
 	public void setMongo(Mongo mongo) throws Exception {
@@ -152,7 +160,8 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
 				PersonWithIdPropertyOfTypeString.class, PersonWithIdPropertyOfTypeInteger.class,
 				PersonWithIdPropertyOfTypeBigInteger.class, PersonWithIdPropertyOfPrimitiveInt.class,
-				PersonWithIdPropertyOfTypeLong.class, PersonWithIdPropertyOfPrimitiveLong.class)));
+				PersonWithIdPropertyOfTypeLong.class, PersonWithIdPropertyOfPrimitiveLong.class,
+				PersonWithIdPropertyOfTypeUUID.class)));
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		mappingContext.initialize();
 
@@ -195,6 +204,7 @@ public class MongoTemplateTests {
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveInt.class);
 		template.dropCollection(PersonWithIdPropertyOfTypeLong.class);
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveLong.class);
+		template.dropCollection(PersonWithIdPropertyOfTypeUUID.class);
 		template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class);
 		template.dropCollection(TestClass.class);
 		template.dropCollection(Sample.class);
@@ -632,6 +642,23 @@ public class MongoTemplateTests {
 		assertThat(p12q, notNullValue());
 		assertThat(p12q.getId(), is(p12.getId()));
 		checkCollectionContents(PersonWithIdPropertyOfPrimitiveLong.class, 1);
+
+		// DATAMONGO-1617
+		// UUID id - provided
+		PersonWithIdPropertyOfTypeUUID p13 = new PersonWithIdPropertyOfTypeUUID();
+		p13.setFirstName("Sven_10");
+		p13.setAge(22);
+		p13.setId(UUID.randomUUID());
+		// insert
+		mongoTemplate.insert(p13);
+		// also try save
+		mongoTemplate.save(p13);
+		assertThat(p13.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeUUID p13q = mongoTemplate.findOne(new Query(where("id").in(p13.getId())),
+				PersonWithIdPropertyOfTypeUUID.class);
+		assertThat(p13q, notNullValue());
+		assertThat(p13q.getId(), is(p13.getId()));
+		checkCollectionContents(PersonWithIdPropertyOfTypeUUID.class, 1);
 	}
 
 	private void checkCollectionContents(Class<?> entityClass, int count) {
@@ -1427,6 +1454,17 @@ public class MongoTemplateTests {
 		dbObject.put("firstName", "Oliver");
 
 		template.insert(dbObject, template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class));
+	}
+
+	@Test // DATAMONGO-1617
+	public void doesNotFailOnInsertForEntityWithNonAutogeneratableId() {
+
+		PersonWithIdPropertyOfTypeUUID person = new PersonWithIdPropertyOfTypeUUID();
+		person.setFirstName("Laszlo");
+		person.setAge(33);
+
+		template.insert(person);
+		assertThat(person.getId(), is(notNullValue()));
 	}
 
 	@Test // DATAMONGO-539
@@ -3544,5 +3582,20 @@ public class MongoTemplateTests {
 
 		@Id String id;
 		Object value;
+	}
+
+	static class PersonWithIdPropertyOfTypeUUIDListener extends AbstractMongoEventListener<PersonWithIdPropertyOfTypeUUID> {
+
+		@Override
+		public void onBeforeConvert(BeforeConvertEvent<PersonWithIdPropertyOfTypeUUID> event) {
+			PersonWithIdPropertyOfTypeUUID person = event.getSource();
+
+			if (person.getId() != null) {
+				return;
+			}
+
+			person.setId(UUID.randomUUID());
+		}
+
 	}
 }
