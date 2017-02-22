@@ -22,6 +22,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 
 /**
@@ -31,7 +32,7 @@ import org.springframework.data.repository.reactive.ReactiveSortingRepository;
  * @since 2.0
  */
 @NoRepositoryBean
-public interface ReactiveMongoRepository<T, ID> extends ReactiveSortingRepository<T, ID> {
+public interface ReactiveMongoRepository<T, ID> extends ReactiveSortingRepository<T, ID>, ReactiveQueryByExampleExecutor<T> {
 
 	/**
 	 * Inserts the given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use the
