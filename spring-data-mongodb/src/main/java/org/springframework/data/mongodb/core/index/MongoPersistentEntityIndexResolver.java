@@ -15,14 +15,10 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -43,10 +39,8 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * {@link IndexResolver} implementation inspecting {@link MongoPersistentEntity} for {@link MongoPersistentEntity} to be
@@ -380,7 +374,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persitentProperty));
 		}
 
-		if (index.unique()) {
+		if ((index.unique() && index.propagateUnique()) || index.unique() && !index.propagateUnique() && !dotPath.contains(".")) {
 			indexDefinition.unique(index.dropDups() ? Duplicates.DROP : Duplicates.RETAIN);
 		}
 

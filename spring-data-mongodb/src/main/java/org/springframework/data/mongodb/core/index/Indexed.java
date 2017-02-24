@@ -134,4 +134,8 @@ public @interface Indexed {
 	 * @see <a href="https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
 	 */
 	int expireAfterSeconds() default -1;
+
+
+
+	boolean propagateUnique() default true;
 }
