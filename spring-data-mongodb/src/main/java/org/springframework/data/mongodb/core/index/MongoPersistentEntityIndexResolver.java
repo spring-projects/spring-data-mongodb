@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit;
  * 
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Florian Bernard
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {

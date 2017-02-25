@@ -47,6 +47,7 @@ import static org.mockito.Mockito.*;
  * @author Johno Crawford
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Florian BERNARD
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentEntityIndexCreatorUnitTests {

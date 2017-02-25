@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Jordi Llach
+ * @author Florian Bernard
  */
 @Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -134,8 +135,6 @@ public @interface Indexed {
 	 * @see <a href="https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
 	 */
 	int expireAfterSeconds() default -1;
-
-
 
 	boolean propagateUnique() default true;
 }
