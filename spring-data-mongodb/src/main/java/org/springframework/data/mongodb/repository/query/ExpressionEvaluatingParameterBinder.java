@@ -126,7 +126,7 @@ class ExpressionEvaluatingParameterBinder {
 				buffer.append(placeholder.getSuffix());
 			}
 
-			if (binding.isQuoted() || placeholder.isQuoted()) {
+			if (placeholder.isQuoted()) {
 				postProcessQuotedBinding(buffer, valueForBinding,
 						!binding.isExpression() ? accessor.getBindableValue(binding.getParameterIndex()) : null,
 						binding.isExpression());

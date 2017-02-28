@@ -497,6 +497,18 @@ public class StringBasedMongoQueryUnitTests {
 				"{ \"$or\" : [ { \"firstname\" : { \"$regex\" : \".*calamity.*\" , \"$options\" : \"i\"}} , { \"lastname\" : { \"$regex\" : \".*calamityxyz.*\" , \"$options\" : \"i\"}}]}")));
 	}
 
+	@Test // DATAMONGO-1603
+	public void shouldAllowPlaceholderReuseInQuotedValue() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameRegex", String.class, String.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getQueryObject(),
+				is((DBObject) JSON.parse("{ 'lastname' : { '$regex' : '^(calamity|John regalia|regalia)'} }")));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -585,5 +597,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'arg0' : '?0', 'arg1' : '?1s' }")
 		List<Person> findByWhenQuotedAndSomeStuffAppended(String arg0, String arg1);
+
+		@Query("{ 'lastname' : { '$regex' : '^(?0|John ?1|?1)'} }") // use spel or some regex string this is fucking bad
+		Person findByLastnameRegex(String lastname, String alternative);
 	}
 }
