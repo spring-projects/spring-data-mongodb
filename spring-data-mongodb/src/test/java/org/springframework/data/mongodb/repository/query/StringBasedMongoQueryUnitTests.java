@@ -485,6 +485,18 @@ public class StringBasedMongoQueryUnitTests {
 				is((DBObject) new BasicDBObject().append("arg0", "calamity").append("arg1", "regalias")));
 	}
 
+	@Test // DATAMONGO-1603
+	public void shouldCaptureReplacementWithComplexSuffixCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByMultiRegex", String.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getQueryObject(), is((DBObject) JSON.parse(
+				"{ \"$or\" : [ { \"firstname\" : { \"$regex\" : \".*calamity.*\" , \"$options\" : \"i\"}} , { \"lastname\" : { \"$regex\" : \".*calamityxyz.*\" , \"$options\" : \"i\"}}]}")));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -507,6 +519,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'lastname' : { '$regex' : '^(?0)'} }")
 		Person findByLastnameRegex(String lastname);
+
+		@Query("{'$or' : [{'firstname': {'$regex': '.*?0.*', '$options': 'i'}}, {'lastname' : {'$regex': '.*?0xyz.*', '$options': 'i'}} ]}")
+		Person findByMultiRegex(String arg0);
 
 		@Query("{ 'address' : ?0 }")
 		Person findByAddress(Address address);

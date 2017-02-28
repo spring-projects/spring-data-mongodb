@@ -247,7 +247,8 @@ class ExpressionEvaluatingParameterBinder {
 
 			regex.append("|");
 			regex.append("(" + Pattern.quote(binding.getParameter()) + ")");
-			regex.append("(\\W?['\"]|\\w*')?");
+			regex.append("([\\w.]*");
+			regex.append("(\\W?['\"]|\\w*')?)");
 		}
 
 		return Pattern.compile(regex.substring(1));
@@ -265,8 +266,8 @@ class ExpressionEvaluatingParameterBinder {
 
 		if (matcher.groupCount() > 1) {
 
-			String rawPlaceholder = matcher.group(parameterIndex * 2 + 1);
-			String suffix = matcher.group(parameterIndex * 2 + 2);
+			String rawPlaceholder = matcher.group(parameterIndex * 3 + 1);
+			String suffix = matcher.group(parameterIndex * 3 + 2);
 
 			if (!StringUtils.hasText(rawPlaceholder)) {
 
@@ -274,9 +275,9 @@ class ExpressionEvaluatingParameterBinder {
 				if(rawPlaceholder.matches(".*\\d$")) {
 					suffix = "";
 				} else {
-					int index = rawPlaceholder.replaceAll("[^\\?a-zA-Z0-9]*$", "").length() - 1;
-					if(index > 1) {
-						suffix = rawPlaceholder.substring(index);
+					int index = rawPlaceholder.replaceAll("[^\\?0-9]*$", "").length() - 1;
+					if (index > 0 && rawPlaceholder.length() > index) {
+						suffix = rawPlaceholder.substring(index+1);
 					}
 				}
 				if (QuotedString.endsWithQuote(rawPlaceholder)) {
