@@ -833,10 +833,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
+		initializeVersionProperty(objectToSave);
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 		assertUpdateableIdIfNotSet(objectToSave);
-
-		initializeVersionProperty(objectToSave);
 
 		Document dbDoc = toDocument(objectToSave, writer);
 
@@ -940,8 +939,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		for (T o : batchToSave) {
 
 			initializeVersionProperty(o);
-
 			maybeEmitEvent(new BeforeConvertEvent<T>(o, collectionName));
+
 			Document document = toDocument(o, writer);
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(o, document, collectionName));
