@@ -750,7 +750,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public long count(Query query, Class<?> entityClass, String collectionName) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-		
+
 		final DBObject dbObject = query == null ? null
 				: queryMapper.getMappedObject(query.getQueryObject(),
 						entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
@@ -829,10 +829,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
+		initializeVersionProperty(objectToSave);
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 		assertUpdateableIdIfNotSet(objectToSave);
-
-		initializeVersionProperty(objectToSave);
 
 		DBObject dbDoc = toDbObject(objectToSave, writer);
 
@@ -923,12 +922,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(writer, "MongoWriter must not be null!");
 
 		List<DBObject> dbObjectList = new ArrayList<DBObject>();
+
 		for (T o : batchToSave) {
 
 			initializeVersionProperty(o);
-			BasicDBObject dbDoc = new BasicDBObject();
-
 			maybeEmitEvent(new BeforeConvertEvent<T>(o, collectionName));
+
+			BasicDBObject dbDoc = new BasicDBObject();
 			writer.write(o, dbDoc);
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(o, dbDoc, collectionName));
