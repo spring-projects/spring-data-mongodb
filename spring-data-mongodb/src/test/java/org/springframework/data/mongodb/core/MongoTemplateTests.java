@@ -130,9 +130,8 @@ public class MongoTemplateTests {
 			.parse("2.4");
 	private static final org.springframework.data.util.Version TWO_DOT_EIGHT = org.springframework.data.util.Version
 			.parse("2.8");
-	private static final org.springframework.data.util.Version THREE_DOT_FOUR= org.springframework.data.util.Version
+	private static final org.springframework.data.util.Version THREE_DOT_FOUR = org.springframework.data.util.Version
 			.parse("3.4");
-
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
@@ -145,23 +144,25 @@ public class MongoTemplateTests {
 
 	@Autowired
 	public void setApplicationContext(ConfigurableApplicationContext context) {
-		context.addApplicationListener(new PersonWithIdPropertyOfTypeUUIDListener());
+
 		this.context = context;
+
+		context.addApplicationListener(new PersonWithIdPropertyOfTypeUUIDListener());
 	}
 
 	@Autowired
 	public void setMongo(Mongo mongo) throws Exception {
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(DateToDateTimeConverter.INSTANCE,
-				DateTimeToDateConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(
+				Arrays.asList(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE));
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
-				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
-				PersonWithIdPropertyOfTypeString.class, PersonWithIdPropertyOfTypeInteger.class,
-				PersonWithIdPropertyOfTypeBigInteger.class, PersonWithIdPropertyOfPrimitiveInt.class,
-				PersonWithIdPropertyOfTypeLong.class, PersonWithIdPropertyOfPrimitiveLong.class,
-				PersonWithIdPropertyOfTypeUUID.class)));
+		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(
+				Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class, PersonWith_idPropertyOfTypeString.class,
+						PersonWithIdPropertyOfTypeObjectId.class, PersonWithIdPropertyOfTypeString.class,
+						PersonWithIdPropertyOfTypeInteger.class, PersonWithIdPropertyOfTypeBigInteger.class,
+						PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class,
+						PersonWithIdPropertyOfPrimitiveLong.class, PersonWithIdPropertyOfTypeUUID.class)));
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		mappingContext.initialize();
 
@@ -175,8 +176,11 @@ public class MongoTemplateTests {
 
 	@Before
 	public void setUp() {
+
 		cleanDb();
 		queryMongoVersionIfNecessary();
+
+		this.mappingTemplate.setApplicationContext(context);
 	}
 
 	@After
@@ -648,7 +652,6 @@ public class MongoTemplateTests {
 		PersonWithIdPropertyOfTypeUUID p13 = new PersonWithIdPropertyOfTypeUUID();
 		p13.setFirstName("Sven_10");
 		p13.setAge(22);
-		p13.setId(UUID.randomUUID());
 		// insert
 		mongoTemplate.insert(p13);
 		// also try save
@@ -2406,7 +2409,7 @@ public class MongoTemplateTests {
 		doc.dbRefAnnotatedList = Arrays.asList( //
 				sample1, //
 				sample2 //
-				);
+		);
 		template.save(doc);
 
 		Update update = new Update().pull("dbRefAnnotatedList", doc.dbRefAnnotatedList.get(1));
@@ -2435,7 +2438,7 @@ public class MongoTemplateTests {
 		doc.dbRefAnnotatedList = Arrays.asList( //
 				sample1, //
 				sample2 //
-				);
+		);
 		template.save(doc);
 
 		Update update = new Update().pull("dbRefAnnotatedList.id", "2");
@@ -2500,8 +2503,8 @@ public class MongoTemplateTests {
 	@Test // DATAMONGO-862
 	public void testUpdateShouldWorkForPathsOnInterfaceMethods() {
 
-		DocumentWithCollection document = new DocumentWithCollection(Arrays.<Model> asList(new ModelA("spring"),
-				new ModelA("data")));
+		DocumentWithCollection document = new DocumentWithCollection(
+				Arrays.<Model> asList(new ModelA("spring"), new ModelA("data")));
 
 		template.save(document);
 
@@ -2967,7 +2970,7 @@ public class MongoTemplateTests {
 				.min("longVal", 490) //
 				.min("bigIntegerVal", new BigInteger("590")) //
 				.min("bigDeciamVal", new BigDecimal("690")) //
-				;
+		;
 
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
@@ -3023,7 +3026,7 @@ public class MongoTemplateTests {
 				.max("longVal", 590) //
 				.max("bigIntegerVal", new BigInteger("690")) //
 				.max("bigDeciamVal", new BigDecimal("790")) //
-				;
+		;
 
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
@@ -3052,7 +3055,7 @@ public class MongoTemplateTests {
 		Update update = new Update()//
 				.max("bigIntegerVal", new BigInteger("70")) //
 				.max("bigDeciamVal", new BigDecimal("80")) //
-				;
+		;
 
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
@@ -3076,7 +3079,7 @@ public class MongoTemplateTests {
 		Update update = new Update()//
 				.min("bigIntegerVal", new BigInteger("700")) //
 				.min("bigDeciamVal", new BigDecimal("800")) //
-				;
+		;
 
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
@@ -3584,10 +3587,12 @@ public class MongoTemplateTests {
 		Object value;
 	}
 
-	static class PersonWithIdPropertyOfTypeUUIDListener extends AbstractMongoEventListener<PersonWithIdPropertyOfTypeUUID> {
+	static class PersonWithIdPropertyOfTypeUUIDListener
+			extends AbstractMongoEventListener<PersonWithIdPropertyOfTypeUUID> {
 
 		@Override
 		public void onBeforeConvert(BeforeConvertEvent<PersonWithIdPropertyOfTypeUUID> event) {
+
 			PersonWithIdPropertyOfTypeUUID person = event.getSource();
 
 			if (person.getId() != null) {
@@ -3596,6 +3601,5 @@ public class MongoTemplateTests {
 
 			person.setId(UUID.randomUUID());
 		}
-
 	}
 }
