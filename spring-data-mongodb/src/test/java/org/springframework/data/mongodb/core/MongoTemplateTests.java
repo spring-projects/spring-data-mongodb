@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,8 +138,10 @@ public class MongoTemplateTests {
 
 	@Autowired
 	public void setApplicationContext(ConfigurableApplicationContext context) {
-		context.addApplicationListener(new PersonWithIdPropertyOfTypeUUIDListener());
+
 		this.context = context;
+
+		context.addApplicationListener(new PersonWithIdPropertyOfTypeUUIDListener());
 	}
 
 	@Autowired
@@ -149,12 +151,12 @@ public class MongoTemplateTests {
 				Arrays.asList(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE));
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
-				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
-				PersonWithIdPropertyOfTypeString.class, PersonWithIdPropertyOfTypeInteger.class,
-				PersonWithIdPropertyOfTypeBigInteger.class, PersonWithIdPropertyOfPrimitiveInt.class,
-				PersonWithIdPropertyOfTypeLong.class, PersonWithIdPropertyOfPrimitiveLong.class,
-				PersonWithIdPropertyOfTypeUUID.class)));
+		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(
+				Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class, PersonWith_idPropertyOfTypeString.class,
+						PersonWithIdPropertyOfTypeObjectId.class, PersonWithIdPropertyOfTypeString.class,
+						PersonWithIdPropertyOfTypeInteger.class, PersonWithIdPropertyOfTypeBigInteger.class,
+						PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class,
+						PersonWithIdPropertyOfPrimitiveLong.class, PersonWithIdPropertyOfTypeUUID.class)));
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		mappingContext.initialize();
 
@@ -168,8 +170,11 @@ public class MongoTemplateTests {
 
 	@Before
 	public void setUp() {
+
 		cleanDb();
 		queryMongoVersionIfNecessary();
+
+		this.mappingTemplate.setApplicationContext(context);
 	}
 
 	@After
@@ -659,7 +664,6 @@ public class MongoTemplateTests {
 		PersonWithIdPropertyOfTypeUUID p13 = new PersonWithIdPropertyOfTypeUUID();
 		p13.setFirstName("Sven_10");
 		p13.setAge(22);
-		p13.setId(UUID.randomUUID());
 		// insert
 		mongoTemplate.insert(p13);
 		// also try save
@@ -3629,10 +3633,12 @@ public class MongoTemplateTests {
 		Object value;
 	}
 
-	static class PersonWithIdPropertyOfTypeUUIDListener extends AbstractMongoEventListener<PersonWithIdPropertyOfTypeUUID> {
+	static class PersonWithIdPropertyOfTypeUUIDListener
+			extends AbstractMongoEventListener<PersonWithIdPropertyOfTypeUUID> {
 
 		@Override
 		public void onBeforeConvert(BeforeConvertEvent<PersonWithIdPropertyOfTypeUUID> event) {
+
 			PersonWithIdPropertyOfTypeUUID person = event.getSource();
 
 			if (person.getId() != null) {
@@ -3641,6 +3647,5 @@ public class MongoTemplateTests {
 
 			person.setId(UUID.randomUUID());
 		}
-
 	}
 }
