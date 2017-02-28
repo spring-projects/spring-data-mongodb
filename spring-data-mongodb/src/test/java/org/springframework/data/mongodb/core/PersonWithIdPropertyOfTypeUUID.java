@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2017 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,43 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.Data;
+
 import java.util.UUID;
 
+@Data
 public class PersonWithIdPropertyOfTypeUUID {
 
 	private UUID id;
-
 	private String firstName;
-
 	private int age;
-
-	public UUID getId() {
-		return id;
-	}
-
-	public void setId(UUID id) {
-		this.id = id;
-	}
-
-	public String getFirstName() {
-		return firstName;
-	}
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-	public int getAge() {
-		return age;
-	}
-
-	public void setAge(int age) {
-		this.age = age;
-	}
-
-	@Override
-	public String toString() {
-		return "PersonWithIdPropertyOfTypeUUID [id=" + id + ", firstName=" + firstName + ", age=" + age + "]";
-	}
-
 }
