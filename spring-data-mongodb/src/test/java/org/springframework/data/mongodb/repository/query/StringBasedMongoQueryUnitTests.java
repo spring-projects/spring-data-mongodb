@@ -60,7 +60,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
