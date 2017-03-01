@@ -519,7 +519,7 @@ public class StringBasedMongoQueryUnitTests {
 	public void findUsingSpelShouldRetainNullValues() throws Exception {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByUsingSpel", Object.class);
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[]{null});
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { null });
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		assertThat(query.getQueryObject(), is(new Document("arg0", null)));

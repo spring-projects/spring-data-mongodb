@@ -219,10 +219,6 @@ class ExpressionEvaluatingParameterBinder {
 			return base64representation;
 		}
 
-		if (binding.isExpression() && value instanceof String) {
-			return "\"" + JSON.serialize(value) + "\"";
-		}
-
 		return JSON.serialize(value);
 	}
 
