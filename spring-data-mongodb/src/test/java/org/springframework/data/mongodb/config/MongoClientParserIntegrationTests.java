@@ -19,6 +19,7 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.*;
 import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsInstanceOf.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +29,8 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
@@ -109,6 +112,26 @@ public class MongoClientParserIntegrationTests {
 
 			assertThat(client.getCredentialsList(),
 					contains(MongoCredential.createPlainCredential("jon", "snow", "warg".toCharArray())));
+		} finally {
+			context.close();
+		}
+	}
+
+	@Test // DATAMONGO-1620
+	public void createsMongoClinetWithServerSelectionTimeoutCorrectly() {
+
+		assumeThat(MongoClientVersion.isMongo3Driver(), is(true));
+
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
+
+		AbstractApplicationContext context = new GenericApplicationContext(factory);
+		context.refresh();
+
+		try {
+
+			MongoClient client = context.getBean("mongo-client-with-server-selection-timeout", MongoClient.class);
+			assertThat(ReflectionTestUtils.getField(client.getMongoClientOptions(), "serverSelectionTimeout"),
+					is((Object) 100));
 		} finally {
 			context.close();
 		}
