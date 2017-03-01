@@ -24,13 +24,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 import org.bson.BSON;
 import org.bson.BsonRegularExpression;
 import org.bson.Document;
@@ -446,8 +442,8 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document().append("arg0", "calamity")
-				.append("arg1", "regalia").append("arg2", "calamity")));
+		assertThat(query.getQueryObject(),
+				is(new Document().append("arg0", "calamity").append("arg1", "regalia").append("arg2", "calamity")));
 	}
 
 	@Test // DATAMONGO-1603
@@ -458,8 +454,8 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document().append("arg0", "calamity")
-				.append("arg1", "regalia").append("arg2", "calamity")));
+		assertThat(query.getQueryObject(),
+				is(new Document().append("arg0", "calamity").append("arg1", "regalia").append("arg2", "calamity")));
 	}
 
 	@Test // DATAMONGO-1603
@@ -470,8 +466,8 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document().append("arg0", "calamity")
-				.append("arg1", "regalia").append("arg2", "calamitys")));
+		assertThat(query.getQueryObject(),
+				is(new Document().append("arg0", "calamity").append("arg1", "regalia").append("arg2", "calamitys")));
 	}
 
 	@Test // DATAMONGO-1603
@@ -482,8 +478,7 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(),
-				is(new Document().append("arg0", "calamity").append("arg1", "regalias")));
+		assertThat(query.getQueryObject(), is(new Document().append("arg0", "calamity").append("arg1", "regalias")));
 	}
 
 	@Test // DATAMONGO-1603

@@ -264,38 +264,34 @@ class ExpressionEvaluatingParameterBinder {
 	 */
 	private Placeholder extractPlaceholder(int parameterIndex, Matcher matcher) {
 
-		if (matcher.groupCount() > 1) {
+		String rawPlaceholder = matcher.group(parameterIndex * 3 + 1);
+		String suffix = matcher.group(parameterIndex * 3 + 2);
 
-			String rawPlaceholder = matcher.group(parameterIndex * 3 + 1);
-			String suffix = matcher.group(parameterIndex * 3 + 2);
+		if (!StringUtils.hasText(rawPlaceholder)) {
 
-			if (!StringUtils.hasText(rawPlaceholder)) {
-
-				rawPlaceholder = matcher.group();
-				if(rawPlaceholder.matches(".*\\d$")) {
-					suffix = "";
-				} else {
-					int index = rawPlaceholder.replaceAll("[^\\?0-9]*$", "").length() - 1;
-					if (index > 0 && rawPlaceholder.length() > index) {
-						suffix = rawPlaceholder.substring(index+1);
-					}
-				}
-				if (QuotedString.endsWithQuote(rawPlaceholder)) {
-					rawPlaceholder = rawPlaceholder.substring(0, rawPlaceholder.length() - (StringUtils.hasText(suffix) ? suffix.length() : 1));
+			rawPlaceholder = matcher.group();
+			if (rawPlaceholder.matches(".*\\d$")) {
+				suffix = "";
+			} else {
+				int index = rawPlaceholder.replaceAll("[^\\?0-9]*$", "").length() - 1;
+				if (index > 0 && rawPlaceholder.length() > index) {
+					suffix = rawPlaceholder.substring(index + 1);
 				}
 			}
-
-			if (StringUtils.hasText(suffix)) {
-
-				boolean quoted = QuotedString.endsWithQuote(suffix);
-
-				return Placeholder.of(parameterIndex, rawPlaceholder, quoted,
-						quoted ? QuotedString.unquoteSuffix(suffix) : suffix);
+			if (QuotedString.endsWithQuote(rawPlaceholder)) {
+				rawPlaceholder = rawPlaceholder.substring(0,
+						rawPlaceholder.length() - (StringUtils.hasText(suffix) ? suffix.length() : 1));
 			}
-			return Placeholder.of(parameterIndex, rawPlaceholder, false, null);
 		}
 
-		return Placeholder.of(parameterIndex, matcher.group(), false, null);
+		if (StringUtils.hasText(suffix)) {
+
+			boolean quoted = QuotedString.endsWithQuote(suffix);
+
+			return Placeholder.of(parameterIndex, rawPlaceholder, quoted,
+					quoted ? QuotedString.unquoteSuffix(suffix) : suffix);
+		}
+		return Placeholder.of(parameterIndex, rawPlaceholder, false, null);
 	}
 
 	/**
