@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,10 @@ import com.mongodb.WriteConcern;
 
 /**
  * A factory bean for construction of a {@link MongoClientOptions} instance.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 1.7
  */
 public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClientOptions> {
@@ -62,13 +63,14 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	private int heartbeatConnectTimeout = DEFAULT_MONGO_OPTIONS.getHeartbeatConnectTimeout();
 	private int heartbeatSocketTimeout = DEFAULT_MONGO_OPTIONS.getHeartbeatSocketTimeout();
 	private String requiredReplicaSetName = DEFAULT_MONGO_OPTIONS.getRequiredReplicaSetName();
+	private int serverSelectionTimeout = DEFAULT_MONGO_OPTIONS.getServerSelectionTimeout();
 
 	private boolean ssl;
 	private SSLSocketFactory sslSocketFactory;
 
 	/**
 	 * Set the {@link MongoClient} description.
-	 * 
+	 *
 	 * @param description
 	 */
 	public void setDescription(String description) {
@@ -77,7 +79,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the minimum number of connections per host.
-	 * 
+	 *
 	 * @param minConnectionsPerHost
 	 */
 	public void setMinConnectionsPerHost(int minConnectionsPerHost) {
@@ -87,7 +89,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	/**
 	 * Set the number of connections allowed per host. Will block if run out. Default is 10. System property
 	 * {@code MONGO.POOLSIZE} can override
-	 * 
+	 *
 	 * @param connectionsPerHost
 	 */
 	public void setConnectionsPerHost(int connectionsPerHost) {
@@ -98,7 +100,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	 * Set the multiplier for connectionsPerHost for # of threads that can block. Default is 5. If connectionsPerHost is
 	 * 10, and threadsAllowedToBlockForConnectionMultiplier is 5, then 50 threads can block more than that and an
 	 * exception will be thrown.
-	 * 
+	 *
 	 * @param threadsAllowedToBlockForConnectionMultiplier
 	 */
 	public void setThreadsAllowedToBlockForConnectionMultiplier(int threadsAllowedToBlockForConnectionMultiplier) {
@@ -107,7 +109,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the max wait time of a blocking thread for a connection. Default is 12000 ms (2 minutes)
-	 * 
+	 *
 	 * @param maxWaitTime
 	 */
 	public void setMaxWaitTime(int maxWaitTime) {
@@ -116,7 +118,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * The maximum idle time for a pooled connection.
-	 * 
+	 *
 	 * @param maxConnectionIdleTime
 	 */
 	public void setMaxConnectionIdleTime(int maxConnectionIdleTime) {
@@ -125,7 +127,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the maximum life time for a pooled connection.
-	 * 
+	 *
 	 * @param maxConnectionLifeTime
 	 */
 	public void setMaxConnectionLifeTime(int maxConnectionLifeTime) {
@@ -134,7 +136,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the connect timeout in milliseconds. 0 is default and infinite.
-	 * 
+	 *
 	 * @param connectTimeout
 	 */
 	public void setConnectTimeout(int connectTimeout) {
@@ -143,7 +145,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the socket timeout. 0 is default and infinite.
-	 * 
+	 *
 	 * @param socketTimeout
 	 */
 	public void setSocketTimeout(int socketTimeout) {
@@ -152,7 +154,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the keep alive flag, controls whether or not to have socket keep alive timeout. Defaults to false.
-	 * 
+	 *
 	 * @param socketKeepAlive
 	 */
 	public void setSocketKeepAlive(boolean socketKeepAlive) {
@@ -161,7 +163,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the {@link ReadPreference}.
-	 * 
+	 *
 	 * @param readPreference
 	 */
 	public void setReadPreference(ReadPreference readPreference) {
@@ -171,7 +173,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	/**
 	 * Set the {@link WriteConcern} that will be the default value used when asking the {@link MongoDbFactory} for a DB
 	 * object.
-	 * 
+	 *
 	 * @param writeConcern
 	 */
 	public void setWriteConcern(WriteConcern writeConcern) {
@@ -187,7 +189,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the frequency that the driver will attempt to determine the current state of each server in the cluster.
-	 * 
+	 *
 	 * @param heartbeatFrequency
 	 */
 	public void setHeartbeatFrequency(int heartbeatFrequency) {
@@ -197,7 +199,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	/**
 	 * In the event that the driver has to frequently re-check a server's availability, it will wait at least this long
 	 * since the previous check to avoid wasted effort.
-	 * 
+	 *
 	 * @param minHeartbeatFrequency
 	 */
 	public void setMinHeartbeatFrequency(int minHeartbeatFrequency) {
@@ -206,7 +208,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the connect timeout for connections used for the cluster heartbeat.
-	 * 
+	 *
 	 * @param heartbeatConnectTimeout
 	 */
 	public void setHeartbeatConnectTimeout(int heartbeatConnectTimeout) {
@@ -215,7 +217,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the socket timeout for connections used for the cluster heartbeat.
-	 * 
+	 *
 	 * @param heartbeatSocketTimeout
 	 */
 	public void setHeartbeatSocketTimeout(int heartbeatSocketTimeout) {
@@ -224,7 +226,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Configures the name of the replica set.
-	 * 
+	 *
 	 * @param requiredReplicaSetName
 	 */
 	public void setRequiredReplicaSetName(String requiredReplicaSetName) {
@@ -233,7 +235,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * This controls if the driver should us an SSL connection. Defaults to |@literal false}.
-	 * 
+	 *
 	 * @param ssl
 	 */
 	public void setSsl(boolean ssl) {
@@ -243,22 +245,32 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	/**
 	 * Set the {@link SSLSocketFactory} to use for the {@literal SSL} connection. If none is configured here,
 	 * {@link SSLSocketFactory#getDefault()} will be used.
-	 * 
+	 *
 	 * @param sslSocketFactory
 	 */
 	public void setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
 		this.sslSocketFactory = sslSocketFactory;
 	}
 
-	/* 
+	/**
+	 * Set the {@literal server selection timeout} in msec for a 3.x MongoDB Java driver. If not set the default value of
+	 * 30 sec will be used.
+	 *
+	 * @param serverSelectionTimeout in msec.
+	 */
+	public void setServerSelectionTimeout(int serverSelectionTimeout) {
+		this.serverSelectionTimeout = serverSelectionTimeout;
+	}
+
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
 	 */
 	@Override
 	protected MongoClientOptions createInstance() throws Exception {
 
-		SocketFactory socketFactoryToUse = ssl ? (sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory
-				.getDefault()) : this.socketFactory;
+		SocketFactory socketFactoryToUse = ssl
+				? (sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault()) : this.socketFactory;
 
 		return MongoClientOptions.builder() //
 				.alwaysUseMBeans(this.alwaysUseMBeans) //
@@ -278,6 +290,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 				.minHeartbeatFrequency(minHeartbeatFrequency) //
 				.readPreference(readPreference) //
 				.requiredReplicaSetName(requiredReplicaSetName) //
+				.serverSelectionTimeout(serverSelectionTimeout) //
 				.socketFactory(socketFactoryToUse) //
 				.socketKeepAlive(socketKeepAlive) //
 				.socketTimeout(socketTimeout) //
