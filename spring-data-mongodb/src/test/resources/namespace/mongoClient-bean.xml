@@ -15,4 +15,9 @@
 	
 	<mongo:mongo-client />
 
+	<!-- DATAMONGO-1620 -->
+	<mongo:mongo-client id="mongo-client-with-server-selection-timeout">
+		<mongo:client-options server-selection-timeout="100" />
+	</mongo:mongo-client>
+
 </beans>

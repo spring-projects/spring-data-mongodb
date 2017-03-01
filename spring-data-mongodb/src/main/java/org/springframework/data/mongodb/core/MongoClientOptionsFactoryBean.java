@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@ package org.springframework.data.mongodb.core;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 
 import com.mongodb.DBDecoderFactory;
 import com.mongodb.DBEncoderFactory;
@@ -62,6 +64,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	private int heartbeatConnectTimeout = DEFAULT_MONGO_OPTIONS.getHeartbeatConnectTimeout();
 	private int heartbeatSocketTimeout = DEFAULT_MONGO_OPTIONS.getHeartbeatSocketTimeout();
 	private String requiredReplicaSetName = DEFAULT_MONGO_OPTIONS.getRequiredReplicaSetName();
+	private int serverSelectionTimeout = -1;
 
 	private boolean ssl;
 	private SSLSocketFactory sslSocketFactory;
@@ -250,17 +253,33 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 		this.sslSocketFactory = sslSocketFactory;
 	}
 
-	/* 
+	/**
+	 * Set the {@literal server selection timeout} in msec for a 3.x MongoDB Java driver. If not set the default value of
+	 * 30 sec will be used.
+	 *
+	 * @param serverSelectionTimeout in msec.
+	 */
+	public void setServerSelectionTimeout(int serverSelectionTimeout) {
+		this.serverSelectionTimeout = serverSelectionTimeout;
+	}
+
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
 	 */
 	@Override
 	protected MongoClientOptions createInstance() throws Exception {
 
-		SocketFactory socketFactoryToUse = ssl ? (sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory
-				.getDefault()) : this.socketFactory;
+		SocketFactory socketFactoryToUse = ssl
+				? (sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault()) : this.socketFactory;
 
-		return MongoClientOptions.builder() //
+		MongoClientOptions.Builder builder = MongoClientOptions.builder();
+
+		if (MongoClientVersion.isMongo3Driver() && serverSelectionTimeout > 0) {
+			new DirectFieldAccessor(builder).setPropertyValue("serverSelectionTimeout", serverSelectionTimeout);
+		}
+
+		return builder //
 				.alwaysUseMBeans(this.alwaysUseMBeans) //
 				.connectionsPerHost(this.connectionsPerHost) //
 				.connectTimeout(connectTimeout) //
