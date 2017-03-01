@@ -113,10 +113,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		String queryString = parameterBinder.bind(this.query, accessor, new BindingContext(getQueryMethod()
-				.getParameters(), queryParameterBindings));
-		String fieldsString = parameterBinder.bind(this.fieldSpec, accessor, new BindingContext(getQueryMethod()
-				.getParameters(), fieldSpecParameterBindings));
+		String queryString = parameterBinder.bind(this.query, accessor,
+				new BindingContext(getQueryMethod().getParameters(), queryParameterBindings));
+		String fieldsString = parameterBinder.bind(this.fieldSpec, accessor,
+				new BindingContext(getQueryMethod().getParameters(), fieldSpecParameterBindings));
 
 		Query query = new BasicQuery(queryString, fieldsString).with(accessor.getSort());
 
