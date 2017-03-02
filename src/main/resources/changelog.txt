@@ -55,6 +55,16 @@ Changes in version 2.0.0.M2 (2017-04-04)
 * DATAMONGO-1535 - Release 2.0 M2 (Kay).
 
 
+Changes in version 1.9.8.RELEASE (2017-03-02)
+---------------------------------------------
+* DATAMONGO-1608 - NullPointerException with null argument when using IgnoreCase.
+* DATAMONGO-1607 - Class Cast Exception when retrieve data Point with value equal integer.
+* DATAMONGO-1605 - All SPEL values are converted to String.
+* DATAMONGO-1603 - @Query Annotation Placeholder Issue.
+* DATAMONGO-1602 - Remove references to single-argument assertion methods of Spring.
+* DATAMONGO-1597 - Release 1.9.8 (Hopper SR8).
+
+
 Changes in version 1.10.1.RELEASE (2017-03-02)
 ----------------------------------------------
 * DATAMONGO-1608 - NullPointerException with null argument when using IgnoreCase.
