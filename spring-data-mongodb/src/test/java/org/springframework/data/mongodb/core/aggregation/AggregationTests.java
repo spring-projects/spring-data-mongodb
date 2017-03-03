@@ -66,6 +66,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -82,6 +83,7 @@ import com.mongodb.client.MongoCollection;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Nikolay Bogdanov
+ * @author maninder
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -145,7 +147,7 @@ public class AggregationTests {
 	/**
 	 * Imports the sample dataset (zips.json) if necessary (e.g. if it doesn't exist yet). The dataset can originally be
 	 * found on the mongodb aggregation framework example website:
-	 * 
+	 *
 	 * @see <a href="https://docs.mongodb.org/manual/tutorial/aggregation-examples/">MongoDB Aggregation Examples</a>
 	 */
 	private void initSampleDataIfNecessary() {
@@ -229,6 +231,37 @@ public class AggregationTests {
 		assertTagCount("nosql", 1, tagCount.get(2));
 	}
 
+	@Test // DATAMONGO-1637
+	public void shouldAggregateAndStream() {
+
+		createTagDocuments();
+
+		Aggregation agg = newAggregation( //
+				project("tags"), //
+				unwind("tags"), //
+				group("tags") //
+						.count().as("n"), //
+				project("n") //
+						.and("tag").previousOperation(), //
+				sort(DESC, "n") //
+		);
+
+		CloseableIterator<TagCount> iterator = mongoTemplate.aggregateStream(agg, INPUT_COLLECTION, TagCount.class);
+
+		assertThat(iterator, is(notNullValue()));
+		List<TagCount> tagCount = new ArrayList<TagCount>();
+		while (iterator.hasNext()) {
+			tagCount.add(iterator.next());
+		}
+
+		assertThat(tagCount, is(notNullValue()));
+		assertThat(tagCount.size(), is(3));
+
+		assertTagCount("spring", 3, tagCount.get(0));
+		assertTagCount("mongodb", 2, tagCount.get(1));
+		assertTagCount("nosql", 1, tagCount.get(2));
+	}
+
 	@Test // DATAMONGO-586
 	public void shouldAggregateEmptyCollection() {
 
@@ -249,6 +282,32 @@ public class AggregationTests {
 		List<TagCount> tagCount = results.getMappedResults();
 
 		assertThat(tagCount, is(notNullValue()));
+		assertThat(tagCount.size(), is(0));
+	}
+
+	@Test // DATAMONGO-1637
+	public void shouldAggregateEmptyCollectionAndStream() {
+
+		Aggregation aggregation = newAggregation(//
+				project("tags"), //
+				unwind("tags"), //
+				group("tags") //
+						.count().as("n"), //
+				project("n") //
+						.and("tag").previousOperation(), //
+				sort(DESC, "n") //
+		);
+
+		CloseableIterator<TagCount> results = mongoTemplate.aggregateStream(aggregation, INPUT_COLLECTION, TagCount.class);
+
+		assertThat(results, is(notNullValue()));
+
+		List<TagCount> tagCount = new ArrayList<TagCount>();
+		while (results.hasNext()) {
+			tagCount.add(results.next());
+		}
+
+		// assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(0));
 	}
 
@@ -328,6 +387,33 @@ public class AggregationTests {
 		List<TagCount> tagCount = results.getMappedResults();
 
 		assertThat(tagCount, is(notNullValue()));
+		assertThat(tagCount.size(), is(2));
+		assertTagCount(null, 0, tagCount.get(0));
+		assertTagCount(null, 0, tagCount.get(1));
+	}
+
+	@Test // DATAMONGO-1637
+	public void shouldDetectResultMismatchWhileStreaming() {
+
+		createTagDocuments();
+
+		Aggregation aggregation = newAggregation( //
+				project("tags"), //
+				unwind("tags"), //
+				group("tags") //
+						.count().as("count"), // count field not present
+				limit(2) //
+		);
+
+		CloseableIterator<TagCount> results = mongoTemplate.aggregateStream(aggregation, INPUT_COLLECTION, TagCount.class);
+
+		assertThat(results, is(notNullValue()));
+
+		List<TagCount> tagCount = new ArrayList<TagCount>();
+		while (results.hasNext()) {
+			tagCount.add(results.next());
+		}
+		// assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(2));
 		assertTagCount(null, 0, tagCount.get(0));
 		assertTagCount(null, 0, tagCount.get(1));
@@ -1189,6 +1275,35 @@ public class AggregationTests {
 		assertLikeStats(result.getMappedResults().get(4), "e", 3);
 	}
 
+	@Test // DATAMONGO-1637
+	public void returnFiveMostCommonLikesAggregationFrameworkExampleWithSortOnDiskOptionEnabledWhileStreaming() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
+
+		createUserWithLikesDocuments();
+
+		TypedAggregation<UserWithLikes> agg = createUsersWithCommonLikesAggregation() //
+				.withOptions(newAggregationOptions().allowDiskUse(true).build());
+
+		assertThat(agg, is(notNullValue()));
+		assertThat(agg.toString(), is(notNullValue()));
+
+		CloseableIterator<LikeStats> iterator = mongoTemplate.aggregateStream(agg, LikeStats.class);
+		List<LikeStats> result = new ArrayList<LikeStats>();
+		while (iterator.hasNext()) {
+			result.add(iterator.next());
+		}
+		assertThat(result, is(notNullValue()));
+		assertThat(result, is(notNullValue()));
+		assertThat(result.size(), is(5));
+
+		assertLikeStats(result.get(0), "a", 4);
+		assertLikeStats(result.get(1), "b", 2);
+		assertLikeStats(result.get(2), "c", 4);
+		assertLikeStats(result.get(3), "d", 2);
+		assertLikeStats(result.get(4), "e", 3);
+	}
+
 	@Test // DATAMONGO-960
 	public void returnFiveMostCommonLikesShouldReturnStageExecutionInformationWithExplainOptionEnabled() {
 
@@ -1435,6 +1550,34 @@ public class AggregationTests {
 		assertThat(results.getMappedResults(), is(empty()));
 
 		List<Document> list = mongoTemplate.findAll(Document.class, tempOutCollection);
+
+		assertThat(list, hasSize(2));
+		assertThat(list.get(0), isBsonObject().containing("_id", "MALE").containing("count", 3));
+		assertThat(list.get(1), isBsonObject().containing("_id", "FEMALE").containing("count", 2));
+
+		mongoTemplate.dropCollection(tempOutCollection);
+	}
+
+	@Test // DATAMONGO-1637
+	public void shouldCreateOutputCollectionWhileStreaming() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
+
+		mongoTemplate.save(new Person("Anna", "Ivanova", 21, Person.Sex.FEMALE));
+		mongoTemplate.save(new Person("Pavel", "Sidorov", 36, Person.Sex.MALE));
+		mongoTemplate.save(new Person("Anastasia", "Volochkova", 29, Person.Sex.FEMALE));
+		mongoTemplate.save(new Person("Igor", "Stepanov", 31, Person.Sex.MALE));
+		mongoTemplate.save(new Person("Leoniv", "Yakubov", 55, Person.Sex.MALE));
+
+		String tempOutCollection = "personQueryTemp";
+		TypedAggregation<Person> agg = newAggregation(Person.class, //
+				group("sex").count().as("count"), //
+				sort(DESC, "count"), //
+				out(tempOutCollection));
+
+		CloseableIterator<DBObject> iterator = mongoTemplate.aggregateStream(agg, DBObject.class);
+
+		List<DBObject> list = mongoTemplate.findAll(DBObject.class, tempOutCollection);
 
 		assertThat(list, hasSize(2));
 		assertThat(list.get(0), isBsonObject().containing("_id", "MALE").containing("count", 3));
@@ -1745,6 +1888,7 @@ public class AggregationTests {
 	}
 
 	static class DATAMONGO753 {
+
 		PD[] pd;
 
 		DATAMONGO753 withPDs(PD... pds) {
@@ -1754,6 +1898,7 @@ public class AggregationTests {
 	}
 
 	static class PD {
+
 		String pDch;
 		@org.springframework.data.mongodb.core.mapping.Field("alias") int up;
 
@@ -1830,6 +1975,7 @@ public class AggregationTests {
 
 	@SuppressWarnings("unused")
 	static class Descriptors {
+
 		private CarDescriptor carDescriptor;
 	}
 
@@ -1846,6 +1992,7 @@ public class AggregationTests {
 
 		@SuppressWarnings("unused")
 		static class Entry {
+
 			private String make;
 			private String model;
 			private int year;
@@ -1964,3 +2111,4 @@ public class AggregationTests {
 		double price;
 	}
 }
+
