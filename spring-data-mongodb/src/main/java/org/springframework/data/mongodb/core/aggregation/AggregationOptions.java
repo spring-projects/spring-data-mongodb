@@ -31,9 +31,9 @@ import com.mongodb.DBObject;
  */
 public class AggregationOptions {
 
-	private static final String CURSOR = "cursor";
-	private static final String EXPLAIN = "explain";
-	private static final String ALLOW_DISK_USE = "allowDiskUse";
+	public static final String CURSOR = "cursor";
+	public static final String EXPLAIN = "explain";
+	public static final String ALLOW_DISK_USE = "allowDiskUse";
 
 	private final boolean allowDiskUse;
 	private final boolean explain;

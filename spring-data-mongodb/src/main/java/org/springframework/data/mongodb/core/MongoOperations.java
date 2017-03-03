@@ -394,6 +394,7 @@ public interface MongoOperations {
 	 */
 	<T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
 
+
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class. The name of the
 	 * inputCollection is derived from the inputType of the aggregation.
@@ -419,6 +420,23 @@ public interface MongoOperations {
 	 */
 	<O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType);
 
+
+	/**
+	 * Execute an aggregation operation. The raw results will be mapped to the given entity class and are returned as stream. The name of the
+	 * inputCollection is derived from the inputType of the aggregation.
+	 *
+	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
+	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 * @since 1.11.0
+	 */
+	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType);
+
+
+	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
+											 Class<O> outputType);
+
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
 	 * 
@@ -431,6 +449,8 @@ public interface MongoOperations {
 	 * @since 1.3
 	 */
 	<O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
+
+	<O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
@@ -1006,6 +1026,8 @@ public interface MongoOperations {
 	 * @param collectionName name of the collection where the objects will removed
 	 */
 	WriteResult remove(Query query, String collectionName);
+
+	<O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType);
 
 	/**
 	 * Returns and removes all documents form the specified collection that match the provided query.
