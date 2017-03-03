@@ -93,6 +93,7 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.ser
  * @author Niko Schmuck
  * @author Mark Paluch
  * @author Laszlo Csontos
+ * @author maninder
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -382,11 +383,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * {@link DocumentCallbackHandler} using the provided CursorPreparer.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 *          specification, must not be {@literal null}.
+	 * specification, must not be {@literal null}.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param dch the handler that will extract results, one document at a time
 	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-	 *          limits, skips and so on).
+	 * limits, skips and so on).
 	 */
 	protected void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch,
 								CursorPreparer preparer) {
@@ -1294,7 +1295,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Remove using query: {} in collection: {}.",
-							new Object[] { serializeToJsonSafely(dboq), collectionName });
+							new Object[]{serializeToJsonSafely(dboq), collectionName});
 				}
 
 				WriteResult wr = writeConcernToUse == null ? collection.remove(dboq)
@@ -1436,14 +1437,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return aggregate(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
 	}
 
-    @Override
-    public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
-        return aggregateStream(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
-    }
+	@Override
+	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
+		return aggregateStream(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
+	}
 
-    @Override
-    public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
-                                               Class<O> outputType) {
+	@Override
+	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
+											   Class<O> outputType) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 
@@ -1452,52 +1453,52 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return aggregate(aggregation, inputCollectionName, outputType, context);
 	}
 
-    @Override
-    public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
-                                               Class<O> outputType) {
+	@Override
+	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
+													Class<O> outputType) {
 
-        Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 
-        AggregationOperationContext context = new TypeBasedAggregationOperationContext(aggregation.getInputType(),
-                mappingContext, queryMapper);
-        return aggregateStream(aggregation, inputCollectionName, outputType, context);
-    }
+		AggregationOperationContext context = new TypeBasedAggregationOperationContext(aggregation.getInputType(),
+				mappingContext, queryMapper);
+		return aggregateStream(aggregation, inputCollectionName, outputType, context);
+	}
 
-    @Override
-    public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
+	@Override
+	public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
 		return aggregate(aggregation, determineCollectionName(inputType), outputType,
 				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
 	}
 
-    @Override
-    public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
+	@Override
+	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
-        return aggregateStream(aggregation, determineCollectionName(inputType), outputType,
-                new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
-    }
-
-
-    @Override
-    public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
-        return aggregate(aggregation, collectionName, outputType, null);
-    }
+		return aggregateStream(aggregation, determineCollectionName(inputType), outputType,
+				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
+	}
 
 
-    @Override
-    public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType) {
-        return aggregateStream(aggregation, collectionName, outputType, null);
-    }
+	@Override
+	public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
+		return aggregate(aggregation, collectionName, outputType, null);
+	}
 
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.String)
-     */
-    @Override
-    public <T> List<T> findAllAndRemove(Query query, String collectionName) {
-        return findAndRemove(query, null, collectionName);
-    }
+	@Override
+	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType) {
+		return aggregateStream(aggregation, collectionName, outputType, null);
+	}
+
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.String)
+	 */
+	@Override
+	public <T> List<T> findAllAndRemove(Query query, String collectionName) {
+		return findAndRemove(query, null, collectionName);
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -1559,59 +1560,59 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				commandResult);
 	}
 
-    protected <O> CloseableIterator<O> aggregateStream(final Aggregation aggregation, final String collectionName, final Class<O> outputType,
-                                                       AggregationOperationContext context) {
+	protected <O> CloseableIterator<O> aggregateStream(final Aggregation aggregation, final String collectionName, final Class<O> outputType,
+													   AggregationOperationContext context) {
 
-        Assert.hasText(collectionName, "Collection name must not be null or empty!");
-        Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
-        Assert.notNull(outputType, "Output type must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+		Assert.notNull(outputType, "Output type must not be null!");
 
-        AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
 
-        final DBObject command = aggregation.toDbObject(collectionName, rootContext);
+		final DBObject command = aggregation.toDbObject(collectionName, rootContext);
 
-        Assert.isNull(command.get(CURSOR), "Custom options not allowed while streaming");
-        Assert.isNull(command.get(EXPLAIN), "Explain option can't be used while streaming");
+		Assert.isNull(command.get(CURSOR), "Custom options not allowed while streaming");
+		Assert.isNull(command.get(EXPLAIN), "Explain option can't be used while streaming");
 
-        return execute(collectionName, new CollectionCallback<CloseableIterator<O>>() {
+		return execute(collectionName, new CollectionCallback<CloseableIterator<O>>() {
 
-            @Override
-            public CloseableIterator<O> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+			@Override
+			public CloseableIterator<O> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 
-                List<DBObject> pipeline = (List<DBObject>) command.get("pipeline");
-                Cursor cursor = collection.aggregate(pipeline, getNativeAggregationOptionsFromCommand(command));
+				List<DBObject> pipeline = (List<DBObject>) command.get("pipeline");
+				Cursor cursor = collection.aggregate(pipeline, getNativeAggregationOptionsFromCommand(command));
 
-                ReadDbObjectCallback<O> readCallback = new ReadDbObjectCallback<O>(mongoConverter, outputType, collectionName);
+				ReadDbObjectCallback<O> readCallback = new ReadDbObjectCallback<O>(mongoConverter, outputType, collectionName);
 
-                return new CloseableIterableCursorAdapter<O>(cursor, exceptionTranslator, readCallback);
-            }
+				return new CloseableIterableCursorAdapter<O>(cursor, exceptionTranslator, readCallback);
+			}
 
-            private AggregationOptions getNativeAggregationOptionsFromCommand(DBObject command) {
-                AggregationOptions.Builder builder = AggregationOptions.builder();
-                Object allowDiskUse = command.get(ALLOW_DISK_USE);
-                if(allowDiskUse !=null && String.valueOf(allowDiskUse).equals("true")){
-                    builder.allowDiskUse(true);
-                }
-                return builder.build();
-            }
-        });
+			private AggregationOptions getNativeAggregationOptionsFromCommand(DBObject command) {
+				AggregationOptions.Builder builder = AggregationOptions.builder();
+				Object allowDiskUse = command.get(ALLOW_DISK_USE);
+				if (allowDiskUse != null && String.valueOf(allowDiskUse).equals("true")) {
+					builder.allowDiskUse(true);
+				}
+				return builder.build();
+			}
+		});
 
 /*
-        Query query = new BasicQuery(command);
+		Query query = new BasicQuery(command);
         return stream(query, outputType);
 */
-    }
+	}
 
 
-    /**
-     * Returns the potentially mapped results of the given {@commandResult} contained some.
-     *
-     * @param outputType
-     * @param commandResult
-     * @return
-     */
-    private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult,
-                                                       String collectionName) {
+	/**
+	 * Returns the potentially mapped results of the given {@commandResult} contained some.
+	 *
+	 * @param outputType
+	 * @param commandResult
+	 * @return
+	 */
+	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult,
+													   String collectionName) {
 
 		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
@@ -1785,7 +1786,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-	 *          limits, skips and so on).
+	 * limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass,
@@ -1993,7 +1994,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				}
 
 				return result;
-
 			} finally {
 
 				if (cursor != null) {
@@ -2023,13 +2023,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					DBObject dbobject = cursor.next();
 					callbackHandler.processDocument(dbobject);
 				}
-
 			} finally {
 				if (cursor != null) {
 					cursor.close();
 				}
 			}
-
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
@@ -2447,7 +2445,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						}
 					}
 				}
-
 			} catch (RuntimeException e) {
 				throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 			}
@@ -2495,8 +2492,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * A {@link CloseableIterator} that is backed by a MongoDB {@link Cursor}.
 	 *
-	 * @since 1.7
 	 * @author Thomas Darimont
+	 * @since 1.7
 	 */
 	static class CloseableIterableCursorAdapter<T> implements CloseableIterator<T> {
 
