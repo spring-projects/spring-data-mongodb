@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.aggregation.AggregationOptions.ALLOW_DISK_USE;
-import static org.springframework.data.mongodb.core.aggregation.AggregationOptions.CURSOR;
-import static org.springframework.data.mongodb.core.aggregation.AggregationOptions.EXPLAIN;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
@@ -34,8 +31,6 @@ import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 
-import com.mongodb.*;
-import com.mongodb.AggregationOptions;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +61,12 @@ import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
-import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -92,7 +92,11 @@ import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
-import org.springframework.data.mongodb.core.query.*;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Meta;
+import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.jca.cci.core.ConnectionCallback;
@@ -102,6 +106,21 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.Bytes;
+import com.mongodb.CommandResult;
+import com.mongodb.Cursor;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.MapReduceCommand;
+import com.mongodb.MapReduceOutput;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 import com.mongodb.util.JSONParseException;
 
@@ -160,7 +179,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
     /**
      * Constructor used for a basic template configuration
      *
-     * @param mongo        must not be {@literal null}.
+     * @param mongo must not be {@literal null}.
      * @param databaseName must not be {@literal null} or empty.
      */
     public MongoTemplate(Mongo mongo, String databaseName) {
@@ -171,8 +190,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
      * Constructor used for a template configuration with user credentials in the form of
      * {@link org.springframework.data.authentication.UserCredentials}
      *
-     * @param mongo           must not be {@literal null}.
-     * @param databaseName    must not be {@literal null} or empty.
+     * @param mongo must not be {@literal null}.
+     * @param databaseName must not be {@literal null} or empty.
      * @param userCredentials
      */
     public MongoTemplate(Mongo mongo, String databaseName, UserCredentials userCredentials) {
@@ -411,12 +430,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
      * Execute a MongoDB query and iterate over the query results on a per-document basis with a
      * {@link DocumentCallbackHandler} using the provided CursorPreparer.
      *
-     * @param query          the query class that specifies the criteria used to find a record and also an optional fields
-     *                       specification, must not be {@literal null}.
+     * @param query the query class that specifies the criteria used to find a record and also an optional fields
+     *          specification, must not be {@literal null}.
      * @param collectionName name of the collection to retrieve the objects from
-     * @param dch            the handler that will extract results, one document at a time
-     * @param preparer       allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-     *                       limits, skips and so on).
+     * @param dch the handler that will extract results, one document at a time
+     * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
+     *          limits, skips and so on).
      */
     protected void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch,
                                 CursorPreparer preparer) {
@@ -679,7 +698,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
         for (Object element : results) {
 
 			/*
-             * As MongoDB currently (2.4.4) doesn't support the skipping of elements in near queries
+			 * As MongoDB currently (2.4.4) doesn't support the skipping of elements in near queries
 			 * we skip the elements ourselves to avoid at least the document 2 object mapping overhead.
 			 *
 			 * @see <a href="https://jira.mongodb.org/browse/SERVER-3925">MongoDB Jira: SERVER-3925</a>
@@ -1324,7 +1343,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Remove using query: {} in collection: {}.",
-                            new Object[]{serializeToJsonSafely(dboq), collectionName});
+                            new Object[] { serializeToJsonSafely(dboq), collectionName });
                 }
 
                 WriteResult wr = writeConcernToUse == null ? collection.remove(dboq)
@@ -1522,8 +1541,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
     /*
      * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.String)
-	 */
+     * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.String)
+     */
     @Override
     public <T> List<T> findAllAndRemove(Query query, String collectionName) {
         return findAndRemove(query, null, collectionName);
@@ -1770,9 +1789,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
      * The query document is specified as a standard {@link DBObject} and so is the fields specification.
      *
      * @param collectionName name of the collection to retrieve the objects from.
-     * @param query          the query document that specifies the criteria used to find a record.
-     * @param fields         the document that specifies the fields to be returned.
-     * @param entityClass    the parameterized type of the returned list.
+     * @param query the query document that specifies the criteria used to find a record.
+     * @param fields the document that specifies the fields to be returned.
+     * @param entityClass the parameterized type of the returned list.
      * @return the {@link List} of converted objects.
      */
     protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> entityClass) {
@@ -1795,9 +1814,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
      * query document is specified as a standard DBObject and so is the fields specification.
      *
      * @param collectionName name of the collection to retrieve the objects from
-     * @param query          the query document that specifies the criteria used to find a record
-     * @param fields         the document that specifies the fields to be returned
-     * @param entityClass    the parameterized type of the returned list.
+     * @param query the query document that specifies the criteria used to find a record
+     * @param fields the document that specifies the fields to be returned
+     * @param entityClass the parameterized type of the returned list.
      * @return the List of converted objects.
      */
     protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass) {
@@ -1811,11 +1830,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
      * specified as a standard DBObject and so is the fields specification.
      *
      * @param collectionName name of the collection to retrieve the objects from.
-     * @param query          the query document that specifies the criteria used to find a record.
-     * @param fields         the document that specifies the fields to be returned.
-     * @param entityClass    the parameterized type of the returned list.
-     * @param preparer       allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-     *                       limits, skips and so on).
+     * @param query the query document that specifies the criteria used to find a record.
+     * @param fields the document that specifies the fields to be returned.
+     * @param entityClass the parameterized type of the returned list.
+     * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
+     *          limits, skips and so on).
      * @return the {@link List} of converted objects.
      */
     protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass,
@@ -1864,8 +1883,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
      * The query document is specified as a standard DBObject and so is the fields specification.
      *
      * @param collectionName name of the collection to retrieve the objects from
-     * @param query          the query document that specifies the criteria used to find a record
-     * @param entityClass    the parameterized type of the returned list.
+     * @param query the query document that specifies the criteria used to find a record
+     * @param entityClass the parameterized type of the returned list.
      * @return the List of converted objects.
      */
     protected <T> T doFindAndRemove(String collectionName, DBObject query, DBObject fields, DBObject sort,
@@ -1966,8 +1985,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
      *
      * @param <T>
      * @param collectionCallback the callback to retrieve the {@link DBObject} with
-     * @param objectCallback     the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
-     * @param collectionName     the collection to be queried
+     * @param objectCallback the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+     * @param collectionName the collection to be queried
      * @return
      */
     private <T> T executeFindOneInternal(CollectionCallback<DBObject> collectionCallback,
@@ -1995,9 +2014,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
      *
      * @param <T>
      * @param collectionCallback the callback to retrieve the {@link DBCursor} with
-     * @param preparer           the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
-     * @param objectCallback     the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
-     * @param collectionName     the collection to be queried
+     * @param preparer the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
+     * @param objectCallback the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+     * @param collectionName the collection to be queried
      * @return
      */
     private <T> List<T> executeFindMultiInternal(CollectionCallback<DBCursor> collectionCallback, CursorPreparer preparer,
@@ -2182,7 +2201,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
      * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
      * exception if the conversation failed. Thus allows safe re-throwing of the return value.
      *
-     * @param ex                  the exception to translate
+     * @param ex the exception to translate
      * @param exceptionTranslator the {@link PersistenceExceptionTranslator} to be used for translation
      * @return
      */

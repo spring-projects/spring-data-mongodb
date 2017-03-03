@@ -15,27 +15,9 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
-import static org.springframework.data.domain.Sort.Direction.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.aggregation.Fields.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
-
+import com.mongodb.*;
+import com.mongodb.util.JSON;
 import lombok.Builder;
-
-import java.io.BufferedInputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
@@ -71,14 +53,20 @@ import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.CommandResult;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
-import com.mongodb.util.JSON;
+import java.io.BufferedInputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.domain.Sort.Direction.DESC;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.aggregation.Fields.field;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.isBsonObject;
 
 /**
  * Tests for {@link MongoTemplate#aggregate(String, AggregationPipeline, Class)}.
@@ -103,11 +91,9 @@ public class AggregationTests {
 
     private static boolean initialized = false;
 
-    @Autowired
-    MongoTemplate mongoTemplate;
+    @Autowired MongoTemplate mongoTemplate;
 
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
+    @Rule public ExpectedException exception = ExpectedException.none();
     private static Version mongoVersion;
 
     @Before
@@ -430,9 +416,9 @@ public class AggregationTests {
 
     @Test // DATAMONGO-586
     public void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
-        /*
+		/*
 		 //complex mongodb aggregation framework example from https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		db.zipInfo.aggregate( 
+		db.zipInfo.aggregate(
 			{
 			   $group: {
 			      _id: {
@@ -539,18 +525,18 @@ public class AggregationTests {
     @Test // DATAMONGO-586
     public void findStatesWithPopulationOver10MillionAggregationExample() {
 		/*
-		 //complex mongodb aggregation framework example from 
+		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		 
-		 db.zipcodes.aggregate( 
+
+		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
 				      _id:"$state",
 				      totalPop:{ $sum:"$pop"}
 		 			 }
 				},
-				{ 
-		 			$sort: { _id: 1, "totalPop": 1 } 
+				{
+		 			$sort: { _id: 1, "totalPop": 1 }
 		 		},
 				{
 				   $match: {
@@ -584,7 +570,7 @@ public class AggregationTests {
 
     /**
      * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/cond/#example">MongoDB Aggregation
-     * Framework: $cond</a>
+     *      Framework: $cond</a>
      */
     @Test // DATAMONGO-861
     public void aggregationUsingConditionalProjectionToCalculateDiscount() {
@@ -637,7 +623,7 @@ public class AggregationTests {
 
     /**
      * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/#example">MongoDB Aggregation
-     * Framework: $ifNull</a>
+     *      Framework: $ifNull</a>
      */
     @Test // DATAMONGO-861
     public void aggregationUsingIfNullToProjectSaneDefaults() {
@@ -817,8 +803,8 @@ public class AggregationTests {
 
     /**
      * @see <a href=
-     * "https://docs.mongodb.com/manual/tutorial/aggregation-with-user-preference-data/#return-the-five-most-common-likes">Return
-     * the Five Most Common “Likes”</a>
+     *      "https://docs.mongodb.com/manual/tutorial/aggregation-with-user-preference-data/#return-the-five-most-common-likes">Return
+     *      the Five Most Common “Likes”</a>
      */
     @Test // DATAMONGO-586
     public void returnFiveMostCommonLikesAggregationFrameworkExample() {
@@ -991,8 +977,8 @@ public class AggregationTests {
 
     /**
      * @see <a href=
-     * "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
-     * Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
+     *      "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
+     *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
      */
     @Test // DATAMONGO-753
     public void allowsNestedFieldReferencesAsGroupIdsInGroupExpressions() {
@@ -1020,8 +1006,8 @@ public class AggregationTests {
 
     /**
      * @see <a href=
-     * "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
-     * Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
+     *      "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
+     *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
      */
     @Test // DATAMONGO-753
     public void aliasesNestedFieldInProjectionImmediately() {
@@ -1654,7 +1640,7 @@ public class AggregationTests {
         assertThat(mongoTemplate.aggregate(agg, Sales.class).getMappedResults(),
                 contains(Sales.builder().id("0").items(Collections.singletonList(item2)).build(),
                         Sales.builder().id("1").items(Arrays.asList(item23, item38)).build(),
-                        Sales.builder().id("2").items(Collections.<Item>emptyList()).build()));
+                        Sales.builder().id("2").items(Collections.<Item> emptyList()).build()));
     }
 
     @Test // DATAMONGO-1538
@@ -1910,8 +1896,7 @@ public class AggregationTests {
 
     static class PD {
         String pDch;
-        @org.springframework.data.mongodb.core.mapping.Field("alias")
-        int up;
+        @org.springframework.data.mongodb.core.mapping.Field("alias") int up;
 
         public PD(String pDch, int up) {
             this.pDch = pDch;
@@ -1926,8 +1911,7 @@ public class AggregationTests {
         int xField;
         int yField;
 
-        public DATAMONGO788() {
-        }
+        public DATAMONGO788() {}
 
         public DATAMONGO788(int x, int y) {
             this.x = x;
@@ -1940,12 +1924,10 @@ public class AggregationTests {
     // DATAMONGO-806
     static class User {
 
-        @Id
-        String id;
+        @Id String id;
         List<PushMessage> msgs;
 
-        public User() {
-        }
+        public User() {}
 
         public User(String id, PushMessage... msgs) {
             this.id = id;
@@ -1956,13 +1938,11 @@ public class AggregationTests {
     // DATAMONGO-806
     static class PushMessage {
 
-        @Id
-        String id;
+        @Id String id;
         String content;
         Date createDate;
 
-        public PushMessage() {
-        }
+        public PushMessage() {}
 
         public PushMessage(String id, String content, Date createDate) {
             this.id = id;
@@ -1974,8 +1954,7 @@ public class AggregationTests {
     @org.springframework.data.mongodb.core.mapping.Document
     static class CarPerson {
 
-        @Id
-        private String id;
+        @Id private String id;
         private String firstName;
         private String lastName;
         private Descriptors descriptors;
@@ -2012,8 +1991,7 @@ public class AggregationTests {
             private String model;
             private int year;
 
-            public Entry() {
-            }
+            public Entry() {}
 
             public Entry(String make, String model, int year) {
                 this.make = make;
@@ -2029,8 +2007,7 @@ public class AggregationTests {
         String confirmationNumber;
         int timestamp;
 
-        public Reservation() {
-        }
+        public Reservation() {}
 
         public Reservation(String hotelCode, String confirmationNumber, int timestamp) {
             this.hotelCode = hotelCode;
@@ -2057,8 +2034,7 @@ public class AggregationTests {
         String description;
         int qty;
 
-        public InventoryItem() {
-        }
+        public InventoryItem() {}
 
         public InventoryItem(int id, String item, int qty) {
 
@@ -2081,8 +2057,7 @@ public class AggregationTests {
     @Builder
     static class Sales {
 
-        @Id
-        String id;
+        @Id String id;
         List<Item> items;
     }
 
