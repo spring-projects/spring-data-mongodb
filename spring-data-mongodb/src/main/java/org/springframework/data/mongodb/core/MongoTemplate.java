@@ -1608,50 +1608,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
                 commandResult);
     }
 
-    protected <O> CloseableIterator<O> aggregateStream(final Aggregation aggregation, final String collectionName, final Class<O> outputType,
-                                                       AggregationOperationContext context) {
-
-        Assert.hasText(collectionName, "Collection name must not be null or empty!");
-        Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
-        Assert.notNull(outputType, "Output type must not be null!");
-
-        AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-
-        final DBObject command = aggregation.toDbObject(collectionName, rootContext);
-
-        Assert.isNull(command.get(CURSOR), "Custom options not allowed while streaming");
-        Assert.isNull(command.get(EXPLAIN), "Explain option can't be used while streaming");
-
-        return execute(collectionName, new CollectionCallback<CloseableIterator<O>>() {
-
-            @Override
-            public CloseableIterator<O> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-
-                List<DBObject> pipeline = (List<DBObject>) command.get("pipeline");
-                Cursor cursor = collection.aggregate(pipeline, getNativeAggregationOptionsFromCommand(command));
-
-                ReadDbObjectCallback<O> readCallback = new ReadDbObjectCallback<O>(mongoConverter, outputType, collectionName);
-
-                return new CloseableIterableCursorAdapter<O>(cursor, exceptionTranslator, readCallback);
-            }
-
-            private AggregationOptions getNativeAggregationOptionsFromCommand(DBObject command) {
-                AggregationOptions.Builder builder = AggregationOptions.builder();
-                Object allowDiskUse = command.get(ALLOW_DISK_USE);
-                if(allowDiskUse !=null && String.valueOf(allowDiskUse).equals("true")){
-                    builder.allowDiskUse(true);
-                }
-                return builder.build();
-            }
-        });
-
-/*
-        Query query = new BasicQuery(command);
-        return stream(query, outputType);
-*/
-    }
-
-
     /**
      * Returns the potentially mapped results of the given {@commandResult} contained some.
      *
@@ -2544,8 +2500,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
     /**
      * A {@link CloseableIterator} that is backed by a MongoDB {@link Cursor}.
      *
-     * @author Thomas Darimont
      * @since 1.7
+     * @author Thomas Darimont
      */
     static class CloseableIterableCursorAdapter<T> implements CloseableIterator<T> {
 
