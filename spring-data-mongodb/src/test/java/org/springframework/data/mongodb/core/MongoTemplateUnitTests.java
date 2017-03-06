@@ -328,8 +328,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void aggregateShouldHonorReadPreferenceWhenSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
 		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
 		template.setReadPreference(ReadPreference.secondary());
 
@@ -341,8 +341,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void aggregateShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
 		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
 
 		template.aggregate(Aggregation.newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
@@ -353,8 +353,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void geoNearShouldHonorReadPreferenceWhenSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
 		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
 		template.setReadPreference(ReadPreference.secondary());
 
@@ -367,8 +367,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
 		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
