@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ public class Query {
 		} else {
 			throw new InvalidMongoDbApiUsageException(
 					"Due to limitations of the com.mongodb.BasicDBObject, " + "you can't add a second '" + key + "' criteria. "
-							+ "Query already contains '" + existing.getCriteriaObject() + "'.");
+							+ "Query already contains '" + serializeToJsonSafely(existing.getCriteriaObject()) + "'.");
 		}
 
 		return this;
