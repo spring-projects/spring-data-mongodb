@@ -34,11 +34,12 @@ import org.springframework.data.mongodb.core.SpecialDoc;
 
 /**
  * Unit tests for {@link Query}.
- * 
+ *
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Patryk Wasik
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class QueryTests {
 
@@ -212,5 +213,21 @@ public class QueryTests {
 		assertThat(query.getRestrictedTypes(), is(notNullValue()));
 		assertThat(query.getRestrictedTypes().size(), is(1));
 		assertThat(query.getRestrictedTypes(), hasItems(Arrays.asList(SpecialDoc.class).toArray(new Class<?>[0])));
+	}
+
+	@Test // DATAMONGO-1421
+	public void addCriteriaForSamePropertyMultipleTimesShouldThrowAndSafelySerializeErrorMessage() {
+
+		exception.expect(InvalidMongoDbApiUsageException.class);
+		exception.expectMessage("second 'value' criteria");
+		exception.expectMessage("already contains '{ \"value\" : { $java : VAL_1 } }'");
+
+		Query query = new Query();
+		query.addCriteria(where("value").is(EnumType.VAL_1));
+		query.addCriteria(where("value").is(EnumType.VAL_2));
+	}
+
+	enum EnumType {
+		VAL_1, VAL_2
 	}
 }
