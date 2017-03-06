@@ -1001,15 +1001,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			doInsert(collectionName, objectToSave, this.mongoConverter);
 		} else {
 
-			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
-			assertUpdateableIdIfNotSet(objectToSave);
-
-			// Create query for entity with the id and old version
-			Object id = convertingAccessor.getProperty(idProperty);
-			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(versionProperty.getName()).is(version));
-
 			// Bump version number
 			convertingAccessor.setProperty(versionProperty, versionNumber.longValue() + 1);
+
+			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
+			assertUpdateableIdIfNotSet(objectToSave);
 
 			BasicDBObject dbObject = new BasicDBObject();
 
@@ -1017,6 +1013,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbObject, collectionName));
 			Update update = Update.fromDBObject(dbObject, ID_FIELD);
+
+			// Create query for entity with the id and old version
+			Object id = convertingAccessor.getProperty(idProperty);
+			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(versionProperty.getName()).is(version));
 
 			doUpdate(collectionName, query, update, objectToSave.getClass(), false, false);
 			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbObject, collectionName));
