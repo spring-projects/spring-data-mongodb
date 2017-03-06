@@ -56,6 +56,8 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -75,6 +77,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
 
 /**
  * Unit tests for {@link MongoTemplate}.
@@ -496,6 +499,36 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				new MapReduceOptions().limit(1000), Wrapper.class);
 
 		verify(output, times(1)).limit(1000);
+	}
+
+	@Test // DATAMONGO-1639
+	public void beforeConvertEventForUpdateSeesNextVersion() {
+
+		final VersionedEntity entity = new VersionedEntity();
+		entity.id = 1;
+		entity.version = 0;
+
+		GenericApplicationContext context = new GenericApplicationContext();
+		context.refresh();
+		context.addApplicationListener(new AbstractMongoEventListener<VersionedEntity>() {
+
+			@Override
+			public void onBeforeConvert(BeforeConvertEvent<VersionedEntity> event) {
+				assertThat(event.getSource().version, is(1));
+			}
+		});
+
+		template.setApplicationContext(context);
+
+		MongoTemplate spy = Mockito.spy(template);
+
+		UpdateResult result = mock(UpdateResult.class);
+		doReturn(1L).when(result).getModifiedCount();
+
+		doReturn(result).when(spy).doUpdate(anyString(), Mockito.any(Query.class), Mockito.any(Update.class),
+				Mockito.any(Class.class), anyBoolean(), anyBoolean());
+
+		spy.save(entity);
 	}
 
 	class AutogenerateableId {
