@@ -92,7 +92,7 @@ public interface MongoOperations {
 	 * @param command a MongoDB command
 	 * @param options query options to use
 	 * @deprecated since 1.7. Please use {@link #executeCommand(DBObject, ReadPreference)}, as the MongoDB Java driver
-	 * version 3 no longer supports this operation.
+	 *             version 3 no longer supports this operation.
 	 */
 	@Deprecated
 	CommandResult executeCommand(DBObject command, int options);
@@ -112,7 +112,7 @@ public interface MongoOperations {
 	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 * specification
+	 *          specification
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param dch the handler that will extract results, one document at a time
 	 */
@@ -164,15 +164,15 @@ public interface MongoOperations {
 	 * @param action callback that specified the MongoDB actions to perform on the DB instance
 	 * @return a result object returned by the action or <tt>null</tt>
 	 * @deprecated since 1.7 as the MongoDB Java driver version 3 does not longer support request boundaries via
-	 * {@link DB#requestStart()} and {@link DB#requestDone()}.
+	 *             {@link DB#requestStart()} and {@link DB#requestDone()}.
 	 */
 	@Deprecated
 	<T> T executeInSession(DbCallback<T> action);
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB
-	 * {@link Cursor}.
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
+	 * {@link Cursor}. Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be
+	 * closed.
 	 *
 	 * @param <T> element return type
 	 * @param query must not be {@literal null}.
@@ -184,8 +184,8 @@ public interface MongoOperations {
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} and collection backed
-	 * by a Mongo DB {@link Cursor}.
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
+	 * by a Mongo DB {@link Cursor}. Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that
+	 * needs to be closed.
 	 *
 	 * @param <T> element return type
 	 * @param query must not be {@literal null}.
@@ -369,10 +369,10 @@ public interface MongoOperations {
 	 * the returned object that takes int account the initial document structure as well as any finalize functions.
 	 *
 	 * @param criteria The criteria that restricts the row that are considered for grouping. If not specified all rows are
-	 * considered.
+	 *          considered.
 	 * @param inputCollectionName the collection where the group operation will read from
 	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
-	 * reduce function.
+	 *          reduce function.
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the group operation
 	 */
@@ -384,22 +384,21 @@ public interface MongoOperations {
 	 * as well as any finalize functions.
 	 *
 	 * @param criteria The criteria that restricts the row that are considered for grouping. If not specified all rows are
-	 * considered.
+	 *          considered.
 	 * @param inputCollectionName the collection where the group operation will read from
 	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
-	 * reduce function.
+	 *          reduce function.
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the group operation
 	 */
 	<T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
-
 
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class. The name of the
 	 * inputCollection is derived from the inputType of the aggregation.
 	 *
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
-	 * {@literal null}.
+	 *          {@literal null}.
 	 * @param collectionName The name of the input collection to use for the aggreation.
 	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
@@ -412,37 +411,35 @@ public interface MongoOperations {
 	 * inputCollection is derived from the inputType of the aggregation.
 	 *
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
-	 * {@literal null}.
+	 *          {@literal null}.
 	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
 	<O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType);
 
-
 	/**
-	 * Execute an aggregation operation. The raw results will be mapped to the given entity class and are returned as stream. The name of the
-	 * inputCollection is derived from the inputType of the aggregation.
+	 * Execute an aggregation operation. The raw results will be mapped to the given entity class and are returned as
+	 * stream. The name of the inputCollection is derived from the inputType of the aggregation.
 	 *
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
-	 * {@literal null}.
+	 *          {@literal null}.
 	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.11.0
 	 */
 	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType);
 
-
 	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
-											 Class<O> outputType);
+			Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
 	 *
 	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
-	 * {@literal null}.
+	 *          {@literal null}.
 	 * @param inputType the inputType where the aggregation operation will read from, must not be {@literal null} or
-	 * empty.
+	 *          empty.
 	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
@@ -455,9 +452,9 @@ public interface MongoOperations {
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
 	 *
 	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
-	 * {@literal null}.
+	 *          {@literal null}.
 	 * @param collectionName the collection where the aggregation operation will read from, must not be {@literal null} or
-	 * empty.
+	 *          empty.
 	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
@@ -475,7 +472,7 @@ public interface MongoOperations {
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
-									  Class<T> entityClass);
+			Class<T> entityClass);
 
 	/**
 	 * Execute a map-reduce operation that takes additional map-reduce options.
@@ -488,7 +485,7 @@ public interface MongoOperations {
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
-									  MapReduceOptions mapReduceOptions, Class<T> entityClass);
+			MapReduceOptions mapReduceOptions, Class<T> entityClass);
 
 	/**
 	 * Execute a map-reduce operation that takes a query. The map-reduce operation will be formed with an output type of
@@ -503,7 +500,7 @@ public interface MongoOperations {
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
-									  Class<T> entityClass);
+			Class<T> entityClass);
 
 	/**
 	 * Execute a map-reduce operation that takes a query and additional map-reduce options
@@ -517,7 +514,7 @@ public interface MongoOperations {
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
-									  MapReduceOptions mapReduceOptions, Class<T> entityClass);
+			MapReduceOptions mapReduceOptions, Class<T> entityClass);
 
 	/**
 	 * Returns {@link GeoResults} for all entities matching the given {@link NearQuery}. Will consider entity mapping
@@ -539,7 +536,7 @@ public interface MongoOperations {
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
 	 * @param collectionName the collection to trigger the query against. If no collection name is given the entity class
-	 * will be inspected.
+	 *          will be inspected.
 	 * @return
 	 */
 	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName);
@@ -555,7 +552,7 @@ public interface MongoOperations {
 	 * feature rich {@link Query}.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 * specification
+	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @return the converted object
 	 */
@@ -572,7 +569,7 @@ public interface MongoOperations {
 	 * feature rich {@link Query}.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 * specification
+	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the converted object
@@ -617,7 +614,7 @@ public interface MongoOperations {
 	 * feature rich {@link Query}.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 * specification
+	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @return the List of converted objects
 	 */
@@ -633,7 +630,7 @@ public interface MongoOperations {
 	 * feature rich {@link Query}.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 * specification
+	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the List of converted objects
@@ -663,11 +660,11 @@ public interface MongoOperations {
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 * fields specification.
+	 *          fields specification.
 	 * @param update the {@link Update} to apply on matching documents.
 	 * @param entityClass the parameterized type.
 	 * @return
@@ -675,11 +672,11 @@ public interface MongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 * fields specification.
+	 *          fields specification.
 	 * @param update the {@link Update} to apply on matching documents.
 	 * @param entityClass the parameterized type.
 	 * @param collectionName the collection to query.
@@ -688,12 +685,12 @@ public interface MongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 * fields specification.
+	 *          fields specification.
 	 * @param update the {@link Update} to apply on matching documents.
 	 * @param options the {@link FindAndModifyOptions} holding additional information.
 	 * @param entityClass the parameterized type.
@@ -702,12 +699,12 @@ public interface MongoOperations {
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 * fields specification.
+	 *          fields specification.
 	 * @param update the {@link Update} to apply on matching documents.
 	 * @param options the {@link FindAndModifyOptions} holding additional information.
 	 * @param entityClass the parameterized type.
@@ -715,7 +712,7 @@ public interface MongoOperations {
 	 * @return
 	 */
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
-						String collectionName);
+			String collectionName);
 
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an object of the
@@ -728,7 +725,7 @@ public interface MongoOperations {
 	 * feature rich {@link Query}.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 * specification
+	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @return the converted object
 	 */
@@ -745,7 +742,7 @@ public interface MongoOperations {
 	 * feature rich {@link Query}.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 * specification
+	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the converted object
@@ -891,7 +888,7 @@ public interface MongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 * object.
+	 *          object.
 	 * @param collectionName name of the collection to update the object in
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
@@ -915,7 +912,7 @@ public interface MongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 * object.
+	 *          object.
 	 * @param entityClass class that determines the collection to use
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
@@ -927,7 +924,7 @@ public interface MongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 * object.
+	 *          object.
 	 * @param collectionName name of the collection to update the object in
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
@@ -939,7 +936,7 @@ public interface MongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 * object.
+	 *          object.
 	 * @param entityClass class of the pojo to be operated on
 	 * @param collectionName name of the collection to update the object in
 	 * @return the WriteResult which lets you access the results of the previous write.
@@ -952,7 +949,7 @@ public interface MongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 * object.
+	 *          object.
 	 * @param entityClass class that determines the collection to use
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
@@ -964,7 +961,7 @@ public interface MongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 * object.
+	 *          object.
 	 * @param collectionName name of the collection to update the object in
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
@@ -976,7 +973,7 @@ public interface MongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 * object.
+	 *          object.
 	 * @param entityClass class of the pojo to be operated on
 	 * @param collectionName name of the collection to update the object in
 	 * @return the WriteResult which lets you access the results of the previous write.

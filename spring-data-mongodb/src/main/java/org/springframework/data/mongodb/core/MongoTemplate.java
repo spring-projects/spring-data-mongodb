@@ -383,14 +383,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * {@link DocumentCallbackHandler} using the provided CursorPreparer.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 * specification, must not be {@literal null}.
+	 *          specification, must not be {@literal null}.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param dch the handler that will extract results, one document at a time
 	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-	 * limits, skips and so on).
+	 *          limits, skips and so on).
 	 */
 	protected void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch,
-								CursorPreparer preparer) {
+			CursorPreparer preparer) {
 
 		Assert.notNull(query, "Query must not be null!");
 
@@ -683,7 +683,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
-							   String collectionName) {
+			String collectionName) {
 		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(),
 				getMappedSortObject(query, entityClass), entityClass, update, options);
 	}
@@ -721,7 +721,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		final DBObject dbObject = query == null ? null
 				: queryMapper.getMappedObject(query.getQueryObject(),
-				entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
+						entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
 
 		return execute(collectionName, new CollectionCallback<Long>() {
 			public Long doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -1100,7 +1100,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected WriteResult doUpdate(final String collectionName, final Query query, final Update update,
-								   final Class<?> entityClass, final boolean upsert, final boolean multi) {
+			final Class<?> entityClass, final boolean upsert, final boolean multi) {
 
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -1295,7 +1295,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Remove using query: {} in collection: {}.",
-							new Object[]{serializeToJsonSafely(dboq), collectionName});
+							new Object[] { serializeToJsonSafely(dboq), collectionName });
 				}
 
 				WriteResult wr = writeConcernToUse == null ? collection.remove(dboq)
@@ -1320,24 +1320,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
-											 Class<T> entityClass) {
+			Class<T> entityClass) {
 		return mapReduce(null, inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(),
 				entityClass);
 	}
 
 	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
-											 MapReduceOptions mapReduceOptions, Class<T> entityClass) {
+			MapReduceOptions mapReduceOptions, Class<T> entityClass) {
 		return mapReduce(null, inputCollectionName, mapFunction, reduceFunction, mapReduceOptions, entityClass);
 	}
 
 	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
-											 String reduceFunction, Class<T> entityClass) {
+			String reduceFunction, Class<T> entityClass) {
 		return mapReduce(query, inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(),
 				entityClass);
 	}
 
 	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
-											 String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass) {
+			String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass) {
 
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
@@ -1376,7 +1376,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy,
-									   Class<T> entityClass) {
+			Class<T> entityClass) {
 
 		DBObject dbo = groupBy.getGroupByObject();
 		dbo.put("ns", inputCollectionName);
@@ -1444,7 +1444,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
-											   Class<O> outputType) {
+			Class<O> outputType) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 
@@ -1455,7 +1455,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
-													Class<O> outputType) {
+			Class<O> outputType) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 
@@ -1478,18 +1478,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
 	}
 
-
 	@Override
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
 		return aggregate(aggregation, collectionName, outputType, null);
 	}
 
-
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType) {
 		return aggregateStream(aggregation, collectionName, outputType, null);
 	}
-
 
 	/*
 	 * (non-Javadoc)
@@ -1540,7 +1537,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
-												  AggregationOperationContext context) {
+			AggregationOperationContext context) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
@@ -1560,8 +1557,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				commandResult);
 	}
 
-	protected <O> CloseableIterator<O> aggregateStream(final Aggregation aggregation, final String collectionName, final Class<O> outputType,
-													   AggregationOperationContext context) {
+	protected <O> CloseableIterator<O> aggregateStream(final Aggregation aggregation, final String collectionName,
+			final Class<O> outputType, AggregationOperationContext context) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
@@ -1597,12 +1594,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 		});
 
-/*
-		Query query = new BasicQuery(command);
-        return stream(query, outputType);
-*/
+		/*
+				Query query = new BasicQuery(command);
+		    return stream(query, outputType);
+		*/
 	}
-
 
 	/**
 	 * Returns the potentially mapped results of the given {@commandResult} contained some.
@@ -1612,7 +1608,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @return
 	 */
 	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult,
-													   String collectionName) {
+			String collectionName) {
 
 		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
@@ -1660,7 +1656,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	private void copyMapReduceOptionsToCommand(Query query, MapReduceOptions mapReduceOptions,
-											   MapReduceCommand mapReduceCommand) {
+			MapReduceCommand mapReduceCommand) {
 
 		if (query != null) {
 			if (query.getSkip() != 0 || query.getFieldsObject() != null) {
@@ -1786,17 +1782,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-	 * limits, skips and so on).
+	 *          limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass,
-								 CursorPreparer preparer) {
+			CursorPreparer preparer) {
 		return doFind(collectionName, query, fields, entityClass, preparer,
 				new ReadDbObjectCallback<T>(mongoConverter, entityClass, collectionName));
 	}
 
 	protected <S, T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<S> entityClass,
-									CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
+			CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -1840,7 +1836,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @return the List of converted objects.
 	 */
 	protected <T> T doFindAndRemove(String collectionName, DBObject query, DBObject fields, DBObject sort,
-									Class<T> entityClass) {
+			Class<T> entityClass) {
 
 		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 
@@ -1856,7 +1852,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected <T> T doFindAndModify(String collectionName, DBObject query, DBObject fields, DBObject sort,
-									Class<T> entityClass, Update update, FindAndModifyOptions options) {
+			Class<T> entityClass, Update update, FindAndModifyOptions options) {
 
 		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 
@@ -1942,7 +1938,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @return
 	 */
 	private <T> T executeFindOneInternal(CollectionCallback<DBObject> collectionCallback,
-										 DbObjectCallback<T> objectCallback, String collectionName) {
+			DbObjectCallback<T> objectCallback, String collectionName) {
 
 		try {
 			T result = objectCallback
@@ -1972,7 +1968,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @return
 	 */
 	private <T> List<T> executeFindMultiInternal(CollectionCallback<DBCursor> collectionCallback, CursorPreparer preparer,
-												 DbObjectCallback<T> objectCallback, String collectionName) {
+			DbObjectCallback<T> objectCallback, String collectionName) {
 
 		try {
 
@@ -2006,7 +2002,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	private void executeQueryInternal(CollectionCallback<DBCursor> collectionCallback, CursorPreparer preparer,
-									  DocumentCallbackHandler callbackHandler, String collectionName) {
+			DocumentCallbackHandler callbackHandler, String collectionName) {
 
 		try {
 
@@ -2155,7 +2151,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @return
 	 */
 	private static RuntimeException potentiallyConvertRuntimeException(RuntimeException ex,
-																	   PersistenceExceptionTranslator exceptionTranslator) {
+			PersistenceExceptionTranslator exceptionTranslator) {
 		RuntimeException resolved = exceptionTranslator.translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
 	}
@@ -2281,7 +2277,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		private final FindAndModifyOptions options;
 
 		public FindAndModifyCallback(DBObject query, DBObject fields, DBObject sort, DBObject update,
-									 FindAndModifyOptions options) {
+				FindAndModifyOptions options) {
 			this.query = query;
 			this.fields = fields;
 			this.sort = sort;
@@ -2345,7 +2341,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	class UnwrapAndReadDbObjectCallback<T> extends ReadDbObjectCallback<T> {
 
 		public UnwrapAndReadDbObjectCallback(EntityReader<? super T, DBObject> reader, Class<T> type,
-											 String collectionName) {
+				String collectionName) {
 			super(reader, type, collectionName);
 		}
 
@@ -2509,7 +2505,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		 * @param objectReadCallback
 		 */
 		public CloseableIterableCursorAdapter(Cursor cursor, PersistenceExceptionTranslator exceptionTranslator,
-											  DbObjectCallback<T> objectReadCallback) {
+				DbObjectCallback<T> objectReadCallback) {
 
 			this.cursor = cursor;
 			this.exceptionTranslator = exceptionTranslator;

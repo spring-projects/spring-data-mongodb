@@ -301,7 +301,7 @@ public class AggregationTests {
 			tagCount.add(results.next());
 		}
 
-		//   assertThat(tagCount, is(notNullValue()));
+		// assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(0));
 	}
 
@@ -386,7 +386,6 @@ public class AggregationTests {
 		assertTagCount(null, 0, tagCount.get(1));
 	}
 
-
 	@Test // DATAMONGO-1637
 	public void shouldDetectResultMismatchWhileStreaming() {
 
@@ -408,12 +407,11 @@ public class AggregationTests {
 		while (results.hasNext()) {
 			tagCount.add(results.next());
 		}
-//        assertThat(tagCount, is(notNullValue()));
+		// assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(2));
 		assertTagCount(null, 0, tagCount.get(0));
 		assertTagCount(null, 0, tagCount.get(1));
 	}
-
 
 	@Test // DATAMONGO-586
 	public void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
@@ -571,7 +569,7 @@ public class AggregationTests {
 
 	/**
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/cond/#example">MongoDB Aggregation
-	 * Framework: $cond</a>
+	 *      Framework: $cond</a>
 	 */
 	@Test // DATAMONGO-861
 	public void aggregationUsingConditionalProjectionToCalculateDiscount() {
@@ -624,7 +622,7 @@ public class AggregationTests {
 
 	/**
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/#example">MongoDB Aggregation
-	 * Framework: $ifNull</a>
+	 *      Framework: $ifNull</a>
 	 */
 	@Test // DATAMONGO-861
 	public void aggregationUsingIfNullToProjectSaneDefaults() {
@@ -804,8 +802,8 @@ public class AggregationTests {
 
 	/**
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/tutorial/aggregation-with-user-preference-data/#return-the-five-most-common-likes">Return
-	 * the Five Most Common “Likes”</a>
+	 *      "https://docs.mongodb.com/manual/tutorial/aggregation-with-user-preference-data/#return-the-five-most-common-likes">Return
+	 *      the Five Most Common “Likes”</a>
 	 */
 	@Test // DATAMONGO-586
 	public void returnFiveMostCommonLikesAggregationFrameworkExample() {
@@ -978,8 +976,8 @@ public class AggregationTests {
 
 	/**
 	 * @see <a href=
-	 * "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
-	 * Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
+	 *      "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
+	 *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
 	 */
 	@Test // DATAMONGO-753
 	public void allowsNestedFieldReferencesAsGroupIdsInGroupExpressions() {
@@ -1007,8 +1005,8 @@ public class AggregationTests {
 
 	/**
 	 * @see <a href=
-	 * "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
-	 * Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
+	 *      "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
+	 *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
 	 */
 	@Test // DATAMONGO-753
 	public void aliasesNestedFieldInProjectionImmediately() {
@@ -1300,7 +1298,6 @@ public class AggregationTests {
 		assertLikeStats(result.get(4), "e", 3);
 	}
 
-
 	@Test // DATAMONGO-960
 	public void returnFiveMostCommonLikesShouldReturnStageExecutionInformationWithExplainOptionEnabled() {
 
@@ -1417,7 +1414,7 @@ public class AggregationTests {
 				.and("dateValue").extractDayOfWeek().as("dayOfWeek") //
 				.andExpression("dateValue + 86400000").extractDayOfYear().as("dayOfYearPlus1Day") //
 				.andExpression("dateValue + 86400000").project("dayOfYear").as("dayOfYearPlus1DayManually") //
-				;
+		;
 
 		Aggregation agg = newAggregation(dateProjection);
 		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, ObjectWithDate.class, DBObject.class);
@@ -1640,7 +1637,7 @@ public class AggregationTests {
 		assertThat(mongoTemplate.aggregate(agg, Sales.class).getMappedResults(),
 				contains(Sales.builder().id("0").items(Collections.singletonList(item2)).build(),
 						Sales.builder().id("1").items(Arrays.asList(item23, item38)).build(),
-						Sales.builder().id("2").items(Collections.<Item>emptyList()).build()));
+						Sales.builder().id("2").items(Collections.<Item> emptyList()).build()));
 	}
 
 	@Test // DATAMONGO-1538
@@ -1913,8 +1910,7 @@ public class AggregationTests {
 		int xField;
 		int yField;
 
-		public DATAMONGO788() {
-		}
+		public DATAMONGO788() {}
 
 		public DATAMONGO788(int x, int y) {
 			this.x = x;
@@ -1930,8 +1926,7 @@ public class AggregationTests {
 		@Id String id;
 		List<PushMessage> msgs;
 
-		public User() {
-		}
+		public User() {}
 
 		public User(String id, PushMessage... msgs) {
 			this.id = id;
@@ -1946,8 +1941,7 @@ public class AggregationTests {
 		String content;
 		Date createDate;
 
-		public PushMessage() {
-		}
+		public PushMessage() {}
 
 		public PushMessage(String id, String content, Date createDate) {
 			this.id = id;
@@ -1998,8 +1992,7 @@ public class AggregationTests {
 			private String model;
 			private int year;
 
-			public Entry() {
-			}
+			public Entry() {}
 
 			public Entry(String make, String model, int year) {
 				this.make = make;
@@ -2015,8 +2008,7 @@ public class AggregationTests {
 		String confirmationNumber;
 		int timestamp;
 
-		public Reservation() {
-		}
+		public Reservation() {}
 
 		public Reservation(String hotelCode, String confirmationNumber, int timestamp) {
 			this.hotelCode = hotelCode;
@@ -2043,8 +2035,7 @@ public class AggregationTests {
 		String description;
 		int qty;
 
-		public InventoryItem() {
-		}
+		public InventoryItem() {}
 
 		public InventoryItem(int id, String item, int qty) {
 
@@ -2077,7 +2068,7 @@ public class AggregationTests {
 	static class Item {
 
 		@org.springframework.data.mongodb.core.mapping.Field("item_id") //
-				String itemId;
+		String itemId;
 		Integer quantity;
 		Long price;
 	}
