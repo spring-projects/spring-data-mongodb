@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public class Query {
 
 	/**
 	 * Static factory method to create a {@link Query} using the provided {@link CriteriaDefinition}.
-	 * 
+	 *
 	 * @param criteriaDefinition must not be {@literal null}.
 	 * @return
 	 * @since 1.6
@@ -71,7 +71,7 @@ public class Query {
 
 	/**
 	 * Creates a new {@link Query} using the given {@link CriteriaDefinition}.
-	 * 
+	 *
 	 * @param criteriaDefinition must not be {@literal null}.
 	 * @since 1.6
 	 */
@@ -81,7 +81,7 @@ public class Query {
 
 	/**
 	 * Adds the given {@link CriteriaDefinition} to the current {@link Query}.
-	 * 
+	 *
 	 * @param criteriaDefinition must not be {@literal null}.
 	 * @return
 	 * @since 1.6
@@ -96,7 +96,7 @@ public class Query {
 		} else {
 			throw new InvalidMongoDbApiUsageException(
 					"Due to limitations of the com.mongodb.BasicDBObject, " + "you can't add a second '" + key + "' criteria. "
-							+ "Query already contains '" + existing.getCriteriaObject() + "'.");
+							+ "Query already contains '" + serializeToJsonSafely(existing.getCriteriaObject()) + "'.");
 		}
 
 		return this;
@@ -111,7 +111,7 @@ public class Query {
 
 	/**
 	 * Set number of documents to skip before returning results.
-	 * 
+	 *
 	 * @param skip
 	 * @return
 	 */
@@ -122,7 +122,7 @@ public class Query {
 
 	/**
 	 * Limit the number of returned documents to {@code limit}.
-	 * 
+	 *
 	 * @param limit
 	 * @return
 	 */
@@ -133,7 +133,7 @@ public class Query {
 
 	/**
 	 * Configures the query to use the given hint when being executed.
-	 * 
+	 *
 	 * @param name must not be {@literal null} or empty.
 	 * @return
 	 */
@@ -146,7 +146,7 @@ public class Query {
 	/**
 	 * Sets the given pagination information on the {@link Query} instance. Will transparently set {@code skip} and
 	 * {@code limit} as well as applying the {@link Sort} instance defined with the {@link Pageable}.
-	 * 
+	 *
 	 * @param pageable
 	 * @return
 	 */
@@ -164,7 +164,7 @@ public class Query {
 
 	/**
 	 * Adds a {@link Sort} to the {@link Query} instance.
-	 * 
+	 *
 	 * @param sort
 	 * @return
 	 */
@@ -199,7 +199,7 @@ public class Query {
 
 	/**
 	 * Restricts the query to only return documents instances that are exactly of the given types.
-	 * 
+	 *
 	 * @param type may not be {@literal null}
 	 * @param additionalTypes may not be {@literal null}
 	 * @return
@@ -253,7 +253,7 @@ public class Query {
 
 	/**
 	 * Get the number of documents to skip.
-	 * 
+	 *
 	 * @return
 	 */
 	public int getSkip() {
@@ -262,7 +262,7 @@ public class Query {
 
 	/**
 	 * Get the maximum number of documents to be return.
-	 * 
+	 *
 	 * @return
 	 */
 	public int getLimit() {
@@ -388,7 +388,7 @@ public class Query {
 
 	/**
 	 * Tests whether the settings of the given {@link Query} are equal to this query.
-	 * 
+	 *
 	 * @param that
 	 * @return
 	 */
@@ -405,7 +405,7 @@ public class Query {
 		return criteriaEqual && fieldsEqual && sortEqual && hintEqual && skipEqual && limitEqual && metaEqual;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -427,7 +427,7 @@ public class Query {
 
 	/**
 	 * Returns whether the given key is the one used to hold the type restriction information.
-	 * 
+	 *
 	 * @deprecated don't call this method as the restricted type handling will undergo some significant changes going
 	 *             forward.
 	 * @param key
