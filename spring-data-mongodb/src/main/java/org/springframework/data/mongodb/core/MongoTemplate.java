@@ -15,10 +15,23 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.AggregationOptions;
-import com.mongodb.*;
-import com.mongodb.util.JSON;
-import com.mongodb.util.JSONParseException;
+import static org.springframework.data.mongodb.core.aggregation.AggregationOptions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Scanner;
+import java.util.Set;
+
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,15 +78,24 @@ import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.*;
 import org.springframework.util.StringUtils;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.Map.Entry;
-
-import static org.springframework.data.mongodb.core.aggregation.AggregationOptions.ALLOW_DISK_USE;
-import static org.springframework.data.mongodb.core.aggregation.AggregationOptions.CURSOR;
-import static org.springframework.data.mongodb.core.aggregation.AggregationOptions.EXPLAIN;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.SerializationUtils.serializeToJsonSafely;
+import com.mongodb.BasicDBObject;
+import com.mongodb.Bytes;
+import com.mongodb.CommandResult;
+import com.mongodb.Cursor;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.MapReduceCommand;
+import com.mongodb.MapReduceOutput;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
+import com.mongodb.util.JSON;
+import com.mongodb.util.JSONParseException;
+import com.mongodb.AggregationOptions;
 
 /**
  * Primary implementation of {@link MongoOperations}.
@@ -953,15 +975,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			doInsert(collectionName, objectToSave, this.mongoConverter);
 		} else {
 
-			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
-			assertUpdateableIdIfNotSet(objectToSave);
-
-			// Create query for entity with the id and old version
-			Object id = convertingAccessor.getProperty(idProperty);
-			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(versionProperty.getName()).is(version));
-
 			// Bump version number
 			convertingAccessor.setProperty(versionProperty, versionNumber.longValue() + 1);
+
+			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
+			assertUpdateableIdIfNotSet(objectToSave);
 
 			BasicDBObject dbObject = new BasicDBObject();
 
@@ -969,6 +987,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbObject, collectionName));
 			Update update = Update.fromDBObject(dbObject, ID_FIELD);
+
+			// Create query for entity with the id and old version
+			Object id = convertingAccessor.getProperty(idProperty);
+			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(versionProperty.getName()).is(version));
 
 			doUpdate(collectionName, query, update, objectToSave.getClass(), false, false);
 			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbObject, collectionName));
@@ -1557,6 +1579,32 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				commandResult);
 	}
 
+	/**
+	 * Returns the potentially mapped results of the given {@commandResult} contained some.
+	 *
+	 * @param outputType
+	 * @param commandResult
+	 * @return
+	 */
+	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult,
+			String collectionName) {
+
+		@SuppressWarnings("unchecked")
+		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
+		if (resultSet == null) {
+			return Collections.emptyList();
+		}
+
+		DbObjectCallback<O> callback = new UnwrapAndReadDbObjectCallback<O>(mongoConverter, outputType, collectionName);
+
+		List<O> mappedResults = new ArrayList<O>();
+		for (DBObject dbObject : resultSet) {
+			mappedResults.add(callback.doWith(dbObject));
+		}
+
+		return mappedResults;
+	}
+
 	protected <O> CloseableIterator<O> aggregateStream(final Aggregation aggregation, final String collectionName,
 			final Class<O> outputType, AggregationOperationContext context) {
 
@@ -1593,37 +1641,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				return builder.build();
 			}
 		});
-
-		/*
-				Query query = new BasicQuery(command);
-		    return stream(query, outputType);
-		*/
-	}
-
-	/**
-	 * Returns the potentially mapped results of the given {@commandResult} contained some.
-	 *
-	 * @param outputType
-	 * @param commandResult
-	 * @return
-	 */
-	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult,
-			String collectionName) {
-
-		@SuppressWarnings("unchecked")
-		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
-		if (resultSet == null) {
-			return Collections.emptyList();
-		}
-
-		DbObjectCallback<O> callback = new UnwrapAndReadDbObjectCallback<O>(mongoConverter, outputType, collectionName);
-
-		List<O> mappedResults = new ArrayList<O>();
-		for (DBObject dbObject : resultSet) {
-			mappedResults.add(callback.doWith(dbObject));
-		}
-
-		return mappedResults;
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {
@@ -1990,6 +2007,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				}
 
 				return result;
+
 			} finally {
 
 				if (cursor != null) {
@@ -2019,11 +2037,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					DBObject dbobject = cursor.next();
 					callbackHandler.processDocument(dbobject);
 				}
+
 			} finally {
 				if (cursor != null) {
 					cursor.close();
 				}
 			}
+
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
@@ -2441,6 +2461,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						}
 					}
 				}
+
 			} catch (RuntimeException e) {
 				throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 			}
@@ -2488,8 +2509,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * A {@link CloseableIterator} that is backed by a MongoDB {@link Cursor}.
 	 *
-	 * @author Thomas Darimont
 	 * @since 1.7
+	 * @author Thomas Darimont
 	 */
 	static class CloseableIterableCursorAdapter<T> implements CloseableIterator<T> {
 
