@@ -52,6 +52,8 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -72,6 +74,7 @@ import com.mongodb.MapReduceOutput;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
+import com.mongodb.WriteResult;
 
 /**
  * Unit tests for {@link MongoTemplate}.
@@ -325,8 +328,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void aggregateShouldHonorReadPreferenceWhenSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
 		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
 		template.setReadPreference(ReadPreference.secondary());
 
@@ -338,8 +341,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void aggregateShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
 		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
 
 		template.aggregate(Aggregation.newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
@@ -350,8 +353,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void geoNearShouldHonorReadPreferenceWhenSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
 		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
 		template.setReadPreference(ReadPreference.secondary());
 
@@ -364,8 +367,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(
-				mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
 		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
@@ -463,6 +466,33 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).mapReduce(captor.capture());
 
 		assertThat(captor.getValue().getLimit(), is(1000));
+	}
+
+	@Test // DATAMONGO-1639
+	public void beforeConvertEventForUpdateSeesNextVersion() {
+
+		final VersionedEntity entity = new VersionedEntity();
+		entity.id = 1;
+		entity.version = 0;
+
+		GenericApplicationContext context = new GenericApplicationContext();
+		context.refresh();
+		context.addApplicationListener(new AbstractMongoEventListener<VersionedEntity>() {
+
+			@Override
+			public void onBeforeConvert(BeforeConvertEvent<VersionedEntity> event) {
+				assertThat(event.getSource().version, is(1));
+			}
+		});
+
+		template.setApplicationContext(context);
+
+		MongoTemplate spy = Mockito.spy(template);
+
+		doReturn(mock(WriteResult.class)).when(spy).doUpdate(anyString(), Mockito.any(Query.class),
+				Mockito.any(Update.class), Mockito.any(Class.class), anyBoolean(), anyBoolean());
+
+		spy.save(entity);
 	}
 
 	class AutogenerateableId {
