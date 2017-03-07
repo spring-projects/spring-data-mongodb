@@ -23,14 +23,16 @@
 		<module>spring-data-mongodb-cross-store</module>
 		<module>spring-data-mongodb-log4j</module>
 		<module>spring-data-mongodb-distribution</module>
+		<module>spring-data-mongodb-benchmarks</module>
 	</modules>
 
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>2.0.0.M1</springdata.commons>
-		<mongo>3.2.2</mongo>
-		<mongo.reactivestreams>1.2.0</mongo.reactivestreams>
+        <springdata.commons>2.0.0.M1</springdata.commons>
+        <mongo>3.2.2</mongo>
+        <mongo.reactivestreams>1.2.0</mongo.reactivestreams>
+        <jmh.version>1.19</jmh.version>
 	</properties>
 
 	<developers>
