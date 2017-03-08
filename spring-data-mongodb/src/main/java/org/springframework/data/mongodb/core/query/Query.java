@@ -94,8 +94,8 @@ public class Query {
 			this.criteria.put(key, criteriaDefinition);
 		} else {
 			throw new InvalidMongoDbApiUsageException(
-					"Due to limitations of the com.mongodb.BasicDocument, " + "you can't add a second '" + key + "' criteria. "
-							+ "Query already contains '" + serializeToJsonSafely(existing.getCriteriaObject()) + "'.");
+					String.format("Due to limitations of the com.mongodb.BasicDocument, you can't add a second '%s' criteria. "
+							+ "Query already contains '%s'", key, serializeToJsonSafely(existing.getCriteriaObject())));
 		}
 
 		return this;
