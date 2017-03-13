@@ -254,7 +254,8 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	/**
 	 * Set the {@literal server selection timeout} in msec for a 3.x MongoDB Java driver. If not set the default value of
-	 * 30 sec will be used.
+	 * 30 sec will be used. A value of 0 means that it will timeout immediately if no server is available. A negative
+	 * value means to wait indefinitely.
 	 *
 	 * @param serverSelectionTimeout in msec.
 	 */

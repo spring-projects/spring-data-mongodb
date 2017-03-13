@@ -38,7 +38,7 @@ import com.mongodb.WriteConcern;
 
 /**
  * Integration tests for {@link MongoClientParser}.
- * 
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  */
@@ -118,7 +118,7 @@ public class MongoClientParserIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1620
-	public void createsMongoClinetWithServerSelectionTimeoutCorrectly() {
+	public void createsMongoClientWithServerSelectionTimeoutCorrectly() {
 
 		assumeThat(MongoClientVersion.isMongo3Driver(), is(true));
 
