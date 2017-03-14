@@ -8,4 +8,5 @@ http\://www.springframework.org/schema/data/mongo/spring-mongo-1.7.xsd=org/sprin
 http\://www.springframework.org/schema/data/mongo/spring-mongo-1.8.xsd=org/springframework/data/mongodb/config/spring-mongo-1.8.xsd
 http\://www.springframework.org/schema/data/mongo/spring-mongo-1.10.xsd=org/springframework/data/mongodb/config/spring-mongo-1.10.xsd
 http\://www.springframework.org/schema/data/mongo/spring-mongo-1.10.2.xsd=org/springframework/data/mongodb/config/spring-mongo-1.10.2.xsd
-http\://www.springframework.org/schema/data/mongo/spring-mongo.xsd=org/springframework/data/mongodb/config/spring-mongo-1.10.2.xsd
+http\://www.springframework.org/schema/data/mongo/spring-mongo-2.0.xsd=org/springframework/data/mongodb/config/spring-mongo-2.0.xsd
+http\://www.springframework.org/schema/data/mongo/spring-mongo.xsd=org/springframework/data/mongodb/config/spring-mongo-2.0.xsd
