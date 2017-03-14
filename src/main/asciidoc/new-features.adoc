@@ -6,6 +6,7 @@
 * Upgrade to Java 8.
 * Usage of the `Document` API instead of `DBObject`.
 * <<mongo.reactive>>.
+* Support for aggregation result streaming via Java 8 `Stream`.
 
 [[new-features.1-10-0]]
 == What's new in Spring Data MongoDB 1.10

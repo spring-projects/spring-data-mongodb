@@ -15,26 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.aggregation.AggregationOptions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -69,6 +57,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
@@ -112,6 +101,16 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.CommandResult;
+import com.mongodb.Cursor;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
@@ -126,7 +125,6 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSONParseException;
-import com.mongodb.AggregationOptions;
 
 /**
  * Primary implementation of {@link MongoOperations}.
@@ -146,7 +144,7 @@ import com.mongodb.AggregationOptions;
  * @author Niko Schmuck
  * @author Mark Paluch
  * @author Laszlo Csontos
- * @author maninder
+ * @author Maninder Singh
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
@@ -365,8 +363,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				FindIterable<Document> cursor = collection.find(mappedQuery).projection(mappedFields);
 				QueryCursorPreparer cursorPreparer = new QueryCursorPreparer(query, entityType);
 
-				ReadDocumentCallback<T> readCallback = new ReadDocumentCallback<T>(mongoConverter, entityType,
-						collectionName);
+				ReadDocumentCallback<T> readCallback = new ReadDocumentCallback<T>(mongoConverter, entityType, collectionName);
 
 				return new CloseableIterableCursorAdapter<T>(cursorPreparer.prepare(cursor), exceptionTranslator, readCallback);
 			}
@@ -1527,16 +1524,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return new GroupByResults<T>(mappedResults, commandResult);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.Class)
+	 */
 	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType) {
 		return aggregate(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
 	}
 
-	@Override
-	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
-		return aggregateStream(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
-	}
-
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.String, java.lang.Class)
+	 */
 	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
@@ -1548,6 +1546,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return aggregate(aggregation, inputCollectionName, outputType, context);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.Class, java.lang.Class)
+	 */
+	@Override
+	public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
+
+		return aggregate(aggregation, determineCollectionName(inputType), outputType,
+				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.String, java.lang.Class)
+	 */
+	@Override
+	public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
+		return aggregate(aggregation, collectionName, outputType, null);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregateStream(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.String, java.lang.Class)
+	 */
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
@@ -1559,13 +1578,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return aggregateStream(aggregation, inputCollectionName, outputType, context);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregateStream(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.Class)
+	 */
 	@Override
-	public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
-
-		return aggregate(aggregation, determineCollectionName(inputType), outputType,
-				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
+	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
+		return aggregateStream(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregateStream(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.Class, java.lang.Class)
+	 */
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
@@ -1573,11 +1596,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
 	}
 
-	@Override
-	public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
-		return aggregate(aggregation, collectionName, outputType, null);
-	}
-
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregateStream(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.String, java.lang.Class)
+	 */
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType) {
 		return aggregateStream(aggregation, collectionName, outputType, null);
@@ -1677,8 +1698,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return mappedResults;
 	}
 
-	protected <O> CloseableIterator<O> aggregateStream(final Aggregation aggregation, final String collectionName,
-			final Class<O> outputType, AggregationOperationContext context) {
+	protected <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName,
+			Class<O> outputType, AggregationOperationContext context) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
@@ -1686,33 +1707,51 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
 
-		final DBObject command = aggregation.toDbObject(collectionName, rootContext);
+		Document command = aggregation.toDocument(collectionName, rootContext);
 
-		Assert.isNull(command.get(CURSOR), "Custom options not allowed while streaming");
-		Assert.isNull(command.get(EXPLAIN), "Explain option can't be used while streaming");
+		assertNotExplain(command);
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Streaming aggregation: {}", serializeToJsonSafely(command));
+		}
+
+		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<O>(mongoConverter, outputType, collectionName);
 
 		return execute(collectionName, new CollectionCallback<CloseableIterator<O>>() {
 
 			@Override
-			public CloseableIterator<O> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+			public CloseableIterator<O> doInCollection(MongoCollection<Document> collection)
+					throws MongoException, DataAccessException {
 
-				List<DBObject> pipeline = (List<DBObject>) command.get("pipeline");
-				Cursor cursor = collection.aggregate(pipeline, getNativeAggregationOptionsFromCommand(command));
+				List<Document> pipeline = (List<Document>) command.get("pipeline");
 
-				ReadDbObjectCallback<O> readCallback = new ReadDbObjectCallback<O>(mongoConverter, outputType, collectionName);
+				AggregationOptions options = AggregationOptions.fromDocument(command);
 
-				return new CloseableIterableCursorAdapter<O>(cursor, exceptionTranslator, readCallback);
-			}
+				AggregateIterable<Document> cursor = collection.aggregate(pipeline).allowDiskUse(options.isAllowDiskUse())
+						.useCursor(true);
 
-			private AggregationOptions getNativeAggregationOptionsFromCommand(DBObject command) {
-				AggregationOptions.Builder builder = AggregationOptions.builder();
-				Object allowDiskUse = command.get(ALLOW_DISK_USE);
-				if (allowDiskUse != null && String.valueOf(allowDiskUse).equals("true")) {
-					builder.allowDiskUse(true);
+				Integer cursorBatchSize = options.getCursorBatchSize();
+				if (cursorBatchSize != null) {
+					cursor.batchSize(cursorBatchSize);
 				}
-				return builder.build();
+
+				return new CloseableIterableCursorAdapter<O>(cursor.iterator(), exceptionTranslator, readCallback);
 			}
 		});
+	}
+
+	/**
+	 * Assert that the {@link Document} does not enable Aggregation explain mode.
+	 *
+	 * @param command the command {@link Document}.
+	 */
+	private void assertNotExplain(Document command) {
+
+		Boolean explain = command.get("explain", Boolean.class);
+
+		if (explain != null && explain) {
+			throw new IllegalArgumentException("Can't use explain option with streaming!");
+		}
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {
@@ -2008,7 +2047,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return
 	 */
 	private <T> T executeFindOneInternal(CollectionCallback<Document> collectionCallback,
-										 DocumentCallback<T> objectCallback, String collectionName) {
+			DocumentCallback<T> objectCallback, String collectionName) {
 
 		try {
 			T result = objectCallback
@@ -2038,7 +2077,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return
 	 */
 	private <T> List<T> executeFindMultiInternal(CollectionCallback<FindIterable<Document>> collectionCallback,
-												 CursorPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
+			CursorPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
 
 		try {
 
@@ -2242,11 +2281,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * Returns all identifiers for the given documents. Will augment the given identifiers and fill in only the ones that
 	 * are {@literal null} currently. This would've been better solved in {@link #insertDBObjectList(String, List)}
 	 * directly but would require a signature change of that method.
-	 * 
+	 *
 	 * @param ids
 	 * @param documents
-	 * @return
-	 * TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
+	 * @return TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
 	 */
 	private static List<Object> consolidateIdentifiers(List<ObjectId> ids, List<Document> documents) {
 

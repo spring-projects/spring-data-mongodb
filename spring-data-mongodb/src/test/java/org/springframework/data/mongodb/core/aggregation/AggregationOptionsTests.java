@@ -19,6 +19,8 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +29,7 @@ import org.junit.Test;
  * Unit tests for {@link AggregationOptions}.
  * 
  * @author Thomas Darimont
+ * @author Mark Paluch
  * @since 1.6
  */
 public class AggregationOptionsTests {
@@ -35,9 +38,10 @@ public class AggregationOptionsTests {
 
 	@Before
 	public void setup() {
-		aggregationOptions = newAggregationOptions().explain(true).cursor(new Document("foo", 1)).allowDiskUse(true)
+		aggregationOptions = newAggregationOptions().explain(true) //
+				.cursorBatchSize(1) //
+				.allowDiskUse(true) //
 				.build();
-
 	}
 
 	@Test // DATAMONGO-960
@@ -45,12 +49,28 @@ public class AggregationOptionsTests {
 
 		assertThat(aggregationOptions.isAllowDiskUse(), is(true));
 		assertThat(aggregationOptions.isExplain(), is(true));
-		assertThat(aggregationOptions.getCursor(), is(new Document("foo", 1)));
+		assertThat(aggregationOptions.getCursor(), is(new Document("batchSize", 1)));
+	}
+
+	@Test // DATAMONGO-1637
+	public void shouldInitializeFromDocument() {
+
+		Document document = new Document();
+		document.put("cursor", new Document("batchSize", 1));
+		document.put("explain", true);
+		document.put("allowDiskUse", true);
+
+		aggregationOptions = AggregationOptions.fromDocument(document);
+
+		assertThat(aggregationOptions.isAllowDiskUse(), is(true));
+		assertThat(aggregationOptions.isExplain(), is(true));
+		assertThat(aggregationOptions.getCursor(), is(new Document("batchSize", 1)));
+		assertThat(aggregationOptions.getCursorBatchSize(), is(1));
 	}
 
 	@Test // DATAMONGO-960
 	public void aggregationOptionsToString() {
 		assertThat(aggregationOptions.toDocument(),
-				is(Document.parse("{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"foo\" : 1}}")));
+				is(Document.parse("{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"batchSize\" : 1}}")));
 	}
 }

@@ -75,7 +75,7 @@ import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 
 /**
- * Tests for {@link MongoTemplate#aggregate(String, AggregationPipeline, Class)}.
+ * Tests for {@link MongoTemplate#aggregate(Aggregation, Class, Class)}.
  *
  * @author Tobias Trelle
  * @author Thomas Darimont
@@ -83,7 +83,7 @@ import com.mongodb.client.MongoCollection;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Nikolay Bogdanov
- * @author maninder
+ * @author Maninder Singh
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -244,15 +244,13 @@ public class AggregationTests {
 				project("n") //
 						.and("tag").previousOperation(), //
 				sort(DESC, "n") //
-		);
+		).withOptions(new AggregationOptions(true, false, 1));
 
 		CloseableIterator<TagCount> iterator = mongoTemplate.aggregateStream(agg, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(iterator, is(notNullValue()));
-		List<TagCount> tagCount = new ArrayList<TagCount>();
-		while (iterator.hasNext()) {
-			tagCount.add(iterator.next());
-		}
+		List<TagCount> tagCount = toList(iterator);
+		iterator.close();
 
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(3));
@@ -302,12 +300,9 @@ public class AggregationTests {
 
 		assertThat(results, is(notNullValue()));
 
-		List<TagCount> tagCount = new ArrayList<TagCount>();
-		while (results.hasNext()) {
-			tagCount.add(results.next());
-		}
+		List<TagCount> tagCount = toList(results);
+		results.close();
 
-		// assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(0));
 	}
 
@@ -409,11 +404,9 @@ public class AggregationTests {
 
 		assertThat(results, is(notNullValue()));
 
-		List<TagCount> tagCount = new ArrayList<TagCount>();
-		while (results.hasNext()) {
-			tagCount.add(results.next());
-		}
-		// assertThat(tagCount, is(notNullValue()));
+		List<TagCount> tagCount = toList(results);
+		results.close();
+
 		assertThat(tagCount.size(), is(2));
 		assertTagCount(null, 0, tagCount.get(0));
 		assertTagCount(null, 0, tagCount.get(1));
@@ -423,7 +416,7 @@ public class AggregationTests {
 	public void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
 		/*
 		 //complex mongodb aggregation framework example from https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		db.zipInfo.aggregate( 
+		db.zipInfo.aggregate(
 			{
 			   $group: {
 			      _id: {
@@ -530,18 +523,18 @@ public class AggregationTests {
 	@Test // DATAMONGO-586
 	public void findStatesWithPopulationOver10MillionAggregationExample() {
 		/*
-		 //complex mongodb aggregation framework example from 
+		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		 
-		 db.zipcodes.aggregate( 
+
+		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
 				      _id:"$state",
 				      totalPop:{ $sum:"$pop"}
 		 			 }
 				},
-				{ 
-		 			$sort: { _id: 1, "totalPop": 1 } 
+				{
+		 			$sort: { _id: 1, "totalPop": 1 }
 		 		},
 				{
 				   $match: {
@@ -1289,10 +1282,9 @@ public class AggregationTests {
 		assertThat(agg.toString(), is(notNullValue()));
 
 		CloseableIterator<LikeStats> iterator = mongoTemplate.aggregateStream(agg, LikeStats.class);
-		List<LikeStats> result = new ArrayList<LikeStats>();
-		while (iterator.hasNext()) {
-			result.add(iterator.next());
-		}
+		List<LikeStats> result = toList(iterator);
+		iterator.close();
+
 		assertThat(result, is(notNullValue()));
 		assertThat(result, is(notNullValue()));
 		assertThat(result.size(), is(5));
@@ -1534,11 +1526,7 @@ public class AggregationTests {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
 
-		mongoTemplate.save(new Person("Anna", "Ivanova", 21, Person.Sex.FEMALE));
-		mongoTemplate.save(new Person("Pavel", "Sidorov", 36, Person.Sex.MALE));
-		mongoTemplate.save(new Person("Anastasia", "Volochkova", 29, Person.Sex.FEMALE));
-		mongoTemplate.save(new Person("Igor", "Stepanov", 31, Person.Sex.MALE));
-		mongoTemplate.save(new Person("Leoniv", "Yakubov", 55, Person.Sex.MALE));
+		createPersonDocuments();
 
 		String tempOutCollection = "personQueryTemp";
 		TypedAggregation<Person> agg = newAggregation(Person.class, //
@@ -1563,11 +1551,7 @@ public class AggregationTests {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
 
-		mongoTemplate.save(new Person("Anna", "Ivanova", 21, Person.Sex.FEMALE));
-		mongoTemplate.save(new Person("Pavel", "Sidorov", 36, Person.Sex.MALE));
-		mongoTemplate.save(new Person("Anastasia", "Volochkova", 29, Person.Sex.FEMALE));
-		mongoTemplate.save(new Person("Igor", "Stepanov", 31, Person.Sex.MALE));
-		mongoTemplate.save(new Person("Leoniv", "Yakubov", 55, Person.Sex.MALE));
+		createPersonDocuments();
 
 		String tempOutCollection = "personQueryTemp";
 		TypedAggregation<Person> agg = newAggregation(Person.class, //
@@ -1575,15 +1559,48 @@ public class AggregationTests {
 				sort(DESC, "count"), //
 				out(tempOutCollection));
 
-		CloseableIterator<DBObject> iterator = mongoTemplate.aggregateStream(agg, DBObject.class);
+		mongoTemplate.aggregateStream(agg, Document.class).close();
 
-		List<DBObject> list = mongoTemplate.findAll(DBObject.class, tempOutCollection);
+		List<Document> list = mongoTemplate.findAll(Document.class, tempOutCollection);
 
 		assertThat(list, hasSize(2));
 		assertThat(list.get(0), isBsonObject().containing("_id", "MALE").containing("count", 3));
 		assertThat(list.get(1), isBsonObject().containing("_id", "FEMALE").containing("count", 2));
 
 		mongoTemplate.dropCollection(tempOutCollection);
+	}
+
+	@Test // DATAMONGO-1637
+	public void shouldReturnDocumentsWithOutputCollectionWhileStreaming() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
+
+		createPersonDocuments();
+
+		String tempOutCollection = "personQueryTemp";
+		TypedAggregation<Person> agg = newAggregation(Person.class, //
+				group("sex").count().as("count"), //
+				sort(DESC, "count"), //
+				out(tempOutCollection));
+
+		CloseableIterator<Document> iterator = mongoTemplate.aggregateStream(agg, Document.class);
+
+		List<Document> result = toList(iterator);
+
+		assertThat(result, hasSize(2));
+		assertThat(result.get(0), isBsonObject().containing("_id", "MALE").containing("count", 3));
+		assertThat(result.get(1), isBsonObject().containing("_id", "FEMALE").containing("count", 2));
+
+		mongoTemplate.dropCollection(tempOutCollection);
+	}
+
+	private void createPersonDocuments() {
+
+		mongoTemplate.save(new Person("Anna", "Ivanova", 21, Person.Sex.FEMALE));
+		mongoTemplate.save(new Person("Pavel", "Sidorov", 36, Person.Sex.MALE));
+		mongoTemplate.save(new Person("Anastasia", "Volochkova", 29, Person.Sex.FEMALE));
+		mongoTemplate.save(new Person("Igor", "Stepanov", 31, Person.Sex.MALE));
+		mongoTemplate.save(new Person("Leoniv", "Yakubov", 55, Person.Sex.MALE));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1418
@@ -1887,6 +1904,16 @@ public class AggregationTests {
 		assertThat(tagCount.getN(), is(n));
 	}
 
+	private static <T> List<T> toList(CloseableIterator<? extends T> results) {
+
+		List<T> result = new ArrayList<T>();
+		while (results.hasNext()) {
+			result.add(results.next());
+		}
+
+		return result;
+	}
+
 	static class DATAMONGO753 {
 
 		PD[] pd;
@@ -2111,4 +2138,3 @@ public class AggregationTests {
 		double price;
 	}
 }
-
