@@ -25,13 +25,13 @@ import com.mongodb.MongoClient;
 public class PersonExampleAppConfig {
 
 	@Bean
-	public Mongo mongo() throws Exception {
+	public MongoClient mongoClient() throws Exception {
 		return new MongoClient("localhost");
 	}
 
 	@Bean
 	public MongoTemplate mongoTemplate() throws Exception {
-		return new MongoTemplate(mongo(), "database");
+		return new MongoTemplate(mongoClient(), "database");
 	}
 
 	@Bean

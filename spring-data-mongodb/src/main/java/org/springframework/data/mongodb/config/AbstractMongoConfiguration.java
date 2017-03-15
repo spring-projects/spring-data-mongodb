@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
@@ -26,7 +25,6 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**
@@ -44,26 +42,13 @@ import com.mongodb.MongoClient;
 public abstract class AbstractMongoConfiguration extends MongoConfigurationSupport {
 
 	/**
-	 * Return the name of the authentication database to use. Defaults to {@literal null} and will turn into the value
-	 * returned by {@link #getDatabaseName()} later on effectively.
-	 * 
-	 * @return
-	 * @deprecated since 1.7. {@link MongoClient} should hold authentication data within
-	 *             {@link MongoClient#getCredentialsList()}
-	 */
-	@Deprecated
-	protected String getAuthenticationDatabaseName() {
-		return null;
-	}
-
-	/**
-	 * Return the {@link Mongo} instance to connect to. Annotate with {@link Bean} in case you want to expose a
-	 * {@link Mongo} instance to the {@link org.springframework.context.ApplicationContext}.
+	 * Return the {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want to expose a
+	 * {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}.
 	 * 
 	 * @return
 	 * @throws Exception
 	 */
-	public abstract Mongo mongo() throws Exception;
+	public abstract MongoClient mongoClient() throws Exception;
 
 	/**
 	 * Creates a {@link MongoTemplate}.
@@ -77,8 +62,8 @@ public abstract class AbstractMongoConfiguration extends MongoConfigurationSuppo
 	}
 
 	/**
-	 * Creates a {@link SimpleMongoDbFactory} to be used by the {@link MongoTemplate}. Will use the {@link Mongo} instance
-	 * configured in {@link #mongo()}.
+	 * Creates a {@link SimpleMongoDbFactory} to be used by the {@link MongoTemplate}. Will use the {@link MongoClient}
+	 * instance configured in {@link #mongo()}.
 	 * 
 	 * @see #mongo()
 	 * @see #mongoTemplate()
@@ -87,7 +72,7 @@ public abstract class AbstractMongoConfiguration extends MongoConfigurationSuppo
 	 */
 	@Bean
 	public MongoDbFactory mongoDbFactory() throws Exception {
-		return new SimpleMongoDbFactory(mongo(), getDatabaseName(), getUserCredentials(), getAuthenticationDatabaseName());
+		return new SimpleMongoDbFactory(mongoClient(), getDatabaseName());
 	}
 
 	/**
@@ -105,19 +90,6 @@ public abstract class AbstractMongoConfiguration extends MongoConfigurationSuppo
 
 		Package mappingBasePackage = getClass().getPackage();
 		return mappingBasePackage == null ? null : mappingBasePackage.getName();
-	}
-
-	/**
-	 * Return {@link UserCredentials} to be used when connecting to the MongoDB instance or {@literal null} if none shall
-	 * be used.
-	 * 
-	 * @return
-	 * @deprecated since 1.7. {@link MongoClient} should hold authentication data within
-	 *             {@link MongoClient#getCredentialsList()}
-	 */
-	@Deprecated
-	protected UserCredentials getUserCredentials() {
-		return null;
 	}
 
 	/**

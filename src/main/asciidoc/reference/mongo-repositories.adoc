@@ -56,10 +56,10 @@ Right now this interface simply serves typing purposes but we will add additiona
     http://www.springframework.org/schema/data/mongo
     http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
 
-  <mongo:mongo id="mongo" />
+  <mongo:mongo-client id="mongoClient" />
 
   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-    <constructor-arg ref="mongo" />
+    <constructor-arg ref="mongoClient" />
     <constructor-arg value="databaseName" />
   </bean>
 

@@ -17,7 +17,7 @@
 		<constructor-arg ref="factory2" />
 	</bean>
 
-	<mongo:db-factory id="factory1" host="127.0.0.1" dbname="mongo-index-db1" />
-	<mongo:db-factory id="factory2" host="127.0.0.1" dbname="mongo-index-db2" />
+	<mongo:db-factory id="factory1" dbname="mongo-index-db1" />
+	<mongo:db-factory id="factory2" dbname="mongo-index-db2" />
 
 </beans>

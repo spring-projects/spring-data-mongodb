@@ -5,8 +5,6 @@ Rich mapping support is provided by the `MappingMongoConverter`. `MappingMongoCo
 
 In this section we will describe the features of the `MappingMongoConverter`. How to use conventions for mapping objects to documents and how to override those conventions with annotation based mapping metadata.
 
-NOTE: `SimpleMongoConverter` has been deprecated in Spring Data MongoDB M3 as all of its functionality has been subsumed into `MappingMongoConverter`.
-
 [[mapping-conventions]]
 == Convention based Mapping
 
@@ -252,7 +250,7 @@ calling `get()` before the actual conversion
 
 Unless explicitly configured, an instance of `MappingMongoConverter` is created by default when creating a `MongoTemplate`. You can create your own instance of the `MappingMongoConverter` so as to tell it where to scan the classpath at startup your domain classes in order to extract metadata and construct indexes. Also, by creating your own instance you can register Spring converters to use for mapping specific classes to and from the database.
 
-You can configure the `MappingMongoConverter` as well as `com.mongodb.Mongo` and MongoTemplate either using Java or XML based metadata. Here is an example using Spring's Java based configuration
+You can configure the `MappingMongoConverter` as well as `com.mongodb.MongoClient` and MongoTemplate either using Java or XML based metadata. Here is an example using Spring's Java based configuration
 
 .@Configuration class to configure MongoDB mapping support
 ====
@@ -296,7 +294,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 ----
 ====
 
-`AbstractMongoConfiguration` requires you to implement methods that define a `com.mongodb.Mongo` as well as provide a database name. `AbstractMongoConfiguration` also has a method you can override named  `getMappingBasePackage(…)` which tells the converter where to scan for classes annotated with the `@Document` annotation.
+`AbstractMongoConfiguration` requires you to implement methods that define a `com.mongodb.MongoClient` as well as provide a database name. `AbstractMongoConfiguration` also has a method you can override named  `getMappingBasePackage(…)` which tells the converter where to scan for classes annotated with the `@Document` annotation.
 
 You can add additional converters to the converter by overriding the method afterMappingMongoConverterCreation. Also shown in the above example is a `LoggingEventListener` which logs `MongoMappingEvent` s that are posted onto Spring's `ApplicationContextEvent` infrastructure.
 
@@ -320,9 +318,9 @@ Spring's MongoDB namespace enables you to easily enable mapping functionality in
     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
   <!-- Default bean name is 'mongo' -->
-  <mongo:mongo host="localhost" port="27017"/>
+  <mongo:mongo-client host="localhost" port="27017"/>
 
-  <mongo:db-factory dbname="database" mongo-ref="mongo"/>
+  <mongo:db-factory dbname="database" mongo-ref="mongoClient"/>
 
   <!-- by default look for a Mongo object named 'mongo' - default name used for the converter is 'mappingConverter' -->
   <mongo:mapping-converter base-package="com.bigbank.domain">

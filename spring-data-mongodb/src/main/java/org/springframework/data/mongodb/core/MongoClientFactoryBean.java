@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
@@ -38,7 +37,7 @@ import com.mongodb.ServerAddress;
  * @author Christoph Strobl
  * @since 1.7
  */
-public class MongoClientFactoryBean extends AbstractFactoryBean<Mongo> implements PersistenceExceptionTranslator {
+public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> implements PersistenceExceptionTranslator {
 
 	private static final PersistenceExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new MongoExceptionTranslator();
 
@@ -108,8 +107,8 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<Mongo> implement
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.FactoryBean#getObjectType()
 	 */
-	public Class<? extends Mongo> getObjectType() {
-		return Mongo.class;
+	public Class<? extends MongoClient> getObjectType() {
+		return MongoClient.class;
 	}
 
 	/*
@@ -125,7 +124,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<Mongo> implement
 	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
 	 */
 	@Override
-	protected Mongo createInstance() throws Exception {
+	protected MongoClient createInstance() throws Exception {
 
 		if (mongoClientOptions == null) {
 			mongoClientOptions = MongoClientOptions.builder().build();
@@ -143,7 +142,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<Mongo> implement
 	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#destroyInstance(java.lang.Object)
 	 */
 	@Override
-	protected void destroyInstance(Mongo instance) throws Exception {
+	protected void destroyInstance(MongoClient instance) throws Exception {
 		instance.close();
 	}
 

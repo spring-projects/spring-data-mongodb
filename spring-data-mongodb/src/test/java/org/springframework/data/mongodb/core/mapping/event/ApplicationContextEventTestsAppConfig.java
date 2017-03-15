@@ -32,7 +32,7 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
 
 	@Override
 	@Bean
-	public Mongo mongo() throws Exception {
+	public MongoClient mongoClient() throws Exception {
 		return new MongoClient("127.0.0.1");
 	}
 

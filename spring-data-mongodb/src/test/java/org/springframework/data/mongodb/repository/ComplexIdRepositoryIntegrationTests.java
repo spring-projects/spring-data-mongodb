@@ -57,7 +57,7 @@ public class ComplexIdRepositoryIntegrationTests {
 		}
 
 		@Override
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() throws Exception {
 			return new MongoClient();
 		}
 

@@ -5,6 +5,6 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<mongo:db-factory id="testMongo" uri="mongodb://username:password@localhost/database" />
+	<mongo:db-factory id="testMongo" client-uri="mongodb://username:password@localhost/database" />
 
 </beans>

@@ -15,12 +15,12 @@
  */
 package org.springframework.data.mongodb.monitor;
 
+import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * JMX Metrics for Memory
@@ -30,8 +30,8 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Memory Metrics")
 public class MemoryMetrics extends AbstractMonitor {
 
-	public MemoryMetrics(Mongo mongo) {
-		this.mongo = mongo;
+	public MemoryMetrics(MongoClient mongoClient) {
+		super(mongoClient);
 	}
 
 	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Memory address size")
@@ -61,7 +61,7 @@ public class MemoryMetrics extends AbstractMonitor {
 
 	@SuppressWarnings("unchecked")
 	private <T> T getMemData(String key, Class<T> targetClass) {
-		DBObject mem = (DBObject) getServerStatus().get("mem");
+		Document mem = (Document) getServerStatus().get("mem");
 		// Class c = mem.get(key).getClass();
 		return (T) mem.get(key);
 	}

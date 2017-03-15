@@ -15,12 +15,12 @@
  */
 package org.springframework.data.mongodb.monitor;
 
+import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * JMX Metrics for Operation counters
@@ -30,8 +30,8 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Operation Counters")
 public class OperationCounters extends AbstractMonitor {
 
-	public OperationCounters(Mongo mongo) {
-		this.mongo = mongo;
+	public OperationCounters(MongoClient mongoClient) {
+		super(mongoClient);
 	}
 
 	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Insert operation count")
@@ -65,7 +65,7 @@ public class OperationCounters extends AbstractMonitor {
 	}
 
 	private int getOpCounter(String key) {
-		DBObject opCounters = (DBObject) getServerStatus().get("opcounters");
+		Document opCounters = (Document) getServerStatus().get("opcounters");
 		return (Integer) opCounters.get(key);
 	}
 }

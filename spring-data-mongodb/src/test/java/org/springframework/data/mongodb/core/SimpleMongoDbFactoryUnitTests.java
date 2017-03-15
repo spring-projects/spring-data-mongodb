@@ -47,7 +47,7 @@ import com.mongodb.MongoURI;
 public class SimpleMongoDbFactoryUnitTests {
 
 	public @Rule ExpectedException expectedException = ExpectedException.none();
-	@Mock Mongo mongo;
+	@Mock MongoClient mongo;
 
 	@Test // DATADOC-254
 	public void rejectsIllegalDatabaseNames() {
@@ -67,19 +67,10 @@ public class SimpleMongoDbFactoryUnitTests {
 	@SuppressWarnings("deprecation")
 	public void mongoUriConstructor() throws UnknownHostException {
 
-		MongoURI mongoURI = new MongoURI("mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
+		MongoClientURI mongoURI = new MongoClientURI("mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
 		MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoURI);
 
-		assertThat(getField(mongoDbFactory, "credentials"), is((Object) new UserCredentials("myUsername", "myPassword")));
 		assertThat(getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
-	}
-
-	@Test // DATAMONGO-789
-	@SuppressWarnings("deprecation")
-	public void defaultsAuthenticationDatabaseToDatabase() {
-
-		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(mongo, "foo");
-		assertThat(getField(factory, "authenticationDatabaseName"), is((Object) "foo"));
 	}
 
 	@Test // DATAMONGO-1158
@@ -89,43 +80,6 @@ public class SimpleMongoDbFactoryUnitTests {
 		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(uri);
 
 		assertThat(getField(factory, "databaseName").toString(), is("myDataBase"));
-	}
-
-	@Test // DATAMONGO-1158
-	public void shouldDefaultAuthenticationDbNameToDbNameWhenUsingMongoClient() throws UnknownHostException {
-
-		MongoClient clientMock = mock(MongoClient.class);
-		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(clientMock, "FooBar");
-
-		assertThat(getField(factory, "authenticationDatabaseName").toString(), is("FooBar"));
-	}
-
-	@Test // DATAMONGO-1260
-	public void rejectsMongoClientWithUserCredentials() {
-
-		expectedException.expect(InvalidDataAccessApiUsageException.class);
-		expectedException.expectMessage("use 'MongoCredential' for 'MongoClient'");
-
-		new SimpleMongoDbFactory(mock(MongoClient.class), "cairhienin", new UserCredentials("moiraine", "sedai"));
-	}
-
-	@Test // DATAMONGO-1260
-	public void rejectsMongoClientWithUserCredentialsAndAuthDb() {
-
-		expectedException.expect(InvalidDataAccessApiUsageException.class);
-		expectedException.expectMessage("use 'MongoCredential' for 'MongoClient'");
-
-		new SimpleMongoDbFactory(mock(MongoClient.class), "malkieri", new UserCredentials("lan", "mandragoran"), "authdb");
-	}
-
-	@Test // DATAMONGO-1260
-	public void shouldNotRejectMongoClientWithNoCredentials() {
-		new SimpleMongoDbFactory(mock(MongoClient.class), "andoran", UserCredentials.NO_CREDENTIALS);
-	}
-
-	@Test // DATAMONGO-1260
-	public void shouldNotRejectMongoClientWithEmptyUserCredentials() {
-		new SimpleMongoDbFactory(mock(MongoClient.class), "shangtai", new UserCredentials("", ""));
 	}
 
 	@SuppressWarnings("deprecation")

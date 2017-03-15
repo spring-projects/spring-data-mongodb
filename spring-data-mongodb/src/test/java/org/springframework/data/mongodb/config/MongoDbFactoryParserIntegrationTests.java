@@ -17,11 +17,8 @@ package org.springframework.data.mongodb.config;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.junit.Assume.*;
-import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
@@ -34,11 +31,9 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvokerTestUtil;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoURI;
@@ -56,11 +51,6 @@ public class MongoDbFactoryParserIntegrationTests {
 
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
-
-	@BeforeClass
-	public static void validateMongoDriver() {
-		assumeFalse(isMongo3Driver());
-	}
 
 	@Before
 	public void setUp() {
@@ -119,27 +109,6 @@ public class MongoDbFactoryParserIntegrationTests {
 		factory.getBean("first");
 	}
 
-	@Test // DATAMONGO-280
-	@SuppressWarnings("deprecation")
-	public void parsesMaxAutoConnectRetryTimeCorrectly() {
-
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
-		Mongo mongo = factory.getBean(Mongo.class);
-		assertThat(ReflectiveMongoOptionsInvokerTestUtil.getMaxAutoConnectRetryTime(mongo.getMongoOptions()), is(27L));
-	}
-
-	@Test // DATAMONGO-295
-	public void setsUpMongoDbFactoryUsingAMongoUri() {
-
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri.xml"));
-		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
-		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
-
-		assertThat(constructorArguments.getArgumentCount(), is(1));
-		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoURI.class);
-		assertThat(argument, is(notNullValue()));
-	}
-
 	@Test // DATAMONGO-306
 	public void setsUpMongoDbFactoryUsingAMongoUriWithoutCredentials() {
 
@@ -156,11 +125,6 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(db.getName(), is("database"));
 	}
 
-	@Test(expected = BeanDefinitionParsingException.class) // DATAMONGO-295
-	public void rejectsUriPlusDetailedConfiguration() {
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-and-details.xml"));
-	}
-
 	@Test // DATAMONGO-1218
 	public void setsUpMongoDbFactoryUsingAMongoClientUri() {
 
@@ -171,11 +135,6 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(constructorArguments.getArgumentCount(), is(1));
 		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoClientURI.class);
 		assertThat(argument, is(notNullValue()));
-	}
-
-	@Test(expected = BeanDefinitionParsingException.class) // DATAMONGO-1218
-	public void rejectsClientUriPlusDetailedConfiguration() {
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-and-details.xml"));
 	}
 
 	@Test // DATAMONGO-1293
@@ -200,16 +159,6 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(constructorArguments.getArgumentCount(), is(1));
 		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoClientURI.class);
 		assertThat(argument, is(notNullValue()));
-	}
-
-	@Test(expected = BeanDefinitionParsingException.class) // DATAMONGO-1293
-	public void rejectsClientUriPlusDetailedConfigurationAndWriteConcern() {
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-write-concern-and-details.xml"));
-	}
-
-	@Test(expected = BeanDefinitionParsingException.class) // DATAMONGO-1293
-	public void rejectsUriPlusDetailedConfigurationAndWriteConcern() {
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-write-concern-and-details.xml"));
 	}
 
 	private static void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
