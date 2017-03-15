@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2011 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.monitor;
 
+import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * JMX Metrics for Global Locks
@@ -30,8 +31,8 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Global Lock Metrics")
 public class GlobalLockMetrics extends AbstractMonitor {
 
-	public GlobalLockMetrics(Mongo mongo) {
-		this.mongo = mongo;
+	public GlobalLockMetrics(MongoClient mongoClient) {
+		super(mongoClient);
 	}
 
 	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Total time")
@@ -71,8 +72,8 @@ public class GlobalLockMetrics extends AbstractMonitor {
 	}
 
 	private int getCurrentQueue(String key) {
-		DBObject globalLock = (DBObject) getServerStatus().get("globalLock");
-		DBObject currentQueue = (DBObject) globalLock.get("currentQueue");
+		Document globalLock = (Document) getServerStatus().get("globalLock");
+		Document currentQueue = (Document) globalLock.get("currentQueue");
 		return (Integer) currentQueue.get(key);
 	}
 }

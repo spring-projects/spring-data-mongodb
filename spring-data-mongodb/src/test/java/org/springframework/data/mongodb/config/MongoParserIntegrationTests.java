@@ -54,7 +54,7 @@ public class MongoParserIntegrationTests {
 	public void readsMongoAttributesCorrectly() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-bean.xml"));
-		BeanDefinition definition = factory.getBeanDefinition("mongo");
+		BeanDefinition definition = factory.getBeanDefinition("mongoClient");
 
 		List<PropertyValue> values = definition.getPropertyValues().getPropertyValueList();
 
@@ -63,7 +63,7 @@ public class MongoParserIntegrationTests {
 
 		assertThat(x.getPropertyValues().getPropertyValueList(), hasItem(new PropertyValue("writeConcern", "SAFE")));
 
-		factory.getBean("mongo");
+		factory.getBean("mongoClient");
 	}
 
 	@Test // DATAMONGO-343

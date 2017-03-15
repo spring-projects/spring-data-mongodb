@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2011 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  */
 package org.springframework.data.mongodb.monitor;
 
+import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * JMX Metrics for Connections
@@ -30,8 +30,8 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Connection metrics")
 public class ConnectionMetrics extends AbstractMonitor {
 
-	public ConnectionMetrics(Mongo mongo) {
-		this.mongo = mongo;
+	public ConnectionMetrics(MongoClient mongoClient) {
+		super(mongoClient);
 	}
 
 	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Current Connections")
@@ -46,7 +46,7 @@ public class ConnectionMetrics extends AbstractMonitor {
 
 	@SuppressWarnings("unchecked")
 	private <T> T getConnectionData(String key, Class<T> targetClass) {
-		DBObject mem = (DBObject) getServerStatus().get("connections");
+		Document mem = (Document) getServerStatus().get("connections");
 		// Class c = mem.get(key).getClass();
 		return (T) mem.get(key);
 	}

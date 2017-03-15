@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.monitor;
 
+import com.mongodb.MongoClient;
+import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
@@ -30,8 +32,8 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Assertion Metrics")
 public class AssertMetrics extends AbstractMonitor {
 
-	public AssertMetrics(Mongo mongo) {
-		this.mongo = mongo;
+	public AssertMetrics(MongoClient mongoClient) {
+		super(mongoClient);
 	}
 
 	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Regular")
@@ -60,7 +62,7 @@ public class AssertMetrics extends AbstractMonitor {
 	}
 
 	private int getBtree(String key) {
-		DBObject asserts = (DBObject) getServerStatus().get("asserts");
+		Document asserts = (Document) getServerStatus().get("asserts");
 		// Class c = btree.get(key).getClass();
 		return (Integer) asserts.get(key);
 	}

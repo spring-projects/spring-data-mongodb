@@ -55,13 +55,13 @@ public class DefaultScriptOperationsTests {
 		private static final String DB_NAME = "script-tests";
 
 		@Bean
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() throws Exception {
 			return new MongoClient();
 		}
 
 		@Bean
 		public MongoTemplate template() throws Exception {
-			return new MongoTemplate(mongo(), DB_NAME);
+			return new MongoTemplate(mongoClient(), DB_NAME);
 		}
 
 	}

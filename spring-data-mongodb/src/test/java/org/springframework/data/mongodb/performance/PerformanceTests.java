@@ -80,7 +80,7 @@ public class PerformanceTests {
 	private static final int COLLECTION_SIZE = 1024 * 1024 * 256; // 256 MB
 	private static final Collection<String> COLLECTION_NAMES = Arrays.asList("template", "driver", "person");
 
-	Mongo mongo;
+	MongoClient mongo;
 	MongoTemplate operations;
 	PersonRepository repository;
 	MongoConverter converter;

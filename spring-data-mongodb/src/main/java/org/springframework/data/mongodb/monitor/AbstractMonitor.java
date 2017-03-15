@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,58 +15,35 @@
  */
 package org.springframework.data.mongodb.monitor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.authentication.UserCredentials;
-import org.springframework.data.mongodb.core.MongoDbUtils;
+import org.bson.Document;
 
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Base class to encapsulate common configuration settings when connecting to a database
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public abstract class AbstractMonitor {
 
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+	private final MongoClient mongoClient;
 
-	protected Mongo mongo;
-	private String username;
-	private String password;
-
-	/**
-	 * Sets the username to use to connect to the Mongo database
-	 * 
-	 * @param username The username to use
-	 */
-	public void setUsername(String username) {
-		this.username = username;
+	protected AbstractMonitor(MongoClient mongoClient) {
+		this.mongoClient = mongoClient;
 	}
 
-	/**
-	 * Sets the password to use to authenticate with the Mongo database.
-	 * 
-	 * @param password The password to use
-	 */
-	public void setPassword(String password) {
-		this.password = password;
+	public Document getServerStatus() {
+		return getDb("admin").runCommand(new Document("serverStatus", 1).append("rangeDeleter", 1).append("repl", 1));
 	}
 
-	public CommandResult getServerStatus() {
-		CommandResult result = getDb("admin").command("serverStatus");
-		if (!result.ok()) {
-			logger.error("Could not query for server status.  Command Result = " + result);
-			throw new MongoException("could not query for server status.  Command Result = " + result);
-		}
-		return result;
+	public MongoDatabase getDb(String databaseName) {
+		return mongoClient.getDatabase(databaseName);
 	}
 
-	public DB getDb(String databaseName) {
-		return MongoDbUtils.getDB(mongo, databaseName, new UserCredentials(username, password));
+	protected MongoClient getMongoClient() {
+		return mongoClient;
 	}
 }

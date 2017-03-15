@@ -41,7 +41,7 @@ public class ConfigClassInDefaultPackage extends AbstractMongoConfiguration {
 	 * @see org.springframework.data.mongodb.config.AbstractMongoConfiguration#mongo()
 	 */
 	@Override
-	public Mongo mongo() throws Exception {
+	public MongoClient mongoClient() throws Exception {
 		return new MongoClient();
 	}
 }

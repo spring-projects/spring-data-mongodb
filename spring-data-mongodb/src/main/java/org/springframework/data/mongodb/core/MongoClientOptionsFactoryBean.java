@@ -249,7 +249,9 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	 * @param sslSocketFactory
 	 */
 	public void setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
+
 		this.sslSocketFactory = sslSocketFactory;
+		this.ssl = sslSocketFactory != null;
 	}
 
 	/**

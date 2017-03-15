@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core;
-
-import static org.springframework.data.mongodb.util.MongoClientVersion.*;
-import static org.springframework.util.ReflectionUtils.*;
-
-import java.lang.reflect.Method;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.util.MongoClientVersion;
@@ -35,15 +30,6 @@ import com.mongodb.DBCollection;
  */
 class ReflectiveDBCollectionInvoker {
 
-	private static final Method GEN_INDEX_NAME_METHOD;
-	private static final Method RESET_INDEX_CHACHE_METHOD;
-
-	static {
-
-		GEN_INDEX_NAME_METHOD = findMethod(DBCollection.class, "genIndexName", Document.class);
-		RESET_INDEX_CHACHE_METHOD = findMethod(DBCollection.class, "resetIndexCache");
-	}
-
 	private ReflectiveDBCollectionInvoker() {}
 
 	/**
@@ -54,28 +40,7 @@ class ReflectiveDBCollectionInvoker {
 	 * @return
 	 */
 	public static String generateIndexName(Document keys) {
-
-		if (isMongo3Driver()) {
-			return genIndexName(keys);
-		}
-		return (String) invokeMethod(GEN_INDEX_NAME_METHOD, null, keys);
-	}
-
-	/**
-	 * In case of MongoDB Java driver version 2 all indices that have not yet been applied to this collection will be
-	 * cleared. Since this method is not available for the MongoDB Java driver version 3 the operation will throw
-	 * {@link UnsupportedOperationException}.
-	 * 
-	 * @param dbCollection
-	 * @throws UnsupportedOperationException
-	 */
-	public static void resetIndexCache(DBCollection dbCollection) {
-
-		if (isMongo3Driver()) {
-			throw new UnsupportedOperationException("The mongo java driver 3 does no loger support resetIndexCache!");
-		}
-
-		invokeMethod(RESET_INDEX_CHACHE_METHOD, dbCollection);
+		return genIndexName(keys);
 	}
 
 	/**

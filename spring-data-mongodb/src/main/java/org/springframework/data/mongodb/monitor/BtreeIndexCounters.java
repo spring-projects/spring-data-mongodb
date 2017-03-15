@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2011 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  */
 package org.springframework.data.mongodb.monitor;
 
+import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * JMX Metrics for B-tree index counters
@@ -30,8 +30,8 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Btree Metrics")
 public class BtreeIndexCounters extends AbstractMonitor {
 
-	public BtreeIndexCounters(Mongo mongo) {
-		this.mongo = mongo;
+	public BtreeIndexCounters(MongoClient mongoClient) {
+		super(mongoClient);
 	}
 
 	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Accesses")
@@ -60,14 +60,14 @@ public class BtreeIndexCounters extends AbstractMonitor {
 	}
 
 	private int getBtree(String key) {
-		DBObject indexCounters = (DBObject) getServerStatus().get("indexCounters");
+		Document indexCounters = (Document) getServerStatus().get("indexCounters");
 		if (indexCounters.get("note") != null) {
 			String message = (String) indexCounters.get("note");
 			if (message.contains("not supported")) {
 				return -1;
 			}
 		}
-		DBObject btree = (DBObject) indexCounters.get("btree");
+		Document btree = (Document) indexCounters.get("btree");
 		// Class c = btree.get(key).getClass();
 		return (Integer) btree.get(key);
 	}

@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
-import static org.springframework.data.mongodb.core.ReflectiveWriteConcernInvoker.*;
-import static org.springframework.data.mongodb.core.ReflectiveWriteResultInvoker.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
@@ -1026,7 +1024,7 @@ public class MongoTemplateTests {
 
 		UpdateResult wr = template.updateMulti(new Query(), u, PersonWithIdPropertyOfTypeObjectId.class);
 
-		if (wasAcknowledged(wr)) {
+		if (wr.wasAcknowledged()) {
 			assertThat(wr.getModifiedCount(), is(2L));
 		}
 
@@ -1182,7 +1180,7 @@ public class MongoTemplateTests {
 		person.setId(new ObjectId());
 		person.setFirstName("Dave");
 
-		template.setWriteConcern(noneOrUnacknowledged());
+		template.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
 		template.save(person);
 		UpdateResult result = template.updateFirst(query(where("id").is(person.getId())), update("firstName", "Carter"),
 				PersonWithIdPropertyOfTypeObjectId.class);
@@ -1195,7 +1193,7 @@ public class MongoTemplateTests {
 
 		MongoAction lastMongoAction = resolver.getMongoAction();
 		assertThat(lastMongoAction.getCollectionName(), is("personWithIdPropertyOfTypeObjectId"));
-		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(noneOrUnacknowledged()));
+		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(WriteConcern.UNACKNOWLEDGED));
 		assertThat(lastMongoAction.getDocument(), notNullValue());
 		assertThat(lastMongoAction.getEntityType().toString(), is(PersonWithIdPropertyOfTypeObjectId.class.toString()));
 		assertThat(lastMongoAction.getMongoActionOperation(), is(MongoActionOperation.UPDATE));

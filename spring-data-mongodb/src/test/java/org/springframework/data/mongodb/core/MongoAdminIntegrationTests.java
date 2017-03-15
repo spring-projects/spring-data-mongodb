@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2011 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
-import com.mongodb.Mongo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
@@ -26,6 +23,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.mongodb.DB;
+import com.mongodb.MongoClient;
 
 /**
  * This test class assumes that you are already running the MongoDB server.
@@ -38,23 +38,24 @@ public class MongoAdminIntegrationTests {
 
 	private static final Log logger = LogFactory.getLog(MongoAdminIntegrationTests.class);
 
-	@SuppressWarnings("unused")
-	private DB testAdminDb;
+	@SuppressWarnings("unused") private DB testAdminDb;
 
-	@Autowired
-	Mongo mongo;
+	@Autowired MongoClient mongoClient;
+
+	MongoAdmin mongoAdmin;
 
 	@Before
 	public void setUp() {
-		mongo.getDB("testAdminDb").dropDatabase();
-		testAdminDb = mongo.getDB("testAdminDb");
-
+		mongoAdmin = new MongoAdmin(mongoClient);
 	}
 
 	@Test
 	public void serverStats() {
-		// CommandResult result = testAdminDb.getStats();
-		CommandResult result = mongo.getDB("admin").command("serverStatus");
-		logger.info("stats = " + result);
+		logger.info("stats = " + mongoAdmin.getServerStatus());
+	}
+
+	@Test
+	public void datanaseStats() {
+		logger.info(mongoAdmin.getDatabaseStats("testAdminDb"));
 	}
 }

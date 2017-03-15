@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
@@ -99,8 +98,6 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		String mongoRef = element.getAttribute("mongo-ref");
 		String dbname = element.getAttribute("dbname");
 
-		BeanDefinition userCredentials = getUserCredentialsBeanDefinition(element, parserContext);
-
 		// Defaulting
 		if (StringUtils.hasText(mongoRef)) {
 			dbFactoryBuilder.addConstructorArgReference(mongoRef);
@@ -109,8 +106,6 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		}
 
 		dbFactoryBuilder.addConstructorArgValue(StringUtils.hasText(dbname) ? dbname : "db");
-		dbFactoryBuilder.addConstructorArgValue(userCredentials);
-		dbFactoryBuilder.addConstructorArgValue(element.getAttribute("authentication-dbname"));
 
 		BeanDefinitionBuilder writeConcernPropertyEditorBuilder = getWriteConcernPropertyEditorBuilder();
 
@@ -136,28 +131,6 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		setPropertyValue(mongoBuilder, element, "port");
 
 		return getSourceBeanDefinition(mongoBuilder, parserContext, element);
-	}
-
-	/**
-	 * Returns a {@link BeanDefinition} for a {@link UserCredentials} object.
-	 * 
-	 * @param element
-	 * @return the {@link BeanDefinition} or {@literal null} if neither username nor password given.
-	 */
-	private BeanDefinition getUserCredentialsBeanDefinition(Element element, ParserContext context) {
-
-		String username = element.getAttribute("username");
-		String password = element.getAttribute("password");
-
-		if (!StringUtils.hasText(username) && !StringUtils.hasText(password)) {
-			return null;
-		}
-
-		BeanDefinitionBuilder userCredentialsBuilder = BeanDefinitionBuilder.genericBeanDefinition(UserCredentials.class);
-		userCredentialsBuilder.addConstructorArgValue(StringUtils.hasText(username) ? username : null);
-		userCredentialsBuilder.addConstructorArgValue(StringUtils.hasText(password) ? password : null);
-
-		return getSourceBeanDefinition(userCredentialsBuilder, context, element);
 	}
 
 	/**
@@ -193,7 +166,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 					parserContext.extractSource(element));
 		}
 
-		Class<?> type = hasClientUri ? MongoClientURI.class : MongoURI.class;
+		Class<?> type = MongoClientURI.class;
 		String uri = hasClientUri ? element.getAttribute("client-uri") : element.getAttribute("uri");
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(type);
