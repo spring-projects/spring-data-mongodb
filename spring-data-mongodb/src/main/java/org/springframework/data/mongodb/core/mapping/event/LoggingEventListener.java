@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
@@ -23,9 +25,10 @@ import com.mongodb.DBObject;
 
 /**
  * {@link ApplicationListener} for Mongo mapping events logging the events.
- * 
+ *
  * @author Jon Brisbin
  * @author Martin Baumgartner
+ * @author Christoph Strobl
  */
 public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 
@@ -46,7 +49,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onBeforeSave(Object source, DBObject dbo) {
-		LOGGER.info("onBeforeSave: {}, {}", source, dbo);
+		LOGGER.info("onBeforeSave: {}, {}", source, serializeToJsonSafely(dbo));
 	}
 
 	/*
@@ -55,7 +58,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterSave(Object source, DBObject dbo) {
-		LOGGER.info("onAfterSave: {}, {}", source, dbo);
+		LOGGER.info("onAfterSave: {}, {}", source, serializeToJsonSafely(dbo));
 	}
 
 	/*
@@ -64,7 +67,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterLoad(DBObject dbo) {
-		LOGGER.info("onAfterLoad: {}", dbo);
+		LOGGER.info("onAfterLoad: {}", serializeToJsonSafely(dbo));
 	}
 
 	/*
@@ -73,7 +76,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterConvert(DBObject dbo, Object source) {
-		LOGGER.info("onAfterConvert: {}, {}", dbo, source);
+		LOGGER.info("onAfterConvert: {}, {}", serializeToJsonSafely(dbo), source);
 	}
 
 	/*
@@ -82,7 +85,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterDelete(DBObject dbo) {
-		LOGGER.info("onAfterDelete: {}", dbo);
+		LOGGER.info("onAfterDelete: {}", serializeToJsonSafely(dbo));
 	}
 
 	/*
@@ -91,6 +94,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onBeforeDelete(DBObject dbo) {
-		LOGGER.info("onBeforeDelete: {}", dbo);
+		LOGGER.info("onBeforeDelete: {}", serializeToJsonSafely(dbo));
 	}
 }
