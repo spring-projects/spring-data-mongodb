@@ -23,31 +23,54 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
 import org.bson.Document;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Tests for {@link LoggingEventListener}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class LoggingEventListenerTests {
 
-	LoggingEventListener listener;
 	ListAppender<ILoggingEvent> appender;
+	ch.qos.logback.classic.Logger logger;
+	LoggingEventListener listener;
 
 	@Before
 	public void setUp() {
 
-		// set log level for LoggingEventListener to "info" and set up an appender capturing events.
-		ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory
-				.getLogger(LoggingEventListener.class);
-		logger.setLevel(Level.toLevel("info"));
+		appender = new ListAppender<ILoggingEvent>();
 
-		appender = new ListAppender();
+		// set log level for LoggingEventListener to "info" and set up an appender capturing events.
+		logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LoggingEventListener.class);
+
+		logger.setAdditive(false);
+		logger.setLevel(Level.INFO);
 		logger.addAppender(appender);
+
 		appender.start();
 
 		listener = new LoggingEventListener();
+	}
+
+	@After
+	public void tearDown() {
+
+		// cleanup
+		if (logger != null) {
+
+			logger.detachAppender(appender);
+			logger.setAdditive(true);
+			logger.setLevel(null);
+		}
+
+		if (appender != null) {
+			appender.stop();
+		}
 	}
 
 	@Test // DATAMONGO-1645
@@ -95,5 +118,4 @@ public class LoggingEventListenerTests {
 	static class Foo {
 
 	}
-
 }
