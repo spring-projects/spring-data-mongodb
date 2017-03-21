@@ -15,13 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Collections;
-import java.util.Date;
-
+import com.mongodb.*;
 import org.hamcrest.core.IsEqual;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,17 +30,14 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.*;
 
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
+import java.util.Collections;
+import java.util.Date;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link MongoPersistentEntityIndexCreator}.
@@ -56,6 +47,7 @@ import com.mongodb.MongoException;
  * @author Johno Crawford
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Florian BERNARD
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentEntityIndexCreatorUnitTests {
@@ -218,6 +210,28 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		new MongoPersistentEntityIndexCreator(mappingContext, factory);
 	}
 
+
+	@Test
+	public void doesNotPropagateUniqueIndex(){
+		MongoMappingContext mappingContext = prepareMappingContext(Recipe.class);
+		MongoPersistentEntityIndexCreator creator = new MongoPersistentEntityIndexCreator(mappingContext, factory);
+
+		assertEquals(4,optionsCaptor.getAllValues().size());
+		for(DBObject dbObject : optionsCaptor.getAllValues()){
+			BasicDBObject basicDBObject = (BasicDBObject)dbObject;
+			String indexName = basicDBObject.getString("name");
+			if(indexName.equals("noPropagated")){
+				assertTrue(basicDBObject.getBoolean("unique"));
+			}else if (indexName.equals("ingredient.noPropagated")){
+				assertFalse(basicDBObject.getBoolean("unique"));
+			}else if(indexName.equals("propagated")){
+				assertTrue(basicDBObject.getBoolean("unique"));
+			} else if (indexName.equals("ingredient.propagated")) {
+				assertTrue(basicDBObject.getBoolean("unique"));
+			}
+		}
+	}
+
 	private static MongoMappingContext prepareMappingContext(Class<?> type) {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
@@ -234,6 +248,22 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		@Field("fieldname")//
 		String field;
 
+	}
+
+
+	@Document
+	static class Ingredient {
+
+		@Indexed(name = "noPropagated",unique = true, propagateUnique = false)//
+		String uniqueNoPropagated;
+
+		@Indexed(name = "propagated",unique = true)//
+		String uniquePropagated;
+	}
+
+	@Document
+	static class Recipe{
+		Ingredient ingredient;
 	}
 
 	@Document
