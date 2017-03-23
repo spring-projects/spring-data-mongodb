@@ -26,7 +26,7 @@ import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.Ordered;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;

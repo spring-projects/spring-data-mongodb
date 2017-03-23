@@ -27,7 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.data.mongodb.util.MongoClientVersion;
