@@ -15,11 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.util.Optional;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 import org.bson.Document;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -36,6 +31,8 @@ import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.util.JSON;
 import com.mongodb.util.JSONParseException;
 
 /**
@@ -101,7 +98,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 		if (!StringUtils.hasText(fieldSpec)) {
 
-			ReturnedType returnedType = processor.withDynamicProjection(Optional.of(accessor)).getReturnedType();
+			ReturnedType returnedType = processor.withDynamicProjection(accessor).getReturnedType();
 
 			if (returnedType.isProjecting()) {
 

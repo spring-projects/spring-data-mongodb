@@ -17,19 +17,16 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.core.Ordered;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -57,16 +54,10 @@ public class AuditingEventListenerUnitTests {
 		mappingContext.getPersistentEntity(Sample.class);
 
 		handler = spy(new IsNewAwareAuditingHandler(new PersistentEntities(Arrays.asList(mappingContext))));
-		doNothing().when(handler).markCreated(Mockito.any(Optional.class));
-		doNothing().when(handler).markModified(Mockito.any(Optional.class));
+		doNothing().when(handler).markCreated(any());
+		doNothing().when(handler).markModified(any());
 
-		listener = new AuditingEventListener(new ObjectFactory<IsNewAwareAuditingHandler>() {
-
-			@Override
-			public IsNewAwareAuditingHandler getObject() throws BeansException {
-				return handler;
-			}
-		});
+		listener = new AuditingEventListener(() -> handler);
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-577
@@ -80,8 +71,8 @@ public class AuditingEventListenerUnitTests {
 		Sample sample = new Sample();
 		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample, "collection-1"));
 
-		verify(handler, times(1)).markCreated(Optional.of(sample));
-		verify(handler, times(0)).markModified(Mockito.any(Optional.class));
+		verify(handler, times(1)).markCreated(sample);
+		verify(handler, times(0)).markModified(any());
 	}
 
 	@Test // DATAMONGO-577
@@ -91,8 +82,8 @@ public class AuditingEventListenerUnitTests {
 		sample.id = "id";
 		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample, "collection-1"));
 
-		verify(handler, times(0)).markCreated(Mockito.any(Optional.class));
-		verify(handler, times(1)).markModified(Optional.of(sample));
+		verify(handler, times(0)).markCreated(any());
+		verify(handler, times(1)).markModified(sample);
 	}
 
 	@Test

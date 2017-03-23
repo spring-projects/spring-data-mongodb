@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.util.Optional;
-
 import org.bson.Document;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -96,7 +94,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 		if (!StringUtils.hasText(fieldSpec)) {
 
-			ReturnedType returnedType = processor.withDynamicProjection(Optional.of(accessor)).getReturnedType();
+			ReturnedType returnedType = processor.withDynamicProjection(accessor).getReturnedType();
 
 			if (returnedType.isProjecting()) {
 				returnedType.getInputProperties().forEach(query.fields()::include);

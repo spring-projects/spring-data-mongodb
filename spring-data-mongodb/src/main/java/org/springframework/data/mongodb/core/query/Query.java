@@ -152,7 +152,7 @@ public class Query {
 	 */
 	public Query with(Pageable pageable) {
 
-		if (pageable == null || ObjectUtils.nullSafeEquals(Pageable.NONE, pageable)) {
+		if (pageable.isUnpaged()) {
 			return this;
 		}
 
