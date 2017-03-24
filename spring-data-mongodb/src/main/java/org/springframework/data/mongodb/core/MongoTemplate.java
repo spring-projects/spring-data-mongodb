@@ -1000,8 +1000,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			// Create query for entity with the id and old version
 			MongoPersistentProperty idProperty = entity.getRequiredIdProperty();
-			Object id = convertingAccessor.getProperty(idProperty)
-					.orElseThrow(() -> new IllegalStateException("Required id not found!"));
+			Object id = entity.getIdentifierAccessor(objectToSave).getRequiredIdentifier();
 			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(property.getName()).is(number));
 
 			UpdateResult result = doUpdate(collectionName, query, update, objectToSave.getClass(), false, false);
