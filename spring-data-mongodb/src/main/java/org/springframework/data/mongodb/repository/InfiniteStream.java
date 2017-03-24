@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.repository;
 
 import java.lang.annotation.Documented;
@@ -24,8 +23,6 @@ import java.lang.annotation.Target;
 
 import org.springframework.data.annotation.QueryAnnotation;
 
-import reactor.core.Cancellation;
-
 /**
  * Annotation to declare an infinite stream using repository query methods. An infinite stream uses MongoDB's
  * {@link com.mongodb.CursorType#TailableAwait tailable} cursors to retrieve data from a capped collection and stream
@@ -35,8 +32,8 @@ import reactor.core.Cancellation;
  * The stream may become dead, or invalid, if either the query returns no match or the cursor returns the document at
  * the "end" of the collection and then the application deletes that document.
  * <p>
- * A stream that is no longer in use must be {@link Cancellation#dispose()} disposed} otherwise the streams will linger
- * and exhaust resources.
+ * A stream that is no longer in use must be {@link reactor.core.Disposable#dispose()} disposed} otherwise the streams
+ * will linger and exhaust resources.
  *
  * @author Mark Paluch
  * @see <a href="https://docs.mongodb.com/manual/core/tailable-cursors/">Tailable Cursors</a>

@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 
 import lombok.NoArgsConstructor;
-import reactor.core.Cancellation;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -183,7 +183,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		BlockingQueue<Capped> documents = new LinkedBlockingDeque<>(100);
 
-		Cancellation cancellation = cappedRepository.findByKey("value").doOnNext(documents::add).subscribe();
+		Disposable disposable = cappedRepository.findByKey("value").doOnNext(documents::add).subscribe();
 
 		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
 
@@ -191,7 +191,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
 		assertThat(documents.isEmpty(), is(true));
 
-		cancellation.dispose();
+		disposable.dispose();
 	}
 
 	@Test // DATAMONGO-1444
@@ -208,7 +208,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		BlockingQueue<CappedProjection> documents = new LinkedBlockingDeque<>(100);
 
-		Cancellation cancellation = cappedRepository.findProjectionByKey("value").doOnNext(documents::add).subscribe();
+		Disposable disposable = cappedRepository.findProjectionByKey("value").doOnNext(documents::add).subscribe();
 
 		CappedProjection projection1 = documents.poll(5, TimeUnit.SECONDS);
 		assertThat(projection1, is(notNullValue()));
@@ -222,7 +222,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		assertThat(documents.isEmpty(), is(true));
 
-		cancellation.dispose();
+		disposable.dispose();
 	}
 
 	@Test // DATAMONGO-1444

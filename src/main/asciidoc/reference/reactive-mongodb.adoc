@@ -466,12 +466,12 @@ By default, MongoDB will automatically close a cursor when the client has exhaus
 ----
 Flux<Person> stream = template.tail(query(where("name").is("Joe")), Person.class);
 
-Cancellation cancellation = stream.doOnNext(person -> System.out.println(person)).subscribe();
+Disposable subscription = stream.doOnNext(person -> System.out.println(person)).subscribe();
 
 // …
 
 // Later: Dispose the stream
-cancellation.dispose();
+subscription.dispose();
 ----
 
 

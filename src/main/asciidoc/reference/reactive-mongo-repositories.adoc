@@ -206,10 +206,10 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 
 Flux<Person> stream = repository.findByFirstname("Joe");
 
-Cancellation cancellation = stream.doOnNext(person -> System.out.println(person)).subscribe();
+Disposable subscription = stream.doOnNext(person -> System.out.println(person)).subscribe();
 
 // …
 
 // Later: Dispose the stream
-cancellation.dispose();
+subscription.dispose();
 ----

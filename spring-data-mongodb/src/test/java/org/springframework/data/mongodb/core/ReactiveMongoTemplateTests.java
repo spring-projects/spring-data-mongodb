@@ -21,7 +21,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
-import reactor.core.Cancellation;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -812,12 +812,12 @@ public class ReactiveMongoTemplateTests {
 
 		Flux<Document> capped = template.tail(null, Document.class, "capped");
 
-		Cancellation cancellation = capped.doOnNext(documents::add).subscribe();
+		Disposable disposable = capped.doOnNext(documents::add).subscribe();
 
 		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
 		assertThat(documents.isEmpty(), is(true));
 
-		cancellation.dispose();
+		disposable.dispose();
 	}
 
 	@Test // DATAMONGO-1444
@@ -834,7 +834,7 @@ public class ReactiveMongoTemplateTests {
 
 		Flux<Document> capped = template.tail(null, Document.class, "capped");
 
-		Cancellation cancellation = capped.doOnNext(documents::add).subscribe();
+		Disposable disposable = capped.doOnNext(documents::add).subscribe();
 
 		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
 		assertThat(documents.isEmpty(), is(true));
@@ -845,7 +845,7 @@ public class ReactiveMongoTemplateTests {
 
 		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
 
-		cancellation.dispose();
+		disposable.dispose();
 
 		StepVerifier.create(template.insert(new Document("random", Math.random()).append("key", "value"), "capped")) //
 				.expectNextCount(1) //
