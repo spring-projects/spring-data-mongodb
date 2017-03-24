@@ -40,7 +40,7 @@ import org.w3c.dom.Element;
 
 /**
  * {@link RepositoryConfigurationExtension} for MongoDB.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  */
@@ -49,7 +49,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 	private static final String MONGO_TEMPLATE_REF = "mongo-template-ref";
 	private static final String CREATE_QUERY_INDEXES = "create-query-indexes";
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getModuleName()
 	 */
@@ -69,13 +69,13 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtension#getRepositoryFactoryClassName()
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtension#getRepositoryFactoryBeanClassName()
 	 */
-	public String getRepositoryFactoryClassName() {
+	public String getRepositoryFactoryBeanClassName() {
 		return MongoRepositoryFactoryBean.class.getName();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingAnnotations()
 	 */
@@ -84,7 +84,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		return Collections.singleton(Document.class);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingTypes()
 	 */
@@ -93,7 +93,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		return Collections.singleton(MongoRepository.class);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.XmlRepositoryConfigurationSource)
 	 */
@@ -106,7 +106,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		ParsingUtils.setPropertyValue(builder, element, CREATE_QUERY_INDEXES, "createIndexesForQueryMethods");
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource)
 	 */
@@ -119,7 +119,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		builder.addPropertyValue("createIndexesForQueryMethods", attributes.getBoolean("createIndexesForQueryMethods"));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#registerBeansForRoot(org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.data.repository.config.RepositoryConfigurationSource)
 	 */
@@ -138,7 +138,7 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		}
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#useRepositoryConfiguration(org.springframework.data.repository.core.RepositoryMetadata)
 	 */
