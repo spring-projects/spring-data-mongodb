@@ -20,8 +20,19 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.data.util.Optionals.*;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
@@ -2010,7 +2021,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			PersistentPropertyAccessor accessor = entity.getPropertyAccessor(savedObject);
 
 			Optional<Object> value = accessor.getProperty(idProp);
-			if(!value.isPresent()) {
+			if (!value.isPresent()) {
 				new ConvertingPropertyAccessor(accessor, conversionService).setProperty(idProp, Optional.of(id));
 			}
 		});
@@ -2522,7 +2533,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			try {
 				if (query.getSkip() > 0) {
-					cursorToUse = cursorToUse.skip((int)query.getSkip());
+					cursorToUse = cursorToUse.skip((int) query.getSkip());
 				}
 				if (query.getLimit() > 0) {
 					cursorToUse = cursorToUse.limit(query.getLimit());
