@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core;
 
 import static com.sun.prism.impl.Disposer.*;
@@ -21,7 +20,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
 
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.test.StepVerifier;
 
 import org.bson.Document;
 import org.junit.After;
@@ -39,10 +39,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
+import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-
-import reactor.core.publisher.Flux;
-import reactor.test.TestSubscriber;
 
 /**
  * Integration test for {@link ReactiveMongoTemplate} execute methods.
@@ -55,10 +53,10 @@ public class ReactiveMongoTemplateExecuteTests {
 
 	private static final Version THREE = Version.parse("3.0");
 
+	@Rule public ExpectedException thrown = ExpectedException.none();
+
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoOperations operations;
-
-	@Rule public ExpectedException thrown = ExpectedException.none();
 
 	Version mongoVersion;
 
@@ -67,99 +65,104 @@ public class ReactiveMongoTemplateExecuteTests {
 		cleanUp();
 
 		if (mongoVersion == null) {
-			Document result = operations.executeCommand("{ buildInfo: 1 }").block();
-			mongoVersion = Version.parse(result.get("version").toString());
+			mongoVersion = operations.executeCommand("{ buildInfo: 1 }") //
+					.map(it -> it.get("version").toString())//
+					.map(Version::parse) //
+					.block();
 		}
 	}
 
 	@After
 	public void tearDown() {
 
-		operations.dropCollection("person").block();
-		operations.dropCollection(Person.class).block();
-		operations.dropCollection("execute_test").block();
-		operations.dropCollection("execute_test1").block();
-		operations.dropCollection("execute_test2").block();
-		operations.dropCollection("execute_index_test").block();
+		Flux<Void> cleanup = operations.dropCollection("person") //
+				.mergeWith(operations.dropCollection(Person.class)) //
+				.mergeWith(operations.dropCollection("execute_test")) //
+				.mergeWith(operations.dropCollection("execute_test1")) //
+				.mergeWith(operations.dropCollection("execute_test2")) //
+				.mergeWith(operations.dropCollection("execute_index_test"));
+
+		StepVerifier.create(cleanup).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeCommandJsonCommandShouldReturnSingleResponse() throws Exception {
+	public void executeCommandJsonCommandShouldReturnSingleResponse() {
 
-		Document document = operations.executeCommand("{ buildInfo: 1 }").block();
+		StepVerifier.create(operations.executeCommand("{ buildInfo: 1 }")).consumeNextWith(actual -> {
 
-		assertThat(document, hasKey("version"));
+			assertThat(actual, hasKey("version"));
+		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeCommandDocumentCommandShouldReturnSingleResponse() throws Exception {
+	public void executeCommandDocumentCommandShouldReturnSingleResponse() {
 
-		Document document = operations.executeCommand(new Document("buildInfo", 1)).block();
+		StepVerifier.create(operations.executeCommand(new Document("buildInfo", 1))).consumeNextWith(actual -> {
 
-		assertThat(document, hasKey("version"));
+			assertThat(actual, hasKey("version"));
+		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeCommandJsonCommandShouldReturnMultipleResponses() throws Exception {
+	public void executeCommandJsonCommandShouldReturnMultipleResponses() {
 
 		assumeTrue(mongoVersion.isGreaterThan(THREE));
 
-		operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}").block();
+		StepVerifier.create(operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}"))
+				.expectNextCount(1).verifyComplete();
 
-		TestSubscriber<Document> subscriber = TestSubscriber.create();
-		operations.executeCommand("{ find: 'execute_test'}").subscribe(subscriber);
+		StepVerifier.create(operations.executeCommand("{ find: 'execute_test'}")) //
+				.consumeNextWith(actual -> {
 
-		subscriber.awaitAndAssertNextValueCount(1);
-		subscriber.assertValuesWith(document -> {
-
-			assertThat(document.get("ok", Double.class), is(closeTo(1D, 0D)));
-			assertThat(document, hasKey("cursor"));
-		});
+					assertThat(actual.get("ok", Double.class), is(closeTo(1D, 0D)));
+					assertThat(actual, hasKey("cursor"));
+				}) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeCommandJsonCommandShouldTranslateExceptions() throws Exception {
+	public void executeCommandJsonCommandShouldTranslateExceptions() {
 
-		TestSubscriber<Document> testSubscriber = TestSubscriber.subscribe(operations.executeCommand("{ unknown: 1 }"));
-
-		testSubscriber.await().assertError(InvalidDataAccessApiUsageException.class);
+		StepVerifier.create(operations.executeCommand("{ unknown: 1 }")) //
+				.expectError(InvalidDataAccessApiUsageException.class) //
+				.verify();
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeCommandDocumentCommandShouldTranslateExceptions() throws Exception {
+	public void executeCommandDocumentCommandShouldTranslateExceptions() {
 
-		TestSubscriber<Document> testSubscriber = TestSubscriber
-				.subscribe(operations.executeCommand(new Document("unknown", 1)));
+		StepVerifier.create(operations.executeCommand(new Document("unknown", 1))) //
+				.expectError(InvalidDataAccessApiUsageException.class) //
+				.verify();
 
-		testSubscriber.await().assertError(InvalidDataAccessApiUsageException.class);
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeCommandWithReadPreferenceCommandShouldTranslateExceptions() throws Exception {
+	public void executeCommandWithReadPreferenceCommandShouldTranslateExceptions() {
 
-		TestSubscriber<Document> testSubscriber = TestSubscriber
-				.subscribe(operations.executeCommand(new Document("unknown", 1), ReadPreference.nearest()));
-
-		testSubscriber.await().assertError(InvalidDataAccessApiUsageException.class);
+		StepVerifier.create(operations.executeCommand(new Document("unknown", 1), ReadPreference.nearest())) //
+				.expectError(InvalidDataAccessApiUsageException.class) //
+				.verify();
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeOnDatabaseShouldExecuteCommand() throws Exception {
+	public void executeOnDatabaseShouldExecuteCommand() {
 
-		operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}").block();
-		operations.executeCommand("{ insert: 'execute_test1', documents: [{},{},{}]}").block();
-		operations.executeCommand("{ insert: 'execute_test2', documents: [{},{},{}]}").block();
+		Flux<Document> documentFlux = operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}")
+				.mergeWith(operations.executeCommand("{ insert: 'execute_test1', documents: [{},{},{}]}"))
+				.mergeWith(operations.executeCommand("{ insert: 'execute_test2', documents: [{},{},{}]}"));
+
+		StepVerifier.create(documentFlux).expectNextCount(3).verifyComplete();
 
 		Flux<Document> execute = operations.execute(MongoDatabase::listCollections);
 
-		List<Document> documents = execute.filter(document -> document.getString("name").startsWith("execute_test"))
-				.collectList().block();
-
-		assertThat(documents, hasSize(3));
+		StepVerifier.create(execute.filter(document -> document.getString("name").startsWith("execute_test"))) //
+				.expectNextCount(3) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeOnDatabaseShouldDeferExecution() throws Exception {
+	public void executeOnDatabaseShouldDeferExecution() {
 
 		operations.execute(db -> {
 			throw new MongoException(50, "hi there");
@@ -169,42 +172,34 @@ public class ReactiveMongoTemplateExecuteTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeOnDatabaseShouldShouldTranslateExceptions() throws Exception {
-
-		TestSubscriber<Document> testSubscriber = TestSubscriber.create();
+	public void executeOnDatabaseShouldShouldTranslateExceptions() {
 
 		Flux<Document> execute = operations.execute(db -> {
 			throw new MongoException(50, "hi there");
 		});
 
-		execute.subscribe(testSubscriber);
-
-		testSubscriber.await().assertError(UncategorizedMongoDbException.class);
+		StepVerifier.create(execute).expectError(UncategorizedMongoDbException.class).verify();
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeOnCollectionWithTypeShouldReturnFindResults() throws Exception {
+	public void executeOnCollectionWithTypeShouldReturnFindResults() {
 
-		operations.executeCommand("{ insert: 'person', documents: [{},{},{}]}").block();
+		StepVerifier.create(operations.executeCommand("{ insert: 'person', documents: [{},{},{}]}")) //
+				.expectNextCount(1) //
+				.verifyComplete();
 
-		TestSubscriber<Document> testSubscriber = TestSubscriber.create();
-
-		Flux<Document> execute = operations.execute(Person.class, collection -> collection.find());
-		execute.subscribe(testSubscriber);
-
-		testSubscriber.awaitAndAssertNextValueCount(3).assertComplete();
+		StepVerifier.create(operations.execute(Person.class, MongoCollection::find)).expectNextCount(3).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void executeOnCollectionWithNameShouldReturnFindResults() throws Exception {
+	public void executeOnCollectionWithNameShouldReturnFindResults() {
 
-		operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}").block();
+		StepVerifier.create(operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}")) //
+				.expectNextCount(1) //
+				.verifyComplete();
 
-		TestSubscriber<Document> testSubscriber = TestSubscriber.create();
-
-		Flux<Document> execute = operations.execute("execute_test", collection -> collection.find());
-		execute.subscribe(testSubscriber);
-
-		testSubscriber.awaitAndAssertNextValueCount(3).assertComplete();
+		StepVerifier.create(operations.execute("execute_test", MongoCollection::find)) //
+				.expectNextCount(3) //
+				.verifyComplete();
 	}
 }

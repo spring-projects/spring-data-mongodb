@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.repository;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,8 +35,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -44,12 +45,6 @@ import org.springframework.data.repository.query.DefaultEvaluationContextProvide
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ClassUtils;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.TestSubscriber;
 
 /**
  * Test for {@link ReactiveMongoRepository}.
@@ -62,10 +57,10 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 	@Autowired private ReactiveMongoTemplate template;
 
-	private ReactiveMongoRepositoryFactory factory;
-	private ClassLoader classLoader;
-	private BeanFactory beanFactory;
-	private ReactivePersonRepostitory repository;
+	ReactiveMongoRepositoryFactory factory;
+	ClassLoader classLoader;
+	BeanFactory beanFactory;
+	ReactivePersonRepostitory repository;
 
 	private ReactivePerson dave, oliver, carter, boyd, stefan, leroi, alicia;
 
@@ -90,7 +85,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		repository = factory.getRepository(ReactivePersonRepostitory.class);
 
-		repository.deleteAll().block();
+		StepVerifier.create(repository.deleteAll()).verifyComplete();
 
 		dave = new ReactivePerson("Dave", "Matthews", 42);
 		oliver = new ReactivePerson("Oliver August", "Matthews", 4);
@@ -100,134 +95,92 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		leroi = new ReactivePerson("Leroi", "Moore", 41);
 		alicia = new ReactivePerson("Alicia", "Keys", 30);
 
-		TestSubscriber<ReactivePerson> subscriber = TestSubscriber.create();
-		repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia)).subscribe(subscriber);
-
-		subscriber.await().assertComplete().assertNoError();
+		StepVerifier.create(repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
+				.expectNextCount(7) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void existsByIdShouldReturnTrueForExistingObject() {
-
-		Boolean exists = repository.exists(dave.id).block();
-
-		assertThat(exists, is(true));
+		StepVerifier.create(repository.exists(dave.id)).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void existsByIdShouldReturnFalseForAbsentObject() {
-
-		TestSubscriber<Boolean> testSubscriber = TestSubscriber.subscribe(repository.exists("unknown"));
-
-		testSubscriber.await().assertComplete().assertValues(false).assertNoError();
+		StepVerifier.create(repository.exists("unknown")).expectNext(false).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void existsByMonoOfIdShouldReturnTrueForExistingObject() {
-
-		Boolean exists = repository.exists(Mono.just(dave.id)).block();
-		assertThat(exists, is(true));
+		StepVerifier.create(repository.exists(Mono.just(dave.id))).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void existsByEmptyMonoOfIdShouldReturnEmptyMono() {
-
-		TestSubscriber<Boolean> testSubscriber = TestSubscriber.subscribe(repository.exists(Mono.empty()));
-
-		testSubscriber.await().assertComplete().assertNoValues().assertNoError();
+		StepVerifier.create(repository.exists(Mono.empty())).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findOneShouldReturnObject() {
-
-		ReactivePerson person = repository.findOne(dave.id).block();
-
-		assertThat(person.getFirstname(), is(equalTo("Dave")));
+		StepVerifier.create(repository.findOne(dave.id)).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findOneShouldCompleteWithoutValueForAbsentObject() {
-
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.findOne("unknown"));
-
-		testSubscriber.await().assertComplete().assertNoValues().assertNoError();
+		StepVerifier.create(repository.findOne("unknown")).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findOneByMonoOfIdShouldReturnTrueForExistingObject() {
-
-		ReactivePerson person = repository.findOne(Mono.just(dave.id)).block();
-
-		assertThat(person.id, is(equalTo(dave.id)));
+		StepVerifier.create(repository.findOne(Mono.just(dave.id))).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findOneByEmptyMonoOfIdShouldReturnEmptyMono() {
-
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.findOne(Mono.empty()));
-
-		testSubscriber.await().assertComplete().assertNoValues().assertNoError();
+		StepVerifier.create(repository.findOne(Mono.empty())).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllShouldReturnAllResults() {
-
-		List<ReactivePerson> persons = repository.findAll().collectList().block();
-
-		assertThat(persons, hasSize(7));
+		StepVerifier.create(repository.findAll()).expectNextCount(7).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllByIterableOfIdShouldReturnResults() {
-
-		List<ReactivePerson> persons = repository.findAll(Arrays.asList(dave.id, boyd.id)).collectList().block();
-
-		assertThat(persons, hasSize(2));
+		StepVerifier.create(repository.findAll(Arrays.asList(dave.id, boyd.id))).expectNextCount(2).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllByPublisherOfIdShouldReturnResults() {
-
-		List<ReactivePerson> persons = repository.findAll(Flux.just(dave.id, boyd.id)).collectList().block();
-
-		assertThat(persons, hasSize(2));
+		StepVerifier.create(repository.findAll(Flux.just(dave.id, boyd.id))).expectNextCount(2).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllByEmptyPublisherOfIdShouldReturnResults() {
-
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.findAll(Flux.empty()));
-
-		testSubscriber.await().assertComplete().assertNoValues().assertNoError();
+		StepVerifier.create(repository.findAll(Flux.empty())).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllWithSortShouldReturnResults() {
 
-		List<ReactivePerson> persons = repository.findAll(new Sort(new Order(Direction.ASC, "age"))).collectList().block();
-
-		assertThat(persons, hasSize(7));
-		assertThat(persons.get(0).getId(), is(equalTo(oliver.getId())));
+		StepVerifier.create(repository.findAll(new Sort(new Order(Direction.ASC, "age")))) //
+				.expectNextCount(7) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void countShouldReturnNumberOfRecords() {
-
-		TestSubscriber<Long> testSubscriber = TestSubscriber.subscribe(repository.count());
-
-		testSubscriber.await().assertComplete().assertValueCount(1).assertValues(7L).assertNoError();
+		StepVerifier.create(repository.count()).expectNext(7L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void insertEntityShouldInsertEntity() {
 
-		repository.deleteAll().block();
+		StepVerifier.create(repository.deleteAll()).verifyComplete();
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
 
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.insert(person));
-
-		testSubscriber.await().assertComplete().assertValueCount(1).assertValues(person);
+		StepVerifier.create(repository.insert(person)).expectNext(person).verifyComplete();
 
 		assertThat(person.getId(), is(notNullValue()));
 	}
@@ -245,16 +198,15 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	@Test // DATAMONGO-1444
 	public void insertIterableOfEntitiesShouldInsertEntity() {
 
-		repository.deleteAll().block();
+		StepVerifier.create(repository.deleteAll()).verifyComplete();
 
 		dave.setId(null);
 		oliver.setId(null);
 		boyd.setId(null);
 
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber
-				.subscribe(repository.insert(Arrays.asList(dave, oliver, boyd)));
-
-		testSubscriber.await().assertComplete().assertValueCount(3).assertValues(dave, oliver, boyd);
+		StepVerifier.create(repository.insert(Arrays.asList(dave, oliver, boyd))) //
+				.expectNext(dave, oliver, boyd) //
+				.verifyComplete();
 
 		assertThat(dave.getId(), is(notNullValue()));
 		assertThat(oliver.getId(), is(notNullValue()));
@@ -264,16 +216,13 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	@Test // DATAMONGO-1444
 	public void insertPublisherOfEntitiesShouldInsertEntity() {
 
-		repository.deleteAll().block();
+		StepVerifier.create(repository.deleteAll()).verifyComplete();
 
 		dave.setId(null);
 		oliver.setId(null);
 		boyd.setId(null);
 
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber
-				.subscribe(repository.insert(Flux.just(dave, oliver, boyd)));
-
-		testSubscriber.await().assertComplete().assertValueCount(3);
+		StepVerifier.create(repository.insert(Flux.just(dave, oliver, boyd))).expectNextCount(3).verifyComplete();
 
 		assertThat(dave.getId(), is(notNullValue()));
 		assertThat(oliver.getId(), is(notNullValue()));
@@ -286,19 +235,15 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		dave.setFirstname("Hello, Dave");
 		dave.setLastname("Bowman");
 
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.save(dave));
+		StepVerifier.create(repository.save(dave)).expectNext(dave).verifyComplete();
 
-		testSubscriber.await().assertComplete().assertValueCount(1).assertValues(dave);
+		StepVerifier.create(repository.findByLastname("Matthews")).expectNext(oliver).verifyComplete();
 
-		List<ReactivePerson> matthews = repository.findByLastname("Matthews").collectList().block();
-		assertThat(matthews, hasSize(1));
-		assertThat(matthews, contains(oliver));
-		assertThat(matthews, not(contains(dave)));
+		StepVerifier.create(repository.findOne(dave.id)).consumeNextWith(actual -> {
 
-		ReactivePerson reactivePerson = repository.findOne(dave.id).block();
-
-		assertThat(reactivePerson.getFirstname(), is(equalTo(dave.getFirstname())));
-		assertThat(reactivePerson.getLastname(), is(equalTo(dave.getLastname())));
+			assertThat(actual.getFirstname(), is(equalTo(dave.getFirstname())));
+			assertThat(actual.getLastname(), is(equalTo(dave.getLastname())));
+		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -306,29 +251,25 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
 
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.save(person));
+		StepVerifier.create(repository.save(person)).expectNext(person).verifyComplete();
 
-		testSubscriber.await().assertComplete().assertValueCount(1).assertValues(person);
+		StepVerifier.create(repository.findOne(person.id)).consumeNextWith(actual -> {
 
-		ReactivePerson reactivePerson = repository.findOne(person.id).block();
-
-		assertThat(reactivePerson.getFirstname(), is(equalTo(person.getFirstname())));
-		assertThat(reactivePerson.getLastname(), is(equalTo(person.getLastname())));
+			assertThat(actual.getFirstname(), is(equalTo(person.getFirstname())));
+			assertThat(actual.getLastname(), is(equalTo(person.getLastname())));
+		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void saveIterableOfNewEntitiesShouldInsertEntity() {
 
-		repository.deleteAll().block();
+		StepVerifier.create(repository.deleteAll()).verifyComplete();
 
 		dave.setId(null);
 		oliver.setId(null);
 		boyd.setId(null);
 
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber
-				.subscribe(repository.save(Arrays.asList(dave, oliver, boyd)));
-
-		testSubscriber.await().assertComplete().assertValueCount(3).assertValues(dave, oliver, boyd);
+		StepVerifier.create(repository.save(Arrays.asList(dave, oliver, boyd))).expectNextCount(3).verifyComplete();
 
 		assertThat(dave.getId(), is(notNullValue()));
 		assertThat(oliver.getId(), is(notNullValue()));
@@ -343,32 +284,24 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		dave.setFirstname("Hello, Dave");
 		dave.setLastname("Bowman");
 
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber
-				.subscribe(repository.save(Arrays.asList(person, dave)));
+		StepVerifier.create(repository.save(Arrays.asList(person, dave))).expectNextCount(2).verifyComplete();
 
-		testSubscriber.await().assertComplete().assertValueCount(2);
-
-		ReactivePerson persistentDave = repository.findOne(dave.id).block();
-		assertThat(persistentDave, is(equalTo(dave)));
+		StepVerifier.create(repository.findOne(dave.id)).expectNext(dave).verifyComplete();
 
 		assertThat(person.id, is(notNullValue()));
-		ReactivePerson persistentHomer = repository.findOne(person.id).block();
-		assertThat(persistentHomer, is(equalTo(person)));
+		StepVerifier.create(repository.findOne(person.id)).expectNext(person).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void savePublisherOfEntitiesShouldInsertEntity() {
 
-		repository.deleteAll().block();
+		StepVerifier.create(repository.deleteAll()).verifyComplete();
 
 		dave.setId(null);
 		oliver.setId(null);
 		boyd.setId(null);
 
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber
-				.subscribe(repository.save(Flux.just(dave, oliver, boyd)));
-
-		testSubscriber.await().assertComplete().assertValueCount(3);
+		StepVerifier.create(repository.save(Flux.just(dave, oliver, boyd))).expectNextCount(3).verifyComplete();
 
 		assertThat(dave.getId(), is(notNullValue()));
 		assertThat(oliver.getId(), is(notNullValue()));
@@ -378,67 +311,46 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	@Test // DATAMONGO-1444
 	public void deleteAllShouldRemoveEntities() {
 
-		repository.deleteAll().block();
+		StepVerifier.create(repository.deleteAll()).verifyComplete();
 
-		TestSubscriber<ReactivePerson> testSubscriber = TestSubscriber.subscribe(repository.findAll());
-
-		testSubscriber.await().assertComplete().assertValueCount(0);
+		StepVerifier.create(repository.findAll()).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void deleteByIdShouldRemoveEntity() {
 
-		TestSubscriber<Void> testSubscriber = TestSubscriber.subscribe(repository.delete(dave.id));
+		StepVerifier.create(repository.delete(dave.id)).verifyComplete();
 
-		testSubscriber.await().assertComplete().assertNoValues();
-
-		TestSubscriber<ReactivePerson> verificationSubscriber = TestSubscriber.subscribe(repository.findOne(dave.id));
-
-		verificationSubscriber.await().assertComplete().assertNoValues();
+		StepVerifier.create(repository.findOne(dave.id)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void deleteShouldRemoveEntity() {
 
-		TestSubscriber<Void> testSubscriber = TestSubscriber.subscribe(repository.delete(dave));
+		StepVerifier.create(repository.delete(dave)).verifyComplete();
 
-		testSubscriber.await().assertComplete().assertNoValues();
+		StepVerifier.create(repository.findOne(dave.id)).verifyComplete();
 
-		TestSubscriber<ReactivePerson> verificationSubscriber = TestSubscriber.subscribe(repository.findOne(dave.id));
-
-		verificationSubscriber.await().assertComplete().assertNoValues();
 	}
 
 	@Test // DATAMONGO-1444
 	public void deleteIterableOfEntitiesShouldRemoveEntities() {
 
-		TestSubscriber<Void> testSubscriber = TestSubscriber.subscribe(repository.delete(Arrays.asList(dave, boyd)));
+		StepVerifier.create(repository.delete(Arrays.asList(dave, boyd))).verifyComplete();
 
-		testSubscriber.await().assertComplete().assertNoValues();
+		StepVerifier.create(repository.findOne(boyd.id)).verifyComplete();
 
-		TestSubscriber<ReactivePerson> verificationSubscriber = TestSubscriber.subscribe(repository.findOne(boyd.id));
-		verificationSubscriber.await().assertComplete().assertNoValues();
-
-		List<ReactivePerson> matthews = repository.findByLastname("Matthews").collectList().block();
-		assertThat(matthews, hasSize(1));
-		assertThat(matthews, contains(oliver));
-
+		StepVerifier.create(repository.findByLastname("Matthews")).expectNext(oliver).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void deletePublisherOfEntitiesShouldRemoveEntities() {
 
-		TestSubscriber<Void> testSubscriber = TestSubscriber.subscribe(repository.delete(Flux.just(dave, boyd)));
+		StepVerifier.create(repository.delete(Flux.just(dave, boyd))).verifyComplete();
 
-		testSubscriber.await().assertComplete().assertNoValues();
+		StepVerifier.create(repository.findOne(boyd.id)).verifyComplete();
 
-		TestSubscriber<ReactivePerson> verificationSubscriber = TestSubscriber.subscribe(repository.findOne(boyd.id));
-		verificationSubscriber.await().assertComplete().assertNoValues();
-
-		List<ReactivePerson> matthews = repository.findByLastname("Matthews").collectList().block();
-		assertThat(matthews, hasSize(1));
-		assertThat(matthews, contains(oliver));
-
+		StepVerifier.create(repository.findByLastname("Matthews")).expectNext(oliver).verifyComplete();
 	}
 
 	interface ReactivePersonRepostitory extends ReactiveMongoRepository<ReactivePerson, String> {

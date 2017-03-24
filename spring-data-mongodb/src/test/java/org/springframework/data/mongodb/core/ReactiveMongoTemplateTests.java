@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.Matchers.*;
@@ -21,7 +20,12 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import java.util.ArrayList;
+import lombok.Data;
+import reactor.core.Cancellation;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,12 +46,10 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.MongoTemplateTests.PersonWithConvertedId;
@@ -59,17 +61,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.WriteConcern;
-
-import lombok.Data;
-import reactor.core.Cancellation;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.TestSubscriber;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -81,93 +76,86 @@ import reactor.test.TestSubscriber;
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class ReactiveMongoTemplateTests {
 
+	@Rule public ExpectedException thrown = ExpectedException.none();
+
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoTemplate template;
 
-	@Rule public ExpectedException thrown = ExpectedException.none();
-
-	Version mongoVersion;
-
 	@Before
 	public void setUp() {
-		cleanDb();
+
+		StepVerifier
+				.create(template.dropCollection("people") //
+						.mergeWith(template.dropCollection("collection")) //
+						.mergeWith(template.dropCollection(Person.class)) //
+						.mergeWith(template.dropCollection(Venue.class)) //
+						.mergeWith(template.dropCollection(PersonWithAList.class)) //
+						.mergeWith(template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class)) //
+						.mergeWith(template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class)) //
+						.mergeWith(template.dropCollection(Sample.class))) //
+				.verifyComplete();
 	}
 
 	@After
 	public void cleanUp() {}
 
-	private void cleanDb() {
-		template.dropCollection("people") //
-				.and(template.dropCollection("collection")) //
-				.and(template.dropCollection(Person.class)) //
-				.and(template.dropCollection(Venue.class)) //
-				.and(template.dropCollection(PersonWithAList.class)) //
-				.and(template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class)) //
-				.and(template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class)) //
-				.and(template.dropCollection(Sample.class)).block();
-	}
-
 	@Test // DATAMONGO-1444
-	public void insertSetsId() throws Exception {
+	public void insertSetsId() {
 
 		PersonWithAList person = new PersonWithAList();
 		assert person.getId() == null;
 
-		template.insert(person).block();
+		StepVerifier.create(template.insert(person)).expectNextCount(1).verifyComplete();
 
 		assertThat(person.getId(), is(notNullValue()));
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertAllSetsId() throws Exception {
+	public void insertAllSetsId() {
 
 		PersonWithAList person = new PersonWithAList();
-		assert person.getId() == null;
 
-		template.insertAll(Collections.singletonList(person)).next().block();
+		StepVerifier.create(template.insertAll(Collections.singleton(person))).expectNextCount(1).verifyComplete();
 
 		assertThat(person.getId(), is(notNullValue()));
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertCollectionSetsId() throws Exception {
+	public void insertCollectionSetsId() {
 
 		PersonWithAList person = new PersonWithAList();
-		assert person.getId() == null;
 
-		template.insert(Collections.singletonList(person), PersonWithAList.class).next().block();
+		StepVerifier.create(template.insert(Collections.singleton(person), PersonWithAList.class)).expectNextCount(1)
+				.verifyComplete();
 
 		assertThat(person.getId(), is(notNullValue()));
 	}
 
 	@Test // DATAMONGO-1444
-	public void saveSetsId() throws Exception {
+	public void saveSetsId() {
 
 		PersonWithAList person = new PersonWithAList();
 		assert person.getId() == null;
 
-		template.save(person).block();
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
 		assertThat(person.getId(), is(notNullValue()));
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertsSimpleEntityCorrectly() throws Exception {
+	public void insertsSimpleEntityCorrectly() {
 
 		Person person = new Person("Mark");
 		person.setAge(35);
-		template.insert(person).block();
+		StepVerifier.create(template.insert(person)).expectNextCount(1).verifyComplete();
 
-		TestSubscriber<Person> testSubscriber = TestSubscriber.create();
-		Flux<Person> flux = template.find(new Query(where("_id").is(person.getId())), Person.class);
-		flux.subscribe(testSubscriber);
-
-		testSubscriber.awaitAndAssertNextValueCount(1);
-		testSubscriber.assertValues(person);
+		StepVerifier.create(template.find(new Query(where("_id").is(person.getId())), Person.class)) //
+				.expectNext(person) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void simpleInsertDoesNotAllowArrays() throws Exception {
+	public void simpleInsertDoesNotAllowArrays() {
 
 		thrown.expect(IllegalArgumentException.class);
 
@@ -177,7 +165,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void simpleInsertDoesNotAllowCollections() throws Exception {
+	public void simpleInsertDoesNotAllowCollections() {
 
 		thrown.expect(IllegalArgumentException.class);
 
@@ -187,193 +175,183 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertsSimpleEntityWithSuppliedCollectionNameCorrectly() throws Exception {
+	public void insertsSimpleEntityWithSuppliedCollectionNameCorrectly() {
 
 		Person person = new Person("Homer");
 		person.setAge(35);
-		template.insert(person, "people").block();
+		StepVerifier.create(template.insert(person, "people")).expectNextCount(1).verifyComplete();
 
-		TestSubscriber<Person> testSubscriber = TestSubscriber.create();
-		Flux<Person> flux = template.find(new Query(where("_id").is(person.getId())), Person.class, "people");
-		flux.subscribe(testSubscriber);
-
-		testSubscriber.awaitAndAssertNextValueCount(1);
-		testSubscriber.assertValues(person);
+		StepVerifier.create(template.find(new Query(where("_id").is(person.getId())), Person.class, "people")) //
+				.expectNext(person) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertBatchCorrectly() throws Exception {
+	public void insertBatchCorrectly() {
 
-		List<Person> persons = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
+		List<Person> people = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
 
-		template.insertAll(persons).next().block();
+		StepVerifier.create(template.insertAll(people)).expectNextCount(3).verifyComplete();
 
-		TestSubscriber<Person> testSubscriber = TestSubscriber.create();
-		Flux<Person> flux = template.find(new Query().with(new Sort(new Order("firstname"))), Person.class);
-		flux.subscribe(testSubscriber);
-
-		testSubscriber.awaitAndAssertNextValueCount(3);
-		testSubscriber.assertValues(persons.toArray(new Person[persons.size()]));
+		StepVerifier.create(template.find(new Query().with(Sort.by("firstname")), Person.class)) //
+				.expectNextSequence(people) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertBatchWithSuppliedCollectionNameCorrectly() throws Exception {
+	public void insertBatchWithSuppliedCollectionNameCorrectly() {
 
-		List<Person> persons = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
+		List<Person> people = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
 
-		template.insert(persons, "people").then().block();
+		StepVerifier.create(template.insert(people, "people")).expectNextCount(3).verifyComplete();
 
-		TestSubscriber<Person> testSubscriber = TestSubscriber.create();
-		Flux<Person> flux = template.find(new Query().with(new Sort(new Order("firstname"))), Person.class, "people");
-		flux.subscribe(testSubscriber);
-
-		testSubscriber.awaitAndAssertNextValueCount(3);
-		testSubscriber.assertValues(persons.toArray(new Person[persons.size()]));
+		StepVerifier.create(template.find(new Query().with(Sort.by("firstname")), Person.class, "people")) //
+				.expectNextSequence(people) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertBatchWithSuppliedEntityTypeCorrectly() throws Exception {
+	public void insertBatchWithSuppliedEntityTypeCorrectly() {
 
-		List<Person> persons = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
+		List<Person> people = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
 
-		template.insert(persons, Person.class).then().block();
+		StepVerifier.create(template.insert(people, Person.class)).expectNextCount(3).verifyComplete();
 
-		TestSubscriber<Person> testSubscriber = TestSubscriber.create();
-		Flux<Person> flux = template.find(new Query().with(new Sort(new Order("firstname"))), Person.class);
-		flux.subscribe(testSubscriber);
-
-		testSubscriber.awaitAndAssertNextValueCount(3);
-		testSubscriber.assertValues(persons.toArray(new Person[persons.size()]));
+		StepVerifier.create(template.find(new Query().with(Sort.by("firstname")), Person.class)) //
+				.expectNextSequence(people) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void testAddingToList() {
 
-		PersonWithAList p = new PersonWithAList();
-		p.setFirstName("Sven");
-		p.setAge(22);
-		template.insert(p).block();
+		PersonWithAList person = createPersonWithAList("Sven", 22);
+		StepVerifier.create(template.insert(person)).expectNextCount(1).verifyComplete();
 
-		Query q1 = new Query(where("id").is(p.getId()));
-		PersonWithAList p2 = template.findOne(q1, PersonWithAList.class).block();
-		assertThat(p2, notNullValue());
-		assertThat(p2.getWishList().size(), is(0));
+		Query query = new Query(where("id").is(person.getId()));
 
-		p2.addToWishList("please work!");
+		StepVerifier.create(template.findOne(query, PersonWithAList.class)).consumeNextWith(actual -> {
 
-		template.save(p2).block();
+			assertThat(actual.getWishList().size(), is(0));
+		}).verifyComplete();
 
-		PersonWithAList p3 = template.findOne(q1, PersonWithAList.class).block();
-		assertThat(p3, notNullValue());
-		assertThat(p3.getWishList().size(), is(1));
+		person.addToWishList("please work!");
 
-		Friend f = new Friend();
-		p.setFirstName("Erik");
-		p.setAge(21);
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
-		p3.addFriend(f);
-		template.save(p3).block();
+		StepVerifier.create(template.findOne(query, PersonWithAList.class)).consumeNextWith(actual -> {
 
-		PersonWithAList p4 = template.findOne(q1, PersonWithAList.class).block();
-		assertThat(p4, notNullValue());
-		assertThat(p4.getWishList().size(), is(1));
-		assertThat(p4.getFriends().size(), is(1));
+			assertThat(actual.getWishList().size(), is(1));
+		}).verifyComplete();
 
+		Friend friend = new Friend();
+		person.setFirstName("Erik");
+		person.setAge(21);
+
+		person.addFriend(friend);
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
+
+		StepVerifier.create(template.findOne(query, PersonWithAList.class)).consumeNextWith(actual -> {
+
+			assertThat(actual.getWishList().size(), is(1));
+			assertThat(actual.getFriends().size(), is(1));
+		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void testFindOneWithSort() {
-		PersonWithAList p = new PersonWithAList();
-		p.setFirstName("Sven");
-		p.setAge(22);
-		template.insert(p).block();
 
-		PersonWithAList p2 = new PersonWithAList();
-		p2.setFirstName("Erik");
-		p2.setAge(21);
-		template.insert(p2).block();
+		PersonWithAList sven = createPersonWithAList("Sven", 22);
+		PersonWithAList erik = createPersonWithAList("Erik", 21);
+		PersonWithAList mark = createPersonWithAList("Mark", 40);
 
-		PersonWithAList p3 = new PersonWithAList();
-		p3.setFirstName("Mark");
-		p3.setAge(40);
-		template.insert(p3).block();
+		StepVerifier.create(template.insertAll(Arrays.asList(sven, erik, mark))).expectNextCount(3).verifyComplete();
 
 		// test query with a sort
-		Query q2 = new Query(where("age").gt(10));
-		q2.with(new Sort(Direction.DESC, "age"));
-		PersonWithAList p5 = template.findOne(q2, PersonWithAList.class).block();
-		assertThat(p5.getFirstName(), is("Mark"));
+		Query query = new Query(where("age").gt(10));
+		query.with(Sort.by(Direction.DESC, "age"));
+
+		StepVerifier.create(template.findOne(query, PersonWithAList.class)).consumeNextWith(actual -> {
+
+			assertThat(actual.getFirstName(), is("Mark"));
+		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void bogusUpdateDoesNotTriggerException() throws Exception {
+	public void bogusUpdateDoesNotTriggerException() {
 
 		ReactiveMongoTemplate mongoTemplate = new ReactiveMongoTemplate(factory);
 		mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
-		Person person = new Person("Oliver2");
-		person.setAge(25);
-		mongoTemplate.insert(person).block();
+		Person oliver = new Person("Oliver2", 25);
+		StepVerifier.create(template.insert(oliver)).expectNextCount(1).verifyComplete();
 
 		Query q = new Query(where("BOGUS").gt(22));
 		Update u = new Update().set("firstName", "Sven");
-		mongoTemplate.updateFirst(q, u, Person.class).block();
+
+		StepVerifier.create(mongoTemplate.updateFirst(q, u, Person.class)).expectNextCount(1).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void updateFirstByEntityTypeShouldUpdateObject() throws Exception {
+	public void updateFirstByEntityTypeShouldUpdateObject() {
 
 		Person person = new Person("Oliver2", 25);
-		template.insert(person) //
+		StepVerifier.create(template.insert(person) //
 				.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), Person.class)) //
-				.flatMap(p -> template.find(new Query(where("age").is(25)), Person.class))
-				.subscribeWith(TestSubscriber.create()) //
-				.await() //
-				.assertValuesWith(result -> {
-					assertThat(result.getFirstName(), is(equalTo("Sven")));
-				});
+				.flatMap(p -> template.find(new Query(where("age").is(25)), Person.class))).consumeNextWith(actual -> {
+
+					assertThat(actual.getFirstName(), is(equalTo("Sven")));
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void updateFirstByCollectionNameShouldUpdateObjects() throws Exception {
+	public void updateFirstByCollectionNameShouldUpdateObjects() {
 
 		Person person = new Person("Oliver2", 25);
-		template.insert(person, "people") //
-				.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), "people")) //
-				.flatMap(p -> template.find(new Query(where("age").is(25)), Person.class, "people"))
-				.subscribeWith(TestSubscriber.create()) //
-				.await() //
-				.assertValuesWith(result -> {
-					assertThat(result.getFirstName(), is(equalTo("Sven")));
-				});
+		StepVerifier
+				.create(template.insert(person, "people") //
+						.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), "people")) //
+						.flatMap(p -> template.find(new Query(where("age").is(25)), Person.class, "people")))
+				.consumeNextWith(actual -> {
+
+					assertThat(actual.getFirstName(), is(equalTo("Sven")));
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void updateMultiByEntityTypeShouldUpdateObjects() throws Exception {
+	public void updateMultiByEntityTypeShouldUpdateObjects() {
 
 		Query query = new Query(
 				new Criteria().orOperator(where("firstName").is("Walter Jr"), Criteria.where("firstName").is("Walter")));
 
-		template.insertAll(Mono.just(Arrays.asList(new Person("Walter", 50), new Person("Skyler", 43), new Person("Walter Jr", 16)))) //
-				.flatMap(a -> template.updateMulti(query, new Update().set("firstName", "Walt"), Person.class)) //
-				.flatMap(p -> template.find(new Query(where("firstName").is("Walt")), Person.class)) //
-				.subscribeWith(TestSubscriber.create()) //
-				.awaitAndAssertNextValueCount(2);
+		StepVerifier
+				.create(template
+						.insertAll(Mono
+								.just(Arrays.asList(new Person("Walter", 50), new Person("Skyler", 43), new Person("Walter Jr", 16)))) //
+						.flatMap(a -> template.updateMulti(query, new Update().set("firstName", "Walt"), Person.class)) //
+						.thenMany(template.find(new Query(where("firstName").is("Walt")), Person.class))) //
+				.expectNextCount(2) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void updateMultiByCollectionNameShouldUpdateObject() throws Exception {
+	public void updateMultiByCollectionNameShouldUpdateObject() {
 
 		Query query = new Query(
 				new Criteria().orOperator(where("firstName").is("Walter Jr"), Criteria.where("firstName").is("Walter")));
 
-		template
-				.insertAll(Mono.just(Arrays.asList(new Person("Walter", 50), new Person("Skyler", 43), new Person("Walter Jr", 16))), "people") //
+		List<Person> people = Arrays.asList(new Person("Walter", 50), //
+				new Person("Skyler", 43), //
+				new Person("Walter Jr", 16));
+
+		Flux<Person> personFlux = template.insertAll(Mono.just(people), "people") //
 				.collectList() //
 				.flatMap(a -> template.updateMulti(query, new Update().set("firstName", "Walt"), Person.class, "people")) //
-				.flatMap(p -> template.find(new Query(where("firstName").is("Walt")), Person.class, "people")) //
-				.subscribeWith(TestSubscriber.create()) //
-				.awaitAndAssertNextValueCount(2);
+				.flatMap(p -> template.find(new Query(where("firstName").is("Walt")), Person.class, "people"));
+
+		StepVerifier.create(personFlux) //
+				.expectNextCount(2) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -385,14 +363,9 @@ public class ReactiveMongoTemplateTests {
 		Person person = new Person(new ObjectId(), "Amol");
 		person.setAge(28);
 
-		template.insert(person).block();
+		StepVerifier.create(template.insert(person)).expectNextCount(1).verifyComplete();
 
-		try {
-			template.insert(person).block();
-			fail("Expected DataIntegrityViolationException!");
-		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(), containsString("E11000 duplicate key error"));
-		}
+		StepVerifier.create(template.insert(person)).expectError(DataIntegrityViolationException.class).verify();
 	}
 
 	@Test // DATAMONGO-1444
@@ -405,23 +378,18 @@ public class ReactiveMongoTemplateTests {
 		Person person = new Person(id, "Amol");
 		person.setAge(28);
 
-		template.insert(person).block();
-
-		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage("array");
-		thrown.expectMessage("age");
-		// thrown.expectMessage("failed");
+		StepVerifier.create(template.insert(person)).expectNextCount(1).verifyComplete();
 
 		Query query = new Query(where("firstName").is("Amol"));
 		Update upd = new Update().push("age", 29);
-		template.updateFirst(query, upd, Person.class).block();
+
+		StepVerifier.create(template.updateFirst(query, upd, Person.class)) //
+				.expectError(DataIntegrityViolationException.class) //
+				.verify();
 	}
 
 	@Test // DATAMONGO-1444
 	public void rejectsDuplicateIdInInsertAll() {
-
-		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage("E11000 duplicate key error");
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
@@ -430,18 +398,19 @@ public class ReactiveMongoTemplateTests {
 		Person person = new Person(id, "Amol");
 		person.setAge(28);
 
-		List<Person> records = new ArrayList<>();
-		records.add(person);
-		records.add(person);
-
-		template.insertAll(records).next().block();
+		StepVerifier.create(template.insertAll(Arrays.asList(person, person))) //
+				.expectError(DataIntegrityViolationException.class) //
+				.verify();
 	}
 
 	@Test // DATAMONGO-1444
 	public void testFindAndUpdate() {
 
-		template.insertAll(Arrays.asList(new Person("Tom", 21), new Person("Dick", 22), new Person("Harry", 23))).next()
-				.block();
+		StepVerifier
+				.create(
+						template.insertAll(Arrays.asList(new Person("Tom", 21), new Person("Dick", 22), new Person("Harry", 23)))) //
+				.expectNextCount(3) //
+				.verifyComplete();
 
 		Query query = new Query(Criteria.where("firstName").is("Harry"));
 		Update update = new Update().inc("age", 1);
@@ -478,62 +447,52 @@ public class ReactiveMongoTemplateTests {
 		Sample spring = new Sample("100", "spring");
 		Sample data = new Sample("200", "data");
 		Sample mongodb = new Sample("300", "mongodb");
-		template.insert(Arrays.asList(spring, data, mongodb), Sample.class).then().block();
+
+		StepVerifier.create(template.insert(Arrays.asList(spring, data, mongodb), Sample.class)) //
+				.expectNextCount(3) //
+				.verifyComplete();
 
 		Query qry = query(where("field").in("spring", "mongodb"));
 
-		TestSubscriber<Sample> testSubscriber = TestSubscriber.create();
-		template.findAllAndRemove(qry, Sample.class).subscribe(testSubscriber);
+		StepVerifier.create(template.findAllAndRemove(qry, Sample.class)).expectNextCount(2).verifyComplete();
 
-		testSubscriber.awaitAndAssertNextValueCount(2);
-		testSubscriber.assertValues(spring, mongodb);
-
-		assertThat(template.findOne(new Query(), Sample.class).block(), is(equalTo(data)));
+		StepVerifier.create(template.findOne(new Query(), Sample.class)).expectNext(data).verifyComplete();
 	}
 
-	@Test(expected = OptimisticLockingFailureException.class) // DATAMONGO-1444
+	@Test // DATAMONGO-1444
 	public void optimisticLockingHandling() {
 
 		// Init version
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.age = 29;
 		person.firstName = "Patryk";
-		template.save(person).block();
 
-		List<PersonWithVersionPropertyOfTypeInteger> result = Flux
-				.from(template.findAll(PersonWithVersionPropertyOfTypeInteger.class)).collectList().block();
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0).version, is(0));
+		StepVerifier.create(template.findAll(PersonWithVersionPropertyOfTypeInteger.class)).consumeNextWith(actual -> {
 
-		// Version change
-		person = result.get(0);
-		person.firstName = "Patryk2";
+			assertThat(actual.version, is(0));
+		}).verifyComplete();
 
-		template.save(person).block();
+		StepVerifier.create(template.findAll(PersonWithVersionPropertyOfTypeInteger.class).flatMap(p -> {
+
+			// Version change
+			person.firstName = "Patryk2";
+			return template.save(person);
+		})).expectNextCount(1).verifyComplete();
 
 		assertThat(person.version, is(1));
 
-		result = Flux.from(template.findAll(PersonWithVersionPropertyOfTypeInteger.class)).collectList().block();
+		StepVerifier.create(template.findAll(PersonWithVersionPropertyOfTypeInteger.class)).consumeNextWith(actual -> {
 
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0).version, is(1));
+			assertThat(actual.version, is(1));
+		}).verifyComplete();
 
 		// Optimistic lock exception
 		person.version = 0;
 		person.firstName = "Patryk3";
 
-		template.save(person).block();
-	}
-
-	@Test // DATAMONGO-1444
-	public void optimisticLockingHandlingWithExistingId() {
-
-		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
-		person.id = new ObjectId().toString();
-		person.age = 29;
-		person.firstName = "Patryk";
-		template.save(person);
+		StepVerifier.create(template.save(person)).expectError(OptimisticLockingFailureException.class).verify();
 	}
 
 	@Test // DATAMONGO-1444
@@ -542,22 +501,30 @@ public class ReactiveMongoTemplateTests {
 		Document dbObject = new Document();
 		dbObject.put("firstName", "Oliver");
 
-		template.insert(dbObject, template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class));
+		StepVerifier
+				.create(template.insert(dbObject, //
+						template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class))) //
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void removesObjectFromExplicitCollection() {
 
 		String collectionName = "explicit";
-		template.remove(new Query(), collectionName).block();
+		StepVerifier.create(template.remove(new Query(), collectionName)).expectNextCount(1).verifyComplete();
 
 		PersonWithConvertedId person = new PersonWithConvertedId();
 		person.name = "Dave";
-		template.save(person, collectionName).block();
-		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).next().block(), is(notNullValue()));
 
-		template.remove(person, collectionName).block();
-		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).next().block(), is(nullValue()));
+		StepVerifier.create(template.save(person, collectionName)).expectNextCount(1).verifyComplete();
+
+		StepVerifier.create(template.findAll(PersonWithConvertedId.class, collectionName)).expectNextCount(1)
+				.verifyComplete();
+
+		StepVerifier.create(template.remove(person, collectionName)).expectNextCount(1).verifyComplete();
+
+		StepVerifier.create(template.findAll(PersonWithConvertedId.class, collectionName)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -566,24 +533,23 @@ public class ReactiveMongoTemplateTests {
 		Map<String, String> map = new HashMap<>();
 		map.put("key", "value");
 
-		template.save(map, "maps").block();
+		StepVerifier.create(template.save(map, "maps")).expectNextCount(1).verifyComplete();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
+	@Test // DATAMONGO-1444
 	public void savesMongoPrimitiveObjectCorrectly() {
-		template.save(new Object(), "collection").block();
-	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
-	public void rejectsNullObjectToBeSaved() {
-		template.save((Object) null);
+		StepVerifier.create(template.save(new Object(), "collection")) //
+				.expectError(IllegalArgumentException.class) //
+				.verify();
 	}
 
 	@Test // DATAMONGO-1444
 	public void savesPlainDbObjectCorrectly() {
 
 		Document dbObject = new Document("foo", "bar");
-		template.save(dbObject, "collection").block();
+
+		StepVerifier.create(template.save(dbObject, "collection")).expectNextCount(1).verifyComplete();
 
 		assertThat(dbObject.containsKey("_id"), is(true));
 	}
@@ -592,20 +558,27 @@ public class ReactiveMongoTemplateTests {
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		Document dbObject = new Document("foo", "bar");
-		template.save(dbObject, "collection").block();
 
-		template.findById(dbObject.get("_id"), Document.class).block();
+		StepVerifier.create(template.save(dbObject, "collection")).expectNextCount(1).verifyComplete();
+
+		StepVerifier.create(template.findById(dbObject.get("_id"), Document.class)) //
+				.expectError(IllegalArgumentException.class) //
+				.verify();
+
 	}
 
 	@Test // DATAMONGO-1444
 	public void readsPlainDbObjectById() {
 
 		Document dbObject = new Document("foo", "bar");
-		template.save(dbObject, "collection").block();
+		StepVerifier.create(template.save(dbObject, "collection")).expectNextCount(1).verifyComplete();
 
-		Document result = template.findById(dbObject.get("_id"), Document.class, "collection").block();
-		assertThat(result.get("foo"), is(dbObject.get("foo")));
-		assertThat(result.get("_id"), is(dbObject.get("_id")));
+		StepVerifier.create(template.findById(dbObject.get("_id"), Document.class, "collection")) //
+				.consumeNextWith(actual -> {
+
+					assertThat(actual.get("foo"), is(dbObject.get("foo")));
+					assertThat(actual.get("_id"), is(dbObject.get("_id")));
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -616,32 +589,38 @@ public class ReactiveMongoTemplateTests {
 				new Venue("Flatiron Building", -73.988135, 40.741404), //
 				new Venue("Maplewood, NJ", -74.2713, 40.73137));
 
-		template.insertAll(venues).blockLast();
+		StepVerifier.create(template.insertAll(venues)).expectNextCount(4).verifyComplete();
+
 		IndexOperationsAdapter.blocking(template.indexOps(Venue.class))
 				.ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2D));
 
 		NearQuery geoFar = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150, Metrics.KILOMETERS);
 
-		template.geoNear(geoFar, Venue.class) //
-				.subscribeWith(TestSubscriber.create()) //
-				.awaitAndAssertNextValueCount(4);
+		StepVerifier.create(template.geoNear(geoFar, Venue.class)) //
+				.expectNextCount(4) //
+				.verifyComplete();
 
 		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(120, Metrics.KILOMETERS);
 
-		template.geoNear(geoNear, Venue.class) //
-				.subscribeWith(TestSubscriber.create()) //
-				.await() //
-				.assertValueCount(3);
+		StepVerifier.create(template.geoNear(geoNear, Venue.class)) //
+				.expectNextCount(3) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void writesPlainString() {
-		template.save("{ 'foo' : 'bar' }", "collection").block();
+
+		StepVerifier.create(template.save("{ 'foo' : 'bar' }", "collection")) //
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-1444
+	@Test // DATAMONGO-1444
 	public void rejectsNonJsonStringForSave() {
-		template.save("Foobar!", "collection").block();
+
+		StepVerifier.create(template.save("Foobar!", "collection")) //
+				.expectError(MappingException.class) //
+				.verify();
 	}
 
 	@Test // DATAMONGO-1444
@@ -650,7 +629,7 @@ public class ReactiveMongoTemplateTests {
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.firstName = "Dave";
 
-		template.insert(person).block();
+		StepVerifier.create(template.insert(person)).expectNextCount(1).verifyComplete();
 
 		assertThat(person.version, is(0));
 	}
@@ -661,17 +640,17 @@ public class ReactiveMongoTemplateTests {
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.firstName = "Dave";
 
-		template.insertAll(Collections.singletonList(person)).next().block();
+		StepVerifier.create(template.insertAll(Collections.singleton(person))).expectNextCount(1).verifyComplete();
 
 		assertThat(person.version, is(0));
 	}
 
 	@Test // DATAMONGO-1444
-	public void queryCantBeNull() {
+	public void queryCanBeNull() {
 
-		List<PersonWithIdPropertyOfTypeObjectId> result = Flux
-				.from(template.findAll(PersonWithIdPropertyOfTypeObjectId.class)).collectList().block();
-		assertThat(template.find(null, PersonWithIdPropertyOfTypeObjectId.class).collectList().block(), is(result));
+		StepVerifier.create(template.findAll(PersonWithIdPropertyOfTypeObjectId.class)).verifyComplete();
+
+		StepVerifier.create(template.find(null, PersonWithIdPropertyOfTypeObjectId.class)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -680,10 +659,10 @@ public class ReactiveMongoTemplateTests {
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.firstName = "Dave";
 
-		template.save(person, "personX").block();
+		StepVerifier.create(template.save(person, "personX")).expectNextCount(1).verifyComplete();
 		assertThat(person.version, is(0));
 
-		template.save(person, "personX").block();
+		StepVerifier.create(template.save(person, "personX")).expectNextCount(1).verifyComplete();
 		assertThat(person.version, is(1));
 	}
 
@@ -693,7 +672,7 @@ public class ReactiveMongoTemplateTests {
 		PersonWithVersionPropertyOfTypeLong person = new PersonWithVersionPropertyOfTypeLong();
 		person.firstName = "Dave";
 
-		template.save(person).block();
+		StepVerifier.create(template.save(person, "personX")).expectNextCount(1).verifyComplete();
 		assertThat(person.version, is(0L));
 	}
 
@@ -702,25 +681,24 @@ public class ReactiveMongoTemplateTests {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-		template.indexOps(Person.class).ensureIndex(new Index().on("firstName", Direction.DESC).unique()).block();
+		StepVerifier
+				.create(template.indexOps(Person.class) //
+						.ensureIndex(new Index().on("firstName", Direction.DESC).unique())) //
+				.expectNextCount(1) //
+				.verifyComplete();
 
 		Person person = new Person(new ObjectId(), "Amol");
 		person.setAge(28);
 
-		template.save(person).block();
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
 		person = new Person(new ObjectId(), "Amol");
 		person.setAge(28);
 
-		try {
-			template.save(person).block();
-			fail("Expected DataIntegrityViolationException!");
-		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(), containsString("E11000 duplicate key error"));
-		}
+		StepVerifier.create(template.save(person)).expectError(DataIntegrityViolationException.class).verify();
 	}
 
-	@Test(expected = DuplicateKeyException.class) // DATAMONGO-1444
+	@Test // DATAMONGO-1444
 	public void preventsDuplicateInsert() {
 
 		template.setWriteConcern(WriteConcern.MAJORITY);
@@ -728,24 +706,25 @@ public class ReactiveMongoTemplateTests {
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.firstName = "Dave";
 
-		template.save(person).block();
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 		assertThat(person.version, is(0));
 
 		person.version = null;
-		template.save(person).block();
+		StepVerifier.create(template.save(person)).expectError(DuplicateKeyException.class).verify();
 	}
 
 	@Test // DATAMONGO-1444
 	public void countAndFindWithoutTypeInformation() {
 
 		Person person = new Person();
-		template.save(person).block();
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
 		Query query = query(where("_id").is(person.getId()));
 		String collectionName = template.getCollectionName(Person.class);
 
-		assertThat(Flux.from(template.find(query, HashMap.class, collectionName)).collectList().block(), hasSize(1));
-		assertThat(template.count(query, collectionName).block(), is(1L));
+		StepVerifier.create(template.find(query, HashMap.class, collectionName)).expectNextCount(1).verifyComplete();
+
+		StepVerifier.create(template.count(query, collectionName)).expectNext(1L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -755,27 +734,36 @@ public class ReactiveMongoTemplateTests {
 		person.firstname = "Dave";
 		person.lastname = "Matthews";
 
-		template.save(person).block();
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
+
 		assertThat(person.id, is(notNullValue()));
 
 		person.lastname = null;
-		template.save(person).block();
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
-		person = template.findOne(query(where("id").is(person.id)), VersionedPerson.class).block();
-		assertThat(person.lastname, is(nullValue()));
+		StepVerifier.create(template.findOne(query(where("id").is(person.id)), VersionedPerson.class)) //
+				.consumeNextWith(actual -> {
+
+					assertThat(actual.lastname, is(nullValue()));
+				}) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void nullsValuesForUpdatesOfUnversionedEntity() {
 
 		Person person = new Person("Dave");
-		template.save(person).block();
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
 		person.setFirstName(null);
-		template.save(person).block();
+		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
-		person = template.findOne(query(where("id").is(person.getId())), Person.class).block();
-		assertThat(person.getFirstName(), is(nullValue()));
+		StepVerifier.create(template.findOne(query(where("id").is(person.getId())), Person.class)) //
+				.consumeNextWith(actual -> {
+
+					assertThat(actual.getFirstName(), is(nullValue()));
+				}) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -783,32 +771,42 @@ public class ReactiveMongoTemplateTests {
 
 		Document dbObject = new Document().append("first", "first").append("second", "second");
 
-		template.save(dbObject, "collection").block();
+		StepVerifier.create(template.save(dbObject, "collection")).expectNextCount(1).verifyComplete();
 
-		Document result = template.findAll(Document.class, "collection").next().block();
-		assertThat(result.containsKey("first"), is(true));
+		StepVerifier.create(template.findAll(Document.class, "collection")) //
+				.consumeNextWith(actual -> {
+
+					assertThat(actual.containsKey("first"), is(true));
+				}) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void executesExistsCorrectly() {
 
 		Sample sample = new Sample();
-		template.save(sample).block();
+		StepVerifier.create(template.save(sample)).expectNextCount(1).verifyComplete();
 
 		Query query = query(where("id").is(sample.id));
 
-		assertThat(template.exists(query, Sample.class).block(), is(true));
-		assertThat(template.exists(query(where("_id").is(sample.id)), template.getCollectionName(Sample.class)).block(),
-				is(true));
-		assertThat(template.exists(query, Sample.class, template.getCollectionName(Sample.class)).block(), is(true));
+		StepVerifier.create(template.exists(query, Sample.class)).expectNext(true).verifyComplete();
+
+		StepVerifier.create(template.exists(query(where("_id").is(sample.id)), template.getCollectionName(Sample.class)))
+				.expectNext(true).verifyComplete();
+
+		StepVerifier.create(template.exists(query, Sample.class, template.getCollectionName(Sample.class))).expectNext(true)
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void tailStreamsData() throws InterruptedException {
 
-		template.dropCollection("capped").block();
-		template.createCollection("capped", new CollectionOptions(1000, 10, true)).block();
-		template.insert(new Document("random", Math.random()).append("key", "value"), "capped").block();
+		StepVerifier.create(template.dropCollection("capped")
+				.then(template.createCollection("capped", //
+						new CollectionOptions(1000, 10, true)))
+				.then(template.insert(new Document("random", Math.random()).append("key", "value"), //
+						"capped")))
+				.expectNextCount(1).verifyComplete();
 
 		BlockingQueue<Document> documents = new LinkedBlockingQueue<>(1000);
 
@@ -825,9 +823,12 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1444
 	public void tailStreamsDataUntilCancellation() throws InterruptedException {
 
-		template.dropCollection("capped").block();
-		template.createCollection("capped", new CollectionOptions(1000, 10, true)).block();
-		template.insert(new Document("random", Math.random()).append("key", "value"), "capped").block();
+		StepVerifier.create(template.dropCollection("capped")
+				.then(template.createCollection("capped", //
+						new CollectionOptions(1000, 10, true)))
+				.then(template.insert(new Document("random", Math.random()).append("key", "value"), //
+						"capped")))
+				.expectNextCount(1).verifyComplete();
 
 		BlockingQueue<Document> documents = new LinkedBlockingQueue<>(1000);
 
@@ -838,13 +839,28 @@ public class ReactiveMongoTemplateTests {
 		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
 		assertThat(documents.isEmpty(), is(true));
 
-		template.insert(new Document("random", Math.random()).append("key", "value"), "capped").block();
+		StepVerifier.create(template.insert(new Document("random", Math.random()).append("key", "value"), "capped")) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
 		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
 
 		cancellation.dispose();
 
-		template.insert(new Document("random", Math.random()).append("key", "value"), "capped").block();
+		StepVerifier.create(template.insert(new Document("random", Math.random()).append("key", "value"), "capped")) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
 		assertThat(documents.poll(1, TimeUnit.SECONDS), is(nullValue()));
+	}
+
+	private PersonWithAList createPersonWithAList(String firstname, int age) {
+
+		PersonWithAList p = new PersonWithAList();
+		p.setFirstName(firstname);
+		p.setAge(age);
+
+		return p;
 	}
 
 	@Data

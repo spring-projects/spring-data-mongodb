@@ -13,11 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.repository;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+import rx.Observable;
+import rx.Single;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,27 +35,16 @@ import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan.Filter;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
-import org.springframework.data.repository.RepositoryDefinition;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 import org.springframework.data.repository.reactive.RxJava1SortingRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.TestSubscriber;
-import rx.Observable;
-import rx.Single;
 
 /**
  * Test for {@link ReactiveMongoRepository} using reactive wrapper type conversion.
@@ -59,11 +55,11 @@ import rx.Single;
 @ContextConfiguration(classes = ConvertingReactiveMongoRepositoryTests.Config.class)
 public class ConvertingReactiveMongoRepositoryTests {
 
-	@EnableReactiveMongoRepositories(includeFilters = @Filter(value = Repository.class), considerNestedRepositories = true)
+	@EnableReactiveMongoRepositories(includeFilters = @Filter(value = Repository.class),
+			considerNestedRepositories = true)
 	@ImportResource("classpath:reactive-infrastructure.xml")
 	static class Config {}
 
-	@Autowired ReactiveMongoTemplate template;
 	@Autowired MixedReactivePersonRepostitory reactiveRepository;
 	@Autowired ReactivePersonRepostitory reactivePersonRepostitory;
 	@Autowired RxJavaPersonRepostitory rxJavaPersonRepostitory;
@@ -71,9 +67,9 @@ public class ConvertingReactiveMongoRepositoryTests {
 	ReactivePerson dave, oliver, carter, boyd, stefan, leroi, alicia;
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 
-		reactiveRepository.deleteAll().block();
+		StepVerifier.create(reactiveRepository.deleteAll()).verifyComplete();
 
 		dave = new ReactivePerson("Dave", "Matthews", 42);
 		oliver = new ReactivePerson("Oliver August", "Matthews", 4);
@@ -83,123 +79,121 @@ public class ConvertingReactiveMongoRepositoryTests {
 		leroi = new ReactivePerson("Leroi", "Moore", 41);
 		alicia = new ReactivePerson("Alicia", "Keys", 30);
 
-		TestSubscriber<ReactivePerson> subscriber = TestSubscriber.create();
-		reactiveRepository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia)).subscribe(subscriber);
-
-		subscriber.await().assertComplete().assertNoError();
+		StepVerifier.create(reactiveRepository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
+				.expectNextCount(7) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void reactiveStreamsMethodsShouldWork() throws Exception {
-
-		TestSubscriber<Boolean> subscriber = TestSubscriber.subscribe(reactivePersonRepostitory.exists(dave.getId()));
-
-		subscriber.awaitAndAssertNextValueCount(1).assertValues(true);
+	public void reactiveStreamsMethodsShouldWork() {
+		StepVerifier.create(reactivePersonRepostitory.exists(dave.getId())).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void reactiveStreamsQueryMethodsShouldWork() throws Exception {
-
-		TestSubscriber<ReactivePerson> subscriber = TestSubscriber
-				.subscribe(reactivePersonRepostitory.findByLastname(boyd.getLastname()));
-
-		subscriber.awaitAndAssertNextValueCount(1).assertValues(boyd);
+	public void reactiveStreamsQueryMethodsShouldWork() {
+		StepVerifier.create(reactivePersonRepostitory.findByLastname(boyd.getLastname())).expectNext(boyd).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void simpleRxJavaMethodsShouldWork() throws Exception {
+	public void simpleRxJavaMethodsShouldWork() {
 
-		rx.observers.TestSubscriber<Boolean> subscriber = new rx.observers.TestSubscriber<>();
-		rxJavaPersonRepostitory.exists(dave.getId()).subscribe(subscriber);
-
-		subscriber.awaitTerminalEvent();
-		subscriber.assertCompleted();
-		subscriber.assertNoErrors();
-		subscriber.assertValue(true);
+		rxJavaPersonRepostitory.exists(dave.getId()) //
+				.test() //
+				.awaitTerminalEvent() //
+				.assertValue(true) //
+				.assertNoErrors() //
+				.assertCompleted();
 	}
 
 	@Test // DATAMONGO-1444
-	public void existsWithSingleRxJavaIdMethodsShouldWork() throws Exception {
+	public void existsWithSingleRxJavaIdMethodsShouldWork() {
 
-		rx.observers.TestSubscriber<Boolean> subscriber = new rx.observers.TestSubscriber<>();
-		rxJavaPersonRepostitory.exists(Single.just(dave.getId())).subscribe(subscriber);
-
-		subscriber.awaitTerminalEvent();
-		subscriber.assertCompleted();
-		subscriber.assertNoErrors();
-		subscriber.assertValue(true);
+		rxJavaPersonRepostitory.exists(Single.just(dave.getId())) //
+				.test() //
+				.awaitTerminalEvent() //
+				.assertValue(true) //
+				.assertNoErrors() //
+				.assertCompleted();
 	}
 
 	@Test // DATAMONGO-1444
-	public void singleRxJavaQueryMethodShouldWork() throws Exception {
+	public void singleRxJavaQueryMethodShouldWork() {
 
-		rx.observers.TestSubscriber<ReactivePerson> subscriber = new rx.observers.TestSubscriber<>();
-		rxJavaPersonRepostitory.findByFirstnameAndLastname(dave.getFirstname(), dave.getLastname()).subscribe(subscriber);
-
-		subscriber.awaitTerminalEvent();
-		subscriber.assertCompleted();
-		subscriber.assertNoErrors();
-		subscriber.assertValue(dave);
+		rxJavaPersonRepostitory.findByFirstnameAndLastname(dave.getFirstname(), dave.getLastname()) //
+				.test() //
+				.awaitTerminalEvent() //
+				.assertValue(dave) //
+				.assertNoErrors() //
+				.assertCompleted();
 	}
 
 	@Test // DATAMONGO-1444
-	public void singleProjectedRxJavaQueryMethodShouldWork() throws Exception {
+	public void singleProjectedRxJavaQueryMethodShouldWork() {
 
-		rx.observers.TestSubscriber<ProjectedPerson> subscriber = new rx.observers.TestSubscriber<>();
-		rxJavaPersonRepostitory.findProjectedByLastname(carter.getLastname()).subscribe(subscriber);
+		List<ProjectedPerson> people = rxJavaPersonRepostitory.findProjectedByLastname(carter.getLastname()) //
+				.test() //
+				.awaitTerminalEvent() //
+				.assertValueCount(1) //
+				.assertNoErrors() //
+				.assertCompleted() //
+				.getOnNextEvents();
 
-		subscriber.awaitTerminalEvent();
-		subscriber.assertCompleted();
-		subscriber.assertNoErrors();
-
-		ProjectedPerson projectedPerson = subscriber.getOnNextEvents().get(0);
+		ProjectedPerson projectedPerson = people.get(0);
 		assertThat(projectedPerson.getFirstname(), is(equalTo(carter.getFirstname())));
 	}
 
 	@Test // DATAMONGO-1444
-	public void observableRxJavaQueryMethodShouldWork() throws Exception {
+	public void observableRxJavaQueryMethodShouldWork() {
 
-		rx.observers.TestSubscriber<ReactivePerson> subscriber = new rx.observers.TestSubscriber<>();
-		rxJavaPersonRepostitory.findByLastname(boyd.getLastname()).subscribe(subscriber);
-
-		subscriber.awaitTerminalEvent();
-		subscriber.assertCompleted();
-		subscriber.assertNoErrors();
-		subscriber.assertValue(boyd);
+		rxJavaPersonRepostitory.findByLastname(boyd.getLastname()) //
+				.test() //
+				.awaitTerminalEvent() //
+				.assertValue(boyd) //
+				.assertNoErrors() //
+				.assertCompleted() //
+				.getOnNextEvents();
 	}
 
 	@Test // DATAMONGO-1444
-	public void mixedRepositoryShouldWork() throws Exception {
+	public void mixedRepositoryShouldWork() {
 
-		ReactivePerson value = reactiveRepository.findByLastname(boyd.getLastname()).toBlocking().value();
-
-		assertThat(value, is(equalTo(boyd)));
+		reactiveRepository.findByLastname(boyd.getLastname()) //
+				.test() //
+				.awaitTerminalEvent() //
+				.assertValue(boyd) //
+				.assertNoErrors() //
+				.assertCompleted() //
+				.getOnNextEvents();
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindOneBySingleOfLastName() throws Exception {
+	public void shouldFindOneBySingleOfLastName() {
 
-		ReactivePerson carter = reactiveRepository.findByLastname(Single.just("Beauford")).block();
-
-		assertThat(carter.getFirstname(), is(equalTo("Carter")));
+		StepVerifier.create(reactiveRepository.findByLastname(Single.just(carter.getLastname()))) //
+				.expectNext(carter) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindByObservableOfLastNameIn() throws Exception {
+	public void shouldFindByObservableOfLastNameIn() {
 
-		List<ReactivePerson> persons = reactiveRepository.findByLastnameIn(Observable.just("Beauford", "Matthews"))
-				.collectList().block();
-
-		assertThat(persons, hasItems(carter, dave, oliver));
+		StepVerifier.create(reactiveRepository.findByLastnameIn(Observable.just(carter.getLastname(), dave.getLastname()))) //
+				.expectNextCount(3) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindByPublisherOfLastNameInAndAgeGreater() throws Exception {
+	public void shouldFindByPublisherOfLastNameInAndAgeGreater() {
 
-		List<ReactivePerson> persons = reactiveRepository
-				.findByLastnameInAndAgeGreaterThan(Flux.just("Beauford", "Matthews"), 41).toList().toBlocking().single();
+		List<ReactivePerson> people = reactiveRepository
+				.findByLastnameInAndAgeGreaterThan(Flux.just(carter.getLastname(), dave.getLastname()), 41).test() //
+				.awaitTerminalEvent() //
+				.assertValueCount(2) //
+				.assertNoErrors() //
+				.assertCompleted() //
+				.getOnNextEvents();
 
-		assertThat(persons, hasItems(carter, dave));
+		assertThat(people, hasItems(carter, dave));
 	}
 
 	@Repository

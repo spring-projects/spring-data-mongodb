@@ -19,8 +19,13 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 
+import lombok.NoArgsConstructor;
+import reactor.core.Cancellation;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -34,12 +39,9 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
@@ -55,13 +57,7 @@ import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import lombok.NoArgsConstructor;
 import org.springframework.util.ClassUtils;
-import reactor.core.Cancellation;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.TestSubscriber;
 
 /**
  * Test for {@link ReactiveMongoRepository} query methods.
@@ -75,10 +71,10 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	@Autowired ReactiveMongoTemplate template;
 
 	ReactiveMongoRepositoryFactory factory;
-	private ClassLoader classLoader;
-	private BeanFactory beanFactory;
-	private ReactivePersonRepository repository;
-	private ReactiveCappedCollectionRepository cappedRepository;
+	ClassLoader classLoader;
+	BeanFactory beanFactory;
+	ReactivePersonRepository repository;
+	ReactiveCappedCollectionRepository cappedRepository;
 
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
 
@@ -104,7 +100,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		repository = factory.getRepository(ReactivePersonRepository.class);
 		cappedRepository = factory.getRepository(ReactiveCappedCollectionRepository.class);
 
-		repository.deleteAll().block();
+		StepVerifier.create(repository.deleteAll()).verifyComplete();
 
 		dave = new Person("Dave", "Matthews", 42);
 		oliver = new Person("Oliver August", "Matthews", 4);
@@ -118,78 +114,72 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
-		TestSubscriber<Person> subscriber = TestSubscriber.create();
-		repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia)).subscribe(subscriber);
-
-		subscriber.await().assertComplete().assertNoError();
+		StepVerifier.create(repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
+				.expectNextCount(7) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindByLastName() {
-
-		List<Person> list = repository.findByLastname("Matthews").collectList().block();
-
-		assertThat(list, hasSize(2));
+		StepVerifier.create(repository.findByLastname(dave.getLastname())).expectNextCount(2).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindOneByLastName() {
-
-		Person carter = repository.findOneByLastname("Beauford").block();
-
-		assertThat(carter.getFirstname(), is(equalTo("Carter")));
+		StepVerifier.create(repository.findOneByLastname(carter.getLastname())).expectNext(carter);
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindOneByPublisherOfLastName() {
-
-		Person carter = repository.findByLastname(Mono.just("Beauford")).block();
-
-		assertThat(carter.getFirstname(), is(equalTo("Carter")));
+		StepVerifier.create(repository.findByLastname(Mono.just(carter.getLastname()))).expectNext(carter);
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindByPublisherOfLastNameIn() {
-
-		List<Person> persons = repository.findByLastnameIn(Flux.just("Beauford", "Matthews")).collectList().block();
-
-		assertThat(persons, hasItems(carter, dave, oliver));
+		StepVerifier.create(repository.findByLastnameIn(Flux.just(carter.getLastname(), dave.getLastname()))) //
+				.expectNextCount(3) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindByPublisherOfLastNameInAndAgeGreater() {
 
-		List<Person> persons = repository.findByLastnameInAndAgeGreaterThan(Flux.just("Beauford", "Matthews"), 41)
-				.collectList().block();
-
-		assertThat(persons, hasItems(carter, dave));
+		StepVerifier
+				.create(repository.findByLastnameInAndAgeGreaterThan(Flux.just(carter.getLastname(), dave.getLastname()), 41)) //
+				.expectNextCount(2) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindUsingPublishersInStringQuery() {
 
-		List<Person> persons = repository.findStringQuery(Flux.just("Beauford", "Matthews"), Mono.just(41)).collectList()
-				.block();
-
-		assertThat(persons, hasItems(carter, dave));
+		StepVerifier.create(repository.findStringQuery(Flux.just("Beauford", "Matthews"), Mono.just(41))) //
+				.expectNextCount(2) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindByLastNameAndSort() {
+		StepVerifier.create(repository.findByLastname("Matthews", Sort.by(ASC, "age"))) //
+				.expectNext(oliver, dave) //
+				.verifyComplete();
 
-		List<Person> persons = repository.findByLastname("Matthews", new Sort(new Order(ASC, "age"))).collectList().block();
-		assertThat(persons, contains(oliver, dave));
-
-		persons = repository.findByLastname("Matthews", new Sort(new Order(DESC, "age"))).collectList().block();
-		assertThat(persons, contains(dave, oliver));
+		StepVerifier.create(repository.findByLastname("Matthews", Sort.by(DESC, "age"))) //
+				.expectNext(dave, oliver) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldUseInfiniteStream() throws Exception {
 
-		template.dropCollection(Capped.class).block();
-		template.createCollection(Capped.class, new CollectionOptions(1000, 100, true)).block();
-		template.insert(new Capped("value", Math.random())).block();
+		StepVerifier
+				.create(template.dropCollection(Capped.class) //
+						.then(template.createCollection(Capped.class, //
+								new CollectionOptions(1000, 100, true)))) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<Capped> documents = new LinkedBlockingDeque<>(100);
 
@@ -197,7 +187,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
 
-		template.insert(new Capped("value", Math.random())).block();
+		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
 		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
 		assertThat(documents.isEmpty(), is(true));
 
@@ -207,9 +197,14 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	@Test // DATAMONGO-1444
 	public void shouldUseInfiniteStreamWithProjection() throws Exception {
 
-		template.dropCollection(Capped.class).block();
-		template.createCollection(Capped.class, new CollectionOptions(1000, 100, true)).block();
-		template.insert(new Capped("value", Math.random())).block();
+		StepVerifier
+				.create(template.dropCollection(Capped.class) //
+						.then(template.createCollection(Capped.class, //
+								new CollectionOptions(1000, 100, true)))) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<CappedProjection> documents = new LinkedBlockingDeque<>(100);
 
@@ -219,7 +214,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		assertThat(projection1, is(notNullValue()));
 		assertThat(projection1.getRandom(), is(not(0)));
 
-		template.insert(new Capped("value", Math.random())).block();
+		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
 
 		CappedProjection projection2 = documents.poll(5, TimeUnit.SECONDS);
 		assertThat(projection2, is(notNullValue()));
@@ -235,11 +230,11 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		repository.save(dave).block();
+		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170)) //
-				.subscribeWith(TestSubscriber.create()) //
-				.awaitAndAssertNextValues(dave);
+		StepVerifier.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170))) //
+				.expectNext(dave) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -247,11 +242,13 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		repository.save(dave).block();
+		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), new PageRequest(0, 10)) //
-				.subscribeWith(TestSubscriber.create()) //
-				.awaitAndAssertNextValues(dave);
+		StepVerifier
+				.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), //
+						PageRequest.of(0, 10))) //
+				.expectNext(dave) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -259,15 +256,15 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		repository.save(dave).block();
+		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000, Metrics.KILOMETERS)) //
-				.subscribeWith(TestSubscriber.create()) //
-				.awaitAndAssertNextValuesWith(personGeoResult -> {
+		StepVerifier.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
+				new Distance(2000, Metrics.KILOMETERS)) //
+		).consumeNextWith(actual -> {
 
-					assertThat(personGeoResult.getDistance().getValue(), is(closeTo(1, 1)));
-					assertThat(personGeoResult.getContent(), is(equalTo(dave)));
-				});
+			assertThat(actual.getDistance().getValue(), is(closeTo(1, 1)));
+			assertThat(actual.getContent(), is(equalTo(dave)));
+		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -275,15 +272,17 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		repository.save(dave).block();
+		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000, Metrics.KILOMETERS), new PageRequest(0, 10)) //
-				.subscribeWith(TestSubscriber.create()) //
-				.awaitAndAssertNextValuesWith(personGeoResult -> {
+		StepVerifier
+				.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
+						new Distance(2000, Metrics.KILOMETERS), //
+						PageRequest.of(0, 10))) //
+				.consumeNextWith(actual -> {
 
-					assertThat(personGeoResult.getDistance().getValue(), is(closeTo(1, 1)));
-					assertThat(personGeoResult.getContent(), is(equalTo(dave)));
-				});
+					assertThat(actual.getDistance().getValue(), is(closeTo(1, 1)));
+					assertThat(actual.getContent(), is(equalTo(dave)));
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -291,11 +290,13 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		repository.save(dave).block();
+		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		repository.findPersonByLocationNear(new Point(-73.99, 40.73), new Distance(2000, Metrics.KILOMETERS)) //
-				.subscribeWith(TestSubscriber.create()) //
-				.awaitAndAssertNextValues(dave);
+		StepVerifier
+				.create(repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
+						new Distance(2000, Metrics.KILOMETERS))) //
+				.expectNext(dave) //
+				.verifyComplete();
 	}
 
 	interface ReactivePersonRepository extends ReactiveMongoRepository<Person, String> {
