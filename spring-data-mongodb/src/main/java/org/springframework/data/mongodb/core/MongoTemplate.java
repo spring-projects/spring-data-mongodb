@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.core.aggregation.AggregationOptions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
@@ -123,6 +124,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 import com.mongodb.util.JSONParseException;
+import com.mongodb.AggregationOptions;
 
 /**
  * Primary implementation of {@link MongoOperations}.
@@ -142,6 +144,7 @@ import com.mongodb.util.JSONParseException;
  * @author Niko Schmuck
  * @author Mark Paluch
  * @author Laszlo Csontos
+ * @author maninder
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -1486,6 +1489,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	@Override
+	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
+		return aggregateStream(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
+	}
+
+	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
 
@@ -1497,6 +1505,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	@Override
+	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
+			Class<O> outputType) {
+
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+
+		AggregationOperationContext context = new TypeBasedAggregationOperationContext(aggregation.getInputType(),
+				mappingContext, queryMapper);
+		return aggregateStream(aggregation, inputCollectionName, outputType, context);
+	}
+
+	@Override
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
 		return aggregate(aggregation, determineCollectionName(inputType), outputType,
@@ -1504,8 +1523,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	@Override
+	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
+
+		return aggregateStream(aggregation, determineCollectionName(inputType), outputType,
+				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
+	}
+
+	@Override
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
 		return aggregate(aggregation, collectionName, outputType, null);
+	}
+
+	@Override
+	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType) {
+		return aggregateStream(aggregation, collectionName, outputType, null);
 	}
 
 	/*
@@ -1601,6 +1632,44 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		return mappedResults;
+	}
+
+	protected <O> CloseableIterator<O> aggregateStream(final Aggregation aggregation, final String collectionName,
+			final Class<O> outputType, AggregationOperationContext context) {
+
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+		Assert.notNull(outputType, "Output type must not be null!");
+
+		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+
+		final DBObject command = aggregation.toDbObject(collectionName, rootContext);
+
+		Assert.isNull(command.get(CURSOR), "Custom options not allowed while streaming");
+		Assert.isNull(command.get(EXPLAIN), "Explain option can't be used while streaming");
+
+		return execute(collectionName, new CollectionCallback<CloseableIterator<O>>() {
+
+			@Override
+			public CloseableIterator<O> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+				List<DBObject> pipeline = (List<DBObject>) command.get("pipeline");
+				Cursor cursor = collection.aggregate(pipeline, getNativeAggregationOptionsFromCommand(command));
+
+				ReadDbObjectCallback<O> readCallback = new ReadDbObjectCallback<O>(mongoConverter, outputType, collectionName);
+
+				return new CloseableIterableCursorAdapter<O>(cursor, exceptionTranslator, readCallback);
+			}
+
+			private AggregationOptions getNativeAggregationOptionsFromCommand(DBObject command) {
+				AggregationOptions.Builder builder = AggregationOptions.builder();
+				Object allowDiskUse = command.get(ALLOW_DISK_USE);
+				if (allowDiskUse != null && String.valueOf(allowDiskUse).equals("true")) {
+					builder.allowDiskUse(true);
+				}
+				return builder.build();
+			}
+		});
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {
@@ -2140,7 +2209,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Returns all identifiers for the given documents. Will augment the given identifiers and fill in only the ones that
 	 * are {@literal null} currently. This would've been better solved in {@link #insertDBObjectList(String, List)}
 	 * directly but would require a signature change of that method.
-	 * 
+	 *
 	 * @param ids
 	 * @param documents
 	 * @return TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
