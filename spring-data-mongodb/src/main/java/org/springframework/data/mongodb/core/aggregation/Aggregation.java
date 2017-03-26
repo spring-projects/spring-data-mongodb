@@ -385,6 +385,16 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link SampleOperation} to selects the specified number of documents from its input randomly.
+	 *
+	 * @param maxElements must not be less than zero.
+	 * @return
+	 */
+	public static SampleOperation sample(long sampleSize) {
+		return new SampleOperation(sampleSize);
+	}
+	
+	/**
 	 * Creates a new {@link MatchOperation} using the given {@link Criteria}.
 	 *
 	 * @param criteria must not be {@literal null}.
