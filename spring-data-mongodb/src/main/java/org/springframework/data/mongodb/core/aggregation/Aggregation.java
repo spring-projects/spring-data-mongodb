@@ -53,6 +53,7 @@ import com.mongodb.DBObject;
  * @author Alessio Fachechi
  * @author Christoph Strobl
  * @author Nikolay Bogdanov
+ * @author Gustavo de Geus
  * @since 1.3
  */
 public class Aggregation {
@@ -387,7 +388,7 @@ public class Aggregation {
 	/**
 	 * Creates a new {@link SampleOperation} to selects the specified number of documents from its input randomly.
 	 *
-	 * @param maxElements must not be less than zero.
+	 * @param sampleSize must not be less than zero.
 	 * @return
 	 */
 	public static SampleOperation sample(long sampleSize) {
