@@ -35,7 +35,7 @@ public class SampleOperation implements AggregationOperation {
 	private final long sampleSize;
 
 	/**
-	 * @param sampleSize Number of documents to consider.
+	 * @param sampleSize number of documents to be randomly selected from its input.
 	 */
 	public SampleOperation(long sampleSize) {
 
