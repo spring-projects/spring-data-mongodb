@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static com.sun.prism.impl.Disposer.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
@@ -24,7 +23,6 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import org.bson.Document;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,7 +60,13 @@ public class ReactiveMongoTemplateExecuteTests {
 
 	@Before
 	public void setUp() {
-		cleanUp();
+
+		Flux<Void> cleanup = operations.dropCollection("person") //
+				.mergeWith(operations.dropCollection("execute_test")) //
+				.mergeWith(operations.dropCollection("execute_test1")) //
+				.mergeWith(operations.dropCollection("execute_test2"));
+
+		StepVerifier.create(cleanup).verifyComplete();
 
 		if (mongoVersion == null) {
 			mongoVersion = operations.executeCommand("{ buildInfo: 1 }") //
@@ -70,19 +74,6 @@ public class ReactiveMongoTemplateExecuteTests {
 					.map(Version::parse) //
 					.block();
 		}
-	}
-
-	@After
-	public void tearDown() {
-
-		Flux<Void> cleanup = operations.dropCollection("person") //
-				.mergeWith(operations.dropCollection(Person.class)) //
-				.mergeWith(operations.dropCollection("execute_test")) //
-				.mergeWith(operations.dropCollection("execute_test1")) //
-				.mergeWith(operations.dropCollection("execute_test2")) //
-				.mergeWith(operations.dropCollection("execute_index_test"));
-
-		StepVerifier.create(cleanup).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
