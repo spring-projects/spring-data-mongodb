@@ -20,19 +20,8 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.data.util.Optionals.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
@@ -114,7 +103,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.CommandResult;
 import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -123,6 +111,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
@@ -191,16 +180,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private ResourceLoader resourceLoader;
 	private MongoPersistentEntityIndexCreator indexCreator;
 
-	private Mongo mongo;
-
 	/**
 	 * Constructor used for a basic template configuration
 	 *
-	 * @param mongo must not be {@literal null}.
+	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null} or empty.
 	 */
-	public MongoTemplate(MongoClient mongo, String databaseName) {
-		this(new SimpleMongoDbFactory(mongo, databaseName), null);
+	public MongoTemplate(MongoClient mongoClient, String databaseName) {
+		this(new SimpleMongoDbFactory(mongoClient, databaseName), null);
 	}
 
 	/**
@@ -242,7 +229,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Configures the {@link WriteResultChecking} to be used with the template. Setting {@literal null} will reset the
-	 * default of {@value #DEFAULT_WRITE_RESULT_CHECKING}.
+	 * default of {@link #DEFAULT_WRITE_RESULT_CHECKING}.
 	 *
 	 * @param resultChecking
 	 */
@@ -271,8 +258,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
-	 * Used by @{link {@link #prepareCollection(DBCollection)} to set the {@link ReadPreference} before any operations are
-	 * performed.
+	 * Used by @{link {@link #prepareCollection(MongoCollection)} to set the {@link ReadPreference} before any operations
+	 * are performed.
 	 *
 	 * @param readPreference
 	 */
@@ -410,15 +397,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 
 		return result;
-	}
-
-	protected void logCommandExecutionError(final Document command, CommandResult result) {
-
-		String error = result.getErrorMessage();
-
-		if (error != null) {
-			LOGGER.warn("Command execution of {} failed: {}", command.toString(), error);
-		}
 	}
 
 	public void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch) {
@@ -2620,10 +2598,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				objectReadCallback = null;
 			}
 		}
-	}
-
-	public Mongo getMongo() {
-		return mongo;
 	}
 
 	public MongoDbFactory getMongoDbFactory() {
