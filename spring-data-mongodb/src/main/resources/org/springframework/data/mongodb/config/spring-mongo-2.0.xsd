@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xsd:schema xmlns="http://www.springframework.org/schema/data/mongo"
 						xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-						xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 						xmlns:beans="http://www.springframework.org/schema/beans"
 						xmlns:tool="http://www.springframework.org/schema/tool"
-						xmlns:context="http://www.springframework.org/schema/context"
 						xmlns:repository="http://www.springframework.org/schema/data/repository"
 						targetNamespace="http://www.springframework.org/schema/data/mongo"
 						elementFormDefault="qualified" attributeFormDefault="unqualified">
@@ -38,13 +36,13 @@ Defines a MongoDbFactory for connecting to a specific database
 			<xsd:attribute name="id" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The name of the mongo definition (by default "mongoDbFactory").]]></xsd:documentation>
+The name of the MongoDbFactory definition (by default "mongoDbFactory").]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name="mongo-ref" type="mongoRef" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The reference to a Mongo instance. If not configured a default com.mongodb.Mongo instance will be created.
+The reference to a MongoClient instance. If not configured a default com.mongodb.MongoClient instance will be created.
 					]]>
 					</xsd:documentation>
 				</xsd:annotation>
@@ -120,7 +118,7 @@ The MongoClientURI string.]]></xsd:documentation>
 					<xsd:annotation>
 						<xsd:documentation><![CDATA[
 		Top-level element that contains one or more custom converters to be used for mapping
-		domain objects to and from Mongo's DBObject]]>
+		domain objects to and from Mongo's Document]]>
 						</xsd:documentation>
 					</xsd:annotation>
 					<xsd:complexType>
@@ -211,7 +209,7 @@ Defines a JMX Model MBeans for monitoring a MongoDB server'.
 			<xsd:attribute name="mongo-ref" type="mongoRef" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The name of the Mongo object that determines what server to monitor. (by default "mongo").]]></xsd:documentation>
+The name of the MongoClient object that determines what server to monitor. (by default "mongoClient").]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -350,7 +348,7 @@ The Mongo driver options
 		<xsd:attribute name="id" type="xsd:string" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The name of the mongo definition (by default "mongoClient").]]></xsd:documentation>
+The name of the MongoClient definition (by default "mongoClient").]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
 		<xsd:attribute name="port" type="xsd:string" use="optional">
@@ -406,7 +404,7 @@ The minimum number of connections per host.
 		<xsd:attribute name="connections-per-host" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The number of connections allowed per host.  Will block if run out.	 Default is 10.  System property MONGO.POOLSIZE can override.
+The number of connections allowed per host.  Will block if run out.	 Default is 100.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -422,7 +420,7 @@ then 50 threads can block more than that and an exception will be thrown.
 		<xsd:attribute name="max-wait-time" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The max wait time of a blocking thread for a connection. Default is 12000 ms (2 minutes).
+The max wait time of a blocking thread for a connection. Default is 120000 ms (2 minutes).
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -575,20 +573,20 @@ The SSLSocketFactory to use for the SSL connection. If none is configured here, 
 	<xsd:element name="template">
 		<xsd:annotation>
 			<xsd:documentation><![CDATA[
-Defines a MongoDbFactory for connecting to a specific database
+Defines a MongoTemplate.
 			]]></xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:attribute name="id" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The name of the mongo definition (by default "mongoDbFactory").]]></xsd:documentation>
+The name of the MongoTemplate definition (by default "mongoTemplate").]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name="converter-ref" type="converterRef" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The reference to a Mongoconverter instance.
+The reference to a MappingMongoConverter instance.
 					]]>
 					</xsd:documentation>
 					<xsd:appinfo>
@@ -628,20 +626,20 @@ The reference to a Mongoconverter instance.
 	<xsd:element name="gridFsTemplate">
 		<xsd:annotation>
 			<xsd:documentation><![CDATA[
-Defines a MongoDbFactory for connecting to a specific database
+Defines a GridFsTemplate.
 			]]></xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:attribute name="id" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The name of the mongo definition (by default "mongoDbFactory").]]></xsd:documentation>
+The name of the GridFsTemplate definition (by default "gridFsTemplate").]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name="converter-ref" type="converterRef" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The reference to a Mongoconverter instance.
+The reference to a MappingMongoConverter instance.
 					]]>
 					</xsd:documentation>
 					<xsd:appinfo>

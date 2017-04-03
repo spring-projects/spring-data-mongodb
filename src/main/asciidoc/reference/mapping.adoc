@@ -260,8 +260,8 @@ You can configure the `MappingMongoConverter` as well as `com.mongodb.MongoClien
 public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 
   @Bean
-  public Mongo mongo() throws Exception {
-    return new Mongo("localhost");
+  public MongoClient mongoClient() {
+    return new MongoClient("localhost");
   }
 
   @Override

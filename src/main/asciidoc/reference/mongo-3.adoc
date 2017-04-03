@@ -58,7 +58,7 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
 
   @Override
   @Bean
-  public Mongo mongo() throws Exception {
+  public MongoClient mongoClient() {
     return new MongoClient(singletonList(new ServerAddress("127.0.0.1", 27017)),
       singletonList(MongoCredential.createCredential("name", "db", "pwd".toCharArray())));
   }

@@ -29,7 +29,7 @@ import com.mongodb.MongoClient;
 
 /**
  * This test class assumes that you are already running the MongoDB server.
- * 
+ *
  * @author Mark Pollack
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -55,7 +55,7 @@ public class MongoAdminIntegrationTests {
 	}
 
 	@Test
-	public void datanaseStats() {
+	public void databaseStats() {
 		logger.info(mongoAdmin.getDatabaseStats("testAdminDb"));
 	}
 }

@@ -186,14 +186,14 @@ public class AppConfig {
   /*
    * Use the standard Mongo driver API to create a com.mongodb.MongoClient instance.
    */
-   public @Bean MongoClient mongoClient() throws UnknownHostException {
+   public @Bean MongoClient mongoClient() {
        return new MongoClient("localhost");
    }
 }
 ----
 ====
 
-This approach allows you to use the standard `com.mongodb.MongoClient` instance with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.Mongo` instance directly, the FactoryBean approach does not throw a checked exception and has the added advantage of also providing the container with an ExceptionTranslator implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html[Spring's DAO support features].
+This approach allows you to use the standard `com.mongodb.MongoClient` instance with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.MongoClient` instance directly, the FactoryBean has the added advantage of also providing the container with an ExceptionTranslator implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html[Spring's DAO support features].
 
 An example of a Java based bean metadata that supports exception translation on `@Repository` annotated classes is shown below:
 
@@ -311,7 +311,7 @@ public class MongoApp {
 
   public static void main(String[] args) throws Exception {
 
-    MongoOperations mongoOps = new MongoTemplate(*new SimpleMongoDbFactory(new Mongo(), "database")*);
+    MongoOperations mongoOps = new MongoTemplate(*new SimpleMongoDbFactory(new MongoClient(), "database")*);
 
     mongoOps.insert(new Person("Joe", 34));
 
@@ -334,8 +334,8 @@ To register a MongoDbFactory instance with the container, you write code much li
 @Configuration
 public class MongoConfiguration {
 
-  public @Bean MongoDbFactory mongoDbFactory() throws Exception {
-    return new SimpleMongoDbFactory(new Mongo(), "database");
+  public @Bean MongoDbFactory mongoDbFactory() {
+    return new SimpleMongoDbFactory(new MongoClient(), "database");
   }
 }
 ----
@@ -354,7 +354,7 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
 
   @Override
   @Bean
-  public Mongo mongo() throws Exception {
+  public MongoClient mongoClient() {
     return new MongoClient(singletonList(new ServerAddress("127.0.0.1", 27017)),
       singletonList(MongoCredential.createCredential("name", "db", "pwd".toCharArray())));
   }
@@ -435,11 +435,11 @@ You can use Java to create and register an instance of `MongoTemplate` as shown 
 @Configuration
 public class AppConfig {
 
-  public @Bean MongoClient mongoClient() throws Exception {
+  public @Bean MongoClient mongoClient() {
       return new MongoClient("localhost");
   }
 
-  public @Bean MongoTemplate mongoTemplate() throws Exception {
+  public @Bean MongoTemplate mongoTemplate() {
       return new MongoTemplate(mongoClient(), "mydatabase");
   }
 }
@@ -471,7 +471,7 @@ NOTE: The preferred way to reference the operations on `MongoTemplate` instance 
 [[mongo-template.writeresultchecking]]
 === WriteResultChecking Policy
 
-When in development it is very handy to either log or throw an exception if the `com.mongodb.WriteResult` returned from any MongoDB operation contains an error. It is quite common to forget to do this during development and then end up with an application that looks like it runs successfully but in fact the database was not modified according to your expectations. Set MongoTemplate's  property to an enum with the following values, `LOG`, `EXCEPTION`, or `NONE` to either log the error, throw and exception or do nothing. The default is to use a `WriteResultChecking` value of `NONE`.
+When in development it is very handy to either log or throw an exception if the `com.mongodb.WriteResult` returned from any MongoDB operation contains an error. It is quite common to forget to do this during development and then end up with an application that looks like it runs successfully but in fact the database was not modified according to your expectations. Set MongoTemplate's  property to an enum with the following values, `EXCEPTION`, or `NONE` to either throw an Exception or do nothing. The default is to use a `WriteResultChecking` value of `NONE`.
 
 [[mongo-template.writeconcern]]
 === WriteConcern
@@ -571,7 +571,7 @@ public class MongoApp {
 
   private static final Log log = LogFactory.getLog(MongoApp.class);
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
 
     MongoOperations mongoOps = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
 
@@ -721,8 +721,8 @@ class SampleMongoConfiguration extends AbstractMongoConfiguration {
   }
 
   @Override
-  public Mongo mongo() throws Exception {
-    return new Mongo();
+  public MongoClient mongoClient() {
+    return new MongoClient();
   }
 
   @Bean
@@ -2440,7 +2440,7 @@ class GridFsClient {
   GridFsOperations operations;
 
   @Test
-  public void storeFileToGridFs {
+  public void storeFileToGridFs() {
 
     FileMetadata metadata = new FileMetadata();
     // populate metadata
@@ -2466,7 +2466,7 @@ class GridFsClient {
   GridFsOperations operations;
 
   @Test
-  public void findFilesInGridFs {
+  public void findFilesInGridFs() {
     List<GridFSDBFile> result = operations.find(query(whereFilename().is("filename.txt")))
   }
 }
@@ -2487,7 +2487,7 @@ class GridFsClient {
   GridFsOperations operations;
 
   @Test
-  public void readFilesFromGridFs {
+  public void readFilesFromGridFs() {
     GridFsResources[] txtFiles = operations.getResources("*.txt");
   }
 }

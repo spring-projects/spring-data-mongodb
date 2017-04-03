@@ -29,7 +29,7 @@ import com.mongodb.MongoClient;
 
 /**
  * Base class for Spring Data MongoDB configuration using JavaConfig.
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -39,22 +39,21 @@ import com.mongodb.MongoClient;
  * @see MongoConfigurationSupport
  */
 @Configuration
-public abstract class AbstractMongoConfiguration extends MongoConfigurationSupport {
+public abstract class
+AbstractMongoConfiguration extends MongoConfigurationSupport {
 
 	/**
 	 * Return the {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want to expose a
 	 * {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}.
-	 * 
+	 *
 	 * @return
-	 * @throws Exception
 	 */
-	public abstract MongoClient mongoClient() throws Exception;
+	public abstract MongoClient mongoClient();
 
 	/**
 	 * Creates a {@link MongoTemplate}.
-	 * 
+	 *
 	 * @return
-	 * @throws Exception
 	 */
 	@Bean
 	public MongoTemplate mongoTemplate() throws Exception {
@@ -64,14 +63,13 @@ public abstract class AbstractMongoConfiguration extends MongoConfigurationSuppo
 	/**
 	 * Creates a {@link SimpleMongoDbFactory} to be used by the {@link MongoTemplate}. Will use the {@link MongoClient}
 	 * instance configured in {@link #mongo()}.
-	 * 
-	 * @see #mongo()
+	 *
+	 * @see #mongoClient()
 	 * @see #mongoTemplate()
 	 * @return
-	 * @throws Exception
 	 */
 	@Bean
-	public MongoDbFactory mongoDbFactory() throws Exception {
+	public MongoDbFactory mongoDbFactory() {
 		return new SimpleMongoDbFactory(mongoClient(), getDatabaseName());
 	}
 
@@ -95,7 +93,7 @@ public abstract class AbstractMongoConfiguration extends MongoConfigurationSuppo
 	/**
 	 * Creates a {@link MappingMongoConverter} using the configured {@link #mongoDbFactory()} and
 	 * {@link #mongoMappingContext()}. Will get {@link #customConversions()} applied.
-	 * 
+	 *
 	 * @see #customConversions()
 	 * @see #mongoMappingContext()
 	 * @see #mongoDbFactory()

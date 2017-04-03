@@ -21,13 +21,13 @@ import com.mongodb.MongoClient;
 
 /**
  * Sample configuration class in default package.
- * 
+ *
  * @author Oliver Gierke
  */
 @Configuration
 public class ConfigClassInDefaultPackage extends AbstractMongoConfiguration {
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.config.AbstractMongoConfiguration#getDatabaseName()
 	 */
@@ -36,12 +36,12 @@ public class ConfigClassInDefaultPackage extends AbstractMongoConfiguration {
 		return "default";
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.config.AbstractMongoConfiguration#mongo()
 	 */
 	@Override
-	public MongoClient mongoClient() throws Exception {
+	public MongoClient mongoClient() {
 		return new MongoClient();
 	}
 }

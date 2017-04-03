@@ -87,8 +87,8 @@ class ApplicationConfig extends AbstractMongoConfiguration {
   }
 
   @Override
-  public Mongo mongo() throws Exception {
-    return new Mongo();
+  public MongoClient mongoClient() {
+    return new MongoClient();
   }
 
   @Override
@@ -553,9 +553,9 @@ class MongoTemplateProducer {
 
     @Produces
     @ApplicationScoped
-    public MongoOperations createMongoTemplate() throws UnknownHostException, MongoException {
+    public MongoOperations createMongoTemplate() {
 
-        MongoDbFactory factory = new SimpleMongoDbFactory(new Mongo(), "database");
+        MongoDbFactory factory = new SimpleMongoDbFactory(new MongoClient(), "database");
         return new MongoTemplate(factory);
     }
 }

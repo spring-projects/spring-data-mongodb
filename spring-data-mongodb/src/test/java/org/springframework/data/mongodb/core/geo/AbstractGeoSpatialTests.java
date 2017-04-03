@@ -65,7 +65,7 @@ public abstract class AbstractGeoSpatialTests {
 		}
 
 		@Override
-		public MongoClient mongoClient() throws Exception {
+		public MongoClient mongoClient() {
 			return new MongoClient();
 		}
 	}
