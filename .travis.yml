@@ -9,13 +9,8 @@ before_script:
 env:
   matrix:
     - PROFILE=ci
-    - PROFILE=mongo3
-    - PROFILE=mongo3-next
-    - PROFILE=mongo31
-    - PROFILE=mongo32
-    - PROFILE=mongo33
-    - PROFILE=mongo34
     - PROFILE=mongo34-next
+    - PROFILE=mongo35-next
 
 # Current MongoDB version is 2.4.2 as of 2016-04, see https://github.com/travis-ci/travis-ci/issues/3694
 # apt-get starts a MongoDB instance so it's not started using before_script

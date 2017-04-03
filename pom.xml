@@ -114,79 +114,28 @@
 	</developers>
 
 	<profiles>
-		<profile>
-
-			<id>mongo3</id>
-			<properties>
-				<mongo>3.0.4</mongo>
-			</properties>
-
-		</profile>
-
-		<profile>
-
-			<id>mongo3-next</id>
-			<properties>
-				<mongo>3.0.5-SNAPSHOT</mongo>
-			</properties>
-
-			<repositories>
-				<repository>
-					<id>mongo-snapshots</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-				</repository>
-			</repositories>
-
-		</profile>
-
-		<profile>
-
-			<id>mongo31</id>
-			<properties>
-				<mongo>3.1.1</mongo>
-			</properties>
-
-		</profile>
-
-		<profile>
-
-			<id>mongo32</id>
-			<properties>
-				<mongo>3.2.2</mongo>
-			</properties>
-
-		</profile>
-
-		<profile>
-
-			<id>mongo33</id>
-			<properties>
-				<mongo>3.3.0</mongo>
-			</properties>
-
-			<repositories>
-				<repository>
-					<id>mongo-snapshots</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-				</repository>
-			</repositories>
-
-		</profile>
-
-		<profile>
-
-			<id>mongo34</id>
-			<properties>
-				<mongo>3.4.2</mongo>
-			</properties>
-
-		</profile>
 
 		<profile>
 
 			<id>mongo34-next</id>
 			<properties>
 				<mongo>3.4.3-SNAPSHOT</mongo>
+			</properties>
+
+			<repositories>
+				<repository>
+					<id>mongo-snapshots</id>
+					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+				</repository>
+			</repositories>
+
+		</profile>
+
+		<profile>
+
+			<id>mongo35-next</id>
+			<properties>
+				<mongo>3.5.0-SNAPSHOT</mongo>
 			</properties>
 
 			<repositories>
