@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,6 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.mapreduce.GroupBy.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import java.util.Arrays;
-import java.util.HashSet;
-
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Assert;
@@ -30,22 +27,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
 import com.mongodb.client.MongoCollection;
 
 /**
  * Integration tests for group-by operations.
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -54,25 +44,7 @@ import com.mongodb.client.MongoCollection;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class GroupByTests {
 
-	@Autowired MongoDbFactory factory;
-	@Autowired ApplicationContext applicationContext;
-
-	MongoTemplate mongoTemplate;
-
-	@Autowired
-	public void setMongo(Mongo mongo) throws Exception {
-
-		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(XObject.class)));
-		mappingContext.initialize();
-
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
-		MappingMongoConverter mappingConverter = new MappingMongoConverter(dbRefResolver, mappingContext);
-		mappingConverter.afterPropertiesSet();
-
-		this.mongoTemplate = new MongoTemplate(factory, mappingConverter);
-		mongoTemplate.setApplicationContext(applicationContext);
-	}
+	@Autowired MongoTemplate mongoTemplate;
 
 	@Before
 	public void setUp() {
