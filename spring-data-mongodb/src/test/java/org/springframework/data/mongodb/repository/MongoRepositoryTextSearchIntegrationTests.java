@@ -55,7 +55,7 @@ import com.mongodb.MongoClient;
 
 /**
  * Integration tests for text searches on repository.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
  */
@@ -207,7 +207,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		}
 
 		@Override
-		public MongoClient mongoClient() throws Exception {
+		public MongoClient mongoClient() {
 			return new MongoClient();
 		}
 

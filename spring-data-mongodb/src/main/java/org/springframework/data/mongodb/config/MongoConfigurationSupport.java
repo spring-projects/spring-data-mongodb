@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ public abstract class MongoConfigurationSupport {
 
 	/**
 	 * Return the name of the database to connect to.
-	 * 
+	 *
 	 * @return must not be {@literal null}.
 	 */
 	protected abstract String getDatabaseName();
@@ -72,7 +72,7 @@ public abstract class MongoConfigurationSupport {
 	 * configuration class' (the concrete class, not this one here) by default. So if you have a
 	 * {@code com.acme.AppConfig} extending {@link MongoConfigurationSupport} the base package will be considered
 	 * {@code com.acme} unless the method is overridden to implement alternate behavior.
-	 * 
+	 *
 	 * @return the base packages to scan for mapped {@link Document} classes or an empty collection to not enable scanning
 	 *         for entities.
 	 * @since 1.10
@@ -85,8 +85,8 @@ public abstract class MongoConfigurationSupport {
 
 	/**
 	 * Creates a {@link MongoMappingContext} equipped with entity classes scanned from the mapping base package.
-	 * 
-	 * @see #getMappingBasePackage()
+	 *
+	 * @see #getMappingBasePackages()
 	 * @return
 	 * @throws ClassNotFoundException
 	 */

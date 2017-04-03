@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 @Configuration
@@ -32,7 +31,7 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
 
 	@Override
 	@Bean
-	public MongoClient mongoClient() throws Exception {
+	public MongoClient mongoClient() {
 		return new MongoClient("127.0.0.1");
 	}
 

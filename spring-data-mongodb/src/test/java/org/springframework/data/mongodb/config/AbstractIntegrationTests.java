@@ -51,7 +51,7 @@ public abstract class AbstractIntegrationTests {
 		}
 
 		@Override
-		public MongoClient mongoClient() throws Exception {
+		public MongoClient mongoClient() {
 			return new MongoClient();
 		}
 	}
