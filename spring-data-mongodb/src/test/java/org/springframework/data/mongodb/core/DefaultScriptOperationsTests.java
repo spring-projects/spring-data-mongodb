@@ -35,12 +35,11 @@ import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**
  * Integration tests for {@link DefaultScriptOperations}.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @since 1.7
@@ -55,13 +54,13 @@ public class DefaultScriptOperationsTests {
 		private static final String DB_NAME = "script-tests";
 
 		@Bean
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() {
 			return new MongoClient();
 		}
 
 		@Bean
 		public MongoTemplate template() throws Exception {
-			return new MongoTemplate(mongo(), DB_NAME);
+			return new MongoTemplate(mongoClient(), DB_NAME);
 		}
 
 	}

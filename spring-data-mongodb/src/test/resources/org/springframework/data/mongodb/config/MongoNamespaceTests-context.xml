@@ -12,56 +12,42 @@
 	<context:property-placeholder
 			location="classpath:/org/springframework/data/mongodb/config/mongo.properties"/>
 
-	<mongo:mongo host="${mongo.host}" port="${mongo.port}">
-			<mongo:options
+	<mongo:mongo-client host="${mongo.host}" port="${mongo.port}">
+			<mongo:client-options
 					connections-per-host="${mongo.connectionsPerHost}"
 					threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
 					connect-timeout="${mongo.connectTimeout}"
 					max-wait-time="${mongo.maxWaitTime}"					
-					auto-connect-retry="${mongo.autoConnectRetry}"
-					socket-keep-alive="${mongo.socketKeepAlive}"					
-					socket-timeout="${mongo.socketTimeout}"
-					slave-ok="${mongo.slaveOk}"
-					write-number="1"
-					write-timeout="0"
-					write-fsync="true"/>
-	</mongo:mongo>
+					socket-keep-alive="${mongo.socketKeepAlive}"
+					socket-timeout="${mongo.socketTimeout}" />
+	</mongo:mongo-client>
 	
-	<mongo:db-factory dbname="database" mongo-ref="mongo"/>
+	<mongo:db-factory dbname="database" mongo-ref="mongoClient"/>
 
 	<mongo:mongo-client id="mongoClientSsl">
 		<mongo:client-options ssl="${mongoSsl.ssl}" />
 	</mongo:mongo-client>
 
 	<mongo:db-factory id="secondMongoDbFactory"
-					  host="localhost"
-					  port="27017"
-					  dbname="database"
-					  username="joe"
-					  password="secret"/>
+					  dbname="database" />
 					  
 		<mongo:db-factory id="thirdMongoDbFactory"
-					  host="localhost"
-					  port="27017"
-					  dbname="database"
-					  username="joe"
-					  password="secret"
-					  authentication-dbname="admin"/>
+					  dbname="database" />
 
-	<mongo:mongo id="defaultMongo" host="localhost" port="27017"/>
+	<mongo:mongo-client id="defaultMongo" host="localhost" port="27017"/>
 
-	<mongo:mongo id="mongoSsl" host="localhost" port="27017">
-		<mongo:options ssl="${mongoSsl.ssl}"/>
-	</mongo:mongo>
+	<mongo:mongo-client id="mongoSsl" host="localhost" port="27017">
+		<mongo:client-options ssl="${mongoSsl.ssl}"/>
+	</mongo:mongo-client>
 
-	<mongo:mongo id="mongoSslWithCustomSslFactory" host="localhost" port="27017">
+	<mongo:mongo-client id="mongoSslWithCustomSslFactory" host="localhost" port="27017">
 		<!-- setting a non-null ssl-socket-factory implicitly sets ssl=true -->
-		<mongo:options ssl-socket-factory-ref="customSslSocketFactory"/>
-	</mongo:mongo>
+		<mongo:client-options ssl-socket-factory-ref="customSslSocketFactory"/>
+	</mongo:mongo-client>
 
 	<bean id="customSslSocketFactory" class="javax.net.ssl.SSLSocketFactory" factory-method="getDefault" scope="singleton"/>
 
-	<mongo:mongo id="noAttrMongo"/>
+	<mongo:mongo-client id="noAttrMongo"/>
 
 	<mongo:mapping-converter>
 		<mongo:custom-converters>

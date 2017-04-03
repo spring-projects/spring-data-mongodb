@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,19 @@ import org.springframework.data.mongodb.monitor.*;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
+/**
+ * @author Mark Pollack
+ * @author Thomas Risberg
+ * @author John Brisbin
+ * @author Oliver Gierke
+ * @author Christoph Strobl
+ */
 public class MongoJmxParser implements BeanDefinitionParser {
 
 	public BeanDefinition parse(Element element, ParserContext parserContext) {
 		String name = element.getAttribute("mongo-ref");
 		if (!StringUtils.hasText(name)) {
-			name = "mongo";
+			name = BeanNames.MONGO_BEAN_NAME;
 		}
 		registerJmxComponents(name, element, parserContext);
 		return null;

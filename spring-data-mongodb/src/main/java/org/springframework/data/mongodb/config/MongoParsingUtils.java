@@ -25,7 +25,6 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.data.mongodb.core.MongoClientOptionsFactoryBean;
-import org.springframework.data.mongodb.core.MongoOptionsFactoryBean;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
@@ -52,42 +51,6 @@ abstract class MongoParsingUtils {
 	 */
 	static void parseReplicaSet(Element element, BeanDefinitionBuilder mongoBuilder) {
 		setPropertyValue(mongoBuilder, element, "replica-set", "replicaSetSeeds");
-	}
-
-	/**
-	 * Parses the {@code mongo:options} sub-element. Populates the given attribute factory with the proper attributes.
-	 * 
-	 * @return true if parsing actually occured, {@literal false} otherwise
-	 */
-	static boolean parseMongoOptions(Element element, BeanDefinitionBuilder mongoBuilder) {
-
-		Element optionsElement = DomUtils.getChildElementByTagName(element, "options");
-
-		if (optionsElement == null) {
-			return false;
-		}
-
-		BeanDefinitionBuilder optionsDefBuilder = BeanDefinitionBuilder
-				.genericBeanDefinition(MongoOptionsFactoryBean.class);
-
-		setPropertyValue(optionsDefBuilder, optionsElement, "connections-per-host", "connectionsPerHost");
-		setPropertyValue(optionsDefBuilder, optionsElement, "threads-allowed-to-block-for-connection-multiplier",
-				"threadsAllowedToBlockForConnectionMultiplier");
-		setPropertyValue(optionsDefBuilder, optionsElement, "max-wait-time", "maxWaitTime");
-		setPropertyValue(optionsDefBuilder, optionsElement, "connect-timeout", "connectTimeout");
-		setPropertyValue(optionsDefBuilder, optionsElement, "socket-timeout", "socketTimeout");
-		setPropertyValue(optionsDefBuilder, optionsElement, "socket-keep-alive", "socketKeepAlive");
-		setPropertyValue(optionsDefBuilder, optionsElement, "auto-connect-retry", "autoConnectRetry");
-		setPropertyValue(optionsDefBuilder, optionsElement, "max-auto-connect-retry-time", "maxAutoConnectRetryTime");
-		setPropertyValue(optionsDefBuilder, optionsElement, "write-number", "writeNumber");
-		setPropertyValue(optionsDefBuilder, optionsElement, "write-timeout", "writeTimeout");
-		setPropertyValue(optionsDefBuilder, optionsElement, "write-fsync", "writeFsync");
-		setPropertyValue(optionsDefBuilder, optionsElement, "slave-ok", "slaveOk");
-		setPropertyValue(optionsDefBuilder, optionsElement, "ssl", "ssl");
-		setPropertyReference(optionsDefBuilder, optionsElement, "ssl-socket-factory-ref", "sslSocketFactory");
-
-		mongoBuilder.addPropertyValue("mongoOptions", optionsDefBuilder.getBeanDefinition());
-		return true;
 	}
 
 	/**

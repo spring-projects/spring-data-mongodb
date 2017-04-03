@@ -127,10 +127,10 @@ Finally, you need to configure your project to use MongoDB and also configure th
   ...
 
   <!--  Mongo config -->
-  <mongo:mongo host="localhost" port="27017"/>
+  <mongo:mongo-client host="localhost" port="27017"/>
 
   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-    <constructor-arg name="mongo" ref="mongo"/>
+    <constructor-arg name="mongoClient" ref="mongoClient"/>
     <constructor-arg name="databaseName" value="test"/>
     <constructor-arg name="defaultCollectionName" value="cross-store"/>
   </bean>

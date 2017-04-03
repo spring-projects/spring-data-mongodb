@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,19 @@ package org.springframework.data.mongodb.core;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 @Configuration
 public class PersonExampleAppConfig {
 
 	@Bean
-	public Mongo mongo() throws Exception {
+	public MongoClient mongoClient() {
 		return new MongoClient("localhost");
 	}
 
 	@Bean
 	public MongoTemplate mongoTemplate() throws Exception {
-		return new MongoTemplate(mongo(), "database");
+		return new MongoTemplate(mongoClient(), "database");
 	}
 
 	@Bean

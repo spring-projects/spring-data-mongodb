@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2011 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,12 @@ package org.springframework.data.mongodb.monitor;
 
 import java.util.Date;
 
+import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * JMX Metrics for Background Flushing
@@ -32,8 +32,8 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Background Flushing Metrics")
 public class BackgroundFlushingMetrics extends AbstractMonitor {
 
-	public BackgroundFlushingMetrics(Mongo mongo) {
-		this.mongo = mongo;
+	public BackgroundFlushingMetrics(MongoClient mongoClient) {
+		super(mongoClient);
 	}
 
 	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Flushes")
@@ -63,12 +63,12 @@ public class BackgroundFlushingMetrics extends AbstractMonitor {
 
 	@SuppressWarnings("unchecked")
 	private <T> T getFlushingData(String key, Class<T> targetClass) {
-		DBObject mem = (DBObject) getServerStatus().get("backgroundFlushing");
+		Document mem = (Document) getServerStatus().get("backgroundFlushing");
 		return (T) mem.get(key);
 	}
 
 	private Date getLast() {
-		DBObject bgFlush = (DBObject) getServerStatus().get("backgroundFlushing");
+		Document bgFlush = (Document) getServerStatus().get("backgroundFlushing");
 		Date lastFinished = (Date) bgFlush.get("last_finished");
 		return lastFinished;
 	}

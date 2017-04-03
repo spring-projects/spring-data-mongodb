@@ -22,7 +22,7 @@ import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * Expose basic server information via JMX
@@ -34,8 +34,8 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Server Information")
 public class ServerInfo extends AbstractMonitor {
 
-	public ServerInfo(Mongo mongo) {
-		this.mongo = mongo;
+	public ServerInfo(MongoClient mongoClient) {
+		super(mongoClient);
 	}
 
 	/**
@@ -51,7 +51,7 @@ public class ServerInfo extends AbstractMonitor {
 		 * UnknownHostException is not necessary anymore, but clients could have
 		 * called this method in a try..catch(UnknownHostException) already
 		 */
-		return mongo.getAddress().getHost();
+		return getMongoClient().getAddress().getHost();
 	}
 
 	@ManagedMetric(displayName = "Uptime Estimate")

@@ -23,13 +23,14 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mongodb.MongoClient;
 import org.bson.Document;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.mongodb.core.MongoFactoryBean;
+import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -56,7 +57,7 @@ public class MongoNamespaceReplicaSetTests {
 	public void testParsingMongoWithReplicaSets() throws Exception {
 
 		assertTrue(ctx.containsBean("replicaSetMongo"));
-		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&replicaSetMongo");
+		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&replicaSetMongo");
 
 		List<ServerAddress> replicaSetSeeds = (List<ServerAddress>) ReflectionTestUtils.getField(mfb, "replicaSetSeeds");
 
@@ -70,7 +71,7 @@ public class MongoNamespaceReplicaSetTests {
 	public void testParsingWithPropertyPlaceHolder() throws Exception {
 
 		assertTrue(ctx.containsBean("manyReplicaSetMongo"));
-		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&manyReplicaSetMongo");
+		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&manyReplicaSetMongo");
 
 		List<ServerAddress> replicaSetSeeds = (List<ServerAddress>) ReflectionTestUtils.getField(mfb, "replicaSetSeeds");
 
@@ -89,7 +90,7 @@ public class MongoNamespaceReplicaSetTests {
 	@Ignore("CI infrastructure does not yet support replica sets")
 	public void testMongoWithReplicaSets() {
 
-		Mongo mongo = ctx.getBean(Mongo.class);
+		MongoClient mongo = ctx.getBean(MongoClient.class);
 		assertEquals(2, mongo.getAllAddress().size());
 		List<ServerAddress> servers = mongo.getAllAddress();
 		assertEquals("127.0.0.1", servers.get(0).getHost());

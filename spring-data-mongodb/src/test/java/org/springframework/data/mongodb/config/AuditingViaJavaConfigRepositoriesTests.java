@@ -64,7 +64,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		}
 
 		@Override
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() {
 			return new MongoClient();
 		}
 
@@ -119,7 +119,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	static class SimpleConfig extends AbstractMongoConfiguration {
 
 		@Override
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() {
 			return new MongoClient();
 		}
 

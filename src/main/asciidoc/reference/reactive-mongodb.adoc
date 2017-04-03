@@ -145,7 +145,7 @@ One of the first tasks when using MongoDB and Spring is to create a `com.mongodb
 
 An example of using Java based bean metadata to register an instance of a `com.mongodb.reactivestreams.client.MongoClient` is shown below
 
-.Registering a com.mongodb.Mongo object using Java based bean metadata
+.Registering a com.mongodb.MongoClient object using Java based bean metadata
 ====
 [source,java]
 ----
@@ -168,7 +168,7 @@ An alternative is to register an instance of `com.mongodb.reactivestreams.client
 
 An example of a Java based bean metadata that supports exception translation on `@Repository` annotated classes is shown below:
 
-.Registering a com.mongodb.Mongo object using Spring's MongoClientFactoryBean and enabling Spring's exception translation support
+.Registering a com.mongodb.MongoClient object using Spring's MongoClientFactoryBean and enabling Spring's exception translation support
 ====
 [source,java]
 ----
@@ -331,7 +331,7 @@ public class AppConfig {
 
 There are several overloaded constructors of `ReactiveMongoTemplate`. These are
 
-* `ReactiveMongoTemplate(MongoClient mongo, String databaseName)` - takes the `com.mongodb.Mongo` object and the default database name to operate against.
+* `ReactiveMongoTemplate(MongoClient mongo, String databaseName)` - takes the `com.mongodb.MongoClient` object and the default database name to operate against.
 * `ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory)` - takes a ReactiveMongoDatabaseFactory object that encapsulated the `com.mongodb.reactivestreams.client.MongoClient` object and database name.
 * `ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory, MongoConverter mongoConverter)` - adds a `MongoConverter` to use for mapping.
 

@@ -7,9 +7,12 @@
 			 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 			 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
+	<mongo:mongo-client id="mongo" host="127.0.0.1" port="27117">
+		<mongo:client-options server-selection-timeout="1000" />
+	</mongo:mongo-client>
+
 	<mongo:db-factory id="mongoDbFactory"
-					  host="localhost"
-					  port="27117"
+					  mongo-ref="mongo"
 					  dbname="database"/>
 
 	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">

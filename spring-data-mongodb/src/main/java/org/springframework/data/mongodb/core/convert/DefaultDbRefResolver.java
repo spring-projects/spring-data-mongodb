@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,11 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 
 /**
  * A {@link DbRefResolver} that resolves {@link org.springframework.data.mongodb.core.mapping.DBRef}s by delegating to a
@@ -105,6 +107,11 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	@Override
 	public DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation,
 			MongoPersistentEntity<?> entity, Object id) {
+
+		if (annotation != null && StringUtils.hasText(annotation.db())) {
+			return new DBRef(annotation.db(), entity.getCollection(), id);
+		}
+
 		return new DBRef(entity.getCollection(), id);
 	}
 
@@ -114,7 +121,11 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	@Override
 	public Document fetch(DBRef dbRef) {
-		return ReflectiveDBRefResolver.fetch(mongoDbFactory, dbRef);
+
+		StringUtils.hasText(dbRef.getDatabaseName());
+		return (StringUtils.hasText(dbRef.getDatabaseName()) ? mongoDbFactory.getDb(dbRef.getDatabaseName())
+				: mongoDbFactory.getDb()).getCollection(dbRef.getCollectionName(), Document.class)
+						.find(Filters.eq("_id", dbRef.getId())).first();
 	}
 
 	/*
@@ -147,7 +158,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		MongoDatabase db = mongoDbFactory.getDb();
 		List<Document> result = new ArrayList<>();
 		db.getCollection(collection).find(new Document("_id", new Document("$in", ids))).into(result);
-		Collections.sort(result, new DbRefByReferencePositionComparator(ids));
+		result.sort(new DbRefByReferencePositionComparator(ids));
 		return result;
 	}
 

@@ -18,13 +18,11 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
-import static org.springframework.data.mongodb.core.ReflectiveDBCollectionInvoker.*;
 import static org.springframework.data.mongodb.core.index.PartialIndexFilter.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.bson.Document;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +41,7 @@ import com.mongodb.client.MongoCollection;
 
 /**
  * Integration tests for {@link DefaultIndexOperations}.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
  */
@@ -153,7 +151,7 @@ public class DefaultIndexOperationsIntegrationTests {
 	}
 
 	private static IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, org.bson.Document keys) {
-		return findAndReturnIndexInfo(candidates, generateIndexName(keys));
+		return findAndReturnIndexInfo(candidates, genIndexName(keys));
 	}
 
 	private static IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, String name) {
@@ -164,6 +162,27 @@ public class DefaultIndexOperationsIntegrationTests {
 			}
 		}
 		throw new AssertionError(String.format("Index with %s was not found", name));
+	}
+
+	private static String genIndexName(Document keys) {
+
+		StringBuilder name = new StringBuilder();
+
+		for (String s : keys.keySet()) {
+
+			if (name.length() > 0) {
+				name.append('_');
+			}
+
+			name.append(s).append('_');
+			Object val = keys.get(s);
+
+			if (val instanceof Number || val instanceof String) {
+				name.append(val.toString().replace(' ', '_'));
+			}
+		}
+
+		return name.toString();
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "default-index-operations-tests")

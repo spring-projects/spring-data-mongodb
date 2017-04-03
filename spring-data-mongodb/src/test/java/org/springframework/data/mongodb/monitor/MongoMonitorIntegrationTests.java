@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * This test class assumes that you are already running the MongoDB server.
@@ -39,18 +39,18 @@ import com.mongodb.Mongo;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoMonitorIntegrationTests {
 
-	@Autowired Mongo mongo;
+	@Autowired MongoClient mongoClient;
 
 	@Test
 	public void serverInfo() {
-		ServerInfo serverInfo = new ServerInfo(mongo);
+		ServerInfo serverInfo = new ServerInfo(mongoClient);
 		serverInfo.getVersion();
 	}
 
 	@Test // DATAMONGO-685
 	public void getHostNameShouldReturnServerNameReportedByMongo() throws UnknownHostException {
 
-		ServerInfo serverInfo = new ServerInfo(mongo);
+		ServerInfo serverInfo = new ServerInfo(mongoClient);
 
 		String hostName = null;
 		try {
@@ -65,7 +65,7 @@ public class MongoMonitorIntegrationTests {
 
 	@Test
 	public void operationCounters() {
-		OperationCounters operationCounters = new OperationCounters(mongo);
+		OperationCounters operationCounters = new OperationCounters(mongoClient);
 		operationCounters.getInsertCount();
 	}
 }

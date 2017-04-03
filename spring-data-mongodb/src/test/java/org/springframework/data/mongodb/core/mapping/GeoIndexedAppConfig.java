@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 
 	@Override
 	@Bean
-	public Mongo mongo() throws Exception {
+	public MongoClient mongoClient() {
 		return new MongoClient("127.0.0.1");
 	}
 

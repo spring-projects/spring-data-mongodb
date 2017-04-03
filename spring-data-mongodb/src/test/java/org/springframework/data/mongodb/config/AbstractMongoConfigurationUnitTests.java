@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import example.first.First;
+import example.second.Second;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,11 +43,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
-
-import example.first.First;
-import example.second.Second;
 
 /**
  * Unit tests for {@link AbstractMongoConfiguration}.
@@ -86,7 +85,7 @@ public class AbstractMongoConfigurationUnitTests {
 		assertThat(context.getBean(MongoDbFactory.class), is(notNullValue()));
 
 		exception.expect(NoSuchBeanDefinitionException.class);
-		context.getBean(Mongo.class);
+		context.getBean(MongoClient.class);
 		context.close();
 	}
 
@@ -125,11 +124,6 @@ public class AbstractMongoConfigurationUnitTests {
 		context.close();
 	}
 
-	@Test // DATAMONGO-789
-	public void authenticationDatabaseShouldDefaultToNull() {
-		assertThat(new SampleMongoConfiguration().getAuthenticationDatabaseName(), is(nullValue()));
-	}
-
 	@Test // DATAMONGO-1470
 	@SuppressWarnings("unchecked")
 	public void allowsMultipleEntityBasePackages() throws ClassNotFoundException {
@@ -163,7 +157,7 @@ public class AbstractMongoConfigurationUnitTests {
 		}
 
 		@Override
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() {
 			return new MongoClient();
 		}
 
@@ -191,7 +185,7 @@ public class AbstractMongoConfigurationUnitTests {
 		}
 
 		@Override
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() {
 			return new MongoClient();
 		}
 

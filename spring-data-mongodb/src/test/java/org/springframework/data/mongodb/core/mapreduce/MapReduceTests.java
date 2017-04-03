@@ -22,7 +22,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -34,22 +33,16 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Box;
-import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
 import com.mongodb.client.MongoCollection;
 
 /**
  * Integration test for {@link MongoTemplate}'s Map-Reduce operations
- * 
+ *
  * @author Mark Pollack
  * @author Thomas Darimont
  */
@@ -61,23 +54,7 @@ public class MapReduceTests {
 	private String reduceFunction = "function(key,values){ var sum=0; for( var i=0; i<values.length; i++ ) sum += values[i]; return sum;}";
 
 	@Autowired MongoTemplate template;
-	@Autowired MongoDbFactory factory;
-
-	MongoTemplate mongoTemplate;
-
-	@Autowired
-	@SuppressWarnings("unchecked")
-	public void setMongo(Mongo mongo) throws Exception {
-
-		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(ValueObject.class)));
-		mappingContext.initialize();
-
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
-		MappingMongoConverter mappingConverter = new MappingMongoConverter(dbRefResolver, mappingContext);
-		mappingConverter.afterPropertiesSet();
-		this.mongoTemplate = new MongoTemplate(factory, mappingConverter);
-	}
+	@Autowired MongoTemplate mongoTemplate;
 
 	@Before
 	public void setUp() {
@@ -191,7 +168,7 @@ public class MapReduceTests {
 		{ "_id" : 3, "document_id" : "Resume", "author" : "Author", "content" : "...", "version" : 6 }
 		{ "_id" : 4, "document_id" : "Schema", "author" : "Someone Else", "content" : "...", "version" : 0.9 }
 		{ "_id" : 5, "document_id" : "Schema", "author" : "Someone Else", "content" : "...", "version" : 1 }
-		
+
 		 */
 		ContentAndVersion cv1 = new ContentAndVersion();
 		cv1.setDocumentId("mongoDB How-To");

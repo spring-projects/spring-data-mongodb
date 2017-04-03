@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import com.mongodb.MongoClient;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -93,7 +94,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	MongoTemplate template;
 
 	@Mock MongoDbFactory factory;
-	@Mock Mongo mongo;
+	@Mock MongoClient mongo;
 	@Mock MongoDatabase db;
 	@Mock MongoCollection<Document> collection;
 	@Mock MongoCursor<Document> cursor;

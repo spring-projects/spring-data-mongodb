@@ -56,7 +56,7 @@ public class NoExplicitIdTests {
 		}
 
 		@Override
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() {
 			return new MongoClient();
 		}
 	}

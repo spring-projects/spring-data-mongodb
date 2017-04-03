@@ -5,20 +5,10 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<mongo:db-factory id="first" mongo-ref="mongo" write-concern="SAFE" />
+	<mongo:db-factory id="first" mongo-ref="mongoClient" write-concern="SAFE"/>
 
-	<mongo:mongo-client id="mongo">
-		<mongo:options max-auto-connect-retry-time="27" />
+	<mongo:mongo-client id="mongoClient">
+		<mongo:client-options />
 	</mongo:mongo-client>
-	
-	<!-- now part of the namespace
-	<bean class="org.springframework.beans.factory.config.CustomEditorConfigurer">
-	  <property name="customEditors">
-	    <map>
-	      <entry key="com.mongodb.WriteConcern" value="org.springframework.data.mongodb.config.WriteConcernPropertyEditor"/>
-	    </map>
-	  </property>
-	</bean>
-	-->
-	
+
 </beans>

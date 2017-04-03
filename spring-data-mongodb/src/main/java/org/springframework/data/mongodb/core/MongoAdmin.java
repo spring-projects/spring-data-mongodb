@@ -15,13 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.authentication.UserCredentials;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.util.Assert;
-
-import com.mongodb.DB;
-import com.mongodb.Mongo;
 
 /**
  * Mongo server administration exposed via JMX annotations
@@ -29,19 +28,17 @@ import com.mongodb.Mongo;
  * @author Mark Pollack
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @ManagedResource(description = "Mongo Admin Operations")
 public class MongoAdmin implements MongoAdminOperations {
 
-	private final Mongo mongo;
-	private String username;
-	private String password;
-	private String authenticationDatabaseName;
+	private final MongoClient mongoClient;
 
-	public MongoAdmin(Mongo mongo) {
+	public MongoAdmin(MongoClient mongoClient) {
 
-		Assert.notNull(mongo, "Mongo must not be null!");
-		this.mongo = mongo;
+		Assert.notNull(mongoClient, "MongoClient must not be null!");
+		this.mongoClient = mongoClient;
 	}
 
 	/* (non-Javadoc)
@@ -49,7 +46,7 @@ public class MongoAdmin implements MongoAdminOperations {
 	  */
 	@ManagedOperation
 	public void dropDatabase(String databaseName) {
-		getDB(databaseName).dropDatabase();
+		getDB(databaseName).drop();
 	}
 
 	/* (non-Javadoc)
@@ -65,37 +62,16 @@ public class MongoAdmin implements MongoAdminOperations {
 	  */
 	@ManagedOperation
 	public String getDatabaseStats(String databaseName) {
-		return getDB(databaseName).getStats().toString();
+		return getDB(databaseName).runCommand(new Document("dbStats", 1).append("scale" , 1024)).toJson();
 	}
 
-	/**
-	 * Sets the username to use to connect to the Mongo database
-	 * 
-	 * @param username The username to use
-	 */
-	public void setUsername(String username) {
-		this.username = username;
+	@ManagedOperation
+	public String getServerStatus() {
+		return getDB("admin").runCommand(new Document("serverStatus", 1).append("rangeDeleter", 1).append("repl", 1)).toJson();
 	}
 
-	/**
-	 * Sets the password to use to authenticate with the Mongo database.
-	 * 
-	 * @param password The password to use
-	 */
-	public void setPassword(String password) {
-		this.password = password;
-	}
 
-	/**
-	 * Sets the authenticationDatabaseName to use to authenticate with the Mongo database.
-	 * 
-	 * @param authenticationDatabaseName The authenticationDatabaseName to use.
-	 */
-	public void setAuthenticationDatabaseName(String authenticationDatabaseName) {
-		this.authenticationDatabaseName = authenticationDatabaseName;
-	}
-
-	DB getDB(String databaseName) {
-		return MongoDbUtils.getDB(mongo, databaseName, new UserCredentials(username, password), authenticationDatabaseName);
+	MongoDatabase getDB(String databaseName) {
+		return mongoClient.getDatabase(databaseName);
 	}
 }

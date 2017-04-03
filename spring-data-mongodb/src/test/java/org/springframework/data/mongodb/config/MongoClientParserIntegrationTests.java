@@ -90,7 +90,7 @@ public class MongoClientParserIntegrationTests {
 		context.refresh();
 
 		try {
-			MongoClient client = context.getBean("mongo", MongoClient.class);
+			MongoClient client = context.getBean("mongoClient", MongoClient.class);
 
 			assertThat(client.getAddress().getHost(), is("127.0.0.1"));
 			assertThat(client.getAddress().getPort(), is(27017));
@@ -119,8 +119,6 @@ public class MongoClientParserIntegrationTests {
 
 	@Test // DATAMONGO-1620
 	public void createsMongoClientWithServerSelectionTimeoutCorrectly() {
-
-		assumeThat(MongoClientVersion.isMongo3Driver(), is(true));
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
 

@@ -3,13 +3,13 @@
 			 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 			 xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-	<bean id="mongo" class="org.springframework.data.mongodb.core.MongoClientFactoryBean">
+	<bean id="mongoClient" class="org.springframework.data.mongodb.core.MongoClientFactoryBean">
 		<property name="host" value="127.0.0.1"/>
 		<property name="port" value="27017"/>
 	</bean>
 
 	<bean id="mongoDbFactory" class="org.springframework.data.mongodb.core.SimpleMongoDbFactory">
-		<constructor-arg name="mongo" ref="mongo"/>
+		<constructor-arg name="mongoClient" ref="mongoClient"/>
 		<constructor-arg name="databaseName" value="database"/>
 	</bean>
 
