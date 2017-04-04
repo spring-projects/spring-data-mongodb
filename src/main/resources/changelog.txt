@@ -1,6 +1,60 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.0.M2 (2017-04-04)
+----------------------------------------
+* DATAMONGO-1656 - Upgrade to MongoDB Driver 3.4.2 and Reactive Streams Driver 1.3.0.
+* DATAMONGO-1655 - Remove obsolete build profiles.
+* DATAMONGO-1648 - Rename getRepositoryFactoryClassName to getRepositoryFactoryBeanClassName.
+* DATAMONGO-1647 - Use IdentifierAccessor.getRequiredIdentifier() in MongoTemplate.doSaveVersioned(…).
+* DATAMONGO-1645 - RuntimeException when logging BeforeDeleteEvent and AfterDeleteEvent.
+* DATAMONGO-1643 - Add namespace xsd for 2.x.
+* DATAMONGO-1641 - Remove formatting config from the repository.
+* DATAMONGO-1639 - BeforeConvertEvent now sees old version values for update of entities.
+* DATAMONGO-1637 - Add support for aggregation result streaming.
+* DATAMONGO-1620 - Not able to set serverSelectionTimeout on MongoClientOptions using MongoClientOptionsFactoryBean.
+* DATAMONGO-1617 - IDs with non-autogeneratable type cannot be assigned automatically with custom event listeners.
+* DATAMONGO-1610 - Support RxJava 2 repositories.
+* DATAMONGO-1608 - NullPointerException with null argument when using IgnoreCase.
+* DATAMONGO-1607 - Class Cast Exception when retrieve data Point with value equal integer.
+* DATAMONGO-1605 - All SPEL values are converted to String.
+* DATAMONGO-1603 - @Query Annotation Placeholder Issue.
+* DATAMONGO-1602 - Remove references to single-argument assertion methods of Spring.
+* DATAMONGO-1600 - GraphLookupOperationBuilder is not visible.
+* DATAMONGO-1596 - Reference to wrong annotation in cross-store reference documentation.
+* DATAMONGO-1594 - Update "what’s new" section in reference documentation.
+* DATAMONGO-1590 - Entity new detection doesn't consider Persistable.isNew().
+* DATAMONGO-1589 - Update project documentation with the CLA tool integration.
+* DATAMONGO-1588 - Repository will not accept Point subclass in spatial query.
+* DATAMONGO-1587 - Migrate ticket references in test code to Spring Framework style.
+* DATAMONGO-1586 - TypeBasedAggregationOperationContext.getReferenceFor(…) exposes fields with their leaf property name.
+* DATAMONGO-1585 - Aggregation sort references target field of projected and aliased fields.
+* DATAMONGO-1581 - ReactiveMongoRepositoryConfigurationExtension should be public.
+* DATAMONGO-1578 - Add missing @Test annotation to ProjectionOperationUnitTests.
+* DATAMONGO-1577 - Fix Reference and JavaDoc spelling issues.
+* DATAMONGO-1576 - AbstractMongoEventListener methods not called when working with member fields.
+* DATAMONGO-1575 - Treat String replacement values in StringBased queries as such unless they are SpEL expressions.
+* DATAMONGO-1567 - Upgrade to a newer JDK version on TravisCI.
+* DATAMONGO-1566 - Adapt API in RepositoryFactoryBeanSupport implementation.
+* DATAMONGO-1565 - Placeholders in manually defined queries not escaped properly.
+* DATAMONGO-1564 - Split up AggregationExpressions.
+* DATAMONGO-1559 - Migrate reactive tests from TestSubscriber to StepVerifier.
+* DATAMONGO-1558 - Upgrade travis-ci profile to MongoDB 3.4.
+* DATAMONGO-1552 - Add $facet, $bucket and $bucketAuto aggregation stages.
+* DATAMONGO-1551 - Add $graphLookup aggregation stage.
+* DATAMONGO-1550 - Add $replaceRoot aggregation stage.
+* DATAMONGO-1549 - Add $count aggregation stage.
+* DATAMONGO-1548 - Add new MongoDB 3.4 aggregation operators.
+* DATAMONGO-1547 - Register repository factory in spring.factories for multi-store support.
+* DATAMONGO-1546 - Switch to new way of registering custom Jackson modules.
+* DATAMONGO-1542 - Refactor CondOperator and IfNullOperator to children of AggregationExpressions.
+* DATAMONGO-1540 - Add support for $map to aggregation.
+* DATAMONGO-1539 - Add dedicated annotations for manually declared count and delete queries.
+* DATAMONGO-1538 - Add support for $let to aggregation.
+* DATAMONGO-1536 - Add missing aggregation operators.
+* DATAMONGO-1535 - Release 2.0 M2 (Kay).
+
+
 Changes in version 1.10.1.RELEASE (2017-03-02)
 ----------------------------------------------
 * DATAMONGO-1608 - NullPointerException with null argument when using IgnoreCase.
