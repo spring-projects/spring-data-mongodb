@@ -298,7 +298,7 @@ public class ReactiveMongoTemplateTests {
 		Person person = new Person("Oliver2", 25);
 		StepVerifier.create(template.insert(person) //
 				.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), Person.class)) //
-				.flatMap(p -> template.find(new Query(where("age").is(25)), Person.class))).consumeNextWith(actual -> {
+				.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class))).consumeNextWith(actual -> {
 
 					assertThat(actual.getFirstName(), is(equalTo("Sven")));
 				}).verifyComplete();
@@ -311,7 +311,7 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier
 				.create(template.insert(person, "people") //
 						.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), "people")) //
-						.flatMap(p -> template.find(new Query(where("age").is(25)), Person.class, "people")))
+						.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class, "people")))
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getFirstName(), is(equalTo("Sven")));
@@ -347,7 +347,7 @@ public class ReactiveMongoTemplateTests {
 		Flux<Person> personFlux = template.insertAll(Mono.just(people), "people") //
 				.collectList() //
 				.flatMap(a -> template.updateMulti(query, new Update().set("firstName", "Walt"), Person.class, "people")) //
-				.flatMap(p -> template.find(new Query(where("firstName").is("Walt")), Person.class, "people"));
+				.flatMapMany(p -> template.find(new Query(where("firstName").is("Walt")), Person.class, "people"));
 
 		StepVerifier.create(personFlux) //
 				.expectNextCount(2) //
