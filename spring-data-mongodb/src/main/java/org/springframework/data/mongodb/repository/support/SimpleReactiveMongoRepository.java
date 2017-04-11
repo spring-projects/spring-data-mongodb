@@ -77,7 +77,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(mono, "The given id must not be null!");
 
-		return mono.then(
+		return mono.flatMap(
 				id -> mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
 	}
 
@@ -101,7 +101,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(mono, "The given id must not be null!");
 
-		return mono.then(id -> mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
+		return mono.flatMap(id -> mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
 				entityInformation.getCollectionName()));
 
 	}
@@ -250,10 +250,10 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return Flux.from(entityStream).flatMap(entity -> {
 
 			if (entityInformation.isNew(entity)) {
-				return mongoOperations.insert(entity, entityInformation.getCollectionName()).then(aVoid -> Mono.just(entity));
+				return mongoOperations.insert(entity, entityInformation.getCollectionName()).then(Mono.just(entity));
 			}
 
-			return mongoOperations.save(entity, entityInformation.getCollectionName()).then(aVoid -> Mono.just(entity));
+			return mongoOperations.save(entity, entityInformation.getCollectionName()).then(Mono.just(entity));
 		});
 	}
 
@@ -295,7 +295,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	// TODO: should this one really be void?
 	public Mono<Void> deleteAll() {
 		return mongoOperations.remove(new Query(), entityInformation.getCollectionName())
-				.then(deleteResult -> Mono.empty());
+				.then(Mono.empty());
 	}
 
 	private Query getIdQuery(Object id) {

@@ -422,7 +422,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
 				.fromCallable(() -> getAndPrepareCollection(getMongoDatabase(), collectionName));
 
-		return collectionPublisher.flatMap(callback::doInCollection).onErrorResumeWith(translateFluxException());
+		return collectionPublisher.flatMapMany(callback::doInCollection).onErrorResumeWith(translateFluxException());
 	}
 
 	/**
@@ -441,7 +441,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
 				.fromCallable(() -> getAndPrepareCollection(getMongoDatabase(), collectionName));
 
-		return collectionPublisher.then(collection -> Mono.from(callback.doInCollection(collection)))
+		return collectionPublisher.flatMap(collection -> Mono.from(callback.doInCollection(collection)))
 				.otherwise(translateMonoException());
 	}
 
@@ -665,7 +665,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			GeoNearResultDbObjectCallback<T> callback = new GeoNearResultDbObjectCallback<T>(
 					new ReadDocumentCallback<T>(mongoConverter, entityClass, collectionName), near.getMetric());
 
-			return executeCommand(command, this.readPreference).flatMap(document -> {
+			return executeCommand(command, this.readPreference).flatMapMany(document -> {
 
 				List<Document> l = document.get("results", List.class);
 				if (l == null) {
@@ -766,7 +766,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <T> Mono<T> insert(Mono<? extends T> objectToSave) {
-		return objectToSave.then(this::insert);
+		return objectToSave.flatMap(this::insert);
 	}
 
 	/* (non-Javadoc)
@@ -816,7 +816,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc, collectionName));
 
-			Mono<T> afterInsert = insertDBObject(collectionName, dbDoc, objectToSave.getClass()).then(id -> {
+			Mono<T> afterInsert = insertDBObject(collectionName, dbDoc, objectToSave.getClass()).flatMap(id -> {
 				populateIdIfNecessary(objectToSave, id);
 				maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc, collectionName));
 				return Mono.just(objectToSave);
@@ -897,7 +897,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					}
 				}).collectList();
 
-		Flux<Tuple2<T, Document>> insertDocuments = prepareDocuments.flatMap(tuples -> {
+		Flux<Tuple2<T, Document>> insertDocuments = prepareDocuments.flatMapMany(tuples -> {
 
 			List<Document> dbObjects = tuples.stream().map(Tuple2::getT2).collect(Collectors.toList());
 
@@ -917,7 +917,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <T> Mono<T> save(Mono<? extends T> objectToSave) {
-		return objectToSave.then(this::save);
+		return objectToSave.flatMap(this::save);
 	}
 
 	/* (non-Javadoc)
@@ -925,7 +925,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <T> Mono<T> save(Mono<? extends T> objectToSave, String collectionName) {
-		return objectToSave.then(o -> save(o, collectionName));
+		return objectToSave.flatMap(o -> save(o, collectionName));
 	}
 
 	/* (non-Javadoc)
@@ -1247,7 +1247,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public Mono<DeleteResult> remove(Mono<? extends Object> objectToRemove) {
-		return objectToRemove.then(this::remove);
+		return objectToRemove.flatMap(this::remove);
 	}
 
 	/* (non-Javadoc)
@@ -1255,7 +1255,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public Mono<DeleteResult> remove(Mono<? extends Object> objectToRemove, String collection) {
-		return objectToRemove.then(o -> remove(objectToRemove, collection));
+		return objectToRemove.flatMap(o -> remove(objectToRemove, collection));
 	}
 
 	/* (non-Javadoc)
@@ -1496,7 +1496,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Flux<T> flux = find(query, entityClass, collectionName);
 
 		return Flux.from(flux).collectList()
-				.flatMap(list -> Flux.from(remove(getIdInQueryFor(list), entityClass, collectionName))
+				.flatMapMany(list -> Flux.from(remove(getIdInQueryFor(list), entityClass, collectionName))
 						.flatMap(deleteResult -> Flux.fromIterable(list)));
 	}
 
