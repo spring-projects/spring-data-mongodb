@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -904,7 +905,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (!DBRef.class.equals(rawComponentType) && isCollectionOfDbRefWhereBulkFetchIsPossible(sourceValue)) {
-			return bulkReadAndConvertDBRefs((List<DBRef>) (List) (sourceValue), componentType, path, rawComponentType);
+
+			List<Object> objects = bulkReadAndConvertDBRefs((List<DBRef>)(List) sourceValue, componentType, path,
+					rawComponentType);
+			return getPotentiallyConvertedSimpleRead(objects, targetType.getType());
 		}
 
 		for (Object dbObjItem : sourceValue) {
@@ -1314,7 +1318,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Returns whether the given {@link Iterable} contains {@link DBRef} instances all pointing to the same collection.
-	 * 
+	 *
 	 * @param source must not be {@literal null}.
 	 * @return
 	 */

@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -63,7 +64,7 @@ import com.mongodb.DBRef;
 
 /**
  * Unit tests for {@link DbRefMappingMongoConverter}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -548,6 +549,28 @@ public class DbRefMappingMongoConverterUnitTests {
 		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
 	}
 
+	@Test // DATAMONGO-1666
+	public void shouldBulkFetchSetOfReferencesForConstructorCreation() {
+
+		String id1 = "1";
+		String id2 = "2";
+		String value = "val";
+
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(
+				Arrays.asList(new BasicDBObject("_id", id1).append("value", value), new BasicDBObject("_id", id2).append("value", value)))
+						.when(converterSpy).bulkReadRefs(anyListOf(DBRef.class));
+
+		BasicDBObject document = new BasicDBObject("dbRefToInterface",
+				Arrays.asList(new DBRef("lazyDbRefTarget", "1"), new DBRef("lazyDbRefTarget", "2")));
+
+		ClassWithDbRefSetConstructor result = converterSpy.read(ClassWithDbRefSetConstructor.class, document);
+
+		assertThat(result.dbRefToInterface, is(instanceOf(Set.class)));
+
+		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
+	}
+
 	@Test // DATAMONGO-1194
 	public void shouldFallbackToOneByOneFetchingWhenElementsInListOfReferencesPointToDifferentCollections() {
 
@@ -673,6 +696,15 @@ public class DbRefMappingMongoConverterUnitTests {
 				lazy = true) LazyDbRefTargetWithPeristenceConstructorWithoutDefaultConstructor dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor;
 	}
 
+	static class ClassWithDbRefSetConstructor {
+
+		final @org.springframework.data.mongodb.core.mapping.DBRef Set<LazyDbRefTarget> dbRefToInterface;
+
+		public ClassWithDbRefSetConstructor(Set<LazyDbRefTarget> dbRefToInterface) {
+			this.dbRefToInterface = dbRefToInterface;
+		}
+	}
+
 	static class SerializableClassWithLazyDbRefs implements Serializable {
 
 		private static final long serialVersionUID = 1L;
@@ -780,7 +812,7 @@ public class DbRefMappingMongoConverterUnitTests {
 			super(id, value);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */
