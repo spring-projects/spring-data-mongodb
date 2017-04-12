@@ -31,6 +31,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -55,7 +56,6 @@ import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
@@ -241,10 +241,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 		// Retrieve persistent entity info
 
-		Document target = bson instanceof BasicDBObject ? new Document((BasicDBObject)bson) : (Document) bson;
+		Document target = bson instanceof BasicDBObject ? new Document((BasicDBObject) bson) : (Document) bson;
 
-		return read((MongoPersistentEntity<S>) mappingContext.getRequiredPersistentEntity(typeToUse), target,
-				path);
+		return read((MongoPersistentEntity<S>) mappingContext.getRequiredPersistentEntity(typeToUse), target, path);
 	}
 
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
@@ -870,7 +869,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			return dbRefResolver.createDbRef(property == null ? null : property.getDBRef(), entity,
-					idMapper.convertId(id instanceof Optional ? (Optional)id : Optional.ofNullable(id)).orElse(null));
+					idMapper.convertId(id instanceof Optional ? (Optional) id : Optional.ofNullable(id)).orElse(null));
 
 		}).orElseThrow(() -> new MappingException("No id property found on class " + entity.getType()));
 	}
@@ -913,7 +912,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (!DBRef.class.equals(rawComponentType) && isCollectionOfDbRefWhereBulkFetchIsPossible(sourceValue)) {
-			return bulkReadAndConvertDBRefs((List<DBRef>) (List) (sourceValue), componentType, path, rawComponentType);
+
+			List<Object> objects = bulkReadAndConvertDBRefs((List<DBRef>) sourceValue, componentType, path,
+					rawComponentType);
+			return getPotentiallyConvertedSimpleRead(objects, targetType.getType());
 		}
 
 		for (Object dbObjItem : sourceValue) {
