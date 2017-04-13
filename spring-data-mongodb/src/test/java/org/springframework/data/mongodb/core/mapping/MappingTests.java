@@ -51,6 +51,7 @@ import com.mongodb.client.MongoCollection;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Guto Bortolozzo
  */
 public class MappingTests extends AbstractIntegrationTests {
 
@@ -515,7 +516,108 @@ public class MappingTests extends AbstractIntegrationTests {
 		assertThat(result.item, is(notNullValue()));
 		assertThat(result.item.value, is("bar"));
 	}
+	
+	/**
+	 * @see DATAMONGO-783
+	 */
+	@Test
+	public void testMappItemLocationWithArrayOfDouble(){
 
+		ItemLocation location = new ItemLocation("foo");
+		Double[] latlon = {10.4d, 9.49d}; 
+		location.latlon = latlon;
+
+		template.insert(location);
+
+		Query query = new Query(Criteria.where("id").is("foo"));
+
+		ItemLocation one = template.findOne(query, ItemLocation.class);
+
+		assertThat(one, is(notNullValue()));
+		assertThat(one.latlon, is(notNullValue()));
+		assertThat(one.latlon, arrayWithSize(2));
+		assertThat(one.latlon, arrayContaining(10.4d, 9.49d));
+	}
+
+	/**
+	 * @see DATAMONGO-783
+	 */
+	@Test
+	public void testMappItemContainerWithItemLocation(){
+
+		ItemLocation location = new ItemLocation("foo");
+		Double[] latlon = {10.4d, 9.49d}; 
+		location.latlon = latlon;
+
+		template.insert(location);
+
+		ItemContainer container = new ItemContainer("bar");
+
+		container.location = location;
+
+		template.insert(container);
+
+		Query query = new Query(Criteria.where("id").is("bar"));
+
+		ItemContainer one = template.findOne(query, ItemContainer.class);
+
+		assertThat(one, is(notNullValue()));
+		assertThat(one.location, is(notNullValue()));
+		assertThat(one.location.latlon, arrayWithSize(2));
+		assertThat(one.location.latlon, arrayContaining(10.4d, 9.49d));
+	}
+
+	/**
+	 * @see DATAMONGO-783
+	 */
+	@Test
+	public void testMappItemContainerWithItemsLocation(){
+
+		ItemLocation location = new ItemLocation("foo");
+		Double[] latlon = {10.4d, 9.49d}; 
+		location.latlon = latlon;
+
+		template.insert(location);
+
+		ItemContainer container = new ItemContainer("bar");
+
+		container.locations = Arrays.asList(location);
+
+		template.insert(container);
+
+		Query query = new Query(Criteria.where("id").is("bar"));
+
+		ItemContainer one = template.findOne(query, ItemContainer.class);
+
+		assertThat(one, is(notNullValue()));
+		assertThat(one.locations, is(notNullValue()));
+		assertThat(one.locations.size(), is(1));
+		assertThat(one.locations.get(0).latlon, arrayContaining(10.4d, 9.49d));
+	}
+
+	static class ItemContainer {
+
+		@Id final String id;
+
+		public ItemContainer(String id) {
+			this.id = id;
+		}
+
+		@DBRef ItemLocation location;
+		@DBRef List<ItemLocation> locations;
+	}
+
+	static class ItemLocation {
+
+		@Id final String id;
+
+		public ItemLocation(String id) {
+			this.id = id;
+		}
+
+		@Field("latlon") private Double[] latlon;
+	}
+	
 	static class Container {
 
 		@Id final String id;
