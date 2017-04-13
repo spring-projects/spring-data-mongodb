@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -40,7 +41,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.AccessType.Type;
 import org.springframework.data.annotation.Id;
@@ -95,7 +95,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		person.id = "foo";
 
 		DBRef dbRef = converter.toDBRef(person, null);
-		assertThat(dbRef.getId(), is((Object) "foo"));
+		assertThat(dbRef.getId(), is("foo"));
 		assertThat(dbRef.getCollectionName(), is("person"));
 	}
 
@@ -127,7 +127,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		MapDBRefVal val = new MapDBRefVal();
 		val.id = BigInteger.ONE;
 
-		Map<String, MapDBRefVal> mapVal = new HashMap<String, MapDBRefVal>();
+		Map<String, MapDBRefVal> mapVal = new HashMap<>();
 		mapVal.put("test", val);
 
 		mapDBRef.map = mapVal;
@@ -156,7 +156,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		person.id = "foo";
 
 		DBRef dbRef = converter.toDBRef(person, property);
-		assertThat(dbRef.getId(), is((Object) "foo"));
+		assertThat(dbRef.getId(), is("foo"));
 		assertThat(dbRef.getCollectionName(), is("person"));
 	}
 
@@ -166,11 +166,11 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef(any());
 
 		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
-		lazyDbRefs.dbRefToInterface = new LinkedList<LazyDbRefTarget>(Arrays.asList(new LazyDbRefTarget("1")));
+		lazyDbRefs.dbRefToInterface = new LinkedList<>(Collections.singletonList(new LazyDbRefTarget("1")));
 		converterSpy.write(lazyDbRefs, document);
 
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
@@ -187,12 +187,11 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef(any());
 
 		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
-		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<LazyDbRefTarget>(
-				Arrays.asList(new LazyDbRefTarget(id, value)));
+		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<>(Collections.singletonList(new LazyDbRefTarget(id, value)));
 		converterSpy.write(lazyDbRefs, document);
 
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
@@ -209,7 +208,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef(any());
 
 		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
@@ -230,12 +229,11 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef(any());
 
 		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
-		lazyDbRefs.dbRefToConcreteTypeWithPersistenceConstructor = new LazyDbRefTargetWithPeristenceConstructor((Object) id,
-				(Object) value);
+		lazyDbRefs.dbRefToConcreteTypeWithPersistenceConstructor = new LazyDbRefTargetWithPeristenceConstructor(id, value);
 		converterSpy.write(lazyDbRefs, document);
 
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
@@ -252,12 +250,12 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef(any());
 
 		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
 		lazyDbRefs.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor = new LazyDbRefTargetWithPeristenceConstructorWithoutDefaultConstructor(
-				(Object) id, (Object) value);
+				id, value);
 		converterSpy.write(lazyDbRefs, document);
 
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
@@ -274,7 +272,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef(any());
 
 		Document document = new Document();
 		SerializableClassWithLazyDbRefs lazyDbRefs = new SerializableClassWithLazyDbRefs();
@@ -296,7 +294,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef(any());
 
 		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
@@ -317,7 +315,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef(any());
 
 		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
@@ -393,7 +391,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		String id = "42";
 		String value = "bubu";
 		MappingMongoConverter converterSpy = spy(converter);
-		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+		doReturn(new Document("_id", id).append("value", value)).when(converterSpy).readRef(any());
 
 		Document document = new Document();
 		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
@@ -537,11 +535,11 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(
 				Arrays.asList(new Document("_id", id1).append("value", value), new Document("_id", id2).append("value", value)))
-						.when(converterSpy).bulkReadRefs(anyListOf(DBRef.class));
+						.when(converterSpy).bulkReadRefs(anyList());
 
 		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
-		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<LazyDbRefTarget>(
+		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<>(
 				Arrays.asList(new LazyDbRefTarget(id1, value), new LazyDbRefTarget(id2, value)));
 		converterSpy.write(lazyDbRefs, document);
 
@@ -565,7 +563,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(
 				Arrays.asList(new Document("_id", id1).append("value", value), new Document("_id", id2).append("value", value)))
-						.when(converterSpy).bulkReadRefs(any());
+						.when(converterSpy).bulkReadRefs(anyList());
 
 		Document document = new Document("dbRefToInterface",
 				Arrays.asList(new DBRef("lazyDbRefTarget", "1"), new DBRef("lazyDbRefTarget", "2")));
@@ -590,7 +588,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
-		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<LazyDbRefTarget>(
+		lazyDbRefs.dbRefToConcreteCollection = new ArrayList<>(
 				Arrays.asList(new LazyDbRefTarget(id1, value), new SerializableLazyDbRefTarget(id2, value)));
 		converterSpy.write(lazyDbRefs, document);
 
@@ -602,7 +600,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToConcreteCollection.get(1).getId(), is(id2));
 
 		verify(converterSpy, times(2)).readRef(Mockito.any(DBRef.class));
-		verify(converterSpy, never()).bulkReadRefs(anyListOf(DBRef.class));
+		verify(converterSpy, never()).bulkReadRefs(anyList());
 	}
 
 	@Test // DATAMONGO-1194
@@ -616,11 +614,11 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(Arrays.asList(new Document("_id", val1.id), new Document("_id", val2.id))).when(converterSpy)
-				.bulkReadRefs(anyListOf(DBRef.class));
+				.bulkReadRefs(anyList());
 
 		Document document = new Document();
 		MapDBRef mapDBRef = new MapDBRef();
-		mapDBRef.map = new LinkedHashMap<String, MapDBRefVal>();
+		mapDBRef.map = new LinkedHashMap<>();
 		mapDBRef.map.put("one", val1);
 		mapDBRef.map.put("two", val2);
 
@@ -633,7 +631,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		// assertProxyIsResolved(result.map, true);
 		assertThat(result.map.get("two").id, is(val2.id));
 
-		verify(converterSpy, times(1)).bulkReadRefs(anyListOf(DBRef.class));
+		verify(converterSpy, times(1)).bulkReadRefs(anyList());
 		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
 	}
 
@@ -648,11 +646,11 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		MappingMongoConverter converterSpy = spy(converter);
 		doReturn(Arrays.asList(new Document("_id", val1.id), new Document("_id", val2.id))).when(converterSpy)
-				.bulkReadRefs(anyListOf(DBRef.class));
+				.bulkReadRefs(anyList());
 
 		Document document = new Document();
 		MapDBRef mapDBRef = new MapDBRef();
-		mapDBRef.lazyMap = new LinkedHashMap<String, MapDBRefVal>();
+		mapDBRef.lazyMap = new LinkedHashMap<>();
 		mapDBRef.lazyMap.put("one", val1);
 		mapDBRef.lazyMap.put("two", val2);
 
@@ -665,8 +663,8 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(result.lazyMap, true);
 		assertThat(result.lazyMap.get("two").id, is(val2.id));
 
-		verify(converterSpy, times(1)).bulkReadRefs(anyListOf(DBRef.class));
-		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
+		verify(converterSpy, times(1)).bulkReadRefs(anyList());
+		verify(converterSpy, never()).readRef(any());
 	}
 
 	private Object transport(Object result) {
