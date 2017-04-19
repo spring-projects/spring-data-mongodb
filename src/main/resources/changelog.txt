@@ -1,6 +1,15 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.9.9.RELEASE (2017-04-19)
+---------------------------------------------
+* DATAMONGO-1662 - Section "Projection Expressions" contains error "Aggregate".
+* DATAMONGO-1645 - RuntimeException when logging BeforeDeleteEvent and AfterDeleteEvent.
+* DATAMONGO-1639 - BeforeConvertEvent now sees old version values for update of entities.
+* DATAMONGO-1634 - Release 1.9.9 (Hopper SR9).
+* DATAMONGO-1421 - Repository with Enum argument: json can't serialize type.
+
+
 Changes in version 1.10.2.RELEASE (2017-04-19)
 ----------------------------------------------
 * DATAMONGO-1666 - Constructor creation with bulk fetching of DBRefs uses List instead of collection type.
