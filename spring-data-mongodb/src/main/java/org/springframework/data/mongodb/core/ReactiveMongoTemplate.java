@@ -390,7 +390,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Flux.defer(() -> callback.doInDB(getMongoDatabase())).onErrorResumeWith(translateFluxException());
+		return Flux.defer(() -> callback.doInDB(getMongoDatabase())).onErrorMap(translateException());
 	}
 
 	/**
@@ -404,7 +404,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Mono.defer(() -> Mono.from(callback.doInDB(getMongoDatabase()))).otherwise(translateMonoException());
+		return Mono.defer(() -> Mono.from(callback.doInDB(getMongoDatabase()))).onErrorMap(translateException());
 	}
 
 	/**
@@ -422,7 +422,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
 				.fromCallable(() -> getAndPrepareCollection(getMongoDatabase(), collectionName));
 
-		return collectionPublisher.flatMapMany(callback::doInCollection).onErrorResumeWith(translateFluxException());
+		return collectionPublisher.flatMapMany(callback::doInCollection).onErrorMap(translateException());
 	}
 
 	/**
@@ -442,7 +442,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.fromCallable(() -> getAndPrepareCollection(getMongoDatabase(), collectionName));
 
 		return collectionPublisher.flatMap(collection -> Mono.from(callback.doInCollection(collection)))
-				.otherwise(translateMonoException());
+				.onErrorMap(translateException());
 	}
 
 	/* (non-Javadoc)
@@ -1850,36 +1850,19 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * Exception translation {@link Function} intended for {@link Flux#onErrorResumeWith(Function)} usage.
+	 * Exception translation {@link Function} intended for {@link Flux#mapError(Function)}} usage.
 	 *
 	 * @return the exception translation {@link Function}
 	 */
-	private <T> Function<Throwable, Publisher<? extends T>> translateFluxException() {
+	private Function<Throwable, Throwable> translateException() {
 
 		return throwable -> {
 
 			if (throwable instanceof RuntimeException) {
-				return Flux.error(potentiallyConvertRuntimeException((RuntimeException) throwable, exceptionTranslator));
+				return potentiallyConvertRuntimeException((RuntimeException) throwable, exceptionTranslator);
 			}
 
-			return Flux.error(throwable);
-		};
-	}
-
-	/**
-	 * Exception translation {@link Function} intended for {@link Mono#otherwise(Function)} usage.
-	 *
-	 * @return the exception translation {@link Function}
-	 */
-	private <T> Function<Throwable, Mono<? extends T>> translateMonoException() {
-
-		return throwable -> {
-
-			if (throwable instanceof RuntimeException) {
-				return Mono.error(potentiallyConvertRuntimeException((RuntimeException) throwable, exceptionTranslator));
-			}
-
-			return Mono.error(throwable);
+			return throwable;
 		};
 	}
 
