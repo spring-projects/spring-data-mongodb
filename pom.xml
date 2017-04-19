@@ -5,7 +5,7 @@
 
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-mongodb-parent</artifactId>
-	<version>1.10.2.BUILD-SNAPSHOT</version>
+	<version>1.10.2.RELEASE</version>
 	<packaging>pom</packaging>
 
 	<name>Spring Data MongoDB</name>
