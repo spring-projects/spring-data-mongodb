@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.3
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/sort/">MongoDB Aggregation Framework: $sort</a>
  */
@@ -40,7 +41,7 @@ public class SortOperation implements AggregationOperation {
 
 	/**
 	 * Creates a new {@link SortOperation} for the given {@link Sort} instance.
-	 * 
+	 *
 	 * @param sort must not be {@literal null}.
 	 */
 	public SortOperation(Sort sort) {
@@ -50,14 +51,14 @@ public class SortOperation implements AggregationOperation {
 	}
 
 	public SortOperation and(Direction direction, String... fields) {
-		return and(new Sort(direction, fields));
+		return and(Sort.by(direction, fields));
 	}
 
 	public SortOperation and(Sort sort) {
 		return new SortOperation(this.sort.and(sort));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */

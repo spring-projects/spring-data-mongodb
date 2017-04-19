@@ -26,15 +26,16 @@ import org.springframework.data.domain.Sort.Direction;
 
 /**
  * Unit tests for {@link SortOperation}.
- * 
+ *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class SortOperationUnitTests {
 
 	@Test
 	public void createsDocumentForAscendingSortCorrectly() {
 
-		SortOperation operation = new SortOperation(new Sort(Direction.ASC, "foobar"));
+		SortOperation operation = new SortOperation(Sort.by(Direction.ASC, "foobar"));
 		Document result = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document sortValue = getAsDocument(result, "$sort");
@@ -45,7 +46,7 @@ public class SortOperationUnitTests {
 	@Test
 	public void createsDocumentForDescendingSortCorrectly() {
 
-		SortOperation operation = new SortOperation(new Sort(Direction.DESC, "foobar"));
+		SortOperation operation = new SortOperation(Sort.by(Direction.DESC, "foobar"));
 		Document result = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document sortValue = getAsDocument(result, "$sort");

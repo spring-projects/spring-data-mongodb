@@ -58,6 +58,7 @@ import com.mongodb.MongoClient;
  *
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -122,7 +123,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 
 		initRepoWithDefaultDocuments();
 
-		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("film"), new PageRequest(1,
+		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("film"), PageRequest.of(1,
 				1, Direction.ASC, "id"));
 
 		assertThat(page.hasNext(), is(true));
@@ -138,7 +139,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
 		repo.save(snipes);
 
-		List<FullTextDocument> result = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"), new Sort(
+		List<FullTextDocument> result = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"), Sort.by(
 				"score"));
 
 		assertThat(result.size(), is(4));
@@ -152,7 +153,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
 		repo.save(snipes);
 
-		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"), new PageRequest(
+		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"), PageRequest.of(
 				0, 10, Direction.ASC, "score"));
 
 		assertThat(page.getTotalElements(), is(4L));
@@ -166,7 +167,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
 		repo.save(snipes);
 
-		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"), new PageRequest(
+		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"), PageRequest.of(
 				0, 10, Direction.ASC, "id"));
 
 		assertThat(page.getTotalElements(), is(4L));

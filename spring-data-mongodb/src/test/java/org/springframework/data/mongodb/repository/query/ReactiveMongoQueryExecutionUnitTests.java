@@ -60,7 +60,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		Query query = new Query();
 		when(parameterAccessor.getGeoNearLocation()).thenReturn(new Point(1, 2));
 		when(parameterAccessor.getDistanceRange()).thenReturn(new Range<>(new Distance(10), new Distance(15)));
-		when(parameterAccessor.getPageable()).thenReturn(new PageRequest(1, 10));
+		when(parameterAccessor.getPageable()).thenReturn(PageRequest.of(1, 10));
 
 		new GeoNearExecution(operations, parameterAccessor, ClassTypeInformation.fromReturnTypeOf(geoNear)).execute(query,
 				Person.class, "person");

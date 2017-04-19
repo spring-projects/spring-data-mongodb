@@ -64,7 +64,7 @@ import com.mongodb.QueryBuilder;
 
 /**
  * Unit tests for {@link QueryMapper}.
- * 
+ *
  * @author Oliver Gierke
  * @author Patryk Wasik
  * @author Thomas Darimont
@@ -565,7 +565,7 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-647
 	public void customizedFieldNameShouldBeMappedCorrectlyWhenApplyingSort() {
 
-		Query query = query(where("field").is("bar")).with(new Sort(Direction.DESC, "field"));
+		Query query = query(where("field").is("bar")).with(Sort.by(Direction.DESC, "field"));
 		org.bson.Document document = mapper.getMappedObject(query.getSortObject(),
 				context.getPersistentEntity(CustomizedField.class));
 		assertThat(document, equalTo(new org.bson.Document().append("foo", -1)));
@@ -597,7 +597,7 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-973
 	public void getMappedSortAppendsTextScoreProperlyWhenSortedByScore() {
 
-		Query query = new Query().with(new Sort("textScore"));
+		Query query = new Query().with(Sort.by("textScore"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
@@ -608,7 +608,7 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-973
 	public void getMappedSortIgnoresTextScoreWhenNotSortedByScore() {
 
-		Query query = new Query().with(new Sort("id"));
+		Query query = new Query().with(Sort.by("id"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
@@ -643,7 +643,7 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-1050
 	public void shouldUseExplicitlySetFieldnameForIdPropertyCandidatesUsedInSortClause() {
 
-		Query query = new Query().with(new Sort("nested.id"));
+		Query query = new Query().with(Sort.by("nested.id"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));

@@ -25,27 +25,30 @@ import org.springframework.data.domain.Sort.Direction;
 
 /**
  * Unit tests for sorting.
- * 
+ *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class SortTests {
 
 	@Test
 	public void testWithSortAscending() {
-		Query s = new Query().with(new Sort(Direction.ASC, "name"));
+
+		Query s = new Query().with(Sort.by(Direction.ASC, "name"));
 		assertEquals(Document.parse("{ \"name\" : 1}"), s.getSortObject());
 	}
 
 	@Test
 	public void testWithSortDescending() {
-		Query s = new Query().with(new Sort(Direction.DESC, "name"));
+
+		Query s = new Query().with(Sort.by(Direction.DESC, "name"));
 		assertEquals(Document.parse("{ \"name\" : -1}"), s.getSortObject());
 	}
 
 	@Test // DATADOC-177
 	public void preservesOrderKeysOnMultipleSorts() {
 
-		Query sort = new Query().with(new Sort(Direction.DESC, "foo").and(new Sort(Direction.DESC, "bar")));
+		Query sort = new Query().with(Sort.by(Direction.DESC, "foo").and(Sort.by(Direction.DESC, "bar")));
 		assertThat(sort.getSortObject(), is(Document.parse("{ \"foo\" : -1 , \"bar\" : -1}")));
 	}
 }

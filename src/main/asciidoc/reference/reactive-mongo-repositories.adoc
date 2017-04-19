@@ -105,7 +105,7 @@ public class PersonRepositoryTests {
 
     @Test
     public void sortsElementsCorrectly() {
-      Flux<Person> persons = repository.findAll(new Sort(new Order(ASC, "lastname")));
+      Flux<Person> persons = repository.findAll(Sort.by(new Order(ASC, "lastname")));
     }
 }
 ----

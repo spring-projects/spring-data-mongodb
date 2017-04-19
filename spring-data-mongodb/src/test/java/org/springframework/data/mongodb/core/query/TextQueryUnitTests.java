@@ -24,8 +24,9 @@ import org.springframework.data.domain.Sort.Direction;
 
 /**
  * Unit tests for {@link TextQuery}.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class TextQueryUnitTests {
 
@@ -65,7 +66,7 @@ public class TextQueryUnitTests {
 	public void shouldNotOverrideExistingSort() {
 
 		TextQuery query = new TextQuery(QUERY);
-		query.with(new Sort(Direction.DESC, "foo"));
+		query.with(Sort.by(Direction.DESC, "foo"));
 		query.sortByScore();
 
 		assertThat(query,

@@ -38,8 +38,9 @@ import com.querydsl.core.types.Predicate;
 
 /**
  * Integration test for {@link QueryDslMongoRepository}.
- * 
+ *
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @ContextConfiguration(
 		locations = "/org/springframework/data/mongodb/repository/PersonRepositoryIntegrationTests-context.xml")
@@ -81,7 +82,7 @@ public class QueryDslMongoRepositoryIntegrationTests {
 	@Test // DATAMONGO-1167
 	public void shouldSupportFindAllWithPredicateAndSort() {
 
-		List<Person> users = repository.findAll(person.lastname.isNotNull(), new Sort(Direction.ASC, "firstname"));
+		List<Person> users = repository.findAll(person.lastname.isNotNull(), Sort.by(Direction.ASC, "firstname"));
 
 		assertThat(users, hasSize(3));
 		assertThat(users.get(0).getFirstname(), is(carter.getFirstname()));

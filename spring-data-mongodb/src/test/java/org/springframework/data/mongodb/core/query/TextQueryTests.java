@@ -47,6 +47,7 @@ import org.springframework.data.util.Version;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class TextQueryTests extends AbstractIntegrationTests {
 
@@ -207,12 +208,12 @@ public class TextQueryTests extends AbstractIntegrationTests {
 
 		// page 1
 		List<FullTextDoc> result = template
-				.find(new TextQuery("bake coffee cake").sortByScore().with(new PageRequest(0, 2)), FullTextDoc.class);
+				.find(new TextQuery("bake coffee cake").sortByScore().with(PageRequest.of(0, 2)), FullTextDoc.class);
 		assertThat(result, hasSize(2));
 		assertThat(result, contains(BAKE, COFFEE));
 
 		// page 2
-		result = template.find(new TextQuery("bake coffee cake").sortByScore().with(new PageRequest(1, 2)),
+		result = template.find(new TextQuery("bake coffee cake").sortByScore().with(PageRequest.of(1, 2)),
 				FullTextDoc.class);
 		assertThat(result, hasSize(1));
 		assertThat(result, contains(CAKE));

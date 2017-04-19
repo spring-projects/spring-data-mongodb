@@ -51,7 +51,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * @author <a href="mailto:kowsercse@gmail.com">A. B. M. Kowser</a>
+ * @author A. B. M. Kowser
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -172,7 +172,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Page<Person> result = repository.findAll(Example.of(sample), new PageRequest(0, 10));
+		Page<Person> result = repository.findAll(Example.of(sample), PageRequest.of(0, 10));
 
 		assertThat(result.getContent(), hasItems(dave, oliver));
 		assertThat(result.getContent(), hasSize(2));
@@ -186,7 +186,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Page<Person> result = repository.findAll(Example.of(sample), new PageRequest(0, 1));
+		Page<Person> result = repository.findAll(Example.of(sample), PageRequest.of(0, 1));
 
 		assertThat(result.getContent(), hasSize(1));
 		assertThat(result.getTotalPages(), is(2));

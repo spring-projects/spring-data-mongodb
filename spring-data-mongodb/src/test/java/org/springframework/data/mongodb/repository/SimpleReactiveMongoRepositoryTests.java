@@ -163,7 +163,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	@Test // DATAMONGO-1444
 	public void findAllWithSortShouldReturnResults() {
 
-		StepVerifier.create(repository.findAll(new Sort(new Order(Direction.ASC, "age")))) //
+		StepVerifier.create(repository.findAll(Sort.by(new Order(Direction.ASC, "age")))) //
 				.expectNextCount(7) //
 				.verifyComplete();
 	}

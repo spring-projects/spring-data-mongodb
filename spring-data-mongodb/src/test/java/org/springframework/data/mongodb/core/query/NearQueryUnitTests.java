@@ -29,10 +29,11 @@ import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 /**
  * Unit tests for {@link NearQuery}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class NearQueryUnitTests {
 
@@ -86,7 +87,7 @@ public class NearQueryUnitTests {
 	@Test // DATAMONGO-445
 	public void shouldTakeSkipAndLimitSettingsFromGivenPageable() {
 
-		Pageable pageable = new PageRequest(3, 5);
+		Pageable pageable = PageRequest.of(3, 5);
 		NearQuery query = NearQuery.near(new Point(1, 1)).with(pageable);
 
 		assertThat(query.getSkip(), is((long)pageable.getPageNumber() * pageable.getPageSize()));
@@ -110,7 +111,7 @@ public class NearQueryUnitTests {
 
 		int limit = 10;
 		int skip = 5;
-		Pageable pageable = new PageRequest(3, 5);
+		Pageable pageable = PageRequest.of(3, 5);
 		NearQuery query = NearQuery.near(new Point(1, 1))
 				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip)).with(pageable);
 

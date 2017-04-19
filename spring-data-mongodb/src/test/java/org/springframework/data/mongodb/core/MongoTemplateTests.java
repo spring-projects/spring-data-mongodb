@@ -57,7 +57,6 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -1122,7 +1121,7 @@ public class MongoTemplateTests {
 
 		// test query with a sort
 		Query q2 = new Query(Criteria.where("age").gt(10));
-		q2.with(new Sort(Direction.DESC, "age"));
+		q2.with(Sort.by(Direction.DESC, "age"));
 		PersonWithAList p5 = template.findOne(q2, PersonWithAList.class);
 		assertThat(p5.getFirstName(), is("Mark"));
 	}
@@ -2064,8 +2063,8 @@ public class MongoTemplateTests {
 
 		assertThat(template.count(query, Sample.class), is(1L));
 
-		query.with(new PageRequest(0, 10));
-		query.with(new Sort("field"));
+		query.with(PageRequest.of(0, 10));
+		query.with(Sort.by("field"));
 
 		assertThat(template.find(query, Sample.class), is(not(empty())));
 	}
@@ -2696,7 +2695,7 @@ public class MongoTemplateTests {
 		template.save(one);
 		template.save(two);
 
-		Query query = query(where("_id").in("1", "2")).with(new Sort(Direction.DESC, "someIdKey"));
+		Query query = query(where("_id").in("1", "2")).with(Sort.by(Direction.DESC, "someIdKey"));
 		assertThat(template.find(query, DoucmentWithNamedIdField.class), contains(two, one));
 	}
 
@@ -2714,7 +2713,7 @@ public class MongoTemplateTests {
 		template.save(one);
 		template.save(two);
 
-		Query query = query(where("_id").in("1", "2")).with(new Sort(Direction.DESC, "value"));
+		Query query = query(where("_id").in("1", "2")).with(Sort.by(Direction.DESC, "value"));
 		assertThat(template.find(query, DoucmentWithNamedIdField.class), contains(two, one));
 	}
 
@@ -2819,7 +2818,7 @@ public class MongoTemplateTests {
 		template.insertAll(Arrays.asList(oldestPerson, youngestPerson));
 
 		Query q = new Query();
-		q.with(new Sort(Direction.ASC, "age"));
+		q.with(Sort.by(Direction.ASC, "age"));
 		CloseableIterator<Person> stream = template.stream(q, Person.class);
 
 		assertThat(stream.next().getAge(), is(youngestPerson.getAge()));
@@ -2835,7 +2834,7 @@ public class MongoTemplateTests {
 		template.insertAll(Arrays.asList(oldestPerson, youngestPerson));
 
 		Query q = new Query();
-		q.with(new PageRequest(0, 1, new Sort(Direction.ASC, "age")));
+		q.with(PageRequest.of(0, 1, Sort.by(Direction.ASC, "age")));
 		CloseableIterator<Person> stream = template.stream(q, Person.class);
 
 		assertThat(stream.next().getAge(), is(youngestPerson.getAge()));

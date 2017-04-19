@@ -87,6 +87,7 @@ import com.mongodb.client.result.UpdateResult;
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -321,7 +322,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-948
 	public void sortShouldBeTakenAsIsWhenExecutingQueryWithoutSpecificTypeInformation() {
 
-		Query query = Query.query(Criteria.where("foo").is("bar")).with(new Sort("foo"));
+		Query query = Query.query(Criteria.where("foo").is("bar")).with(Sort.by("foo"));
 		template.executeQuery(query, "collection1", new DocumentCallbackHandler() {
 
 			@Override

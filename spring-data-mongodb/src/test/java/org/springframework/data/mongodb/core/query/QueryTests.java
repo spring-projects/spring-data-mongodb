@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.SpecialDoc;
  * @author Patryk Wasik
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class QueryTests {
 
@@ -190,7 +191,7 @@ public class QueryTests {
 	@Test // DATAMONGO-538
 	public void addsSortCorrectly() {
 
-		Query query = new Query().with(new Sort(Direction.DESC, "foo"));
+		Query query = new Query().with(Sort.by(Direction.DESC, "foo"));
 		assertThat(query.getSortObject(), is(Document.parse("{ \"foo\" : -1}")));
 	}
 
@@ -200,7 +201,7 @@ public class QueryTests {
 		exception.expect(IllegalArgumentException.class);
 		exception.expectMessage("foo");
 
-		new Query().with(new Sort(new Sort.Order("foo").ignoreCase()));
+		new Query().with(Sort.by(new Sort.Order("foo").ignoreCase()));
 	}
 
 	@Test // DATAMONGO-709

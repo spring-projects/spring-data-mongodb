@@ -55,7 +55,7 @@ import org.springframework.util.ReflectionUtils;
 
 /**
  * Unit tests for {@link MongoQueryExecution}.
- * 
+ *
  * @author Mark Paluch
  * @soundtrack U Can't Touch This - MC Hammer
  */
@@ -88,7 +88,7 @@ public class MongoQueryExecutionUnitTests {
 		when(mongoOperationsMock.find(any(Query.class), eq(Person.class), eq("person")))
 				.thenReturn(Collections.<Person> emptyList());
 
-		PagedExecution execution = new PagedExecution(mongoOperationsMock, new PageRequest(0, 10));
+		PagedExecution execution = new PagedExecution(mongoOperationsMock, PageRequest.of(0, 10));
 		execution.execute(new Query(), Person.class, "person");
 
 		verify(mongoOperationsMock).find(any(Query.class), eq(Person.class), eq("person"));
@@ -101,7 +101,7 @@ public class MongoQueryExecutionUnitTests {
 		when(mongoOperationsMock.find(any(Query.class), eq(Person.class), eq("person")))
 				.thenReturn(Arrays.asList(new Person(), new Person(), new Person(), new Person()));
 
-		PagedExecution execution = new PagedExecution(mongoOperationsMock, new PageRequest(0, 10));
+		PagedExecution execution = new PagedExecution(mongoOperationsMock, PageRequest.of(0, 10));
 		execution.execute(new Query(), Person.class, "person");
 
 		verify(mongoOperationsMock).find(any(Query.class), eq(Person.class), eq("person"));
@@ -114,7 +114,7 @@ public class MongoQueryExecutionUnitTests {
 		when(mongoOperationsMock.find(any(Query.class), eq(Person.class), eq("person")))
 				.thenReturn(Collections.<Person> emptyList());
 
-		PagedExecution execution = new PagedExecution(mongoOperationsMock, new PageRequest(2, 10));
+		PagedExecution execution = new PagedExecution(mongoOperationsMock, PageRequest.of(2, 10));
 		execution.execute(new Query(), Person.class, "person");
 
 		verify(mongoOperationsMock).find(any(Query.class), eq(Person.class), eq("person"));
@@ -125,7 +125,7 @@ public class MongoQueryExecutionUnitTests {
 	public void pagingGeoExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() throws Exception {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
-				new Object[] { POINT, DISTANCE, new PageRequest(0, 10) });
+				new Object[] { POINT, DISTANCE, PageRequest.of(0, 10) });
 
 		PartTreeMongoQuery query = new PartTreeMongoQuery(queryMethod, mongoOperationsMock);
 		GeoResult<Person> result = new GeoResult<Person>(new Person(), DISTANCE);
@@ -145,7 +145,7 @@ public class MongoQueryExecutionUnitTests {
 	public void pagingGeoExecutionRetrievesObjectsForPageableOutOfRange() throws Exception {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
-				new Object[] { POINT, DISTANCE, new PageRequest(2, 10) });
+				new Object[] { POINT, DISTANCE, PageRequest.of(2, 10) });
 
 		PartTreeMongoQuery query = new PartTreeMongoQuery(queryMethod, mongoOperationsMock);
 

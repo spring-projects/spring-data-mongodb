@@ -28,6 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @ContextConfiguration("config/MongoNamespaceIntegrationTests-context.xml")
 public class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryIntegrationTests {
@@ -37,7 +38,7 @@ public class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryI
 	@Test // DATAMONGO-760
 	public void adjustedWellKnownPagedFindAllMethodShouldReturnOnlyTheUserWithFirstnameOliverAugust() {
 
-		Page<Person> page = repository.findAll(new PageRequest(0, 2));
+		Page<Person> page = repository.findAll(PageRequest.of(0, 2));
 
 		assertThat(page.getNumberOfElements(), is(1));
 		assertThat(page.getContent().get(0).getFirstname(), is(oliver.getFirstname()));

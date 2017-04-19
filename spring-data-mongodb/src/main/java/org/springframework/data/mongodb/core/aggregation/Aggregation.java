@@ -348,7 +348,7 @@ public class Aggregation {
 	 * @return
 	 */
 	public static SortOperation sort(Direction direction, String... fields) {
-		return new SortOperation(new Sort(direction, fields));
+		return new SortOperation(Sort.by(direction, fields));
 	}
 
 	/**
@@ -585,7 +585,7 @@ public class Aggregation {
 		return command;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

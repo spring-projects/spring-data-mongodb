@@ -51,6 +51,7 @@ import com.mongodb.client.MongoCollection;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public class MappingTests extends AbstractIntegrationTests {
 
@@ -427,7 +428,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.insert(p4);
 
 		Query q = query(where("id").in("1", "2"));
-		q.with(new Sort(Direction.ASC, "id"));
+		q.with(Sort.by(Direction.ASC, "id"));
 		List<PersonPojoStringId> people = template.find(q, PersonPojoStringId.class);
 		assertEquals(2, people.size());
 

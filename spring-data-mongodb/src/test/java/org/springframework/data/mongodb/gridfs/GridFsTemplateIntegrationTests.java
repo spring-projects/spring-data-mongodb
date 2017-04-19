@@ -45,7 +45,7 @@ import com.mongodb.gridfs.GridFSFile;
 
 /**
  * Integration tests for {@link GridFsTemplate}.
- * 
+ *
  * @author Oliver Gierke
  * @author Philipp Schneider
  * @author Thomas Darimont
@@ -151,7 +151,7 @@ public class GridFsTemplateIntegrationTests {
 		ObjectId third = operations.store(resource.getInputStream(), "foobar.xml");
 		ObjectId first = operations.store(resource.getInputStream(), "bar.xml");
 
-		Query query = new Query().with(new Sort(Direction.ASC, "filename"));
+		Query query = new Query().with(Sort.by(Direction.ASC, "filename"));
 
 		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
 		GridFSFindIterable result = operations.find(query);

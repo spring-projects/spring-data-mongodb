@@ -62,7 +62,7 @@ import com.mongodb.client.result.DeleteResult;
 
 /**
  * Unit tests for {@link AbstractMongoQuery}.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -152,7 +152,7 @@ public class AbstractMongoQueryUnitTests {
 	public void metadataShouldBeAddedToQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
-		query.execute(new Object[] { "fake", new PageRequest(0, 10) });
+		query.execute(new Object[] { "fake", PageRequest.of(0, 10) });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
@@ -164,7 +164,7 @@ public class AbstractMongoQueryUnitTests {
 	public void metadataShouldBeAddedToCountQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
-		query.execute(new Object[] { "fake", new PageRequest(1, 10) });
+		query.execute(new Object[] { "fake", PageRequest.of(1, 10) });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
@@ -176,7 +176,7 @@ public class AbstractMongoQueryUnitTests {
 	public void metadataShouldBeAddedToStringBasedQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByAnnotatedQuery", String.class, Pageable.class);
-		query.execute(new Object[] { "fake", new PageRequest(0, 10) });
+		query.execute(new Object[] { "fake", PageRequest.of(0, 10) });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
@@ -188,7 +188,7 @@ public class AbstractMongoQueryUnitTests {
 	public void slicedExecutionShouldRetainNrOfElementsToSkip() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
-		Pageable page1 = new PageRequest(0, 10);
+		Pageable page1 = PageRequest.of(0, 10);
 		Pageable page2 = page1.next();
 
 		query.execute(new Object[] { "fake", page1 });
@@ -206,7 +206,7 @@ public class AbstractMongoQueryUnitTests {
 	public void slicedExecutionShouldIncrementLimitByOne() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
-		Pageable page1 = new PageRequest(0, 10);
+		Pageable page1 = PageRequest.of(0, 10);
 		Pageable page2 = page1.next();
 
 		query.execute(new Object[] { "fake", page1 });
@@ -224,7 +224,7 @@ public class AbstractMongoQueryUnitTests {
 	public void slicedExecutionShouldRetainSort() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
-		Pageable page1 = new PageRequest(0, 10, Sort.Direction.DESC, "bar");
+		Pageable page1 = PageRequest.of(0, 10, Sort.Direction.DESC, "bar");
 		Pageable page2 = page1.next();
 
 		query.execute(new Object[] { "fake", page1 });
