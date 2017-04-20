@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,9 +53,10 @@ import com.mongodb.util.JSON;
  * indexed. <br />
  * All {@link MongoPersistentProperty} of the {@link MongoPersistentEntity} are inspected for potential indexes by
  * scanning related annotations.
- * 
+ *
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Martin Macko
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -66,7 +67,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	/**
 	 * Create new {@link MongoPersistentEntityIndexResolver}.
-	 * 
+	 *
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	public MongoPersistentEntityIndexResolver(MongoMappingContext mappingContext) {
@@ -87,7 +88,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * Resolve the {@link IndexDefinition}s for given {@literal root} entity by traversing {@link MongoPersistentProperty}
 	 * scanning for index annotations {@link Indexed}, {@link CompoundIndex} and {@link GeospatialIndex}. The given
 	 * {@literal root} has therefore to be annotated with {@link Document}.
-	 * 
+	 *
 	 * @param root must not be null.
 	 * @return List of {@link IndexDefinitionHolder}. Will never be {@code null}.
 	 * @throws IllegalArgumentException in case of missing {@link Document} annotation marking root entities.
@@ -133,7 +134,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	/**
 	 * Recursively resolve and inspect properties of given {@literal type} for indexes to be created.
-	 * 
+	 *
 	 * @param type
 	 * @param path The {@literal "dot} path.
 	 * @param collection
@@ -281,7 +282,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	/**
 	 * Create {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} for {@link CompoundIndexes} of given type.
-	 * 
+	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
 	 * @param fallbackCollection
 	 * @param type
@@ -361,7 +362,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	/**
 	 * Creates {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} out of {@link Indexed} for given
 	 * {@link MongoPersistentProperty}.
-	 * 
+	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
 	 * @param collection
 	 * @param persitentProperty
@@ -402,7 +403,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	/**
 	 * Creates {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} out of {@link GeoSpatialIndexed} for
 	 * {@link MongoPersistentProperty}.
-	 * 
+	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
 	 * @param collection
 	 * @param persistentProperty
@@ -479,7 +480,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	/**
 	 * {@link CycleGuard} holds information about properties and the paths for accessing those. This information is used
 	 * to detect potential cycles within the references.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 */
 	static class CycleGuard {
@@ -529,24 +530,24 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		/**
 		 * Path defines the property and its full path from the document root. <br />
 		 * A {@link Path} with {@literal spring.data.mongodb} would be created for the property {@code Three.mongodb}.
-		 * 
+		 *
 		 * <pre>
 		 * <code>
 		 * &#64;Document
 		 * class One {
 		 *   Two spring;
 		 * }
-		 * 
+		 *
 		 * class Two {
 		 *   Three data;
 		 * }
-		 * 
+		 *
 		 * class Three {
 		 *   String mongodb;
 		 * }
 		 * </code>
 		 * </pre>
-		 * 
+		 *
 		 * @author Christoph Strobl
 		 */
 		static class Path {
@@ -569,7 +570,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			 * the current path. Given {@literal foo.bar.bar} cycles if {@literal foo.bar} has already been visited and
 			 * {@code class Bar} contains a property of type {@code Bar}. The previously mentioned path would not cycle if
 			 * {@code class Bar} contained a property of type {@code SomeEntity} named {@literal bar}.
-			 * 
+			 *
 			 * @param property
 			 * @param path
 			 * @return
@@ -618,7 +619,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	/**
 	 * Implementation of {@link IndexDefinition} holding additional (property)path information used for creating the
 	 * index. The path itself is the properties {@literal "dot"} path representation from its root document.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.5
 	 */
@@ -630,7 +631,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		/**
 		 * Create
-		 * 
+		 *
 		 * @param path
 		 */
 		public IndexDefinitionHolder(String path, IndexDefinition definition, String collection) {
@@ -646,7 +647,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		/**
 		 * Get the {@literal "dot"} path used to create the index.
-		 * 
+		 *
 		 * @return
 		 */
 		public String getPath() {
@@ -655,7 +656,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		/**
 		 * Get the {@literal raw} {@link IndexDefinition}.
-		 * 
+		 *
 		 * @return
 		 */
 		public IndexDefinition getIndexDefinition() {
