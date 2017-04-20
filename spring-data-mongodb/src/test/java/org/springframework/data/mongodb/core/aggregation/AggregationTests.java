@@ -1612,6 +1612,24 @@ public class AggregationTests {
 				skip(100L));
 	}
 
+	@Test // DATAMONGO-1325
+	public void shouldApplySampleCorrectly() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
+
+		createUserWithLikesDocuments();
+
+		TypedAggregation<UserWithLikes> agg = newAggregation(UserWithLikes.class, //
+				unwind("likes"), //
+				sample(3) //
+		);
+
+		assertThat(agg.toString(), is(notNullValue()));
+
+		AggregationResults<LikeStats> result = mongoTemplate.aggregate(agg, LikeStats.class);
+		assertThat(result.getMappedResults().size(), is(3));
+	}
+
 	@Test // DATAMONGO-1457
 	public void sliceShouldBeAppliedCorrectly() {
 

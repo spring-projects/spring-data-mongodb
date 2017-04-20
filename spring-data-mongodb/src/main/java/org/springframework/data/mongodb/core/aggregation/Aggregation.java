@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,15 +24,10 @@ import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.CountOperation.CountOperationBuilder;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.FacetOperation.FacetOperationBuilder;
-import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.StartWithBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootOperationBuilder;
-import org.springframework.data.mongodb.core.aggregation.Fields.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -384,15 +378,16 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link SampleOperation} to selects the specified number of documents from its input randomly.
+	 * Creates a new {@link SampleOperation} to select the specified number of documents from its input randomly.
 	 *
 	 * @param sampleSize must not be less than zero.
 	 * @return
+	 * @since 2.0
 	 */
 	public static SampleOperation sample(long sampleSize) {
 		return new SampleOperation(sampleSize);
 	}
-	
+
 	/**
 	 * Creates a new {@link MatchOperation} using the given {@link Criteria}.
 	 *

@@ -57,7 +57,7 @@ import com.mongodb.DBRef;
 
 /**
  * A helper class to encapsulate any modifications of a Query object before it gets submitted to the database.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Patryk Wasik
@@ -82,7 +82,7 @@ public class QueryMapper {
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
-	 * 
+	 *
 	 * @param converter must not be {@literal null}.
 	 */
 	public QueryMapper(MongoConverter converter) {
@@ -102,7 +102,7 @@ public class QueryMapper {
 	/**
 	 * Replaces the property keys used in the given {@link Document} with the appropriate keys by using the
 	 * {@link PersistentEntity} metadata.
-	 * 
+	 *
 	 * @param query must not be {@literal null}.
 	 * @param entity can be {@literal null}.
 	 * @return
@@ -155,7 +155,7 @@ public class QueryMapper {
 	/**
 	 * Maps fields used for sorting to the {@link MongoPersistentEntity}s properties. <br />
 	 * Also converts properties to their {@code $meta} representation if present.
-	 * 
+	 *
 	 * @param sortObject
 	 * @param entity
 	 * @return
@@ -179,7 +179,7 @@ public class QueryMapper {
 	/**
 	 * Maps fields to retrieve to the {@link MongoPersistentEntity}s properties. <br />
 	 * Also onverts and potentially adds missing property {@code $meta} representation.
-	 * 
+	 *
 	 * @param fieldsObject
 	 * @param entity
 	 * @return
@@ -217,7 +217,7 @@ public class QueryMapper {
 
 	/**
 	 * Extracts the mapped object value for given field out of rawValue taking nested {@link Keyword}s into account
-	 * 
+	 *
 	 * @param field
 	 * @param rawValue
 	 * @return
@@ -250,7 +250,7 @@ public class QueryMapper {
 
 	/**
 	 * Returns the given {@link Document} representing a keyword by mapping the keyword's value.
-	 * 
+	 *
 	 * @param keyword the {@link Document} representing a keyword (e.g. {@code $ne : … } )
 	 * @param entity
 	 * @return
@@ -280,7 +280,7 @@ public class QueryMapper {
 
 	/**
 	 * Returns the mapped keyword considered defining a criteria for the given property.
-	 * 
+	 *
 	 * @param property
 	 * @param keyword
 	 * @return
@@ -299,7 +299,7 @@ public class QueryMapper {
 	/**
 	 * Returns the mapped value for the given source object assuming it's a value for the given
 	 * {@link MongoPersistentProperty}.
-	 * 
+	 *
 	 * @param value the source object to be mapped
 	 * @param property the property the value is a value for
 	 * @param newKey the key the value will be bound to eventually
@@ -368,7 +368,7 @@ public class QueryMapper {
 	 * requires conversion to a {@link org.springframework.data.mongodb.core.mapping.DBRef} object. We check whether the
 	 * type of the given value is compatible with the type of the given document field in order to deal with potential
 	 * query field exclusions, since MongoDB uses the {@code int} {@literal 0} as an indicator for an excluded field.
-	 * 
+	 *
 	 * @param documentField must not be {@literal null}.
 	 * @param value
 	 * @return
@@ -399,7 +399,7 @@ public class QueryMapper {
 
 	/**
 	 * Retriggers mapping if the given source is a {@link Document} or simply invokes the
-	 * 
+	 *
 	 * @param source
 	 * @param entity
 	 * @return
@@ -432,7 +432,7 @@ public class QueryMapper {
 	/**
 	 * Converts the given source Object to a mongo type with the type information of the original source type omitted.
 	 * Subclasses may overwrite this method to retain the type information of the source type on the resulting mongo type.
-	 * 
+	 *
 	 * @param source
 	 * @param entity
 	 * @return the converted mongo type or null if source is null
@@ -447,7 +447,7 @@ public class QueryMapper {
 
 	/**
 	 * Converts the given source assuming it's actually an association to another object.
-	 * 
+	 *
 	 * @param source
 	 * @param property
 	 * @return
@@ -486,7 +486,7 @@ public class QueryMapper {
 
 	/**
 	 * Checks whether the given value is a {@link Document}.
-	 * 
+	 *
 	 * @param value can be {@literal null}.
 	 * @return
 	 */
@@ -506,7 +506,7 @@ public class QueryMapper {
 
 	/**
 	 * Creates a new {@link Entry} for the given {@link Field} with the given value.
-	 * 
+	 *
 	 * @param field must not be {@literal null}.
 	 * @param value can be {@literal null}.
 	 * @return
@@ -517,7 +517,7 @@ public class QueryMapper {
 
 	/**
 	 * Creates a new {@link Entry} with the given key and value.
-	 * 
+	 *
 	 * @param key must not be {@literal null} or empty.
 	 * @param value can be {@literal null}
 	 * @return
@@ -543,7 +543,7 @@ public class QueryMapper {
 
 	/**
 	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
-	 * 
+	 *
 	 * @param id
 	 * @return
 	 */
@@ -566,7 +566,7 @@ public class QueryMapper {
 
 	/**
 	 * Returns whether the given {@link Object} is a keyword, i.e. if it's a {@link Document} with a keyword key.
-	 * 
+	 *
 	 * @param candidate
 	 * @return
 	 */
@@ -588,7 +588,7 @@ public class QueryMapper {
 	/**
 	 * Returns whether the given {@link String} is a MongoDB keyword. The default implementation will check against the
 	 * set of registered keywords returned by {@link #getKeywords()}.
-	 * 
+	 *
 	 * @param candidate
 	 * @return
 	 */
@@ -598,7 +598,7 @@ public class QueryMapper {
 
 	/**
 	 * Value object to capture a query keyword representation.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	static class Keyword {
@@ -624,7 +624,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns whether the current keyword is the {@code $exists} keyword.
-		 * 
+		 *
 		 * @return
 		 */
 		public boolean isExists() {
@@ -637,7 +637,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns whether the current keyword is the {@code $geometry} keyword.
-		 * 
+		 *
 		 * @return
 		 * @since 1.8
 		 */
@@ -646,13 +646,13 @@ public class QueryMapper {
 		}
 
 		/**
-		 * Returns wheter the current keyword indicates a sample object.
-		 * 
+		 * Returns whether the current keyword indicates a {@link Example} object.
+		 *
 		 * @return
 		 * @since 1.8
 		 */
 		public boolean isSample() {
-			return "$sample".equalsIgnoreCase(key);
+			return "$example".equalsIgnoreCase(key);
 		}
 
 		public boolean hasIterableValue() {
@@ -671,7 +671,7 @@ public class QueryMapper {
 
 	/**
 	 * Value object to represent a field and its meta-information.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	protected static class Field {
@@ -682,7 +682,7 @@ public class QueryMapper {
 
 		/**
 		 * Creates a new {@link DocumentField} without meta-information but the given name.
-		 * 
+		 *
 		 * @param name must not be {@literal null} or empty.
 		 */
 		public Field(String name) {
@@ -693,7 +693,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns a new {@link DocumentField} with the given name.
-		 * 
+		 *
 		 * @param name must not be {@literal null} or empty.
 		 * @return
 		 */
@@ -703,7 +703,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns whether the current field is the id field.
-		 * 
+		 *
 		 * @return
 		 */
 		public boolean isIdField() {
@@ -714,7 +714,7 @@ public class QueryMapper {
 		 * Returns the underlying {@link MongoPersistentProperty} backing the field. For path traversals this will be the
 		 * property that represents the value to handle. This means it'll be the leaf property for plain paths or the
 		 * association property in case we refer to an association somewhere in the path.
-		 * 
+		 *
 		 * @return
 		 */
 		public MongoPersistentProperty getProperty() {
@@ -723,7 +723,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns the {@link MongoPersistentEntity} that field is conatined in.
-		 * 
+		 *
 		 * @return
 		 */
 		public MongoPersistentEntity<?> getPropertyEntity() {
@@ -732,7 +732,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns whether the field represents an association.
-		 * 
+		 *
 		 * @return
 		 */
 		public boolean isAssociation() {
@@ -741,7 +741,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns the key to be used in the mapped document eventually.
-		 * 
+		 *
 		 * @return
 		 */
 		public String getMappedKey() {
@@ -750,7 +750,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns whether the field references an association in case it refers to a nested field.
-		 * 
+		 *
 		 * @return
 		 */
 		public boolean containsAssociation() {
@@ -768,7 +768,7 @@ public class QueryMapper {
 
 	/**
 	 * Extension of {@link DocumentField} to be backed with mapping metadata.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
@@ -785,7 +785,7 @@ public class QueryMapper {
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
 		 * {@link MappingContext}.
-		 * 
+		 *
 		 * @param name must not be {@literal null} or empty.
 		 * @param entity must not be {@literal null}.
 		 * @param context must not be {@literal null}.
@@ -798,7 +798,7 @@ public class QueryMapper {
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
 		 * {@link MappingContext} with the given {@link MongoPersistentProperty}.
-		 * 
+		 *
 		 * @param name must not be {@literal null} or empty.
 		 * @param entity must not be {@literal null}.
 		 * @param context must not be {@literal null}.
@@ -841,7 +841,7 @@ public class QueryMapper {
 					.orElseGet(() -> DEFAULT_ID_NAMES.contains(name));
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getProperty()
 		 */
@@ -850,7 +850,7 @@ public class QueryMapper {
 			return association == null ? property : association.getInverse();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getEntity()
 		 */
@@ -860,7 +860,7 @@ public class QueryMapper {
 			return property == null ? null : mappingContext.getPersistentEntity(property).orElse(null);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#isAssociation()
 		 */
@@ -869,7 +869,7 @@ public class QueryMapper {
 			return association != null;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getAssociation()
 		 */
@@ -880,7 +880,7 @@ public class QueryMapper {
 
 		/**
 		 * Finds the association property in the {@link PersistentPropertyPath}.
-		 * 
+		 *
 		 * @return
 		 */
 		private final Association<MongoPersistentProperty> findAssociation() {
@@ -914,7 +914,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns the {@link PersistentPropertyPath} for the given <code>pathExpression</code>.
-		 * 
+		 *
 		 * @param pathExpression
 		 * @return
 		 */
@@ -951,7 +951,7 @@ public class QueryMapper {
 		/**
 		 * Return the {@link Converter} to be used to created the mapped key. Default implementation will use
 		 * {@link PropertyToFieldNameConverter}.
-		 * 
+		 *
 		 * @return
 		 */
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
@@ -961,7 +961,7 @@ public class QueryMapper {
 		/**
 		 * Return the {@link Converter} to use for creating the mapped key of an association. Default implementation is
 		 * {@link AssociationConverter}.
-		 * 
+		 *
 		 * @return
 		 * @since 1.7
 		 */
@@ -991,7 +991,7 @@ public class QueryMapper {
 			}
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getTypeHint()
 		 */
@@ -1028,7 +1028,7 @@ public class QueryMapper {
 
 			/**
 			 * Maps the property name while retaining potential positional operator {@literal $}.
-			 * 
+			 *
 			 * @param property
 			 * @return
 			 */
@@ -1070,7 +1070,7 @@ public class QueryMapper {
 
 	/**
 	 * Converter to skip all properties after an association property was rendered.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	protected static class AssociationConverter implements Converter<MongoPersistentProperty, String> {
@@ -1080,7 +1080,7 @@ public class QueryMapper {
 
 		/**
 		 * Creates a new {@link AssociationConverter} for the given {@link Association}.
-		 * 
+		 *
 		 * @param association must not be {@literal null}.
 		 */
 		public AssociationConverter(Association<MongoPersistentProperty> association) {
@@ -1089,7 +1089,7 @@ public class QueryMapper {
 			this.property = association.getInverse();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */

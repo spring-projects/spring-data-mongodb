@@ -31,24 +31,29 @@ public class SampleOperationUnitTests {
 	private static final String SIZE = "size";
 	private static final String OP = "$sample";
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1325
 	public void rejectsNegativeSample() {
 		new SampleOperation(-1L);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1325
 	public void rejectsZeroSample() {
 		new SampleOperation(0L);
 	}
 
-	@Test
+	@Test // DATAMONGO-1325
 	public void rendersSampleOperation() {
+
 		long sampleSize = 5L;
+
 		SampleOperation sampleOperation = Aggregation.sample(sampleSize);
+
 		Document sampleOperationDocument = sampleOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+
 		assertNotNull(sampleOperationDocument.get(OP));
 		assertThat(sampleOperationDocument.get(OP), is(instanceOf(Document.class)));
-		Document sampleSizeDocument =  sampleOperationDocument.get(OP, Document.class);
+
+		Document sampleSizeDocument = sampleOperationDocument.get(OP, Document.class);
 		assertEquals(sampleSize, sampleSizeDocument.get(SIZE));
 	}
 }

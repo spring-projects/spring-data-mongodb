@@ -45,7 +45,7 @@ import com.mongodb.BasicDBList;
 /**
  * Central class for creating queries. It follows a fluent API style so that you can easily chain together multiple
  * criteria. Static import of the 'Criteria.where' method will improve readability.
- * 
+ *
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -82,7 +82,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Static factory method to create a Criteria using the provided key
-	 * 
+	 *
 	 * @param key
 	 * @return
 	 */
@@ -92,7 +92,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Static factory method to create a {@link Criteria} matching an example object.
-	 * 
+	 *
 	 * @param example must not be {@literal null}.
 	 * @return
 	 * @see Criteria#alike(Example)
@@ -104,7 +104,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Static factory method to create a {@link Criteria} matching an example object.
-	 * 
+	 *
 	 * @param example must not be {@literal null}.
 	 * @return
 	 * @see Criteria#alike(Example)
@@ -116,7 +116,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Static factory method to create a Criteria using the provided key
-	 * 
+	 *
 	 * @return
 	 */
 	public Criteria and(String key) {
@@ -125,7 +125,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using equality
-	 * 
+	 *
 	 * @param o
 	 * @return
 	 */
@@ -381,7 +381,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Syntactical sugar for {@link #is(Object)} making obvious that we create a regex predicate.
-	 * 
+	 *
 	 * @param pattern
 	 * @return
 	 */
@@ -420,8 +420,10 @@ public class Criteria implements CriteriaDefinition {
 	 *
 	 * @param circle must not be {@literal null}
 	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/geoWithin/">MongoDB Query operator: $geoWithin</a>
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/centerSphere/">MongoDB Query operator: $centerSphere</a>
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/geoWithin/">MongoDB Query operator:
+	 *      $geoWithin</a>
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/centerSphere/">MongoDB Query operator:
+	 *      $centerSphere</a>
 	 */
 	public Criteria withinSphere(Circle circle) {
 
@@ -436,7 +438,8 @@ public class Criteria implements CriteriaDefinition {
 	 *
 	 * @param shape
 	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/geoWithin/">MongoDB Query operator: $geoWithin</a>
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/geoWithin/">MongoDB Query operator:
+	 *      $geoWithin</a>
 	 */
 	public Criteria within(Shape shape) {
 
@@ -467,7 +470,8 @@ public class Criteria implements CriteriaDefinition {
 	 *
 	 * @param point must not be {@literal null}
 	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nearSphere/">MongoDB Query operator: $nearSphere</a>
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nearSphere/">MongoDB Query operator:
+	 *      $nearSphere</a>
 	 */
 	public Criteria nearSphere(Point point) {
 
@@ -480,7 +484,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates criterion using {@code $geoIntersects} operator which matches intersections of the given {@code geoJson}
 	 * structure and the documents one. Requires MongoDB 2.4 or better.
-	 * 
+	 *
 	 * @param geoJson must not be {@literal null}.
 	 * @return
 	 * @since 1.8
@@ -498,7 +502,8 @@ public class Criteria implements CriteriaDefinition {
 	 *
 	 * @param maxDistance
 	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/maxDistance/">MongoDB Query operator: $maxDistance</a>
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/maxDistance/">MongoDB Query operator:
+	 *      $maxDistance</a>
 	 */
 	public Criteria maxDistance(double maxDistance) {
 
@@ -514,7 +519,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a geospatial criterion using a {@literal $minDistance} operation, for use with {@literal $near} or
 	 * {@literal $nearSphere}.
-	 * 
+	 *
 	 * @param minDistance
 	 * @return
 	 * @since 1.7
@@ -535,7 +540,8 @@ public class Criteria implements CriteriaDefinition {
 	 *
 	 * @param c
 	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/elemMatch/">MongoDB Query operator: $elemMatch</a>
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/elemMatch/">MongoDB Query operator:
+	 *      $elemMatch</a>
 	 */
 	public Criteria elemMatch(Criteria c) {
 		criteria.put("$elemMatch", c.getCriteriaObject());
@@ -544,14 +550,14 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the given object as a pattern.
-	 * 
+	 *
 	 * @param sample
 	 * @return
 	 * @since 1.8
 	 */
 	public Criteria alike(Example<?> sample) {
 
-		criteria.put("$sample", sample);
+		criteria.put("$example", sample);
 		this.criteriaChain.add(this);
 		return this;
 	}
@@ -561,7 +567,7 @@ public class Criteria implements CriteriaDefinition {
 	 * <p>
 	 * Note that mongodb doesn't support an $or operator to be wrapped in a $not operator.
 	 * <p>
-	 * 
+	 *
 	 * @throws IllegalArgumentException if {@link #orOperator(Criteria...)} follows a not() call directly.
 	 * @param criteria
 	 */
@@ -575,7 +581,7 @@ public class Criteria implements CriteriaDefinition {
 	 * <p>
 	 * Note that mongodb doesn't support an $nor operator to be wrapped in a $not operator.
 	 * <p>
-	 * 
+	 *
 	 * @throws IllegalArgumentException if {@link #norOperator(Criteria...)} follows a not() call directly.
 	 * @param criteria
 	 */
@@ -589,7 +595,7 @@ public class Criteria implements CriteriaDefinition {
 	 * <p>
 	 * Note that mongodb doesn't support an $and operator to be wrapped in a $not operator.
 	 * <p>
-	 * 
+	 *
 	 * @throws IllegalArgumentException if {@link #andOperator(Criteria...)} follows a not() call directly.
 	 * @param criteria
 	 */
@@ -771,7 +777,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Checks the given objects for equality. Handles {@link Pattern} and arrays correctly.
-	 * 
+	 *
 	 * @param left
 	 * @param right
 	 * @return

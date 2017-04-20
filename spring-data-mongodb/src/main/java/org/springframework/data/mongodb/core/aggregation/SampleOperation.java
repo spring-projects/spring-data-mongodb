@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ import org.springframework.util.Assert;
  *
  * @author Gustavo de Geus
  * @since 2.0
- * @see <a href="https://docs.mongodb.com/master/reference/operator/aggregation/sample/">MongoDB Aggregation Framework: $sample</a>
+ * @see <a href="https://docs.mongodb.com/master/reference/operator/aggregation/sample/">MongoDB Aggregation Framework:
+ *      $sample</a>
  */
 public class SampleOperation implements AggregationOperation {
 
