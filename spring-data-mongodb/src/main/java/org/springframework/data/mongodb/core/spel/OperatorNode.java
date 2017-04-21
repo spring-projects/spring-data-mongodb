@@ -29,7 +29,7 @@ import org.springframework.expression.spel.ast.Operator;
 
 /**
  * An {@link ExpressionNode} representing an operator.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
@@ -47,6 +47,10 @@ public class OperatorNode extends ExpressionNode {
 		map.put("/", "$divide");
 		map.put("%", "$mod");
 
+		map.put("and", "and");
+		map.put("or", "or");
+		map.put("!", "not");
+
 		OPERATORS = Collections.unmodifiableMap(map);
 	}
 
@@ -54,7 +58,7 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Creates a new {@link OperatorNode} from the given {@link Operator} and {@link ExpressionState}.
-	 * 
+	 *
 	 * @param node must not be {@literal null}.
 	 * @param state must not be {@literal null}.
 	 */
@@ -75,8 +79,6 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Returns whether the operator is unary.
-	 * 
-	 * @return
 	 */
 	public boolean isUnaryOperator() {
 		return operator.getRightOperand() == null;
@@ -84,8 +86,6 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Returns the Mongo expression of the operator.
-	 * 
-	 * @return
 	 */
 	public String getMongoOperator() {
 		return OPERATORS.get(operator.getOperatorName());
@@ -93,8 +93,6 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Returns whether the operator is a unary minus, e.g. -1.
-	 * 
-	 * @return
 	 */
 	public boolean isUnaryMinus() {
 		return isUnaryOperator() && operator instanceof OpMinus;
@@ -102,8 +100,6 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Returns the left operand as {@link ExpressionNode}.
-	 * 
-	 * @return
 	 */
 	public ExpressionNode getLeft() {
 		return from(operator.getLeftOperand());
@@ -111,8 +107,6 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Returns the right operand as {@link ExpressionNode}.
-	 * 
-	 * @return
 	 */
 	public ExpressionNode getRight() {
 		return from(operator.getRightOperand());
