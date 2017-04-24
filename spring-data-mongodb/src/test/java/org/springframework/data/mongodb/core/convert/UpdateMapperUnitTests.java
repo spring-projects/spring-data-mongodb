@@ -40,6 +40,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -80,7 +81,7 @@ public class UpdateMapperUnitTests {
 	public void setUp() {
 
 		this.writingConverterSpy = Mockito.spy(new NestedEntityWriteConverter());
-		CustomConversions conversions = new CustomConversions(Arrays.asList(writingConverterSpy));
+		CustomConversions conversions = new MongoCustomConversions(Collections.singletonList(writingConverterSpy));
 
 		this.context = new MongoMappingContext();
 		this.context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
@@ -739,7 +740,7 @@ public class UpdateMapperUnitTests {
 	@SuppressWarnings("unchecked")
 	public void mapsUpdateWithBothReadingAndWritingConverterRegistered() {
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(
+		CustomConversions conversions = new MongoCustomConversions(Arrays.asList(
 				ClassWithEnum.AllocationToStringConverter.INSTANCE, ClassWithEnum.StringToAllocationConverter.INSTANCE));
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
@@ -857,7 +858,7 @@ public class UpdateMapperUnitTests {
 	@SuppressWarnings("unchecked")
 	public void mappingShouldConsiderCustomConvertersForEnumMapKeys() {
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(
+		CustomConversions conversions = new MongoCustomConversions(Arrays.asList(
 				ClassWithEnum.AllocationToStringConverter.INSTANCE, ClassWithEnum.StringToAllocationConverter.INSTANCE));
 
 		MongoMappingContext mappingContext = new MongoMappingContext();

@@ -42,7 +42,7 @@ import org.springframework.util.ReflectionUtils;
 
 /**
  * Unit test for {@link BasicMongoPersistentProperty}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -101,12 +101,12 @@ public class BasicMongoPersistentPropertyUnitTests {
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
 
 		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(field), entity,
-				new SimpleTypeHolder(), UppercaseFieldNamingStrategy.INSTANCE);
+				SimpleTypeHolder.DEFAULT, UppercaseFieldNamingStrategy.INSTANCE);
 		assertThat(property.getFieldName(), is("LASTNAME"));
 
 		field = ReflectionUtils.findField(Person.class, "firstname");
 
-		property = new BasicMongoPersistentProperty(Property.of(field), entity, new SimpleTypeHolder(),
+		property = new BasicMongoPersistentProperty(Property.of(field), entity, SimpleTypeHolder.DEFAULT,
 				UppercaseFieldNamingStrategy.INSTANCE);
 		assertThat(property.getFieldName(), is("foo"));
 	}
@@ -116,7 +116,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
 		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(field), entity,
-				new SimpleTypeHolder(), InvalidFieldNamingStrategy.INSTANCE);
+				SimpleTypeHolder.DEFAULT, InvalidFieldNamingStrategy.INSTANCE);
 
 		exception.expect(MappingException.class);
 		exception.expectMessage(InvalidFieldNamingStrategy.class.getName());
@@ -196,7 +196,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	private MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> persistentEntity, Field field) {
-		return new BasicMongoPersistentProperty(Property.of(field), persistentEntity, new SimpleTypeHolder(),
+		return new BasicMongoPersistentProperty(Property.of(field), persistentEntity, SimpleTypeHolder.DEFAULT,
 				PropertyNameFieldNamingStrategy.INSTANCE);
 	}
 

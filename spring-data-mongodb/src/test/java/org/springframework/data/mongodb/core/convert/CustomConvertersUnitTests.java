@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011-2016 by the original author(s).
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,13 +30,13 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 
 /**
  * Test case to verify correct usage of custom {@link Converter} implementations to be used.
- * 
+ *
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -49,8 +49,6 @@ public class CustomConvertersUnitTests {
 	@Mock MongoDbFactory mongoDbFactory;
 
 	MongoMappingContext context;
-	MongoPersistentEntity<Foo> fooEntity;
-	MongoPersistentEntity<Bar> barEntity;
 
 	@Before
 	@SuppressWarnings("unchecked")
@@ -59,7 +57,7 @@ public class CustomConvertersUnitTests {
 		when(barToDocumentConverter.convert(any(Bar.class))).thenReturn(new Document());
 		when(documentToBarConverter.convert(any(Document.class))).thenReturn(new Bar());
 
-		CustomConversions conversions = new CustomConversions(
+		CustomConversions conversions = new MongoCustomConversions(
 				Arrays.asList(barToDocumentConverter, documentToBarConverter));
 
 		context = new MongoMappingContext();

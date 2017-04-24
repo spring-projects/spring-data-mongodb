@@ -25,22 +25,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.Matcher;
@@ -63,6 +48,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.geo.Box;
@@ -93,10 +79,11 @@ import com.mongodb.DBRef;
 
 /**
  * Unit tests for {@link MappingMongoConverter}.
- * 
+ *
  * @author Oliver Gierke
  * @author Patrik Wasik
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoConverterUnitTests {
@@ -1145,24 +1132,25 @@ public class MappingMongoConverterUnitTests {
 		entity.mapOfObjects = new HashMap<String, Object>();
 		entity.mapOfObjects.put("foo", person);
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(new Converter<Person, org.bson.Document>() {
+		CustomConversions conversions = new MongoCustomConversions(
+				Arrays.asList(new Converter<Person, org.bson.Document>() {
 
-			@Override
-			public org.bson.Document convert(Person source) {
-				return new org.bson.Document().append("firstname", source.firstname)//
-						.append("_class", Person.class.getName());
-			}
+					@Override
+					public org.bson.Document convert(Person source) {
+						return new org.bson.Document().append("firstname", source.firstname)//
+								.append("_class", Person.class.getName());
+					}
 
-		}, new Converter<org.bson.Document, Person>() {
+				}, new Converter<org.bson.Document, Person>() {
 
-			@Override
-			public Person convert(org.bson.Document source) {
-				Person person = new Person();
-				person.firstname = source.get("firstname").toString();
-				person.lastname = "converter";
-				return person;
-			}
-		}));
+					@Override
+					public Person convert(org.bson.Document source) {
+						Person person = new Person();
+						person.firstname = source.get("firstname").toString();
+						person.lastname = "converter";
+						return person;
+					}
+				}));
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
@@ -1385,7 +1373,7 @@ public class MappingMongoConverterUnitTests {
 		List<org.bson.Document> points = (List<org.bson.Document>) polygonDoc.get("points");
 
 		assertThat(points, hasSize(3));
-		assertThat(points, Matchers.<org.bson.Document>hasItems(toDocument(object.polygon.getPoints().get(0)),
+		assertThat(points, Matchers.<org.bson.Document> hasItems(toDocument(object.polygon.getPoints().get(0)),
 				toDocument(object.polygon.getPoints().get(1)), toDocument(object.polygon.getPoints().get(2))));
 	}
 
@@ -1704,7 +1692,7 @@ public class MappingMongoConverterUnitTests {
 
 		TypeWithOptional read = converter.read(TypeWithOptional.class, result);
 
-		assertThat(read.string, is(Optional.<String>empty()));
+		assertThat(read.string, is(Optional.<String> empty()));
 		assertThat(read.localDateTime, is(Optional.of(now)));
 	}
 
@@ -1713,7 +1701,7 @@ public class MappingMongoConverterUnitTests {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.setCustomConversions(
-				new CustomConversions(Arrays.asList(new FooBarEnumToStringConverter(), new StringToFooNumConverter())));
+				new MongoCustomConversions(Arrays.asList(new FooBarEnumToStringConverter(), new StringToFooNumConverter())));
 		converter.afterPropertiesSet();
 
 		ClassWithMapUsingEnumAsKey source = new ClassWithMapUsingEnumAsKey();
@@ -1730,7 +1718,7 @@ public class MappingMongoConverterUnitTests {
 	public void writesMapKeyUsingCustomConverter() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
-		converter.setCustomConversions(new CustomConversions(Arrays.asList(new FooBarEnumToStringConverter())));
+		converter.setCustomConversions(new MongoCustomConversions(Arrays.asList(new FooBarEnumToStringConverter())));
 		converter.afterPropertiesSet();
 
 		ClassWithMapUsingEnumAsKey source = new ClassWithMapUsingEnumAsKey();
@@ -1751,7 +1739,7 @@ public class MappingMongoConverterUnitTests {
 	public void readsMapKeyUsingCustomConverter() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
-		converter.setCustomConversions(new CustomConversions(Arrays.asList(new StringToFooNumConverter())));
+		converter.setCustomConversions(new MongoCustomConversions(Arrays.asList(new StringToFooNumConverter())));
 		converter.afterPropertiesSet();
 
 		org.bson.Document source = new org.bson.Document("map", new org.bson.Document("foo-enum-value", "spring"));

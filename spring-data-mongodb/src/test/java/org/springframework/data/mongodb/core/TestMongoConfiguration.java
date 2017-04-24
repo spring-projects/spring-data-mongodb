@@ -20,8 +20,9 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.mongodb.MongoClient;
@@ -47,9 +48,9 @@ public class TestMongoConfiguration extends AbstractMongoConfiguration {
 	@Override
 	public CustomConversions customConversions() {
 
-		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
+		List<Converter<?, ?>> converters = new ArrayList<>(2);
 		converters.add(new org.springframework.data.mongodb.core.PersonReadConverter());
 		converters.add(new org.springframework.data.mongodb.core.PersonWriteConverter());
-		return new CustomConversions(converters);
+		return new MongoCustomConversions(converters);
 	}
 }

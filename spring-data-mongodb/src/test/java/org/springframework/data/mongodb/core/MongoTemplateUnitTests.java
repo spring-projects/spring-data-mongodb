@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.math.BigInteger;
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import com.mongodb.MongoClient;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -49,13 +49,14 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -70,7 +71,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.DB;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.FindIterable;
@@ -188,7 +189,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-374
 	public void convertsUpdateConstraintsUsingConverters() {
 
-		CustomConversions conversions = new CustomConversions(Collections.singletonList(MyConverter.INSTANCE));
+		CustomConversions conversions = new MongoCustomConversions(Collections.singletonList(MyConverter.INSTANCE));
 		this.converter.setCustomConversions(conversions);
 		this.converter.afterPropertiesSet();
 
@@ -341,7 +342,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void aggregateShouldHonorReadPreferenceWhenSet() {
 
 		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class), eq(Document.class)))
-		.thenReturn(mock(Document.class));
+				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
 
 		template.aggregate(Aggregation.newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
@@ -365,7 +366,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void geoNearShouldHonorReadPreferenceWhenSet() {
 
 		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class), eq(Document.class)))
-		.thenReturn(mock(Document.class));
+				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
@@ -378,8 +379,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.runCommand(Mockito.any(Document.class), eq(Document.class))).thenReturn(
-				mock(Document.class));
+		when(db.runCommand(Mockito.any(Document.class), eq(Document.class))).thenReturn(mock(Document.class));
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		template.geoNear(query, Wrapper.class);

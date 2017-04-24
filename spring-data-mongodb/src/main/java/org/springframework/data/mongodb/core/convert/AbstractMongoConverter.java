@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToObjectIdConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
@@ -34,11 +35,12 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObj
  *
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public abstract class AbstractMongoConverter implements MongoConverter, InitializingBean {
 
 	protected final GenericConversionService conversionService;
-	protected CustomConversions conversions = new CustomConversions();
+	protected CustomConversions conversions = new MongoCustomConversions();
 	protected EntityInstantiators instantiators = new EntityInstantiators();
 
 	/**

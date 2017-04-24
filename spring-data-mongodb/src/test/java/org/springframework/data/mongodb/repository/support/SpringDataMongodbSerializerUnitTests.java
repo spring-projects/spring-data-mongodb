@@ -19,8 +19,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -32,10 +32,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Person.Sex;
@@ -52,9 +52,10 @@ import com.querydsl.core.types.dsl.StringPath;
 
 /**
  * Unit tests for {@link SpringDataMongodbSerializer}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class SpringDataMongodbSerializerUnitTests {
@@ -171,7 +172,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		MongoMappingContext context = new MongoMappingContext();
 
 		MappingMongoConverter converter = new MappingMongoConverter(dbFactory, context);
-		converter.setCustomConversions(new CustomConversions(Collections.singletonList(new SexTypeWriteConverter())));
+		converter.setCustomConversions(new MongoCustomConversions(Collections.singletonList(new SexTypeWriteConverter())));
 		converter.afterPropertiesSet();
 
 		this.converter = converter;

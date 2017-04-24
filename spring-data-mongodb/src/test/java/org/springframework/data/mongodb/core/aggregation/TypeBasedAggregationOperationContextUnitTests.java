@@ -36,21 +36,22 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
  * Unit tests for {@link TypeBasedAggregationOperationContext}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Mark Paluch
@@ -362,7 +363,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	public CustomConversions customAgeConversions() {
-		return new CustomConversions(Arrays.<Converter<?, ?>> asList(ageWriteConverter(), ageReadConverter()));
+		return new MongoCustomConversions(Arrays.asList(ageWriteConverter(), ageReadConverter()));
 	}
 
 	Converter<Age, org.bson.Document> ageWriteConverter() {

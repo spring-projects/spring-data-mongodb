@@ -6,8 +6,8 @@
        http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd">
 
   <bean class="org.springframework.data.mongodb.core.TestMongoConfiguration"/>
-  
-  <mongo:db-factory dbname="database"/>
+
+	<mongo:db-factory dbname="database"/>
 
   <bean id="mappingConverter1" class="org.springframework.data.mongodb.core.convert.MappingMongoConverter">
   	<constructor-arg ref="mongoDbFactory" />
@@ -20,8 +20,8 @@
   		<bean factory-bean="conversions" factory-method="getSimpleTypeHolder" />
   	</property>
   </bean>
-  
-	<bean id="conversions" class="org.springframework.data.mongodb.core.convert.CustomConversions">
+
+	<bean id="conversions" class="org.springframework.data.mongodb.core.convert.MongoCustomConversions">
 		<constructor-arg>
 			<list>
 				<bean class="org.springframework.data.mongodb.core.PersonReadConverter" />
@@ -44,7 +44,7 @@
           <bean class="org.springframework.data.mongodb.core.PersonWriteConverter"/>
         </mongo:converter>
       </mongo:custom-converters>
-  </mongo:mapping-converter>      
+  </mongo:mapping-converter>
 
   <bean id="mongoTemplate2" class="org.springframework.data.mongodb.core.MongoTemplate">
     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>

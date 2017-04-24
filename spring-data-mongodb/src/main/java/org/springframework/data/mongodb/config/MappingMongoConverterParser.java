@@ -53,8 +53,8 @@ import org.springframework.data.annotation.Persistent;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
 import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -122,12 +122,15 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			converterBuilder.addPropertyValue("customConversions", conversionsDefinition);
 		}
 
-		if(!registry.containsBeanDefinition("indexOperationsProvider")){
+		if (!registry.containsBeanDefinition("indexOperationsProvider")) {
 
-			BeanDefinitionBuilder indexOperationsProviderBuilder = BeanDefinitionBuilder.genericBeanDefinition("org.springframework.data.mongodb.core.DefaultIndexOperationsProvider");
+			BeanDefinitionBuilder indexOperationsProviderBuilder = BeanDefinitionBuilder
+					.genericBeanDefinition("org.springframework.data.mongodb.core.DefaultIndexOperationsProvider");
 			indexOperationsProviderBuilder.addConstructorArgReference(dbFactoryRef);
-			indexOperationsProviderBuilder.addConstructorArgValue(BeanDefinitionBuilder.genericBeanDefinition(QueryMapper.class).addConstructorArgReference(id).getBeanDefinition());
-			parserContext.registerBeanComponent(new BeanComponentDefinition(indexOperationsProviderBuilder.getBeanDefinition(), "indexOperationsProvider"));
+			indexOperationsProviderBuilder.addConstructorArgValue(BeanDefinitionBuilder
+					.genericBeanDefinition(QueryMapper.class).addConstructorArgReference(id).getBeanDefinition());
+			parserContext.registerBeanComponent(
+					new BeanComponentDefinition(indexOperationsProviderBuilder.getBeanDefinition(), "indexOperationsProvider"));
 		}
 
 		try {
@@ -140,15 +143,15 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			indexHelperBuilder.addConstructorArgReference("indexOperationsProvider");
 			indexHelperBuilder.addDependsOn(ctxRef);
 
-			parserContext.registerBeanComponent(new BeanComponentDefinition(indexHelperBuilder.getBeanDefinition(),
-					INDEX_HELPER_BEAN_NAME));
+			parserContext.registerBeanComponent(
+					new BeanComponentDefinition(indexHelperBuilder.getBeanDefinition(), INDEX_HELPER_BEAN_NAME));
 		}
 
 		BeanDefinition validatingMongoEventListener = potentiallyCreateValidatingMongoEventListener(element, parserContext);
 
 		if (validatingMongoEventListener != null) {
-			parserContext.registerBeanComponent(new BeanComponentDefinition(validatingMongoEventListener,
-					VALIDATING_EVENT_LISTENER_BEAN_NAME));
+			parserContext.registerBeanComponent(
+					new BeanComponentDefinition(validatingMongoEventListener, VALIDATING_EVENT_LISTENER_BEAN_NAME));
 		}
 
 		parserContext.registerBeanComponent(new BeanComponentDefinition(converterBuilder.getBeanDefinition(), id));
@@ -287,7 +290,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 				}
 			}
 
-			BeanDefinitionBuilder conversionsBuilder = BeanDefinitionBuilder.rootBeanDefinition(CustomConversions.class);
+			BeanDefinitionBuilder conversionsBuilder = BeanDefinitionBuilder.rootBeanDefinition(MongoCustomConversions.class);
 			conversionsBuilder.addConstructorArgValue(converterBeans);
 
 			AbstractBeanDefinition conversionsBean = conversionsBuilder.getBeanDefinition();
@@ -335,8 +338,8 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			return beanDef;
 		}
 
-		parserContext.getReaderContext().error(
-				"Element <converter> must specify 'ref' or contain a bean definition for the converter", element);
+		parserContext.getReaderContext()
+				.error("Element <converter> must specify 'ref' or contain a bean definition for the converter", element);
 		return null;
 	}
 
@@ -348,8 +351,8 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		mappingContextStrategyFactoryBuilder.addConstructorArgReference(mappingContextRef);
 
 		BeanComponentDefinitionBuilder builder = new BeanComponentDefinitionBuilder(element, context);
-		context.registerBeanComponent(builder.getComponent(mappingContextStrategyFactoryBuilder,
-				IS_NEW_STRATEGY_FACTORY_BEAN_NAME));
+		context.registerBeanComponent(
+				builder.getComponent(mappingContextStrategyFactoryBuilder, IS_NEW_STRATEGY_FACTORY_BEAN_NAME));
 
 		return IS_NEW_STRATEGY_FACTORY_BEAN_NAME;
 	}
@@ -379,7 +382,8 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		 * (non-Javadoc)
 		 * @see org.springframework.core.type.filter.TypeFilter#match(org.springframework.core.type.classreading.MetadataReader, org.springframework.core.type.classreading.MetadataReaderFactory)
 		 */
-		public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
+		public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)
+				throws IOException {
 
 			for (TypeFilter delegate : delegates) {
 				if (delegate.match(metadataReader, metadataReaderFactory)) {

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.config;
 
 import java.util.Arrays;
@@ -28,29 +27,20 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
-import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.support.CachingIsNewStrategyFactory;
 import org.springframework.data.support.IsNewStrategyFactory;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
 
 /**
  * Base class for Spring Data MongoDB to be extended for JavaConfiguration usage.
@@ -117,13 +107,13 @@ public abstract class MongoConfigurationSupport {
 	/**
 	 * Register custom {@link Converter}s in a {@link CustomConversions} object if required. These
 	 * {@link CustomConversions} will be registered with the {@link #mappingMongoConverter()} and
-	 * {@link #mongoMappingContext()}. Returns an empty {@link CustomConversions} instance by default.
+	 * {@link #mongoMappingContext()}. Returns an empty {@link MongoCustomConversions} instance by default.
 	 *
 	 * @return must not be {@literal null}.
 	 */
 	@Bean
 	public CustomConversions customConversions() {
-		return new CustomConversions(Collections.emptyList());
+		return new MongoCustomConversions(Collections.emptyList());
 	}
 
 	/**
