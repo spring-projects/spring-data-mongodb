@@ -22,7 +22,7 @@ import org.springframework.data.domain.Range;
 import org.springframework.util.Assert;
 
 /**
- * Utility methods for aggregation ooperation implementations.
+ * Utility methods for aggregation operation implementations.
  * 
  * @author Oliver Gierke
  */

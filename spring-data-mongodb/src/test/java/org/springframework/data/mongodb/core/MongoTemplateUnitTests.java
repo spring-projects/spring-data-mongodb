@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.math.BigInteger;
@@ -62,6 +63,7 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCre
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -79,6 +81,8 @@ import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
@@ -101,6 +105,9 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Mock MongoCollection<Document> collection;
 	@Mock MongoCursor<Document> cursor;
 	@Mock FindIterable<Document> findIterable;
+	@Mock MapReduceIterable mapReduceIterable;
+
+	Document commandResultDocument = new Document();
 
 	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	MappingMongoConverter converter;
@@ -113,9 +120,16 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(Mockito.any(String.class), eq(Document.class))).thenReturn(collection);
+		when(db.runCommand(Mockito.any(), Mockito.any(Class.class))).thenReturn(commandResultDocument);
 		when(collection.find(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
+		when(collection.mapReduce(Mockito.any(), Mockito.any())).thenReturn(mapReduceIterable);
+		when(findIterable.projection(Mockito.any())).thenReturn(findIterable);
 		when(findIterable.sort(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.modifiers(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
+		when(findIterable.collation(Mockito.any())).thenReturn(findIterable);
+		when(findIterable.limit(anyInt())).thenReturn(findIterable);
+		when(mapReduceIterable.collation(Mockito.any())).thenReturn(mapReduceIterable);
+		when(mapReduceIterable.iterator()).thenReturn(cursor);
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
@@ -306,7 +320,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		BasicQuery query = new BasicQuery("{'foo':'bar'}");
 		template.findAllAndRemove(query, VersionedEntity.class);
 
-		verify(collection, times(1)).deleteMany(queryCaptor.capture());
+		verify(collection, times(1)).deleteMany(queryCaptor.capture(), Mockito.any());
 
 		Document idField = DocumentTestUtils.getAsDocument(queryCaptor.getValue(), "_id");
 		assertThat((List<Object>) idField.get("$in"),
@@ -345,7 +359,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
 
-		template.aggregate(Aggregation.newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
+		template.aggregate(newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
 
 		verify(this.db, times(1)).runCommand(Mockito.any(org.bson.Document.class), eq(ReadPreference.secondary()),
 				eq(Document.class));
@@ -357,7 +371,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(db.runCommand(Mockito.any(org.bson.Document.class), eq(org.bson.Document.class)))
 				.thenReturn(mock(Document.class));
 
-		template.aggregate(Aggregation.newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
+		template.aggregate(newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
 
 		verify(this.db, times(1)).runCommand(Mockito.any(org.bson.Document.class), eq(org.bson.Document.class));
 	}
@@ -613,6 +627,160 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		assertThat(queryCaptor.getValue(), isBsonObject().containing("$isolated", 0).containing("eddard", "stark"));
 		assertThat(updateCaptor.getValue(), isBsonObject().containing("$set.jon", "snow").notContaining("$isolated"));
+	}
+
+	@Test // DATAMONGO-1518
+	public void executeQueryShouldUseCollationWhenPresent() {
+
+		template.executeQuery(new BasicQuery("{}").collation(Collation.of("fr")), "collection-1", val -> {});
+
+		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1518
+	public void streamQueryShouldUseCollationWhenPresent() {
+
+		template.stream(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class).next();
+
+		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1518
+	public void findShouldUseCollationWhenPresent() {
+
+		template.find(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
+
+		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1518
+	public void findOneShouldUseCollationWhenPresent() {
+
+		template.findOne(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
+
+		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1518
+	public void existsShouldUseCollationWhenPresent() {
+
+		template.exists(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
+
+		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1518
+	public void findAndModfiyShoudUseCollationWhenPresent() {
+
+		template.findAndModify(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class);
+
+		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
+		verify(collection).findOneAndUpdate(Mockito.any(), Mockito.any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+	}
+
+	@Test // DATAMONGO-1518
+	public void findAndRemoveShouldUseCollationWhenPresent() {
+
+		template.findAndRemove(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
+
+		ArgumentCaptor<FindOneAndDeleteOptions> options = ArgumentCaptor.forClass(FindOneAndDeleteOptions.class);
+		verify(collection).findOneAndDelete(Mockito.any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+	}
+
+	@Test // DATAMONGO-1518
+	public void findAndRemoveManyShouldUseCollationWhenPresent() {
+
+		template.doRemove("collection-1", new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
+
+		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
+		verify(collection).deleteMany(Mockito.any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+	}
+
+	@Test // DATAMONGO-1518
+	public void updateOneShouldUseCollationWhenPresent() {
+
+		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
+				AutogenerateableId.class);
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(Mockito.any(), Mockito.any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+	}
+
+	@Test // DATAMONGO-1518
+	public void updateManyShouldUseCollationWhenPresent() {
+
+		template.updateMulti(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
+				AutogenerateableId.class);
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateMany(Mockito.any(), Mockito.any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+
+	}
+
+	@Test // DATAMONGO-1518
+	public void replaceOneShouldUseCollationWhenPresent() {
+
+		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class);
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).replaceOne(Mockito.any(), Mockito.any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+	}
+
+	@Test // DATAMONGO-1518
+	public void aggregateShouldUseCollationWhenPresent() {
+
+		Aggregation aggregation = newAggregation(project("id"))
+				.withOptions(newAggregationOptions().collation(Collation.of("fr")).build());
+		template.aggregate(aggregation, AutogenerateableId.class, Document.class);
+
+		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
+		verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
+
+		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
+	}
+
+	@Test // DATAMONGO-1518
+	public void mapReduceShouldUseCollationWhenPresent() {
+
+		template.mapReduce("", "", "", MapReduceOptions.options().collation(Collation.of("fr")), AutogenerateableId.class);
+
+		verify(mapReduceIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1518
+	public void geoNearShouldUseCollationWhenPresent() {
+
+		NearQuery query = NearQuery.near(0D, 0D).query(new BasicQuery("{}").collation(Collation.of("fr")));
+		template.geoNear(query, AutogenerateableId.class);
+
+		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
+		verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
+
+		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
+	}
+
+	@Test // DATAMONGO-1518
+	public void groupShouldUseCollationWhenPresent() {
+
+		commandResultDocument.append("retval", Collections.emptySet());
+		template.group("collection-1", GroupBy.key("id").reduceFunction("bar").collation(Collation.of("fr")), AutogenerateableId.class);
+
+		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
+		verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
+
+		assertThat(cmd.getValue().get("group", Document.class).get("collation", Document.class), equalTo(new Document("locale", "fr")));
 	}
 
 	class AutogenerateableId {

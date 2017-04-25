@@ -18,10 +18,12 @@ package org.springframework.data.mongodb.core.index;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.Collation;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -50,7 +52,9 @@ public class Index implements IndexDefinition {
 
 	private long expire = -1;
 
-	private IndexFilter filter;
+	private Optional<IndexFilter> filter = Optional.empty();
+
+	private Optional<Collation> collation = Optional.empty();
 
 	public Index() {}
 
@@ -72,7 +76,8 @@ public class Index implements IndexDefinition {
 	 * Reject all documents that contain a duplicate value for the indexed field.
 	 *
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
 	public Index unique() {
 		this.unique = true;
@@ -83,7 +88,8 @@ public class Index implements IndexDefinition {
 	 * Skip over any document that is missing the indexed field.
 	 *
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
 	public Index sparse() {
 		this.sparse = true;
@@ -139,7 +145,23 @@ public class Index implements IndexDefinition {
 	 */
 	public Index partial(IndexFilter filter) {
 
-		this.filter = filter;
+		this.filter = Optional.ofNullable(filter);
+		return this;
+	}
+
+	/**
+	 * Set the {@link Collation} to specify language-specific rules for string comparison, such as rules for lettercase
+	 * and accent marks.<br />
+	 * <strong>NOTE:</strong> Only queries using the same {@link Collation} as the {@link Index} actually make use of the
+	 * index.
+	 *
+	 * @param collation can be {@literal null}.
+	 * @return
+	 * @since 2.0
+	 */
+	public Index collation(Collation collation) {
+
+		this.collation = Optional.ofNullable(collation);
 		return this;
 	}
 
@@ -180,9 +202,9 @@ public class Index implements IndexDefinition {
 			document.put("expireAfterSeconds", expire);
 		}
 
-		if (filter != null) {
-			document.put("partialFilterExpression", filter.getFilterObject());
-		}
+		filter.ifPresent(val -> document.put("partialFilterExpression", val.getFilterObject()));
+		collation.ifPresent(val -> document.append("collation", val.toDocument()));
+
 		return document;
 	}
 

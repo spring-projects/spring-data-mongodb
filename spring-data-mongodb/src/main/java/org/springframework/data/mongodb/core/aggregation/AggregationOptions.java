@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.Optional;
+
 import org.bson.Document;
+import org.springframework.data.mongodb.core.Collation;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
@@ -39,10 +42,12 @@ public class AggregationOptions {
 	private static final String CURSOR = "cursor";
 	private static final String EXPLAIN = "explain";
 	private static final String ALLOW_DISK_USE = "allowDiskUse";
+	private static final String COLLATION = "collation";
 
 	private final boolean allowDiskUse;
 	private final boolean explain;
-	private final Document cursor;
+	private final Optional<Document> cursor;
+	private final Optional<Collation> collation;
 
 	/**
 	 * Creates a new {@link AggregationOptions}.
@@ -52,10 +57,25 @@ public class AggregationOptions {
 	 * @param cursor can be {@literal null}, used to pass additional options to the aggregation.
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, Document cursor) {
+		this(allowDiskUse, explain, cursor, null);
+	}
+
+	/**
+	 * Creates a new {@link AggregationOptions}.
+	 *
+	 * @param allowDiskUse whether to off-load intensive sort-operations to disk.
+	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
+	 * @param cursor can be {@literal null}, used to pass additional options (such as {@code batchSize}) to the
+	 *          aggregation.
+	 * @param collation collation for string comparison. Can be {@literal null}.
+	 * @since 2.0
+	 */
+	public AggregationOptions(boolean allowDiskUse, boolean explain, Document cursor, Collation collation) {
 
 		this.allowDiskUse = allowDiskUse;
 		this.explain = explain;
-		this.cursor = cursor;
+		this.cursor = Optional.ofNullable(cursor);
+		this.collation = Optional.ofNullable(collation);
 	}
 
 	/**
@@ -67,7 +87,7 @@ public class AggregationOptions {
 	 * @since 2.0
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, int cursorBatchSize) {
-		this(allowDiskUse, explain, createCursor(cursorBatchSize));
+		this(allowDiskUse, explain, createCursor(cursorBatchSize), null);
 	}
 
 	/**
@@ -81,23 +101,13 @@ public class AggregationOptions {
 
 		Assert.notNull(document, "Document must not be null!");
 
-		boolean allowDiskUse = false;
-		boolean explain = false;
-		Document cursor = null;
+		boolean allowDiskUse = document.getBoolean(ALLOW_DISK_USE, false);
+		boolean explain = document.getBoolean(EXPLAIN, false);
+		Document cursor = document.get(CURSOR, Document.class);
+		Collation collation = document.containsKey(COLLATION) ? Collation.from(document.get(COLLATION, Document.class))
+				: null;
 
-		if (document.containsKey(ALLOW_DISK_USE)) {
-			allowDiskUse = document.get(ALLOW_DISK_USE, Boolean.class);
-		}
-
-		if (document.containsKey(EXPLAIN)) {
-			explain = (Boolean) document.get(EXPLAIN);
-		}
-
-		if (document.containsKey(CURSOR)) {
-			cursor = document.get(CURSOR, Document.class);
-		}
-
-		return new AggregationOptions(allowDiskUse, explain, cursor);
+		return new AggregationOptions(allowDiskUse, explain, cursor, collation);
 	}
 
 	/**
@@ -127,8 +137,8 @@ public class AggregationOptions {
 	 */
 	public Integer getCursorBatchSize() {
 
-		if (cursor != null && cursor.containsKey("batchSize")) {
-			return cursor.get("batchSize", Integer.class);
+		if (cursor.filter(val -> val.containsKey(BATCH_SIZE)).isPresent()) {
+			return cursor.get().get(BATCH_SIZE, Integer.class);
 		}
 
 		return null;
@@ -139,8 +149,18 @@ public class AggregationOptions {
 	 *
 	 * @return
 	 */
-	public Document getCursor() {
+	public Optional<Document> getCursor() {
 		return cursor;
+	}
+
+	/**
+	 * Get collation settings for string comparison.
+	 *
+	 * @return
+	 * @since 2.0
+	 */
+	public Optional<Collation> getCollation() {
+		return collation;
 	}
 
 	/**
@@ -162,8 +182,12 @@ public class AggregationOptions {
 			result.put(EXPLAIN, explain);
 		}
 
-		if (cursor != null && !result.containsKey(CURSOR)) {
-			result.put(CURSOR, cursor);
+		if (!result.containsKey(CURSOR)) {
+			cursor.ifPresent(val -> result.put(CURSOR, val));
+		}
+
+		if (!result.containsKey(COLLATION)) {
+			collation.map(Collation::toDocument).ifPresent(val -> result.append(COLLATION, val));
 		}
 
 		return result;
@@ -179,7 +203,9 @@ public class AggregationOptions {
 		Document document = new Document();
 		document.put(ALLOW_DISK_USE, allowDiskUse);
 		document.put(EXPLAIN, explain);
-		document.put(CURSOR, cursor);
+
+		cursor.ifPresent(val -> document.put(CURSOR, val));
+		collation.ifPresent(val -> document.append(COLLATION, val.toDocument()));
 
 		return document;
 	}
@@ -207,6 +233,7 @@ public class AggregationOptions {
 		private boolean allowDiskUse;
 		private boolean explain;
 		private Document cursor;
+		private Collation collation;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
@@ -258,12 +285,24 @@ public class AggregationOptions {
 		}
 
 		/**
+		 * Define collation settings for string comparison.
+		 *
+		 * @param collation can be {@literal null}.
+		 * @return
+		 */
+		public Builder collation(Collation collation) {
+
+			this.collation = collation;
+			return this;
+		}
+
+		/**
 		 * Returns a new {@link AggregationOptions} instance with the given configuration.
 		 *
 		 * @return
 		 */
 		public AggregationOptions build() {
-			return new AggregationOptions(allowDiskUse, explain, cursor);
+			return new AggregationOptions(allowDiskUse, explain, cursor, collation);
 		}
 	}
 }

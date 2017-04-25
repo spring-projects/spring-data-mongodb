@@ -404,7 +404,9 @@ public final class NearQuery {
 		Document document = new Document();
 
 		if (query != null) {
+
 			document.put("query", query.getQueryObject());
+			query.getCollation().ifPresent(collation -> document.append("collation", collation.toDocument()));
 		}
 
 		if (maxDistance != null) {
