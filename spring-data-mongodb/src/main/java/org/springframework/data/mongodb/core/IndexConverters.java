@@ -16,21 +16,19 @@
 
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.domain.Sort.Direction.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
-import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.util.ObjectUtils;
 
+import com.mongodb.client.model.Collation;
+import com.mongodb.client.model.CollationAlternate;
+import com.mongodb.client.model.CollationCaseFirst;
+import com.mongodb.client.model.CollationMaxVariable;
+import com.mongodb.client.model.CollationStrength;
 import com.mongodb.client.model.IndexOptions;
 
 /**
@@ -44,10 +42,6 @@ abstract class IndexConverters {
 
 	private static final Converter<IndexDefinition, IndexOptions> DEFINITION_TO_MONGO_INDEX_OPTIONS;
 	private static final Converter<Document, IndexInfo> DOCUMENT_INDEX_INFO;
-
-	private static final Double ONE = Double.valueOf(1);
-	private static final Double MINUS_ONE = Double.valueOf(-1);
-	private static final Collection<String> TWO_D_IDENTIFIERS = Arrays.asList("2d", "2dsphere");
 
 	static {
 
@@ -117,18 +111,57 @@ abstract class IndexConverters {
 				}
 			}
 
-			if(indexOptions.containsKey("partialFilterExpression")) {
-				ops = ops.partialFilterExpression((org.bson.Document)indexOptions.get("partialFilterExpression"));
+			if (indexOptions.containsKey("partialFilterExpression")) {
+				ops = ops.partialFilterExpression((org.bson.Document) indexOptions.get("partialFilterExpression"));
+			}
+
+			if (indexOptions.containsKey("collation")) {
+				ops = ops.collation(fromDocument(indexOptions.get("collation", Document.class)));
 			}
 
 			return ops;
 		};
 	}
 
-	private static Converter<Document, IndexInfo> getDocumentIndexInfoConverter() {
+	public static Collation fromDocument(Document source) {
 
-		return ix -> {
-			return IndexInfo.indexInfoOf(ix);
-		};
+		if (source == null) {
+			return null;
+		}
+
+		com.mongodb.client.model.Collation.Builder collationBuilder = Collation.builder();
+
+		collationBuilder.locale(source.getString("locale"));
+		if (source.containsKey("caseLevel")) {
+			collationBuilder.caseLevel(source.getBoolean("caseLevel"));
+		}
+		if (source.containsKey("caseFirst")) {
+			collationBuilder.collationCaseFirst(CollationCaseFirst.fromString(source.getString("caseFirst")));
+		}
+		if (source.containsKey("strength")) {
+			collationBuilder.collationStrength(CollationStrength.fromInt(source.getInteger("strength")));
+		}
+		if (source.containsKey("numericOrdering")) {
+			collationBuilder.numericOrdering(source.getBoolean("numericOrdering"));
+		}
+		if (source.containsKey("alternate")) {
+			collationBuilder.collationAlternate(CollationAlternate.fromString(source.getString("alternate")));
+		}
+		if (source.containsKey("maxVariable")) {
+			collationBuilder.collationMaxVariable(CollationMaxVariable.fromString(source.getString("maxVariable")));
+		}
+		if (source.containsKey("backwards")) {
+			collationBuilder.backwards(source.getBoolean("backwards"));
+		}
+		if (source.containsKey("normalization")) {
+			collationBuilder.normalization(source.getBoolean("normalization"));
+		}
+
+		return collationBuilder.build();
 	}
+
+	private static Converter<Document, IndexInfo> getDocumentIndexInfoConverter() {
+		return ix -> IndexInfo.indexInfoOf(ix);
+	}
+
 }

@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.hamcrest.core.Is.*;
 import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.core.index.PartialIndexFilter.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.Collation.ICUCaseFirst;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
@@ -50,6 +51,7 @@ import com.mongodb.client.MongoCollection;
 public class DefaultIndexOperationsIntegrationTests {
 
 	private static final Version THREE_DOT_TWO = new Version(3, 2);
+	private static final Version THREE_DOT_FOUR = new Version(3, 4);
 	private static Version mongoVersion;
 	static final org.bson.Document GEO_SPHERE_2D = new org.bson.Document("loaction", "2dsphere");
 
@@ -83,7 +85,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		collection.createIndex(GEO_SPHERE_2D);
 
 		IndexInfo info = findAndReturnIndexInfo(GEO_SPHERE_2D);
-		assertThat(info.getIndexFields().get(0).isGeo(), is(true));
+		assertThat(info.getIndexFields().get(0).isGeo()).isEqualTo(true);
 	}
 
 	@Test // DATAMONGO-1467
@@ -97,7 +99,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		indexOps.ensureIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-criteria");
-		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"q-t-y\" : { \"$gte\" : 10 } }")));
+		assertThat(info.getPartialFilterExpression()).isEqualTo("{ \"q-t-y\" : { \"$gte\" : 10 } }");
 	}
 
 	@Test // DATAMONGO-1467
@@ -111,7 +113,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		indexOps.ensureIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-mapped-criteria");
-		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"qty\" : { \"$gte\" : 10 } }")));
+		assertThat(info.getPartialFilterExpression()).isEqualTo("{ \"qty\" : { \"$gte\" : 10 } }");
 	}
 
 	@Test // DATAMONGO-1467
@@ -125,7 +127,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		indexOps.ensureIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-dbo");
-		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"qty\" : { \"$gte\" : 10 } }")));
+		assertThat(info.getPartialFilterExpression()).isEqualTo("{ \"qty\" : { \"$gte\" : 10 } }");
 	}
 
 	@Test // DATAMONGO-1467
@@ -143,7 +145,42 @@ public class DefaultIndexOperationsIntegrationTests {
 		indexOps.ensureIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-inheritance");
-		assertThat(info.getPartialFilterExpression(), is(equalTo("{ \"a_g_e\" : { \"$gte\" : 10 } }")));
+		assertThat(info.getPartialFilterExpression()).isEqualTo("{ \"a_g_e\" : { \"$gte\" : 10 } }");
+	}
+
+	@Test // DATAMONGO-1518
+	public void shouldCreateIndexWithCollationCorrectly() {
+
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR), is(true));
+
+		IndexDefinition id = new Index().named("with-collation").on("xyz", Direction.ASC)
+				.collation(Collation.of("de_AT").caseFirst(ICUCaseFirst.off()));
+
+		new DefaultIndexOperations(template.getMongoDbFactory(),
+				this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class),
+				new QueryMapper(template.getConverter()), MappingToSameCollection.class);
+
+		indexOps.ensureIndex(id);
+
+		Document expected = new Document("locale", "de_AT") //
+				.append("caseLevel", false) //
+				.append("caseFirst", "off") //
+				.append("strength", 3) //
+				.append("numericOrdering", false) //
+				.append("alternate", "non-ignorable") //
+				.append("maxVariable", "punct") //
+				.append("normalization", false) //
+				.append("backwards", false);
+
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "with-collation");
+
+		assertThat(info.getCollation()).isPresent();
+
+		// version is set by MongoDB server - we remove it to avoid errors when upgrading server version.
+		Document result = info.getCollation().get();
+		result.remove("version");
+
+		assertThat(result).isEqualTo(expected);
 	}
 
 	private IndexInfo findAndReturnIndexInfo(org.bson.Document keys) {

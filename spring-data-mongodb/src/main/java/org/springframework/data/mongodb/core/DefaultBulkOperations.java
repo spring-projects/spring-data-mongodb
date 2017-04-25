@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.mongodb.client.model.DeleteOptions;
 import org.bson.Document;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -58,12 +59,12 @@ class DefaultBulkOperations implements BulkOperations {
 
 	private BulkWriteOptions bulkOptions;
 
-	List<WriteModel<Document>> models = new ArrayList<WriteModel<Document>>();
+	List<WriteModel<Document>> models = new ArrayList<>();
 
 	/**
 	 * Creates a new {@link DefaultBulkOperations} for the given {@link MongoOperations}, {@link BulkMode}, collection
 	 * name and {@link WriteConcern}.
-	 * 
+	 *
 	 * @param mongoOperations The underlying {@link MongoOperations}, must not be {@literal null}.
 	 * @param bulkMode must not be {@literal null}.
 	 * @param collectionName Name of the collection to work on, must not be {@literal null} or empty.
@@ -88,7 +89,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 	/**
 	 * Configures the {@link PersistenceExceptionTranslator} to be used. Defaults to {@link MongoExceptionTranslator}.
-	 * 
+	 *
 	 * @param exceptionTranslator can be {@literal null}.
 	 */
 	public void setExceptionTranslator(PersistenceExceptionTranslator exceptionTranslator) {
@@ -97,7 +98,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 	/**
 	 * Configures the {@link WriteConcernResolver} to be used. Defaults to {@link DefaultWriteConcernResolver}.
-	 * 
+	 *
 	 * @param writeConcernResolver can be {@literal null}.
 	 */
 	public void setWriteConcernResolver(WriteConcernResolver writeConcernResolver) {
@@ -107,7 +108,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 	/**
 	 * Configures the default {@link WriteConcern} to be used. Defaults to {@literal null}.
-	 * 
+	 *
 	 * @param defaultWriteConcern can be {@literal null}.
 	 */
 	public void setDefaultWriteConcern(WriteConcern defaultWriteConcern) {
@@ -244,7 +245,10 @@ class DefaultBulkOperations implements BulkOperations {
 
 		Assert.notNull(query, "Query must not be null!");
 
-		models.add(new DeleteManyModel<Document>(query.getQueryObject()));
+		DeleteOptions deleteOptions = new DeleteOptions();
+		query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
+
+		models.add(new DeleteManyModel(query.getQueryObject(), deleteOptions));
 		return this;
 	}
 
@@ -306,11 +310,12 @@ class DefaultBulkOperations implements BulkOperations {
 
 		UpdateOptions options = new UpdateOptions();
 		options.upsert(upsert);
+		query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 
 		if (multi) {
-			models.add(new UpdateManyModel<Document>(query.getQueryObject(), update.getUpdateObject(), options));
+			models.add(new UpdateManyModel<>(query.getQueryObject(), update.getUpdateObject(), options));
 		} else {
-			models.add(new UpdateOneModel<Document>(query.getQueryObject(), update.getUpdateObject(), options));
+			models.add(new UpdateOneModel<>(query.getQueryObject(), update.getUpdateObject(), options));
 		}
 		return this;
 	}

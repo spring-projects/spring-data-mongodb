@@ -32,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -59,6 +60,7 @@ public class QueryCursorPreparerUnitTests {
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslatorMock);
 		when(cursor.modifiers(any(Document.class))).thenReturn(cursor);
 		when(cursor.noCursorTimeout(anyBoolean())).thenReturn(cursor);
+		when(cursor.collation(any())).thenReturn(cursor);
 	}
 
 	@Test // DATAMONGO-185
@@ -132,7 +134,6 @@ public class QueryCursorPreparerUnitTests {
 		assertThat(captor.getValue(), equalTo(new Document("$snapshot", true)));
 	}
 
-
 	@Test // DATAMONGO-1480
 	public void appliesNoCursorTimeoutCorrectly() {
 
@@ -141,6 +142,14 @@ public class QueryCursorPreparerUnitTests {
 		prepare(query);
 
 		verify(cursor).noCursorTimeout(eq(true));
+	}
+
+	@Test // DATAMONGO-1518
+	public void appliesCollationCorrectly() {
+
+		prepare(new BasicQuery("{}").collation(Collation.of("fr")));
+
+		verify(cursor).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
 
 	private FindIterable<Document> prepare(Query query) {

@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.util.Assert;
@@ -46,9 +47,9 @@ public class IndexInfo {
 	private final boolean sparse;
 	private final String language;
 	private String partialFilterExpression;
+	private Document collation;
 
-	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse,
-			String language) {
+	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse, String language) {
 
 		this.indexFields = Collections.unmodifiableList(indexFields);
 		this.name = name;
@@ -106,10 +107,11 @@ public class IndexInfo {
 		String language = sourceDocument.containsKey("default_language") ? (String) sourceDocument.get("default_language")
 				: "";
 		String partialFilter = sourceDocument.containsKey("partialFilterExpression")
-				? ((Document)sourceDocument.get("partialFilterExpression")).toJson() : "";
+				? ((Document) sourceDocument.get("partialFilterExpression")).toJson() : "";
 
 		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
 		info.partialFilterExpression = partialFilter;
+		info.collation = sourceDocument.get("collation", Document.class);
 		return info;
 	}
 
@@ -169,10 +171,21 @@ public class IndexInfo {
 		return partialFilterExpression;
 	}
 
+	/**
+	 * Get collation information.
+	 *
+	 * @return
+	 * @since 2.0
+	 */
+	public Optional<Document> getCollation() {
+		return Optional.ofNullable(collation);
+	}
+
 	@Override
 	public String toString() {
-		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", sparse=" + sparse + ", language=" + language + ", partialFilterExpression="
-				+ partialFilterExpression + "]";
+		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", sparse=" + sparse
+				+ ", language=" + language + ", partialFilterExpression=" + partialFilterExpression + ", collation=" + collation
+				+ "]";
 	}
 
 	@Override
@@ -186,6 +199,7 @@ public class IndexInfo {
 		result = prime * result + (unique ? 1231 : 1237);
 		result = prime * result + ObjectUtils.nullSafeHashCode(language);
 		result = prime * result + ObjectUtils.nullSafeHashCode(partialFilterExpression);
+		result = prime * result + ObjectUtils.nullSafeHashCode(collation);
 		return result;
 	}
 
@@ -225,6 +239,10 @@ public class IndexInfo {
 			return false;
 		}
 		if (!ObjectUtils.nullSafeEquals(partialFilterExpression, other.partialFilterExpression)) {
+			return false;
+		}
+
+		if (!ObjectUtils.nullSafeEquals(collation, collation)) {
 			return false;
 		}
 		return true;

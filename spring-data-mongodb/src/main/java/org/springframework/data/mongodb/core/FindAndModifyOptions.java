@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,20 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.Optional;
+
+/**
+ * @author Mark Pollak
+ * @author Oliver Gierke
+ * @author Christoph Strobl
+ */
 public class FindAndModifyOptions {
 
 	boolean returnNew;
-
 	boolean upsert;
-
 	boolean remove;
+
+	private Collation collation;
 
 	/**
 	 * Static factory method to create a FindAndModifyOptions instance
@@ -30,6 +37,27 @@ public class FindAndModifyOptions {
 	 */
 	public static FindAndModifyOptions options() {
 		return new FindAndModifyOptions();
+	}
+
+	/**
+	 * @param options
+	 * @return
+	 * @since 2.0
+	 */
+	public static FindAndModifyOptions of(FindAndModifyOptions source) {
+
+
+		FindAndModifyOptions options = new FindAndModifyOptions();
+		if(source == null) {
+			return options;
+		}
+
+		options.returnNew = source.returnNew;
+		options.upsert = source.upsert;
+		options.remove = source.remove;
+		options.collation = source.collation;
+
+		return options;
 	}
 
 	public FindAndModifyOptions returnNew(boolean returnNew) {
@@ -47,6 +75,19 @@ public class FindAndModifyOptions {
 		return this;
 	}
 
+	/**
+	 * Define the {@link Collation} specifying language-specific rules for string comparison.
+	 *
+	 * @param collation
+	 * @return
+	 * @since 2.0
+	 */
+	public FindAndModifyOptions collation(Collation collation) {
+
+		this.collation = collation;
+		return this;
+	}
+
 	public boolean isReturnNew() {
 		return returnNew;
 	}
@@ -57,6 +98,16 @@ public class FindAndModifyOptions {
 
 	public boolean isRemove() {
 		return remove;
+	}
+
+	/**
+	 * Get the {@link Collation} specifying language-specific rules for string comparison.
+	 *
+	 * @return
+	 * @since 2.0
+	 */
+	public Optional<Collation> getCollation() {
+		return Optional.ofNullable(collation);
 	}
 
 }

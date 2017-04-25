@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.util.Optional;
+
 import org.bson.Document;
+import org.springframework.data.mongodb.core.Collation;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -37,7 +40,8 @@ public class GeospatialIndex implements IndexDefinition {
 	private GeoSpatialIndexType type = GeoSpatialIndexType.GEO_2D;
 	private Double bucketSize = 1.0;
 	private String additionalField;
-	private IndexFilter filter;
+	private Optional<IndexFilter> filter = Optional.empty();
+	private Optional<Collation> collation = Optional.empty();
 
 	/**
 	 * Creates a new {@link GeospatialIndex} for the given field.
@@ -129,7 +133,23 @@ public class GeospatialIndex implements IndexDefinition {
 	 */
 	public GeospatialIndex partial(IndexFilter filter) {
 
-		this.filter = filter;
+		this.filter = Optional.ofNullable(filter);
+		return this;
+	}
+
+	/**
+	 * Set the {@link Collation} to specify language-specific rules for string comparison, such as rules for lettercase
+	 * and accent marks.<br />
+	 * <strong>NOTE:</strong> Only queries using the same {@link Collation} as the {@link Index} actually make use of the
+	 * index.
+	 *
+	 * @param collation can be {@literal null}.
+	 * @return
+	 * @since 2.0
+	 */
+	public GeospatialIndex collation(Collation collation) {
+
+		this.collation = Optional.ofNullable(collation);
 		return this;
 	}
 
@@ -168,9 +188,9 @@ public class GeospatialIndex implements IndexDefinition {
 			return null;
 		}
 
-		Document dbo = new Document();
+		Document document = new Document();
 		if (StringUtils.hasText(name)) {
-			dbo.put("name", name);
+			document.put("name", name);
 		}
 
 		switch (type) {
@@ -178,13 +198,13 @@ public class GeospatialIndex implements IndexDefinition {
 			case GEO_2D:
 
 				if (min != null) {
-					dbo.put("min", min);
+					document.put("min", min);
 				}
 				if (max != null) {
-					dbo.put("max", max);
+					document.put("max", max);
 				}
 				if (bits != null) {
-					dbo.put("bits", bits);
+					document.put("bits", bits);
 				}
 				break;
 
@@ -195,16 +215,15 @@ public class GeospatialIndex implements IndexDefinition {
 			case GEO_HAYSTACK:
 
 				if (bucketSize != null) {
-					dbo.put("bucketSize", bucketSize);
+					document.put("bucketSize", bucketSize);
 				}
 				break;
 		}
 
-		if (filter != null) {
-			dbo.put("partialFilterExpression", filter.getFilterObject());
-		}
+		filter.ifPresent(val -> document.put("partialFilterExpression", val.getFilterObject()));
+		collation.ifPresent(val -> document.append("collation", val.toDocument()));
 
-		return dbo;
+		return document;
 	}
 
 	/*
