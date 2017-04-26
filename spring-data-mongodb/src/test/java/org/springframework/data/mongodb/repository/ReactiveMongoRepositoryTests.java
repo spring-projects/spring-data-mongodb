@@ -170,7 +170,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldUseInfiniteStream() throws Exception {
+	public void shouldUseTailableCursor() throws Exception {
 
 		StepVerifier
 				.create(template.dropCollection(Capped.class) //
@@ -195,7 +195,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldUseInfiniteStreamWithProjection() throws Exception {
+	public void shouldUseTailableCursorWithProjection() throws Exception {
 
 		StepVerifier
 				.create(template.dropCollection(Capped.class) //
@@ -329,10 +329,10 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 	interface ReactiveCappedCollectionRepository extends Repository<Capped, String> {
 
-		@InfiniteStream
+		@Tailable
 		Flux<Capped> findByKey(String key);
 
-		@InfiniteStream
+		@Tailable
 		Flux<CappedProjection> findProjectionByKey(String key);
 	}
 

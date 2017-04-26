@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.repository.InfiniteStream;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.Tailable;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
@@ -44,7 +44,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * Mongo specific implementation of {@link QueryMethod}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -61,7 +61,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
-	 * 
+	 *
 	 * @param method must not be {@literal null}.
 	 * @param metadata must not be {@literal null}.
 	 * @param projectionFactory must not be {@literal null}.
@@ -89,7 +89,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 	/**
 	 * Returns whether the method has an annotated query.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean hasAnnotatedQuery() {
@@ -99,7 +99,7 @@ public class MongoQueryMethod extends QueryMethod {
 	/**
 	 * Returns the query string declared in a {@link Query} annotation or {@literal null} if neither the annotation found
 	 * nor the attribute was specified.
-	 * 
+	 *
 	 * @return
 	 */
 	String getAnnotatedQuery() {
@@ -110,7 +110,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 	/**
 	 * Returns the field specification to be used for the query.
-	 * 
+	 *
 	 * @return
 	 */
 	String getFieldSpecification() {
@@ -119,7 +119,7 @@ public class MongoQueryMethod extends QueryMethod {
 		return StringUtils.hasText(value) ? value : null;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryMethod#getEntityInformation()
 	 */
@@ -165,7 +165,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 	/**
 	 * Returns whether the query is a geo near query.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isGeoNearQuery() {
@@ -192,7 +192,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 	/**
 	 * Returns the {@link Query} annotation that is applied to the method or {@code null} if none available.
-	 * 
+	 *
 	 * @return
 	 */
 	Query getQueryAnnotation() {
@@ -213,7 +213,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 	/**
 	 * Returns the {@link Meta} annotation that is applied to the method or {@code null} if not available.
-	 * 
+	 *
 	 * @return
 	 * @since 1.6
 	 */
@@ -222,18 +222,18 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the {@link InfiniteStream} annotation that is applied to the method or {@code null} if not available.
+	 * Returns the {@link Tailable} annotation that is applied to the method or {@code null} if not available.
 	 *
 	 * @return
 	 * @since 2.0
 	 */
-	InfiniteStream getInfiniteStreamAnnotation() {
-		return AnnotatedElementUtils.findMergedAnnotation(method, InfiniteStream.class);
+	Tailable getTailableAnnotation() {
+		return AnnotatedElementUtils.findMergedAnnotation(method, Tailable.class);
 	}
 
 	/**
 	 * Returns the {@link org.springframework.data.mongodb.core.query.Meta} attributes to be applied.
-	 * 
+	 *
 	 * @return never {@literal null}.
 	 * @since 1.6
 	 */

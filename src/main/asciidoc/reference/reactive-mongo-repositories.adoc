@@ -188,18 +188,18 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 ----
 
 [[mongo.reactive.repositories.infinite-streams]]
-== Infinite Streams
+== Infinite Streams with Tailable Cursors
 
-By default, MongoDB will automatically close a cursor when the client has exhausted all results in the cursor. Closing a cursors turns a Stream into a finite stream. However, for capped collections you may use a https://docs.mongodb.com/manual/core/tailable-cursors/[Tailable Cursor] that remains open after the client exhausts the results in the initial cursor. Using Tailable Cursors with a reactive approach allows construction of infinite streams. A Tailable Cursor remains open until it's closed. It emits data as data arrives in a capped collection. Using Tailable Cursors with Collections is not possible as its result would never complete.
+By default, MongoDB will automatically close a cursor when the client has exhausted all results in the cursor. Closing a cursors turns a Stream into a finite stream. However, for capped collections you may use a https://docs.mongodb.com/manual/core/tailable-cursors/[Tailable Cursor] that remains open after the client exhausts the results in the initial cursor. Using tailable Cursors with a reactive approach allows construction of infinite streams. A tailable Cursor remains open until it's closed. It emits data as data arrives in a capped collection. Using Tailable Cursors with Collections is not possible as its result would never complete.
 
-Spring Data MongoDB Reactive Repository support supports infinite streams by annotating a query method with `@InfiniteStream`. This works for methods returning `Flux` or `Observable` wrapper types.
+Spring Data MongoDB Reactive Repository support supports infinite streams by annotating a query method with `@TailableCursor`. This works for methods returning `Flux` or `Observable` wrapper types.
 
 [source,java]
 ----
 
 public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
 
-  @InfiniteStream
+  @Tailable
   Flux<Person> findByFirstname(String firstname);
 
 }
@@ -207,6 +207,7 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 Flux<Person> stream = repository.findByFirstname("Joe");
 
 Disposable subscription = stream.doOnNext(person -> System.out.println(person)).subscribe();
+
 
 // …
 
