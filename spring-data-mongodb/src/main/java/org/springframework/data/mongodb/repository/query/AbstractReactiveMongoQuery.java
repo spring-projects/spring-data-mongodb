@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,7 +130,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			return new DeleteExecution(operations, method);
 		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(operations, accessor, method.getReturnType());
-		} else if (isInfiniteStream(method)) {
+		} else if (isTailable(method)) {
 			return new TailExecution(operations, accessor.getPageable());
 		} else if (method.isCollectionQuery()) {
 			return new CollectionExecution(operations, accessor.getPageable());
@@ -139,8 +139,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		}
 	}
 
-	private boolean isInfiniteStream(MongoQueryMethod method) {
-		return method.getInfiniteStreamAnnotation() != null;
+	private boolean isTailable(MongoQueryMethod method) {
+		return method.getTailableAnnotation() != null;
 	}
 
 	Query applyQueryMetaAttributesWhenPresent(Query query) {

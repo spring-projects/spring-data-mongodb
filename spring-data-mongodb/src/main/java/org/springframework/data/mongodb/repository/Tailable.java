@@ -24,10 +24,10 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.QueryAnnotation;
 
 /**
- * Annotation to declare an infinite stream using repository query methods. An infinite stream uses MongoDB's
- * {@link com.mongodb.CursorType#TailableAwait tailable} cursors to retrieve data from a capped collection and stream
- * data as it is inserted into the collection. An infinite stream can only be used with streams that emit more than one
- * element, such as {@link reactor.core.publisher.Flux} or {@link rx.Observable}.
+ * Annotation to declare an infinite stream using MongoDB's {@link com.mongodb.CursorType#TailableAwait tailable}
+ * cursors. An infinite stream can only be used with capped collections. Objects are emitted through the stream as data
+ * is inserted into the collection. An infinite stream can only be used with streams that emit more than one element,
+ * such as {@link reactor.core.publisher.Flux}.
  * <p>
  * The stream may become dead, or invalid, if either the query returns no match or the cursor returns the document at
  * the "end" of the collection and then the application deletes that document.
@@ -37,11 +37,12 @@ import org.springframework.data.annotation.QueryAnnotation;
  *
  * @author Mark Paluch
  * @see <a href="https://docs.mongodb.com/manual/core/tailable-cursors/">Tailable Cursors</a>
+ * @since 2.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
 @QueryAnnotation
-public @interface InfiniteStream {
+public @interface Tailable {
 
 }
