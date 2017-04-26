@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +60,6 @@ import org.springframework.util.ClassUtils;
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MongoQueryCreator.class);
-	private static final Pattern PUNCTATION_PATTERN = Pattern.compile("\\p{Punct}");
 	private final MongoParameterAccessor accessor;
 	private final boolean isGeoNearQuery;
 
@@ -217,28 +215,29 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case NEAR:
 
 				Range<Distance> range = accessor.getDistanceRange();
-				Distance distance = range.getUpperBound();
-				Distance minDistance = range.getLowerBound();
+				Optional<Distance> distance = range.getUpperBound().getValue();
+				Optional<Distance> minDistance = range.getLowerBound().getValue();
 
 				Point point = accessor.getGeoNearLocation();
-				point = point == null ? nextAs(parameters, Point.class) : point;
+				Point pointToUse = point == null ? nextAs(parameters, Point.class) : point;
 
 				boolean isSpherical = isSpherical(property);
 
-				if (distance == null) {
-					return isSpherical ? criteria.nearSphere(point) : criteria.near(point);
-				} else {
-					if (isSpherical || !Metrics.NEUTRAL.equals(distance.getMetric())) {
-						criteria.nearSphere(point);
+				return distance.map(it -> {
+
+					if (isSpherical || !Metrics.NEUTRAL.equals(it.getMetric())) {
+						criteria.nearSphere(pointToUse);
 					} else {
-						criteria.near(point);
+						criteria.near(pointToUse);
 					}
-					criteria.maxDistance(distance.getNormalizedValue());
-					if (minDistance != null) {
-						criteria.minDistance(minDistance.getNormalizedValue());
-					}
-				}
-				return criteria;
+
+					criteria.maxDistance(it.getNormalizedValue());
+					minDistance.ifPresent(min -> criteria.minDistance(min.getNormalizedValue()));
+
+					return criteria;
+
+				}).orElseGet(() -> isSpherical ? criteria.nearSphere(pointToUse) : criteria.near(pointToUse));
+
 			case WITHIN:
 
 				Object parameter = parameters.next();

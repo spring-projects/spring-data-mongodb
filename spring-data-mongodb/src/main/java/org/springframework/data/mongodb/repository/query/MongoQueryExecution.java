@@ -140,13 +140,13 @@ interface MongoQueryExecution {
 
 			// Adjust limit if page would exceed the overall limit
 			if (overallLimit != 0 && pageable.getOffset() + pageable.getPageSize() > overallLimit) {
-				query.limit((int)(overallLimit - pageable.getOffset()));
+				query.limit((int) (overallLimit - pageable.getOffset()));
 			}
 
 			return PageableExecutionUtils.getPage(operations.find(query, type, collection), pageable, () -> {
 
-					long count = operations.count(query, type, collection);
-					return overallLimit != 0 ? Math.min(count, overallLimit) : count;
+				long count = operations.count(query, type, collection);
+				return overallLimit != 0 ? Math.min(count, overallLimit) : count;
 
 			});
 		}
@@ -249,17 +249,8 @@ interface MongoQueryExecution {
 			}
 
 			Range<Distance> distances = accessor.getDistanceRange();
-			Distance maxDistance = distances.getUpperBound();
-
-			if (maxDistance != null) {
-				nearQuery.maxDistance(maxDistance).in(maxDistance.getMetric());
-			}
-
-			Distance minDistance = distances.getLowerBound();
-
-			if (minDistance != null) {
-				nearQuery.minDistance(minDistance).in(minDistance.getMetric());
-			}
+			distances.getLowerBound().getValue().ifPresent(it -> nearQuery.minDistance(it).in(it.getMetric()));
+			distances.getUpperBound().getValue().ifPresent(it -> nearQuery.maxDistance(it).in(it.getMetric()));
 
 			Pageable pageable = accessor.getPageable();
 
@@ -315,13 +306,12 @@ interface MongoQueryExecution {
 			Page<GeoResult<Object>> page = PageableExecutionUtils.getPage(geoResults.getContent(), accessor.getPageable(),
 					() -> {
 
+						ConvertingParameterAccessor parameterAccessor = new ConvertingParameterAccessor(operations.getConverter(),
+								accessor);
+						Query countQuery = mongoQuery
+								.applyQueryMetaAttributesWhenPresent(mongoQuery.createCountQuery(parameterAccessor));
 
-							ConvertingParameterAccessor parameterAccessor = new ConvertingParameterAccessor(operations.getConverter(),
-									accessor);
-							Query countQuery = mongoQuery
-									.applyQueryMetaAttributesWhenPresent(mongoQuery.createCountQuery(parameterAccessor));
-
-							return operations.count(countQuery, collection);
+						return operations.count(countQuery, collection);
 
 					});
 

@@ -15,13 +15,16 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+
 import java.util.Optional;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Point;
@@ -34,17 +37,12 @@ import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import com.mongodb.client.result.DeleteResult;
 
 /**
  * Set of classes to contain query execution strategies. Depending (mostly) on the return type of a
- * {@link org.springframework.data.repository.query.QueryMethod} a {@link AbstractReactiveMongoQuery} can be executed in various
- * flavors.
+ * {@link org.springframework.data.repository.query.QueryMethod} a {@link AbstractReactiveMongoQuery} can be executed in
+ * various flavors.
  *
  * @author Mark Paluch
  * @since 2.0
@@ -127,7 +125,7 @@ interface ReactiveMongoQueryExecution {
 			return isStreamOfGeoResult() ? results : results.map(GeoResult::getContent);
 		}
 
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		protected Flux<GeoResult<Object>> doExecuteQuery(Query query, Class<?> type, String collection) {
 
 			Point nearLocation = accessor.getGeoNearLocation();
@@ -138,17 +136,8 @@ interface ReactiveMongoQueryExecution {
 			}
 
 			Range<Distance> distances = accessor.getDistanceRange();
-			Distance maxDistance = distances.getUpperBound();
-
-			if (maxDistance != null) {
-				nearQuery.maxDistance(maxDistance).in(maxDistance.getMetric());
-			}
-
-			Distance minDistance = distances.getLowerBound();
-
-			if (minDistance != null) {
-				nearQuery.minDistance(minDistance).in(minDistance.getMetric());
-			}
+			distances.getUpperBound().getValue().ifPresent(it -> nearQuery.maxDistance(it).in(it.getMetric()));
+			distances.getLowerBound().getValue().ifPresent(it -> nearQuery.minDistance(it).in(it.getMetric()));
 
 			Pageable pageable = accessor.getPageable();
 

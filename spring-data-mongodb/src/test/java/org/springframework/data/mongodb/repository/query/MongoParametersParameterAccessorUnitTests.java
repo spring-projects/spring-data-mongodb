@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.bson.Document;
 import org.hamcrest.core.IsNull;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -51,14 +53,14 @@ public class MongoParametersParameterAccessorUnitTests {
 	ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 
 	@Test
-	public void returnsNullForDistanceIfNoneAvailable() throws NoSuchMethodException, SecurityException {
+	public void returnsUnboundedForDistanceIfNoneAvailable() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { new Point(10, 20) });
-		assertThat(accessor.getDistanceRange().getUpperBound(), is(nullValue()));
+		assertThat(accessor.getDistanceRange().getUpperBound().isBounded()).isFalse();
 	}
 
 	@Test
@@ -69,7 +71,7 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { new Point(10, 20), DISTANCE });
-		assertThat(accessor.getDistanceRange().getUpperBound(), is(DISTANCE));
+		assertThat(accessor.getDistanceRange().getUpperBound()).isEqualTo(Bound.inclusive(DISTANCE));
 	}
 
 	@Test // DATAMONGO-973
@@ -109,8 +111,8 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		Range<Distance> range = accessor.getDistanceRange();
 
-		assertThat(range.getLowerBound(), is(min));
-		assertThat(range.getUpperBound(), is(max));
+		assertThat(range.getLowerBound(), is(Bound.inclusive(min)));
+		assertThat(range.getUpperBound(), is(Bound.inclusive(max)));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {

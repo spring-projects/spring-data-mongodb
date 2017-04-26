@@ -849,16 +849,7 @@ public class ArrayOperators {
 		}
 
 		public IndexOfArray within(Range<Long> range) {
-
-			Assert.notNull(range, "Range must not be null!");
-
-			List<Long> rangeValues = new ArrayList<Long>(2);
-			rangeValues.add(range.getLowerBound());
-			if (range.getUpperBound() != null) {
-				rangeValues.add(range.getUpperBound());
-			}
-
-			return new IndexOfArray(append(rangeValues));
+			return new IndexOfArray(append(AggregationUtils.toRangeValues(range)));
 		}
 
 		/**

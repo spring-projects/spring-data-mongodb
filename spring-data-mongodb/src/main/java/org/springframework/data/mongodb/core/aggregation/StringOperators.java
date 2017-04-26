@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -732,16 +731,7 @@ public class StringOperators {
 		 * @return
 		 */
 		public IndexOfBytes within(Range<Long> range) {
-
-			Assert.notNull(range, "Range must not be null!");
-
-			List<Long> rangeValues = new ArrayList<Long>(2);
-			rangeValues.add(range.getLowerBound());
-			if (range.getUpperBound() != null) {
-				rangeValues.add(range.getUpperBound());
-			}
-
-			return new IndexOfBytes(append(rangeValues));
+			return new IndexOfBytes(append(AggregationUtils.toRangeValues(range)));
 		}
 
 		public static class SubstringBuilder {
@@ -831,16 +821,7 @@ public class StringOperators {
 		 * @return
 		 */
 		public IndexOfCP within(Range<Long> range) {
-
-			Assert.notNull(range, "Range must not be null!");
-
-			List<Long> rangeValues = new ArrayList<Long>(2);
-			rangeValues.add(range.getLowerBound());
-			if (range.getUpperBound() != null) {
-				rangeValues.add(range.getUpperBound());
-			}
-
-			return new IndexOfCP(append(rangeValues));
+			return new IndexOfCP(append(AggregationUtils.toRangeValues(range)));
 		}
 
 		public static class SubstringBuilder {
