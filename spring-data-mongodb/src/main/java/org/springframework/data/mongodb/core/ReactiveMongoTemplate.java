@@ -302,14 +302,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#reactiveIndexOps(java.lang.String)
 	 */
 	public ReactiveIndexOperations indexOps(String collectionName) {
-		return new DefaultReactiveIndexOperations(this, collectionName);
+		return new DefaultReactiveIndexOperations(this, collectionName, this.queryMapper);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#reactiveIndexOps(java.lang.Class)
 	 */
 	public ReactiveIndexOperations indexOps(Class<?> entityClass) {
-		return new DefaultReactiveIndexOperations(this, determineCollectionName(entityClass));
+		return new DefaultReactiveIndexOperations(this, determineCollectionName(entityClass), this.queryMapper);
 	}
 
 	public String getCollectionName(Class<?> entityClass) {
