@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +46,7 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-public class SimpleMongoRepository<T, ID extends Serializable> implements MongoRepository<T, ID> {
+public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	private final MongoOperations mongoOperations;
 	private final MongoEntityInformation<T, ID> entityInformation;

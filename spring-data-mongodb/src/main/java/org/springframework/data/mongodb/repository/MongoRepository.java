@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import java.io.Serializable;
 import java.util.List;
 
 import org.springframework.data.domain.Example;
@@ -33,8 +32,7 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
  * @author Mark Paluch
  */
 @NoRepositoryBean
-public interface MongoRepository<T, ID extends Serializable>
-		extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
+public interface MongoRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
 
 	/*
 	 * (non-Javadoc)
