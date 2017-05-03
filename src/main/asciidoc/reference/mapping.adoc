@@ -185,10 +185,6 @@ calling `get()` before the actual conversion
 | converter
 | `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
 
-| `DateMidnight` (Joda)
-| converter
-| `{"date" : ISODate("2019-11-12T00:00:00.000Z")}`
-
 | `ZoneId` (Java 8, JSR310-BackPort)
 | converter
 | `{"zoneId" : "ECT - Europe/Paris"}`
