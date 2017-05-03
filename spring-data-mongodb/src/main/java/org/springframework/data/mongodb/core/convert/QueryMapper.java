@@ -422,7 +422,7 @@ public class QueryMapper {
 			return getMappedObject((BasicDBObject) source, entity);
 		}
 
-		if(source instanceof BsonValue) {
+		if (source instanceof BsonValue) {
 			return source;
 		}
 

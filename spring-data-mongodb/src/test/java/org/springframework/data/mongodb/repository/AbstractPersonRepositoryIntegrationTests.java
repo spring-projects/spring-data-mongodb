@@ -104,13 +104,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		person = new QPerson("person");
 
-		all = repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
+		all = repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
 	}
 
 	@Test
 	public void findsPersonById() throws Exception {
 
-		assertThat(repository.findOne(dave.getId().toString()), is(Optional.of(dave)));
+		assertThat(repository.findById(dave.getId().toString()), is(Optional.of(dave)));
 	}
 
 	@Test
@@ -123,7 +123,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsAllWithGivenIds() {
 
-		Iterable<Person> result = repository.findAll(Arrays.asList(dave.id, boyd.id));
+		Iterable<Person> result = repository.findAllById(Arrays.asList(dave.id, boyd.id));
 		assertThat(result, hasItems(dave, boyd));
 		assertThat(result, not(hasItems(oliver, carter, stefan, leroi, alicia)));
 	}
@@ -142,7 +142,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void deletesPersonByIdCorrectly() {
 
-		repository.delete(dave.getId().toString());
+		repository.deleteById(dave.getId().toString());
 
 		List<Person> result = repository.findAll();
 
@@ -377,7 +377,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Test // DATADOC-190
 	public void existsWorksCorrectly() {
-		assertThat(repository.exists(dave.getId()), is(true));
+		assertThat(repository.existsById(dave.getId()), is(true));
 	}
 
 	@Test(expected = DuplicateKeyException.class)
@@ -602,7 +602,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		boyd.setLocation(here);
 		leroi.setLocation(here);
 
-		repository.save(Arrays.asList(dave, oliver, carter, boyd, leroi));
+		repository.saveAll(Arrays.asList(dave, oliver, carter, boyd, leroi));
 
 		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73),
 				new Distance(2000, Metrics.KILOMETERS), PageRequest.of(1, 2));
@@ -624,7 +624,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		oliver.setLocation(point);
 		carter.setLocation(point);
 
-		repository.save(Arrays.asList(dave, oliver, carter));
+		repository.saveAll(Arrays.asList(dave, oliver, carter));
 
 		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73),
 				new Distance(2000, Metrics.KILOMETERS), PageRequest.of(1, 2));
@@ -858,7 +858,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-950
 	public void shouldLimitCollectionQueryToMaxResultsWhenPresent() {
 
-		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
+		repository.saveAll(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
 				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		List<Person> result = repository.findTop3ByLastnameStartingWith("Dylan");
 		assertThat(result.size(), is(3));
@@ -867,7 +867,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-950, DATAMONGO-1464
 	public void shouldNotLimitPagedQueryWhenPageRequestWithinBounds() {
 
-		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
+		repository.saveAll(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
 				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", PageRequest.of(0, 2));
 		assertThat(result.getContent().size(), is(2));
@@ -877,7 +877,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-950
 	public void shouldLimitPagedQueryWhenPageRequestExceedsUpperBoundary() {
 
-		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
+		repository.saveAll(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
 				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", PageRequest.of(1, 2));
 		assertThat(result.getContent().size(), is(1));
@@ -886,7 +886,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-950, DATAMONGO-1464
 	public void shouldReturnEmptyWhenPageRequestedPageIsTotallyOutOfScopeForLimit() {
 
-		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
+		repository.saveAll(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
 				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", PageRequest.of(100, 2));
 		assertThat(result.getContent().size(), is(0));
@@ -946,7 +946,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			persons.add(new Person(String.format("%03d", i), "ln" + 1, 100));
 		}
 
-		repository.save(persons);
+		repository.saveAll(persons);
 
 		Slice<Person> slice = repository.findByAgeGreaterThan(50, PageRequest.of(0, 20, Direction.ASC, "firstname"));
 		assertThat(slice, contains(persons.subList(0, 20).toArray()));
@@ -985,7 +985,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			persons.add(person);
 		}
 
-		repository.save(persons);
+		repository.saveAll(persons);
 
 		QPerson person = QPerson.person;
 
@@ -1008,7 +1008,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			persons.add(person);
 		}
 
-		repository.save(persons);
+		repository.saveAll(persons);
 
 		PageRequest pageRequest = PageRequest.of(0, 2, new QSort(person.address.street.desc()));
 		Iterable<Person> result = repository.findAll(pageRequest);
@@ -1030,7 +1030,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			persons.add(person);
 		}
 
-		repository.save(persons);
+		repository.saveAll(persons);
 
 		Iterable<Person> result = repository.findAll(new QSort(person.address.street.desc()));
 

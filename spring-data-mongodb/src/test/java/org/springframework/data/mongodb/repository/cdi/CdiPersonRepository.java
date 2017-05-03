@@ -26,5 +26,5 @@ public interface CdiPersonRepository extends Repository<Person, String> {
 
 	Person save(Person person);
 
-	Optional<Person> findOne(String id);
+	Optional<Person> findById(String id);
 }

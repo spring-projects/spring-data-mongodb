@@ -35,7 +35,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**
@@ -107,7 +106,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		assertThat(repo.findOne(id), is(Optional.of(userWithId)));
+		assertThat(repo.findById(id), is(Optional.of(userWithId)));
 	}
 
 	@Test // DATAMONGO-1078
@@ -115,7 +114,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		Iterable<UserWithComplexId> loaded = repo.findAll(Collections.singleton(id));
+		Iterable<UserWithComplexId> loaded = repo.findAllById(Collections.singleton(id));
 
 		assertThat(loaded, is(Matchers.<UserWithComplexId> iterableWithSize(1)));
 		assertThat(loaded, contains(userWithId));

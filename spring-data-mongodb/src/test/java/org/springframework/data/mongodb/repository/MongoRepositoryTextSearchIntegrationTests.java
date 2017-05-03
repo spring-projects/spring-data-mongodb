@@ -50,7 +50,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**
@@ -79,8 +78,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	@Before
 	public void setUp() {
 
-		template.indexOps(FullTextDocument.class).ensureIndex(
-				new TextIndexDefinitionBuilder().onField("title").onField("content").build());
+		template.indexOps(FullTextDocument.class)
+				.ensureIndex(new TextIndexDefinitionBuilder().onField("title").onField("content").build());
 		this.repo = new MongoRepositoryFactory(this.template).getRepository(FullTextRepository.class);
 	}
 
@@ -104,9 +103,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	public void derivedFinderWithTextCriteriaReturnsCorrectResult() {
 
 		initRepoWithDefaultDocuments();
-		FullTextDocument blade = new FullTextDocument(
-				"4",
-				"Blade",
+		FullTextDocument blade = new FullTextDocument("4", "Blade",
 				"Blade is a 1998 American vampire-superhero-vigilante action film starring Wesley Snipes and Stephen Dorff, loosely based on the Marvel Comics character Blade");
 		blade.nonTextIndexProperty = "foo";
 		repo.save(blade);
@@ -123,8 +120,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 
 		initRepoWithDefaultDocuments();
 
-		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("film"), PageRequest.of(1,
-				1, Direction.ASC, "id"));
+		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("film"),
+				PageRequest.of(1, 1, Direction.ASC, "id"));
 
 		assertThat(page.hasNext(), is(true));
 		assertThat(page.hasPrevious(), is(true));
@@ -139,8 +136,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
 		repo.save(snipes);
 
-		List<FullTextDocument> result = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"), Sort.by(
-				"score"));
+		List<FullTextDocument> result = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"),
+				Sort.by("score"));
 
 		assertThat(result.size(), is(4));
 		assertThat(result.get(0), equalTo(snipes));
@@ -153,8 +150,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
 		repo.save(snipes);
 
-		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"), PageRequest.of(
-				0, 10, Direction.ASC, "score"));
+		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"),
+				PageRequest.of(0, 10, Direction.ASC, "score"));
 
 		assertThat(page.getTotalElements(), is(4L));
 		assertThat(page.getContent().get(0), equalTo(snipes));
@@ -167,8 +164,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
 		repo.save(snipes);
 
-		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"), PageRequest.of(
-				0, 10, Direction.ASC, "id"));
+		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"),
+				PageRequest.of(0, 10, Direction.ASC, "id"));
 
 		assertThat(page.getTotalElements(), is(4L));
 		assertThat(page.getContent().get(0), equalTo(PASSENGER_57));
@@ -181,8 +178,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
 		repo.save(snipes);
 
-		List<FullTextDocument> result = repo.findByNonTextIndexPropertyIsNullOrderByScoreDesc(TextCriteria
-				.forDefaultLanguage().matching("snipes"));
+		List<FullTextDocument> result = repo
+				.findByNonTextIndexPropertyIsNullOrderByScoreDesc(TextCriteria.forDefaultLanguage().matching("snipes"));
 		assertThat(result.get(0), equalTo(snipes));
 	}
 
@@ -196,7 +193,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	}
 
 	private void initRepoWithDefaultDocuments() {
-		repo.save(Arrays.asList(PASSENGER_57, DEMOLITION_MAN, DROP_ZONE));
+		repo.saveAll(Arrays.asList(PASSENGER_57, DEMOLITION_MAN, DROP_ZONE));
 	}
 
 	@org.springframework.context.annotation.Configuration

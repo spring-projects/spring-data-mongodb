@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.io.Serializable;
-
 import org.springframework.data.repository.core.EntityInformation;
 
 /**
@@ -24,7 +22,7 @@ import org.springframework.data.repository.core.EntityInformation;
  * 
  * @author Oliver Gierke
  */
-public interface MongoEntityInformation<T, ID extends Serializable> extends EntityInformation<T, ID> {
+public interface MongoEntityInformation<T, ID> extends EntityInformation<T, ID> {
 
 	/**
 	 * Returns the name of the collection the entity shall be persisted to.

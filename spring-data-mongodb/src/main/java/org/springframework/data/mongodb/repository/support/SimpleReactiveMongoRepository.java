@@ -17,13 +17,14 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Example;
@@ -33,47 +34,41 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.util.StreamUtils;
+import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Reactive repository base implementation for Mongo.
  *
  * @author Mark Paluch
+ * @author Oliver Gierke
  * @since 2.0
  */
+@RequiredArgsConstructor
 public class SimpleReactiveMongoRepository<T, ID extends Serializable> implements ReactiveMongoRepository<T, ID> {
 
-	private final ReactiveMongoOperations mongoOperations;
-	private final MongoEntityInformation<T, ID> entityInformation;
+	private final @NonNull MongoEntityInformation<T, ID> entityInformation;
+	private final @NonNull ReactiveMongoOperations mongoOperations;
 
-	/**
-	 * Creates a new {@link SimpleReactiveMongoRepository} for the given {@link MongoEntityInformation} and
-	 * {@link ReactiveMongoOperations}.
-	 *
-	 * @param metadata must not be {@literal null}.
-	 * @param mongoOperations must not be {@literal null}.
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findById(java.lang.Object)
 	 */
-	public SimpleReactiveMongoRepository(MongoEntityInformation<T, ID> metadata,
-			ReactiveMongoOperations mongoOperations) {
-
-		Assert.notNull(metadata, "MongoEntityInformation must not be null!");
-		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null!");
-
-		this.entityInformation = metadata;
-		this.mongoOperations = mongoOperations;
-	}
-
-	public Mono<T> findOne(ID id) {
+	@Override
+	public Mono<T> findById(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
 
 		return mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
-	public Mono<T> findOne(Mono<ID> mono) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findById(reactor.core.publisher.Mono)
+	 */
+	@Override
+	public Mono<T> findById(Mono<ID> mono) {
 
 		Assert.notNull(mono, "The given id must not be null!");
 
@@ -81,15 +76,12 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				id -> mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
 	}
 
-	public <S extends T> Mono<S> findOne(Example<S> example) {
-
-		Assert.notNull(example, "Sample must not be null!");
-
-		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.findOne(q, example.getProbeType(), entityInformation.getCollectionName());
-	}
-
-	public Mono<Boolean> exists(ID id) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#existsById(java.lang.Object)
+	 */
+	@Override
+	public Mono<Boolean> existsById(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
 
@@ -97,7 +89,12 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				entityInformation.getCollectionName());
 	}
 
-	public Mono<Boolean> exists(Mono<ID> mono) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#existsById(reactor.core.publisher.Mono)
+	 */
+	@Override
+	public Mono<Boolean> existsById(Mono<ID> mono) {
 
 		Assert.notNull(mono, "The given id must not be null!");
 
@@ -106,76 +103,81 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 	}
 
-	public <S extends T> Mono<Boolean> exists(Example<S> example) {
-
-		Assert.notNull(example, "Sample must not be null!");
-
-		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.exists(q, example.getProbeType(), entityInformation.getCollectionName());
-	}
-
 	@Override
 	public Flux<T> findAll() {
 		return findAll(new Query());
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findAllById(java.lang.Iterable)
+	 */
 	@Override
-	public Flux<T> findAll(Iterable<ID> ids) {
+	public Flux<T> findAllById(Iterable<ID> ids) {
 
 		Assert.notNull(ids, "The given Iterable of Id's must not be null!");
 
-		Set<ID> parameters = new HashSet<ID>(tryDetermineRealSizeOrReturn(ids, 10));
-		for (ID id : ids) {
-			parameters.add(id);
-		}
-
-		return findAll(new Query(new Criteria(entityInformation.getIdAttribute()).in(parameters)));
+		return findAll(new Query(new Criteria(entityInformation.getIdAttribute())
+				.in(Streamable.of(ids).stream().collect(StreamUtils.toUnmodifiableList()))));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findAllById(org.reactivestreams.Publisher)
+	 */
 	@Override
-	public Flux<T> findAll(Publisher<ID> idStream) {
+	public Flux<T> findAllById(Publisher<ID> ids) {
 
-		Assert.notNull(idStream, "The given Publisher of Id's must not be null!");
+		Assert.notNull(ids, "The given Publisher of Id's must not be null!");
 
-		return Flux.from(idStream).buffer().flatMap(this::findAll);
+		return Flux.from(ids).buffer().flatMap(this::findAllById);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveSortingRepository#findAll(org.springframework.data.domain.Sort)
+	 */
 	@Override
 	public Flux<T> findAll(Sort sort) {
 		return findAll(new Query().with(sort));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#findAll(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
+	 */
 	@Override
 	public <S extends T> Flux<S> findAll(Example<S> example, Sort sort) {
 
 		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(sort, "Sort must not be null!");
 
-		Query q = new Query(new Criteria().alike(example));
+		Query query = new Query(new Criteria().alike(example)).with(sort);
 
-		if (sort != null) {
-			q.with(sort);
-		}
-
-		return mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName());
+		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#findAll(org.springframework.data.domain.Example)
+	 */
 	@Override
 	public <S extends T> Flux<S> findAll(Example<S> example) {
-		return findAll(example, null);
+		return findAll(example, Sort.unsorted());
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#count()
+	 */
 	public Mono<Long> count() {
 		return mongoOperations.count(new Query(), entityInformation.getCollectionName());
 	}
 
-	public <S extends T> Mono<Long> count(Example<S> example) {
-
-		Assert.notNull(example, "Sample must not be null!");
-
-		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName());
-	}
-
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#insert(java.lang.Object)
+	 */
 	@Override
 	public <S extends T> Mono<S> insert(S entity) {
 
@@ -184,20 +186,24 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.insert(entity, entityInformation.getCollectionName());
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#insert(java.lang.Iterable)
+	 */
 	@Override
 	public <S extends T> Flux<S> insert(Iterable<S> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
-		List<S> list = convertIterableToList(entities);
+		List<S> source = Streamable.of(entities).stream().collect(StreamUtils.toUnmodifiableList());
 
-		if (list.isEmpty()) {
-			return Flux.empty();
-		}
-
-		return Flux.from(mongoOperations.insertAll(list));
+		return source.isEmpty() ? Flux.empty() : Flux.from(mongoOperations.insertAll(source));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#insert(org.reactivestreams.Publisher)
+	 */
 	@Override
 	public <S extends T> Flux<S> insert(Publisher<S> entities) {
 
@@ -206,6 +212,11 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return Flux.from(entities).flatMap(entity -> mongoOperations.insert(entity, entityInformation.getCollectionName()));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#save(java.lang.Object)
+	 */
+	@Override
 	public <S extends T> Mono<S> save(S entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
@@ -217,85 +228,119 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.save(entity, entityInformation.getCollectionName());
 	}
 
-	public <S extends T> Flux<S> save(Iterable<S> entities) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#saveAll(java.lang.Iterable)
+	 */
+	@Override
+	public <S extends T> Flux<S> saveAll(Iterable<S> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
-		List<S> result = convertIterableToList(entities);
-		boolean allNew = true;
+		Streamable<S> source = Streamable.of(entities);
 
-		for (S entity : entities) {
-			if (allNew && !entityInformation.isNew(entity)) {
-				allNew = false;
-			}
-		}
-
-		if (allNew) {
-			return Flux.from(mongoOperations.insertAll(result));
-		}
-
-		List<Mono<S>> monos = new ArrayList<>();
-		for (S entity : result) {
-			monos.add(save(entity));
-		}
-
-		return Flux.merge(monos);
+		return source.stream().allMatch(it -> entityInformation.isNew(it)) ? //
+				mongoOperations.insertAll(source.stream().collect(Collectors.toList())) : //
+				Flux.fromIterable(entities).flatMap(this::save);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#saveAll(org.reactivestreams.Publisher)
+	 */
 	@Override
-	public <S extends T> Flux<S> save(Publisher<S> entityStream) {
+	public <S extends T> Flux<S> saveAll(Publisher<S> entityStream) {
 
 		Assert.notNull(entityStream, "The given Publisher of entities must not be null!");
 
-		return Flux.from(entityStream).flatMap(entity -> {
-
-			if (entityInformation.isNew(entity)) {
-				return mongoOperations.insert(entity, entityInformation.getCollectionName()).then(Mono.just(entity));
-			}
-
-			return mongoOperations.save(entity, entityInformation.getCollectionName()).then(Mono.just(entity));
-		});
+		return Flux.from(entityStream)
+				.flatMap(entity -> entityInformation.isNew(entity) ? //
+						mongoOperations.insert(entity, entityInformation.getCollectionName()).then(Mono.just(entity)) : //
+						mongoOperations.save(entity, entityInformation.getCollectionName()).then(Mono.just(entity)));
 	}
 
-	// TODO: should this one really be void?
-	public Mono<Void> delete(ID id) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteById(java.lang.Object)
+	 */
+	@Override
+	public Mono<Void> deleteById(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
 
 		return mongoOperations
 				.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
-
 	}
 
-	// TODO: should this one really be void?
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#delete(java.lang.Object)
+	 */
+	@Override
 	public Mono<Void> delete(T entity) {
 
 		Assert.notNull(entity, "The given entity must not be null!");
 
-		return delete(entityInformation.getId(entity).get());
+		return deleteById(entityInformation.getRequiredId(entity));
 	}
 
-	// TODO: should this one really be void?
-	public Mono<Void> delete(Iterable<? extends T> entities) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteAll(java.lang.Iterable)
+	 */
+	@Override
+	public Mono<Void> deleteAll(Iterable<? extends T> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
-		return Flux.fromIterable(entities).flatMap(entity -> delete(entityInformation.getId(entity).get())).then();
+		return Flux.fromIterable(entities).flatMap(entity -> deleteById(entityInformation.getRequiredId(entity))).then();
 	}
 
-	// TODO: should this one really be void?
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteAll(org.reactivestreams.Publisher)
+	 */
 	@Override
-	public Mono<Void> delete(Publisher<? extends T> entityStream) {
+	public Mono<Void> deleteAll(Publisher<? extends T> entityStream) {
 
 		Assert.notNull(entityStream, "The given Publisher of entities must not be null!");
 
-		return Flux.from(entityStream).flatMap(entity -> delete(entityInformation.getId(entity).get())).then();
+		return Flux.from(entityStream)//
+				.map(it -> entityInformation.getRequiredId(it))//
+				.flatMap(this::deleteById)//
+				.then();
 	}
 
-	// TODO: should this one really be void?
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteAll()
+	 */
 	public Mono<Void> deleteAll() {
-		return mongoOperations.remove(new Query(), entityInformation.getCollectionName())
-				.then(Mono.empty());
+		return mongoOperations.remove(new Query(), entityInformation.getCollectionName()).then(Mono.empty());
+	}
+
+	public <S extends T> Mono<Boolean> exists(Example<S> example) {
+
+		Assert.notNull(example, "Sample must not be null!");
+
+		Query q = new Query(new Criteria().alike(example));
+		return mongoOperations.exists(q, example.getProbeType(), entityInformation.getCollectionName());
+	}
+
+	public <S extends T> Mono<S> findOne(Example<S> example) {
+
+		Assert.notNull(example, "Sample must not be null!");
+
+		Query q = new Query(new Criteria().alike(example));
+		return mongoOperations.findOne(q, example.getProbeType(), entityInformation.getCollectionName());
+	}
+
+	public <S extends T> Mono<Long> count(Example<S> example) {
+
+		Assert.notNull(example, "Sample must not be null!");
+
+		Query q = new Query(new Criteria().alike(example));
+		return mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	private Query getIdQuery(Object id) {
@@ -314,29 +359,4 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
-
-	private static <T> List<T> convertIterableToList(Iterable<T> entities) {
-
-		if (entities instanceof List) {
-			return (List<T>) entities;
-		}
-
-		int capacity = tryDetermineRealSizeOrReturn(entities, 10);
-
-		if (capacity == 0 || entities == null) {
-			return Collections.emptyList();
-		}
-
-		List<T> list = new ArrayList<T>(capacity);
-		for (T entity : entities) {
-			list.add(entity);
-		}
-
-		return list;
-	}
-
-	private static int tryDetermineRealSizeOrReturn(Iterable<?> iterable, int defaultSize) {
-		return iterable == null ? 0 : (iterable instanceof Collection) ? ((Collection<?>) iterable).size() : defaultSize;
-	}
-
 }

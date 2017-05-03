@@ -33,7 +33,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 
 /**
  * @author Thomas Risberg
@@ -48,8 +47,8 @@ public class Query {
 
 	private final Set<Class<?>> restrictedTypes = new HashSet<Class<?>>();
 	private final Map<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
-	private Field fieldSpec;
-	private Sort sort;
+	private Field fieldSpec = null;
+	private Sort sort = Sort.unsorted();
 	private long skip;
 	private int limit;
 	private String hint;
@@ -103,9 +102,11 @@ public class Query {
 	}
 
 	public Field fields() {
-		if (fieldSpec == null) {
+
+		if (this.fieldSpec == null) {
 			this.fieldSpec = new Field();
 		}
+
 		return this.fieldSpec;
 	}
 
@@ -170,22 +171,19 @@ public class Query {
 	 */
 	public Query with(Sort sort) {
 
-		if (sort == null || ObjectUtils.nullSafeEquals(Sort.unsorted(), sort)) {
+		Assert.notNull(sort, "Sort must not be null!");
+
+		if (sort.isUnsorted()) {
 			return this;
 		}
 
-		for (Order order : sort) {
-			if (order.isIgnoreCase()) {
-				throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case! "
-						+ "MongoDB does not support sorting ignoreing case currently!", order.getProperty()));
-			}
-		}
+		sort.stream().filter(Order::isIgnoreCase).findFirst().ifPresent(it -> {
 
-		if (this.sort == null) {
-			this.sort = sort;
-		} else {
-			this.sort = this.sort.and(sort);
-		}
+			throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case! "
+					+ "MongoDB does not support sorting ignoring case currently!", it.getProperty()));
+		});
+
+		this.sort = this.sort.and(sort);
 
 		return this;
 	}
@@ -238,15 +236,14 @@ public class Query {
 
 	public Document getSortObject() {
 
-		if (this.sort == null) {
+		if (this.sort.isUnsorted()) {
 			return null;
 		}
 
 		Document document = new Document();
 
-		for (org.springframework.data.domain.Sort.Order order : this.sort) {
-			document.put(order.getProperty(), order.isAscending() ? 1 : -1);
-		}
+		this.sort.stream()//
+				.forEach(order -> document.put(order.getProperty(), order.isAscending() ? 1 : -1));
 
 		return document;
 	}
@@ -440,7 +437,7 @@ public class Query {
 
 		boolean criteriaEqual = this.criteria.equals(that.criteria);
 		boolean fieldsEqual = nullSafeEquals(this.fieldSpec, that.fieldSpec);
-		boolean sortEqual = nullSafeEquals(this.sort, that.sort);
+		boolean sortEqual = this.sort.equals(that.sort);
 		boolean hintEqual = nullSafeEquals(this.hint, that.hint);
 		boolean skipEqual = this.skip == that.skip;
 		boolean limitEqual = this.limit == that.limit;

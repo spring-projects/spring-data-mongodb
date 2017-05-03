@@ -34,8 +34,6 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.querydsl.core.types.Predicate;
-
 /**
  * Integration test for {@link QueryDslMongoRepository}.
  *
@@ -68,7 +66,7 @@ public class QueryDslMongoRepositoryIntegrationTests {
 
 		person = new QPerson("person");
 
-		repository.save(Arrays.asList(oliver, dave, carter));
+		repository.saveAll(Arrays.asList(oliver, dave, carter));
 	}
 
 	@Test // DATAMONGO-1146
@@ -76,7 +74,6 @@ public class QueryDslMongoRepositoryIntegrationTests {
 
 		assertThat(repository.exists(person.firstname.eq("Dave")), is(true));
 		assertThat(repository.exists(person.firstname.eq("Unknown")), is(false));
-		assertThat(repository.exists((Predicate) null), is(true));
 	}
 
 	@Test // DATAMONGO-1167

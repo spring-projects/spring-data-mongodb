@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import java.io.Serializable;
-
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -30,7 +28,7 @@ import org.springframework.data.repository.core.support.PersistentEntityInformat
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-public class MappingMongoEntityInformation<T, ID extends Serializable> extends PersistentEntityInformation<T, ID>
+public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInformation<T, ID>
 		implements MongoEntityInformation<T, ID> {
 
 	private final MongoPersistentEntity<T> entityMetadata;

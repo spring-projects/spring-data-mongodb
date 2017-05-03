@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.repository.support;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import java.io.Serializable;
 import java.util.Optional;
 
 import org.springframework.data.domain.Persistable;
@@ -34,7 +33,7 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
  * @since 1.10
  */
 @RequiredArgsConstructor
-class PersistableMongoEntityInformation<T, ID extends Serializable> implements MongoEntityInformation<T, ID> {
+class PersistableMongoEntityInformation<T, ID> implements MongoEntityInformation<T, ID> {
 
 	private final @NonNull MongoEntityInformation<T, ID> delegate;
 

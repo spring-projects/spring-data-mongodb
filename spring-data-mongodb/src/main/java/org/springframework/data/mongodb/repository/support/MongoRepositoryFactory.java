@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -45,7 +44,6 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.data.repository.reactive.RxJava1CrudRepository;
 import org.springframework.data.repository.util.QueryExecutionConverters;
-import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -91,18 +89,19 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	@Override
 	protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
 
-
-
-		boolean isReactiveRepository = (PROJECT_REACTOR_PRESENT && ReactiveCrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface())) || (
-				   RXJAVA_OBSERVABLE_PRESENT && RxJava1CrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()));
+		boolean isReactiveRepository = (PROJECT_REACTOR_PRESENT
+				&& ReactiveCrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()))
+				|| (RXJAVA_OBSERVABLE_PRESENT
+						&& RxJava1CrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()));
 
 		boolean isQueryDslRepository = QUERY_DSL_PRESENT
 				&& QuerydslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
 
 		if (isReactiveRepository) {
 
-			if(isQueryDslRepository) {
-				throw new InvalidDataAccessApiUsageException("Cannot combine Querydsl and reactive repository in one interface");
+			if (isQueryDslRepository) {
+				throw new InvalidDataAccessApiUsageException(
+						"Cannot combine Querydsl and reactive repository in one interface");
 			}
 			return SimpleReactiveMongoRepository.class;
 		}
@@ -127,7 +126,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getQueryLookupStrategy(org.springframework.data.repository.query.QueryLookupStrategy.Key, org.springframework.data.repository.query.EvaluationContextProvider)
 	 */
 	@Override
-	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
+	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
+			EvaluationContextProvider evaluationContextProvider) {
 		return Optional.of(new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext));
 	}
 
@@ -135,12 +135,11 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
 	 */
-	public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+	public <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 		return getEntityInformation(domainClass, null);
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
+	private <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
 			RepositoryInformation information) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);

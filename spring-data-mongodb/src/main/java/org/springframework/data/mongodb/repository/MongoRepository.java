@@ -38,10 +38,10 @@ public interface MongoRepository<T, ID extends Serializable>
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Iterable)
+	 * @see org.springframework.data.repository.CrudRepository#saveAll(java.lang.Iterable)
 	 */
 	@Override
-	<S extends T> List<S> save(Iterable<S> entites);
+	<S extends T> List<S> saveAll(Iterable<S> entites);
 
 	/*
 	 * (non-Javadoc)
@@ -58,9 +58,9 @@ public interface MongoRepository<T, ID extends Serializable>
 	List<T> findAll(Sort sort);
 
 	/**
-	 * Inserts the given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use
-	 * the returned instance for further operations as the save operation might have changed the entity instance
-	 * completely. Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
+	 * Inserts the given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use the
+	 * returned instance for further operations as the save operation might have changed the entity instance completely.
+	 * Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
 	 *
 	 * @param entity must not be {@literal null}.
 	 * @return the saved entity

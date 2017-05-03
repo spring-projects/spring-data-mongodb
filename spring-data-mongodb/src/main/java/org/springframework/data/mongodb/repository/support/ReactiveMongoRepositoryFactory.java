@@ -23,7 +23,6 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -98,7 +97,8 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getQueryLookupStrategy(org.springframework.data.repository.query.QueryLookupStrategy.Key, org.springframework.data.repository.query.EvaluationContextProvider)
 	 */
 	@Override
-	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
+	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
+			EvaluationContextProvider evaluationContextProvider) {
 		return Optional.of(new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext));
 	}
 
@@ -106,22 +106,17 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
 	 */
-	public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+	public <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 		return getEntityInformation(domainClass, null);
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
+	private <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
 			RepositoryInformation information) {
 
-		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(domainClass);
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
 
-		if (!entity.isPresent()) {
-			throw new MappingException(
-					String.format("Could not lookup mapping metadata for domain class %s!", domainClass.getName()));
-		}
-
-		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity.get(),
+		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity,
 				information != null ? (Class<ID>) information.getIdType() : null);
 	}
 

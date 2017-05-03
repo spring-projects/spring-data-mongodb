@@ -90,10 +90,13 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findOne(com.mysema.query.types.Predicate)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findById(com.querydsl.core.types.Predicate)
 	 */
 	@Override
 	public T findOne(Predicate predicate) {
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+
 		return createQueryFor(predicate).fetchOne();
 	}
 
@@ -103,8 +106,10 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate) {
-		List<T> list = createQueryFor(predicate).fetchResults().getResults();
-		return list;
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+
+		return createQueryFor(predicate).fetchResults().getResults();
 	}
 
 	/*
@@ -113,6 +118,10 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(orders, "Order specifiers must not be null!");
+
 		return createQueryFor(predicate).orderBy(orders).fetchResults().getResults();
 	}
 
@@ -122,6 +131,10 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, Sort sort) {
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(sort, "Sort must not be null!");
+
 		return applySorting(createQueryFor(predicate), sort).fetchResults().getResults();
 	}
 
@@ -131,6 +144,9 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
+
+		Assert.notNull(orders, "Order specifiers must not be null!");
+
 		return createQuery().orderBy(orders).fetchResults().getResults();
 	}
 
@@ -139,11 +155,15 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, org.springframework.data.domain.Pageable)
 	 */
 	@Override
-	public Page<T> findAll(final Predicate predicate, Pageable pageable) {
+	public Page<T> findAll(Predicate predicate, Pageable pageable) {
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(pageable, "Pageable must not be null!");
 
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQueryFor(predicate);
 
-		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, () -> createQueryFor(predicate).fetchCount());
+		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable,
+				() -> createQueryFor(predicate).fetchCount());
 	}
 
 	/*
@@ -153,9 +173,12 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 
+		Assert.notNull(pageable, "Pageable must not be null!");
+
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQuery();
 
-		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, () -> createQuery().fetchCount());
+		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable,
+				() -> createQuery().fetchCount());
 	}
 
 	/*
@@ -164,6 +187,9 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Sort sort) {
+
+		Assert.notNull(sort, "Sort must not be null!");
+
 		return applySorting(createQuery(), sort).fetchResults().getResults();
 	}
 
@@ -173,6 +199,9 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public long count(Predicate predicate) {
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+
 		return createQueryFor(predicate).fetchCount();
 	}
 
@@ -182,6 +211,9 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public boolean exists(Predicate predicate) {
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+
 		return createQueryFor(predicate).fetchCount() > 0;
 	}
 
@@ -214,10 +246,6 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> applyPagination(
 			AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query, Pageable pageable) {
 
-		if (pageable == null) {
-			return query;
-		}
-
 		query = query.offset(pageable.getOffset()).limit(pageable.getPageSize());
 		return applySorting(query, pageable.getSort());
 	}
@@ -232,10 +260,6 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> applySorting(
 			AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query, Sort sort) {
 
-		if (sort == null) {
-			return query;
-		}
-
 		// TODO: find better solution than instanceof check
 		if (sort instanceof QSort) {
 
@@ -245,9 +269,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 			return query;
 		}
 
-		for (Order order : sort) {
-			query.orderBy(toOrder(order));
-		}
+		sort.stream().map(this::toOrder).forEach(it -> query.orderBy(it));
 
 		return query;
 	}

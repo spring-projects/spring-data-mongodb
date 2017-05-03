@@ -34,7 +34,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**
@@ -107,7 +106,7 @@ public class NoExplicitIdTests {
 		Map<String, Object> map = mongoOps.findOne(query(where("someString").is(noid.someString)), Map.class,
 				"typeWithoutIdProperty");
 
-		Optional<TypeWithoutIdProperty> retrieved = repo.findOne(map.get("_id").toString());
+		Optional<TypeWithoutIdProperty> retrieved = repo.findById(map.get("_id").toString());
 		assertThat(retrieved.get().someString, is(noid.someString));
 	}
 

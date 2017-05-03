@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import java.io.Serializable;
-
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -42,8 +40,7 @@ final class MongoEntityInformationSupport {
 	 * @return never {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	static <T, ID extends Serializable> MongoEntityInformation<T, ID> entityInformationFor(
-			MongoPersistentEntity<?> entity, Class<?> idType) {
+	static <T, ID> MongoEntityInformation<T, ID> entityInformationFor(MongoPersistentEntity<?> entity, Class<?> idType) {
 
 		Assert.notNull(entity, "Entity must not be null!");
 

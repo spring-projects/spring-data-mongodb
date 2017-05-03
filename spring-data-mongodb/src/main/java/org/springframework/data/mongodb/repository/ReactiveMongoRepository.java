@@ -15,16 +15,14 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import java.io.Serializable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.NoRepositoryBean;
-
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Mongo specific {@link org.springframework.data.repository.Repository} interface with reactive support.
@@ -33,12 +31,12 @@ import reactor.core.publisher.Mono;
  * @since 2.0
  */
 @NoRepositoryBean
-public interface ReactiveMongoRepository<T, ID extends Serializable> extends ReactiveSortingRepository<T, ID> {
+public interface ReactiveMongoRepository<T, ID> extends ReactiveSortingRepository<T, ID> {
 
 	/**
-	 * Inserts the given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use
-	 * the returned instance for further operations as the save operation might have changed the entity instance
-	 * completely. Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
+	 * Inserts the given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use the
+	 * returned instance for further operations as the save operation might have changed the entity instance completely.
+	 * Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
 	 *
 	 * @param entity must not be {@literal null}.
 	 * @return the saved entity
@@ -46,9 +44,9 @@ public interface ReactiveMongoRepository<T, ID extends Serializable> extends Rea
 	<S extends T> Mono<S> insert(S entity);
 
 	/**
-	 * Inserts the given entities. Assumes the instance to be new to be able to apply insertion optimizations. Use
-	 * the returned instance for further operations as the save operation might have changed the entity instance
-	 * completely. Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
+	 * Inserts the given entities. Assumes the instance to be new to be able to apply insertion optimizations. Use the
+	 * returned instance for further operations as the save operation might have changed the entity instance completely.
+	 * Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
 	 *
 	 * @param entities must not be {@literal null}.
 	 * @return the saved entity
@@ -56,21 +54,23 @@ public interface ReactiveMongoRepository<T, ID extends Serializable> extends Rea
 	<S extends T> Flux<S> insert(Iterable<S> entities);
 
 	/**
-	 * Inserts the given entities. Assumes the instance to be new to be able to apply insertion optimizations. Use
-	 * the returned instance for further operations as the save operation might have changed the entity instance
-	 * completely. Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
+	 * Inserts the given entities. Assumes the instance to be new to be able to apply insertion optimizations. Use the
+	 * returned instance for further operations as the save operation might have changed the entity instance completely.
+	 * Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
 	 *
 	 * @param entities must not be {@literal null}.
 	 * @return the saved entity
 	 */
 	<S extends T> Flux<S> insert(Publisher<S> entities);
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example)
 	 */
 	<S extends T> Flux<S> findAll(Example<S> example);
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
 	 */
 	<S extends T> Flux<S> findAll(Example<S> example, Sort sort);

@@ -34,17 +34,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.ExampleMatcher.*;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
-import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.Person.Sex;
+import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -81,7 +81,7 @@ public class SimpleMongoRepositoryTests {
 		leroi = new Person("Leroi", "Moore", 41);
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
-		all = repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
+		all = repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
 	}
 
 	@Test
@@ -92,7 +92,7 @@ public class SimpleMongoRepositoryTests {
 
 	@Test
 	public void findOneFromCustomCollectionName() {
-		Person result = repository.findOne(dave.getId()).get();
+		Person result = repository.findById(dave.getId()).get();
 		assertThat(result, is(dave));
 	}
 
@@ -107,7 +107,7 @@ public class SimpleMongoRepositoryTests {
 
 	@Test
 	public void deleteByIdFromCustomCollectionName() {
-		repository.delete(dave.getId());
+		repository.deleteById(dave.getId());
 		List<Person> result = repository.findAll();
 
 		assertThat(result, hasSize(all.size() - 1));
@@ -122,7 +122,7 @@ public class SimpleMongoRepositoryTests {
 		Person person1 = new Person("First1" + randomId, "Last2" + randomId, 42);
 		person1 = repository.insert(person1);
 
-		Person saved = repository.findOne(person1.getId()).get();
+		Person saved = repository.findById(person1.getId()).get();
 
 		assertThat(saved, is(equalTo(person1)));
 	}

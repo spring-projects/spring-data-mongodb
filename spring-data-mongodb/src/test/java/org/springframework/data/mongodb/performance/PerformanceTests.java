@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -44,7 +45,6 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.util.Assert;
@@ -57,7 +57,6 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
@@ -226,22 +225,13 @@ public class PerformanceTests {
 	}
 
 	private long queryUsingTemplate() {
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				Query query = query(where("addresses.zipCode").regex(".*1.*"));
-				return operations.find(query, Person.class, "template");
-			}
-		});
+		executeWatched(() -> operations.find(query(where("addresses.zipCode").regex(".*1.*")), Person.class, "template"));
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long queryUsingRepository() {
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				return repository.findByAddressesZipCodeContaining("1");
-			}
-		});
+		executeWatched(() -> repository.findByAddressesZipCodeContaining("1"));
 
 		return watch.getLastTaskTimeMillis();
 	}
@@ -288,93 +278,62 @@ public class PerformanceTests {
 
 	private long writingObjectsUsingPlainDriver(int numberOfPersons) {
 
-		final DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
-		final List<Person> persons = getPersonObjects(numberOfPersons);
+		DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
+		List<Person> persons = getPersonObjects(numberOfPersons);
 
-		executeWatched(new WatchCallback<Void>() {
-			public Void doInWatch() {
-				for (Person person : persons) {
-					collection.save(new BasicDBObject(person.toDocument()));
-				}
-				return null;
-			}
-		});
+		executeWatched(() -> persons.stream().map(it -> collection.save(new BasicDBObject(it.toDocument()))));
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long writingObjectsUsingRepositories(int numberOfPersons) {
 
-		final List<Person> persons = getPersonObjects(numberOfPersons);
+		List<Person> persons = getPersonObjects(numberOfPersons);
 
-		executeWatched(new WatchCallback<Void>() {
-			public Void doInWatch() {
-				repository.save(persons);
-				return null;
-			}
-		});
+		executeWatched(() -> repository.saveAll(persons));
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long writingObjectsUsingMongoTemplate(int numberOfPersons) {
 
-		final List<Person> persons = getPersonObjects(numberOfPersons);
+		List<Person> persons = getPersonObjects(numberOfPersons);
 
-		executeWatched(new WatchCallback<Void>() {
-			public Void doInWatch() {
-				for (Person person : persons) {
-					operations.save(person, "template");
-				}
-				return null;
-			}
-		});
+		executeWatched(() -> persons.stream()//
+				.peek(it -> operations.save(it, "template"))//
+				.collect(Collectors.toList()));
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long readingUsingPlainDriver() {
 
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				return toPersons(mongo.getDB(DATABASE_NAME).getCollection("driver").find());
-			}
-		});
+		executeWatched(() -> toPersons(mongo.getDB(DATABASE_NAME).getCollection("driver").find()));
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long readingUsingTemplate() {
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				return operations.findAll(Person.class, "template");
-			}
-		});
+		executeWatched(() -> operations.findAll(Person.class, "template"));
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long readingUsingRepository() {
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
-				return repository.findAll();
-			}
-		});
+		executeWatched(repository::findAll);
 
 		return watch.getLastTaskTimeMillis();
 	}
 
 	private long queryUsingPlainDriver() {
 
-		executeWatched(new WatchCallback<List<Person>>() {
-			public List<Person> doInWatch() {
+		executeWatched(() -> {
 
-				DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
+			DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
 
-				BasicDBObject regex = new BasicDBObject("$regex", Pattern.compile(".*1.*"));
-				BasicDBObject query = new BasicDBObject("addresses.zipCode", regex);
-				return toPersons(collection.find(query));
-			}
+			BasicDBObject regex = new BasicDBObject("$regex", Pattern.compile(".*1.*"));
+			BasicDBObject query = new BasicDBObject("addresses.zipCode", regex);
+			return toPersons(collection.find(query));
 		});
 
 		return watch.getLastTaskTimeMillis();

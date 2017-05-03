@@ -84,14 +84,14 @@ public class ConvertingReactiveMongoRepositoryTests {
 		leroi = new ReactivePerson("Leroi", "Moore", 41);
 		alicia = new ReactivePerson("Alicia", "Keys", 30);
 
-		StepVerifier.create(reactiveRepository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
+		StepVerifier.create(reactiveRepository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
 				.expectNextCount(7) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void reactiveStreamsMethodsShouldWork() {
-		StepVerifier.create(reactivePersonRepostitory.exists(dave.getId())).expectNext(true).verifyComplete();
+		StepVerifier.create(reactivePersonRepostitory.existsById(dave.getId())).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -102,7 +102,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void simpleRxJava1MethodsShouldWork() throws Exception {
 
-		rxJava1PersonRepostitory.exists(dave.getId()) //
+		rxJava1PersonRepostitory.existsById(dave.getId()) //
 				.test() //
 				.awaitTerminalEvent() //
 				.assertValue(true) //
@@ -113,7 +113,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void existsWithSingleRxJava1IdMethodsShouldWork() throws Exception {
 
-		rxJava1PersonRepostitory.exists(Single.just(dave.getId())) //
+		rxJava1PersonRepostitory.existsById(Single.just(dave.getId())) //
 				.test() //
 				.awaitTerminalEvent() //
 				.assertValue(true) //
@@ -162,7 +162,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1610
 	public void simpleRxJava2MethodsShouldWork() throws Exception {
 
-		TestObserver<Boolean> testObserver = rxJava2PersonRepostitory.exists(dave.getId()).test();
+		TestObserver<Boolean> testObserver = rxJava2PersonRepostitory.existsById(dave.getId()).test();
 
 		testObserver.awaitTerminalEvent();
 		testObserver.assertComplete();
@@ -173,7 +173,8 @@ public class ConvertingReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1610
 	public void existsWithSingleRxJava2IdMethodsShouldWork() throws Exception {
 
-		TestObserver<Boolean> testObserver = rxJava2PersonRepostitory.exists(io.reactivex.Single.just(dave.getId())).test();
+		TestObserver<Boolean> testObserver = rxJava2PersonRepostitory.existsById(io.reactivex.Single.just(dave.getId()))
+				.test();
 
 		testObserver.awaitTerminalEvent();
 		testObserver.assertComplete();

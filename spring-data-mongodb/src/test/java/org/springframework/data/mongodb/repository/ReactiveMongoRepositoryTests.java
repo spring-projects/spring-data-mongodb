@@ -114,7 +114,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
-		StepVerifier.create(repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
+		StepVerifier.create(repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
 				.expectNextCount(7) //
 				.verifyComplete();
 	}
