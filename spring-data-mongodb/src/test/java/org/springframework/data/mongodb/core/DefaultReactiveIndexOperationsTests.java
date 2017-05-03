@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
-import org.springframework.data.mongodb.core.Collation.ICUCaseFirst;
+import org.springframework.data.mongodb.core.Collation.CaseFirst;
 import org.springframework.data.mongodb.core.DefaultIndexOperationsIntegrationTests.DefaultIndexOperationsIntegrationTestsSample;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
@@ -43,6 +43,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -95,7 +96,7 @@ public class DefaultReactiveIndexOperationsTests {
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR), is(true));
 
 		IndexDefinition id = new Index().named("with-collation").on("xyz", Direction.ASC)
-				.collation(Collation.of("de_AT").caseFirst(ICUCaseFirst.off()));
+				.collation(Collation.of("de_AT").caseFirst(CaseFirst.off()));
 
 		indexOps.ensureIndex(id).subscribe();
 

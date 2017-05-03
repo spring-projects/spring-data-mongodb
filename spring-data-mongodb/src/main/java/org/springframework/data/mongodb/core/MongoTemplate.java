@@ -20,19 +20,8 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.data.util.Optionals.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
@@ -60,6 +49,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -722,7 +712,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Optionals.ifAllPresent(query.getCollation(), optionsToUse.getCollation(), (l, r) -> {
 			throw new IllegalArgumentException(
-					"Both Query and FindAndModifyOptions define the collation. Please provide the collation only via one of the two.");
+					"Both Query and FindAndModifyOptions define a collation. Please provide the collation only via one of the two.");
 		});
 
 		query.getCollation().ifPresent(optionsToUse::collation);
@@ -885,7 +875,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Optional<? extends MongoPersistentEntity<?>> persistentEntity = getPersistentEntity(entity.getClass());
 
-		ifAllPresent(persistentEntity, persistentEntity.flatMap(it -> it.getVersionProperty()), (l, r) -> {
+		ifAllPresent(persistentEntity, persistentEntity.flatMap(PersistentEntity::getVersionProperty), (l, r) -> {
 			ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(l.getPropertyAccessor(entity),
 					mongoConverter.getConversionService());
 			accessor.setProperty(r, Optional.of(0));
@@ -972,7 +962,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		Optional<? extends MongoPersistentEntity<?>> entity = getPersistentEntity(objectToSave.getClass());
-		Optional<MongoPersistentProperty> versionProperty = entity.flatMap(it -> it.getVersionProperty());
+		Optional<MongoPersistentProperty> versionProperty = entity.flatMap(PersistentEntity::getVersionProperty);
 
 		mapIfAllPresent(entity, versionProperty, //
 				(l, r) -> doSaveVersioned(objectToSave, l, collectionName))//
@@ -1225,18 +1215,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private void increaseVersionForUpdateIfNecessary(Optional<? extends MongoPersistentEntity<?>> persistentEntity,
 			Update update) {
 
-		ifAllPresent(persistentEntity, persistentEntity.flatMap(it -> it.getVersionProperty()), (entity, property) -> {
-			String versionFieldName = property.getFieldName();
-			if (!update.modifies(versionFieldName)) {
-				update.inc(versionFieldName, 1L);
-			}
-		});
+		ifAllPresent(persistentEntity, persistentEntity.flatMap(PersistentEntity::getVersionProperty),
+				(entity, property) -> {
+					String versionFieldName = property.getFieldName();
+					if (!update.modifies(versionFieldName)) {
+						update.inc(versionFieldName, 1L);
+					}
+				});
 	}
 
 	private boolean documentContainsVersionProperty(Document document,
 			Optional<? extends MongoPersistentEntity<?>> persistentEntity) {
 
-		return mapIfAllPresent(persistentEntity, persistentEntity.flatMap(it -> it.getVersionProperty()), //
+		return mapIfAllPresent(persistentEntity, persistentEntity.flatMap(PersistentEntity::getVersionProperty), //
 				(entity, property) -> document.containsKey(property.getFieldName()))//
 						.orElse(false);
 	}
@@ -1458,7 +1449,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			Optionals.ifAllPresent(collation, mapReduceOptions.getCollation(), (l, r) -> {
 				throw new IllegalArgumentException(
-						"Both Query and MapReduceOptions define the collation. Please provide the collation only via one of the two.");
+						"Both Query and MapReduceOptions define a collation. Please provide the collation only via one of the two.");
 			});
 
 			if (mapReduceOptions.getCollation().isPresent()) {
@@ -1482,9 +1473,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 		}
 
-		if (collation.isPresent()) {
-			result = result.collation(collation.map(Collation::toMongoCollation).get());
-		}
+		result = collation.map(Collation::toMongoCollation).map(result::collation).orElse(result);
 
 		List<T> mappedResults = new ArrayList<T>();
 		DocumentCallback<T> callback = new ReadDocumentCallback<T>(mongoConverter, entityClass, inputCollectionName);
@@ -2297,7 +2286,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (LOGGER.isDebugEnabled()) {
 
 				LOGGER.debug("findOne using query: {} fields: {} in db.collection: {}", serializeToJsonSafely(query),
-						serializeToJsonSafely(fields.orElseGet(() -> new Document())), collection.getNamespace().getFullName());
+						serializeToJsonSafely(fields.orElseGet(Document::new)), collection.getNamespace().getFullName());
 			}
 
 			if (fields.isPresent()) {
@@ -2336,11 +2325,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			FindIterable<Document> iterable = collection.find(query);
 
-			if (fields.filter(val -> !val.isEmpty()).isPresent()) {
-				iterable = iterable.projection(fields.get());
-			}
-
-			return iterable;
+			return fields.filter(val -> !val.isEmpty()).map(iterable::projection).orElse(iterable);
 		}
 	}
 
@@ -2399,7 +2384,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				opts.upsert(true);
 			}
 			opts.projection(fields);
-			if (options.returnNew) {
+			if (options.isReturnNew()) {
 				opts.returnDocument(ReturnDocument.AFTER);
 			}
 
@@ -2506,16 +2491,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				return cursor;
 			}
 
-			if (query.getSkip() <= 0 && query.getLimit() <= 0 && query.getSortObject() == null
-					&& !StringUtils.hasText(query.getHint()) && !query.getMeta().hasValues()) {
+			if (query.getSkip() <= 0 && query.getLimit() <= 0
+					&& (query.getSortObject() == null || query.getSortObject().isEmpty()) && !StringUtils.hasText(query.getHint())
+					&& !query.getMeta().hasValues() && !query.getCollation().isPresent()) {
 				return cursor;
 			}
 
-			FindIterable<Document> cursorToUse = cursor;
+			FindIterable<Document> cursorToUse;
 
-			if (query.getCollation().isPresent()) {
-				cursorToUse = cursorToUse.collation(query.getCollation().map(val -> val.toMongoCollation()).get());
-			}
+			cursorToUse = query.getCollation().map(Collation::toMongoCollation).map(cursor::collation).orElse(cursor);
+
 			try {
 				if (query.getSkip() > 0) {
 					cursorToUse = cursorToUse.skip((int) query.getSkip());

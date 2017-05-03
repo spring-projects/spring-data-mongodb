@@ -15,12 +15,18 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.util.Locale;
 import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.client.model.Collation.Builder;
 import com.mongodb.client.model.CollationAlternate;
@@ -37,45 +43,36 @@ import com.mongodb.client.model.CollationStrength;
  * query itself specifies the same collation.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  * @see <a href="https://docs.mongodb.com/manual/reference/collation/">MongoDB Reference - Collation</a>
  */
 public class Collation {
 
-	private static final Collation DEFAULT = of("simple");
+	private static final Collation SIMPLE = of("simple");
 
-	private final ICULocale locale;
+	private final CollationLocale locale;
 
-	private Optional<ICUComparisonLevel> strength = Optional.empty();
+	private Optional<ComparisonLevel> strength = Optional.empty();
 	private Optional<Boolean> numericOrdering = Optional.empty();
 	private Optional<Alternate> alternate = Optional.empty();
 	private Optional<Boolean> backwards = Optional.empty();
 	private Optional<Boolean> normalization = Optional.empty();
 	private Optional<String> version = Optional.empty();
 
-	private Collation(ICULocale locale) {
+	private Collation(CollationLocale locale) {
 
 		Assert.notNull(locale, "ICULocale must not be null!");
 		this.locale = locale;
 	}
 
 	/**
-	 * Create new {@link Collation} using simple binary comparison.
+	 * Create a {@link Collation} using {@literal simple} binary comparison.
 	 *
-	 * @return
-	 * @see #binary()
+	 * @return a {@link Collation} for {@literal simple} binary comparison.
 	 */
 	public static Collation simple() {
-		return binary();
-	}
-
-	/**
-	 * Create new {@link Collation} using simple binary comparison.
-	 *
-	 * @return
-	 */
-	public static Collation binary() {
-		return DEFAULT;
+		return SIMPLE;
 	}
 
 	/**
@@ -88,7 +85,16 @@ public class Collation {
 	public static Collation of(Locale locale) {
 
 		Assert.notNull(locale, "Locale must not be null!");
-		return of(ICULocale.of(locale.getLanguage()).variant(locale.getVariant()));
+
+		String format;
+
+		if (StringUtils.hasText(locale.getCountry())) {
+			format = String.format("%s_%s", locale.getLanguage(), locale.getCountry());
+		} else {
+			format = locale.getLanguage();
+		}
+
+		return of(CollationLocale.of(format).variant(locale.getVariant()));
 	}
 
 	/**
@@ -98,16 +104,16 @@ public class Collation {
 	 * @return
 	 */
 	public static Collation of(String language) {
-		return of(ICULocale.of(language));
+		return of(CollationLocale.of(language));
 	}
 
 	/**
-	 * Create new {@link Collation} with locale set to the given {@link ICULocale}.
+	 * Create new {@link Collation} with locale set to the given {@link CollationLocale}.
 	 *
 	 * @param locale must not be {@literal null}.
 	 * @return
 	 */
-	public static Collation of(ICULocale locale) {
+	public static Collation of(CollationLocale locale) {
 		return new Collation(locale);
 	}
 
@@ -157,13 +163,13 @@ public class Collation {
 	/**
 	 * Set the level of comparison to perform.
 	 *
-	 * @param strength must not be {@literal null}.
+	 * @param strength
 	 * @return new {@link Collation}.
 	 */
-	public Collation strength(Integer strength) {
+	public Collation strength(int strength) {
 
-		ICUComparisonLevel current = this.strength.orElseGet(() -> new ICUComparisonLevel(strength, null, null));
-		return strength(new ICUComparisonLevel(strength, current.caseFirst.orElse(null), current.caseLevel.orElse(null)));
+		ComparisonLevel current = this.strength.orElseGet(() -> new ICUComparisonLevel(strength));
+		return strength(new ICUComparisonLevel(strength, current.getCaseFirst(), current.getCaseLevel()));
 	}
 
 	/**
@@ -172,23 +178,24 @@ public class Collation {
 	 * @param comparisonLevel must not be {@literal null}.
 	 * @return new {@link Collation}
 	 */
-	public Collation strength(ICUComparisonLevel comparisonLevel) {
+	public Collation strength(ComparisonLevel comparisonLevel) {
 
 		Collation newInstance = copy();
-		newInstance.strength = Optional.ofNullable(comparisonLevel);
+		newInstance.strength = Optional.of(comparisonLevel);
 		return newInstance;
 	}
 
 	/**
-	 * Set {@code caseLevel} comarison. <br />
+	 * Set whether to include {@code caseLevel} comparison. <br />
 	 *
-	 * @param caseLevel must not be {@literal null}.
+	 * @param caseLevel
 	 * @return new {@link Collation}.
 	 */
-	public Collation caseLevel(Boolean caseLevel) {
+	public Collation caseLevel(boolean caseLevel) {
 
-		ICUComparisonLevel strengthValue = strength.orElseGet(() -> ICUComparisonLevel.primary());
-		return strength(new ICUComparisonLevel(strengthValue.level, strengthValue.caseFirst.orElse(null), caseLevel));
+		ComparisonLevel strengthValue = strength.orElseGet(ComparisonLevel::primary);
+		return strength(
+				new ICUComparisonLevel(strengthValue.getLevel(), strengthValue.getCaseFirst(), Optional.of(caseLevel)));
 	}
 
 	/**
@@ -198,7 +205,7 @@ public class Collation {
 	 * @return
 	 */
 	public Collation caseFirst(String caseFirst) {
-		return caseFirst(new ICUCaseFirst(caseFirst));
+		return caseFirst(new CaseFirst(caseFirst));
 	}
 
 	/**
@@ -207,10 +214,10 @@ public class Collation {
 	 * @param caseFirst must not be {@literal null}.
 	 * @return
 	 */
-	public Collation caseFirst(ICUCaseFirst sort) {
+	public Collation caseFirst(CaseFirst sort) {
 
-		ICUComparisonLevel strengthValue = strength.orElseGet(() -> ICUComparisonLevel.tertiary());
-		return strength(new ICUComparisonLevel(strengthValue.level, sort, strengthValue.caseLevel.orElse(null)));
+		ComparisonLevel strengthValue = strength.orElseGet(ComparisonLevel::tertiary);
+		return strength(new ICUComparisonLevel(strengthValue.getLevel(), Optional.of(sort), strengthValue.getCaseLevel()));
 	}
 
 	/**
@@ -236,10 +243,10 @@ public class Collation {
 	 *
 	 * @return new {@link Collation}.
 	 */
-	public Collation numericOrdering(Boolean flag) {
+	public Collation numericOrdering(boolean flag) {
 
 		Collation newInstance = copy();
-		newInstance.numericOrdering = Optional.ofNullable(flag);
+		newInstance.numericOrdering = Optional.of(flag);
 		return newInstance;
 	}
 
@@ -252,8 +259,8 @@ public class Collation {
 	 */
 	public Collation alternate(String alternate) {
 
-		Alternate instance = this.alternate.orElseGet(() -> new Alternate(alternate, null));
-		return alternate(new Alternate(alternate, instance.maxVariable.orElse(null)));
+		Alternate instance = this.alternate.orElseGet(() -> new Alternate(alternate, Optional.empty()));
+		return alternate(new Alternate(alternate, instance.maxVariable));
 	}
 
 	/**
@@ -340,7 +347,7 @@ public class Collation {
 	 */
 	public Collation maxVariable(String maxVariable) {
 
-		Alternate alternateValue = alternate.orElseGet(() -> Alternate.shifted());
+		Alternate alternateValue = alternate.orElseGet(Alternate::shifted);
 		return alternate(new AlternateWithMaxVariable(alternateValue.alternate, maxVariable));
 	}
 
@@ -362,6 +369,13 @@ public class Collation {
 		return map(toMongoCollationConverter());
 	}
 
+	/**
+	 * Transform {@code this} {@link Collation} by applying a {@link Converter}.
+	 *
+	 * @param mapper
+	 * @param <R>
+	 * @return
+	 */
 	public <R> R map(Converter<? super Collation, ? extends R> mapper) {
 		return mapper.convert(this);
 	}
@@ -387,39 +401,30 @@ public class Collation {
 	 *
 	 * @since 2.0
 	 */
-	public static class ICUComparisonLevel {
-
-		protected final Integer level;
-		private final Optional<ICUCaseFirst> caseFirst;
-		private final Optional<Boolean> caseLevel;
-
-		private ICUComparisonLevel(Integer level, ICUCaseFirst caseFirst, Boolean caseLevel) {
-
-			this.level = level;
-			this.caseFirst = Optional.ofNullable(caseFirst);
-			this.caseLevel = Optional.ofNullable(caseLevel);
-		}
+	public interface ComparisonLevel {
 
 		/**
 		 * Primary level of comparison. Collation performs comparisons of the base characters only, ignoring other
 		 * differences such as diacritics and case. <br />
-		 * The {@code caseLevel} can be set via {@link ComparisonLevelWithCase#caseLevel(Boolean)}.
+		 * The {@code caseLevel} can be set via {@link PrimaryICUComparisonLevel#includeCase()} and
+		 * {@link PrimaryICUComparisonLevel#excludeCase()}.
 		 *
-		 * @return new {@link ComparisonLevelWithCase}.
+		 * @return new {@link SecondaryICUComparisonLevel}.
 		 */
-		public static PrimaryICUComparisonLevel primary() {
-			return new PrimaryICUComparisonLevel(1, null);
+		static PrimaryICUComparisonLevel primary() {
+			return PrimaryICUComparisonLevel.DEFAULT;
 		}
 
 		/**
-		 * Scondary level of comparison. Collation performs comparisons up to secondary differences, such as
+		 * Secondary level of comparison. Collation performs comparisons up to secondary differences, such as
 		 * diacritics.<br />
-		 * The {@code caseLevel} can be set via {@link ComparisonLevelWithCase#caseLevel(Boolean)}.
+		 * The {@code caseLevel} can be set via {@link SecondaryICUComparisonLevel#includeCase()} and
+		 * {@link SecondaryICUComparisonLevel#excludeCase()}.
 		 *
-		 * @return new {@link ComparisonLevelWithCase}.
+		 * @return new {@link SecondaryICUComparisonLevel}.
 		 */
-		public static SecondaryICUComparisonLevel secondary() {
-			return new SecondaryICUComparisonLevel(2, null);
+		static SecondaryICUComparisonLevel secondary() {
+			return SecondaryICUComparisonLevel.DEFAULT;
 		}
 
 		/**
@@ -429,159 +434,231 @@ public class Collation {
 		 *
 		 * @return new {@link ICUComparisonLevel}.
 		 */
-		public static TertiaryICUComparisonLevel tertiary() {
-			return new TertiaryICUComparisonLevel(3, null);
+		static TertiaryICUComparisonLevel tertiary() {
+			return TertiaryICUComparisonLevel.DEFAULT;
 		}
 
 		/**
 		 * Quaternary Level. Limited for specific use case to consider punctuation. <br />
 		 * The {@code caseLevel} cannot be set for {@link ICUComparisonLevel} above {@code secondary}.
 		 *
-		 * @return new {@link ICUComparisonLevel}.
+		 * @return new {@link ComparisonLevel}.
 		 */
-		public static ICUComparisonLevel quaternary() {
-			return new ICUComparisonLevel(4, null, null);
+		static ComparisonLevel quaternary() {
+			return ComparisonLevels.QUATERNARY;
 		}
 
 		/**
 		 * Identical Level. Limited for specific use case of tie breaker. <br />
 		 * The {@code caseLevel} cannot be set for {@link ICUComparisonLevel} above {@code secondary}.
 		 *
-		 * @return new {@link ICUComparisonLevel}.
+		 * @return new {@link ComparisonLevel}.
 		 */
-		public static ICUComparisonLevel identical() {
-			return new ICUComparisonLevel(5, null, null);
+		static ComparisonLevel identical() {
+			return ComparisonLevels.IDENTICAL;
+		}
+
+		/**
+		 * @return collation strength, {@literal 1} for primary, {@literal 2} for secondary and so on.
+		 */
+		int getLevel();
+
+		default Optional<CaseFirst> getCaseFirst() {
+			return Optional.empty();
+		}
+
+		default Optional<Boolean> getCaseLevel() {
+			return Optional.empty();
 		}
 	}
 
+	/**
+	 * Abstraction for the ICU Comparison Levels.
+	 *
+	 * @since 2.0
+	 */
+	@AllArgsConstructor(access = AccessLevel.PACKAGE)
+	@Getter
+	static class ICUComparisonLevel implements ComparisonLevel {
+
+		private final int level;
+		private final Optional<CaseFirst> caseFirst;
+		private final Optional<Boolean> caseLevel;
+
+		ICUComparisonLevel(int level) {
+			this(level, Optional.empty(), Optional.empty());
+		}
+	}
+
+	/**
+	 * Simple comparison levels.
+	 */
+	enum ComparisonLevels implements ComparisonLevel {
+
+		QUATERNARY(4), IDENTICAL(5);
+
+		private final int level;
+
+		ComparisonLevels(int level) {
+			this.level = level;
+		}
+
+		@Override
+		public int getLevel() {
+			return level;
+		}
+	}
+
+	/**
+	 * Primary-strength {@link ICUComparisonLevel}.
+	 */
+	public static class PrimaryICUComparisonLevel extends ICUComparisonLevel {
+
+		static final PrimaryICUComparisonLevel DEFAULT = new PrimaryICUComparisonLevel();
+		static final PrimaryICUComparisonLevel WITH_CASE_LEVEL = new PrimaryICUComparisonLevel(true);
+		static final PrimaryICUComparisonLevel WITHOUT_CASE_LEVEL = new PrimaryICUComparisonLevel(false);
+
+		private PrimaryICUComparisonLevel() {
+			super(1);
+		}
+
+		private PrimaryICUComparisonLevel(boolean caseLevel) {
+			super(1, Optional.empty(), Optional.of(caseLevel));
+		}
+
+		/**
+		 * Include case comparison.
+		 *
+		 * @return new {@link ICUComparisonLevel}
+		 */
+		public ComparisonLevel includeCase() {
+			return WITH_CASE_LEVEL;
+		}
+
+		/**
+		 * Exclude case comparison.
+		 *
+		 * @return new {@link ICUComparisonLevel}
+		 */
+		public ComparisonLevel excludeCase() {
+			return WITHOUT_CASE_LEVEL;
+		}
+	}
+
+	/**
+	 * Secondary-strength {@link ICUComparisonLevel}.
+	 */
+	public static class SecondaryICUComparisonLevel extends ICUComparisonLevel {
+
+		static final SecondaryICUComparisonLevel DEFAULT = new SecondaryICUComparisonLevel();
+		static final SecondaryICUComparisonLevel WITH_CASE_LEVEL = new SecondaryICUComparisonLevel(true);
+		static final SecondaryICUComparisonLevel WITHOUT_CASE_LEVEL = new SecondaryICUComparisonLevel(false);
+
+		private SecondaryICUComparisonLevel() {
+			super(2);
+		}
+
+		private SecondaryICUComparisonLevel(boolean caseLevel) {
+			super(2, Optional.empty(), Optional.of(caseLevel));
+		}
+
+		/**
+		 * Include case comparison.
+		 *
+		 * @return new {@link SecondaryICUComparisonLevel}
+		 */
+		public ComparisonLevel includeCase() {
+			return WITH_CASE_LEVEL;
+		}
+
+		/**
+		 * Exclude case comparison.
+		 *
+		 * @return new {@link SecondaryICUComparisonLevel}
+		 */
+		public ComparisonLevel excludeCase() {
+			return WITHOUT_CASE_LEVEL;
+		}
+	}
+
+	/**
+	 * Tertiary-strength {@link ICUComparisonLevel}.
+	 */
 	public static class TertiaryICUComparisonLevel extends ICUComparisonLevel {
 
-		private TertiaryICUComparisonLevel(Integer level, ICUCaseFirst caseFirst) {
-			super(level, caseFirst, null);
+		static final TertiaryICUComparisonLevel DEFAULT = new TertiaryICUComparisonLevel();
+
+		private TertiaryICUComparisonLevel() {
+			super(3);
+		}
+
+		private TertiaryICUComparisonLevel(CaseFirst caseFirst) {
+			super(3, Optional.of(caseFirst), Optional.empty());
 		}
 
 		/**
 		 * Set the flag that determines sort order of case differences.
 		 *
-		 * @param caseFirstSort must not be {@literal null}.
-		 * @return
+		 * @param caseFirst must not be {@literal null}.
+		 * @return new {@link ICUComparisonLevel}
 		 */
-		public TertiaryICUComparisonLevel caseFirst(ICUCaseFirst caseFirst) {
+		public ComparisonLevel caseFirst(CaseFirst caseFirst) {
 
 			Assert.notNull(caseFirst, "CaseFirst must not be null!");
-			return new TertiaryICUComparisonLevel(level, caseFirst);
-		}
-	}
-
-	public static class PrimaryICUComparisonLevel extends ICUComparisonLevel {
-
-		private PrimaryICUComparisonLevel(Integer level, Boolean caseLevel) {
-			super(level, null, caseLevel);
-		}
-
-		/**
-		 * Include case comparison.
-		 *
-		 * @return new {@link ComparisonLevelWithCase}
-		 */
-		public PrimaryICUComparisonLevel includeCase() {
-			return caseLevel(Boolean.TRUE);
-		}
-
-		/**
-		 * Exclude case comparison.
-		 *
-		 * @return new {@link ComparisonLevelWithCase}
-		 */
-		public PrimaryICUComparisonLevel excludeCase() {
-			return caseLevel(Boolean.FALSE);
-		}
-
-		PrimaryICUComparisonLevel caseLevel(Boolean caseLevel) {
-			return new PrimaryICUComparisonLevel(level, caseLevel);
-		}
-	}
-
-	public static class SecondaryICUComparisonLevel extends ICUComparisonLevel {
-
-		private SecondaryICUComparisonLevel(Integer level, Boolean caseLevel) {
-			super(level, null, caseLevel);
-		}
-
-		/**
-		 * Include case comparison.
-		 *
-		 * @return new {@link ComparisonLevelWithCase}
-		 */
-		public SecondaryICUComparisonLevel includeCase() {
-			return caseLevel(Boolean.TRUE);
-		}
-
-		/**
-		 * Exclude case comparison.
-		 *
-		 * @return new {@link ComparisonLevelWithCase}
-		 */
-		public SecondaryICUComparisonLevel excludeCase() {
-			return caseLevel(Boolean.FALSE);
-		}
-
-		SecondaryICUComparisonLevel caseLevel(Boolean caseLevel) {
-			return new SecondaryICUComparisonLevel(level, caseLevel);
+			return new TertiaryICUComparisonLevel(caseFirst);
 		}
 	}
 
 	/**
 	 * @since 2.0
 	 */
-	public static class ICUCaseFirst {
+	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class CaseFirst {
+
+		private static final CaseFirst UPPER = new CaseFirst("upper");
+		private static final CaseFirst LOWER = new CaseFirst("lower");
+		private static final CaseFirst OFF = new CaseFirst("off");
 
 		private final String state;
-
-		private ICUCaseFirst(String state) {
-			this.state = state;
-		}
 
 		/**
 		 * Sort uppercase before lowercase.
 		 *
-		 * @return new {@link ICUCaseFirst}.
+		 * @return new {@link CaseFirst}.
 		 */
-		public static ICUCaseFirst upper() {
-			return new ICUCaseFirst("upper");
+		public static CaseFirst upper() {
+			return UPPER;
 		}
 
 		/**
 		 * Sort lowercase before uppercase.
 		 *
-		 * @return new {@link ICUCaseFirst}.
+		 * @return new {@link CaseFirst}.
 		 */
-		public static ICUCaseFirst lower() {
-			return new ICUCaseFirst("lower");
+		public static CaseFirst lower() {
+			return LOWER;
 		}
 
 		/**
 		 * Use the default.
 		 *
-		 * @return new {@link ICUCaseFirst}.
+		 * @return new {@link CaseFirst}.
 		 */
-		public static ICUCaseFirst off() {
-			return new ICUCaseFirst("off");
+		public static CaseFirst off() {
+			return OFF;
 		}
 	}
 
 	/**
 	 * @since 2.0
 	 */
+	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	public static class Alternate {
 
-		protected final String alternate;
-		protected Optional<String> maxVariable;
+		private static final Alternate NON_IGNORABLE = new Alternate("non-ignorable", Optional.empty());
 
-		private Alternate(String alternate, String maxVariable) {
-			this.alternate = alternate;
-			this.maxVariable = Optional.ofNullable(maxVariable);
-		}
+		final String alternate;
+		final Optional<String> maxVariable;
 
 		/**
 		 * Consider Whitespace and punctuation as base characters.
@@ -589,18 +666,18 @@ public class Collation {
 		 * @return new {@link Alternate}.
 		 */
 		public static Alternate nonIgnorable() {
-			return new Alternate("non-ignorable", null);
+			return NON_IGNORABLE;
 		}
 
 		/**
 		 * Whitespace and punctuation are <strong>not</strong> considered base characters and are only distinguished at
 		 * strength. <br />
-		 * <strong>NOTE:</strong> Only works for {@link ICUComparisonLevel} above {@link ICUComparisonLevel#tertiary()}.
+		 * <strong>NOTE:</strong> Only works for {@link ICUComparisonLevel} above {@link ComparisonLevel#tertiary()}.
 		 *
 		 * @return new {@link AlternateWithMaxVariable}.
 		 */
 		public static AlternateWithMaxVariable shifted() {
-			return new AlternateWithMaxVariable("shifted", null);
+			return AlternateWithMaxVariable.DEFAULT;
 		}
 	}
 
@@ -609,8 +686,16 @@ public class Collation {
 	 */
 	public static class AlternateWithMaxVariable extends Alternate {
 
+		static final AlternateWithMaxVariable DEFAULT = new AlternateWithMaxVariable("shifted");
+		static final Alternate SHIFTED_PUNCT = new AlternateWithMaxVariable("shifted", "punct");
+		static final Alternate SHIFTED_SPACE = new AlternateWithMaxVariable("shifted", "space");
+
+		private AlternateWithMaxVariable(String alternate) {
+			super(alternate, Optional.empty());
+		}
+
 		private AlternateWithMaxVariable(String alternate, String maxVariable) {
-			super(alternate, maxVariable);
+			super(alternate, Optional.of(maxVariable));
 		}
 
 		/**
@@ -618,8 +703,8 @@ public class Collation {
 		 *
 		 * @return new {@link AlternateWithMaxVariable}.
 		 */
-		public AlternateWithMaxVariable punct() {
-			return new AlternateWithMaxVariable(alternate, "punct");
+		public Alternate punct() {
+			return SHIFTED_PUNCT;
 		}
 
 		/**
@@ -627,10 +712,9 @@ public class Collation {
 		 *
 		 * @return new {@link AlternateWithMaxVariable}.
 		 */
-		public AlternateWithMaxVariable space() {
-			return new AlternateWithMaxVariable(alternate, "space");
+		public Alternate space() {
+			return SHIFTED_SPACE;
 		}
-
 	}
 
 	/**
@@ -639,38 +723,34 @@ public class Collation {
 	 * @since 2.0
 	 * @see <a href="http://site.icu-project.org">ICU - International Components for Unicode</a>
 	 */
-	public static class ICULocale {
+	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class CollationLocale {
 
 		private final String language;
 		private final Optional<String> variant;
 
-		private ICULocale(String language, String variant) {
-			this.language = language;
-			this.variant = Optional.ofNullable(variant);
-		}
-
 		/**
-		 * Create new {@link ICULocale} for given language.
+		 * Create new {@link CollationLocale} for given language.
 		 *
 		 * @param language must not be {@literal null}.
 		 * @return
 		 */
-		public static ICULocale of(String language) {
+		public static CollationLocale of(String language) {
 
 			Assert.notNull(language, "Code must not be null!");
-			return new ICULocale(language, null);
+			return new CollationLocale(language, Optional.empty());
 		}
 
 		/**
 		 * Define language variant.
 		 *
 		 * @param variant must not be {@literal null}.
-		 * @return new {@link ICULocale}.
+		 * @return new {@link CollationLocale}.
 		 */
-		public ICULocale variant(String variant) {
+		public CollationLocale variant(String variant) {
 
 			Assert.notNull(variant, "Variant must not be null!");
-			return new ICULocale(language, variant);
+			return new CollationLocale(language, Optional.of(variant));
 		}
 
 		/**
@@ -681,12 +761,13 @@ public class Collation {
 		public String asString() {
 
 			StringBuilder sb = new StringBuilder(language);
-			variant.ifPresent(val -> {
 
-				if (!val.isEmpty()) {
-					sb.append("@collation=").append(val);
-				}
+			variant.filter(it -> !it.isEmpty()).ifPresent(val -> {
+
+				// Mongo requires variant rendered as ICU keyword (@key=value;key=value…)
+				sb.append("@collation=").append(val);
 			});
+
 			return sb.toString();
 		}
 	}
@@ -698,24 +779,24 @@ public class Collation {
 			Document document = new Document();
 			document.append("locale", source.locale.asString());
 
-			source.strength.ifPresent(val -> {
+			source.strength.ifPresent(strength -> {
 
-				document.append("strength", val.level);
+				document.append("strength", strength.getLevel());
 
-				val.caseLevel.ifPresent(cl -> document.append("caseLevel", cl));
-				val.caseFirst.ifPresent(cl -> document.append("caseFirst", cl.state));
+				strength.getCaseLevel().ifPresent(it -> document.append("caseLevel", it));
+				strength.getCaseFirst().ifPresent(it -> document.append("caseFirst", it.state));
 			});
 
 			source.numericOrdering.ifPresent(val -> document.append("numericOrdering", val));
-			source.alternate.ifPresent(val -> {
+			source.alternate.ifPresent(it -> {
 
-				document.append("alternate", val.alternate);
-				val.maxVariable.ifPresent(maxVariable -> document.append("maxVariable", maxVariable));
+				document.append("alternate", it.alternate);
+				it.maxVariable.ifPresent(maxVariable -> document.append("maxVariable", maxVariable));
 			});
 
-			source.backwards.ifPresent(val -> document.append("backwards", val));
-			source.normalization.ifPresent(val -> document.append("normalization", val));
-			source.version.ifPresent(val -> document.append("version", val));
+			source.backwards.ifPresent(it -> document.append("backwards", it));
+			source.normalization.ifPresent(it -> document.append("normalization", it));
+			source.version.ifPresent(it -> document.append("version", it));
 
 			return document;
 		};
@@ -729,24 +810,24 @@ public class Collation {
 
 			builder.locale(source.locale.asString());
 
-			source.strength.ifPresent(val -> {
+			source.strength.ifPresent(strength -> {
 
-				builder.collationStrength(CollationStrength.fromInt(val.level));
+				builder.collationStrength(CollationStrength.fromInt(strength.getLevel()));
 
-				val.caseLevel.ifPresent(cl -> builder.caseLevel(cl));
-				val.caseFirst.ifPresent(cl -> builder.collationCaseFirst(CollationCaseFirst.fromString(cl.state)));
+				strength.getCaseLevel().ifPresent(builder::caseLevel);
+				strength.getCaseFirst().ifPresent(it -> builder.collationCaseFirst(CollationCaseFirst.fromString(it.state)));
 			});
 
-			source.numericOrdering.ifPresent(val -> builder.numericOrdering(val));
-			source.alternate.ifPresent(val -> {
+			source.numericOrdering.ifPresent(builder::numericOrdering);
+			source.alternate.ifPresent(it -> {
 
-				builder.collationAlternate(CollationAlternate.fromString(val.alternate));
-				val.maxVariable
+				builder.collationAlternate(CollationAlternate.fromString(it.alternate));
+				it.maxVariable
 						.ifPresent(maxVariable -> builder.collationMaxVariable(CollationMaxVariable.fromString(maxVariable)));
 			});
 
-			source.backwards.ifPresent(val -> builder.backwards(val));
-			source.normalization.ifPresent(val -> builder.normalization(val));
+			source.backwards.ifPresent(builder::backwards);
+			source.normalization.ifPresent(builder::normalization);
 
 			return builder.build();
 		};

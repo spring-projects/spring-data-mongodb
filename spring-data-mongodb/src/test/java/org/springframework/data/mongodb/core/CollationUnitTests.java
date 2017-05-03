@@ -17,15 +17,18 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.Locale;
+
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.Collation.Alternate;
-import org.springframework.data.mongodb.core.Collation.ICUCaseFirst;
-import org.springframework.data.mongodb.core.Collation.ICUComparisonLevel;
-import org.springframework.data.mongodb.core.Collation.ICULocale;
+import org.springframework.data.mongodb.core.Collation.CaseFirst;
+import org.springframework.data.mongodb.core.Collation.CollationLocale;
+import org.springframework.data.mongodb.core.Collation.ComparisonLevel;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class CollationUnitTests {
 
@@ -59,7 +62,8 @@ public class CollationUnitTests {
 
 	@Test // DATAMONGO-1518
 	public void localeWithVariant() {
-		assertThat(Collation.of(ICULocale.of("de_AT").variant("phonebook")).toDocument()).isEqualTo(LOCALE_WITH_VARIANT);
+		assertThat(Collation.of(CollationLocale.of("de_AT").variant("phonebook")).toDocument())
+				.isEqualTo(LOCALE_WITH_VARIANT);
 	}
 
 	@Test // DATAMONGO-1518
@@ -68,14 +72,15 @@ public class CollationUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void lcaleFromJavaUtilLocale() {
-		assertThat(Collation.of(java.util.Locale.US).toDocument()).isEqualTo(new Document().append("locale", "en"));
+	public void localeFromJavaUtilLocale() {
+
+		assertThat(Collation.of(java.util.Locale.US).toDocument()).isEqualTo(new Document().append("locale", "en_US"));
+		assertThat(Collation.of(Locale.ENGLISH).toDocument()).isEqualTo(new Document().append("locale", "en"));
 	}
 
 	@Test // DATAMONGO-1518
 	public void withStrenghPrimary() {
-		assertThat(Collation.of("en_US").strength(ICUComparisonLevel.primary()).toDocument())
-				.isEqualTo(WITH_STRENGTH_PRIMARY);
+		assertThat(Collation.of("en_US").strength(ComparisonLevel.primary()).toDocument()).isEqualTo(WITH_STRENGTH_PRIMARY);
 	}
 
 	@Test // DATAMONGO-1518
@@ -86,7 +91,7 @@ public class CollationUnitTests {
 	@Test // DATAMONGO-1518
 	public void withStrenghPrimaryAndIncludeCase() {
 
-		assertThat(Collation.of("en_US").strength(ICUComparisonLevel.primary().includeCase()).toDocument())
+		assertThat(Collation.of("en_US").strength(ComparisonLevel.primary().includeCase()).toDocument())
 				.isEqualTo(WITH_STRENGTH_PRIMARY_INCLUDE_CASE);
 	}
 
@@ -129,7 +134,7 @@ public class CollationUnitTests {
 
 	@Test // DATAMONGO-1518
 	public void withCaseFirst() {
-		assertThat(Collation.of("en_US").caseFirst(ICUCaseFirst.upper()).toDocument()).isEqualTo(WITH_CASE_FIRST_UPPER);
+		assertThat(Collation.of("en_US").caseFirst(CaseFirst.upper()).toDocument()).isEqualTo(WITH_CASE_FIRST_UPPER);
 	}
 
 	@Test // DATAMONGO-1518
@@ -164,8 +169,8 @@ public class CollationUnitTests {
 	@Test // DATAMONGO-1518
 	public void allTheThings() {
 
-		assertThat(Collation.of(ICULocale.of("de_AT").variant("phonebook"))
-				.strength(ICUComparisonLevel.primary().includeCase()).normalizationEnabled().backwardDiacriticSort()
+		assertThat(Collation.of(CollationLocale.of("de_AT").variant("phonebook"))
+				.strength(ComparisonLevel.primary().includeCase()).normalizationEnabled().backwardDiacriticSort()
 				.numericOrderingEnabled().alternate(Alternate.shifted().punct()).toDocument()).isEqualTo(ALL_THE_THINGS);
 	}
 
@@ -176,7 +181,7 @@ public class CollationUnitTests {
 
 	@Test // DATAMONGO-1518
 	public void justTheDefault() {
-		assertThat(Collation.binary().toDocument()).isEqualTo(BINARY_COMPARISON);
+		assertThat(Collation.simple().toDocument()).isEqualTo(BINARY_COMPARISON);
 	}
 
 }

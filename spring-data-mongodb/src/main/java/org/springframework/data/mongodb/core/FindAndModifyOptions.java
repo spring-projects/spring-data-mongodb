@@ -24,15 +24,15 @@ import java.util.Optional;
  */
 public class FindAndModifyOptions {
 
-	boolean returnNew;
-	boolean upsert;
-	boolean remove;
+	private boolean returnNew;
+	private boolean upsert;
+	private boolean remove;
 
 	private Collation collation;
 
 	/**
 	 * Static factory method to create a FindAndModifyOptions instance
-	 * 
+	 *
 	 * @return a new instance
 	 */
 	public static FindAndModifyOptions options() {
@@ -46,9 +46,8 @@ public class FindAndModifyOptions {
 	 */
 	public static FindAndModifyOptions of(FindAndModifyOptions source) {
 
-
 		FindAndModifyOptions options = new FindAndModifyOptions();
-		if(source == null) {
+		if (source == null) {
 			return options;
 		}
 

@@ -24,27 +24,33 @@ import org.springframework.util.Assert;
  *
  * @author Thomas Risberg
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class CollectionOptions {
 
 	private Integer maxDocuments;
 	private Integer size;
 	private Boolean capped;
-	private Collation collation;
+	private Optional<Collation> collation;
 
 	/**
 	 * Constructs a new <code>CollectionOptions</code> instance.
-	 * 
-	 * @param size the collection size in bytes, this data space is preallocated
+	 *
+	 * @param size the collection size in bytes, this data space is preallocated.
 	 * @param maxDocuments the maximum number of documents in the collection.
 	 * @param capped true to created a "capped" collection (fixed size with auto-FIFO behavior based on insertion order),
 	 *          false otherwise.
 	 */
 	public CollectionOptions(Integer size, Integer maxDocuments, Boolean capped) {
+		this(size, maxDocuments, capped, Optional.empty());
+	}
+
+	private CollectionOptions(Integer size, Integer maxDocuments, Boolean capped, Optional<Collation> collation) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
 		this.capped = capped;
+		this.collation = collation;
 	}
 
 	private CollectionOptions() {}
@@ -66,16 +72,24 @@ public class CollectionOptions {
 	}
 
 	/**
-	 * Create new {@link CollectionOptions} with already given settings and capped set to {@literal true}.
+	 * Create new empty {@link CollectionOptions}.
 	 *
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.0
 	 */
-	public CollectionOptions capped() {
+	public static CollectionOptions empty() {
+		return new CollectionOptions();
+	}
 
-		CollectionOptions options = new CollectionOptions(size, maxDocuments, true);
-		options.setCollation(collation);
-		return options;
+	/**
+	 * Create new {@link CollectionOptions} with already given settings and capped set to {@literal true}.
+	 *
+	 * @param size the collection size in bytes, this data space is preallocated.
+	 * @return new {@link CollectionOptions}.
+	 * @since 2.0
+	 */
+	public CollectionOptions capped(int size) {
+		return new CollectionOptions(size, maxDocuments, true, collation);
 	}
 
 	/**
@@ -86,10 +100,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions maxDocuments(Integer maxDocuments) {
-
-		CollectionOptions options = new CollectionOptions(size, maxDocuments, capped);
-		options.setCollation(collation);
-		return options;
+		return new CollectionOptions(size, maxDocuments, capped, collation);
 	}
 
 	/**
@@ -99,11 +110,8 @@ public class CollectionOptions {
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.0
 	 */
-	public CollectionOptions size(Integer size) {
-
-		CollectionOptions options = new CollectionOptions(size, maxDocuments, capped);
-		options.setCollation(collation);
-		return options;
+	public CollectionOptions size(int size) {
+		return new CollectionOptions(size, maxDocuments, capped, collation);
 	}
 
 	/**
@@ -114,10 +122,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions collation(Collation collation) {
-
-		CollectionOptions options = new CollectionOptions(size, maxDocuments, capped);
-		options.setCollation(collation);
-		return options;
+		return new CollectionOptions(size, maxDocuments, capped, Optional.ofNullable(collation));
 	}
 
 	public Integer getMaxDocuments() {
@@ -151,7 +156,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public void setCollation(Collation collation) {
-		this.collation = collation;
+		this.collation = Optional.ofNullable(collation);
 	}
 
 	/**
@@ -161,6 +166,6 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public Optional<Collation> getCollation() {
-		return Optional.ofNullable(collation);
+		return collation;
 	}
 }
