@@ -25,10 +25,6 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.model.Collation;
-import com.mongodb.client.model.CollationAlternate;
-import com.mongodb.client.model.CollationCaseFirst;
-import com.mongodb.client.model.CollationMaxVariable;
-import com.mongodb.client.model.CollationStrength;
 import com.mongodb.client.model.IndexOptions;
 
 /**
@@ -129,39 +125,11 @@ abstract class IndexConverters {
 			return null;
 		}
 
-		com.mongodb.client.model.Collation.Builder collationBuilder = Collation.builder();
-
-		collationBuilder.locale(source.getString("locale"));
-		if (source.containsKey("caseLevel")) {
-			collationBuilder.caseLevel(source.getBoolean("caseLevel"));
-		}
-		if (source.containsKey("caseFirst")) {
-			collationBuilder.collationCaseFirst(CollationCaseFirst.fromString(source.getString("caseFirst")));
-		}
-		if (source.containsKey("strength")) {
-			collationBuilder.collationStrength(CollationStrength.fromInt(source.getInteger("strength")));
-		}
-		if (source.containsKey("numericOrdering")) {
-			collationBuilder.numericOrdering(source.getBoolean("numericOrdering"));
-		}
-		if (source.containsKey("alternate")) {
-			collationBuilder.collationAlternate(CollationAlternate.fromString(source.getString("alternate")));
-		}
-		if (source.containsKey("maxVariable")) {
-			collationBuilder.collationMaxVariable(CollationMaxVariable.fromString(source.getString("maxVariable")));
-		}
-		if (source.containsKey("backwards")) {
-			collationBuilder.backwards(source.getBoolean("backwards"));
-		}
-		if (source.containsKey("normalization")) {
-			collationBuilder.normalization(source.getBoolean("normalization"));
-		}
-
-		return collationBuilder.build();
+		return org.springframework.data.mongodb.core.Collation.from(source).toMongoCollation();
 	}
 
 	private static Converter<Document, IndexInfo> getDocumentIndexInfoConverter() {
-		return ix -> IndexInfo.indexInfoOf(ix);
+		return IndexInfo::indexInfoOf;
 	}
 
 }

@@ -59,6 +59,7 @@ import org.springframework.data.convert.EntityReader;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Metric;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -573,11 +574,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return createFlux(collectionName, collection -> {
 
 			Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
-			FindPublisher findPublisher = collection.find(mappedQuery).projection(new Document("_id", 1));
+			FindPublisher<Document> findPublisher = collection.find(mappedQuery).projection(new Document("_id", 1));
 
-			if (query.getCollation().isPresent()) {
-				findPublisher = findPublisher.collation(query.getCollation().map(Collation::toMongoCollation).get());
-			}
+			findPublisher = query.getCollation().map(Collation::toMongoCollation).map(findPublisher::collation)
+					.orElse(findPublisher);
 
 			return findPublisher.limit(1);
 		}).hasElements();
@@ -616,8 +616,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Mono<T> findById(Object id, Class<T> entityClass, String collectionName) {
 
 		Optional<? extends MongoPersistentEntity<?>> persistentEntity = mappingContext.getPersistentEntity(entityClass);
-		MongoPersistentProperty idProperty = persistentEntity.isPresent()
-				? persistentEntity.get().getIdProperty().orElse(null) : null;
+		MongoPersistentProperty idProperty = persistentEntity.flatMap(PersistentEntity::getIdProperty).orElse(null);
 
 		String idKey = idProperty == null ? ID_FIELD : idProperty.getName();
 
@@ -712,7 +711,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Optionals.ifAllPresent(query.getCollation(), optionsToUse.getCollation(), (l, r) -> {
 			throw new IllegalArgumentException(
-					"Both Query and FindAndModifyOptions define the collation. Please provide the collation only via one of the two.");
+					"Both Query and FindAndModifyOptions define a collation. Please provide the collation only via one of the two.");
 		});
 
 		query.getCollation().ifPresent(optionsToUse::collation);
@@ -1091,34 +1090,35 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return collectionToUse;
 	}
 
-	protected Mono<Object> saveDocument(final String collectionName, final Document dbDoc, final Class<?> entityClass) {
+	protected Mono<Object> saveDocument(final String collectionName, final Document document,
+			final Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Saving Document containing fields: " + dbDoc.keySet());
+			LOGGER.debug("Saving Document containing fields: " + document.keySet());
 		}
 
 		return createMono(collectionName, collection -> {
 
 			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.SAVE, collectionName, entityClass,
-					dbDoc, null);
+					document, null);
 			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 			Publisher<?> publisher;
-			if (!dbDoc.containsKey(ID_FIELD)) {
+			if (!document.containsKey(ID_FIELD)) {
 				if (writeConcernToUse == null) {
-					publisher = collection.insertOne(dbDoc);
+					publisher = collection.insertOne(document);
 				} else {
-					publisher = collection.withWriteConcern(writeConcernToUse).insertOne(dbDoc);
+					publisher = collection.withWriteConcern(writeConcernToUse).insertOne(document);
 				}
 			} else if (writeConcernToUse == null) {
-				publisher = collection.replaceOne(Filters.eq(ID_FIELD, dbDoc.get(ID_FIELD)), dbDoc,
+				publisher = collection.replaceOne(Filters.eq(ID_FIELD, document.get(ID_FIELD)), document,
 						new UpdateOptions().upsert(true));
 			} else {
-				publisher = collection.withWriteConcern(writeConcernToUse).replaceOne(Filters.eq(ID_FIELD, dbDoc.get(ID_FIELD)),
-						dbDoc, new UpdateOptions().upsert(true));
+				publisher = collection.withWriteConcern(writeConcernToUse)
+						.replaceOne(Filters.eq(ID_FIELD, document.get(ID_FIELD)), document, new UpdateOptions().upsert(true));
 			}
 
-			return Mono.from(publisher).map(o -> dbDoc.get(ID_FIELD));
+			return Mono.from(publisher).map(o -> document.get(ID_FIELD));
 		});
 	}
 
@@ -1317,7 +1317,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(objectType);
-		MongoPersistentProperty idProp = entity.isPresent() ? entity.get().getIdProperty().orElse(null) : null;
+		MongoPersistentProperty idProp = entity.flatMap(PersistentEntity::getIdProperty).orElse(null);
 
 		if (idProp == null) {
 			throw new MappingException("No id property found for object of type " + objectType);
@@ -1907,8 +1907,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	private MongoPersistentProperty getIdPropertyFor(Class<?> type) {
+
 		Optional<? extends MongoPersistentEntity<?>> persistentEntity = mappingContext.getPersistentEntity(type);
-		return persistentEntity.isPresent() ? persistentEntity.get().getIdProperty().orElse(null) : null;
+		return persistentEntity.flatMap(PersistentEntity::getIdProperty).orElse(null);
 	}
 
 	private <T> String determineEntityCollectionName(T obj) {
@@ -2011,21 +2012,19 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		public Publisher<Document> doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
 
-			FindPublisher publisher = collection.find(query);
+			FindPublisher<Document> publisher = collection.find(query);
 
 			if (LOGGER.isDebugEnabled()) {
 
 				LOGGER.debug("findOne using query: {} fields: {} in db.collection: {}", serializeToJsonSafely(query),
-						serializeToJsonSafely(fields.orElseGet(() -> new Document())), collection.getNamespace().getFullName());
+						serializeToJsonSafely(fields.orElseGet(Document::new)), collection.getNamespace().getFullName());
 			}
 
 			if (fields.isPresent()) {
 				publisher = publisher.projection(fields.get());
 			}
 
-			if (collation.isPresent()) {
-				publisher = publisher.collation(collation.map(Collation::toMongoCollation).get());
-			}
+			publisher = collation.map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
 
 			return publisher.limit(1).first();
 		}
@@ -2129,10 +2128,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (options.isRemove()) {
 				FindOneAndDeleteOptions findOneAndDeleteOptions = convertToFindOneAndDeleteOptions(fields, sort);
 
-				if (options.getCollation().isPresent()) {
-					findOneAndDeleteOptions = findOneAndDeleteOptions
-							.collation(options.getCollation().map(Collation::toMongoCollation).get());
-				}
+				findOneAndDeleteOptions = options.getCollation().map(Collation::toMongoCollation)
+						.map(findOneAndDeleteOptions::collation).orElse(findOneAndDeleteOptions);
 
 				return collection.findOneAndDelete(query, findOneAndDeleteOptions);
 			}
@@ -2154,9 +2151,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				result = result.returnDocument(ReturnDocument.BEFORE);
 			}
 
-			if (options.getCollation().isPresent()) {
-				result = result.collation(options.getCollation().map(Collation::toMongoCollation).get());
-			}
+			result = options.getCollation().map(Collation::toMongoCollation).map(result::collation).orElse(result);
 
 			return result;
 		}
@@ -2293,11 +2288,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				return findPublisher;
 			}
 
-			FindPublisher<T> findPublisherToUse = findPublisher;
+			FindPublisher<T> findPublisherToUse;
 
-			if (query.getCollation().isPresent()) {
-				findPublisherToUse = findPublisherToUse.collation(query.getCollation().map(Collation::toMongoCollation).get());
-			}
+			findPublisherToUse = query.getCollation().map(Collation::toMongoCollation).map(findPublisher::collation)
+					.orElse(findPublisher);
 
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && query.getSortObject() == null
 					&& !StringUtils.hasText(query.getHint()) && !query.getMeta().hasValues()) {

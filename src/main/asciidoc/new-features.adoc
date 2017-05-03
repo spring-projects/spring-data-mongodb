@@ -7,6 +7,7 @@
 * Usage of the `Document` API instead of `DBObject`.
 * <<mongo.reactive>>.
 * Support for aggregation result streaming via Java 8 `Stream`.
+* Integration of collations for collection and index creation and query operations.
 
 [[new-features.1-10-0]]
 == What's new in Spring Data MongoDB 1.10

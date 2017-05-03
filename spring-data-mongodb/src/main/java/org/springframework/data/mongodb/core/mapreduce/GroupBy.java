@@ -24,7 +24,7 @@ import org.springframework.data.mongodb.core.Collation;
  * Collects the parameters required to perform a group operation on a collection. The query condition and the input
  * collection are specified on the group method as method arguments to be consistent with other operations, e.g.
  * map-reduce.
- * 
+ *
  * @author Mark Pollack
  * @author Christoph Strobl
  */
@@ -33,7 +33,7 @@ public class GroupBy {
 	private Document initialDocument;
 	private String reduce;
 
-	private Optional<Document> dboKeys = Optional.empty();
+	private Optional<Document> keys = Optional.empty();
 	private Optional<String> keyFunction = Optional.empty();
 	private Optional<String> initial = Optional.empty();
 	private Optional<String> finalize = Optional.empty();
@@ -46,7 +46,7 @@ public class GroupBy {
 			document.put(key, 1);
 		}
 
-		dboKeys = Optional.of(document);
+		this.keys = Optional.of(document);
 	}
 
 	// NOTE GroupByCommand does not handle keyfunction.
@@ -58,7 +58,7 @@ public class GroupBy {
 			keyFunction = Optional.ofNullable(key);
 		} else {
 			document.put(key, 1);
-			dboKeys = Optional.of(document);
+			keys = Optional.of(document);
 		}
 	}
 
@@ -152,7 +152,7 @@ public class GroupBy {
 
 		Document document = new Document();
 
-		dboKeys.ifPresent(val -> document.append("key", val));
+		keys.ifPresent(val -> document.append("key", val));
 		keyFunction.ifPresent(val -> document.append("$keyf", val));
 
 		document.put("$reduce", reduce);

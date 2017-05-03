@@ -244,18 +244,4 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
 	}
 
-	@Ignore("currently no groupBy")
-	@Test // DATAMONGO-1518
-	public void groupShouldUseCollationWhenPresent() {
-
-		// template.group("collection-1", GroupBy.key("id").reduceFunction("bar").collation(Collation.of("fr")),
-		// AutogenerateableId.class).subscribe();
-		//
-		// ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		// verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
-		//
-		// assertThat(cmd.getValue().get("group", Document.class).get("collation", Document.class),
-		// equalTo(new Document("locale", "fr")));
-	}
-
 }

@@ -30,6 +30,7 @@ import org.springframework.util.StringUtils;
 /**
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @SuppressWarnings("deprecation")
 public class Index implements IndexDefinition {
@@ -39,21 +40,13 @@ public class Index implements IndexDefinition {
 	}
 
 	private final Map<String, Direction> fieldSpec = new LinkedHashMap<String, Direction>();
-
 	private String name;
-
 	private boolean unique = false;
-
 	private boolean dropDuplicates = false;
-
 	private boolean sparse = false;
-
 	private boolean background = false;
-
 	private long expire = -1;
-
 	private Optional<IndexFilter> filter = Optional.empty();
-
 	private Optional<Collation> collation = Optional.empty();
 
 	public Index() {}
@@ -98,7 +91,7 @@ public class Index implements IndexDefinition {
 
 	/**
 	 * Build the index in background (non blocking).
-	 * 
+	 *
 	 * @return
 	 * @since 1.5
 	 */
@@ -110,7 +103,7 @@ public class Index implements IndexDefinition {
 
 	/**
 	 * Specifies TTL in seconds.
-	 * 
+	 *
 	 * @param value
 	 * @return
 	 * @since 1.5
@@ -121,7 +114,7 @@ public class Index implements IndexDefinition {
 
 	/**
 	 * Specifies TTL with given {@link TimeUnit}.
-	 * 
+	 *
 	 * @param value
 	 * @param unit
 	 * @return

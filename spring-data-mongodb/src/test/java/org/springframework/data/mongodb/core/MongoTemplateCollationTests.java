@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -28,8 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.Collation.Alternate;
-import org.springframework.data.mongodb.core.Collation.ICUComparisonLevel;
-import org.springframework.data.mongodb.core.Collation.ICULocale;
+import org.springframework.data.mongodb.core.Collation.ComparisonLevel;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -38,6 +38,7 @@ import com.mongodb.MongoClient;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public class MongoTemplateCollationTests {
@@ -79,7 +80,7 @@ public class MongoTemplateCollationTests {
 	public void createCollectionWithCollationHavingLocaleVariant() {
 
 		template.createCollection(COLLECTION_NAME,
-				CollectionOptions.just(Collation.of(ICULocale.of("de_AT").variant("phonebook"))));
+				CollectionOptions.just(Collation.of(new Locale("de", "AT", "phonebook"))));
 
 		Document collation = getCollationInfo(COLLECTION_NAME);
 		assertThat(collation.get("locale")).isEqualTo("de_AT@collation=phonebook");
@@ -89,7 +90,7 @@ public class MongoTemplateCollationTests {
 	public void createCollectionWithCollationHavingStrength() {
 
 		template.createCollection(COLLECTION_NAME,
-				CollectionOptions.just(Collation.of("en_US").strength(ICUComparisonLevel.primary().includeCase())));
+				CollectionOptions.just(Collation.of("en_US").strength(ComparisonLevel.primary().includeCase())));
 
 		Document collation = getCollationInfo(COLLECTION_NAME);
 		assertThat(collation.get("strength")).isEqualTo(1);

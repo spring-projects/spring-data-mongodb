@@ -1344,6 +1344,85 @@ TextQuery.searching(new TextCriteria().phrase("coffee cake"));
 
 The flags for `$caseSensitive` and `$diacriticSensitive` can be set via the according methods on `TextCriteria`. Please note that these two optional flags have been introduced in MongoDB 3.2 and will not be included in the query unless explicitly set.
 
+[[mongo.collation]]
+=== Collations
+
+MongoDB supports since 3.4 collations for collection and index creation and various query operations. Collations define string comparison rules based on the http://userguide.icu-project.org/collation/concepts[ICU collations]. A collation document consists of various properties that are encapsulated in `Collation`:
+
+====
+[source,java]
+----
+Collation collation = Collation.of("fr")         <1>
+
+  .strength(ComparisonLevel.secondary()          <2>
+    .includeCase())
+
+  .numericOrderingEnabled()                      <3>
+
+  .alternate(Alternate.shifted().punct())        <4>
+
+  .forwardDiacriticSort()                        <5>
+
+  .normalizationEnabled();                       <6>
+----
+<1> `Collation` requires a locale for creation. This can be either a string representation of the locale, a `Locale` (considering language, country and variant) or a `CollationLocale`. The locale is mandatory for creation.
+<2> Collation strength defines comparison levels denoting differences between characters. You can configure various options (case-sensitivity, case-ordering) depending on the selected strength.
+<3> Specify whether to compare numeric strings as numbers or as strings.
+<4> Specify whether the collation should consider whitespace and punctuation as base characters for purposes of comparison.
+<5> Specify whether strings with diacritics sort from back of the string, such as with some French dictionary ordering.
+<6> Specify whether to check if text requires normalization and to perform normalization.
+====
+
+Collations can be used to create collections and indexes. If you create a collection specifying a collation, the collation is applied to index creation and queries unless you specify a different collation. A collation is valid for a whole operation and cannot be specified on a per-field basis.
+
+[source,java]
+----
+Collation french = Collation.of("fr");
+Collation german = Collation.of("de");
+
+template.createCollection(Person.class, CollectionOptions.just(collation));
+
+template.indexOps(Person.class).ensureIndex(new Index("name", Direction.ASC).collation(german));
+----
+
+NOTE: MongoDB uses simple binary comparison if no collation is specified (`Collation.simple()`).
+
+Using collations with collection operations is a matter of specifying a `Collation` instance in your query or operation options.
+
+.Using collation with `find`
+====
+[source,java]
+----
+Collation collation = Collation.of("de");
+
+Query query = new Query(Criteria.where("firstName").is("Amél")).collation(collation);
+
+List<Person> results = template.find(query, Person.class);
+----
+====
+
+.Using collation with `aggregate`
+====
+[source,java]
+----
+Collation collation = Collation.of("de");
+
+AggregationOptions options = new AggregationOptions.Builder().collation(collation).build();
+
+Aggregation aggregation = newAggregation(
+  project("tags"),
+  unwind("tags"),
+  group("tags")
+    .count().as("count")
+).withOptions(options);
+
+AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", TagCount.class);
+----
+====
+
+WARNING: Indexes are only used if the collation used for the operation and the index collation matches.
+
+
 include::../{spring-data-commons-docs}/query-by-example.adoc[leveloffset=+1]
 include::query-by-example.adoc[leveloffset=+1]
 
@@ -2241,6 +2320,8 @@ You can create standard, geospatial and text indexes using the classes `IndexDef
 mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));
 ----
 
+NOTE: `Index` and `GeospatialIndex` support configuration of <<mongo.collation,collations>>.
+
 [[mongo-template.index-and-collections.access]]
 === Accessing index information
 
@@ -2280,6 +2361,8 @@ mongoTemplate.dropCollection("MyNewCollection");
 * *createCollection* Create an uncapped collection
 * *dropCollection* Drop the collection
 * *getCollection* Get a collection by name, creating it if it doesn't exist.
+
+NOTE: Collection creation allows customization via `CollectionOptions` and supports <<mongo.collation,collations>>.
 
 [[mongo-template.commands]]
 == Executing Commands
