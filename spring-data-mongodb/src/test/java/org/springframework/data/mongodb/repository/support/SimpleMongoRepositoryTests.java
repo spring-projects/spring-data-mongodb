@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -376,9 +377,9 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Person result = repository.findOne(Example.of(sample));
+		Optional<Person> result = repository.findOne(Example.of(sample));
 
-		assertThat(result, is(equalTo(dave)));
+		Assertions.assertThat(result).isPresent().contains(dave);
 	}
 
 	@Test // DATAMONGO-1245

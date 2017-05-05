@@ -31,6 +31,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * 
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("config/MongoNamespaceIntegrationTests-context.xml")
@@ -57,6 +58,6 @@ public class ContactRepositoryIntegrationTests {
 
 		Person person = repository.save(new Person("Oliver", "Gierke"));
 
-		assertThat(repository.findOne(Example.of(person)), instanceOf(Person.class));
+		assertThat(repository.findOne(Example.of(person)).get(), instanceOf(Person.class));
 	}
 }
