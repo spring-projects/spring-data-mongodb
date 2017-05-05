@@ -40,7 +40,7 @@ import org.springframework.util.Assert;
 
 /**
  * Repository base implementation for Mongo.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
@@ -53,7 +53,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	/**
 	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
-	 * 
+	 *
 	 * @param metadata must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 */
@@ -109,7 +109,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#findOne(java.io.Serializable)
+	 * @see org.springframework.data.repository.CrudRepository#findById(java.io.Serializable)
 	 */
 	@Override
 	public Optional<T> findById(ID id) {

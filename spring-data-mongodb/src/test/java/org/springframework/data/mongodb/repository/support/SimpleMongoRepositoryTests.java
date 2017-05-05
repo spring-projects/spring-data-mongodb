@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
 
 import java.util.ArrayList;
@@ -29,15 +28,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.ExampleMatcher.*;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -87,32 +85,28 @@ public class SimpleMongoRepositoryTests {
 
 	@Test
 	public void findALlFromCustomCollectionName() {
-		List<Person> result = repository.findAll();
-		assertThat(result, hasSize(all.size()));
+		assertThat(repository.findAll()).hasSize(all.size());
 	}
 
 	@Test
 	public void findOneFromCustomCollectionName() {
-		Person result = repository.findById(dave.getId()).get();
-		assertThat(result, is(dave));
+		assertThat(repository.findById(dave.getId()).get()).isEqualTo(dave);
 	}
 
 	@Test
 	public void deleteFromCustomCollectionName() {
-		repository.delete(dave);
-		List<Person> result = repository.findAll();
 
-		assertThat(result, hasSize(all.size() - 1));
-		assertThat(result, not(hasItem(dave)));
+		repository.delete(dave);
+
+		assertThat(repository.findAll()).hasSize(all.size() - 1).doesNotContain(dave);
 	}
 
 	@Test
 	public void deleteByIdFromCustomCollectionName() {
-		repository.deleteById(dave.getId());
-		List<Person> result = repository.findAll();
 
-		assertThat(result, hasSize(all.size() - 1));
-		assertThat(result, not(hasItem(dave)));
+		repository.deleteById(dave.getId());
+
+		assertThat(repository.findAll()).hasSize(all.size() - 1).doesNotContain(dave);
 	}
 
 	@Test // DATAMONGO-1054
@@ -123,9 +117,7 @@ public class SimpleMongoRepositoryTests {
 		Person person1 = new Person("First1" + randomId, "Last2" + randomId, 42);
 		person1 = repository.insert(person1);
 
-		Person saved = repository.findById(person1.getId()).get();
-
-		assertThat(saved, is(equalTo(person1)));
+		assertThat(repository.findById(person1.getId())).contains(person1);
 	}
 
 	@Test // DATAMONGO-1054
@@ -143,7 +135,7 @@ public class SimpleMongoRepositoryTests {
 
 		List<Person> saved = repository.insert(persons);
 
-		assertThat(saved, hasSize(persons.size()));
+		assertThat(saved).hasSize(persons.size());
 		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
 	}
 
@@ -162,7 +154,7 @@ public class SimpleMongoRepositoryTests {
 
 		List<Person> saved = repository.insert(persons);
 
-		assertThat(saved, hasSize(persons.size()));
+		assertThat(saved).hasSize(persons.size());
 		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
 	}
 
@@ -175,9 +167,8 @@ public class SimpleMongoRepositoryTests {
 
 		Page<Person> result = repository.findAll(Example.of(sample), PageRequest.of(0, 10));
 
-		assertThat(result.getContent(), hasItems(dave, oliver));
-		assertThat(result.getContent(), hasSize(2));
-		assertThat(result.getTotalPages(), is(1));
+		assertThat(result.getContent()).hasSize(2).contains(dave, oliver);
+		assertThat(result.getTotalPages()).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1464
@@ -189,8 +180,8 @@ public class SimpleMongoRepositoryTests {
 
 		Page<Person> result = repository.findAll(Example.of(sample), PageRequest.of(0, 1));
 
-		assertThat(result.getContent(), hasSize(1));
-		assertThat(result.getTotalPages(), is(2));
+		assertThat(result.getContent()).hasSize(1);
+		assertThat(result.getTotalPages()).isEqualTo(2);
 	}
 
 	@Test // DATAMONGO-1245
@@ -200,10 +191,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(Example.of(sample));
-
-		assertThat(result, containsInAnyOrder(dave, oliver));
-		assertThat(result, hasSize(2));
+		assertThat(repository.findAll(Example.of(sample))).hasSize(2).contains(dave, oliver);
 	}
 
 	@Test // DATAMONGO-1245
@@ -219,10 +207,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(dave.getAddress());
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(Example.of(sample));
-
-		assertThat(result, hasItem(dave));
-		assertThat(result, hasSize(1));
+		assertThat(repository.findAll(Example.of(sample))).hasSize(1).contains(dave);
 	}
 
 	@Test // DATAMONGO-1245
@@ -238,10 +223,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(new Address(null, null, "Washington"));
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(Example.of(sample));
-
-		assertThat(result, hasItems(dave, oliver));
-		assertThat(result, hasSize(2));
+		assertThat(repository.findAll(Example.of(sample))).hasSize(2).contains(dave, oliver);
 	}
 
 	@Test // DATAMONGO-1245
@@ -255,9 +237,8 @@ public class SimpleMongoRepositoryTests {
 		trimDomainType(sample, "id", "createdAt", "email");
 
 		Example<Person> example = Example.of(sample, matching().withIncludeNullValues());
-		List<Person> result = repository.findAll(example);
 
-		assertThat(result, empty());
+		assertThat(repository.findAll(example)).isEmpty();
 	}
 
 	@Test // DATAMONGO-1245
@@ -271,10 +252,8 @@ public class SimpleMongoRepositoryTests {
 		trimDomainType(sample, "id", "createdAt", "email");
 
 		Example<Person> example = Example.of(sample, matching().withIncludeNullValues());
-		List<Person> result = repository.findAll(example);
 
-		assertThat(result, hasItem(dave));
-		assertThat(result, hasSize(1));
+		assertThat(repository.findAll(example)).hasSize(1).contains(dave);
 	}
 
 	@Test // DATAMONGO-1245
@@ -285,10 +264,8 @@ public class SimpleMongoRepositoryTests {
 		trimDomainType(sample, "id", "createdAt", "email");
 
 		Example<Person> example = Example.of(sample, matching().withStringMatcher(StringMatcher.STARTING));
-		List<Person> result = repository.findAll(example);
 
-		assertThat(result, hasItems(dave, oliver));
-		assertThat(result, hasSize(2));
+		assertThat(repository.findAll(example)).hasSize(2).contains(dave, oliver);
 	}
 
 	@Test // DATAMONGO-1245
@@ -308,10 +285,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setCreator(user);
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(Example.of(sample));
-
-		assertThat(result, hasItem(megan));
-		assertThat(result, hasSize(1));
+		assertThat(repository.findAll(Example.of(sample))).hasSize(1).contains(megan);
 	}
 
 	@Test // DATAMONGO-1245
@@ -326,10 +300,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLocation(megan.getLocation());
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(Example.of(sample));
-
-		assertThat(result, hasItem(megan));
-		assertThat(result, hasSize(1));
+		assertThat(repository.findAll(Example.of(sample))).hasSize(1).contains(megan);
 	}
 
 	@Test // DATAMONGO-1245
@@ -344,10 +315,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLocation(megan.getLocation());
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(Example.of(sample));
-
-		assertThat(result, hasItem(megan));
-		assertThat(result, hasSize(1));
+		assertThat(repository.findAll(Example.of(sample))).hasSize(1).contains(megan);
 	}
 
 	@Test // DATAMONGO-1245
@@ -363,10 +331,7 @@ public class SimpleMongoRepositoryTests {
 
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<PersonExtended> result = repository.findAll(Example.of(sample));
-
-		assertThat(result, hasSize(1));
-		assertThat(result, hasItem(reference));
+		assertThat(repository.findAll(Example.of(sample))).hasSize(1).contains(reference);
 	}
 
 	@Test // DATAMONGO-1245
@@ -377,9 +342,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Optional<Person> result = repository.findOne(Example.of(sample));
-
-		Assertions.assertThat(result).isPresent().contains(dave);
+		assertThat(repository.findOne(Example.of(sample))).isPresent().contains(dave);
 	}
 
 	@Test // DATAMONGO-1245
@@ -390,9 +353,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		boolean result = repository.exists(Example.of(sample));
-
-		assertThat(result, is(true));
+		assertThat(repository.exists(Example.of(sample))).isTrue();
 	}
 
 	@Test // DATAMONGO-1245
@@ -402,16 +363,14 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		long result = repository.count(Example.of(sample));
-
-		assertThat(result, is(equalTo(2L)));
+		assertThat(repository.count(Example.of(sample))).isEqualTo(2L);
 	}
 
 	private void assertThatAllReferencePersonsWereStoredCorrectly(Map<String, Person> references, List<Person> saved) {
 
 		for (Person person : saved) {
 			Person reference = references.get(person.getId());
-			assertThat(person, is(equalTo(reference)));
+			assertThat(person).isEqualTo(reference);
 		}
 	}
 
