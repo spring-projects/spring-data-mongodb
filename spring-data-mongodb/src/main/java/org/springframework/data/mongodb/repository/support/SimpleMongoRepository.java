@@ -312,12 +312,13 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findOne(org.springframework.data.domain.Example)
 	 */
 	@Override
-	public <S extends T> S findOne(Example<S> example) {
+	public <S extends T> Optional<S> findOne(Example<S> example) {
 
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.findOne(q, example.getProbeType(), entityInformation.getCollectionName());
+		return Optional
+				.ofNullable(mongoOperations.findOne(q, example.getProbeType(), entityInformation.getCollectionName()));
 	}
 
 	/*
