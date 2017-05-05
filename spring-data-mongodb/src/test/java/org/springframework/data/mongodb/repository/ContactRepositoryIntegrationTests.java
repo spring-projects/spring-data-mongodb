@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +49,7 @@ public class ContactRepositoryIntegrationTests {
 		Person person = new Person("Oliver", "Gierke");
 		Contact result = repository.save(person);
 
-		assertTrue(repository.findById(result.getId().toString()).get() instanceof Person);
+		assertThat(repository.findById(result.getId().toString())).containsInstanceOf(Person.class);
 	}
 
 	@Test // DATAMONGO-1245
@@ -58,6 +57,6 @@ public class ContactRepositoryIntegrationTests {
 
 		Person person = repository.save(new Person("Oliver", "Gierke"));
 
-		assertThat(repository.findOne(Example.of(person)).get(), instanceOf(Person.class));
+		assertThat(repository.findOne(Example.of(person))).containsInstanceOf(Person.class);
 	}
 }
