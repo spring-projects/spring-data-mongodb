@@ -1,6 +1,23 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.0.M3 (2017-05-09)
+----------------------------------------
+* DATAMONGO-1684 - Adopt documentation to removed JodaTime DateMidnight support.
+* DATAMONGO-1679 - Adapt to API changes in CrudRepository.
+* DATAMONGO-1674 - Adapt to Range API changes.
+* DATAMONGO-1668 - Adopt changed Mono and Flux error handling API.
+* DATAMONGO-1667 - Rename @InfiniteStream to @Tailable.
+* DATAMONGO-1666 - Constructor creation with bulk fetching of DBRefs uses List instead of collection type.
+* DATAMONGO-1665 - Adapt to API changes in Reactor 3.1.
+* DATAMONGO-1664 - Release 2.0 M3 (Kay).
+* DATAMONGO-1662 - Section "Projection Expressions" contains error "Aggregate".
+* DATAMONGO-1660 - Extract CustomConversions into Spring Data Commons.
+* DATAMONGO-1518 - Add support for Collations.
+* DATAMONGO-1325 - Add support for $sample to aggregation.
+* DATAMONGO-1205 - CyclicPropertyReferenceException logged with stack trace.
+
+
 Changes in version 1.9.10.RELEASE (2017-04-19)
 ----------------------------------------------
 * DATAMONGO-1670 - Release 1.9.10 (Hopper SR10).
