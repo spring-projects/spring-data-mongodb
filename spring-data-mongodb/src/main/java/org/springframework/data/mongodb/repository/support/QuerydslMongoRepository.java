@@ -45,14 +45,14 @@ import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
- * Special QueryDsl based repository implementation that allows execution {@link Predicate}s in various forms.
- * 
+ * Special Querydsl based repository implementation that allows execution {@link Predicate}s in various forms.
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID>
+public class QuerydslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID>
 		implements QuerydslPredicateExecutor<T> {
 
 	private final PathBuilder<T> builder;
@@ -60,25 +60,25 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	private final MongoOperations mongoOperations;
 
 	/**
-	 * Creates a new {@link QueryDslMongoRepository} for the given {@link EntityMetadata} and {@link MongoTemplate}. Uses
+	 * Creates a new {@link QuerydslMongoRepository} for the given {@link EntityMetadata} and {@link MongoTemplate}. Uses
 	 * the {@link SimpleEntityPathResolver} to create an {@link EntityPath} for the given domain class.
-	 * 
+	 *
 	 * @param entityInformation must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 */
-	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations) {
+	public QuerydslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations) {
 		this(entityInformation, mongoOperations, SimpleEntityPathResolver.INSTANCE);
 	}
 
 	/**
-	 * Creates a new {@link QueryDslMongoRepository} for the given {@link MongoEntityInformation}, {@link MongoTemplate}
+	 * Creates a new {@link QuerydslMongoRepository} for the given {@link MongoEntityInformation}, {@link MongoTemplate}
 	 * and {@link EntityPathResolver}.
-	 * 
+	 *
 	 * @param entityInformation must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param resolver must not be {@literal null}.
 	 */
-	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations,
+	public QuerydslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations,
 			EntityPathResolver resolver) {
 
 		super(entityInformation, mongoOperations);
@@ -227,7 +227,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/**
 	 * Creates a {@link MongodbQuery} for the given {@link Predicate}.
-	 * 
+	 *
 	 * @param predicate
 	 * @return
 	 */
@@ -246,7 +246,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/**
 	 * Applies the given {@link Pageable} to the given {@link MongodbQuery}.
-	 * 
+	 *
 	 * @param query
 	 * @param pageable
 	 * @return
@@ -260,7 +260,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/**
 	 * Applies the given {@link Sort} to the given {@link MongodbQuery}.
-	 * 
+	 *
 	 * @param query
 	 * @param sort
 	 * @return
@@ -284,7 +284,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/**
 	 * Transforms a plain {@link Order} into a QueryDsl specific {@link OrderSpecifier}.
-	 * 
+	 *
 	 * @param order
 	 * @return
 	 */

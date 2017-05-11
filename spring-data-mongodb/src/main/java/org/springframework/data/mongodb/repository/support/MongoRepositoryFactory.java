@@ -106,7 +106,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 			return SimpleReactiveMongoRepository.class;
 		}
 
-		return isQueryDslRepository ? QueryDslMongoRepository.class : SimpleMongoRepository.class;
+		return isQueryDslRepository ? QuerydslMongoRepository.class : SimpleMongoRepository.class;
 	}
 
 	/*
