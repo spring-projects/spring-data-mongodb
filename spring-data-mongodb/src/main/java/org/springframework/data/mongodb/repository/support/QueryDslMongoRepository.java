@@ -17,7 +17,9 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -34,6 +36,7 @@ import org.springframework.data.repository.core.EntityMetadata;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.util.Assert;
 
+import com.querydsl.core.NonUniqueResultException;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
@@ -47,6 +50,7 @@ import com.querydsl.mongodb.AbstractMongodbQuery;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID>
 		implements QuerydslPredicateExecutor<T> {
@@ -93,11 +97,15 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findById(com.querydsl.core.types.Predicate)
 	 */
 	@Override
-	public T findOne(Predicate predicate) {
+	public Optional<T> findOne(Predicate predicate) {
 
 		Assert.notNull(predicate, "Predicate must not be null!");
 
-		return createQueryFor(predicate).fetchOne();
+		try {
+			return Optional.ofNullable(createQueryFor(predicate).fetchOne());
+		} catch (NonUniqueResultException ex) {
+			throw new IncorrectResultSizeDataAccessException(ex.getMessage(), 1, ex);
+		}
 	}
 
 	/*
