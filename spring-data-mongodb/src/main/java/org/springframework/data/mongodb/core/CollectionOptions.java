@@ -53,7 +53,9 @@ public class CollectionOptions {
 		this.collation = collation;
 	}
 
-	private CollectionOptions() {}
+	private CollectionOptions() {
+		this.collation = Optional.empty();
+	}
 
 	/**
 	 * Create new {@link CollectionOptions} by just providing the {@link Collation} to use.

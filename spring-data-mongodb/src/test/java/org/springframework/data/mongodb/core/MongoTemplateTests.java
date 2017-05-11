@@ -114,8 +114,6 @@ public class MongoTemplateTests {
 
 	private static final org.springframework.data.util.Version TWO_DOT_FOUR = org.springframework.data.util.Version
 			.parse("2.4");
-	private static final org.springframework.data.util.Version TWO_DOT_EIGHT = org.springframework.data.util.Version
-			.parse("2.8");
 	private static final org.springframework.data.util.Version THREE_DOT_FOUR = org.springframework.data.util.Version
 			.parse("3.4");
 
@@ -331,6 +329,26 @@ public class MongoTemplateTests {
 		records.add(person);
 
 		template.insertAll(records);
+	}
+
+	@Test // DATAMONGO-1687
+	public void createCappedCollection() {
+
+		template.createCollection(Person.class, CollectionOptions.empty().capped(1000).maxDocuments(1000));
+
+		org.bson.Document collectionOptions = getCollectionInfo(template.getCollectionName(Person.class)).get("options",
+				org.bson.Document.class);
+		assertThat(collectionOptions.get("capped"), is(true));
+	}
+
+	private org.bson.Document getCollectionInfo(String collectionName) {
+
+		return template.execute(db -> {
+
+			org.bson.Document result = db.runCommand(new org.bson.Document().append("listCollections", 1).append("filter",
+					new org.bson.Document("name", collectionName)));
+			return (org.bson.Document) result.get("cursor", org.bson.Document.class).get("firstBatch", List.class).get(0);
+		});
 	}
 
 	@Test
