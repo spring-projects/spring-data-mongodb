@@ -15,13 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +35,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * Integration test for {@link QueryDslMongoRepository}.
+ * Integration test for {@link QuerydslMongoRepository}.
  *
  * @author Thomas Darimont
  * @author Mark Paluch
@@ -49,7 +47,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class QueryDslMongoRepositoryIntegrationTests {
 
 	@Autowired MongoOperations operations;
-	QueryDslMongoRepository<Person, String> repository;
+	QuerydslMongoRepository<Person, String> repository;
 
 	Person dave, oliver, carter;
 	QPerson person;
@@ -59,7 +57,7 @@ public class QueryDslMongoRepositoryIntegrationTests {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(operations);
 		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
-		repository = new QueryDslMongoRepository<Person, String>(entityInformation, operations);
+		repository = new QuerydslMongoRepository<>(entityInformation, operations);
 
 		operations.dropCollection(Person.class);
 
@@ -75,8 +73,8 @@ public class QueryDslMongoRepositoryIntegrationTests {
 	@Test // DATAMONGO-1146
 	public void shouldSupportExistsWithPredicate() throws Exception {
 
-		assertThat(repository.exists(person.firstname.eq("Dave")), is(true));
-		assertThat(repository.exists(person.firstname.eq("Unknown")), is(false));
+		assertThat(repository.exists(person.firstname.eq("Dave"))).isTrue();
+		assertThat(repository.exists(person.firstname.eq("Unknown"))).isFalse();
 	}
 
 	@Test // DATAMONGO-1167
@@ -84,20 +82,17 @@ public class QueryDslMongoRepositoryIntegrationTests {
 
 		List<Person> users = repository.findAll(person.lastname.isNotNull(), Sort.by(Direction.ASC, "firstname"));
 
-		assertThat(users, hasSize(3));
-		assertThat(users.get(0).getFirstname(), is(carter.getFirstname()));
-		assertThat(users.get(2).getFirstname(), is(oliver.getFirstname()));
-		assertThat(users, hasItems(carter, dave, oliver));
+		assertThat(users).containsExactly(carter, dave, oliver);
 	}
 
 	@Test // DATAMONGO-1690
 	public void findOneWithPredicateReturnsResultCorrectly() {
-		Assertions.assertThat(repository.findOne(person.firstname.eq(dave.getFirstname()))).contains(dave);
+		assertThat(repository.findOne(person.firstname.eq(dave.getFirstname()))).contains(dave);
 	}
 
 	@Test // DATAMONGO-1690
 	public void findOneWithPredicateReturnsOptionalEmptyWhenNoDataFound() {
-		Assertions.assertThat(repository.findOne(person.firstname.eq("batman"))).isNotPresent();
+		assertThat(repository.findOne(person.firstname.eq("batman"))).isNotPresent();
 	}
 
 	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1690
