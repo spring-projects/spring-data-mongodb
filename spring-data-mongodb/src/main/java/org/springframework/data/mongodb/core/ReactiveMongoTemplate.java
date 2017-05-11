@@ -1629,6 +1629,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			collectionOptions.getCapped().ifPresent(result::capped);
 			collectionOptions.getSize().ifPresent(result::sizeInBytes);
 			collectionOptions.getMaxDocuments().ifPresent(result::maxDocuments);
+			collectionOptions.getCollation().map(Collation::toMongoCollation).ifPresent(result::collation);
 		}
 		return result;
 	}
