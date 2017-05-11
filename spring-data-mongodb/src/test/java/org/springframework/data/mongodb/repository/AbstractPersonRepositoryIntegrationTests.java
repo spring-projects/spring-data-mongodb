@@ -917,7 +917,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		dave.setCreator(user);
 		operations.save(dave);
 
-		assertThat(repository.findOne(QPerson.person.creator.eq(user)), is(dave));
+		assertThat(repository.findOne(QPerson.person.creator.eq(user)).get(), is(dave));
 	}
 
 	@Test // DATAMONGO-969

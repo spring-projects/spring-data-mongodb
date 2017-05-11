@@ -21,10 +21,12 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -39,6 +41,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  *
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @ContextConfiguration(
 		locations = "/org/springframework/data/mongodb/repository/PersonRepositoryIntegrationTests-context.xml")
@@ -85,5 +88,20 @@ public class QueryDslMongoRepositoryIntegrationTests {
 		assertThat(users.get(0).getFirstname(), is(carter.getFirstname()));
 		assertThat(users.get(2).getFirstname(), is(oliver.getFirstname()));
 		assertThat(users, hasItems(carter, dave, oliver));
+	}
+
+	@Test // DATAMONGO-1690
+	public void findOneWithPredicateReturnsResultCorrectly() {
+		Assertions.assertThat(repository.findOne(person.firstname.eq(dave.getFirstname()))).contains(dave);
+	}
+
+	@Test // DATAMONGO-1690
+	public void findOneWithPredicateReturnsOptionalEmptyWhenNoDataFound() {
+		Assertions.assertThat(repository.findOne(person.firstname.eq("batman"))).isNotPresent();
+	}
+
+	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1690
+	public void findOneWithPredicateThrowsExceptionForNonUniqueResults() {
+		repository.findOne(person.firstname.contains("e"));
 	}
 }
