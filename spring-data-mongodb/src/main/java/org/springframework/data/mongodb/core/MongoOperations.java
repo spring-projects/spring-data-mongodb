@@ -58,7 +58,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Thomas Darimont
  * @author Maninder Singh
  */
-public interface MongoOperations {
+public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * The collection name used for the specified class by this template.
