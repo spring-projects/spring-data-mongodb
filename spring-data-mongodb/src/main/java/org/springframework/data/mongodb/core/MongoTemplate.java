@@ -20,8 +20,19 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.data.util.Optionals.*;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
@@ -1951,16 +1962,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Document document = new Document();
 		if (collectionOptions != null) {
-			if (collectionOptions.getCapped() != null) {
-				document.put("capped", collectionOptions.getCapped().booleanValue());
-			}
-			if (collectionOptions.getSize() != null) {
-				document.put("size", collectionOptions.getSize().intValue());
-			}
-			if (collectionOptions.getMaxDocuments() != null) {
-				document.put("max", collectionOptions.getMaxDocuments().intValue());
-			}
 
+			collectionOptions.getCapped().ifPresent(val -> document.put("capped", val));
+			collectionOptions.getSize().ifPresent(val -> document.put("size", val));
+			collectionOptions.getMaxDocuments().ifPresent(val -> document.put("max", val));
 			collectionOptions.getCollation().ifPresent(val -> document.append("collation", val.toDocument()));
 		}
 		return document;

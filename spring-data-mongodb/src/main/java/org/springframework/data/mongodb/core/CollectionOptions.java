@@ -28,10 +28,10 @@ import org.springframework.util.Assert;
  */
 public class CollectionOptions {
 
-	private Integer maxDocuments;
-	private Integer size;
+	private Long maxDocuments;
+	private Long size;
 	private Boolean capped;
-	private Optional<Collation> collation;
+	private Collation collation;
 
 	/**
 	 * Constructs a new <code>CollectionOptions</code> instance.
@@ -40,21 +40,19 @@ public class CollectionOptions {
 	 * @param maxDocuments the maximum number of documents in the collection.
 	 * @param capped true to created a "capped" collection (fixed size with auto-FIFO behavior based on insertion order),
 	 *          false otherwise.
+	 * @deprecated since 2.0 please use {@link CollectionOptions#empty()} as entry point.
 	 */
-	public CollectionOptions(Integer size, Integer maxDocuments, Boolean capped) {
-		this(size, maxDocuments, capped, Optional.empty());
+	@Deprecated
+	public CollectionOptions(Long size, Long maxDocuments, Boolean capped) {
+		this(size, maxDocuments, capped, null);
 	}
 
-	private CollectionOptions(Integer size, Integer maxDocuments, Boolean capped, Optional<Collation> collation) {
+	private CollectionOptions(Long size, Long maxDocuments, Boolean capped, Collation collation) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
 		this.capped = capped;
 		this.collation = collation;
-	}
-
-	private CollectionOptions() {
-		this.collation = Optional.empty();
 	}
 
 	/**
@@ -68,9 +66,7 @@ public class CollectionOptions {
 
 		Assert.notNull(collation, "Collation must not be null!");
 
-		CollectionOptions options = new CollectionOptions();
-		options.setCollation(collation);
-		return options;
+		return new CollectionOptions(null, null, null, collation);
 	}
 
 	/**
@@ -80,17 +76,17 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public static CollectionOptions empty() {
-		return new CollectionOptions();
+		return new CollectionOptions(null, null, null, null);
 	}
 
 	/**
-	 * Create new {@link CollectionOptions} with already given settings and capped set to {@literal true}.
+	 * Create new {@link CollectionOptions} with already given settings and capped set to {@literal true}. <br />
+	 * <strong>NOTE</strong> Using capped collections requires defining {@link #size(int)}.
 	 *
-	 * @param size the collection size in bytes, this data space is preallocated.
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.0
 	 */
-	public CollectionOptions capped(int size) {
+	public CollectionOptions capped() {
 		return new CollectionOptions(size, maxDocuments, true, collation);
 	}
 
@@ -101,7 +97,7 @@ public class CollectionOptions {
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.0
 	 */
-	public CollectionOptions maxDocuments(Integer maxDocuments) {
+	public CollectionOptions maxDocuments(long maxDocuments) {
 		return new CollectionOptions(size, maxDocuments, capped, collation);
 	}
 
@@ -112,7 +108,7 @@ public class CollectionOptions {
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.0
 	 */
-	public CollectionOptions size(int size) {
+	public CollectionOptions size(long size) {
 		return new CollectionOptions(size, maxDocuments, capped, collation);
 	}
 
@@ -124,50 +120,44 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions collation(Collation collation) {
-		return new CollectionOptions(size, maxDocuments, capped, Optional.ofNullable(collation));
-	}
-
-	public Integer getMaxDocuments() {
-		return maxDocuments;
-	}
-
-	public void setMaxDocuments(Integer maxDocuments) {
-		this.maxDocuments = maxDocuments;
-	}
-
-	public Integer getSize() {
-		return size;
-	}
-
-	public void setSize(Integer size) {
-		this.size = size;
-	}
-
-	public Boolean getCapped() {
-		return capped;
-	}
-
-	public void setCapped(Boolean capped) {
-		this.capped = capped;
+		return new CollectionOptions(size, maxDocuments, capped, collation);
 	}
 
 	/**
-	 * Set {@link Collation} options.
+	 * Get the max number of documents the collection should be limited to.
 	 *
-	 * @param collation
+	 * @return {@link Optional#empty()} if not set.
+	 */
+	public Optional<Long> getMaxDocuments() {
+		return Optional.ofNullable(maxDocuments);
+	}
+
+	/**
+	 * Get the {@literal size} in bytes the collection should be limited to.
+	 *
+	 * @return {@link Optional#empty()} if not set.
+	 */
+	public Optional<Long> getSize() {
+		return Optional.ofNullable(size);
+	}
+
+	/**
+	 * Get if the collection should be capped.
+	 *
+	 * @return {@link Optional#empty()} if not set.
 	 * @since 2.0
 	 */
-	public void setCollation(Collation collation) {
-		this.collation = Optional.ofNullable(collation);
+	public Optional<Boolean> getCapped() {
+		return Optional.ofNullable(capped);
 	}
 
 	/**
 	 * Get the {@link Collation} settings.
 	 *
-	 * @return
+	 * @return {@link Optional#empty()} if not set.
 	 * @since 2.0
 	 */
 	public Optional<Collation> getCollation() {
-		return collation;
+		return Optional.ofNullable(collation);
 	}
 }

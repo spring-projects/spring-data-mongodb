@@ -334,7 +334,7 @@ public class MongoTemplateTests {
 	@Test // DATAMONGO-1687
 	public void createCappedCollection() {
 
-		template.createCollection(Person.class, CollectionOptions.empty().capped(1000).maxDocuments(1000));
+		template.createCollection(Person.class, CollectionOptions.empty().capped().size(1000).maxDocuments(1000));
 
 		org.bson.Document collectionOptions = getCollectionInfo(template.getCollectionName(Person.class)).get("options",
 				org.bson.Document.class);
