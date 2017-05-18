@@ -166,7 +166,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 		Document mData = new Document();
 		if (StringUtils.hasText(contentType)) {
-			mData.put("type", contentType);
+			mData.put(GridFsResource.CONTENT_TYPE_FIELD, contentType);
 		}
 
 		if (metadata != null) {

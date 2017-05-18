@@ -15,8 +15,10 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
@@ -41,7 +43,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.client.gridfs.GridFSFindIterable;
-import com.mongodb.gridfs.GridFSFile;
 
 /**
  * Integration tests for {@link GridFsTemplate}.
@@ -210,15 +211,15 @@ public class GridFsTemplateIntegrationTests {
 		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), reference);
 	}
 
-	private static void assertSame(GridFSFile left, GridFSFile right) {
+	@Test // DATAMONGO-1695
+	public void readsContentTypeCorrectly() throws IOException {
 
-		assertThat(left.getId(), is(right.getId()));
-		assertThat(left.getMD5(), is(right.getMD5()));
-		assertThat(left.getMetaData(), is(right.getMetaData()));
+		operations.store(resource.getInputStream(), "someName", "contentType");
+
+		assertThat(operations.getResource("someName").getContentType()).isEqualTo("contentType");
 	}
 
 	class Metadata {
-
 		String version;
 	}
 }

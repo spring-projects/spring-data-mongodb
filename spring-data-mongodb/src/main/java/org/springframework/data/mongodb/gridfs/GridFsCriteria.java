@@ -69,6 +69,6 @@ public class GridFsCriteria extends Criteria {
 	 * @return
 	 */
 	public static GridFsCriteria whereContentType() {
-		return new GridFsCriteria("metadata.type");
+		return new GridFsCriteria("metadata.".concat(GridFsResource.CONTENT_TYPE_FIELD));
 	}
 }

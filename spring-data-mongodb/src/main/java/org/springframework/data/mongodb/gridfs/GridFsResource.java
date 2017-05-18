@@ -33,6 +33,8 @@ import com.mongodb.gridfs.GridFSDBFile;
  */
 public class GridFsResource extends InputStreamResource {
 
+	static final String CONTENT_TYPE_FIELD = "_contentType";
+
 	private final GridFSFile file;
 
 	/**
@@ -91,7 +93,11 @@ public class GridFsResource extends InputStreamResource {
 	 * 
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public String getContentType() {
-		return file.getContentType();
+
+		String contentType = file.getMetadata().get(CONTENT_TYPE_FIELD, String.class);
+
+		return contentType != null ? contentType : file.getContentType();
 	}
 }
