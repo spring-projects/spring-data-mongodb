@@ -162,9 +162,10 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 		Assert.notNull(content, "InputStream must not be null!");
 
-		GridFSUploadOptions opts = new GridFSUploadOptions();
+		GridFSUploadOptions options = new GridFSUploadOptions();
 
 		Document mData = new Document();
+
 		if (StringUtils.hasText(contentType)) {
 			mData.put(GridFsResource.CONTENT_TYPE_FIELD, contentType);
 		}
@@ -173,9 +174,9 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 			mData.putAll(metadata);
 		}
 
-		opts.metadata(mData);
+		options.metadata(mData);
 
-		return getGridFs().uploadFromStream(filename, content, opts);
+		return getGridFs().uploadFromStream(filename, content, options);
 	}
 
 	/*
@@ -228,7 +229,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	public GridFsResource getResource(String location) {
 
 		GridFSFile file = findOne(query(whereFilename().is(location)));
-		return file != null ? new GridFsResource(file, getGridFs().openDownloadStreamByName(location)) : null;
+		return file != null ? new GridFsResource(file, getGridFs().openDownloadStream(location)) : null;
 	}
 
 	/*
@@ -249,17 +250,13 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 			List<GridFsResource> resources = new ArrayList<GridFsResource>();
 
 			for (GridFSFile file : files) {
-				resources.add(new GridFsResource(file, getGridFs().openDownloadStreamByName(file.getFilename())));
+				resources.add(new GridFsResource(file, getGridFs().openDownloadStream(file.getFilename())));
 			}
 
 			return resources.toArray(new GridFsResource[resources.size()]);
 		}
 
 		return new GridFsResource[] { getResource(locationPattern) };
-	}
-
-	private Document getMappedQuery(Query query) {
-		return query == null ? new Query().getQueryObject() : getMappedQuery(query.getQueryObject());
 	}
 
 	private Document getMappedQuery(Document query) {

@@ -46,6 +46,12 @@ public class GridFsResource extends InputStreamResource {
 		this(file, new ByteArrayInputStream(new byte[] {}));
 	}
 
+	/**
+	 * Creates a new {@link GridFsResource} from the given {@link GridFSDBFile} and {@link InputStream}.
+	 * 
+	 * @param file must not be {@literal null}.
+	 * @param inputStream must not be {@literal null}.
+	 */
 	public GridFsResource(GridFSFile file, InputStream inputStream) {
 
 		super(inputStream);
