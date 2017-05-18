@@ -1626,17 +1626,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		CreateCollectionOptions result = new CreateCollectionOptions();
 		if (collectionOptions != null) {
 
-			if (collectionOptions.getCapped() != null) {
-				result = result.capped(collectionOptions.getCapped());
-			}
-
-			if (collectionOptions.getSize() != null) {
-				result = result.sizeInBytes(collectionOptions.getSize());
-			}
-
-			if (collectionOptions.getMaxDocuments() != null) {
-				result = result.maxDocuments(collectionOptions.getMaxDocuments());
-			}
+			collectionOptions.getCapped().ifPresent(result::capped);
+			collectionOptions.getSize().ifPresent(result::sizeInBytes);
+			collectionOptions.getMaxDocuments().ifPresent(result::maxDocuments);
 		}
 		return result;
 	}

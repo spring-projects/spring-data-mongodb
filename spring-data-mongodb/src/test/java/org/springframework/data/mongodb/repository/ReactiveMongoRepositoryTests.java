@@ -63,6 +63,7 @@ import org.springframework.util.ClassUtils;
  * Test for {@link ReactiveMongoRepository} query methods.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
@@ -175,7 +176,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		StepVerifier
 				.create(template.dropCollection(Capped.class) //
 						.then(template.createCollection(Capped.class, //
-								new CollectionOptions(1000, 100, true)))) //
+								CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
@@ -200,7 +201,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		StepVerifier
 				.create(template.dropCollection(Capped.class) //
 						.then(template.createCollection(Capped.class, //
-								new CollectionOptions(1000, 100, true)))) //
+								CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
 				.expectNextCount(1) //
 				.verifyComplete();
 

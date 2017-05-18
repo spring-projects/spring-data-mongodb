@@ -46,6 +46,7 @@ import com.mongodb.DBRef;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public abstract class MongoOperationsUnitTests {
@@ -137,7 +138,7 @@ public abstract class MongoOperationsUnitTests {
 		new Execution() {
 			@Override
 			public void doWith(MongoOperations operations) {
-				operations.createCollection("foo", new CollectionOptions(1, 1, true));
+				operations.createCollection("foo", CollectionOptions.empty().size(1).maxDocuments(1).capped());
 			}
 		}.assertDataAccessException();
 	}

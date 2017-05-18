@@ -803,7 +803,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.dropCollection("capped")
 				.then(template.createCollection("capped", //
-						new CollectionOptions(1000, 10, true)))
+						CollectionOptions.empty().size(1000).maxDocuments(10).capped()))
 				.then(template.insert(new Document("random", Math.random()).append("key", "value"), //
 						"capped")))
 				.expectNextCount(1).verifyComplete();
@@ -825,7 +825,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.dropCollection("capped")
 				.then(template.createCollection("capped", //
-						new CollectionOptions(1000, 10, true)))
+						CollectionOptions.empty().size(1000).maxDocuments(10).capped()))
 				.then(template.insert(new Document("random", Math.random()).append("key", "value"), //
 						"capped")))
 				.expectNextCount(1).verifyComplete();
