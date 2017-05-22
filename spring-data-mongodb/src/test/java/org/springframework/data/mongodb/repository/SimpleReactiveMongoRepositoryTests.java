@@ -35,6 +35,7 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
@@ -49,9 +50,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ClassUtils;
 
 /**
- * Test for {@link ReactiveMongoRepository}.
+ * Tests for {@link ReactiveMongoRepository}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
@@ -401,6 +403,15 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
 
 		StepVerifier.create(repository.exists(example)).expectNext(false).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1619
+	public void findOneShouldEmitIncorrectResultSizeDataAccessExceptionWhenMoreThanOneElementFound() {
+
+		Example<ReactivePerson> example = Example.of(new ReactivePerson(null, "Matthews", -1),
+				matching().withIgnorePaths("age"));
+
+		StepVerifier.create(repository.findOne(example)).expectError(IncorrectResultSizeDataAccessException.class);
 	}
 
 	interface ReactivePersonRepostitory extends ReactiveMongoRepository<ReactivePerson, String> {
