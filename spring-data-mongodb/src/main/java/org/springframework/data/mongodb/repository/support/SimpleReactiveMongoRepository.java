@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -43,6 +44,7 @@ import org.springframework.util.Assert;
  *
  * @author Mark Paluch
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 2.0
  */
 @RequiredArgsConstructor
@@ -86,7 +88,16 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.findOne(q, example.getProbeType(), entityInformation.getCollectionName());
+		q.limit(2);
+
+		return mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName()).buffer(2)
+				.flatMap(vals -> {
+
+					if (vals.size() > 1) {
+						return Mono.error(new IncorrectResultSizeDataAccessException(1));
+					}
+					return Mono.just(vals.iterator().next());
+				}).single();
 	}
 
 	/*
