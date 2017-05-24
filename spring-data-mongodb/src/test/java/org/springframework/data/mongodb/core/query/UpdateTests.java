@@ -53,6 +53,18 @@ public class UpdateTests {
 		assertThat(u.getUpdateObject(),
 				is(Document.parse("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\" , \"size\" : 0}}")));
 	}
+	
+	@Test
+	public void testSetOnInsert() {
+		Update u = new Update().setOnInsert("size", 1);
+		Assert.assertEquals("{ \"$setOnInsert\" : { \"size\" : 1}}", u.getUpdateObject().toString());
+	}
+	
+	@Test
+	public void testSetOnInsertSetOnInsert() {
+		Update u = new Update().setOnInsert("size", 1).setOnInsert("count", 1);
+		Assert.assertEquals("{ \"$setOnInsert\" : { \"size\" : 1 , \"count\" : 1}}", u.getUpdateObject().toString());
+	}
 
 	@Test
 	public void testInc() {

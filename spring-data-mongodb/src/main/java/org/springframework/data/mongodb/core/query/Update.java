@@ -114,6 +114,18 @@ public class Update {
 		addMultiFieldOperation("$set", key, value);
 		return this;
 	}
+	
+	/**
+	 * Update using the $setOnInsert update modifier
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public Update setOnInsert(String key, Object value){
+		addMultiFieldOperation("$setOnInsert", key, value);
+		return this;
+	}
 
 	/**
 	 * Update using the {@literal $setOnInsert} update modifier
