@@ -148,6 +148,7 @@ import com.mongodb.util.JSONParseException;
  * @author Mark Paluch
  * @author Laszlo Csontos
  * @author Maninder Singh
+ * @author Kristof Van Sever
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
