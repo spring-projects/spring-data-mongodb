@@ -1165,8 +1165,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			public UpdateResult doInCollection(MongoCollection<Document> collection)
 					throws MongoException, DataAccessException {
 
-				Optional<? extends MongoPersistentEntity<?>> entity = entityClass == null ? Optional.empty()
-						: getPersistentEntity(entityClass);
+				Optional<? extends MongoPersistentEntity<?>> entity = entityClass == null ?
+						getPersistentEntityForCollectionName(collectionName) : getPersistentEntity(entityClass);
 
 				increaseVersionForUpdateIfNecessary(entity, update);
 
@@ -2182,6 +2182,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	private Optional<? extends MongoPersistentEntity<?>> getPersistentEntity(Class<?> type) {
 		return Optional.ofNullable(type).flatMap(it -> mappingContext.getPersistentEntity(it));
+	}
+
+	private Optional<? extends MongoPersistentEntity<?>> getPersistentEntityForCollectionName(String collectionName) {
+		return mappingContext.getPersistentEntities().stream().filter(e -> collectionName.equals(e.getCollection())).findFirst();
 	}
 
 	private Optional<MongoPersistentProperty> getIdPropertyFor(Class<?> type) {
