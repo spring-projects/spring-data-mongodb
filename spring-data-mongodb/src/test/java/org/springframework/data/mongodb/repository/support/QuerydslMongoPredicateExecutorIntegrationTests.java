@@ -35,7 +35,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * Integration test for {@link QuerydslMongoRepository}.
+ * Integration test for {@link QuerydslMongoPredicateExecutor}.
  *
  * @author Thomas Darimont
  * @author Mark Paluch
@@ -44,10 +44,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration(
 		locations = "/org/springframework/data/mongodb/repository/PersonRepositoryIntegrationTests-context.xml")
 @RunWith(SpringJUnit4ClassRunner.class)
-public class QueryDslMongoRepositoryIntegrationTests {
+public class QuerydslMongoPredicateExecutorIntegrationTests {
 
 	@Autowired MongoOperations operations;
-	QuerydslMongoRepository<Person, String> repository;
+	QuerydslMongoPredicateExecutor<Person> repository;
 
 	Person dave, oliver, carter;
 	QPerson person;
@@ -57,7 +57,7 @@ public class QueryDslMongoRepositoryIntegrationTests {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(operations);
 		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
-		repository = new QuerydslMongoRepository<>(entityInformation, operations);
+		repository = new QuerydslMongoPredicateExecutor<Person>(entityInformation, operations);
 
 		operations.dropCollection(Person.class);
 
@@ -67,7 +67,7 @@ public class QueryDslMongoRepositoryIntegrationTests {
 
 		person = new QPerson("person");
 
-		repository.saveAll(Arrays.asList(oliver, dave, carter));
+		operations.insertAll(Arrays.asList(oliver, dave, carter));
 	}
 
 	@Test // DATAMONGO-1146
