@@ -36,13 +36,13 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.core.support.RepositoryComposition.RepositoryFragments;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.data.repository.reactive.RxJava1CrudRepository;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
@@ -88,25 +88,36 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
+		return SimpleMongoRepository.class;
+	}
 
-		boolean isReactiveRepository = (PROJECT_REACTOR_PRESENT
-				&& ReactiveCrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()))
-				|| (RXJAVA_OBSERVABLE_PRESENT
-						&& RxJava1CrudRepository.class.isAssignableFrom(metadata.getRepositoryInterface()));
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getRepositoryFragments(org.springframework.data.repository.core.RepositoryMetadata)
+	 */
+	@Override
+	protected RepositoryFragments getRepositoryFragments(RepositoryMetadata metadata) {
+
+		RepositoryFragments fragments = RepositoryFragments.empty();
 
 		boolean isQueryDslRepository = QUERY_DSL_PRESENT
 				&& QuerydslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
 
-		if (isReactiveRepository) {
+		if (isQueryDslRepository) {
 
-			if (isQueryDslRepository) {
+			if (metadata.isReactiveRepository()) {
 				throw new InvalidDataAccessApiUsageException(
-						"Cannot combine Querydsl and reactive repository in one interface");
+						"Cannot combine Querydsl and reactive repository support in a single interface");
 			}
-			return SimpleReactiveMongoRepository.class;
+
+			MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainType(),
+					metadata);
+
+			fragments = fragments.append(RepositoryFragment.implemented(
+					getTargetRepositoryViaReflection(QuerydslMongoPredicateExecutor.class, entityInformation, operations)));
 		}
 
-		return isQueryDslRepository ? QuerydslMongoRepository.class : SimpleMongoRepository.class;
+		return fragments;
 	}
 
 	/*
@@ -140,16 +151,16 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	private <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
-			RepositoryInformation information) {
+			RepositoryMetadata metadata) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
 		return MongoEntityInformationSupport.<T, ID> entityInformationFor(entity,
-				information != null ? information.getIdType() : null);
+				metadata != null ? metadata.getIdType() : null);
 	}
 
 	/**
 	 * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
