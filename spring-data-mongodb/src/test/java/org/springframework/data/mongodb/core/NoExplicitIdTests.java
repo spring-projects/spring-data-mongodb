@@ -40,6 +40,7 @@ import com.mongodb.MongoClient;
  * Integration tests for DATAMONGO-1289.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -69,7 +70,7 @@ public class NoExplicitIdTests {
 	}
 
 	@Test // DATAMONGO-1289
-	public void saveAndRetrieveTypeWithoutIdPorpertyViaTemplate() {
+	public void saveAndRetrieveTypeWithoutIdPropertyViaTemplate() {
 
 		TypeWithoutIdProperty noid = new TypeWithoutIdProperty();
 		noid.someString = "o.O";
@@ -83,7 +84,7 @@ public class NoExplicitIdTests {
 	}
 
 	@Test // DATAMONGO-1289
-	public void saveAndRetrieveTypeWithoutIdPorpertyViaRepository() {
+	public void saveAndRetrieveTypeWithoutIdPropertyViaRepository() {
 
 		TypeWithoutIdProperty noid = new TypeWithoutIdProperty();
 		noid.someString = "o.O";
@@ -96,7 +97,7 @@ public class NoExplicitIdTests {
 
 	@Test // DATAMONGO-1289
 	@SuppressWarnings("unchecked")
-	public void saveAndRetrieveTypeWithoutIdPorpertyViaRepositoryFindOne() {
+	public void saveAndRetrieveTypeWithoutIdPropertyViaRepositoryFindOne() {
 
 		TypeWithoutIdProperty noid = new TypeWithoutIdProperty();
 		noid.someString = "o.O";
