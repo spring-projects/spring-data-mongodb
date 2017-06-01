@@ -21,6 +21,8 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
+import reactor.core.publisher.Mono;
+
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -137,6 +139,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void findAndModfiyShoudUseCollationWhenPresent() {
 
+		when(collection.findOneAndUpdate(any(), any(), any())).thenReturn(Mono.empty());
+
 		template.findAndModify(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class)
 				.subscribe();
 
@@ -148,6 +152,8 @@ public class ReactiveMongoTemplateUnitTests {
 
 	@Test // DATAMONGO-1518
 	public void findAndRemoveShouldUseCollationWhenPresent() {
+
+		when(collection.findOneAndDelete(any(), any())).thenReturn(Mono.empty());
 
 		template.findAndRemove(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class).subscribe();
 
@@ -174,6 +180,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void updateOneShouldUseCollationWhenPresent() {
 
+		when(collection.updateOne(any(), any(), any())).thenReturn(Mono.empty());
+
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
 				AutogenerateableId.class).subscribe();
 
@@ -185,6 +193,8 @@ public class ReactiveMongoTemplateUnitTests {
 
 	@Test // DATAMONGO-1518
 	public void updateManyShouldUseCollationWhenPresent() {
+
+		when(collection.updateMany(any(), any(), any())).thenReturn(Mono.empty());
 
 		template.updateMulti(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
 				AutogenerateableId.class).subscribe();
@@ -198,6 +208,8 @@ public class ReactiveMongoTemplateUnitTests {
 
 	@Test // DATAMONGO-1518
 	public void replaceOneShouldUseCollationWhenPresent() {
+
+		when(collection.replaceOne(any(), any(), any())).thenReturn(Mono.empty());
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class)
 				.subscribe();

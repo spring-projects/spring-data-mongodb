@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,20 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoProcessor;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
-
 /**
  * Reactive {@link org.springframework.data.repository.query.ParametersParameterAccessor} implementation that subscribes
  * to reactive parameter wrapper types upon creation. This class performs synchronization when acessing parameters.
- * 
+ *
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 2.0
@@ -55,9 +55,9 @@ class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 			}
 
 			if (ReactiveWrappers.isSingleValueType(value.getClass())) {
-				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Mono.class).subscribe());
+				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Mono.class).toProcessor());
 			} else {
-				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Flux.class).collectList().subscribe());
+				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Flux.class).collectList().toProcessor());
 			}
 		}
 	}
