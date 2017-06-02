@@ -208,6 +208,7 @@ Flux<Person> stream = repository.findByFirstname("Joe");
 
 Disposable subscription = stream.doOnNext(System.out::println).subscribe();
 
+
 // …
 
 // Later: Dispose the stream
