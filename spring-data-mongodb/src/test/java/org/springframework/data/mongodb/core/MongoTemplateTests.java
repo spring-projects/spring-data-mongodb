@@ -107,6 +107,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Laszlo Csontos
+ * @author Kristof Van Sever
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -2476,6 +2477,28 @@ public class MongoTemplateTests {
 		VersionedPerson personAfterUpdateFirst = template.findOne(qry, VersionedPerson.class);
 		assertThat(personAfterUpdateFirst.version, is(100L));
 		assertThat(personAfterUpdateFirst.lastname, is("Bubu"));
+	}
+
+	@Test // DATAMONGO-1697
+	public void versionNumberIncreasesWhenUsingUpdateFirstWithCollectionName() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.age = 29;
+		person.firstName = "Patryk";
+		template.save(person);
+
+		Query query = new Query();
+		query.addCriteria(Criteria.where("firstName").is("Patryk"));
+
+		Update update = new Update();
+		update.set("age", 30);
+
+		template.updateFirst(query, update, "personWithVersionPropertyOfTypeInteger");
+
+		PersonWithVersionPropertyOfTypeInteger updatedPerson = template.findOne(query, PersonWithVersionPropertyOfTypeInteger.class);
+
+		assertThat(updatedPerson.age, is(30));
+		assertThat(updatedPerson.version, is(1));
 	}
 
 	@Test // DATAMONGO-468
