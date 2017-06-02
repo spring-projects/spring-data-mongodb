@@ -102,8 +102,8 @@ class ObjectPath {
 			if (item.getIdValue() == null) {
 				continue;
 			}
-
-			if (collection.equals(item.getCollection()) && id.equals(item.getIdValue())) {
+// on mongo 3.0.0 driver equals is not comparing String and ObjectId, so if id is String then some other equals should be
+			if (collection.equals(item.getCollection()) && id.equals(item.getIdValue() instanceof String ? new ObjectId(item.getIdValue()) : item.getIdValue())) {
 				return object;
 			}
 		}
