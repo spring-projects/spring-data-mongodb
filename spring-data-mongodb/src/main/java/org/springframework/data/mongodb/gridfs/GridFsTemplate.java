@@ -50,6 +50,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  * @author Martin Baumgartner
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Mark Norkin
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -57,6 +58,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	private final String bucket;
 	private final MongoConverter converter;
 	private final QueryMapper queryMapper;
+	private final String dbName;
 
 	/**
 	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
@@ -76,6 +78,17 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @param bucket
 	 */
 	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter, String bucket) {
+		this(dbFactory, converter, bucket, null);
+	}
+	/**
+	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
+	 *
+	 * @param dbFactory must not be {@literal null}.
+	 * @param converter must not be {@literal null}.
+	 * @param bucket
+	 * @param dbName
+	 */
+	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter, String bucket, String dbName) {
 
 		Assert.notNull(dbFactory, "MongoDbFactory must not be null!");
 		Assert.notNull(converter, "MongoConverter must not be null!");
@@ -83,6 +96,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		this.dbFactory = dbFactory;
 		this.converter = converter;
 		this.bucket = bucket;
+		this.dbName = dbName;
 
 		this.queryMapper = new QueryMapper(converter);
 	}
@@ -264,8 +278,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	}
 
 	private GridFSBucket getGridFs() {
-
-		MongoDatabase db = dbFactory.getDb();
+		MongoDatabase db = StringUtils.isEmpty(dbName) ? dbFactory.getDb() : dbFactory.getDb(dbName);
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
 	}
 }
