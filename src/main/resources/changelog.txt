@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.9.11.RELEASE (2017-06-07)
+----------------------------------------------
+* DATAMONGO-1671 - Release 1.9.11 (Hopper SR11).
+* DATAMONGO-1205 - CyclicPropertyReferenceException logged with stack trace.
+
+
 Changes in version 2.0.0.M3 (2017-05-09)
 ----------------------------------------
 * DATAMONGO-1684 - Adopt documentation to removed JodaTime DateMidnight support.
