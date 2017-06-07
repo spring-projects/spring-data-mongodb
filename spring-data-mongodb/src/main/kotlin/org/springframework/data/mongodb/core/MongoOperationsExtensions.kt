@@ -38,7 +38,7 @@ import kotlin.reflect.KClass
  * Extension for [MongoOperations.getCollectionName] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 fun <T : Any> MongoOperations.getCollectionName(entityClass: KClass<T>): String =
 		getCollectionName(entityClass.java)
@@ -48,7 +48,7 @@ fun <T : Any> MongoOperations.getCollectionName(entityClass: KClass<T>): String 
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.getCollectionName(): String =
 		getCollectionName(T::class.java)
@@ -58,7 +58,7 @@ inline fun <reified T : Any> MongoOperations.getCollectionName(): String =
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.execute(action: CollectionCallback<T>): T =
 		execute(T::class.java, action)
@@ -68,20 +68,19 @@ inline fun <reified T : Any> MongoOperations.execute(action: CollectionCallback<
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.stream(query: Query): CloseableIterator<T> =
-	  stream(query, T::class.java)
+		stream(query, T::class.java)
 
 /**
  * Extension for [MongoOperations.stream] avoiding requiring the type parameter
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.stream(query: Query,
-		collectionName: String? = null): CloseableIterator<T> =
+inline fun <reified T : Any> MongoOperations.stream(query: Query, collectionName: String? = null): CloseableIterator<T> =
 		if (collectionName != null) stream(query, T::class.java, collectionName)
 		else stream(query, T::class.java)
 
@@ -89,10 +88,9 @@ inline fun <reified T : Any> MongoOperations.stream(query: Query,
  * Extension for [MongoOperations.createCollection] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-fun <T : Any> MongoOperations.createCollection(entityClass: KClass<T>,
-		collectionOptions: CollectionOptions? = null): MongoCollection<Document> =
+fun <T : Any> MongoOperations.createCollection(entityClass: KClass<T>, collectionOptions: CollectionOptions? = null): MongoCollection<Document> =
 		if (collectionOptions != null) createCollection(entityClass.java, collectionOptions)
 		else createCollection(entityClass.java)
 
@@ -101,7 +99,7 @@ fun <T : Any> MongoOperations.createCollection(entityClass: KClass<T>,
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.createCollection(
 		collectionOptions: CollectionOptions? = null): MongoCollection<Document> =
@@ -112,7 +110,7 @@ inline fun <reified T : Any> MongoOperations.createCollection(
  * Extension for [MongoOperations.collectionExists] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 fun <T : Any> MongoOperations.collectionExists(entityClass: KClass<T>): Boolean =
 		collectionExists(entityClass.java)
@@ -122,7 +120,7 @@ fun <T : Any> MongoOperations.collectionExists(entityClass: KClass<T>): Boolean 
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.collectionExists(): Boolean =
 		collectionExists(T::class.java)
@@ -131,10 +129,10 @@ inline fun <reified T : Any> MongoOperations.collectionExists(): Boolean =
  * Extension for [MongoOperations.dropCollection] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 fun <T : Any> MongoOperations.dropCollection(entityClass: KClass<T>) {
-		dropCollection(entityClass.java)
+	dropCollection(entityClass.java)
 }
 
 /**
@@ -142,17 +140,17 @@ fun <T : Any> MongoOperations.dropCollection(entityClass: KClass<T>) {
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.dropCollection() {
-		dropCollection(T::class.java)
+	dropCollection(T::class.java)
 }
 
 /**
  * Extension for [MongoOperations.indexOps] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 fun <T : Any> MongoOperations.indexOps(entityClass: KClass<T>): IndexOperations =
 		indexOps(entityClass.java)
@@ -162,7 +160,7 @@ fun <T : Any> MongoOperations.indexOps(entityClass: KClass<T>): IndexOperations 
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.indexOps(): IndexOperations =
 		indexOps(T::class.java)
@@ -171,10 +169,9 @@ inline fun <reified T : Any> MongoOperations.indexOps(): IndexOperations =
  * Extension for [MongoOperations.bulkOps] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-fun <T : Any> MongoOperations.bulkOps(bulkMode: BulkMode, entityClass: KClass<T>,
-		collectionName: String? = null): BulkOperations =
+fun <T : Any> MongoOperations.bulkOps(bulkMode: BulkMode, entityClass: KClass<T>, collectionName: String? = null): BulkOperations =
 		if (collectionName != null) bulkOps(bulkMode, entityClass.java, collectionName)
 		else bulkOps(bulkMode, entityClass.java)
 
@@ -182,11 +179,10 @@ fun <T : Any> MongoOperations.bulkOps(bulkMode: BulkMode, entityClass: KClass<T>
  * Extension for [MongoOperations.bulkOps] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> MongoOperations.bulkOps(bulkMode: BulkMode,
-		collectionName: String? = null): BulkOperations =
+inline fun <reified T : Any> MongoOperations.bulkOps(bulkMode: BulkMode, collectionName: String? = null): BulkOperations =
 		if (collectionName != null) bulkOps(bulkMode, T::class.java, collectionName)
 		else bulkOps(bulkMode, T::class.java)
 
@@ -195,7 +191,7 @@ inline fun <reified T : Any> MongoOperations.bulkOps(bulkMode: BulkMode,
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.findAll(collectionName: String? = null): List<T> =
 		if (collectionName != null) findAll(T::class.java, collectionName) else findAll(T::class.java)
@@ -205,7 +201,7 @@ inline fun <reified T : Any> MongoOperations.findAll(collectionName: String? = n
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.group(inputCollectionName: String, groupBy: GroupBy): GroupByResults<T> =
 		group(inputCollectionName, groupBy, T::class.java)
@@ -215,10 +211,9 @@ inline fun <reified T : Any> MongoOperations.group(inputCollectionName: String, 
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.group(criteria: Criteria,
-		inputCollectionName: String, groupBy: GroupBy): GroupByResults<T> =
+inline fun <reified T : Any> MongoOperations.group(criteria: Criteria, inputCollectionName: String, groupBy: GroupBy): GroupByResults<T> =
 		group(criteria, inputCollectionName, groupBy, T::class.java)
 
 /**
@@ -226,10 +221,9 @@ inline fun <reified T : Any> MongoOperations.group(criteria: Criteria,
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation,
-		inputType: KClass<*>): AggregationResults<O> =
+inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation, inputType: KClass<*>): AggregationResults<O> =
 		aggregate(aggregation, inputType.java, O::class.java)
 
 /**
@@ -237,10 +231,9 @@ inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation,
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation,
-		collectionName: String): AggregationResults<O> =
+inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation, collectionName: String): AggregationResults<O> =
 		aggregate(aggregation, collectionName, O::class.java)
 
 /**
@@ -248,10 +241,9 @@ inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation,
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation,
-		inputType: KClass<*>): CloseableIterator<O> =
+inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation, inputType: KClass<*>): CloseableIterator<O> =
 		aggregateStream(aggregation, inputType.java, O::class.java)
 
 /**
@@ -259,10 +251,9 @@ inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggreg
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation,
-		collectionName: String): CloseableIterator<O> =
+inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation, collectionName: String): CloseableIterator<O> =
 		aggregateStream(aggregation, collectionName, O::class.java)
 
 /**
@@ -270,10 +261,9 @@ inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggreg
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.mapReduce(collectionName: String,
-		mapFunction: String, reduceFunction: String, options: MapReduceOptions? = null): MapReduceResults<T> =
+inline fun <reified T : Any> MongoOperations.mapReduce(collectionName: String, mapFunction: String, reduceFunction: String, options: MapReduceOptions? = null): MapReduceResults<T> =
 		if (options != null) mapReduce(collectionName, mapFunction, reduceFunction, options, T::class.java)
 		else mapReduce(collectionName, mapFunction, reduceFunction, T::class.java)
 
@@ -282,10 +272,9 @@ inline fun <reified T : Any> MongoOperations.mapReduce(collectionName: String,
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 52.0
  */
-inline fun <reified T : Any> MongoOperations.mapReduce(query: Query, collectionName: String,
-		mapFunction: String, reduceFunction: String, options: MapReduceOptions? = null): MapReduceResults<T> =
+inline fun <reified T : Any> MongoOperations.mapReduce(query: Query, collectionName: String, mapFunction: String, reduceFunction: String, options: MapReduceOptions? = null): MapReduceResults<T> =
 		if (options != null) mapReduce(query, collectionName, mapFunction, reduceFunction, options, T::class.java)
 		else mapReduce(query, collectionName, mapFunction, reduceFunction, T::class.java)
 
@@ -294,10 +283,9 @@ inline fun <reified T : Any> MongoOperations.mapReduce(query: Query, collectionN
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.geoNear(near: NearQuery,
-		collectionName: String? = null): GeoResults<T> =
+inline fun <reified T : Any> MongoOperations.geoNear(near: NearQuery, collectionName: String? = null): GeoResults<T> =
 		if (collectionName != null) geoNear(near, T::class.java, collectionName)
 		else geoNear(near, T::class.java)
 
@@ -306,7 +294,7 @@ inline fun <reified T : Any> MongoOperations.geoNear(near: NearQuery,
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.findOne(query: Query, collectionName: String? = null): T =
 		if (collectionName != null) findOne(query, T::class.java, collectionName) else findOne(query, T::class.java)
@@ -316,10 +304,9 @@ inline fun <reified T : Any> MongoOperations.findOne(query: Query, collectionNam
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-fun <T : Any> MongoOperations.exists(query: Query, entityClass: KClass<T>,
-		collectionName: String? = null): Boolean =
+fun <T : Any> MongoOperations.exists(query: Query, entityClass: KClass<T>, collectionName: String? = null): Boolean =
 		if (collectionName != null) exists(query, entityClass.java, collectionName)
 		else exists(query, entityClass.java)
 
@@ -328,7 +315,7 @@ fun <T : Any> MongoOperations.exists(query: Query, entityClass: KClass<T>,
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 inline fun <reified T : Any> MongoOperations.exists(query: Query, collectionName: String? = null): Boolean =
@@ -340,7 +327,7 @@ inline fun <reified T : Any> MongoOperations.exists(query: Query, collectionName
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.find(query: Query, collectionName: String? = null): List<T> =
 		if (collectionName != null) find(query, T::class.java, collectionName)
@@ -351,7 +338,7 @@ inline fun <reified T : Any> MongoOperations.find(query: Query, collectionName: 
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: String? = null): T =
 		if (collectionName != null) findById(id, T::class.java, collectionName)
@@ -362,10 +349,9 @@ inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: S
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update: Update,
-		options: FindAndModifyOptions, collectionName: String? = null): T =
+inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update: Update, options: FindAndModifyOptions, collectionName: String? = null): T =
 		if (collectionName != null) findAndModify(query, update, options, T::class.java, collectionName)
 		else findAndModify(query, update, options, T::class.java)
 
@@ -374,7 +360,7 @@ inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update:
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.findAndRemove(query: Query, collectionName: String? = null): T =
 		if (collectionName != null) findAndRemove(query, T::class.java, collectionName)
@@ -385,10 +371,9 @@ inline fun <reified T : Any> MongoOperations.findAndRemove(query: Query, collect
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-fun <T : Any> MongoOperations.count(query: Query = Query(), entityClass: KClass<T>,
-		collectionName: String? = null): Long =
+fun <T : Any> MongoOperations.count(query: Query = Query(), entityClass: KClass<T>, collectionName: String? = null): Long =
 		if (collectionName != null) count(query, entityClass.java, collectionName)
 		else count(query, entityClass.java)
 
@@ -397,7 +382,7 @@ fun <T : Any> MongoOperations.count(query: Query = Query(), entityClass: KClass<
  * thanks to Kotlin reified type parameters
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 inline fun <reified T : Any> MongoOperations.count(query: Query = Query(), collectionName: String? = null): Long =
@@ -407,7 +392,7 @@ inline fun <reified T : Any> MongoOperations.count(query: Query = Query(), colle
  * Extension for [MongoOperations.insert] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 fun <T : Any> MongoOperations.insert(batchToSave: Collection<T>, entityClass: KClass<T>) {
 	insert(batchToSave, entityClass.java)
@@ -417,10 +402,9 @@ fun <T : Any> MongoOperations.insert(batchToSave: Collection<T>, entityClass: KC
  * Extension for [MongoOperations.upsert] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-fun <T : Any> MongoOperations.upsert(query: Query, update: Update, entityClass: KClass<T>,
-		collectionName: String? = null): UpdateResult =
+fun <T : Any> MongoOperations.upsert(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) upsert(query, update, entityClass.java, collectionName)
 		else upsert(query, update, entityClass.java)
 
@@ -429,11 +413,10 @@ fun <T : Any> MongoOperations.upsert(query: Query, update: Update, entityClass: 
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> MongoOperations.upsert(query: Query, update: Update,
-		collectionName: String? = null): UpdateResult =
+inline fun <reified T : Any> MongoOperations.upsert(query: Query, update: Update, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) upsert(query, update, T::class.java, collectionName)
 		else upsert(query, update, T::class.java)
 
@@ -441,10 +424,9 @@ inline fun <reified T : Any> MongoOperations.upsert(query: Query, update: Update
  * Extension for [MongoOperations.updateFirst] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-fun <T : Any> MongoOperations.updateFirst(query: Query, update: Update, entityClass: KClass<T>,
-		collectionName: String? = null): UpdateResult =
+fun <T : Any> MongoOperations.updateFirst(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateFirst(query, update, entityClass.java, collectionName)
 		else updateFirst(query, update, entityClass.java)
 
@@ -453,11 +435,10 @@ fun <T : Any> MongoOperations.updateFirst(query: Query, update: Update, entityCl
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: Update,
-		collectionName: String? = null): UpdateResult =
+inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: Update, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateFirst(query, update, T::class.java, collectionName)
 		else updateFirst(query, update, T::class.java)
 
@@ -466,10 +447,9 @@ inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: U
  * Extension for [MongoOperations.updateMulti] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-fun <T : Any> MongoOperations.updateMulti(query: Query, update: Update, entityClass: KClass<T>,
-		collectionName: String? = null): UpdateResult =
+fun <T : Any> MongoOperations.updateMulti(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateMulti(query, update, entityClass.java, collectionName)
 		else updateMulti(query, update, entityClass.java)
 
@@ -478,11 +458,10 @@ fun <T : Any> MongoOperations.updateMulti(query: Query, update: Update, entityCl
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> MongoOperations.updateMulti(query: Query, update: Update,
-		collectionName: String? = null): UpdateResult =
+inline fun <reified T : Any> MongoOperations.updateMulti(query: Query, update: Update, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateMulti(query, update, T::class.java, collectionName)
 		else updateMulti(query, update, T::class.java)
 
@@ -490,10 +469,9 @@ inline fun <reified T : Any> MongoOperations.updateMulti(query: Query, update: U
  * Extension for [MongoOperations.remove] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
-fun <T : Any> MongoOperations.remove(query: Query, entityClass: KClass<T>,
-		collectionName: String? = null): DeleteResult =
+fun <T : Any> MongoOperations.remove(query: Query, entityClass: KClass<T>, collectionName: String? = null): DeleteResult =
 		if (collectionName != null) remove(query, entityClass.java, collectionName)
 		else remove(query, entityClass.java)
 
@@ -502,7 +480,7 @@ fun <T : Any> MongoOperations.remove(query: Query, entityClass: KClass<T>,
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 inline fun <reified T : Any> MongoOperations.remove(query: Query, collectionName: String? = null): DeleteResult =
@@ -514,7 +492,7 @@ inline fun <reified T : Any> MongoOperations.remove(query: Query, collectionName
  * thanks to Kotlin reified type parameters.
  *
  * @author Sebastien Deleuze
- * @since 5.0
+ * @since 2.0
  */
 inline fun <reified T : Any> MongoOperations.findAllAndRemove(query: Query): List<T> =
 		findAllAndRemove(query, T::class.java)
