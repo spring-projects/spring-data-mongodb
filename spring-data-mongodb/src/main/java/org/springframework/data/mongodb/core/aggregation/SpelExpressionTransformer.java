@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,9 +49,10 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * Renders the AST of a SpEL expression as a MongoDB Aggregation Framework projection expression.
- * 
+ *
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
@@ -84,7 +85,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 * {@link AggregationOperationContext} {@code context}.
 	 * <p>
 	 * Exposes the given @{code params} as <code>[0] ... [n]</code>.
-	 * 
+	 *
 	 * @param expression must not be {@literal null}
 	 * @param context must not be {@literal null}
 	 * @param params must not be {@literal null}
@@ -114,7 +115,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	/**
 	 * Returns an appropriate {@link ExpressionNodeConversion} for the given {@code node}. Throws an
 	 * {@link IllegalArgumentException} if no conversion could be found.
-	 * 
+	 *
 	 * @param node
 	 * @return the appropriate {@link ExpressionNodeConversion} for the given {@link ExpressionNode}.
 	 */
@@ -133,7 +134,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 	/**
 	 * Abstract base class for {@link SpelNode} to (Db)-object conversions.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
@@ -145,7 +146,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 		/**
 		 * Creates a new {@link ExpressionNodeConversion}.
-		 * 
+		 *
 		 * @param transformer must not be {@literal null}.
 		 */
 		@SuppressWarnings("unchecked")
@@ -161,7 +162,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		/**
 		 * Returns whether the current conversion supports the given {@link ExpressionNode}. By default we will match the
 		 * node type against the genric type the subclass types the type parameter to.
-		 * 
+		 *
 		 * @param node will never be {@literal null}.
 		 * @return true if {@literal this} conversion can be applied to the given {@code node}.
 		 */
@@ -171,7 +172,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 		/**
 		 * Triggers the transformation for the given {@link ExpressionNode} and the given current context.
-		 * 
+		 *
 		 * @param node must not be {@literal null}.
 		 * @param context must not be {@literal null}.
 		 * @return
@@ -187,7 +188,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		/**
 		 * Triggers the transformation with the given new {@link ExpressionNode}, new parent node, the current operation and
 		 * the previous context.
-		 * 
+		 *
 		 * @param node must not be {@literal null}.
 		 * @param parent
 		 * @param operation
@@ -204,7 +205,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 					context.getAggregationContext()));
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#transform(org.springframework.data.mongodb.core.aggregation.AggregationExpressionTransformer.AggregationExpressionTransformationContext)
 		 */
@@ -215,7 +216,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 		/**
 		 * Performs the actual conversion from {@link SpelNode} to the corresponding representation for MongoDB.
-		 * 
+		 *
 		 * @param context
 		 * @return
 		 */
@@ -224,7 +225,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 	/**
 	 * A {@link ExpressionNodeConversion} that converts arithmetic operations.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 */
 	private static class OperatorNodeConversion extends ExpressionNodeConversion<OperatorNode> {
@@ -233,7 +234,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
 		 */
@@ -258,8 +259,10 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 				return convertUnaryMinusOp(context, leftResult);
 			}
 
-			// we deliberately ignore the RHS result
-			transform(currentNode.getRight(), currentNode, operationObject, context);
+			if (!currentNode.isUnaryOperator()) {
+				// we deliberately ignore the RHS result
+				transform(currentNode.getRight(), currentNode, operationObject, context);
+			}
 
 			return operationObject;
 		}
@@ -299,7 +302,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return result;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#supports(java.lang.Class)
 		 */
@@ -311,7 +314,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 	/**
 	 * A {@link ExpressionNodeConversion} that converts indexed expressions.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
@@ -321,7 +324,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
 		 */
@@ -330,7 +333,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return context.addToPreviousOrReturn(context.getCurrentNode().getValue());
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
 		 */
@@ -342,7 +345,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 	/**
 	 * A {@link ExpressionNodeConversion} that converts in-line list expressions.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 */
 	private static class InlineListNodeConversion extends ExpressionNodeConversion<ExpressionNode> {
@@ -351,7 +354,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
 		 */
@@ -368,7 +371,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return transform(currentNode.getChild(0), currentNode, null, context);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
 		 */
@@ -380,7 +383,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 	/**
 	 * A {@link ExpressionNodeConversion} that converts property or field reference expressions.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
@@ -401,7 +404,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return context.addToPreviousOrReturn(fieldReference);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
 		 */
@@ -413,7 +416,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 	/**
 	 * A {@link ExpressionNodeConversion} that converts literal expressions.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
@@ -423,7 +426,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
 		 */
@@ -448,7 +451,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return value;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#supports(org.springframework.expression.spel.SpelNode)
 		 */
@@ -460,7 +463,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 	/**
 	 * A {@link ExpressionNodeConversion} that converts method reference expressions.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
@@ -470,7 +473,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
 		 */
@@ -489,7 +492,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 				Document dbo = new Document();
 
 				int i = 0;
-				for(ExpressionNode child : node) {
+				for (ExpressionNode child : node) {
 					dbo.put(methodReference.getArgumentMap()[i++], transform(child, context));
 				}
 				args = dbo;
@@ -510,7 +513,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 	/**
 	 * A {@link ExpressionNodeConversion} that converts method compound expressions.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
@@ -520,7 +523,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
 		 */
@@ -537,7 +540,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return context.addToPreviousOrReturn(currentNode.getValue());
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
 		 */

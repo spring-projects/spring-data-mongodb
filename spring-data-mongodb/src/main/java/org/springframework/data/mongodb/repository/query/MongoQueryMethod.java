@@ -93,7 +93,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return
 	 */
 	public boolean hasAnnotatedQuery() {
-		return getAnnotatedQuery() != null;
+		return findAnnotatedQuery().isPresent();
 	}
 
 	/**
@@ -103,9 +103,15 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return
 	 */
 	String getAnnotatedQuery() {
+		return findAnnotatedQuery().orElse(null);
+	}
 
-		String query = (String) AnnotationUtils.getValue(getQueryAnnotation());
-		return StringUtils.hasText(query) ? query : null;
+	private Optional<String> findAnnotatedQuery() {
+
+		return Optional.ofNullable(getQueryAnnotation()) //
+				.map(AnnotationUtils::getValue) //
+				.map(it -> (String) it) //
+				.filter(StringUtils::hasText);
 	}
 
 	/**
@@ -115,8 +121,10 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	String getFieldSpecification() {
 
-		String value = (String) AnnotationUtils.getValue(getQueryAnnotation(), "fields");
-		return StringUtils.hasText(value) ? value : null;
+		return Optional.ofNullable(getQueryAnnotation()) //
+				.map(it -> (String) AnnotationUtils.getValue(it, "fields")) //
+				.filter(StringUtils::hasText) //
+				.orElse(null);
 	}
 
 	/*

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,21 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.expression.spel.ExpressionState;
-import org.springframework.expression.spel.ast.OpAnd;
-import org.springframework.expression.spel.ast.OpDivide;
-import org.springframework.expression.spel.ast.OpEQ;
-import org.springframework.expression.spel.ast.OpGE;
-import org.springframework.expression.spel.ast.OpGT;
-import org.springframework.expression.spel.ast.OpLE;
-import org.springframework.expression.spel.ast.OpLT;
-import org.springframework.expression.spel.ast.OpMinus;
-import org.springframework.expression.spel.ast.OpModulus;
-import org.springframework.expression.spel.ast.OpMultiply;
-import org.springframework.expression.spel.ast.OpNE;
-import org.springframework.expression.spel.ast.OpOr;
-import org.springframework.expression.spel.ast.OpPlus;
-import org.springframework.expression.spel.ast.Operator;
-import org.springframework.expression.spel.ast.OperatorPower;
+import org.springframework.expression.spel.ast.*;
 
 /**
  * An {@link ExpressionNode} representing an operator.
@@ -44,6 +30,7 @@ import org.springframework.expression.spel.ast.OperatorPower;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class OperatorNode extends ExpressionNode {
 
@@ -102,7 +89,7 @@ public class OperatorNode extends ExpressionNode {
 		this.operator = node;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.spel.ExpressionNode#isMathematicalOperation()
 	 */
@@ -122,16 +109,16 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Returns whether the operator is unary.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isUnaryOperator() {
-		return operator.getRightOperand() == null;
+		return operator.getChildCount() == 1;
 	}
 
 	/**
 	 * Returns the Mongo expression of the operator.
-	 * 
+	 *
 	 * @return
 	 */
 	public String getMongoOperator() {
@@ -147,7 +134,7 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Returns whether the operator is a unary minus, e.g. -1.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isUnaryMinus() {
@@ -156,7 +143,7 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Returns the left operand as {@link ExpressionNode}.
-	 * 
+	 *
 	 * @return
 	 */
 	public ExpressionNode getLeft() {
@@ -165,7 +152,7 @@ public class OperatorNode extends ExpressionNode {
 
 	/**
 	 * Returns the right operand as {@link ExpressionNode}.
-	 * 
+	 *
 	 * @return
 	 */
 	public ExpressionNode getRight() {

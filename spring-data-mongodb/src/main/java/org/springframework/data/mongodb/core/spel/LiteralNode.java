@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.springframework.expression.spel.ast.StringLiteral;
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class LiteralNode extends ExpressionNode {
 
@@ -56,7 +57,7 @@ public class LiteralNode extends ExpressionNode {
 
 	/**
 	 * Creates a new {@link LiteralNode} from the given {@link Literal} and {@link ExpressionState}.
-	 * 
+	 *
 	 * @param node must not be {@literal null}.
 	 * @param state must not be {@literal null}.
 	 */
@@ -67,7 +68,7 @@ public class LiteralNode extends ExpressionNode {
 
 	/**
 	 * Returns whether the given {@link ExpressionNode} is a unary minus.
-	 * 
+	 *
 	 * @param parent
 	 * @return
 	 */
@@ -78,7 +79,7 @@ public class LiteralNode extends ExpressionNode {
 		}
 
 		OperatorNode operator = (OperatorNode) parent;
-		return operator.isUnaryMinus() && operator.getRight() == null;
+		return operator.isUnaryMinus();
 	}
 
 	/*
