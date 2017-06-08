@@ -1,6 +1,13 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.4.RELEASE (2017-06-08)
+----------------------------------------------
+* DATAMONGO-1699 - Upgrade travis.yml to use MongoDB 3.4.
+* DATAMONGO-1672 - Release 1.10.4 (Ingalls SR4).
+* DATAMONGO-1205 - CyclicPropertyReferenceException logged with stack trace.
+
+
 Changes in version 1.9.11.RELEASE (2017-06-07)
 ----------------------------------------------
 * DATAMONGO-1671 - Release 1.9.11 (Hopper SR11).
