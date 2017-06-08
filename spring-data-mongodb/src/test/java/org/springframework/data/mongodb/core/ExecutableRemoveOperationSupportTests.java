@@ -63,7 +63,7 @@ public class ExecutableRemoveOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void removeAll() {
 
-		DeleteResult result = template.remove(Person.class).all();
+		DeleteResult result = template.remove(Person.class).remove();
 
 		assertThat(result.getDeletedCount()).isEqualTo(2L);
 	}
@@ -71,7 +71,7 @@ public class ExecutableRemoveOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void removeAllMatching() {
 
-		DeleteResult result = template.remove(Person.class).matching(query(where("firstname").is("han"))).all();
+		DeleteResult result = template.remove(Person.class).matching(query(where("firstname").is("han"))).remove();
 
 		assertThat(result.getDeletedCount()).isEqualTo(1L);
 	}
@@ -80,7 +80,7 @@ public class ExecutableRemoveOperationSupportTests {
 	public void removeAllMatchingWithAlternateDomainTypeAndCollection() {
 
 		DeleteResult result = template.remove(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke")))
-				.all();
+				.remove();
 
 		assertThat(result.getDeletedCount()).isEqualTo(1L);
 	}
@@ -88,7 +88,7 @@ public class ExecutableRemoveOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void removeAndReturnAllMatching() {
 
-		List<Person> result = template.remove(Person.class).matching(query(where("firstname").is("han"))).allAndReturn();
+		List<Person> result = template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove();
 
 		assertThat(result).containsExactly(han);
 	}

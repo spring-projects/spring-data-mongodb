@@ -28,10 +28,9 @@ import com.mongodb.client.result.DeleteResult;
 public interface ExecutableRemoveOperationBuilder {
 
 	/**
-	 * Start creating a rempve operation for the given {@literal domainType}.
+	 * Start creating a remove operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @param <T>
 	 * @return
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
@@ -44,17 +43,17 @@ public interface ExecutableRemoveOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface WithCollectionBuilder<T> extends WithQueryBuilder {
+	interface WithCollectionBuilder<T> extends WithQueryBuilder<T> {
 
 		/**
-		 * [optional] Explicitly set the name of the collection to perform the query on. <br />
-		 * Just skip this step to use the default collection derived from the domain type.
+		 * Explicitly set the name of the collection to perform the query on. <br />
+		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
 		 * @return
 		 * @throws IllegalArgumentException if domainType is {@literal null}.
 		 */
-		WithQueryBuilder inCollection(String collection);
+		WithQueryBuilder<T> inCollection(String collection);
 	}
 
 	/**
@@ -69,17 +68,17 @@ public interface ExecutableRemoveOperationBuilder {
 		 *
 		 * @return
 		 */
-		DeleteResult all();
+		DeleteResult remove();
 
 		/**
-		 * Remove and return all documents matching. <br/>
+		 * Remove and return all matching documents. <br/>
 		 * <strong>NOTE</strong> The entire list of documents will be fetched before sending the actual delete commands.
-		 * Also {@link org.springframework.context.ApplicationEvent}s will be published for each and every delete operation.
+		 * Also, {@link org.springframework.context.ApplicationEvent}s will be published for each and every delete
+		 * operation.
 		 *
-		 * @param filter must not be {@literal null}.
 		 * @return empty {@link List} if no match found. Never {@literal null}.
 		 */
-		List<T> allAndReturn();
+		List<T> findAndRemove();
 	}
 
 	/**
@@ -90,7 +89,7 @@ public interface ExecutableRemoveOperationBuilder {
 	interface WithQueryBuilder<T> extends RemoveOperationBuilderTerminatingOperations<T> {
 
 		/**
-		 * [optional] Define the query filtering elements.
+		 * Define the query filtering elements.
 		 *
 		 * @param query must not be {@literal null}.
 		 * @return
@@ -104,7 +103,5 @@ public interface ExecutableRemoveOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface RemoveOperationBuilder<T> extends WithCollectionBuilder<T> {
-
-	}
+	interface RemoveOperationBuilder<T> extends WithCollectionBuilder<T> {}
 }

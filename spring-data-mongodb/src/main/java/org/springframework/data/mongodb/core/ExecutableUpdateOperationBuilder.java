@@ -30,11 +30,10 @@ public interface ExecutableUpdateOperationBuilder {
 	 * Start creating an update operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @param <T>
 	 * @return
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	public <T> UpdateOperationBuilder<T> update(Class<T> domainType);
+	<T> UpdateOperationBuilder<T> update(Class<T> domainType);
 
 	/**
 	 * Trigger update execution by calling one of the terminating methods.
@@ -93,7 +92,7 @@ public interface ExecutableUpdateOperationBuilder {
 	interface WithQueryBuilder<T> extends WithFindAndModifyBuilder<T>, UpdateOperationBuilderTerminatingOperations<T> {
 
 		/**
-		 * [optional] Filter documents by given {@literal query}.
+		 * Filter documents by given {@literal query}.
 		 *
 		 * @param filter must not be {@literal null}.
 		 * @return
@@ -113,7 +112,7 @@ public interface ExecutableUpdateOperationBuilder {
 	interface WithFindAndModifyBuilder<T> {
 
 		/**
-		 * [optional] Find, modify and return the first matching document.
+		 * Find, modify and return the first matching document.
 		 *
 		 * @param filter must not be {@literal null}.
 		 * @return
@@ -130,7 +129,7 @@ public interface ExecutableUpdateOperationBuilder {
 	interface UpdateOperationBuilder<T> {
 
 		/**
-		 * [required] Set the {@link Update} to be applied.
+		 * Set the {@link Update} to be applied.
 		 *
 		 * @param update must not be {@literal null}.
 		 * @return
@@ -147,8 +146,8 @@ public interface ExecutableUpdateOperationBuilder {
 	interface WithCollectionBuilder<T> extends WithFindAndModifyOptionsBuilder<T> {
 
 		/**
-		 * [optional] Explicitly set the name of the collection to perform the query on. <br />
-		 * Just skip this step to use the default collection derived from the domain type.
+		 * Explicitly set the name of the collection to perform the query on. <br />
+		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
 		 * @return
@@ -162,9 +161,7 @@ public interface ExecutableUpdateOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface WithOptionsBuilder<T> extends WithCollectionBuilder<T>, WithQueryBuilder<T> {
-
-	}
+	interface WithOptionsBuilder<T> extends WithCollectionBuilder<T>, WithQueryBuilder<T> {}
 
 	/**
 	 * @param <T>
@@ -174,7 +171,7 @@ public interface ExecutableUpdateOperationBuilder {
 	interface WithFindAndModifyOptionsBuilder<T> {
 
 		/**
-		 * [optional] Explicitly define {@link FindAndModifyOptions} for the {@link Update}.
+		 * Explicitly define {@link FindAndModifyOptions} for the {@link Update}.
 		 *
 		 * @param options must not be {@literal null}.
 		 * @return

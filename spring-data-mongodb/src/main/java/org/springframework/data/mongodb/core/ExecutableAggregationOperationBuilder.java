@@ -31,11 +31,10 @@ public interface ExecutableAggregationOperationBuilder {
 	 * input type for he aggregation.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @param <T>
 	 * @return
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	public <T> AggregationOperationBuilder<T> aggregateAndReturn(Class<T> domainType);
+	<T> AggregationOperationBuilder<T> aggregateAndReturn(Class<T> domainType);
 
 	/**
 	 * Collection override (Optional).
@@ -47,8 +46,8 @@ public interface ExecutableAggregationOperationBuilder {
 	interface WithCollectionBuilder<T> {
 
 		/**
-		 * [optional] Explicitly set the name of the collection to perform the query on. <br />
-		 * Just skip this step to use the default collection derived from the domain type.
+		 * Explicitly set the name of the collection to perform the query on. <br />
+		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
 		 * @return
@@ -104,7 +103,5 @@ public interface ExecutableAggregationOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface AggregationOperationBuilder<T> extends WithCollectionBuilder<T>, WithAggregationBuilder<T> {
-
-	}
+	interface AggregationOperationBuilder<T> extends WithCollectionBuilder<T>, WithAggregationBuilder<T> {}
 }

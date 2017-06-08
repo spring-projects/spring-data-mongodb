@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -57,7 +59,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new FindBuilder<>(template, null, domainType, null, domainType);
+		return new FindBuilder<>(template, domainType, domainType, null, null);
 	}
 
 	/**
@@ -65,6 +67,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
+	@RequiredArgsConstructor
 	static class FindBuilder<T>
 			implements FindOperationBuilder<T>, WithCollectionBuilder<T>, WithProjectionBuilder<T>, WithQueryBuilder<T> {
 
@@ -74,22 +77,12 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 		private final String collection;
 		private final Query query;
 
-		private FindBuilder(MongoTemplate template, Query query, Class<?> domainType, String collection,
-				Class<T> returnType) {
-
-			this.template = template;
-			this.query = query;
-			this.returnType = returnType;
-			this.domainType = domainType;
-			this.collection = collection;
-		}
-
 		@Override
 		public WithProjectionBuilder<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection name must not be null nor empty!");
 
-			return new FindBuilder<>(template, query, domainType, collection, returnType);
+			return new FindBuilder<>(template, domainType, returnType, collection, query);
 		}
 
 		@Override
@@ -97,7 +90,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 
 			Assert.notNull(returnType, "ReturnType must not be null!");
 
-			return new FindBuilder<>(template, query, domainType, collection, returnType);
+			return new FindBuilder<>(template, domainType, returnType, collection, query);
 		}
 
 		public String asString() {
@@ -142,11 +135,11 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 
 			Assert.notNull(query, "Query must not be null!");
 
-			return new FindBuilder<>(template, query, domainType, collection, returnType);
+			return new FindBuilder<>(template, domainType, returnType, collection, query);
 		}
 
 		@Override
-		public FindOperationBuilderTerminatingNearOperations near(NearQuery nearQuery) {
+		public FindOperationBuilderTerminatingNearOperations<T> near(NearQuery nearQuery) {
 			return () -> template.geoNear(nearQuery, domainType, getCollectionName(), returnType);
 		}
 

@@ -29,14 +29,13 @@ import org.springframework.data.util.CloseableIterator;
 public interface ExecutableFindOperationBuilder {
 
 	/**
-	 * Start creating a find operation for the given {@literal domainType}. <br />
+	 * Start creating a find operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @param <T>
 	 * @return
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	public <T> FindOperationBuilder<T> find(Class<T> domainType);
+	<T> FindOperationBuilder<T> find(Class<T> domainType);
 
 	/**
 	 * Trigger find execution by calling one of the terminating methods.
@@ -105,7 +104,7 @@ public interface ExecutableFindOperationBuilder {
 	interface WithQueryBuilder<T> extends FindOperationBuilderTerminatingOperations<T> {
 
 		/**
-		 * [optional] Set the filter query to be used.
+		 * Set the filter query to be used.
 		 *
 		 * @param query must not be {@literal null}.
 		 * @return
@@ -114,7 +113,7 @@ public interface ExecutableFindOperationBuilder {
 		FindOperationBuilderTerminatingOperations<T> matching(Query query);
 
 		/**
-		 * [optional] Set the filter query for the geoNear execution.
+		 * Set the filter query for the geoNear execution.
 		 *
 		 * @param nearQuery must not be {@literal null}.
 		 * @return
@@ -134,8 +133,8 @@ public interface ExecutableFindOperationBuilder {
 	interface WithCollectionBuilder<T> extends WithQueryBuilder<T> {
 
 		/**
-		 * [optional] Explicitly set the name of the collection to perform the query on. <br />
-		 * Just skip this step to use the default collection derived from the domain type.
+		 * Explicitly set the name of the collection to perform the query on. <br />
+		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
 		 * @return
@@ -154,15 +153,15 @@ public interface ExecutableFindOperationBuilder {
 	interface WithProjectionBuilder<T> extends WithQueryBuilder<T> {
 
 		/**
-		 * [optional] Define the target type fields should be mapped to. <br />
-		 * Just skip this step if you are anyway only interested in the original domain type.
+		 * Define the target type fields should be mapped to. <br />
+		 * Skip this step if you are anyway only interested in the original domain type.
 		 *
 		 * @param resultType must not be {@literal null}.
-		 * @param <T>
+		 * @param <R> result type.
 		 * @return
 		 * @throws IllegalArgumentException if resultType is {@literal null}.
 		 */
-		<T1> WithQueryBuilder<T1> as(Class<T1> resultType);
+		<R> WithQueryBuilder<R> as(Class<R> resultType);
 	}
 
 	/**
@@ -170,7 +169,5 @@ public interface ExecutableFindOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface FindOperationBuilder<T> extends WithCollectionBuilder<T>, WithProjectionBuilder<T> {
-
-	}
+	interface FindOperationBuilder<T> extends WithCollectionBuilder<T>, WithProjectionBuilder<T> {}
 }

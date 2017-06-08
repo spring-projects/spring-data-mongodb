@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -38,7 +39,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	 * @param template must not be {@literal null}.
 	 * @throws IllegalArgumentException if template is {@literal null}.
 	 */
-	public ExecutableAggregationOperationSupport(MongoTemplate template) {
+	ExecutableAggregationOperationSupport(MongoTemplate template) {
 
 		Assert.notNull(template, "Template must not be null!");
 		this.template = template;
@@ -48,7 +49,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	public <T> AggregationOperationBuilder<T> aggregateAndReturn(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
-		return new AggreationBuilder<T>(template, null, domainType, null);
+		return new AggregationBuilder<T>(template, null, domainType, null);
 	}
 
 	/**
@@ -56,7 +57,8 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	static class AggreationBuilder<T> implements WithAggregationBuilder<T>, AggregationOperationBuilder<T>,
+	@RequiredArgsConstructor
+	static class AggregationBuilder<T> implements WithAggregationBuilder<T>, AggregationOperationBuilder<T>,
 			AggregateOperationBuilderTerminatingOperations<T> {
 
 		private final MongoTemplate template;
@@ -64,26 +66,18 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 		private final Class<T> domainType;
 		private final String collection;
 
-		public AggreationBuilder(MongoTemplate template, Aggregation aggregation, Class<T> domainType, String collection) {
-
-			this.template = template;
-			this.aggregation = aggregation;
-			this.domainType = domainType;
-			this.collection = collection;
-		}
-
 		@Override
 		public WithAggregationBuilder<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
-			return new AggreationBuilder<T>(template, aggregation, domainType, collection);
+			return new AggregationBuilder<T>(template, aggregation, domainType, collection);
 		}
 
 		@Override
 		public AggregateOperationBuilderTerminatingOperations<T> by(Aggregation aggregation) {
 
 			Assert.notNull(aggregation, "Aggregation must not be null!");
-			return new AggreationBuilder<T>(template, aggregation, domainType, collection);
+			return new AggregationBuilder<T>(template, aggregation, domainType, collection);
 		}
 
 		@Override

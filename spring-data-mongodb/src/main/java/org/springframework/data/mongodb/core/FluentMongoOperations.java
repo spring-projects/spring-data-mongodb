@@ -33,8 +33,7 @@ public interface FluentMongoOperations {
 	 * Entry point for constructing and executing queries for a given domain type.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @param <S>
-	 * @return new instance of {@link FindExecutionBuilder}.
+	 * @return new instance of {@link FindOperationBuilder}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 * @since 2.0
 	 */
@@ -44,7 +43,6 @@ public interface FluentMongoOperations {
 	 * Entry point for constructing and executing updates for a given domain type.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @param <T>
 	 * @return new instance of {@link ExecutableUpdateOperationBuilder}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 * @since 2.0
@@ -55,7 +53,6 @@ public interface FluentMongoOperations {
 	 * Entry point for constructing and executing deletes for a given domain type.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @param <T>
 	 * @return new instance of {@link RemoveOperationBuilder}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 * @since 2.0
@@ -66,8 +63,7 @@ public interface FluentMongoOperations {
 	 * Entry point for constructing and executing aggregation operations.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @param <T>
-	 * @return new instance of {@link AggregationOperation}.
+	 * @return new instance of {@link AggregationOperationBuilder}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 * @since 2.0
 	 */

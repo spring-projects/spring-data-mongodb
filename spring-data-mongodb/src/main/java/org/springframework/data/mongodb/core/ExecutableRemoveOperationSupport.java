@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.List;
 
 import org.bson.Document;
@@ -51,7 +53,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperationBuild
 	public <T> RemoveOperationBuilder<T> remove(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
-		return new RemoveBuilder<T>(tempate, null, domainType, null);
+		return new RemoveBuilder<>(tempate, null, domainType, null);
 	}
 
 	/**
@@ -59,6 +61,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperationBuild
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
+	@RequiredArgsConstructor
 	static class RemoveBuilder<T> implements RemoveOperationBuilder<T>, WithCollectionBuilder<T> {
 
 		private final MongoTemplate template;
@@ -66,30 +69,22 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperationBuild
 		private final Class<T> domainType;
 		private final String collection;
 
-		public RemoveBuilder(MongoTemplate template, Query query, Class<T> domainType, String collection) {
-
-			this.template = template;
-			this.query = query;
-			this.domainType = domainType;
-			this.collection = collection;
-		}
-
 		@Override
-		public WithQueryBuilder inCollection(String collection) {
+		public WithQueryBuilder<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
-			return new RemoveBuilder<T>(template, query, domainType, collection);
+			return new RemoveBuilder<>(template, query, domainType, collection);
 		}
 
 		@Override
-		public RemoveOperationBuilderTerminatingOperations matching(Query query) {
+		public RemoveOperationBuilderTerminatingOperations<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null!");
-			return new RemoveBuilder<T>(template, query, domainType, collection);
+			return new RemoveBuilder<>(template, query, domainType, collection);
 		}
 
 		@Override
-		public DeleteResult all() {
+		public DeleteResult remove() {
 
 			String collectionName = StringUtils.hasText(collection) ? collection
 					: template.determineCollectionName(domainType);
@@ -98,7 +93,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperationBuild
 		}
 
 		@Override
-		public List allAndReturn() {
+		public List<T> findAndRemove() {
 
 			String collectionName = StringUtils.hasText(collection) ? collection
 					: template.determineCollectionName(domainType);

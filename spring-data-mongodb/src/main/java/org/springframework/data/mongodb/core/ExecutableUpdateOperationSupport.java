@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.RequiredArgsConstructor;
+
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -57,6 +59,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperationBuild
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
+	@RequiredArgsConstructor
 	static class UpdateBuilder<T>
 			implements WithOptionsBuilder<T>, UpdateOperationBuilder<T>, WithCollectionBuilder<T>, WithQueryBuilder<T> {
 
@@ -67,19 +70,8 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperationBuild
 		private final String collection;
 		private final FindAndModifyOptions options;
 
-		private UpdateBuilder(MongoTemplate template, Query query, Class<T> domainType, Update update, String collection,
-				FindAndModifyOptions options) {
-
-			this.template = template;
-			this.query = query;
-			this.domainType = domainType;
-			this.update = update;
-			this.collection = collection;
-			this.options = options;
-		}
-
 		@Override
-		public WithOptionsBuilder apply(Update update) {
+		public WithOptionsBuilder<T> apply(Update update) {
 
 			Assert.notNull(update, "Update must not be null!");
 			return new UpdateBuilder<T>(template, query, domainType, update, collection, options);
@@ -125,7 +117,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperationBuild
 		}
 
 		@Override
-		public WithFindAndModifyBuilder withOptions(FindAndModifyOptions options) {
+		public WithFindAndModifyBuilder<T> withOptions(FindAndModifyOptions options) {
 
 			Assert.notNull(options, "Options must not be null!");
 			return new UpdateBuilder<T>(template, query, domainType, update, collection, options);
