@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -23,19 +24,39 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.util.CloseableIterator;
 
 /**
+ * {@link ExecutableFindOperation} allows creation and execution of MongoDB find operations in a fluent API style.
+ * <br />
+ * The starting {@literal domainType} is used for mapping the {@link Query} provided via {@code matching} into the
+ * MongoDB specific representation. By default this originating {@literal domainType} is also used for mapping back the
+ * result from the {@link org.bson.Document}. However it is possible to define an different {@literal returnType} via
+ * {@code as} that is then used for mapping the result mapping. <br />
+ * The collection to operate on is by default derived from the initial {@literal domainType} and can be defined there
+ * via {@link org.springframework.data.mongodb.core.mapping.Document}. Using {@code inCollection} allows to override the
+ * collection name for the execution.
+ *
+ * <pre>
+ *     <code>
+ *         query(Human.class)
+ *             .inCollection("star-wars")
+ *             .as(Jedi.class)
+ *             .matching(query(where("firstname").is("luke")))
+ *             .all();
+ *     </code>
+ * </pre>
+ *
  * @author Christoph Strobl
  * @since 2.0
  */
-public interface ExecutableFindOperationBuilder {
+public interface ExecutableFindOperation {
 
 	/**
 	 * Start creating a find operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link FindOperation}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	<T> FindOperationBuilder<T> find(Class<T> domainType);
+	<T> FindOperation<T> query(Class<T> domainType);
 
 	/**
 	 * Trigger find execution by calling one of the terminating methods.
@@ -44,22 +65,22 @@ public interface ExecutableFindOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface FindOperationBuilderTerminatingOperations<T> {
+	interface TerminatingFindOperation<T> {
 
 		/**
 		 * Get exactly zero or one result.
 		 *
-		 * @return {@literal null} if no match found.
+		 * @return {@link Optional#empty()} if no match found.
 		 * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if more than one match found.
 		 */
-		T one();
+		Optional<T> one();
 
 		/**
 		 * Get the first or no result.
 		 *
-		 * @return {@literal null} if no match found.
+		 * @return {@link Optional#empty()} if no match found.
 		 */
-		T first();
+		Optional<T> first();
 
 		/**
 		 * Get all matching elements.
@@ -84,7 +105,7 @@ public interface ExecutableFindOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface FindOperationBuilderTerminatingNearOperations<T> {
+	interface TerminatingFindNearOperation<T> {
 
 		/**
 		 * Find all matching elements and return them as {@link org.springframework.data.geo.GeoResult}.
@@ -101,26 +122,25 @@ public interface ExecutableFindOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface WithQueryBuilder<T> extends FindOperationBuilderTerminatingOperations<T> {
+	interface FindOperationWithQuery<T> extends TerminatingFindOperation<T> {
 
 		/**
 		 * Set the filter query to be used.
 		 *
 		 * @param query must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link TerminatingFindOperation}.
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
-		FindOperationBuilderTerminatingOperations<T> matching(Query query);
+		TerminatingFindOperation<T> matching(Query query);
 
 		/**
 		 * Set the filter query for the geoNear execution.
 		 *
 		 * @param nearQuery must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link TerminatingFindNearOperation}.
 		 * @throws IllegalArgumentException if nearQuery is {@literal null}.
 		 */
-		FindOperationBuilderTerminatingNearOperations<T> near(NearQuery nearQuery);
-
+		TerminatingFindNearOperation<T> near(NearQuery nearQuery);
 	}
 
 	/**
@@ -130,17 +150,17 @@ public interface ExecutableFindOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface WithCollectionBuilder<T> extends WithQueryBuilder<T> {
+	interface FindOperationWithCollection<T> extends FindOperationWithQuery<T> {
 
 		/**
 		 * Explicitly set the name of the collection to perform the query on. <br />
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return
+		 * @return new instance of {@link FindOperationWithProjection}.
 		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
-		WithProjectionBuilder<T> inCollection(String collection);
+		FindOperationWithProjection<T> inCollection(String collection);
 	}
 
 	/**
@@ -150,7 +170,7 @@ public interface ExecutableFindOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface WithProjectionBuilder<T> extends WithQueryBuilder<T> {
+	interface FindOperationWithProjection<T> extends FindOperationWithQuery<T> {
 
 		/**
 		 * Define the target type fields should be mapped to. <br />
@@ -158,16 +178,20 @@ public interface ExecutableFindOperationBuilder {
 		 *
 		 * @param resultType must not be {@literal null}.
 		 * @param <R> result type.
-		 * @return
+		 * @return new instance of {@link FindOperationWithProjection}.
 		 * @throws IllegalArgumentException if resultType is {@literal null}.
 		 */
-		<R> WithQueryBuilder<R> as(Class<R> resultType);
+		<R> FindOperationWithQuery<R> as(Class<R> resultType);
 	}
 
 	/**
+	 * {@link FindOperation} provides methods for constructing lookup operations in a fluent way.
+	 *
 	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface FindOperationBuilder<T> extends WithCollectionBuilder<T>, WithProjectionBuilder<T> {}
+	interface FindOperation<T> extends FindOperationWithCollection<T>, FindOperationWithProjection<T> {
+
+	}
 }

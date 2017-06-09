@@ -20,10 +20,25 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.util.CloseableIterator;
 
 /**
+ * {@link ExecutableAggregationOperation} allows creation and execution of MongoDB aggregation operations in a fluent
+ * API style. <br />
+ * The starting {@literal domainType} is used for mapping the {@link Aggregation} provided via {@code by} into the
+ * MongoDB specific representation, as well as mapping back the resulting {@link org.bson.Document}. An alternative
+ * input type for mapping the {@link Aggregation} can be provided by using
+ * {@link org.springframework.data.mongodb.core.aggregation.TypedAggregation}.
+ *
+ * <pre>
+ *     <code>
+ *         aggregateAndReturn(Jedi.class)
+ *             .by(newAggregation(Human.class, project("These are not the droids you are looking for")))
+ *             .get();
+ *     </code>
+ * </pre>
+ *
  * @author Christoph Strobl
  * @since 2.0
  */
-public interface ExecutableAggregationOperationBuilder {
+public interface ExecutableAggregationOperation {
 
 	/**
 	 * Start creating an aggregation operation that returns results mapped to the given domain type. <br />
@@ -31,10 +46,10 @@ public interface ExecutableAggregationOperationBuilder {
 	 * input type for he aggregation.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link AggregationOperation}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	<T> AggregationOperationBuilder<T> aggregateAndReturn(Class<T> domainType);
+	<T> AggregationOperation<T> aggregateAndReturn(Class<T> domainType);
 
 	/**
 	 * Collection override (Optional).
@@ -43,17 +58,17 @@ public interface ExecutableAggregationOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface WithCollectionBuilder<T> {
+	interface AggregationOperationWithCollection<T> {
 
 		/**
 		 * Explicitly set the name of the collection to perform the query on. <br />
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return
+		 * @return new instance of {@link AggregationOperationWithAggregation}.
 		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
-		WithAggregationBuilder<T> inCollection(String collection);
+		AggregationOperationWithAggregation<T> inCollection(String collection);
 	}
 
 	/**
@@ -61,12 +76,12 @@ public interface ExecutableAggregationOperationBuilder {
 	 *
 	 * @param <T>
 	 */
-	interface AggregateOperationBuilderTerminatingOperations<T> {
+	interface TerminatingAggregationOperation<T> {
 
 		/**
 		 * Apply pipeline operations as specified.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		AggregationResults<T> get();
 
@@ -74,7 +89,8 @@ public interface ExecutableAggregationOperationBuilder {
 		 * Apply pipeline operations as specified. <br />
 		 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.Cursor}
 		 *
-		 * @return
+		 * @return a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.Cursor} that needs to be closed.
+		 *         Never {@literal null}.
 		 */
 		CloseableIterator<T> stream();
 	}
@@ -86,16 +102,16 @@ public interface ExecutableAggregationOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface WithAggregationBuilder<T> {
+	interface AggregationOperationWithAggregation<T> {
 
 		/**
-		 * [required] Set the aggregation to be used.
+		 * Set the aggregation to be used.
 		 *
 		 * @param aggregation must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link TerminatingAggregationOperation}.
 		 * @throws IllegalArgumentException if aggregation is {@literal null}.
 		 */
-		AggregateOperationBuilderTerminatingOperations<T> by(Aggregation aggregation);
+		TerminatingAggregationOperation<T> by(Aggregation aggregation);
 	}
 
 	/**
@@ -103,5 +119,6 @@ public interface ExecutableAggregationOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface AggregationOperationBuilder<T> extends WithCollectionBuilder<T>, WithAggregationBuilder<T> {}
+	interface AggregationOperation<T>
+			extends AggregationOperationWithCollection<T>, AggregationOperationWithAggregation<T> {}
 }

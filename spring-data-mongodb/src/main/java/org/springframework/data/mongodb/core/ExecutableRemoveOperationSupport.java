@@ -28,12 +28,12 @@ import org.springframework.util.StringUtils;
 import com.mongodb.client.result.DeleteResult;
 
 /**
- * Implementation of {@link ExecutableRemoveOperationBuilder}.
+ * Implementation of {@link ExecutableRemoveOperation}.
  *
  * @author Christoph Strobl
  * @since 2.0
  */
-class ExecutableRemoveOperationSupport implements ExecutableRemoveOperationBuilder {
+class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 
 	private final MongoTemplate tempate;
 
@@ -50,10 +50,10 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperationBuild
 	}
 
 	@Override
-	public <T> RemoveOperationBuilder<T> remove(Class<T> domainType) {
+	public <T> RemoveOperation<T> remove(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
-		return new RemoveBuilder<>(tempate, null, domainType, null);
+		return new RemoveOperationSupport<>(tempate, null, domainType, null);
 	}
 
 	/**
@@ -62,7 +62,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperationBuild
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
-	static class RemoveBuilder<T> implements RemoveOperationBuilder<T>, WithCollectionBuilder<T> {
+	static class RemoveOperationSupport<T> implements RemoveOperation<T>, RemoveOperationWithCollection<T> {
 
 		private final MongoTemplate template;
 		private final Query query;
@@ -70,21 +70,21 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperationBuild
 		private final String collection;
 
 		@Override
-		public WithQueryBuilder<T> inCollection(String collection) {
+		public RemoveOperationWithQuery<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
-			return new RemoveBuilder<>(template, query, domainType, collection);
+			return new RemoveOperationSupport<>(template, query, domainType, collection);
 		}
 
 		@Override
-		public RemoveOperationBuilderTerminatingOperations<T> matching(Query query) {
+		public TerminatingRemoveOperation<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null!");
-			return new RemoveBuilder<>(template, query, domainType, collection);
+			return new RemoveOperationSupport<>(template, query, domainType, collection);
 		}
 
 		@Override
-		public DeleteResult remove() {
+		public DeleteResult all() {
 
 			String collectionName = StringUtils.hasText(collection) ? collection
 					: template.determineCollectionName(domainType);

@@ -21,6 +21,8 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
 
+import java.util.Optional;
+
 import org.bson.BsonString;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +75,7 @@ public class ExecutableUpdateOperationSupportTests {
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
 	public void collectionIsRequiredOnSet() {
-		template.update(Person.class).apply(new Update()).inCollection(null);
+		template.update(Person.class).inCollection(null);
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
@@ -102,8 +104,8 @@ public class ExecutableUpdateOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void updateAllMatching() {
 
-		UpdateResult result = template.update(Person.class).apply(new Update().set("firstname", "Han"))
-				.matching(queryHan()).all();
+		UpdateResult result = template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han"))
+				.all();
 
 		assertThat(result.getModifiedCount()).isEqualTo(1L);
 		assertThat(result.getUpsertedId()).isNull();
@@ -112,8 +114,8 @@ public class ExecutableUpdateOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void updateWithDifferentDomainClassAndCollection() {
 
-		UpdateResult result = template.update(Jedi.class).apply(new Update().set("name", "Han")).inCollection(STAR_WARS)
-				.matching(query(where("_id").is(han.getId()))).all();
+		UpdateResult result = template.update(Jedi.class).inCollection(STAR_WARS)
+				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("name", "Han")).all();
 
 		assertThat(result.getModifiedCount()).isEqualTo(1L);
 		assertThat(result.getUpsertedId()).isNull();
@@ -124,10 +126,10 @@ public class ExecutableUpdateOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void findAndModify() {
 
-		Person result = template.update(Person.class).apply(new Update().set("firstname", "Han"))
-				.matching(queryHan()).findAndModify();
+		Optional<Person> result = template.update(Person.class).matching(queryHan())
+				.apply(new Update().set("firstname", "Han")).findAndModify();
 
-		assertThat(result).isEqualTo(han);
+		assertThat(result).contains(han);
 		assertThat(template.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
 				"Han");
 	}
@@ -135,10 +137,10 @@ public class ExecutableUpdateOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void findAndModifyWithDifferentDomainTypeAndCollection() {
 
-		Jedi result = template.update(Jedi.class).apply(new Update().set("name", "Han")).inCollection(STAR_WARS)
-				.matching(query(where("_id").is(han.getId()))).findAndModify();
+		Optional<Jedi> result = template.update(Jedi.class).inCollection(STAR_WARS)
+				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("name", "Han")).findAndModify();
 
-		assertThat(result).hasFieldOrPropertyWithValue("name", "han");
+		assertThat(result.get()).hasFieldOrPropertyWithValue("name", "han");
 		assertThat(template.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
 				"Han");
 	}
@@ -146,17 +148,18 @@ public class ExecutableUpdateOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void findAndModifyWithOptions() {
 
-		Person result = template.update(Person.class).apply(new Update().set("firstname", "Han"))
-				.withOptions(FindAndModifyOptions.options().returnNew(true)).matching(queryHan()).findAndModify();
+		Optional<Person> result = template.update(Person.class).matching(queryHan())
+				.apply(new Update().set("firstname", "Han")).withOptions(FindAndModifyOptions.options().returnNew(true))
+				.findAndModify();
 
-		assertThat(result).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Han");
+		assertThat(result.get()).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Han");
 	}
 
 	@Test // DATAMONGO-1563
 	public void upsert() {
 
-		UpdateResult result = template.update(Person.class).apply(new Update().set("firstname", "Chewbacca"))
-				.matching(query(where("id").is("id-3"))).upsert();
+		UpdateResult result = template.update(Person.class).matching(query(where("id").is("id-3")))
+				.apply(new Update().set("firstname", "Chewbacca")).upsert();
 
 		assertThat(result.getModifiedCount()).isEqualTo(0L);
 		assertThat(result.getUpsertedId()).isEqualTo(new BsonString("id-3"));

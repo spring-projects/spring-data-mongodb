@@ -126,12 +126,12 @@ public class ExecutableFindOperationSupportTests {
 
 	@Test // DATAMONGO-1563
 	public void findBy() {
-		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).one()).isEqualTo(luke);
+		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).one()).contains(luke);
 	}
 
 	@Test // DATAMONGO-1563
 	public void findByNoMatch() {
-		assertThat(template.query(Person.class).matching(query(where("firstname").is("spock"))).one()).isNull();
+		assertThat(template.query(Person.class).matching(query(where("firstname").is("spock"))).one()).isEmpty();
 	}
 
 	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1563

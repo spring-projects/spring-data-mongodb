@@ -67,9 +67,10 @@ import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
-import org.springframework.data.mongodb.core.ExecutableFindOperationBuilder.FindOperationBuilder;
-import org.springframework.data.mongodb.core.ExecutableRemoveOperationBuilder.RemoveOperationBuilder;
-import org.springframework.data.mongodb.core.ExecutableUpdateOperationBuilder.UpdateOperationBuilder;
+import org.springframework.data.mongodb.core.ExecutableAggregationOperation.AggregationOperation;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation.RemoveOperation;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateOperation;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -1790,22 +1791,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public <T> FindOperationBuilder<T> query(Class<T> domainType) {
-		return new ExecutableFindOperationSupport(this).find(domainType);
+	public <T> FindOperation<T> query(Class<T> domainType) {
+		return new ExecutableFindOperationSupport(this).query(domainType);
 	}
 
 	@Override
-	public <T> UpdateOperationBuilder<T> update(Class<T> domainType) {
+	public <T> UpdateOperation<T> update(Class<T> domainType) {
 		return new ExecutableUpdateOperationSupport(this).update(domainType);
 	}
 
 	@Override
-	public <T> RemoveOperationBuilder<T> remove(Class<T> domainType) {
+	public <T> RemoveOperation<T> remove(Class<T> domainType) {
 		return new ExecutableRemoveOperationSupport(this).remove(domainType);
 	}
 
 	@Override
-	public <T> ExecutableAggregationOperationBuilder.AggregationOperationBuilder<T> aggregateAndReturn(
+	public <T> AggregationOperation<T> aggregateAndReturn(
 			Class<T> domainType) {
 		return new ExecutableAggregationOperationSupport(this).aggregateAndReturn(domainType);
 	}

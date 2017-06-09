@@ -25,6 +25,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -33,12 +34,12 @@ import org.springframework.util.StringUtils;
 import com.mongodb.client.FindIterable;
 
 /**
- * Implementation of {@link ExecutableFindOperationBuilder}.
+ * Implementation of {@link ExecutableFindOperation}.
  *
  * @author Christoph Strobl
  * @since 2.0
  */
-class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
+class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 	private final MongoTemplate template;
 
@@ -51,15 +52,16 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 	ExecutableFindOperationSupport(MongoTemplate template) {
 
 		Assert.notNull(template, "Template must not be null!");
+
 		this.template = template;
 	}
 
 	@Override
-	public <T> FindOperationBuilder<T> find(Class<T> domainType) {
+	public <T> FindOperation<T> query(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new FindBuilder<>(template, domainType, domainType, null, null);
+		return new FindOperationSupport<>(template, domainType, domainType, null, null);
 	}
 
 	/**
@@ -68,8 +70,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
-	static class FindBuilder<T>
-			implements FindOperationBuilder<T>, WithCollectionBuilder<T>, WithProjectionBuilder<T>, WithQueryBuilder<T> {
+	static class FindOperationSupport<T> implements FindOperation<T>, FindOperationWithCollection<T>,
+			FindOperationWithProjection<T>, FindOperationWithQuery<T> {
 
 		private final MongoTemplate template;
 		private final Class<?> domainType;
@@ -78,46 +80,50 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 		private final Query query;
 
 		@Override
-		public WithProjectionBuilder<T> inCollection(String collection) {
+		public FindOperationWithProjection<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection name must not be null nor empty!");
 
-			return new FindBuilder<>(template, domainType, returnType, collection, query);
+			return new FindOperationSupport<>(template, domainType, returnType, collection, query);
 		}
 
 		@Override
-		public <T1> WithQueryBuilder<T1> as(Class<T1> returnType) {
+		public <T1> FindOperationWithQuery<T1> as(Class<T1> returnType) {
 
 			Assert.notNull(returnType, "ReturnType must not be null!");
 
-			return new FindBuilder<>(template, domainType, returnType, collection, query);
-		}
-
-		public String asString() {
-			return "";
+			return new FindOperationSupport<>(template, domainType, returnType, collection, query);
 		}
 
 		@Override
-		public T one() {
+		public TerminatingFindOperation<T> matching(Query query) {
+
+			Assert.notNull(query, "Query must not be null!");
+
+			return new FindOperationSupport<>(template, domainType, returnType, collection, query);
+		}
+
+		@Override
+		public Optional<T> one() {
 
 			List<T> result = doFind(new DelegatingQueryCursorPreparer(getCursorPreparer(query, null)).limit(2));
 
 			if (ObjectUtils.isEmpty(result)) {
-				return null;
+				return Optional.empty();
 			}
 
 			if (result.size() > 1) {
 				throw new IncorrectResultSizeDataAccessException("Query " + asString() + " returned non unique result.", 1);
 			}
 
-			return result.iterator().next();
+			return Optional.of(result.iterator().next());
 		}
 
 		@Override
-		public T first() {
+		public Optional<T> first() {
 
 			List<T> result = doFind(new DelegatingQueryCursorPreparer(getCursorPreparer(query, null)).limit(1));
-			return ObjectUtils.isEmpty(result) ? null : result.iterator().next();
+			return ObjectUtils.isEmpty(result) ? Optional.empty() : Optional.of(result.iterator().next());
 		}
 
 		@Override
@@ -131,15 +137,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 		}
 
 		@Override
-		public FindOperationBuilderTerminatingOperations<T> matching(Query query) {
-
-			Assert.notNull(query, "Query must not be null!");
-
-			return new FindBuilder<>(template, domainType, returnType, collection, query);
-		}
-
-		@Override
-		public FindOperationBuilderTerminatingNearOperations<T> near(NearQuery nearQuery) {
+		public TerminatingFindNearOperation<T> near(NearQuery nearQuery) {
 			return () -> template.geoNear(nearQuery, domainType, getCollectionName(), returnType);
 		}
 
@@ -165,6 +163,10 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 		private String getCollectionName() {
 			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
 		}
+
+		private String asString() {
+			return SerializationUtils.serializeToJsonSafely(query);
+		}
 	}
 
 	/**
@@ -185,12 +187,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperationBuilder {
 		public FindIterable<Document> prepare(FindIterable<Document> cursor) {
 
 			FindIterable<Document> target = delegate.prepare(cursor);
-
-			if (limit.isPresent()) {
-				target = target.limit(limit.get());
-			}
-
-			return target;
+			return limit.map(it -> target.limit(it)).orElse(target);
 		}
 
 		CursorPreparer limit(int limit) {

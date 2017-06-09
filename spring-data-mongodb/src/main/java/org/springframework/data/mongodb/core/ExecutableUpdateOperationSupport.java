@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.Optional;
+
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -27,12 +29,12 @@ import org.springframework.util.StringUtils;
 import com.mongodb.client.result.UpdateResult;
 
 /**
- * Implementation of {@link ExecutableUpdateOperationBuilder}.
+ * Implementation of {@link ExecutableUpdateOperation}.
  *
  * @author Christoph Strobl
  * @since 2.0
  */
-class ExecutableUpdateOperationSupport implements ExecutableUpdateOperationBuilder {
+class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 	private final MongoTemplate template;
 
@@ -48,10 +50,10 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperationBuild
 	}
 
 	@Override
-	public <T> UpdateOperationBuilder<T> update(Class<T> domainType) {
+	public <T> UpdateOperation<T> update(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
-		return new UpdateBuilder<T>(template, null, domainType, null, null, null);
+		return new UpdateOperationSupport<T>(template, null, domainType, null, null, null);
 	}
 
 	/**
@@ -60,8 +62,8 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperationBuild
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
-	static class UpdateBuilder<T>
-			implements WithOptionsBuilder<T>, UpdateOperationBuilder<T>, WithCollectionBuilder<T>, WithQueryBuilder<T> {
+	static class UpdateOperationSupport<T> implements UpdateOperation<T>, UpdateOperationWithCollection<T>,
+			UpdateOperationWithQuery<T>, TerminatingUpdateOperation<T> {
 
 		private final MongoTemplate template;
 		private final Query query;
@@ -71,17 +73,17 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperationBuild
 		private final FindAndModifyOptions options;
 
 		@Override
-		public WithOptionsBuilder<T> apply(Update update) {
+		public TerminatingUpdateOperation<T> apply(Update update) {
 
 			Assert.notNull(update, "Update must not be null!");
-			return new UpdateBuilder<T>(template, query, domainType, update, collection, options);
+			return new UpdateOperationSupport<T>(template, query, domainType, update, collection, options);
 		}
 
 		@Override
-		public WithQueryBuilder<T> inCollection(String collection) {
+		public UpdateOperationWithQuery<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
-			return new UpdateBuilder<T>(template, query, domainType, update, collection, options);
+			return new UpdateOperationSupport<T>(template, query, domainType, update, collection, options);
 		}
 
 		@Override
@@ -95,20 +97,20 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperationBuild
 		}
 
 		@Override
-		public T findAndModify() {
+		public Optional<T> findAndModify() {
 
 			String collectionName = StringUtils.hasText(collection) ? collection
 					: template.determineCollectionName(domainType);
 
-			return template.findAndModify(query != null ? query : new BasicQuery(new Document()), update, options, domainType,
-					collectionName);
+			return Optional.ofNullable(template.findAndModify(query != null ? query : new BasicQuery(new Document()), update,
+					options, domainType, collectionName));
 		}
 
 		@Override
-		public UpdateOperationBuilderTerminatingOperations<T> matching(Query query) {
+		public UpdateOperationWithUpdate<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null!");
-			return new UpdateBuilder<T>(template, query, domainType, update, collection, options);
+			return new UpdateOperationSupport<T>(template, query, domainType, update, collection, options);
 		}
 
 		@Override
@@ -117,10 +119,10 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperationBuild
 		}
 
 		@Override
-		public WithFindAndModifyBuilder<T> withOptions(FindAndModifyOptions options) {
+		public TerminatingFindAndModifyOperation<T> withOptions(FindAndModifyOptions options) {
 
 			Assert.notNull(options, "Options must not be null!");
-			return new UpdateBuilder<T>(template, query, domainType, update, collection, options);
+			return new UpdateOperationSupport<T>(template, query, domainType, update, collection, options);
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {

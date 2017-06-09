@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -24,12 +25,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
- * Implementation of {@link ExecutableAggregationOperationBuilder} operating directly on {@link MongoTemplate}.
+ * Implementation of {@link ExecutableAggregationOperation} operating directly on {@link MongoTemplate}.
  *
  * @author Christoph Strobl
  * @since 2.0
  */
-class ExecutableAggregationOperationSupport implements ExecutableAggregationOperationBuilder {
+class ExecutableAggregationOperationSupport implements ExecutableAggregationOperation {
 
 	private final MongoTemplate template;
 
@@ -46,10 +47,10 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	}
 
 	@Override
-	public <T> AggregationOperationBuilder<T> aggregateAndReturn(Class<T> domainType) {
+	public <T> AggregationOperation<T> aggregateAndReturn(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
-		return new AggregationBuilder<T>(template, null, domainType, null);
+		return new AggregationOperationSupport<T>(template, null, domainType, null);
 	}
 
 	/**
@@ -58,8 +59,8 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
-	static class AggregationBuilder<T> implements WithAggregationBuilder<T>, AggregationOperationBuilder<T>,
-			AggregateOperationBuilderTerminatingOperations<T> {
+	static class AggregationOperationSupport<T>
+			implements AggregationOperationWithAggregation<T>, AggregationOperation<T>, TerminatingAggregationOperation<T> {
 
 		private final MongoTemplate template;
 		private final Aggregation aggregation;
@@ -67,17 +68,17 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 		private final String collection;
 
 		@Override
-		public WithAggregationBuilder<T> inCollection(String collection) {
+		public AggregationOperationWithAggregation<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
-			return new AggregationBuilder<T>(template, aggregation, domainType, collection);
+			return new AggregationOperationSupport<T>(template, aggregation, domainType, collection);
 		}
 
 		@Override
-		public AggregateOperationBuilderTerminatingOperations<T> by(Aggregation aggregation) {
+		public TerminatingAggregationOperation<T> by(Aggregation aggregation) {
 
 			Assert.notNull(aggregation, "Aggregation must not be null!");
-			return new AggregationBuilder<T>(template, aggregation, domainType, collection);
+			return new AggregationOperationSupport<T>(template, aggregation, domainType, collection);
 		}
 
 		@Override

@@ -15,57 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.mongodb.core.ExecutableAggregationOperationBuilder.AggregationOperationBuilder;
-import org.springframework.data.mongodb.core.ExecutableFindOperationBuilder.FindOperationBuilder;
-import org.springframework.data.mongodb.core.ExecutableRemoveOperationBuilder.RemoveOperationBuilder;
-import org.springframework.data.mongodb.core.ExecutableUpdateOperationBuilder.UpdateOperationBuilder;
-
 /**
- * Stripped down interface providing access to a {@literal builder} based fluent API that specifies a basic set of
- * MongoDB operations.
+ * Stripped down interface providing access to a fluent API that specifies a basic set of MongoDB operations.
  *
  * @author Christoph Strobl
  * @since 2.0
  */
-public interface FluentMongoOperations {
+public interface FluentMongoOperations extends ExecutableFindOperation, ExecutableUpdateOperation,
+		ExecutableRemoveOperation, ExecutableAggregationOperation {
 
-	/**
-	 * Entry point for constructing and executing queries for a given domain type.
-	 *
-	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link FindOperationBuilder}.
-	 * @throws IllegalArgumentException if domainType is {@literal null}.
-	 * @since 2.0
-	 */
-	<T> FindOperationBuilder<T> query(Class<T> domainType);
-
-	/**
-	 * Entry point for constructing and executing updates for a given domain type.
-	 *
-	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link ExecutableUpdateOperationBuilder}.
-	 * @throws IllegalArgumentException if domainType is {@literal null}.
-	 * @since 2.0
-	 */
-	<T> UpdateOperationBuilder<T> update(Class<T> domainType);
-
-	/**
-	 * Entry point for constructing and executing deletes for a given domain type.
-	 *
-	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link RemoveOperationBuilder}.
-	 * @throws IllegalArgumentException if domainType is {@literal null}.
-	 * @since 2.0
-	 */
-	<T> RemoveOperationBuilder<T> remove(Class<T> domainType);
-
-	/**
-	 * Entry point for constructing and executing aggregation operations.
-	 *
-	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link AggregationOperationBuilder}.
-	 * @throws IllegalArgumentException if domainType is {@literal null}.
-	 * @since 2.0
-	 */
-	<T> AggregationOperationBuilder<T> aggregateAndReturn(Class<T> domainType);
 }

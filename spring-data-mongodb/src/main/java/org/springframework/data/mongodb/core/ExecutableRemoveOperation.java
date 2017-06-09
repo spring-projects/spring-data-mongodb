@@ -22,19 +22,35 @@ import org.springframework.data.mongodb.core.query.Query;
 import com.mongodb.client.result.DeleteResult;
 
 /**
+ * {@link ExecutableRemoveOperation} allows creation and execution of MongoDB remove / findAndRemove operations in a
+ * fluent API style. <br />
+ * The starting {@literal domainType} is used for mapping the {@link Query} provided via {@code matching} into the
+ * MongoDB specific representation. The collection to operate on is by default derived from the initial
+ * {@literal domainType} and can be defined there via {@link org.springframework.data.mongodb.core.mapping.Document}.
+ * Using {@code inCollection} allows to override the collection name for the execution.
+ *
+ * <pre>
+ *     <code>
+ *         remove(Jedi.class)
+ *             .inCollection("star-wars")
+ *             .matching(query(where("firstname").is("luke")))
+ *             .all();
+ *     </code>
+ * </pre>
+ *
  * @author Christoph Strobl
  * @since 2.0
  */
-public interface ExecutableRemoveOperationBuilder {
+public interface ExecutableRemoveOperation {
 
 	/**
 	 * Start creating a remove operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link RemoveOperation}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	<T> RemoveOperationBuilder<T> remove(Class<T> domainType);
+	<T> RemoveOperation<T> remove(Class<T> domainType);
 
 	/**
 	 * Collection override (Optional).
@@ -43,17 +59,17 @@ public interface ExecutableRemoveOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface WithCollectionBuilder<T> extends WithQueryBuilder<T> {
+	interface RemoveOperationWithCollection<T> extends RemoveOperationWithQuery<T> {
 
 		/**
 		 * Explicitly set the name of the collection to perform the query on. <br />
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return
-		 * @throws IllegalArgumentException if domainType is {@literal null}.
+		 * @return new instance of {@link RemoveOperationWithCollection}.
+		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
-		WithQueryBuilder<T> inCollection(String collection);
+		RemoveOperationWithQuery<T> inCollection(String collection);
 	}
 
 	/**
@@ -61,14 +77,14 @@ public interface ExecutableRemoveOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface RemoveOperationBuilderTerminatingOperations<T> {
+	interface TerminatingRemoveOperation<T> {
 
 		/**
 		 * Remove all documents matching.
 		 *
 		 * @return
 		 */
-		DeleteResult remove();
+		DeleteResult all();
 
 		/**
 		 * Remove and return all matching documents. <br/>
@@ -86,16 +102,16 @@ public interface ExecutableRemoveOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface WithQueryBuilder<T> extends RemoveOperationBuilderTerminatingOperations<T> {
+	interface RemoveOperationWithQuery<T> extends TerminatingRemoveOperation<T> {
 
 		/**
 		 * Define the query filtering elements.
 		 *
 		 * @param query must not be {@literal null}.
-		 * @return
-		 * @throws IllegalArgumentException if domainType is {@literal null}.
+		 * @return new instance of {@link TerminatingRemoveOperation}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
-		RemoveOperationBuilderTerminatingOperations<T> matching(Query query);
+		TerminatingRemoveOperation<T> matching(Query query);
 	}
 
 	/**
@@ -103,5 +119,7 @@ public interface ExecutableRemoveOperationBuilder {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface RemoveOperationBuilder<T> extends WithCollectionBuilder<T> {}
+	interface RemoveOperation<T> extends RemoveOperationWithCollection<T> {
+
+	}
 }
