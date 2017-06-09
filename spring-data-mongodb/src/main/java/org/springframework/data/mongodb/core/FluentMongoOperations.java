@@ -21,7 +21,7 @@ package org.springframework.data.mongodb.core;
  * @author Christoph Strobl
  * @since 2.0
  */
-public interface FluentMongoOperations extends ExecutableFindOperation, ExecutableUpdateOperation,
-		ExecutableRemoveOperation, ExecutableAggregationOperation {
+public interface FluentMongoOperations extends ExecutableFindOperation, ExecutableInsertOperation,
+		ExecutableUpdateOperation, ExecutableRemoveOperation, ExecutableAggregationOperation {
 
 }
