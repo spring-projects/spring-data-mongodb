@@ -119,28 +119,38 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		StepVerifier.create(repository.existsById(Mono.just(dave.id))).expectNext(true).verifyComplete();
 	}
 
+	@Test // DATAMONGO-1712
+	public void existsByFlusOfIdShouldReturnTrueForExistingObject() {
+		StepVerifier.create(repository.existsById(Flux.just(dave.id, oliver.id))).expectNext(true).verifyComplete();
+	}
+
 	@Test // DATAMONGO-1444
 	public void existsByEmptyMonoOfIdShouldReturnEmptyMono() {
 		StepVerifier.create(repository.existsById(Mono.empty())).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findOneShouldReturnObject() {
+	public void findByIdShouldReturnObject() {
 		StepVerifier.create(repository.findById(dave.id)).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findOneShouldCompleteWithoutValueForAbsentObject() {
+	public void findByIdShouldCompleteWithoutValueForAbsentObject() {
 		StepVerifier.create(repository.findById("unknown")).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findOneByMonoOfIdShouldReturnTrueForExistingObject() {
+	public void findByIdByMonoOfIdShouldReturnTrueForExistingObject() {
 		StepVerifier.create(repository.findById(Mono.just(dave.id))).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findOneByEmptyMonoOfIdShouldReturnEmptyMono() {
+	public void findByIdByFluxOfIdShouldReturnTrueForExistingObject() {
+		StepVerifier.create(repository.findById(Flux.just(dave.id, oliver.id))).expectNext(dave).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1444
+	public void findByIdByEmptyMonoOfIdShouldReturnEmptyMono() {
 		StepVerifier.create(repository.findById(Mono.empty())).verifyComplete();
 	}
 
