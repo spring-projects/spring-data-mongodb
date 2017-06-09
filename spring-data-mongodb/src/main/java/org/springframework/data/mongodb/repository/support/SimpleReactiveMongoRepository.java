@@ -67,14 +67,14 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findById(reactor.core.publisher.Mono)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findById(org.reactivestreams.Publisher)
 	 */
 	@Override
-	public Mono<T> findById(Mono<ID> mono) {
+	public Mono<T> findById(Publisher<ID> publisher) {
 
-		Assert.notNull(mono, "The given id must not be null!");
+		Assert.notNull(publisher, "The given id must not be null!");
 
-		return mono.flatMap(
+		return Mono.from(publisher).flatMap(
 				id -> mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
 	}
 
@@ -115,14 +115,14 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#existsById(reactor.core.publisher.Mono)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#existsById(org.reactivestreams.Publisher)
 	 */
 	@Override
-	public Mono<Boolean> existsById(Mono<ID> mono) {
+	public Mono<Boolean> existsById(Publisher<ID> publisher) {
 
-		Assert.notNull(mono, "The given id must not be null!");
+		Assert.notNull(publisher, "The given id must not be null!");
 
-		return mono.flatMap(id -> mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
+		return Mono.from(publisher).flatMap(id -> mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
 				entityInformation.getCollectionName()));
 
 	}
