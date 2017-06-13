@@ -50,20 +50,21 @@ public interface ExecutableUpdateOperation {
 	 * Start creating an update operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link UpdateOperation}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
 	<T> UpdateOperation<T> update(Class<T> domainType);
 
+	/**
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
 	interface UpdateOperation<T>
-			extends UpdateOperationWithCollection<T>, UpdateOperationWithQuery<T>, UpdateOperationWithUpdate<T> {
-
-	}
+			extends UpdateOperationWithCollection<T>, UpdateOperationWithQuery<T>, UpdateOperationWithUpdate<T> {}
 
 	/**
 	 * Declare the {@link Update} to apply.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -82,7 +83,6 @@ public interface ExecutableUpdateOperation {
 	/**
 	 * Explicitly define the name of the collection to perform operation in.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -102,7 +102,6 @@ public interface ExecutableUpdateOperation {
 	/**
 	 * Define a filter query for the {@link Update}.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -121,7 +120,6 @@ public interface ExecutableUpdateOperation {
 	/**
 	 * Define {@link FindAndModifyOptions}.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -139,8 +137,6 @@ public interface ExecutableUpdateOperation {
 
 	/**
 	 * Trigger findAndModify execution by calling one of the terminating methods.
-	 *
-	 * @param <T>
 	 */
 	interface TerminatingFindAndModifyOperation<T> {
 
@@ -155,7 +151,6 @@ public interface ExecutableUpdateOperation {
 	/**
 	 * Trigger update execution by calling one of the terminating methods.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */

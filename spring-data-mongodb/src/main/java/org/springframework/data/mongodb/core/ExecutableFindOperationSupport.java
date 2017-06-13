@@ -123,6 +123,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		public Optional<T> first() {
 
 			List<T> result = doFind(new DelegatingQueryCursorPreparer(getCursorPreparer(query, null)).limit(1));
+
 			return ObjectUtils.isEmpty(result) ? Optional.empty() : Optional.of(result.iterator().next());
 		}
 
@@ -170,7 +171,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -179,7 +179,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		private final CursorPreparer delegate;
 		private Optional<Integer> limit = Optional.empty();
 
-		public DelegatingQueryCursorPreparer(CursorPreparer delegate) {
+		DelegatingQueryCursorPreparer(CursorPreparer delegate) {
 			this.delegate = delegate;
 		}
 
@@ -187,7 +187,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		public FindIterable<Document> prepare(FindIterable<Document> cursor) {
 
 			FindIterable<Document> target = delegate.prepare(cursor);
-			return limit.map(it -> target.limit(it)).orElse(target);
+
+			return limit.map(target::limit).orElse(target);
 		}
 
 		CursorPreparer limit(int limit) {

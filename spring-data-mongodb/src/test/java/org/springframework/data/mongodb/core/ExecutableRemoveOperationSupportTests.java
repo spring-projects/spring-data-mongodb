@@ -32,7 +32,10 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.result.DeleteResult;
 
 /**
+ * Integration tests for {@link ExecutableRemoveOperationSupport}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class ExecutableRemoveOperationSupportTests {
 

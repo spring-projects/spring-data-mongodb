@@ -46,6 +46,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 	ExecutableRemoveOperationSupport(MongoTemplate template) {
 
 		Assert.notNull(template, "Template must not be null!");
+
 		this.tempate = template;
 	}
 
@@ -53,11 +54,11 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 	public <T> RemoveOperation<T> remove(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
+
 		return new RemoveOperationSupport<>(tempate, null, domainType, null);
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -73,6 +74,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		public RemoveOperationWithQuery<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
+
 			return new RemoveOperationSupport<>(template, query, domainType, collection);
 		}
 
@@ -80,26 +82,32 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		public TerminatingRemoveOperation<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null!");
+
 			return new RemoveOperationSupport<>(template, query, domainType, collection);
 		}
 
 		@Override
 		public DeleteResult all() {
 
-			String collectionName = StringUtils.hasText(collection) ? collection
-					: template.determineCollectionName(domainType);
+			String collectionName = getCollectionName();
 
-			return template.doRemove(collectionName, query != null ? query : new BasicQuery(new Document()), domainType);
+			return template.doRemove(collectionName, getQuery(), domainType);
 		}
 
 		@Override
 		public List<T> findAndRemove() {
 
-			String collectionName = StringUtils.hasText(collection) ? collection
-					: template.determineCollectionName(domainType);
+			String collectionName = getCollectionName();
 
-			return template.doFindAndDelete(collectionName, query != null ? query : new BasicQuery(new Document()),
-					domainType);
+			return template.doFindAndDelete(collectionName, getQuery(), domainType);
+		}
+
+		private String getCollectionName() {
+			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
+		}
+
+		private Query getQuery() {
+			return query != null ? query : new BasicQuery(new Document());
 		}
 	}
 }

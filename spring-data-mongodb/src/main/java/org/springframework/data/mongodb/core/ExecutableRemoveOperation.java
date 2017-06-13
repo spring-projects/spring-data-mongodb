@@ -73,7 +73,6 @@ public interface ExecutableRemoveOperation {
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -82,7 +81,7 @@ public interface ExecutableRemoveOperation {
 		/**
 		 * Remove all documents matching.
 		 *
-		 * @return
+		 * @return the {@link DeleteResult}. Never {@literal null}.
 		 */
 		DeleteResult all();
 
@@ -98,7 +97,6 @@ public interface ExecutableRemoveOperation {
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -115,11 +113,8 @@ public interface ExecutableRemoveOperation {
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface RemoveOperation<T> extends RemoveOperationWithCollection<T> {
-
-	}
+	interface RemoveOperation<T> extends RemoveOperationWithCollection<T> {}
 }

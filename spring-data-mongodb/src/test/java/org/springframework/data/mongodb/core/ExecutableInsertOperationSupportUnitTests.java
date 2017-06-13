@@ -35,10 +35,12 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 
 /**
+ * Unit tests for {@link ExecutableInsertOperationSupport}.
+ *
  * @author Christoph Strobl
- * @since 2017/06
+ * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.Silent.class)
+@RunWith(MockitoJUnitRunner.class)
 public class ExecutableInsertOperationSupportUnitTests {
 
 	private static final String STAR_WARS = "star-wars";

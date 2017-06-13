@@ -35,7 +35,10 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.result.UpdateResult;
 
 /**
+ * Integration tests for {@link ExecutableUpdateOperationSupport}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class ExecutableUpdateOperationSupportTests {
 
@@ -186,5 +189,4 @@ public class ExecutableUpdateOperationSupportTests {
 
 		@Field("firstname") String name;
 	}
-
 }

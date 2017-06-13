@@ -36,6 +36,7 @@ import org.springframework.data.util.CloseableIterator;
  * </pre>
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 public interface ExecutableAggregationOperation {
@@ -54,7 +55,6 @@ public interface ExecutableAggregationOperation {
 	/**
 	 * Collection override (Optional).
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -74,19 +74,20 @@ public interface ExecutableAggregationOperation {
 	/**
 	 * Trigger execution by calling one of the terminating methods.
 	 *
-	 * @param <T>
+	 * @author Christoph Strobl
+	 * @since 2.0
 	 */
 	interface TerminatingAggregationOperation<T> {
 
 		/**
-		 * Apply pipeline operations as specified.
+		 * Apply pipeline operations as specified and get all matching elements.
 		 *
 		 * @return never {@literal null}.
 		 */
-		AggregationResults<T> get();
+		AggregationResults<T> all();
 
 		/**
-		 * Apply pipeline operations as specified. <br />
+		 * Apply pipeline operations as specified and stream all matching elements. <br />
 		 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.Cursor}
 		 *
 		 * @return a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.Cursor} that needs to be closed.
@@ -98,7 +99,6 @@ public interface ExecutableAggregationOperation {
 	/**
 	 * Define the aggregation with pipeline stages.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -115,7 +115,6 @@ public interface ExecutableAggregationOperation {
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */

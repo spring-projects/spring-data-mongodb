@@ -37,7 +37,10 @@ import org.springframework.data.util.CloseableIterator;
 import com.mongodb.MongoClient;
 
 /**
+ * Integration tests for {@link ExecutableFindOperationSupport}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class ExecutableFindOperationSupportTests {
 
@@ -92,9 +95,7 @@ public class ExecutableFindOperationSupportTests {
 
 	@Test // DATAMONGO-1563
 	public void findAllWithProjection() {
-
-		assertThat(template.query(Person.class).as(Jedi.class).all()).hasOnlyElementsOfType(Jedi.class)
-				.hasSize(2);
+		assertThat(template.query(Person.class).as(Jedi.class).all()).hasOnlyElementsOfType(Jedi.class).hasSize(2);
 	}
 
 	@Test // DATAMONGO-1563
@@ -107,8 +108,8 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void findAllByWithCollectionUsingMappingInformation() {
 
-		assertThat(template.query(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all()).hasSize(1)
-				.hasOnlyElementsOfType(Jedi.class);
+		assertThat(template.query(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all())
+				.hasSize(1).hasOnlyElementsOfType(Jedi.class);
 	}
 
 	@Test // DATAMONGO-1563
@@ -166,8 +167,8 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void streamAllBy() {
 
-		try (CloseableIterator<Person> stream = template.query(Person.class)
-				.matching(query(where("firstname").is("luke"))).stream()) {
+		try (CloseableIterator<Person> stream = template.query(Person.class).matching(query(where("firstname").is("luke")))
+				.stream()) {
 
 			assertThat(stream).containsExactlyInAnyOrder(luke);
 		}
@@ -185,8 +186,8 @@ public class ExecutableFindOperationSupportTests {
 		template.save(alderan);
 		template.save(dantooine);
 
-		GeoResults<Planet> results = template.query(Planet.class)
-				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all();
+		GeoResults<Planet> results = template.query(Planet.class).near(NearQuery.near(-73.9667, 40.78).spherical(true))
+				.all();
 		assertThat(results.getContent()).hasSize(2);
 		assertThat(results.getContent().get(0).getDistance()).isNotNull();
 	}
@@ -238,5 +239,4 @@ public class ExecutableFindOperationSupportTests {
 		@Id String name;
 		Point coordinates;
 	}
-
 }

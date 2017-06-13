@@ -30,6 +30,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 
 /**
+ * Unit tests for {@link ExecutableAggregationOperationSupport}.
+ *
  * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -66,7 +68,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	@Test // DATAMONGO-1563
 	public void aggregateWithUntypedAggregationAndExplicitCollection() {
 
-		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).get();
+		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).all();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 		verify(template).aggregate(any(Aggregation.class), eq("star-wars"), captor.capture());
@@ -78,7 +80,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 
 		when(template.determineCollectionName(any(Class.class))).thenReturn("person");
 
-		opSupport.aggregateAndReturn(Person.class).by(newAggregation(project("foo"))).get();
+		opSupport.aggregateAndReturn(Person.class).by(newAggregation(project("foo"))).all();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
@@ -93,7 +95,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 
 		when(template.determineCollectionName(any(Class.class))).thenReturn("person");
 
-		opSupport.aggregateAndReturn(Jedi.class).by(newAggregation(Person.class, project("foo"))).get();
+		opSupport.aggregateAndReturn(Jedi.class).by(newAggregation(Person.class, project("foo"))).all();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
@@ -143,10 +145,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Jedi.class);
 	}
 
-	static class Person {
-
-	}
+	static class Person {}
 
 	static class Jedi {}
-
 }

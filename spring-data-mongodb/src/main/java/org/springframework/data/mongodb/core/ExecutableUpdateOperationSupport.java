@@ -46,6 +46,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	ExecutableUpdateOperationSupport(MongoTemplate template) {
 
 		Assert.notNull(template, "Template must not be null!");
+
 		this.template = template;
 	}
 
@@ -53,11 +54,11 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	public <T> UpdateOperation<T> update(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
-		return new UpdateOperationSupport<T>(template, null, domainType, null, null, null);
+
+		return new UpdateOperationSupport<>(template, null, domainType, null, null, null);
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -76,14 +77,16 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		public TerminatingUpdateOperation<T> apply(Update update) {
 
 			Assert.notNull(update, "Update must not be null!");
-			return new UpdateOperationSupport<T>(template, query, domainType, update, collection, options);
+
+			return new UpdateOperationSupport<>(template, query, domainType, update, collection, options);
 		}
 
 		@Override
 		public UpdateOperationWithQuery<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
-			return new UpdateOperationSupport<T>(template, query, domainType, update, collection, options);
+
+			return new UpdateOperationSupport<>(template, query, domainType, update, collection, options);
 		}
 
 		@Override
@@ -99,8 +102,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		@Override
 		public Optional<T> findAndModify() {
 
-			String collectionName = StringUtils.hasText(collection) ? collection
-					: template.determineCollectionName(domainType);
+			String collectionName = getCollectionName();
 
 			return Optional.ofNullable(template.findAndModify(query != null ? query : new BasicQuery(new Document()), update,
 					options, domainType, collectionName));
@@ -110,7 +112,8 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		public UpdateOperationWithUpdate<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null!");
-			return new UpdateOperationSupport<T>(template, query, domainType, update, collection, options);
+
+			return new UpdateOperationSupport<>(template, query, domainType, update, collection, options);
 		}
 
 		@Override
@@ -122,17 +125,21 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		public TerminatingFindAndModifyOperation<T> withOptions(FindAndModifyOptions options) {
 
 			Assert.notNull(options, "Options must not be null!");
-			return new UpdateOperationSupport<T>(template, query, domainType, update, collection, options);
+
+			return new UpdateOperationSupport<>(template, query, domainType, update, collection, options);
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {
 
-			String collectionName = StringUtils.hasText(collection) ? collection
-					: template.determineCollectionName(domainType);
+			String collectionName = getCollectionName();
 
 			Query query = this.query != null ? this.query : new BasicQuery(new Document());
 
 			return template.doUpdate(collectionName, query, update, domainType, upsert, multi);
+		}
+
+		private String getCollectionName() {
+			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
 		}
 	}
 }

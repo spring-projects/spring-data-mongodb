@@ -22,7 +22,7 @@ import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import com.mongodb.bulk.BulkWriteResult;
 
 /**
- * {@link ExecutableFindOperation} allows creation and execution of MongoDB insert and bulk insert operations in a
+ * {@link ExecutableInsertOperation} allows creation and execution of MongoDB insert and bulk insert operations in a
  * fluent API style. <br />
  * The collection to operate on is by default derived from the initial {@literal domainType} and can be defined there
  * via {@link org.springframework.data.mongodb.core.mapping.Document}. Using {@code inCollection} allows to override the
@@ -53,7 +53,6 @@ public interface ExecutableInsertOperation {
 	/**
 	 * Trigger insert execution by calling one of the terminating methods.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -79,7 +78,6 @@ public interface ExecutableInsertOperation {
 	/**
 	 * Trigger bulk insert execution by calling one of the terminating methods.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -96,19 +94,15 @@ public interface ExecutableInsertOperation {
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
 	interface InsertOperation<T>
-			extends TerminatingInsertOperation<T>, InsertOperationWithCollection<T>, InsertOperationWithBulkMode<T> {
-
-	}
+			extends TerminatingInsertOperation<T>, InsertOperationWithCollection<T>, InsertOperationWithBulkMode<T> {}
 
 	/**
 	 * Collection override (Optional).
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -126,7 +120,6 @@ public interface ExecutableInsertOperation {
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -135,7 +128,7 @@ public interface ExecutableInsertOperation {
 		/**
 		 * Define the {@link BulkMode} to use for bulk insert operation.
 		 *
-		 * @param mode must not be {@literal null}.
+		 * @param bulkMode must not be {@literal null}.
 		 * @return new instance of {@link TerminatingBulkInsertOperation}.
 		 * @throws IllegalArgumentException if bulkMode is {@literal null}.
 		 */

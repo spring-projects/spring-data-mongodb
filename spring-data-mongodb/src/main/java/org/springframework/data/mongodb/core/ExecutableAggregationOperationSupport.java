@@ -35,7 +35,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	private final MongoTemplate template;
 
 	/**
-	 * Create new instance of ExecutableAggregationOperationSupport.
+	 * Create new instance of {@link ExecutableAggregationOperationSupport}.
 	 *
 	 * @param template must not be {@literal null}.
 	 * @throws IllegalArgumentException if template is {@literal null}.
@@ -43,6 +43,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	ExecutableAggregationOperationSupport(MongoTemplate template) {
 
 		Assert.notNull(template, "Template must not be null!");
+
 		this.template = template;
 	}
 
@@ -50,11 +51,11 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	public <T> AggregationOperation<T> aggregateAndReturn(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
-		return new AggregationOperationSupport<T>(template, null, domainType, null);
+
+		return new AggregationOperationSupport<>(template, null, domainType, null);
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -71,18 +72,20 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 		public AggregationOperationWithAggregation<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
-			return new AggregationOperationSupport<T>(template, aggregation, domainType, collection);
+
+			return new AggregationOperationSupport<>(template, aggregation, domainType, collection);
 		}
 
 		@Override
 		public TerminatingAggregationOperation<T> by(Aggregation aggregation) {
 
 			Assert.notNull(aggregation, "Aggregation must not be null!");
-			return new AggregationOperationSupport<T>(template, aggregation, domainType, collection);
+
+			return new AggregationOperationSupport<>(template, aggregation, domainType, collection);
 		}
 
 		@Override
-		public AggregationResults<T> get() {
+		public AggregationResults<T> all() {
 			return template.aggregate(aggregation, getCollectionName(aggregation), domainType);
 		}
 
@@ -99,8 +102,10 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 
 			if (aggregation instanceof TypedAggregation) {
 
-				if (((TypedAggregation<?>) aggregation).getInputType() != null) {
-					return template.determineCollectionName(((TypedAggregation<?>) aggregation).getInputType());
+				TypedAggregation<?> typedAggregation = (TypedAggregation<?>) aggregation;
+
+				if (typedAggregation.getInputType() != null) {
+					return template.determineCollectionName(typedAggregation.getInputType());
 				}
 			}
 

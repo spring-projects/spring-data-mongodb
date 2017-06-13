@@ -1646,8 +1646,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return aggregateStream(aggregation, collectionName, outputType, null);
 	}
 
-	/*
-	 * (non-Javadoc)
+	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.String)
 	 */
 	@Override
@@ -1655,8 +1654,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return findAndRemove(query, null, collectionName);
 	}
 
-	/*
-	 * (non-Javadoc)
+	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
 	 */
 	@Override
@@ -1664,8 +1662,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return findAllAndRemove(query, entityClass, determineCollectionName(entityClass));
 	}
 
-	/*
-	 * (non-Javadoc)
+	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
 	@Override
@@ -1786,26 +1783,46 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ExecutableFindOperation#query(java.lang.Class)
+	 */
 	@Override
 	public <T> FindOperation<T> query(Class<T> domainType) {
 		return new ExecutableFindOperationSupport(this).query(domainType);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation#update(java.lang.Class)
+	 */
 	@Override
 	public <T> UpdateOperation<T> update(Class<T> domainType) {
 		return new ExecutableUpdateOperationSupport(this).update(domainType);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation#remove(java.lang.Class)
+	 */
 	@Override
 	public <T> RemoveOperation<T> remove(Class<T> domainType) {
 		return new ExecutableRemoveOperationSupport(this).remove(domainType);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation#aggregateAndReturn(java.lang.Class)
+	 */
 	@Override
 	public <T> AggregationOperation<T> aggregateAndReturn(Class<T> domainType) {
 		return new ExecutableAggregationOperationSupport(this).aggregateAndReturn(domainType);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#insert(java.lang.Class)
+	 */
 	@Override
 	public <T> InsertOperation<T> insert(Class<T> domainType) {
 		return new ExecutableInsertOperationSupport(this).insert(domainType);
@@ -1997,15 +2014,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified targetClass while
 	 * using sourceClass for mapping the query.
 	 *
-	 * @param collectionName
-	 * @param query
-	 * @param fields
-	 * @param sourceClass
-	 * @param targetClass
-	 * @param objectCallback
-	 * @param <S>
-	 * @param <T>
-	 * @return
 	 * @since 2.0
 	 */
 	<S, T> List<T> doFind(String collectionName, Document query, Document fields, Class<S> sourceClass,
@@ -2253,11 +2261,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	private Optional<? extends MongoPersistentEntity<?>> getPersistentEntity(Class<?> type) {
-		return Optional.ofNullable(type).flatMap(it -> mappingContext.getPersistentEntity(it));
+		return Optional.ofNullable(type).flatMap(mappingContext::getPersistentEntity);
 	}
 
 	private Optional<MongoPersistentProperty> getIdPropertyFor(Class<?> type) {
-		return mappingContext.getPersistentEntity(type).flatMap(it -> it.getIdProperty());
+		return mappingContext.getPersistentEntity(type).flatMap(PersistentEntity::getIdProperty);
 	}
 
 	private <T> String determineEntityCollectionName(T obj) {

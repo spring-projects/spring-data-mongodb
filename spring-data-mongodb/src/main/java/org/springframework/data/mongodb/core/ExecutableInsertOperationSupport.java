@@ -53,11 +53,11 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 	public <T> InsertOperation<T> insert(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
-		return new InsertOperationSupport<T>(template, domainType, null, null);
+
+		return new InsertOperationSupport<>(template, domainType, null, null);
 	}
 
 	/**
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -73,6 +73,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		public void one(T object) {
 
 			Assert.notNull(object, "Object must not be null!");
+
 			template.insert(object, getCollectionName());
 		}
 
@@ -80,6 +81,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		public void all(Collection<? extends T> objects) {
 
 			Assert.notNull(objects, "Objects must not be null!");
+
 			template.insert(objects, getCollectionName());
 		}
 
@@ -87,27 +89,29 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		public BulkWriteResult bulk(Collection<? extends T> objects) {
 
 			Assert.notNull(objects, "Objects must not be null!");
+
 			return template.bulkOps(bulkMode != null ? bulkMode : BulkMode.ORDERED, domainType, getCollectionName())
 					.insert(new ArrayList<>(objects)).execute();
 		}
 
 		@Override
-		public InsertOperationWithBulkMode inCollection(String collection) {
+		public InsertOperationWithBulkMode<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty.");
-			return new InsertOperationSupport<T>(template, domainType, collection, bulkMode);
+
+			return new InsertOperationSupport<>(template, domainType, collection, bulkMode);
 		}
 
 		@Override
-		public TerminatingBulkInsertOperation withBulkMode(BulkMode bulkMode) {
+		public TerminatingBulkInsertOperation<T> withBulkMode(BulkMode bulkMode) {
 
 			Assert.notNull(bulkMode, "BulkMode must not be null!");
-			return new InsertOperationSupport<T>(template, domainType, collection, bulkMode);
+
+			return new InsertOperationSupport<>(template, domainType, collection, bulkMode);
 		}
 
 		private String getCollectionName() {
 			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
 		}
-
 	}
 }

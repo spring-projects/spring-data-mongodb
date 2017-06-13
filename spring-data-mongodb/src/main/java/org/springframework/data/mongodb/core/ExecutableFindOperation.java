@@ -27,9 +27,9 @@ import org.springframework.data.util.CloseableIterator;
  * {@link ExecutableFindOperation} allows creation and execution of MongoDB find operations in a fluent API style.
  * <br />
  * The starting {@literal domainType} is used for mapping the {@link Query} provided via {@code matching} into the
- * MongoDB specific representation. By default this originating {@literal domainType} is also used for mapping back the
- * result from the {@link org.bson.Document}. However it is possible to define an different {@literal returnType} via
- * {@code as} that is then used for mapping the result mapping. <br />
+ * MongoDB specific representation. By default, the originating {@literal domainType} is also used for mapping back the
+ * result from the {@link org.bson.Document}. However, it is possible to define an different {@literal returnType} via
+ * {@code as} to mapping the result.<br />
  * The collection to operate on is by default derived from the initial {@literal domainType} and can be defined there
  * via {@link org.springframework.data.mongodb.core.mapping.Document}. Using {@code inCollection} allows to override the
  * collection name for the execution.
@@ -45,6 +45,7 @@ import org.springframework.data.util.CloseableIterator;
  * </pre>
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 public interface ExecutableFindOperation {
@@ -61,7 +62,6 @@ public interface ExecutableFindOperation {
 	/**
 	 * Trigger find execution by calling one of the terminating methods.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -85,7 +85,7 @@ public interface ExecutableFindOperation {
 		/**
 		 * Get all matching elements.
 		 *
-		 * @return never {@literal}.
+		 * @return never {@literal null}.
 		 */
 		List<T> all();
 
@@ -101,7 +101,6 @@ public interface ExecutableFindOperation {
 	/**
 	 * Trigger geonear execution by calling one of the terminating methods.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -118,7 +117,6 @@ public interface ExecutableFindOperation {
 	/**
 	 * Terminating operations invoking the actual query execution.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -146,7 +144,6 @@ public interface ExecutableFindOperation {
 	/**
 	 * Collection override (Optional).
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -166,7 +163,6 @@ public interface ExecutableFindOperation {
 	/**
 	 * Result type override (Optional).
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -187,11 +183,8 @@ public interface ExecutableFindOperation {
 	/**
 	 * {@link FindOperation} provides methods for constructing lookup operations in a fluent way.
 	 *
-	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface FindOperation<T> extends FindOperationWithCollection<T>, FindOperationWithProjection<T> {
-
-	}
+	interface FindOperation<T> extends FindOperationWithCollection<T>, FindOperationWithProjection<T> {}
 }
