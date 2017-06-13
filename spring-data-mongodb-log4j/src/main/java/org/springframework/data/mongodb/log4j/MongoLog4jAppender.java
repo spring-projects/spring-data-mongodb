@@ -44,7 +44,9 @@ import com.mongodb.WriteConcern;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Ricardo Espirito Santo
+ * @deprecated since 2.0.0.M4. About to be removed for 2.0.0.RC1.
  */
+@Deprecated
 public class MongoLog4jAppender extends AppenderSkeleton {
 
 	public static final String LEVEL = "level";

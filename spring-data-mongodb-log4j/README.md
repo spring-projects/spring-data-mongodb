@@ -1,5 +1,7 @@
 # MongoDB Log4J Appender
 
+:warning: Deprecated. About to be removed for 2.0.0.RC1.
+
 This module sets up a Log4J appender that puts logging events in MongoDB. It is fully configurable
 and connects directly to the MongoDB server using the driver. It has no dependency on any Spring package.
 
