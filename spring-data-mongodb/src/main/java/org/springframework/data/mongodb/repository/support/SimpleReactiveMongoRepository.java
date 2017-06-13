@@ -180,6 +180,9 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	 */
 	@Override
 	public Flux<T> findAll(Sort sort) {
+
+		Assert.notNull(sort, "Sort must not be null!");
+
 		return findAll(new Query().with(sort));
 	}
 
@@ -204,6 +207,9 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	 */
 	@Override
 	public <S extends T> Flux<S> findAll(Example<S> example) {
+
+		Assert.notNull(example, "Example must not be null!");
+
 		return findAll(example, Sort.unsorted());
 	}
 
@@ -325,6 +331,19 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		return mongoOperations
 				.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteById(org.reactivestreams.Publisher)
+	 */
+	@Override
+	public Mono<Void> deleteById(Publisher<ID> publisher) {
+
+		Assert.notNull(publisher, "Id must not be null!");
+
+		return Mono.from(publisher).flatMap(id -> mongoOperations.remove(getIdQuery(id), entityInformation.getJavaType(),
+				entityInformation.getCollectionName())).then();
 	}
 
 	/*

@@ -120,7 +120,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1712
-	public void existsByFlusOfIdShouldReturnTrueForExistingObject() {
+	public void existsByFluxOfIdShouldReturnTrueForExistingObject() {
 		StepVerifier.create(repository.existsById(Flux.just(dave.id, oliver.id))).expectNext(true).verifyComplete();
 	}
 
@@ -144,7 +144,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		StepVerifier.create(repository.findById(Mono.just(dave.id))).expectNext(dave).verifyComplete();
 	}
 
-	@Test // DATAMONGO-1444
+	@Test // DATAMONGO-1712
 	public void findByIdByFluxOfIdShouldReturnTrueForExistingObject() {
 		StepVerifier.create(repository.findById(Flux.just(dave.id, oliver.id))).expectNext(dave).verifyComplete();
 	}
@@ -336,6 +336,23 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		StepVerifier.create(repository.deleteById(dave.id)).verifyComplete();
 
 		StepVerifier.create(repository.findById(dave.id)).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1712
+	public void deleteByIdUsingMonoShouldRemoveEntity() {
+
+		StepVerifier.create(repository.deleteById(Mono.just(dave.id))).verifyComplete();
+
+		StepVerifier.create(repository.existsById(dave.id)).expectNext(false).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1712
+	public void deleteByIdUsingFluxShouldRemoveEntity() {
+
+		StepVerifier.create(repository.deleteById(Flux.just(dave.id, oliver.id))).verifyComplete();
+
+		StepVerifier.create(repository.existsById(dave.id)).expectNext(false).verifyComplete();
+		StepVerifier.create(repository.existsById(oliver.id)).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
