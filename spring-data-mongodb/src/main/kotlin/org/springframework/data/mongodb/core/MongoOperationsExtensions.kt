@@ -44,8 +44,7 @@ fun <T : Any> MongoOperations.getCollectionName(entityClass: KClass<T>): String 
 		getCollectionName(entityClass.java)
 
 /**
- * Extension for [MongoOperations.getCollectionName] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.getCollectionName] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -54,8 +53,7 @@ inline fun <reified T : Any> MongoOperations.getCollectionName(): String =
 		getCollectionName(T::class.java)
 
 /**
- * Extension for [MongoOperations.execute] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.execute] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -64,8 +62,7 @@ inline fun <reified T : Any> MongoOperations.execute(action: CollectionCallback<
 		execute(T::class.java, action)
 
 /**
- * Extension for [MongoOperations.stream] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.stream] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -74,8 +71,7 @@ inline fun <reified T : Any> MongoOperations.stream(query: Query): CloseableIter
 		stream(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.stream] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.stream] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -95,8 +91,7 @@ fun <T : Any> MongoOperations.createCollection(entityClass: KClass<T>, collectio
 		else createCollection(entityClass.java)
 
 /**
- * Extension for [MongoOperations.createCollection] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.createCollection] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -116,8 +111,7 @@ fun <T : Any> MongoOperations.collectionExists(entityClass: KClass<T>): Boolean 
 		collectionExists(entityClass.java)
 
 /**
- * Extension for [MongoOperations.collectionExists] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.collectionExists] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -136,8 +130,7 @@ fun <T : Any> MongoOperations.dropCollection(entityClass: KClass<T>) {
 }
 
 /**
- * Extension for [MongoOperations.dropCollection] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.dropCollection] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -156,8 +149,7 @@ fun <T : Any> MongoOperations.indexOps(entityClass: KClass<T>): IndexOperations 
 		indexOps(entityClass.java)
 
 /**
- * Extension for [MongoOperations.indexOps] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.indexOps] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -176,7 +168,7 @@ fun <T : Any> MongoOperations.bulkOps(bulkMode: BulkMode, entityClass: KClass<T>
 		else bulkOps(bulkMode, entityClass.java)
 
 /**
- * Extension for [MongoOperations.bulkOps] providing a [KClass] based variant.
+ * Extension for [MongoOperations.bulkOps] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -187,8 +179,7 @@ inline fun <reified T : Any> MongoOperations.bulkOps(bulkMode: BulkMode, collect
 		else bulkOps(bulkMode, T::class.java)
 
 /**
- * Extension for [MongoOperations.findAll] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.findAll] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -197,8 +188,7 @@ inline fun <reified T : Any> MongoOperations.findAll(collectionName: String? = n
 		if (collectionName != null) findAll(T::class.java, collectionName) else findAll(T::class.java)
 
 /**
- * Extension for [MongoOperations.group] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.group] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -207,8 +197,7 @@ inline fun <reified T : Any> MongoOperations.group(inputCollectionName: String, 
 		group(inputCollectionName, groupBy, T::class.java)
 
 /**
- * Extension for [MongoOperations.group] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.group] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -217,8 +206,7 @@ inline fun <reified T : Any> MongoOperations.group(criteria: Criteria, inputColl
 		group(criteria, inputCollectionName, groupBy, T::class.java)
 
 /**
- * Extension for [MongoOperations.aggregate] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.aggregate] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -227,8 +215,7 @@ inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation,
 		aggregate(aggregation, inputType.java, O::class.java)
 
 /**
- * Extension for [MongoOperations.aggregate] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.aggregate] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -237,8 +224,7 @@ inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation,
 		aggregate(aggregation, collectionName, O::class.java)
 
 /**
- * Extension for [MongoOperations.aggregateStream] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.aggregateStream] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -247,8 +233,7 @@ inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggreg
 		aggregateStream(aggregation, inputType.java, O::class.java)
 
 /**
- * Extension for [MongoOperations.aggregateStream] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.aggregateStream] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -257,8 +242,7 @@ inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggreg
 		aggregateStream(aggregation, collectionName, O::class.java)
 
 /**
- * Extension for [MongoOperations.mapReduce] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.mapReduce] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -268,8 +252,7 @@ inline fun <reified T : Any> MongoOperations.mapReduce(collectionName: String, m
 		else mapReduce(collectionName, mapFunction, reduceFunction, T::class.java)
 
 /**
- * Extension for [MongoOperations.mapReduce] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.mapReduce] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 52.0
@@ -279,8 +262,7 @@ inline fun <reified T : Any> MongoOperations.mapReduce(query: Query, collectionN
 		else mapReduce(query, collectionName, mapFunction, reduceFunction, T::class.java)
 
 /**
- * Extension for [MongoOperations.geoNear] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.geoNear] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -290,8 +272,7 @@ inline fun <reified T : Any> MongoOperations.geoNear(near: NearQuery, collection
 		else geoNear(near, T::class.java)
 
 /**
- * Extension for [MongoOperations.findOne] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.findOne] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -300,8 +281,7 @@ inline fun <reified T : Any> MongoOperations.findOne(query: Query, collectionNam
 		if (collectionName != null) findOne(query, T::class.java, collectionName) else findOne(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.exists] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.exists] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -311,8 +291,7 @@ fun <T : Any> MongoOperations.exists(query: Query, entityClass: KClass<T>, colle
 		else exists(query, entityClass.java)
 
 /**
- * Extension for [MongoOperations.exists] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.exists] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -323,8 +302,7 @@ inline fun <reified T : Any> MongoOperations.exists(query: Query, collectionName
 		else exists(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.find] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.find] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -334,8 +312,7 @@ inline fun <reified T : Any> MongoOperations.find(query: Query, collectionName: 
 		else find(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.findById] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.findById] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -345,8 +322,7 @@ inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: S
 		else findById(id, T::class.java)
 
 /**
- * Extension for [MongoOperations.findAndModify] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.findAndModify] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -356,8 +332,7 @@ inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update:
 		else findAndModify(query, update, options, T::class.java)
 
 /**
- * Extension for [MongoOperations.findAndRemove] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.findAndRemove] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -367,8 +342,7 @@ inline fun <reified T : Any> MongoOperations.findAndRemove(query: Query, collect
 		else findAndRemove(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.count] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.count] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -378,8 +352,7 @@ fun <T : Any> MongoOperations.count(query: Query = Query(), entityClass: KClass<
 		else count(query, entityClass.java)
 
 /**
- * Extension for [MongoOperations.count] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [MongoOperations.count] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -409,8 +382,7 @@ fun <T : Any> MongoOperations.upsert(query: Query, update: Update, entityClass: 
 		else upsert(query, update, entityClass.java)
 
 /**
- * Extension for [MongoOperations.upsert] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.upsert] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -431,8 +403,7 @@ fun <T : Any> MongoOperations.updateFirst(query: Query, update: Update, entityCl
 		else updateFirst(query, update, entityClass.java)
 
 /**
- * Extension for [MongoOperations.updateFirst] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.updateFirst] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -454,8 +425,7 @@ fun <T : Any> MongoOperations.updateMulti(query: Query, update: Update, entityCl
 		else updateMulti(query, update, entityClass.java)
 
 /**
- * Extension for [MongoOperations.updateMulti] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.updateMulti] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -476,8 +446,7 @@ fun <T : Any> MongoOperations.remove(query: Query, entityClass: KClass<T>, colle
 		else remove(query, entityClass.java)
 
 /**
- * Extension for [MongoOperations.remove] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.remove] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -488,8 +457,7 @@ inline fun <reified T : Any> MongoOperations.remove(query: Query, collectionName
 		else remove(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.findAllAndRemove] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [MongoOperations.findAllAndRemove] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0

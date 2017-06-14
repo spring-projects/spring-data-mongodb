@@ -18,7 +18,7 @@
 	<properties>
 		<objenesis>1.3</objenesis>
 		<equalsverifier>1.5</equalsverifier>
-		<kotlin>1.1.2-3</kotlin>
+		<kotlin>1.1.2-5</kotlin>
 	</properties>
 
 	<dependencies>
@@ -233,7 +233,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-stdlib-jre8</artifactId>
+			<artifactId>kotlin-stdlib</artifactId>
 			<version>${kotlin}</version>
 			<optional>true</optional>
 		</dependency>
@@ -252,8 +252,22 @@
 		<dependency>
 			<groupId>com.nhaarman</groupId>
 			<artifactId>mockito-kotlin</artifactId>
-			<version>1.4.0</version>
+			<version>1.5.0</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-stdlib</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-reflect</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.mockito</groupId>
+					<artifactId>mockito-core</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 	</dependencies>
