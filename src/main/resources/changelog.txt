@@ -1,6 +1,26 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.0.M4 (2017-06-14)
+----------------------------------------
+* DATAMONGO-1716 - Upgrade to Reactive Streams driver 1.5.0.
+* DATAMONGO-1714 - Deprecate MongoLog4jAppender.
+* DATAMONGO-1712 - Adopt to ReactiveCrudRepository.findById(Publisher) and existsById(Publisher).
+* DATAMONGO-1710 - Adopt to changed AnnotationUtils.getValue(…) and OperatorNode.getRightOperand() behavior.
+* DATAMONGO-1707 - Upgrade to Reactor 3.1 M2.
+* DATAMONGO-1699 - Upgrade travis.yml to use MongoDB 3.4.
+* DATAMONGO-1695 - Make sure GridFsResource.getContentType() reads type from new location within file metadata.
+* DATAMONGO-1693 - Support collation in ReactiveMongoTemplate.createCollection.
+* DATAMONGO-1690 - Adapt to QuerydslPerdicateExecutor API changes.
+* DATAMONGO-1689 - Provide Kotlin extensions for Class based methods in MongoOperations / ReactiveMongoOperations.
+* DATAMONGO-1688 - Release 2.0 M4 (Kay).
+* DATAMONGO-1687 - Creating capped collection with CollectionOptions.empty().capped(…) causes NPE.
+* DATAMONGO-1686 - Upgarde to MongoDB reactive streams driver 1.4.
+* DATAMONGO-1685 - Adapt QueryByExampleExecutor API changes.
+* DATAMONGO-1619 - Use ReactiveQueryByExampleExecutor in ReactiveMongoRepository.
+* DATAMONGO-1563 - Add TemplateWrapper to reduce method overloads on MongoTemplate.
+
+
 Changes in version 1.10.4.RELEASE (2017-06-08)
 ----------------------------------------------
 * DATAMONGO-1699 - Upgrade travis.yml to use MongoDB 3.4.
