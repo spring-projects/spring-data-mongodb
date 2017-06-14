@@ -37,8 +37,7 @@ fun <T : Any> ReactiveMongoOperations.indexOps(entityClass: KClass<T>): Reactive
 		indexOps(entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.indexOps] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.indexOps] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -47,8 +46,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.indexOps(): ReactiveIndexOp
 		indexOps(T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.execute] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.execute] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -66,8 +64,7 @@ fun <T : Any> ReactiveMongoOperations.createCollection(entityClass: KClass<T>, c
 		if (collectionOptions != null) createCollection(entityClass.java, collectionOptions) else createCollection(entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.createCollection] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.createCollection] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -85,8 +82,7 @@ fun <T : Any> ReactiveMongoOperations.collectionExists(entityClass: KClass<T>): 
 		collectionExists(entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.collectionExists] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.collectionExists] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -104,8 +100,7 @@ fun <T : Any> ReactiveMongoOperations.dropCollection(entityClass: KClass<T>): Mo
 		dropCollection(entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.dropCollection] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.dropCollection] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -115,8 +110,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.dropCollection(): Mono<Void
 
 
 /**
- * Extension for [ReactiveMongoOperations.findAll] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.findAll] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -125,8 +119,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findAll(collectionName: Str
 		if (collectionName != null) findAll(T::class.java, collectionName) else findAll(T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.findOne] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.findOne] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -135,8 +128,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findOne(query: Query, colle
 		if (collectionName != null) findOne(query, T::class.java, collectionName) else findOne(query, T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.exists] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.exists] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -145,8 +137,7 @@ fun <T : Any> ReactiveMongoOperations.exists(query: Query, entityClass: KClass<T
 		if (collectionName != null) exists(query, entityClass.java, collectionName) else exists(query, entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.exists] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.exists] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -156,8 +147,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.exists(query: Query, collec
 		if (collectionName != null) exists(query, T::class.java, collectionName) else exists(query, T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.find] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.find] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -166,8 +156,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.find(query: Query, collecti
 		if (collectionName != null) find(query, T::class.java, collectionName) else find(query, T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.findById] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.findById] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -176,8 +165,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findById(id: Any, collectio
 		if (collectionName != null) findById(id, T::class.java, collectionName) else findById(id, T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.geoNear] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.geoNear] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -186,8 +174,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.geoNear(near: NearQuery, co
 		if (collectionName != null) geoNear(near, T::class.java, collectionName) else geoNear(near, T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.findAndModify] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.findAndModify] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -196,8 +183,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findAndModify(query: Query,
 		if (collectionName != null) findAndModify(query, update, options, T::class.java, collectionName) else findAndModify(query, update, options, T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.findAndRemove] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.findAndRemove] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -207,8 +193,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findAndRemove(query: Query,
 		else findAndRemove(query, T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.count] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.count] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -218,8 +203,7 @@ fun <T : Any> ReactiveMongoOperations.count(query: Query = Query(), entityClass:
 		else count(query, entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.count] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters
+ * Extension for [ReactiveMongoOperations.count] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -257,8 +241,7 @@ fun <T : Any> ReactiveMongoOperations.upsert(query: Query, update: Update, entit
 		if (collectionName != null) upsert(query, update, entityClass.java, collectionName) else upsert(query, update, entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.upsert] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.upsert] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -279,8 +262,7 @@ fun <T : Any> ReactiveMongoOperations.updateFirst(query: Query, update: Update, 
 		else updateFirst(query, update, entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.updateFirst] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.updateFirst] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -301,8 +283,7 @@ fun <T : Any> ReactiveMongoOperations.updateMulti(query: Query, update: Update, 
 		else updateMulti(query, update, entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.updateMulti] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.updateMulti] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -323,8 +304,7 @@ fun <T : Any> ReactiveMongoOperations.remove(query: Query, entityClass: KClass<T
 		else remove(query, entityClass.java)
 
 /**
- * Extension for [ReactiveMongoOperations.remove] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.remove] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -335,8 +315,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.remove(query: Query, collec
 		else remove(query, T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.findAllAndRemove] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.findAllAndRemove] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
@@ -346,8 +325,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findAllAndRemove(query: Que
 		findAllAndRemove(query, T::class.java)
 
 /**
- * Extension for [ReactiveMongoOperations.tail] avoiding requiring the type parameter
- * thanks to Kotlin reified type parameters.
+ * Extension for [ReactiveMongoOperations.tail] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @since 2.0
