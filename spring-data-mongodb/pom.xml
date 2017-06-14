@@ -11,13 +11,14 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>2.0.0.BUILD-SNAPSHOT</version>
+		<version>2.0.0.DATAMONGO-1689-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<properties>
 		<objenesis>1.3</objenesis>
 		<equalsverifier>1.5</equalsverifier>
+		<kotlin>1.1.2-5</kotlin>
 	</properties>
 
 	<dependencies>
@@ -230,11 +231,107 @@
 			<artifactId>spring-webmvc</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-stdlib</artifactId>
+			<version>${kotlin}</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-reflect</artifactId>
+			<version>${kotlin}</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-test</artifactId>
+			<version>${kotlin}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.nhaarman</groupId>
+			<artifactId>mockito-kotlin</artifactId>
+			<version>1.5.0</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-stdlib</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-reflect</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.mockito</groupId>
+					<artifactId>mockito-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 	</dependencies>
 
 	<build>
 		<plugins>
+
+			<plugin>
+				<artifactId>kotlin-maven-plugin</artifactId>
+				<groupId>org.jetbrains.kotlin</groupId>
+				<version>${kotlin}</version>
+				<configuration>
+					<jvmTarget>1.8</jvmTarget>
+				</configuration>
+				<executions>
+					<execution>
+						<id>compile</id>
+						<phase>compile</phase>
+						<goals> <goal>compile</goal> </goals>
+						<configuration>
+							<sourceDirs>
+								<sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+								<sourceDir>${project.basedir}/src/main/java</sourceDir>
+							</sourceDirs>
+						</configuration>
+					</execution>
+					<execution>
+						<id>test-compile</id>
+						<phase>test-compile</phase>
+						<goals> <goal>test-compile</goal> </goals>
+						<configuration>
+							<sourceDirs>
+								<sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+								<sourceDir>${project.basedir}/src/test/java</sourceDir>
+							</sourceDirs>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>default-compile</id>
+						<phase>none</phase>
+					</execution>
+					<execution>
+						<id>default-testCompile</id>
+						<phase>none</phase>
+					</execution>
+					<execution>
+						<id>java-compile</id>
+						<phase>compile</phase>
+						<goals> <goal>compile</goal> </goals>
+					</execution>
+					<execution>
+						<id>java-test-compile</id>
+						<phase>test-compile</phase>
+						<goals> <goal>testCompile</goal> </goals>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>com.mysema.maven</groupId>
