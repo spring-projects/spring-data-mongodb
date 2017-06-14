@@ -231,6 +231,8 @@
 			<artifactId>spring-webmvc</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Kotlin extension -->
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-stdlib</artifactId>
@@ -280,13 +282,15 @@
 				<groupId>org.jetbrains.kotlin</groupId>
 				<version>${kotlin}</version>
 				<configuration>
-					<jvmTarget>1.8</jvmTarget>
+					<jvmTarget>${source.level}</jvmTarget>
 				</configuration>
 				<executions>
 					<execution>
 						<id>compile</id>
 						<phase>compile</phase>
-						<goals> <goal>compile</goal> </goals>
+						<goals>
+							<goal>compile</goal>
+						</goals>
 						<configuration>
 							<sourceDirs>
 								<sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
@@ -297,7 +301,9 @@
 					<execution>
 						<id>test-compile</id>
 						<phase>test-compile</phase>
-						<goals> <goal>test-compile</goal> </goals>
+						<goals>
+							<goal>test-compile</goal>
+						</goals>
 						<configuration>
 							<sourceDirs>
 								<sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
@@ -323,12 +329,16 @@
 					<execution>
 						<id>java-compile</id>
 						<phase>compile</phase>
-						<goals> <goal>compile</goal> </goals>
+						<goals>
+							<goal>compile</goal>
+						</goals>
 					</execution>
 					<execution>
 						<id>java-test-compile</id>
 						<phase>test-compile</phase>
-						<goals> <goal>testCompile</goal> </goals>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
