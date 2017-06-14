@@ -30,7 +30,7 @@
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>2.0.0.BUILD-SNAPSHOT</springdata.commons>
 		<mongo>3.4.2</mongo>
-		<mongo.reactivestreams>1.4.0</mongo.reactivestreams>
+		<mongo.reactivestreams>1.5.0</mongo.reactivestreams>
 	</properties>
 
 	<developers>
