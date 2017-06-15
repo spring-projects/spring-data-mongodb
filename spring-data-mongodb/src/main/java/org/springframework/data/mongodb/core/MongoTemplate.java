@@ -142,6 +142,7 @@ import com.mongodb.util.JSONParseException;
  * @author Niko Schmuck
  * @author Mark Paluch
  * @author Laszlo Csontos
+ * @author Borislav Rangelov
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -1514,7 +1515,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	@Override
 	public <T> List<T> findAllAndRemove(Query query, String collectionName) {
-		return findAndRemove(query, null, collectionName);
+		return findAllAndRemove(query, null, collectionName);
 	}
 
 	/*
@@ -2140,7 +2141,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Returns all identifiers for the given documents. Will augment the given identifiers and fill in only the ones that
 	 * are {@literal null} currently. This would've been better solved in {@link #insertDBObjectList(String, List)}
 	 * directly but would require a signature change of that method.
-	 * 
+	 *
 	 * @param ids
 	 * @param documents
 	 * @return TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
