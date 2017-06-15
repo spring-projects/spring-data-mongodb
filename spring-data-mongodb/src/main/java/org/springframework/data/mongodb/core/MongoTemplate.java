@@ -159,6 +159,7 @@ import com.mongodb.util.JSONParseException;
  * @author Mark Paluch
  * @author Laszlo Csontos
  * @author Maninder Singh
+ * @author Borislav Rangelov
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
@@ -1651,7 +1652,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public <T> List<T> findAllAndRemove(Query query, String collectionName) {
-		return findAndRemove(query, null, collectionName);
+		return findAllAndRemove(query, null, collectionName);
 	}
 
 	/* (non-Javadoc)
