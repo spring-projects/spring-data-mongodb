@@ -1515,7 +1515,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	@Override
 	public <T> List<T> findAllAndRemove(Query query, String collectionName) {
-		return findAllAndRemove(query, null, collectionName);
+		return (List<T>) findAllAndRemove(query, Object.class, collectionName);
 	}
 
 	/*

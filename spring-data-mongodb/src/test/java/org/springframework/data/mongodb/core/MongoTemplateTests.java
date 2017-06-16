@@ -3210,6 +3210,25 @@ public class MongoTemplateTests {
 		assertThat(loaded.getValue(), instanceOf(decimal128Type));
 	}
 
+	@Test // DATAMONGO-1718
+	public void findAndRemoveAllWithoutExplicitDomainTypeShouldRemoveAndReturnEntitiesCorrectly() {
+
+		Sample jon = new Sample("1", "jon snow");
+		Sample bran = new Sample("2", "bran stark");
+		Sample rickon = new Sample("3", "rickon stark");
+
+		template.save(jon);
+		template.save(bran);
+		template.save(rickon);
+
+		List<Sample> result = template.findAllAndRemove(query(where("field").regex(".*stark$")),
+				template.determineCollectionName(Sample.class));
+
+		assertThat(result, hasSize(2));
+		assertThat(result, containsInAnyOrder(bran, rickon));
+		assertThat(template.count(new BasicQuery("{}"), template.determineCollectionName(Sample.class)), is(equalTo(1L)));
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;
