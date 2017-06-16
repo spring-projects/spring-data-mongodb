@@ -3264,6 +3264,28 @@ public class MongoTemplateTests {
 		assertThat(loaded.getValue(), instanceOf(decimal128Type));
 	}
 
+	/**
+	 * @see DATAMONGO-1718
+	 */
+	@Test
+	public void findAndRemoveAllWithoutExplicitDomainTypeShouldRemoveAndReturnEntitiesCorrectly() {
+
+		Sample jon = new Sample("1", "jon snow");
+		Sample bran = new Sample("2", "bran stark");
+		Sample rickon = new Sample("3", "rickon stark");
+
+		template.save(jon);
+		template.save(bran);
+		template.save(rickon);
+
+		List<Sample> result = template.findAllAndRemove(query(where("field").regex(".*stark$")),
+				template.determineCollectionName(Sample.class));
+
+		assertThat(result, hasSize(2));
+		assertThat(result, containsInAnyOrder(bran, rickon));
+		assertThat(template.count(new BasicQuery("{}"), template.determineCollectionName(Sample.class)), is(equalTo(1L)));
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;
@@ -3434,6 +3456,27 @@ public class MongoTemplateTests {
 		public Sample(String id, String field) {
 			this.id = id;
 			this.field = field;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			Sample sample = (Sample) o;
+
+			if (id != null ? !id.equals(sample.id) : sample.id != null)
+				return false;
+			return field != null ? field.equals(sample.field) : sample.field == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (field != null ? field.hashCode() : 0);
+			return result;
 		}
 	}
 
