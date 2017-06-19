@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.util.Collection;
 
 import org.bson.Document;
@@ -33,9 +36,6 @@ import com.mongodb.ReadPreference;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.MongoCollection;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Interface that specifies a basic set of MongoDB operations executed in a reactive way.
@@ -285,7 +285,9 @@ public interface ReactiveMongoOperations {
 	<T> Mono<T> findOne(Query query, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Determine result of given {@link Query} contains at least one element.
+	 * Determine result of given {@link Query} contains at least one element. <br />
+	 * <strong>NOTE:</strong> Any additional support for query/field mapping, etc. is not available due to the lack of
+	 * domain type information. Use {@link #exists(Query, Class, String)} to get full type specific support.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find a record.
 	 * @param collectionName name of the collection to check for objects.
@@ -494,7 +496,7 @@ public interface ReactiveMongoOperations {
 	/**
 	 * Returns the number of documents for the given {@link Query} querying the given collection. The given {@link Query}
 	 * must solely consist of document field references as we lack type information to map potential property references
-	 * onto document fields. TO make sure the query gets mapped, use {@link #count(Query, Class, String)}.
+	 * onto document fields. Use {@link #count(Query, Class, String)} to get full type specific support.
 	 *
 	 * @param query
 	 * @param collectionName must not be {@literal null} or empty.
@@ -707,7 +709,9 @@ public interface ReactiveMongoOperations {
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
-	 * combining the query document and the update document.
+	 * combining the query document and the update document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #upsert(Query, Update, Class, String)} to get full type specific support.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
@@ -743,7 +747,9 @@ public interface ReactiveMongoOperations {
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
-	 * the provided updated document.
+	 * the provided updated document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #updateFirst(Query, Update, Class, String)} to get full type specific support.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
@@ -755,7 +761,9 @@ public interface ReactiveMongoOperations {
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
-	 * the provided updated document.
+	 * the provided updated document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #updateFirst(Query, Update, Class, String)} to get full type specific support.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
@@ -780,7 +788,9 @@ public interface ReactiveMongoOperations {
 
 	/**
 	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
-	 * provided updated document.
+	 * provided updated document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #updateMulti(Query, Update, Class, String)} to get full type specific support.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
@@ -859,7 +869,9 @@ public interface ReactiveMongoOperations {
 
 	/**
 	 * Remove all documents from the specified collection that match the provided query document criteria. There is no
-	 * conversion/mapping done for any criteria using the id field.
+	 * conversion/mapping done for any criteria using the id field. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping is not available due to the lack of domain type
+	 * information. Use {@link #remove(Query, Class, String)} to get full type specific support.
 	 *
 	 * @param query the query document that specifies the criteria used to remove a record
 	 * @param collectionName name of the collection where the objects will removed
@@ -867,7 +879,9 @@ public interface ReactiveMongoOperations {
 	Mono<DeleteResult> remove(Query query, String collectionName);
 
 	/**
-	 * Returns and removes all documents form the specified collection that match the provided query.
+	 * Returns and removes all documents form the specified collection that match the provided query. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping is not available due to the lack of domain type
+	 * information. Use {@link #findAllAndRemove(Query, Class, String)} to get full type specific support.
 	 *
 	 * @param query
 	 * @param collectionName
