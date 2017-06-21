@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.core.GeoJsonConfiguration;
 import org.springframework.data.mongodb.core.geo.GeoJsonModule;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.test.context.ContextConfiguration;

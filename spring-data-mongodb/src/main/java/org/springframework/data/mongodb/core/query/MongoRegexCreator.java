@@ -18,11 +18,12 @@ package org.springframework.data.mongodb.core.query;
 import java.util.regex.Pattern;
 
 import org.springframework.data.repository.query.parser.Part.Type;
-import org.springframework.util.ObjectUtils;
+import org.springframework.data.util.StringMatcher;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jens Schauder
  * @since 1.8
  */
 public enum MongoRegexCreator {
@@ -37,28 +38,40 @@ public enum MongoRegexCreator {
 	 * @param source the plain String
 	 * @param type
 	 * @return {@literal source} when {@literal source} or {@literal type} is {@literal null}.
+	 * @deprecated use the {@link MongoRegexCreator#toRegularExpression(String, StringMatcher)} instead
 	 */
+	@Deprecated
 	public String toRegularExpression(String source, Type type) {
 
-		if (type == null || source == null) {
+		return toRegularExpression(source, convert(type));
+	}
+
+	/**
+	 * Creates a regular expression String to be used with {@code $regex}.
+	 *
+	 * @param source the plain String
+	 * @param matcherType the type of matching to perform
+	 * @return {@literal source} when {@literal source} or {@literal matcherType} is {@literal null}.
+	 */
+	public String toRegularExpression(String source, StringMatcher matcherType) {
+
+		if (matcherType == null || source == null) {
 			return source;
 		}
 
-		String regex = prepareAndEscapeStringBeforeApplyingLikeRegex(source, type);
+		String regex = prepareAndEscapeStringBeforeApplyingLikeRegex(source, matcherType);
 
-		switch (type) {
-			case STARTING_WITH:
+		switch (matcherType) {
+			case STARTING:
 				regex = "^" + regex;
 				break;
-			case ENDING_WITH:
+			case ENDING:
 				regex = regex + "$";
 				break;
 			case CONTAINING:
-			case NOT_CONTAINING:
 				regex = ".*" + regex + ".*";
 				break;
-			case SIMPLE_PROPERTY:
-			case NEGATING_SIMPLE_PROPERTY:
+			case EXACT:
 				regex = "^" + regex + "$";
 			default:
 		}
@@ -66,13 +79,13 @@ public enum MongoRegexCreator {
 		return regex;
 	}
 
-	private String prepareAndEscapeStringBeforeApplyingLikeRegex(String source, Type type) {
+	private String prepareAndEscapeStringBeforeApplyingLikeRegex(String source, StringMatcher matcherType) {
 
-		if (ObjectUtils.nullSafeEquals(Type.REGEX, type)) {
+		if (StringMatcher.REGEX == matcherType) {
 			return source;
 		}
 
-		if (!ObjectUtils.nullSafeEquals(Type.LIKE, type) && !ObjectUtils.nullSafeEquals(Type.NOT_LIKE, type)) {
+		if (StringMatcher.LIKE != matcherType) {
 			return PUNCTATION_PATTERN.matcher(source).find() ? Pattern.quote(source) : source;
 		}
 
@@ -101,6 +114,51 @@ public enum MongoRegexCreator {
 		}
 
 		return sb.toString();
+	}
+
+	private StringMatcher convert(Type type) {
+
+		if (type == null)
+			return null;
+
+		switch (type) {
+
+			case NOT_LIKE:
+			case LIKE:
+				return StringMatcher.LIKE;
+			case STARTING_WITH:
+				return StringMatcher.STARTING;
+			case ENDING_WITH:
+				return StringMatcher.ENDING;
+			case NOT_CONTAINING:
+			case CONTAINING:
+				return StringMatcher.CONTAINING;
+			case REGEX:
+				return StringMatcher.REGEX;
+			case SIMPLE_PROPERTY:
+			case NEGATING_SIMPLE_PROPERTY:
+				return StringMatcher.EXACT;
+			case BETWEEN:
+			case IS_NOT_NULL:
+			case IS_NULL:
+			case LESS_THAN:
+			case LESS_THAN_EQUAL:
+			case GREATER_THAN:
+			case GREATER_THAN_EQUAL:
+			case BEFORE:
+			case AFTER:
+			case EXISTS:
+			case TRUE:
+			case FALSE:
+			case NOT_IN:
+			case IN:
+			case NEAR:
+			case WITHIN:
+			case IS_NOT_EMPTY:
+			case IS_EMPTY:
+				return StringMatcher.DEFAULT;
+		}
+		throw new IllegalStateException("Execution should never reach this position.");
 	}
 
 }

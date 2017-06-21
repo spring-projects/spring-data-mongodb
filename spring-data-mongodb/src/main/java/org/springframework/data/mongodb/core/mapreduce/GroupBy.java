@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.mapreduce;
 import java.util.Optional;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.Collation;
+import org.springframework.data.mongodb.core.query.Collation;
 
 /**
  * Collects the parameters required to perform a group operation on a collection. The query condition and the input

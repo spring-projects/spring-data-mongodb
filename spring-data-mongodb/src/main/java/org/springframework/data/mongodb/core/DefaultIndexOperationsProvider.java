@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.index.IndexOperations;
+import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 
 /**
  * {@link IndexOperationsProvider} to obtain {@link IndexOperations} from a given {@link MongoDbFactory}. TODO: Review
@@ -38,7 +40,7 @@ class DefaultIndexOperationsProvider implements IndexOperationsProvider {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.IndexOperationsProvider#reactiveIndexOps(java.lang.String)
+	 * @see org.springframework.data.mongodb.core.index.IndexOperationsProvider#reactiveIndexOps(java.lang.String)
 	 */
 	@Override
 	public IndexOperations indexOps(String collectionName) {

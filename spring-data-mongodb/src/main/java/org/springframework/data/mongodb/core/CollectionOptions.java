@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Optional;
 
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.util.Assert;
 
 /**

@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.util.Assert;
 
 import com.mongodb.reactivestreams.client.ListIndexesPublisher;
