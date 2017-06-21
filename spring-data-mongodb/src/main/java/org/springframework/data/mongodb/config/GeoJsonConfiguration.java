@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.mongodb.core.geo.GeoJsonModule;
+import org.springframework.data.web.config.SpringDataJacksonModules;
 
 /**
- * Index operations on a collection.
- *
- * @author Mark Pollack
+ * Configuration class to expose {@link GeoJsonModule} as a Spring bean.
+ * 
  * @author Oliver Gierke
- * @author Christoph Strobl
  * @author Jens Schauder
- *
- * @deprecated Use {@link org.springframework.data.mongodb.core.index.IndexOperations} instead.
  */
-@Deprecated
-public interface IndexOperations extends org.springframework.data.mongodb.core.index.IndexOperations {
+public class GeoJsonConfiguration implements SpringDataJacksonModules {
 
+	@Bean
+	public GeoJsonModule geoJsonModule() {
+		return new GeoJsonModule();
+	}
 }

@@ -21,10 +21,11 @@ import java.util.Locale;
 
 import org.bson.Document;
 import org.junit.Test;
-import org.springframework.data.mongodb.core.Collation.Alternate;
-import org.springframework.data.mongodb.core.Collation.CaseFirst;
-import org.springframework.data.mongodb.core.Collation.CollationLocale;
-import org.springframework.data.mongodb.core.Collation.ComparisonLevel;
+import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Collation.Alternate;
+import org.springframework.data.mongodb.core.query.Collation.CaseFirst;
+import org.springframework.data.mongodb.core.query.Collation.CollationLocale;
+import org.springframework.data.mongodb.core.query.Collation.ComparisonLevel;
 
 /**
  * @author Christoph Strobl

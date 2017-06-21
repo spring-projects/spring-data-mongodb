@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.Collation;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 

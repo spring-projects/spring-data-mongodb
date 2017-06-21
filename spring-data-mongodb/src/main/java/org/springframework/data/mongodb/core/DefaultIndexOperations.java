@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
@@ -89,7 +90,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.IndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
+	 * @see org.springframework.data.mongodb.core.index.IndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
 	 */
 	public String ensureIndex(final IndexDefinition indexDefinition) {
 
@@ -136,7 +137,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.IndexOperations#dropIndex(java.lang.String)
+	 * @see org.springframework.data.mongodb.core.index.IndexOperations#dropIndex(java.lang.String)
 	 */
 	public void dropIndex(final String name) {
 
@@ -149,7 +150,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.IndexOperations#dropAllIndexes()
+	 * @see org.springframework.data.mongodb.core.index.IndexOperations#dropAllIndexes()
 	 */
 	public void dropAllIndexes() {
 		dropIndex("*");
@@ -157,7 +158,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.IndexOperations#getIndexInfo()
+	 * @see org.springframework.data.mongodb.core.index.IndexOperations#getIndexInfo()
 	 */
 	public List<IndexInfo> getIndexInfo() {
 

@@ -125,7 +125,7 @@ abstract class IndexConverters {
 			return null;
 		}
 
-		return org.springframework.data.mongodb.core.Collation.from(source).toMongoCollation();
+		return org.springframework.data.mongodb.core.query.Collation.from(source).toMongoCollation();
 	}
 
 	private static Converter<Document, IndexInfo> getDocumentIndexInfoConverter() {

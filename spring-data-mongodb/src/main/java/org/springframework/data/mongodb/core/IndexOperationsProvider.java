@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-
 /**
- * TODO: Revisit for a better pattern.
  * @author Mark Paluch
+ * @author Jens Schauder
  * @since 2.0
+ *
+ * @deprecated Use {@link org.springframework.data.mongodb.core.index.IndexOperationsProvider} instead.
  */
-public interface IndexOperationsProvider {
+@Deprecated
+public interface IndexOperationsProvider extends org.springframework.data.mongodb.core.index.IndexOperationsProvider {
 
-	/**
-	 * Returns the operations that can be performed on indexes
-	 *
-	 * @return index operations on the named collection
-	 */
-	IndexOperations indexOps(String collectionName);
 }
