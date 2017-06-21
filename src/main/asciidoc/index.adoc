@@ -33,7 +33,6 @@ include::{spring-data-commons-docs}/auditing.adoc[]
 include::reference/mongo-auditing.adoc[]
 include::reference/mapping.adoc[]
 include::reference/cross-store.adoc[]
-include::reference/logging.adoc[]
 include::reference/jmx.adoc[]
 include::reference/mongo-3.adoc[]
 :leveloffset: -1
