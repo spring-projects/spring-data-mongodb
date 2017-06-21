@@ -30,7 +30,9 @@ Following options can be set via command line.
 Option | Default Value
 --- | ---
 warmupIterations | 10
+warmupTime | 1 (seconds)
 measurementIterations | 10
+measurementTime | 1 (seconds)
 forks | 1
 benchmarkReportDir | /target/reports/performance (always relative to project root dir)
-
+benchmark | .* (single benchmark via `classname#benchmark`)
