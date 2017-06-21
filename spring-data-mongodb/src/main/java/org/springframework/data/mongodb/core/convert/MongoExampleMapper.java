@@ -30,8 +30,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
-import org.springframework.data.repository.core.support.ExampleMatcherAccessor;
-import org.springframework.data.repository.query.parser.Part.Type;
+import org.springframework.data.support.ExampleMatcherAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -40,24 +39,18 @@ import org.springframework.util.StringUtils;
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jens Schauder
  * @since 1.8
  */
 public class MongoExampleMapper {
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoConverter converter;
-	private final Map<StringMatcher, Type> stringMatcherPartMapping = new HashMap<StringMatcher, Type>();
 
 	public MongoExampleMapper(MongoConverter converter) {
 
 		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
-
-		stringMatcherPartMapping.put(StringMatcher.EXACT, Type.SIMPLE_PROPERTY);
-		stringMatcherPartMapping.put(StringMatcher.CONTAINING, Type.CONTAINING);
-		stringMatcherPartMapping.put(StringMatcher.STARTING, Type.STARTING_WITH);
-		stringMatcherPartMapping.put(StringMatcher.ENDING, Type.ENDING_WITH);
-		stringMatcherPartMapping.put(StringMatcher.REGEX, Type.REGEX);
 	}
 
 	/**
@@ -201,7 +194,7 @@ public class MongoExampleMapper {
 				continue;
 			}
 
-			StringMatcher stringMatcher = exampleSpecAccessor.getDefaultStringMatcher();
+			org.springframework.data.util.StringMatcher stringMatcher = exampleSpecAccessor.getDefaultStringMatcher().toNewStringMatcher();
 			Object value = entry.getValue();
 			boolean ignoreCase = exampleSpecAccessor.isIgnoreCaseEnabled();
 
@@ -210,7 +203,7 @@ public class MongoExampleMapper {
 				mappedPropertyPath = exampleSpecAccessor.hasPropertySpecifier(propertyPath) ? propertyPath
 						: getMappedPropertyPath(propertyPath, probeType);
 
-				stringMatcher = exampleSpecAccessor.getStringMatcherForPath(mappedPropertyPath);
+				stringMatcher = exampleSpecAccessor.getStringMatcherForPath(mappedPropertyPath).toNewStringMatcher();
 				ignoreCase = exampleSpecAccessor.isIgnoreCaseForPath(mappedPropertyPath);
 			}
 
@@ -239,11 +232,12 @@ public class MongoExampleMapper {
 		return entry.getKey().equals("_id") && entry.getValue() == null || entry.getValue().equals(Optional.empty());
 	}
 
-	private void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher, boolean ignoreCase) {
+	private void applyStringMatcher(Map.Entry<String, Object> entry,
+			org.springframework.data.util.StringMatcher stringMatcher, boolean ignoreCase) {
 
 		Document document = new Document();
 
-		if (ObjectUtils.nullSafeEquals(StringMatcher.DEFAULT, stringMatcher)) {
+		if (org.springframework.data.util.StringMatcher.DEFAULT == stringMatcher) {
 
 			if (ignoreCase) {
 				document.put("$regex", Pattern.quote((String) entry.getValue()));
@@ -251,8 +245,7 @@ public class MongoExampleMapper {
 			}
 		} else {
 
-			Type type = stringMatcherPartMapping.get(stringMatcher);
-			String expression = MongoRegexCreator.INSTANCE.toRegularExpression((String) entry.getValue(), type);
+			String expression = MongoRegexCreator.INSTANCE.toRegularExpression((String) entry.getValue(), stringMatcher);
 			document.put("$regex", expression);
 			entry.setValue(document);
 		}
@@ -260,5 +253,9 @@ public class MongoExampleMapper {
 		if (ignoreCase) {
 			document.put("$options", "i");
 		}
+	}
+
+	private org.springframework.data.util.StringMatcher convert(StringMatcher stringMatcher) {
+		return org.springframework.data.util.StringMatcher.valueOf(stringMatcher.name());
 	}
 }

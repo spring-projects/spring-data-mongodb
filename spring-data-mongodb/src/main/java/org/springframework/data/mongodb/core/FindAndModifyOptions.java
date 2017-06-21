@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Optional;
 
+import org.springframework.data.mongodb.core.query.Collation;
+
 /**
  * @author Mark Pollak
  * @author Oliver Gierke

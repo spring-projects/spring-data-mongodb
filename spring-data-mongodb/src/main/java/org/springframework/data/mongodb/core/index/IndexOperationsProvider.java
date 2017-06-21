@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+
+package org.springframework.data.mongodb.core.index;
 
 /**
- * Index operations on a collection.
+ * TODO: Revisit for a better pattern.
  *
- * @author Mark Pollack
- * @author Oliver Gierke
- * @author Christoph Strobl
+ * @author Mark Paluch
  * @author Jens Schauder
- *
- * @deprecated Use {@link org.springframework.data.mongodb.core.index.IndexOperations} instead.
+ * @since 2.0
  */
-@Deprecated
-public interface IndexOperations extends org.springframework.data.mongodb.core.index.IndexOperations {
+public interface IndexOperationsProvider {
 
+	/**
+	 * Returns the operations that can be performed on indexes
+	 *
+	 * @return index operations on the named collection
+	 */
+	IndexOperations indexOps(String collectionName);
 }

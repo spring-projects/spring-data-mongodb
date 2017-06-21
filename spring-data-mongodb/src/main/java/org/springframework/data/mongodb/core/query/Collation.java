@@ -13,12 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
-
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+package org.springframework.data.mongodb.core.query;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -34,18 +29,24 @@ import com.mongodb.client.model.CollationCaseFirst;
 import com.mongodb.client.model.CollationMaxVariable;
 import com.mongodb.client.model.CollationStrength;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /**
  * Central abstraction for MongoDB collation support. <br />
  * Allows fluent creation of a collation {@link Document} that can be used for creating collections & indexes as well as
  * querying data.
- * <p />
+ * <p/>
  * <strong>NOTE:</strong> Please keep in mind that queries will only make use of an index with collation settings if the
  * query itself specifies the same collation.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 2.0
+ * @author Jens Schauder
  * @see <a href="https://docs.mongodb.com/manual/reference/collation/">MongoDB Reference - Collation</a>
+ * @since 2.0
  */
 public class Collation {
 
@@ -720,8 +721,8 @@ public class Collation {
 	/**
 	 * ICU locale abstraction for usage with MongoDB {@link Collation}.
 	 *
-	 * @since 2.0
 	 * @see <a href="http://site.icu-project.org">ICU - International Components for Unicode</a>
+	 * @since 2.0
 	 */
 	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class CollationLocale {

@@ -232,6 +232,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>de.schauderhaft.degraph</groupId>
+			<artifactId>degraph-check</artifactId>
+			<version>0.1.4</version>
+			<scope>test</scope>
+		</dependency>
+		
 		<!-- Kotlin extension -->
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
