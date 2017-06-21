@@ -12,7 +12,7 @@ The MongoDB support contains a wide range of features which are summarized below
 * Java based Query, Criteria, and Update DSLs
 * Automatic implementation of Repository interfaces including support for custom finder methods.
 * QueryDSL integration to support type-safe queries.
-* Cross-store persistence - support for JPA Entities with fields transparently persisted/retrieved using MongoDB
+* Cross-store persistence - support for JPA Entities with fields transparently persisted/retrieved using MongoDB (deprecated - will be removed without replacement)
 * GeoSpatial integration
 
 For most tasks you will find yourself using `MongoTemplate` or the Repository support that both leverage the rich mapping functionality. `MongoTemplate` is the place to look for accessing functionality such as incrementing counters or ad-hoc CRUD operations. `MongoTemplate` also provides callback methods so that it is easy for you to get a hold of the low level API artifacts such as `com.mongo.DB` to communicate directly with MongoDB. The goal with naming conventions on various API artifacts is to copy those in the base MongoDB Java driver so you can easily map your existing knowledge onto the Spring APIs.
