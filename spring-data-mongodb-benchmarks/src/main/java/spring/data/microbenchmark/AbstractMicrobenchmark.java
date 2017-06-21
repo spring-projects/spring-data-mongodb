@@ -30,6 +30,7 @@ import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.openjdk.jmh.runner.options.TimeValue;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
@@ -53,14 +54,19 @@ public class AbstractMicrobenchmark {
 
 	@Test
 	public void run() throws Exception {
-		new Runner(options().build()).run();
+
+		String includes = includes();
+
+		if(!includes.contains(org.springframework.util.ClassUtils.getShortName(getClass()))) {
+			return;
+		}
+
+		new Runner(options(includes).build()).run();
 	}
 
-	protected ChainedOptionsBuilder options() throws Exception {
+	protected ChainedOptionsBuilder options(String includes) throws Exception {
 
-		String className = org.springframework.util.ClassUtils.getShortName(getClass());
-
-		ChainedOptionsBuilder optionsBuilder = new OptionsBuilder().include(".*" + className + ".*").jvmArgs(jvmArgs());
+		ChainedOptionsBuilder optionsBuilder = new OptionsBuilder().include(includes).jvmArgs(jvmArgs());
 		optionsBuilder = warmup(optionsBuilder);
 		optionsBuilder = measure(optionsBuilder);
 		optionsBuilder = forks(optionsBuilder);
@@ -118,24 +124,52 @@ public class AbstractMicrobenchmark {
 		return environment.getProperty("benchmarkReportDir");
 	}
 
+	/**
+	 * Read {@code measurementTime} property from {@link org.springframework.core.env.Environment}.
+	 *
+	 * @return -1 if not set.
+	 */
+	protected long getMeasurementTime() {
+		return environment.getProperty("measurementTime", Long.class, -1L);
+	}
+
+	/**
+	 * Read {@code warmupTime} property from {@link org.springframework.core.env.Environment}.
+	 *
+	 * @return -1 if not set.
+	 */
+	protected long getWarmupTime() {
+		return environment.getProperty("warmupTime", Long.class, -1L);
+	}
+
 	private ChainedOptionsBuilder measure(ChainedOptionsBuilder optionsBuilder) {
 
 		int measurementIterations = getMeasurementIterations();
-		if (measurementIterations <= 0) {
-			return optionsBuilder;
+		long measurementTime = getMeasurementTime();
+
+		if (measurementIterations > 0) {
+			optionsBuilder = optionsBuilder.measurementIterations(measurementIterations);
 		}
 
-		return optionsBuilder.measurementIterations(measurementIterations);
+		if (measurementTime > 0) {
+			optionsBuilder = optionsBuilder.measurementTime(TimeValue.seconds(measurementTime));
+		}
+		return optionsBuilder;
 	}
 
 	private ChainedOptionsBuilder warmup(ChainedOptionsBuilder optionsBuilder) {
 
 		int warmupIterations = getWarmupIterations();
-		if (warmupIterations <= 0) {
-			return optionsBuilder;
+		long warmupTime = getWarmupTime();
+
+		if (warmupIterations > 0) {
+			optionsBuilder = optionsBuilder.warmupIterations(warmupIterations);
 		}
 
-		return optionsBuilder.warmupIterations(warmupIterations);
+		if (warmupTime > 0) {
+			optionsBuilder = optionsBuilder.warmupTime(TimeValue.seconds(warmupTime));
+		}
+		return optionsBuilder;
 	}
 
 	private ChainedOptionsBuilder forks(ChainedOptionsBuilder optionsBuilder) {
@@ -171,8 +205,25 @@ public class AbstractMicrobenchmark {
 		return optionsBuilder;
 	}
 
+	private String includes() {
+
+		String tests = environment.getProperty("benchmark", String.class);
+		if (!StringUtils.hasText(tests)) {
+			return ".*" + org.springframework.util.ClassUtils.getShortName(getClass()) + ".*";
+		}
+
+		if (!tests.contains("#")) {
+			return ".*" + tests + ".*";
+		}
+
+		String[] args = tests.split("#");
+		return ".*" + args[0] + "." + args[1];
+	}
+
 	/**
-	 * {@code project.version_yyyy-MM-dd_ClassName.json} eg. {@literal 1.11.0.BUILD-SNAPSHOT_2017-03-07_MappingMongoConverterBenchmark.json}
+	 * {@code project.version_yyyy-MM-dd_ClassName.json} eg.
+	 * {@literal 1.11.0.BUILD-SNAPSHOT_2017-03-07_MappingMongoConverterBenchmark.json}
+	 *
 	 * @return
 	 */
 	private String reportFilename() {
