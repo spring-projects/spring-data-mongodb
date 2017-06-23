@@ -61,6 +61,7 @@ import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -575,7 +576,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(mode, "BulkMode must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		DefaultBulkOperations operations = new DefaultBulkOperations(this, mode, collectionName, entityType);
+		DefaultBulkOperations operations = new DefaultBulkOperations(this, collectionName,
+				new BulkOperationContext(mode, getPersistentEntity(entityType), queryMapper, updateMapper));
 
 		operations.setExceptionTranslator(exceptionTranslator);
 		operations.setWriteConcernResolver(writeConcernResolver);
