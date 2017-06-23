@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.data.mongodb.core;
-
-import org.springframework.data.mongodb.core.convert.QueryMapper;
+package org.springframework.data.mongodb.core.index;
 
 /**
  * TODO: Revisit for a better pattern.
+ *
  * @author Mark Paluch
+ * @author Jens Schauder
  * @since 2.0
  */
 public interface IndexOperationsProvider {
