@@ -334,7 +334,6 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		DefaultBulkOperations bulkOps = new DefaultBulkOperations(operations, COLLECTION_NAME, bulkOperationContext);
 		bulkOps.setDefaultWriteConcern(WriteConcern.ACKNOWLEDGED);
-		bulkOps.setWriteConcernResolver(DefaultWriteConcernResolver.INSTANCE);
 
 		return bulkOps;
 	}

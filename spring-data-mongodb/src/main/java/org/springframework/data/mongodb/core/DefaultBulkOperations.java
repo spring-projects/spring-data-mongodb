@@ -15,9 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.Data;
+import lombok.NonNull;
+import lombok.Value;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.dao.DataAccessException;
@@ -45,6 +46,7 @@ import com.mongodb.WriteConcern;
  * @author Tobias Trelle
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.9
  */
 class DefaultBulkOperations implements BulkOperations {
@@ -53,8 +55,8 @@ class DefaultBulkOperations implements BulkOperations {
 	private final String collectionName;
 	private final BulkOperationContext bulkOperationContext;
 
-	private WriteConcernResolver writeConcernResolver;
 	private PersistenceExceptionTranslator exceptionTranslator;
+	private WriteConcernResolver writeConcernResolver;
 	private WriteConcern defaultWriteConcern;
 
 	private BulkWriteOperation bulk;
@@ -79,7 +81,8 @@ class DefaultBulkOperations implements BulkOperations {
 		this.collectionName = collectionName;
 		this.bulkOperationContext = bulkOperationContext;
 		this.exceptionTranslator = new MongoExceptionTranslator();
-		this.bulk = initBulkOperation();
+		this.writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
+		this.bulk = getBulkWriteOptions(bulkOperationContext.getBulkMode());
 	}
 
 	/**
@@ -106,7 +109,7 @@ class DefaultBulkOperations implements BulkOperations {
 	 *
 	 * @param defaultWriteConcern can be {@literal null}.
 	 */
-	public void setDefaultWriteConcern(WriteConcern defaultWriteConcern) {
+	void setDefaultWriteConcern(WriteConcern defaultWriteConcern) {
 		this.defaultWriteConcern = defaultWriteConcern;
 	}
 
@@ -158,7 +161,7 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
-		return updateOne(Arrays.asList(Pair.of(query, update)));
+		return updateOne(Collections.singletonList(Pair.of(query, update)));
 	}
 
 	/*
@@ -188,7 +191,7 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
-		return updateMulti(Arrays.asList(Pair.of(query, update)));
+		return updateMulti(Collections.singletonList(Pair.of(query, update)));
 	}
 
 	/*
@@ -279,7 +282,7 @@ class DefaultBulkOperations implements BulkOperations {
 			throw toThrow == null ? o_O : toThrow;
 
 		} finally {
-			this.bulk = initBulkOperation();
+			this.bulk = getBulkWriteOptions(bulkOperationContext.getBulkMode());
 		}
 	}
 
@@ -297,7 +300,7 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
-		BulkWriteRequestBuilder builder = bulk.find(query.getQueryObject());
+		BulkWriteRequestBuilder builder = bulk.find(getMappedQuery(query.getQueryObject()));
 
 		if (upsert) {
 
@@ -319,11 +322,19 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	private final BulkWriteOperation initBulkOperation() {
+	private DBObject getMappedUpdate(DBObject update) {
+		return bulkOperationContext.getUpdateMapper().getMappedObject(update, bulkOperationContext.getEntity());
+	}
+
+	private DBObject getMappedQuery(DBObject query) {
+		return bulkOperationContext.getQueryMapper().getMappedObject(query, bulkOperationContext.getEntity());
+	}
+
+	private BulkWriteOperation getBulkWriteOptions(BulkMode bulkMode) {
 
 		DBCollection collection = mongoOperations.getCollection(collectionName);
 
-		switch (bulkOperationContext.getBulkMode()) {
+		switch (bulkMode) {
 			case ORDERED:
 				return collection.initializeOrderedBulkOperation();
 			case UNORDERED:
@@ -331,14 +342,6 @@ class DefaultBulkOperations implements BulkOperations {
 		}
 
 		throw new IllegalStateException("BulkMode was null!");
-	}
-
-	private DBObject getMappedUpdate(DBObject update) {
-		return bulkOperationContext.getUpdateMapper().getMappedObject(update, bulkOperationContext.getEntity());
-	}
-
-	private DBObject getMappedQuery(DBObject query) {
-		return bulkOperationContext.getQueryMapper().getMappedObject(query, bulkOperationContext.getEntity());
 	}
 
 	/**
@@ -349,13 +352,13 @@ class DefaultBulkOperations implements BulkOperations {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@Data
+	@Value
 	static class BulkOperationContext {
 
-		final BulkMode bulkMode;
-		final MongoPersistentEntity<?> entity;
-		final QueryMapper queryMapper;
-		final UpdateMapper updateMapper;
+		@NonNull BulkMode bulkMode;
+		MongoPersistentEntity<?> entity;
+		@NonNull QueryMapper queryMapper;
+		@NonNull UpdateMapper updateMapper;
 
 		Class<?> getEntityType() {
 			return entity != null ? entity.getType() : null;
