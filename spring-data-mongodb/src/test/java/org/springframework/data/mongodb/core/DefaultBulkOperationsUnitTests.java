@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
@@ -51,14 +52,18 @@ import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.WriteModel;
 
 /**
+ * Unit tests for {@link DefaultBulkOperations}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultBulkOperationsUnitTests {
 
 	@Mock MongoTemplate template;
-	@Mock MongoCollection collection;
+	@Mock MongoCollection<Document> collection;
 	@Mock DbRefResolver dbRefResolver;
+	@Captor ArgumentCaptor<List<WriteModel<Document>>> captor;
 	MongoConverter converter;
 	MongoMappingContext mappingContext;
 
@@ -85,27 +90,23 @@ public class DefaultBulkOperationsUnitTests {
 		ops.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
 				.execute();
 
-		ArgumentCaptor<List<WriteModel<Document>>> captor = ArgumentCaptor.forClass(List.class);
-
 		verify(collection).bulkWrite(captor.capture(), any());
 
 		assertThat(captor.getValue().get(0)).isInstanceOf(UpdateOneModel.class);
-		assertThat(((UpdateOneModel) captor.getValue().get(0)).getOptions().getCollation())
+		assertThat(((UpdateOneModel<Document>) captor.getValue().get(0)).getOptions().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de").build());
 	}
 
 	@Test // DATAMONGO-1518
-	public void updateMayShouldUseCollationWhenPresent() {
+	public void updateManyShouldUseCollationWhenPresent() {
 
 		ops.updateMulti(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
 				.execute();
 
-		ArgumentCaptor<List<WriteModel<Document>>> captor = ArgumentCaptor.forClass(List.class);
-
 		verify(collection).bulkWrite(captor.capture(), any());
 
 		assertThat(captor.getValue().get(0)).isInstanceOf(UpdateManyModel.class);
-		assertThat(((UpdateManyModel) captor.getValue().get(0)).getOptions().getCollation())
+		assertThat(((UpdateManyModel<Document>) captor.getValue().get(0)).getOptions().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de").build());
 	}
 
@@ -114,12 +115,10 @@ public class DefaultBulkOperationsUnitTests {
 
 		ops.remove(new BasicQuery("{}").collation(Collation.of("de"))).execute();
 
-		ArgumentCaptor<List<WriteModel<Document>>> captor = ArgumentCaptor.forClass(List.class);
-
 		verify(collection).bulkWrite(captor.capture(), any());
 
 		assertThat(captor.getValue().get(0)).isInstanceOf(DeleteManyModel.class);
-		assertThat(((DeleteManyModel) captor.getValue().get(0)).getOptions().getCollation())
+		assertThat(((DeleteManyModel<Document>) captor.getValue().get(0)).getOptions().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de").build());
 	}
 
@@ -128,11 +127,9 @@ public class DefaultBulkOperationsUnitTests {
 
 		ops.updateOne(query(where("firstName").is("danerys")), Update.update("firstName", "queen danerys")).execute();
 
-		ArgumentCaptor<List<WriteModel<Document>>> captor = ArgumentCaptor.forClass(List.class);
-
 		verify(collection).bulkWrite(captor.capture(), any());
 
-		UpdateOneModel<Document> updateModel = (UpdateOneModel) captor.getValue().get(0);
+		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
 		assertThat(updateModel.getFilter()).isEqualTo(new Document("first_name", "danerys"));
 		assertThat(updateModel.getUpdate()).isEqualTo(new Document("$set", new Document("first_name", "queen danerys")));
 	}
@@ -142,11 +139,9 @@ public class DefaultBulkOperationsUnitTests {
 
 		ops.remove(query(where("firstName").is("danerys"))).execute();
 
-		ArgumentCaptor<List<WriteModel<Document>>> captor = ArgumentCaptor.forClass(List.class);
-
 		verify(collection).bulkWrite(captor.capture(), any());
 
-		DeleteManyModel<Document> updateModel = (DeleteManyModel) captor.getValue().get(0);
+		DeleteManyModel<Document> updateModel = (DeleteManyModel<Document>) captor.getValue().get(0);
 		assertThat(updateModel.getFilter()).isEqualTo(new Document("first_name", "danerys"));
 	}
 

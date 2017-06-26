@@ -15,10 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.Data;
+import lombok.NonNull;
+import lombok.Value;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -54,6 +55,7 @@ import com.mongodb.client.model.WriteModel;
  * @author Tobias Trelle
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.9
  */
 class DefaultBulkOperations implements BulkOperations {
@@ -61,14 +63,12 @@ class DefaultBulkOperations implements BulkOperations {
 	private final MongoOperations mongoOperations;
 	private final String collectionName;
 	private final BulkOperationContext bulkOperationContext;
+	private final List<WriteModel<Document>> models = new ArrayList<>();
 
-	private WriteConcernResolver writeConcernResolver;
 	private PersistenceExceptionTranslator exceptionTranslator;
 	private WriteConcern defaultWriteConcern;
 
 	private BulkWriteOptions bulkOptions;
-
-	List<WriteModel<Document>> models = new ArrayList<>();
 
 	/**
 	 * Creates a new {@link DefaultBulkOperations} for the given {@link MongoOperations}, collection name and
@@ -90,7 +90,7 @@ class DefaultBulkOperations implements BulkOperations {
 		this.collectionName = collectionName;
 		this.bulkOperationContext = bulkOperationContext;
 		this.exceptionTranslator = new MongoExceptionTranslator();
-		this.bulkOptions = initBulkOperation();
+		this.bulkOptions = getBulkWriteOptions(bulkOperationContext.getBulkMode());
 	}
 
 	/**
@@ -103,21 +103,11 @@ class DefaultBulkOperations implements BulkOperations {
 	}
 
 	/**
-	 * Configures the {@link WriteConcernResolver} to be used. Defaults to {@link DefaultWriteConcernResolver}.
-	 *
-	 * @param writeConcernResolver can be {@literal null}.
-	 */
-	public void setWriteConcernResolver(WriteConcernResolver writeConcernResolver) {
-		this.writeConcernResolver = writeConcernResolver == null ? DefaultWriteConcernResolver.INSTANCE
-				: writeConcernResolver;
-	}
-
-	/**
 	 * Configures the default {@link WriteConcern} to be used. Defaults to {@literal null}.
 	 *
 	 * @param defaultWriteConcern can be {@literal null}.
 	 */
-	public void setDefaultWriteConcern(WriteConcern defaultWriteConcern) {
+	void setDefaultWriteConcern(WriteConcern defaultWriteConcern) {
 		this.defaultWriteConcern = defaultWriteConcern;
 	}
 
@@ -140,6 +130,7 @@ class DefaultBulkOperations implements BulkOperations {
 		mongoOperations.getConverter().write(document, sink);
 
 		models.add(new InsertOneModel<>(sink));
+
 		return this;
 	}
 
@@ -152,9 +143,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 		Assert.notNull(documents, "Documents must not be null!");
 
-		for (Object document : documents) {
-			insert(document);
-		}
+		documents.forEach(this::insert);
 
 		return this;
 	}
@@ -170,7 +159,7 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
-		return updateOne(Arrays.asList(Pair.of(query, update)));
+		return updateOne(Collections.singletonList(Pair.of(query, update)));
 	}
 
 	/*
@@ -200,7 +189,7 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
-		return updateMulti(Arrays.asList(Pair.of(query, update)));
+		return updateMulti(Collections.singletonList(Pair.of(query, update)));
 	}
 
 	/*
@@ -254,7 +243,8 @@ class DefaultBulkOperations implements BulkOperations {
 		DeleteOptions deleteOptions = new DeleteOptions();
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
 
-		models.add(new DeleteManyModel(query.getQueryObject(), deleteOptions));
+		models.add(new DeleteManyModel<>(query.getQueryObject(), deleteOptions));
+
 		return this;
 	}
 
@@ -296,13 +286,13 @@ class DefaultBulkOperations implements BulkOperations {
 			throw toThrow == null ? o_O : toThrow;
 
 		} finally {
-			this.bulkOptions = initBulkOperation();
+			this.bulkOptions = getBulkWriteOptions(bulkOperationContext.getBulkMode());
 		}
 	}
 
 	/**
 	 * Performs update and upsert bulk operations.
-	 * 
+	 *
 	 * @param query the {@link Query} to determine documents to update.
 	 * @param update the {@link Update} to perform, must not be {@literal null}.
 	 * @param upsert whether to upsert.
@@ -323,20 +313,8 @@ class DefaultBulkOperations implements BulkOperations {
 		} else {
 			models.add(new UpdateOneModel<>(query.getQueryObject(), update.getUpdateObject(), options));
 		}
+
 		return this;
-	}
-
-	private final BulkWriteOptions initBulkOperation() {
-
-		BulkWriteOptions options = new BulkWriteOptions();
-
-		switch (bulkOperationContext.getBulkMode()) {
-			case ORDERED:
-				return options.ordered(true);
-			case UNORDERED:
-				return options.ordered(false);
-		}
-		throw new IllegalStateException("BulkMode was null!");
 	}
 
 	private WriteModel<Document> mapWriteModel(WriteModel<Document> writeModel) {
@@ -345,7 +323,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 			UpdateOneModel<Document> model = (UpdateOneModel<Document>) writeModel;
 
-			return new UpdateOneModel(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()),
+			return new UpdateOneModel<>(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()),
 					model.getOptions());
 		}
 
@@ -353,7 +331,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 			UpdateManyModel<Document> model = (UpdateManyModel<Document>) writeModel;
 
-			return new UpdateManyModel(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()),
+			return new UpdateManyModel<>(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()),
 					model.getOptions());
 		}
 
@@ -361,14 +339,14 @@ class DefaultBulkOperations implements BulkOperations {
 
 			DeleteOneModel<Document> model = (DeleteOneModel<Document>) writeModel;
 
-			return new DeleteOneModel(getMappedQuery(model.getFilter()), model.getOptions());
+			return new DeleteOneModel<>(getMappedQuery(model.getFilter()), model.getOptions());
 		}
 
 		if (writeModel instanceof DeleteManyModel) {
 
 			DeleteManyModel<Document> model = (DeleteManyModel<Document>) writeModel;
 
-			return new DeleteManyModel(getMappedQuery(model.getFilter()), model.getOptions());
+			return new DeleteManyModel<>(getMappedQuery(model.getFilter()), model.getOptions());
 		}
 
 		return writeModel;
@@ -382,6 +360,20 @@ class DefaultBulkOperations implements BulkOperations {
 		return bulkOperationContext.getQueryMapper().getMappedObject(query, bulkOperationContext.getEntity());
 	}
 
+	private static BulkWriteOptions getBulkWriteOptions(BulkMode bulkMode) {
+
+		BulkWriteOptions options = new BulkWriteOptions();
+
+		switch (bulkMode) {
+			case ORDERED:
+				return options.ordered(true);
+			case UNORDERED:
+				return options.ordered(false);
+		}
+
+		throw new IllegalStateException("BulkMode was null!");
+	}
+
 	/**
 	 * {@link BulkOperationContext} holds information about
 	 * {@link org.springframework.data.mongodb.core.BulkOperations.BulkMode} the entity in use as well as references to
@@ -390,12 +382,12 @@ class DefaultBulkOperations implements BulkOperations {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@Data
+	@Value
 	static class BulkOperationContext {
 
-		final BulkMode bulkMode;
-		final Optional<? extends MongoPersistentEntity<?>> entity;
-		final QueryMapper queryMapper;
-		final UpdateMapper updateMapper;
+		@NonNull BulkMode bulkMode;
+		@NonNull Optional<? extends MongoPersistentEntity<?>> entity;
+		@NonNull QueryMapper queryMapper;
+		@NonNull UpdateMapper updateMapper;
 	}
 }
