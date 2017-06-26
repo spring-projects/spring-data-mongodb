@@ -21,15 +21,15 @@ import static org.junit.Assert.*;
 import java.util.Collection;
 
 import org.junit.Test;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfiguration;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
@@ -46,8 +46,10 @@ public class ReactiveMongoRepositoryConfigurationExtensionUnitTests {
 	StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(Config.class, true);
 	ResourceLoader loader = new PathMatchingResourcePatternResolver();
 	Environment environment = new StandardEnvironment();
+	BeanDefinitionRegistry registry = new DefaultListableBeanFactory();
+
 	RepositoryConfigurationSource configurationSource = new AnnotationRepositoryConfigurationSource(metadata,
-			EnableReactiveMongoRepositories.class, loader, environment);
+			EnableReactiveMongoRepositories.class, loader, environment, registry);
 
 	@Test // DATAMONGO-1444
 	public void isStrictMatchIfDomainTypeIsAnnotatedWithDocument() {

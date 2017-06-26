@@ -20,6 +20,8 @@ import static org.junit.Assert.*;
 import java.util.Collection;
 
 import org.junit.Test;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ResourceLoader;
@@ -43,8 +45,10 @@ public class MongoRepositoryConfigurationExtensionUnitTests {
 	StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(Config.class, true);
 	ResourceLoader loader = new PathMatchingResourcePatternResolver();
 	Environment environment = new StandardEnvironment();
+	BeanDefinitionRegistry registry = new DefaultListableBeanFactory();
+
 	RepositoryConfigurationSource configurationSource = new AnnotationRepositoryConfigurationSource(metadata,
-			EnableMongoRepositories.class, loader, environment);
+			EnableMongoRepositories.class, loader, environment, registry);
 
 	@Test // DATAMONGO-1009
 	public void isStrictMatchIfDomainTypeIsAnnotatedWithDocument() {
