@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -80,8 +81,9 @@ public class DefaultBulkOperationsUnitTests {
 		when(template.getCollection(anyString())).thenReturn(collection);
 
 		ops = new DefaultBulkOperations(template, "collection-1",
-				new BulkOperationContext(BulkMode.ORDERED, mappingContext.getPersistentEntity(SomeDomainType.class),
-						new QueryMapper(converter), new UpdateMapper(converter)));
+				new BulkOperationContext(BulkMode.ORDERED,
+						Optional.of(mappingContext.getPersistentEntity(SomeDomainType.class)), new QueryMapper(converter),
+						new UpdateMapper(converter)));
 	}
 
 	@Test // DATAMONGO-1518

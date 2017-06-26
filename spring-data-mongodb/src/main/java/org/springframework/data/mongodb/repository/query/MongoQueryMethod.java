@@ -147,14 +147,14 @@ public class MongoQueryMethod extends QueryMethod {
 
 			} else {
 
-				Optional<? extends MongoPersistentEntity<?>> returnedEntity = mappingContext.getPersistentEntity(returnedObjectType);
+				MongoPersistentEntity<?> returnedEntity = mappingContext.getPersistentEntity(returnedObjectType);
 				MongoPersistentEntity<?> managedEntity = mappingContext.getRequiredPersistentEntity(domainClass);
-				returnedEntity = !returnedEntity.isPresent() || returnedEntity.get().getType().isInterface() ? Optional.of(managedEntity)
+				returnedEntity = returnedEntity == null || returnedEntity.getType().isInterface() ? managedEntity
 						: returnedEntity;
-				MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity.get()
+				MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity
 						: managedEntity;
 
-				this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.get().getType(),
+				this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.getType(),
 						collectionEntity);
 			}
 		}
@@ -192,7 +192,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 		if (Iterable.class.isAssignableFrom(returnType)) {
 			TypeInformation<?> from = ClassTypeInformation.fromReturnTypeOf(method);
-			return GeoResult.class.equals(from.getComponentType().get().getType());
+			return GeoResult.class.equals(from.getRequiredComponentType().getType());
 		}
 
 		return false;

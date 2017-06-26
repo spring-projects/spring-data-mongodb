@@ -20,7 +20,6 @@ import java.lang.reflect.Modifier;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -32,7 +31,7 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -47,7 +46,7 @@ import org.springframework.util.StringUtils;
 /**
  * MongoDB specific {@link MongoPersistentEntity} implementation that adds Mongo specific meta-data such as the
  * collection name and the like.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -69,23 +68,30 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
 	 * collection name to the entities simple type name.
-	 * 
+	 *
 	 * @param typeInformation must not be {@literal null}.
 	 */
 	public BasicMongoPersistentEntity(TypeInformation<T> typeInformation) {
 
-		super(typeInformation, Optional.of(MongoPersistentPropertyComparator.INSTANCE));
+		super(typeInformation, MongoPersistentPropertyComparator.INSTANCE);
 
 		Class<?> rawType = typeInformation.getType();
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
 
-		Optional<Document> document = this.findAnnotation(Document.class);
-
-		this.expression = document.map(it -> detectExpression(it)).orElse(null);
 		this.context = new StandardEvaluationContext();
-		this.collection = document.filter(it -> StringUtils.hasText(it.collection())).map(it -> it.collection())
-				.orElse(fallback);
-		this.language = document.filter(it -> StringUtils.hasText(it.language())).map(it -> it.language()).orElse("");
+
+		if (this.isAnnotationPresent(Document.class)) {
+			Document document = this.findAnnotation(Document.class);
+
+			this.collection = StringUtils.hasText(document.collection()) ? document.collection() : fallback;
+			this.language = StringUtils.hasText(document.language()) ? document.language() : "";
+			this.expression = document != null ? detectExpression(document) : null;
+		} else {
+
+			this.collection = fallback;
+			this.language = "";
+			this.expression = null;
+		}
 	}
 
 	/*
@@ -122,7 +128,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 */
 	@Override
 	public MongoPersistentProperty getTextScoreProperty() {
-		return getPersistentProperty(TextScore.class).orElse(null);
+		return getPersistentProperty(TextScore.class);
 	}
 
 	/*
@@ -159,7 +165,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 	/**
 	 * {@link Comparator} implementation inspecting the {@link MongoPersistentProperty}'s order.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	static enum MongoPersistentPropertyComparator implements Comparator<MongoPersistentProperty> {
@@ -189,7 +195,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * that is annotated with @see {@link Id}. The property id is updated according to the following rules: 1) An id
 	 * property which is defined explicitly takes precedence over an implicitly defined id property. 2) In case of any
 	 * ambiguity a @see {@link MappingException} is thrown.
-	 * 
+	 *
 	 * @param property - the new id property candidate
 	 * @return
 	 */
@@ -202,45 +208,47 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			return null;
 		}
 
-		Optional<MongoPersistentProperty> currentIdProperty = getIdProperty();
+		MongoPersistentProperty currentIdProperty = getIdProperty();
 
-		return currentIdProperty.map(it -> {
+		boolean currentIdPropertyIsSet = currentIdProperty != null;
+		@SuppressWarnings("null")
+		boolean currentIdPropertyIsExplicit = currentIdPropertyIsSet ? currentIdProperty.isExplicitIdProperty() : false;
+		boolean newIdPropertyIsExplicit = property.isExplicitIdProperty();
 
-			boolean currentIdPropertyIsExplicit = it.isExplicitIdProperty();
-			boolean newIdPropertyIsExplicit = property.isExplicitIdProperty();
-			Optional<Field> currentIdPropertyField = it.getField();
+		if (!currentIdPropertyIsSet) {
+			return property;
 
-			if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
-				throw new MappingException(
-						String.format(
-								"Attempt to add explicit id property %s but already have an property %s registered "
-										+ "as explicit id. Check your mapping configuration!",
-								property.getField(), currentIdPropertyField));
+		}
 
-			} else if (newIdPropertyIsExplicit && !currentIdPropertyIsExplicit) {
-				// explicit id property takes precedence over implicit id property
-				return property;
+		@SuppressWarnings("null")
+		Field currentIdPropertyField = currentIdProperty.getField();
 
-			} else if (!newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
-				// no id property override - current property is explicitly defined
+		if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
+			throw new MappingException(
+					String.format("Attempt to add explicit id property %s but already have an property %s registered "
+							+ "as explicit id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
 
-			} else {
-				throw new MappingException(
-						String.format("Attempt to add id property %s but already have an property %s registered "
-								+ "as id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
-			}
+		} else if (newIdPropertyIsExplicit && !currentIdPropertyIsExplicit) {
+			// explicit id property takes precedence over implicit id property
+			return property;
 
-			return null;
+		} else if (!newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
+			// no id property override - current property is explicitly defined
 
-		}).orElse(property);
+		} else {
+			throw new MappingException(
+					String.format("Attempt to add id property %s but already have an property %s registered "
+							+ "as id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
+		}
 
+		return null;
 	}
 
 	/**
 	 * Returns a SpEL {@link Expression} frór the collection String expressed in the given {@link Document} annotation if
 	 * present or {@literal null} otherwise. Will also return {@literal null} it the collection {@link String} evaluates
 	 * to a {@link LiteralExpression} (indicating that no subsequent evaluation is necessary).
-	 * 
+	 *
 	 * @param document can be {@literal null}
 	 * @return
 	 */
@@ -264,7 +272,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	/**
 	 * Handler to collect {@link MongoPersistentProperty} instances and check that each of them is mapped to a distinct
 	 * field name.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	private static class AssertFieldNameUniquenessHandler

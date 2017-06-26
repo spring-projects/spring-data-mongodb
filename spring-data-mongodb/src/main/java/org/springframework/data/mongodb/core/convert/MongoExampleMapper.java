@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
@@ -41,7 +32,6 @@ import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.repository.core.support.ExampleMatcherAccessor;
 import org.springframework.data.repository.query.parser.Part.Type;
-import org.springframework.data.util.Optionals;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -99,8 +89,12 @@ public class MongoExampleMapper {
 
 		Document reference = (Document) converter.convertToMongoType(example.getProbe());
 
-		if(entity.getIdProperty().isPresent() && !entity.getIdentifierAccessor(example.getProbe()).getIdentifier().isPresent()) {
-			reference.remove(entity.getIdProperty().get().getFieldName());
+		if (entity.getIdProperty() != null) {
+
+			Object identifier = entity.getIdentifierAccessor(example.getProbe()).getIdentifier();
+			if (identifier == null) {
+				reference.remove(entity.getIdProperty().getFieldName());
+			}
 		}
 
 		ExampleMatcherAccessor matcherAccessor = new ExampleMatcherAccessor(example.getMatcher());
@@ -153,7 +147,7 @@ public class MongoExampleMapper {
 		while (parts.hasNext()) {
 
 			String part = parts.next();
-			MongoPersistentProperty prop = entity.getPersistentProperty(part).orElse(null);
+			MongoPersistentProperty prop = entity.getPersistentProperty(part);
 
 			if (prop == null) {
 

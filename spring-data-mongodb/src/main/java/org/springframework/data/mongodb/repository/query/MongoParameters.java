@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import org.springframework.data.util.TypeInformation;
 
 /**
  * Custom extension of {@link Parameters} discovering additional
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
@@ -47,7 +47,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 	/**
 	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
-	 * 
+	 *
 	 * @param method must not be {@literal null}.
 	 * @param queryMethod must not be {@literal null}.
 	 */
@@ -115,8 +115,8 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		if (this.nearIndex == null && mongoParameter.isManuallyAnnotatedNearParameter()) {
 			this.nearIndex = mongoParameter.getIndex();
 		} else if (mongoParameter.isManuallyAnnotatedNearParameter()) {
-			throw new IllegalStateException(String.format(
-					"Found multiple @Near annotations ond method %s! Only one allowed!", parameter.getMethod().toString()));
+			throw new IllegalStateException(String.format("Found multiple @Near annotations ond method %s! Only one allowed!",
+					parameter.getMethod().toString()));
 		}
 
 		return mongoParameter;
@@ -128,7 +128,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 	/**
 	 * Returns the index of the {@link Distance} parameter to be used for max distance in geo queries.
-	 * 
+	 *
 	 * @return
 	 * @since 1.7
 	 */
@@ -138,7 +138,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 	/**
 	 * Returns the index of the parameter to be used to start a geo-near query from.
-	 * 
+	 *
 	 * @return
 	 */
 	public int getNearIndex() {
@@ -147,7 +147,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 	/**
 	 * Returns ths inde of the parameter to be used as a textquery param
-	 * 
+	 *
 	 * @return
 	 * @since 1.6
 	 */
@@ -171,7 +171,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return rangeIndex;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
 	 */
@@ -190,7 +190,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 				if (componentType == null) {
 					return i;
-				} else if (componentType.equals(candidate.getComponentType().get().getType())) {
+				} else if (componentType.equals(candidate.getRequiredComponentType().getType())) {
 					return i;
 				}
 			}
@@ -201,7 +201,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 	/**
 	 * Custom {@link Parameter} implementation adding parameters of type {@link Distance} to the special ones.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	class MongoParameter extends Parameter {
@@ -210,7 +210,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 		/**
 		 * Creates a new {@link MongoParameter}.
-		 * 
+		 *
 		 * @param parameter must not be {@literal null}.
 		 */
 		MongoParameter(MethodParameter parameter) {

@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -389,8 +388,8 @@ public class SimpleMongoRepositoryTests {
 		}
 
 		@Override
-		public Optional<String> getId(Person entity) {
-			return Optional.ofNullable(entity.getId());
+		public String getId(Person entity) {
+			return entity.getId();
 		}
 
 		@Override

@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
 
 import java.io.Serializable;
@@ -68,6 +69,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class DbRefMappingMongoConverterUnitTests {
@@ -483,7 +485,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		PersistentPropertyAccessor accessor = propertyEntity.getPropertyAccessor(result.dbRefToConcreteType);
 		MongoPersistentProperty idProperty = mappingContext.getRequiredPersistentEntity(LazyDbRefTarget.class)
-				.getIdProperty().get();
+				.getIdProperty();
 
 		assertThat(accessor.getProperty(idProperty), is(notNullValue()));
 		assertProxyIsResolved(result.dbRefToConcreteType, false);

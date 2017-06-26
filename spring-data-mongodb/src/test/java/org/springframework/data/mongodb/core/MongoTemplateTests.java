@@ -54,7 +54,7 @@ import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -1498,7 +1498,7 @@ public class MongoTemplateTests {
 		template.save(map, "maps");
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-549
+	@Test(expected = MappingException.class) // DATAMONGO-549, DATAMONGO-1730
 	public void savesMongoPrimitiveObjectCorrectly() {
 		template.save(new Object(), "collection");
 	}
@@ -1517,7 +1517,7 @@ public class MongoTemplateTests {
 		assertThat(document.containsKey("_id"), is(true));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-550
+	@Test(expected = MappingException.class) // DATAMONGO-550, DATAMONGO-1730
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");

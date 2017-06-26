@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -55,7 +54,7 @@ import com.mongodb.client.model.Filters;
 /**
  * A {@link DbRefResolver} that resolves {@link org.springframework.data.mongodb.core.mapping.DBRef}s by delegating to a
  * {@link DbRefResolverCallback} than is able to generate lazy loading proxies.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -70,7 +69,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 	/**
 	 * Creates a new {@link DefaultDbRefResolver} with the given {@link MongoDbFactory}.
-	 * 
+	 *
 	 * @param mongoDbFactory must not be {@literal null}.
 	 */
 	public DefaultDbRefResolver(MongoDbFactory mongoDbFactory) {
@@ -87,20 +86,20 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
 	 */
 	@Override
-	public Optional<Object> resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+	public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler handler) {
 
 		Assert.notNull(property, "Property must not be null!");
 		Assert.notNull(callback, "Callback must not be null!");
 
 		if (isLazyDbRef(property)) {
-			return Optional.of(createLazyLoadingProxy(property, dbref, callback, handler));
+			return createLazyLoadingProxy(property, dbref, callback, handler);
 		}
 
-		return Optional.ofNullable(callback.resolve(property));
+		return callback.resolve(property);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#created(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.mapping.MongoPersistentEntity, java.lang.Object)
 	 */
@@ -165,7 +164,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	/**
 	 * Creates a proxy for the given {@link MongoPersistentProperty} using the given {@link DbRefResolverCallback} to
 	 * eventually resolve the value of the property.
-	 * 
+	 *
 	 * @param property must not be {@literal null}.
 	 * @param dbref can be {@literal null}.
 	 * @param callback must not be {@literal null}.
@@ -200,7 +199,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 	/**
 	 * Returns the CGLib enhanced type for the given source type.
-	 * 
+	 *
 	 * @param type
 	 * @return
 	 */
@@ -216,7 +215,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 	/**
 	 * Returns whether the property shall be resolved lazily.
-	 * 
+	 *
 	 * @param property must not be {@literal null}.
 	 * @return
 	 */
@@ -228,7 +227,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * A {@link MethodInterceptor} that is used within a lazy loading proxy. The property resolving is delegated to a
 	 * {@link DbRefResolverCallback}. The resolving process is triggered by a method invocation on the proxy and is
 	 * guaranteed to be performed only once.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 * @author Christoph Strobl
@@ -259,7 +258,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		/**
 		 * Creates a new {@link LazyLoadingInterceptor} for the given {@link MongoPersistentProperty},
 		 * {@link PersistenceExceptionTranslator} and {@link DbRefResolverCallback}.
-		 * 
+		 *
 		 * @param property must not be {@literal null}.
 		 * @param dbref can be {@literal null}.
 		 * @param callback must not be {@literal null}.
@@ -286,7 +285,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			return intercept(invocation.getThis(), invocation.getMethod(), invocation.getArguments(), null);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.cglib.proxy.MethodInterceptor#intercept(java.lang.Object, java.lang.reflect.Method, java.lang.Object[], org.springframework.cglib.proxy.MethodProxy)
 		 */
@@ -332,7 +331,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		/**
 		 * Returns a to string representation for the given {@code proxy}.
-		 * 
+		 *
 		 * @param proxy
 		 * @return
 		 */
@@ -353,7 +352,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		/**
 		 * Returns the hashcode for the given {@code proxy}.
-		 * 
+		 *
 		 * @param proxy
 		 * @return
 		 */
@@ -363,7 +362,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		/**
 		 * Performs an equality check for the given {@code proxy}.
-		 * 
+		 *
 		 * @param proxy
 		 * @param that
 		 * @return
@@ -383,7 +382,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		/**
 		 * Will trigger the resolution if the proxy is not resolved already or return a previously resolved result.
-		 * 
+		 *
 		 * @return
 		 */
 		private Object ensureResolved() {
@@ -398,7 +397,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		/**
 		 * Callback method for serialization.
-		 * 
+		 *
 		 * @param out
 		 * @throws IOException
 		 */
@@ -410,7 +409,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		/**
 		 * Callback method for deserialization.
-		 * 
+		 *
 		 * @param in
 		 * @throws IOException
 		 */
@@ -426,7 +425,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		/**
 		 * Resolves the proxy into its backing object.
-		 * 
+		 *
 		 * @return
 		 */
 		private synchronized Object resolve() {

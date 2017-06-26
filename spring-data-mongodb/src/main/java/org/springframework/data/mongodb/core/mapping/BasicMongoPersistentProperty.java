@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.math.BigInteger;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
@@ -27,19 +26,20 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
 
 /**
- * MongoDB specific {@link org.springframework.data.mapping.MongoPersistentProperty} implementation.
- * 
+ * MongoDB specific {@link org.springframework.data.mapping.PersistentProperty} implementation.
+ *
  * @author Oliver Gierke
  * @author Patryk Wasik
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty>
 		implements MongoPersistentProperty {
@@ -65,7 +65,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentProperty}.
-	 * 
+	 *
 	 * @param field
 	 * @param propertyDescriptor
 	 * @param owner
@@ -86,7 +86,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	/**
 	 * Also considers fields as id that are of supported id type and name.
-	 * 
+	 *
 	 * @see #SUPPORTED_ID_PROPERTY_NAMES
 	 * @see #SUPPORTED_ID_TYPES
 	 */
@@ -113,14 +113,14 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	/**
 	 * Returns the key to be used to store the value of the property inside a Mongo {@link org.bson.Document}.
-	 * 
+	 *
 	 * @return
 	 */
 	public String getFieldName() {
 
 		if (isIdProperty()) {
 
-			if (!getOwner().getIdProperty().isPresent()) {
+			if (getOwner().getIdProperty() == null) {
 				return ID_FIELD_NAME;
 			}
 
@@ -154,13 +154,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	private String getAnnotatedFieldName() {
 
-		Optional<org.springframework.data.mongodb.core.mapping.Field> annotation = findAnnotation(
+		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
 				org.springframework.data.mongodb.core.mapping.Field.class);
 
-		return annotation//
-				.filter(it -> StringUtils.hasText(it.value()))//
-				.map(it -> it.value())//
-				.orElse(null);
+		return annotation != null ? annotation.value() : null;
 	}
 
 	/*
@@ -169,10 +166,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	public int getFieldOrder() {
 
-		Optional<org.springframework.data.mongodb.core.mapping.Field> annotation = findAnnotation(
+		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
 				org.springframework.data.mongodb.core.mapping.Field.class);
 
-		return annotation.map(it -> it.order()).orElse(Integer.MAX_VALUE);
+		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
 	}
 
 	/*
@@ -197,7 +194,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDBRef()
 	 */
 	public DBRef getDBRef() {
-		return findAnnotation(DBRef.class).orElse(null);
+		return findAnnotation(DBRef.class);
 	}
 
 	/*

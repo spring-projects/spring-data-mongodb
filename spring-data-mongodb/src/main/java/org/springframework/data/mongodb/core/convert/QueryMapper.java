@@ -39,7 +39,7 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -122,7 +122,7 @@ public class QueryMapper {
 			if (Query.isRestrictedTypeKey(key)) {
 
 				@SuppressWarnings("unchecked")
-				Set<Class<?>> restrictedTypes = (Set<Class<?>>) BsonUtils.get(query, key);
+				Set<Class<?>> restrictedTypes = BsonUtils.get(query, key);
 				this.converter.getTypeMapper().writeTypeRestrictions(result, restrictedTypes);
 
 				continue;
@@ -318,11 +318,11 @@ public class QueryMapper {
 					String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
 					List<Object> ids = new ArrayList<Object>();
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-						ids.add(convertId(id).get());
+						ids.add(convertId(id));
 					}
 					resultDbo.put(inKey, ids);
 				} else if (valueDbo.containsField("$ne")) {
-					resultDbo.put("$ne", convertId(valueDbo.get("$ne")).get());
+					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
 				} else {
 					return getMappedObject(resultDbo, Optional.empty());
 				}
@@ -337,18 +337,18 @@ public class QueryMapper {
 					String inKey = valueDbo.containsKey("$in") ? "$in" : "$nin";
 					List<Object> ids = new ArrayList<Object>();
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-						ids.add(convertId(id).orElse(null));
+						ids.add(convertId(id));
 					}
 					resultDbo.put(inKey, ids);
 				} else if (valueDbo.containsKey("$ne")) {
-					resultDbo.put("$ne", convertId(valueDbo.get("$ne")).orElse(null));
+					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
 				} else {
 					return getMappedObject(resultDbo, Optional.empty());
 				}
 				return resultDbo;
 
 			} else {
-				return convertId(value).orElse(null);
+				return convertId(value);
 			}
 		}
 
@@ -394,7 +394,7 @@ public class QueryMapper {
 
 		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
 		return entity.hasIdProperty() && (type.equals(DBRef.class)
-				|| entity.getIdProperty().map(it -> it.getActualType().isAssignableFrom(type)).orElse(false));
+				|| entity.getRequiredIdProperty().getActualType().isAssignableFrom(type));
 	}
 
 	/**
@@ -461,7 +461,7 @@ public class QueryMapper {
 		if (source instanceof DBRef) {
 
 			DBRef ref = (DBRef) source;
-			return new DBRef(ref.getCollectionName(), convertId(ref.getId()).get());
+			return new DBRef(ref.getCollectionName(), convertId(ref.getId()));
 		}
 
 		if (source instanceof Iterable) {
@@ -537,31 +537,28 @@ public class QueryMapper {
 		return converter.toDBRef(source, property);
 	}
 
-	private Optional<Object> convertId(Object id) {
-		return convertId(Optional.ofNullable(id));
-	}
-
 	/**
 	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
 	 *
 	 * @param id
 	 * @return
 	 */
-	public Optional<Object> convertId(Optional<Object> id) {
+	public Object convertId(Object id) {
 
-		return id.map(it -> {
+		if (id == null) {
+			return null;
+		}
 
-			if (it instanceof String) {
-				return ObjectId.isValid(it.toString()) ? conversionService.convert(it, ObjectId.class) : it;
-			}
+		if (id instanceof String) {
+			return ObjectId.isValid(id.toString()) ? conversionService.convert(id, ObjectId.class) : id;
+		}
 
-			try {
-				return conversionService.canConvert(it.getClass(), ObjectId.class)
-						? conversionService.convert(it, ObjectId.class) : delegateConvertToMongoType(it, null);
-			} catch (ConversionException o_O) {
-				return delegateConvertToMongoType(it, null);
-			}
-		});
+		try {
+			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService.convert(id, ObjectId.class)
+					: delegateConvertToMongoType(id, null);
+		} catch (ConversionException o_O) {
+			return delegateConvertToMongoType(id, null);
+		}
 	}
 
 	/**
@@ -836,9 +833,13 @@ public class QueryMapper {
 		@Override
 		public boolean isIdField() {
 
-			return entity.getIdProperty()//
-					.map(it -> it.getName().equals(name) || it.getFieldName().equals(name))//
-					.orElseGet(() -> DEFAULT_ID_NAMES.contains(name));
+			MongoPersistentProperty idProperty = entity.getIdProperty();
+
+			if (idProperty != null) {
+				return idProperty.getName().equals(name) || idProperty.getFieldName().equals(name);
+			}
+
+			return DEFAULT_ID_NAMES.contains(name);
 		}
 
 		/*
@@ -857,7 +858,7 @@ public class QueryMapper {
 		@Override
 		public MongoPersistentEntity<?> getPropertyEntity() {
 			MongoPersistentProperty property = getProperty();
-			return property == null ? null : mappingContext.getPersistentEntity(property).orElse(null);
+			return property == null ? null : mappingContext.getPersistentEntity(property);
 		}
 
 		/*
@@ -883,15 +884,15 @@ public class QueryMapper {
 		 *
 		 * @return
 		 */
-		private final Association<MongoPersistentProperty> findAssociation() {
+		private Association<MongoPersistentProperty> findAssociation() {
 
 			if (this.path != null) {
 				for (MongoPersistentProperty p : this.path) {
 
-					Optional<Association<MongoPersistentProperty>> association = p.getAssociation();
+					Association<MongoPersistentProperty> association = p.getAssociation();
 
-					if (association.isPresent()) {
-						return association.get();
+					if (association != null) {
+						return association;
 					}
 				}
 			}

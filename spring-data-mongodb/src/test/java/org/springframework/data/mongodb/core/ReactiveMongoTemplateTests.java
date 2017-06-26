@@ -51,7 +51,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Metrics;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.MongoTemplateTests.PersonWithConvertedId;
 import org.springframework.data.mongodb.core.MongoTemplateTests.VersionedPerson;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -86,6 +86,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier
 				.create(template.dropCollection("people") //
+						.mergeWith(template.dropCollection("personX")) //
 						.mergeWith(template.dropCollection("collection")) //
 						.mergeWith(template.dropCollection(Person.class)) //
 						.mergeWith(template.dropCollection(Venue.class)) //
@@ -536,11 +537,11 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.save(map, "maps")).expectNextCount(1).verifyComplete();
 	}
 
-	@Test // DATAMONGO-1444
+	@Test // DATAMONGO-1444, DATAMONGO-1730
 	public void savesMongoPrimitiveObjectCorrectly() {
 
 		StepVerifier.create(template.save(new Object(), "collection")) //
-				.expectError(IllegalArgumentException.class) //
+				.expectError(MappingException.class) //
 				.verify();
 	}
 
@@ -554,7 +555,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(dbObject.containsKey("_id"), is(true));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
+	@Test(expected = MappingException.class) // DATAMONGO-1444, DATAMONGO-1730
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		Document dbObject = new Document("foo", "bar");
@@ -562,9 +563,8 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.save(dbObject, "collection")).expectNextCount(1).verifyComplete();
 
 		StepVerifier.create(template.findById(dbObject.get("_id"), Document.class)) //
-				.expectError(IllegalArgumentException.class) //
+				.expectError(MappingException.class) //
 				.verify();
-
 	}
 
 	@Test // DATAMONGO-1444

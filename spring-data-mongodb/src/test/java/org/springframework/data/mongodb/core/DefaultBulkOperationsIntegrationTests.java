@@ -46,7 +46,7 @@ import com.mongodb.client.MongoCollection;
 
 /**
  * Integration tests for {@link DefaultBulkOperations}.
- * 
+ *
  * @author Tobias Trelle
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -278,7 +278,7 @@ public class DefaultBulkOperationsIntegrationTests {
 	private BulkOperations createBulkOps(BulkMode mode, Class<?> entityType) {
 
 		Optional<? extends MongoPersistentEntity<?>> entity = entityType != null
-				? operations.getConverter().getMappingContext().getPersistentEntity(entityType) : Optional.empty();
+				? Optional.of(operations.getConverter().getMappingContext().getPersistentEntity(entityType)) : Optional.empty();
 
 		BulkOperationContext bulkOperationContext = new BulkOperationContext(mode, entity,
 				new QueryMapper(operations.getConverter()), new UpdateMapper(operations.getConverter()));

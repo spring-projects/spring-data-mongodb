@@ -22,7 +22,6 @@ import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,16 +33,17 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.MappingException;
 
 import com.mongodb.DBRef;
 
 /**
  * Unit tests for {@link MongoMappingContext}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoMappingContextUnitTests {
@@ -65,14 +65,14 @@ public class MongoMappingContextUnitTests {
 	public void doesNotReturnPersistentEntityForMongoSimpleType() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		assertThat(context.getPersistentEntity(DBRef.class), is(Optional.empty()));
+		assertThat(context.getPersistentEntity(DBRef.class), is(nullValue()));
 	}
 
 	@Test // DATAMONGO-638
 	public void doesNotCreatePersistentEntityForAbstractMap() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		assertThat(context.getPersistentEntity(AbstractMap.class), is(Optional.empty()));
+		assertThat(context.getPersistentEntity(AbstractMap.class), is(nullValue()));
 	}
 
 	@Test // DATAMONGO-607

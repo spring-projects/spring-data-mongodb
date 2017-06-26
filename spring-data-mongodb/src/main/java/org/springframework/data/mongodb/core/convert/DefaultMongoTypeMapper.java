@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,17 +32,17 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
-import org.springframework.util.ObjectUtils;
 
 /**
  * Default implementation of {@link MongoTypeMapper} allowing configuration of the key to lookup and store type
  * information in {@link Document}. The key defaults to {@link #DEFAULT_TYPE_KEY}. Actual type-to-{@link String}
  * conversion and back is done in {@link #getTypeString(TypeInformation)} or {@link #getTypeInformation(String)}
  * respectively.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -94,7 +94,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 		return typeKey == null ? false : typeKey.equals(key);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#writeTypeRestrictions(java.util.Set)
 	 */
@@ -111,26 +111,26 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 
 			Alias typeAlias = getAliasFor(ClassTypeInformation.from(restrictedType));
 
-			if (typeAlias != null && !ObjectUtils.nullSafeEquals(Alias.NONE, typeAlias) && typeAlias.getValue().isPresent()) {
-				restrictedMappedTypes.add(typeAlias.getValue().get());
+			if (typeAlias != null && !ObjectUtils.nullSafeEquals(Alias.NONE, typeAlias) && typeAlias.isPresent()) {
+				restrictedMappedTypes.add(typeAlias.getValue());
 			}
 		}
 
 		accessor.writeTypeTo(result, new Document("$in", restrictedMappedTypes));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.convert.DefaultTypeMapper#getFallbackTypeFor(java.lang.Object)
 	 */
 	@Override
-	protected Optional<TypeInformation<?>> getFallbackTypeFor(Bson source) {
-		return Optional.of(source instanceof BasicDBList ? LIST_TYPE_INFO : MAP_TYPE_INFO);
+	protected TypeInformation<?> getFallbackTypeFor(Bson source) {
+		return source instanceof BasicDBList ? LIST_TYPE_INFO : MAP_TYPE_INFO;
 	}
 
 	/**
 	 * {@link TypeAliasAccessor} to store aliases in a {@link Document}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	public static final class DocumentTypeAliasAccessor implements TypeAliasAccessor<Bson> {
@@ -152,9 +152,9 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 			}
 
 			if (source instanceof Document) {
-				return Alias.ofOptional(Optional.ofNullable(((Document) source).get(typeKey)));
+				return Alias.ofNullable(((Document) source).get(typeKey));
 			} else if (source instanceof DBObject) {
-				return Alias.ofOptional(Optional.ofNullable(((DBObject) source).get(typeKey)));
+				return Alias.ofNullable(((DBObject) source).get(typeKey));
 			}
 
 			throw new IllegalArgumentException("Cannot read alias from " + source.getClass());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.repository.query;
-
-import java.util.Optional;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiator;
@@ -36,6 +34,7 @@ import org.springframework.util.Assert;
  * {@link Converter} to instantiate DTOs from fully equipped domain objects.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 class DtoInstantiatingConverter implements Converter<Object, Object> {
 
@@ -45,7 +44,7 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 
 	/**
 	 * Creates a new {@link Converter} to instantiate DTOs.
-	 * 
+	 *
 	 * @param dtoType must not be {@literal null}.
 	 * @param context must not be {@literal null}.
 	 * @param instantiators must not be {@literal null}.
@@ -63,7 +62,7 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 		this.instantiator = instantiator.getInstantiatorFor(context.getRequiredPersistentEntity(dtoType));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 	 */
@@ -78,14 +77,14 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 		final PersistentPropertyAccessor sourceAccessor = sourceEntity.getPropertyAccessor(source);
 		final PersistentEntity<?, ?> targetEntity = context.getRequiredPersistentEntity(targetType);
 		final PreferredConstructor<?, ? extends PersistentProperty<?>> constructor = targetEntity
-				.getPersistenceConstructor().get();
+				.getPersistenceConstructor();
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		Object dto = instantiator.createInstance(targetEntity, new ParameterValueProvider() {
 
 			@Override
-			public Optional<Object> getParameterValue(Parameter parameter) {
-				return sourceAccessor.getProperty(sourceEntity.getPersistentProperty(parameter.getName().get().toString()).get());
+			public Object getParameterValue(Parameter parameter) {
+				return sourceAccessor.getProperty(sourceEntity.getPersistentProperty(parameter.getName().toString()));
 			}
 		});
 
@@ -101,7 +100,7 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 				}
 
 				dtoAccessor.setProperty(property,
-						sourceAccessor.getProperty(sourceEntity.getPersistentProperty(property.getName()).get()));
+						sourceAccessor.getProperty(sourceEntity.getPersistentProperty(property.getName())));
 			}
 		});
 

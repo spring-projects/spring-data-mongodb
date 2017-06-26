@@ -20,13 +20,10 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
@@ -81,7 +78,7 @@ public class AbstractMongoQueryUnitTests {
 	public void setUp() {
 
 		doReturn("persons").when(persitentEntityMock).getCollection();
-		doReturn(Optional.of(persitentEntityMock)).when(mappingContextMock).getPersistentEntity(Mockito.any(Class.class));
+		doReturn(persitentEntityMock).when(mappingContextMock).getPersistentEntity(Mockito.any(Class.class));
 		doReturn(persitentEntityMock).when(mappingContextMock).getRequiredPersistentEntity(Mockito.any(Class.class));
 		doReturn(Person.class).when(persitentEntityMock).getType();
 

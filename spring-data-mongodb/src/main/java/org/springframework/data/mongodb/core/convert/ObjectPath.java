@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
@@ -31,34 +29,36 @@ import org.springframework.util.StringUtils;
  * <p>
  * An immutable ordered set of target objects for {@link Document} to {@link Object} conversions. Object paths can be
  * constructed by the {@link #toObjectPath(Object)} method and extended via {@link #push(Object)}.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 1.6
  */
 class ObjectPath {
 
 	public static final ObjectPath ROOT = new ObjectPath();
 
-	private final List<ObjectPathItem> items;
+	private final ObjectPathItem[] items;
 
 	private ObjectPath() {
-		this.items = Collections.emptyList();
+		this.items = new ObjectPathItem[0];
 	}
 
 	/**
 	 * Creates a new {@link ObjectPath} from the given parent {@link ObjectPath} by adding the provided
 	 * {@link ObjectPathItem} to it.
-	 * 
+	 *
 	 * @param parent can be {@literal null}.
 	 * @param item
 	 */
 	private ObjectPath(ObjectPath parent, ObjectPath.ObjectPathItem item) {
 
-		List<ObjectPath.ObjectPathItem> items = new ArrayList<ObjectPath.ObjectPathItem>(parent.items);
-		items.add(item);
+		ObjectPathItem[] items = new ObjectPathItem[parent.items.length + 1];
+		System.arraycopy(parent.items, 0, items, 0, parent.items.length);
+		items[parent.items.length] = item;
 
-		this.items = Collections.unmodifiableList(items);
+		this.items = items;
 	}
 
 	/**
@@ -81,7 +81,7 @@ class ObjectPath {
 	/**
 	 * Returns the object with the given id and stored in the given collection if it's contained in the {@link ObjectPath}
 	 * .
-	 * 
+	 *
 	 * @param id must not be {@literal null}.
 	 * @param collection must not be {@literal null} or empty.
 	 * @return
@@ -113,25 +113,25 @@ class ObjectPath {
 
 	/**
 	 * Returns the current object of the {@link ObjectPath} or {@literal null} if the path is empty.
-	 * 
+	 *
 	 * @return
 	 */
-	public Optional<Object> getCurrentObject() {
-		return items.isEmpty() ? Optional.empty() : Optional.of(items.get(items.size() - 1).getObject());
+	public Object getCurrentObject() {
+		return items.length == 0 ? null : items[items.length - 1].getObject();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
 
-		if (items.isEmpty()) {
+		if (items.length == 0) {
 			return "[empty]";
 		}
 
-		List<String> strings = new ArrayList<String>(items.size());
+		List<String> strings = new ArrayList<String>(items.length);
 
 		for (ObjectPathItem item : items) {
 			strings.add(item.object.toString());
@@ -142,7 +142,7 @@ class ObjectPath {
 
 	/**
 	 * An item in an {@link ObjectPath}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
@@ -154,7 +154,7 @@ class ObjectPath {
 
 		/**
 		 * Creates a new {@link ObjectPathItem}.
-		 * 
+		 *
 		 * @param object
 		 * @param idValue
 		 * @param collection

@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.repository.support;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Optional;
-
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 
@@ -76,10 +74,10 @@ class PersistableMongoEntityInformation<T, ID> implements MongoEntityInformation
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public Optional<ID> getId(T t) {
+	public ID getId(T t) {
 
 		if (t instanceof Persistable) {
-			return Optional.ofNullable(((Persistable<ID>) t).getId());
+			return ((Persistable<ID>) t).getId();
 		}
 
 		return delegate.getId(t);

@@ -29,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -210,7 +211,7 @@ public abstract class MongoOperationsUnitTests {
 			public void doWith(MongoOperations operations) {
 				operations.findAll(Object.class);
 			}
-		}.assertException(IllegalArgumentException.class);
+		}.assertException(MappingException.class);
 	}
 
 	@Test

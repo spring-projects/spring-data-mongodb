@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,10 @@ import org.springframework.data.repository.core.support.PersistentEntityInformat
  * {@link MongoEntityInformation} implementation using a {@link MongoPersistentEntity} instance to lookup the necessary
  * information. Can be configured with a custom collection to be returned which will trump the one returned by the
  * {@link MongoPersistentEntity} if given.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInformation<T, ID>
 		implements MongoEntityInformation<T, ID> {
@@ -37,7 +38,7 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 
 	/**
 	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity}.
-	 * 
+	 *
 	 * @param entity must not be {@literal null}.
 	 */
 	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity) {
@@ -47,18 +48,18 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 	/**
 	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity} and fallback
 	 * identifier type.
-	 * 
+	 *
 	 * @param entity must not be {@literal null}.
 	 * @param fallbackIdType can be {@literal null}.
 	 */
 	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, Class<ID> fallbackIdType) {
-		this(entity, (String) null, fallbackIdType);
+		this(entity, null, fallbackIdType);
 	}
 
 	/**
 	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity} and custom
 	 * collection name.
-	 * 
+	 *
 	 * @param entity must not be {@literal null}.
 	 * @param customCollectionName can be {@literal null}.
 	 */
@@ -69,7 +70,7 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 	/**
 	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity}, collection name
 	 * and identifier type.
-	 * 
+	 *
 	 * @param entity must not be {@literal null}.
 	 * @param customCollectionName can be {@literal null}.
 	 * @param idType can be {@literal null}.
@@ -96,7 +97,7 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getIdAttribute()
 	 */
 	public String getIdAttribute() {
-		return entityMetadata.getIdProperty().get().getName();
+		return entityMetadata.getRequiredIdProperty().getName();
 	}
 
 	/*

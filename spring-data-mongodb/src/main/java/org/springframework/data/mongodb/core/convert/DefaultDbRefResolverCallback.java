@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,10 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
  * Default implementation of {@link DbRefResolverCallback}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class DefaultDbRefResolverCallback implements DbRefResolverCallback {
 
@@ -36,7 +37,7 @@ class DefaultDbRefResolverCallback implements DbRefResolverCallback {
 	/**
 	 * Creates a new {@link DefaultDbRefResolverCallback} using the given {@link Document}, {@link ObjectPath},
 	 * {@link ValueResolver} and {@link SpELExpressionEvaluator}.
-	 * 
+	 *
 	 * @param surroundingObject must not be {@literal null}.
 	 * @param path must not be {@literal null}.
 	 * @param evaluator must not be {@literal null}.
@@ -51,12 +52,12 @@ class DefaultDbRefResolverCallback implements DbRefResolverCallback {
 		this.evaluator = evaluator;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolverCallback#resolve(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
 	 */
 	@Override
 	public Object resolve(MongoPersistentProperty property) {
-		return resolver.getValueInternal(property, surroundingObject, evaluator, path).orElse(null);
+		return resolver.getValueInternal(property, surroundingObject, evaluator, path);
 	}
 }

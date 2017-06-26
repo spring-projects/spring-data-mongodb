@@ -36,7 +36,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -462,7 +461,7 @@ public class QueryMapperUnitTests {
 	public void queryMapperShouldNotChangeStateInGivenQueryObjectWhenIdConstrainedByInList() {
 
 		BasicMongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(Sample.class);
-		String idPropertyName = persistentEntity.getIdProperty().get().getName();
+		String idPropertyName = persistentEntity.getIdProperty().getName();
 		org.bson.Document queryObject = query(where(idPropertyName).in("42")).getQueryObject();
 
 		Object idValuesBefore = getAsDocument(queryObject, idPropertyName).get("$in");

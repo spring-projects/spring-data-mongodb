@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -33,7 +32,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PropertyHandler;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexedFieldSpec;
@@ -94,7 +93,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	public List<IndexDefinitionHolder> resolveIndexForEntity(final MongoPersistentEntity<?> root) {
 
 		Assert.notNull(root, "Index cannot be resolved for given 'null' entity.");
-		Document document = root.findAnnotation(Document.class).orElseThrow(() -> new IllegalArgumentException("Given entity is not collection root."));
+		Document document = root.findAnnotation(Document.class);
 		Assert.notNull(document, "Given entity is not collection root.");
 
 		final List<IndexDefinitionHolder> indexInformation = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
@@ -255,20 +254,20 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					indexDefinitionBuilder.withLanguageOverride(persistentProperty.getFieldName());
 				}
 
-				Optional<TextIndexed> indexed = persistentProperty.findAnnotation(TextIndexed.class);
+				TextIndexed indexed = persistentProperty.findAnnotation(TextIndexed.class);
 
-				if (includeOptions.isForce() || indexed.isPresent()|| persistentProperty.isEntity()) {
+				if (includeOptions.isForce() || indexed != null || persistentProperty.isEntity()) {
 
 					String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "")
 							+ persistentProperty.getFieldName();
 
-					Float weight = indexed.isPresent() ? indexed.get().weight()
+					Float weight = indexed != null ? indexed.weight()
 							: (includeOptions.getParentFieldSpec() != null ? includeOptions.getParentFieldSpec().getWeight() : 1.0F);
 
 					if (persistentProperty.isEntity()) {
 
 						TextIndexIncludeOptions optionsForNestedType = includeOptions;
-						if (!IncludeStrategy.FORCE.equals(includeOptions.getStrategy()) && indexed.isPresent()) {
+						if (!IncludeStrategy.FORCE.equals(includeOptions.getStrategy()) && indexed != null) {
 							optionsForNestedType = new TextIndexIncludeOptions(IncludeStrategy.FORCE,
 									new TextIndexedFieldSpec(propertyDotPath, weight));
 						}
@@ -282,7 +281,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 							LOGGER.info(String.format("Potentially invalid index structure discovered. Breaking operation for %s.",
 									entity.getName()), e);
 						}
-					} else if (includeOptions.isForce() || indexed.isPresent()) {
+					} else if (includeOptions.isForce() || indexed != null) {
 						indexDefinitionBuilder.onField(propertyDotPath, weight);
 					}
 				}
@@ -304,18 +303,18 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			MongoPersistentEntity<?> entity) {
 
 		List<IndexDefinitionHolder> indexDefinitions = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
-		Optional<CompoundIndexes> indexes = entity.findAnnotation(CompoundIndexes.class);
+		CompoundIndexes indexes = entity.findAnnotation(CompoundIndexes.class);
 
-		if (indexes.isPresent()) {
-			for (CompoundIndex index : indexes.get().value()) {
+		if (indexes != null) {
+			for (CompoundIndex index : indexes.value()) {
 				indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index, entity));
 			}
 		}
 
-		Optional<CompoundIndex> index = entity.findAnnotation(CompoundIndex.class);
+		CompoundIndex index = entity.findAnnotation(CompoundIndex.class);
 
-		if (index.isPresent()) {
-			indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index.get(), entity));
+		if (index != null) {
+			indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index, entity));
 		}
 
 		return indexDefinitions;
@@ -382,33 +381,33 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persitentProperty) {
 
-		Optional<Indexed> index = persitentProperty.findAnnotation(Indexed.class);
+		Indexed index = persitentProperty.findAnnotation(Indexed.class);
 
-		if(!index.isPresent()){
+		if (index == null) {
 			return null;
 		}
 
 		Index indexDefinition = new Index().on(dotPath,
-				IndexDirection.ASCENDING.equals(index.get().direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
+				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
 
-		if (!index.get().useGeneratedName()) {
-			indexDefinition.named(pathAwareIndexName(index.get().name(), dotPath, persitentProperty));
+		if (!index.useGeneratedName()) {
+			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persitentProperty));
 		}
 
-		if (index.get().unique()) {
+		if (index.unique()) {
 			indexDefinition.unique();
 		}
 
-		if (index.get().sparse()) {
+		if (index.sparse()) {
 			indexDefinition.sparse();
 		}
 
-		if (index.get().background()) {
+		if (index.background()) {
 			indexDefinition.background();
 		}
 
-		if (index.get().expireAfterSeconds() >= 0) {
-			indexDefinition.expire(index.get().expireAfterSeconds(), TimeUnit.SECONDS);
+		if (index.expireAfterSeconds() >= 0) {
+			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
 		}
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
@@ -426,21 +425,21 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	protected IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
-		Optional<GeoSpatialIndexed> index = persistentProperty.findAnnotation(GeoSpatialIndexed.class);
+		GeoSpatialIndexed index = persistentProperty.findAnnotation(GeoSpatialIndexed.class);
 
-		if(!index.isPresent()) {
+		if (index == null) {
 			return null;
 		}
 
 		GeospatialIndex indexDefinition = new GeospatialIndex(dotPath);
-		indexDefinition.withBits(index.get().bits());
-		indexDefinition.withMin(index.get().min()).withMax(index.get().max());
+		indexDefinition.withBits(index.bits());
+		indexDefinition.withMin(index.min()).withMax(index.max());
 
-		if (!index.get().useGeneratedName()) {
-			indexDefinition.named(pathAwareIndexName(index.get().name(), dotPath, persistentProperty));
+		if (!index.useGeneratedName()) {
+			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persistentProperty));
 		}
 
-		indexDefinition.typed(index.get().type()).withBucketSize(index.get().bucketSize()).withAdditionalField(index.get().additionalField());
+		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}

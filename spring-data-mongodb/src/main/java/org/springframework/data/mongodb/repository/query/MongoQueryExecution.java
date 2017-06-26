@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ interface MongoQueryExecution {
 
 	/**
 	 * {@link MongoQueryExecution} for collection returning queries.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	@RequiredArgsConstructor
@@ -83,7 +83,7 @@ interface MongoQueryExecution {
 
 	/**
 	 * {@link MongoQueryExecution} for {@link Slice} query methods.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Christoph Strobl
 	 * @since 1.5
@@ -116,7 +116,7 @@ interface MongoQueryExecution {
 
 	/**
 	 * {@link MongoQueryExecution} for pagination queries.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Mark Paluch
 	 */
@@ -154,7 +154,7 @@ interface MongoQueryExecution {
 
 	/**
 	 * {@link MongoQueryExecution} to return a single entity.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	@RequiredArgsConstructor
@@ -217,7 +217,7 @@ interface MongoQueryExecution {
 
 	/**
 	 * {@link MongoQueryExecution} to execute geo-near queries.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	@RequiredArgsConstructor
@@ -267,8 +267,8 @@ interface MongoQueryExecution {
 				return false;
 			}
 
-			Optional<TypeInformation<?>> componentType = returnType.getComponentType();
-			return componentType.isPresent() && GeoResult.class.equals(componentType.get().getType());
+			TypeInformation<?> componentType = returnType.getComponentType();
+			return componentType != null && GeoResult.class.equals(componentType.getType());
 		}
 	}
 
@@ -322,7 +322,7 @@ interface MongoQueryExecution {
 
 	/**
 	 * {@link MongoQueryExecution} removing documents matching the query.
-	 * 
+	 *
 	 * @since 1.5
 	 */
 	@RequiredArgsConstructor
@@ -388,7 +388,7 @@ interface MongoQueryExecution {
 		private final @NonNull MongoQueryExecution delegate;
 		private final @NonNull Converter<Object, Object> converter;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
@@ -411,7 +411,7 @@ interface MongoQueryExecution {
 		private final @NonNull MongoOperations operations;
 		private final @NonNull EntityInstantiators instantiators;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */

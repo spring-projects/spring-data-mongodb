@@ -22,18 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -107,9 +96,9 @@ public class ReactivePerformanceTests {
 
 		converter = new MappingMongoConverter(new DbRefResolver() {
 			@Override
-			public Optional<Object> resolveDbRef(MongoPersistentProperty property, DBRef dbref,
+			public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref,
 					DbRefResolverCallback callback, DbRefProxyHandler proxyHandler) {
-				return Optional.empty();
+				return null;
 			}
 
 			@Override

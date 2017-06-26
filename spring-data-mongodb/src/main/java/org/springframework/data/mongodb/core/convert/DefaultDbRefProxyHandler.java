@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import com.mongodb.DBRef;
 /**
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 
@@ -50,7 +51,7 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 		this.resolver = resolver;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.DbRefProxyHandler#populateId(com.mongodb.DBRef, java.lang.Object)
 	 */
@@ -62,8 +63,7 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 		}
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(property);
-		MongoPersistentProperty idProperty = entity.getIdProperty()
-				.orElseThrow(() -> new IllegalStateException("Couldn't find identifier property!"));
+		MongoPersistentProperty idProperty = entity.getRequiredIdProperty();
 
 		if (idProperty.usePropertyAccess()) {
 			return proxy;

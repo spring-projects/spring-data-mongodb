@@ -51,7 +51,7 @@ import org.springframework.util.ClassUtils;
 
 /**
  * Custom query creator to create Mongo criterias.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -68,7 +68,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	/**
 	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}, {@link ConvertingParameterAccessor} and
 	 * {@link MappingContext}.
-	 * 
+	 *
 	 * @param tree
 	 * @param accessor
 	 * @param context
@@ -81,7 +81,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	/**
 	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}, {@link ConvertingParameterAccessor} and
 	 * {@link MappingContext}.
-	 * 
+	 *
 	 * @param tree
 	 * @param accessor
 	 * @param context
@@ -163,7 +163,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	/**
 	 * Populates the given {@link CriteriaDefinition} depending on the {@link Part} given.
-	 * 
+	 *
 	 * @param part
 	 * @param property
 	 * @param criteria
@@ -272,7 +272,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	/**
 	 * Creates and extends the given criteria with a like-regex if necessary.
-	 * 
+	 *
 	 * @param part
 	 * @param property
 	 * @param criteria
@@ -314,7 +314,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * If the target property of the comparison is of type String, then the operator checks for match using regular
 	 * expression. If the target property of the comparison is a {@link Collection} then the operator evaluates to true if
 	 * it finds an exact match within any member of the {@link Collection}.
-	 * 
+	 *
 	 * @param part
 	 * @param property
 	 * @param criteria
@@ -333,7 +333,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	/**
 	 * Creates an appropriate like-regex and appends it to the given criteria.
-	 * 
+	 *
 	 * @param criteria
 	 * @param part
 	 * @param value
@@ -368,7 +368,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	/**
 	 * Returns the next element from the given {@link Iterator} expecting it to be of a certain type.
-	 * 
+	 *
 	 * @param <T>
 	 * @param iterator
 	 * @param type
@@ -407,7 +407,11 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private boolean isSpherical(MongoPersistentProperty property) {
 
-		Optional<GeoSpatialIndexed> index = property.findAnnotation(GeoSpatialIndexed.class);
-		return index.isPresent() && index.get().type().equals(GeoSpatialIndexType.GEO_2DSPHERE);
+		if (property.isAnnotationPresent(GeoSpatialIndexed.class)) {
+			GeoSpatialIndexed index = property.findAnnotation(GeoSpatialIndexed.class);
+			return index.type().equals(GeoSpatialIndexType.GEO_2DSPHERE);
+		}
+
+		return false;
 	}
 }

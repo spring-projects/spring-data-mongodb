@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,10 +33,10 @@ import org.springframework.util.ClassUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.util.JSON;
 import com.querydsl.core.types.Constant;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Operation;
-import com.mongodb.util.JSON;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.PathMetadata;
 import com.querydsl.core.types.PathType;
@@ -44,7 +44,7 @@ import com.querydsl.mongodb.MongodbSerializer;
 
 /**
  * Custom {@link MongodbSerializer} to take mapping information into account when building keys for constraints.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -69,7 +69,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	/**
 	 * Creates a new {@link SpringDataMongodbSerializer} for the given {@link MappingContext}.
-	 * 
+	 *
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	public SpringDataMongodbSerializer(MongoConverter converter) {
@@ -108,9 +108,9 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 		Path<?> parent = metadata.getParent();
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(parent.getType());
-		Optional<MongoPersistentProperty> property = entity.getPersistentProperty(metadata.getName());
+		MongoPersistentProperty property = entity.getPersistentProperty(metadata.getName());
 
-		return !property.isPresent() ? super.getKeyForPath(expr, metadata) : property.get().getFieldName();
+		return property == null ? super.getKeyForPath(expr, metadata) : property.getFieldName();
 	}
 
 	/*
@@ -120,7 +120,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	@Override
 	protected DBObject asDBObject(String key, Object value) {
 
-		value = value instanceof Optional ? ((Optional)value).orElse(null) : value;
+		value = value instanceof Optional ? ((Optional) value).orElse(null) : value;
 
 		if (ID_KEY.equals(key)) {
 			DBObject superIdValue = super.asDBObject(key, value);
@@ -203,8 +203,8 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 			return null;
 		}
 
-		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(parent.getType());
-		return entity.isPresent() ? entity.get().getRequiredPersistentProperty(path.getMetadata().getName()) : null;
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
+		return entity != null ? entity.getRequiredPersistentProperty(path.getMetadata().getName()) : null;
 	}
 
 	/**

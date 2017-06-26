@@ -70,8 +70,8 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 
 			boolean multiWrapper = ReactiveWrappers.isMultiValueType(returnType.getType());
 			boolean singleWrapperWithWrappedPageableResult = ReactiveWrappers.isSingleValueType(returnType.getType())
-					&& (PAGE_TYPE.isAssignableFrom(returnType.getComponentType().get())
-							|| SLICE_TYPE.isAssignableFrom(returnType.getComponentType().get()));
+					&& (PAGE_TYPE.isAssignableFrom(returnType.getRequiredComponentType())
+							|| SLICE_TYPE.isAssignableFrom(returnType.getRequiredComponentType()));
 
 			if (singleWrapperWithWrappedPageableResult) {
 				throw new InvalidDataAccessApiUsageException(
@@ -94,7 +94,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		this.method = method;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoQueryMethod#createParameters(java.lang.reflect.Method)
 	 */
@@ -103,7 +103,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		return new MongoParameters(method, isGeoNearQuery(method));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryMethod#isCollectionQuery()
 	 */
@@ -112,7 +112,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		return !(isPageQuery() || isSliceQuery()) && ReactiveWrappers.isMultiValueType(method.getReturnType());
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoQueryMethod#isGeoNearQuery()
 	 */
@@ -125,13 +125,13 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 
 		if (ReactiveWrappers.supports(method.getReturnType())) {
 			TypeInformation<?> from = ClassTypeInformation.fromReturnTypeOf(method);
-			return GeoResult.class.equals(from.getComponentType().get().getType());
+			return GeoResult.class.equals(from.getRequiredComponentType().getType());
 		}
 
 		return false;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryMethod#isModifyingQuery()
 	 */
@@ -140,7 +140,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		return super.isModifyingQuery();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryMethod#isQueryForEntity()
 	 */
