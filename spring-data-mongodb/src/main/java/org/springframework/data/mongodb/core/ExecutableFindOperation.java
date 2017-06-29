@@ -73,14 +73,33 @@ public interface ExecutableFindOperation {
 		 * @return {@link Optional#empty()} if no match found.
 		 * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if more than one match found.
 		 */
-		Optional<T> one();
+		default Optional<T> one() {
+			return Optional.ofNullable(oneValue());
+		}
+
+		/**
+		 * Get exactly zero or one result.
+		 *
+		 * @return {@literal null} if no match found.
+		 * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if more than one match found.
+		 */
+		T oneValue();
 
 		/**
 		 * Get the first or no result.
 		 *
 		 * @return {@link Optional#empty()} if no match found.
 		 */
-		Optional<T> first();
+		default Optional<T> first() {
+			return Optional.ofNullable(firstValue());
+		}
+
+		/**
+		 * Get the first or no result.
+		 *
+		 * @return {@literal null} if no match found.
+		 */
+		T firstValue();
 
 		/**
 		 * Get all matching elements.

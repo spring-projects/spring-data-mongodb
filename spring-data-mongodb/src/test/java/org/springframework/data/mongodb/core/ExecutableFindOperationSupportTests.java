@@ -140,6 +140,30 @@ public class ExecutableFindOperationSupportTests {
 		template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).one();
 	}
 
+	@Test // DATAMONGO-1726
+	public void findByReturningOneValue() {
+		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).oneValue()).isEqualTo(luke);
+	}
+
+	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1726
+	public void findByReturningOneValueButTooManyResults() {
+		template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).oneValue();
+	}
+
+	@Test // DATAMONGO-1726
+	public void findByReturningFirstValue() {
+
+		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).firstValue())
+				.isEqualTo(luke);
+	}
+
+	@Test // DATAMONGO-1726
+	public void findByReturningFirstValueForManyResults() {
+
+		assertThat(template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).firstValue())
+				.isIn(han, luke);
+	}
+
 	@Test // DATAMONGO-1563
 	public void streamAll() {
 
