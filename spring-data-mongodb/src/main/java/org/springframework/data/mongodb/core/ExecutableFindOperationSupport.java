@@ -104,27 +104,27 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
-		public Optional<T> one() {
+		public T oneValue() {
 
 			List<T> result = doFind(new DelegatingQueryCursorPreparer(getCursorPreparer(query, null)).limit(2));
 
 			if (ObjectUtils.isEmpty(result)) {
-				return Optional.empty();
+				return null;
 			}
 
 			if (result.size() > 1) {
 				throw new IncorrectResultSizeDataAccessException("Query " + asString() + " returned non unique result.", 1);
 			}
 
-			return Optional.of(result.iterator().next());
+			return result.iterator().next();
 		}
 
 		@Override
-		public Optional<T> first() {
+		public T firstValue() {
 
 			List<T> result = doFind(new DelegatingQueryCursorPreparer(getCursorPreparer(query, null)).limit(1));
 
-			return ObjectUtils.isEmpty(result) ? Optional.empty() : Optional.of(result.iterator().next());
+			return ObjectUtils.isEmpty(result) ? null : result.iterator().next();
 		}
 
 		@Override
