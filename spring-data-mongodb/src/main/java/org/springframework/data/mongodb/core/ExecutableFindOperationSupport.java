@@ -186,8 +186,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		@Override
 		public FindIterable<Document> prepare(FindIterable<Document> cursor) {
 
-			FindIterable<Document> target = delegate.prepare(cursor);
-
+			FindIterable<Document> target = delegate != null ? delegate.prepare(cursor) : cursor;
 			return limit.map(target::limit).orElse(target);
 		}
 

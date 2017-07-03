@@ -213,6 +213,11 @@ public class ExecutableFindOperationSupportTests {
 		assertThat(results.getContent().get(0).getContent().getId()).isEqualTo("alderan");
 	}
 
+	@Test // DATAMONGO-1728
+	public void firstShouldReturnFirstEntryInCollection() {
+		assertThat(template.query(Person.class).first()).isNotEmpty();
+	}
+
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person {
