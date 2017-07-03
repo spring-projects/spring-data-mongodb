@@ -31,6 +31,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -172,6 +173,14 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(query.getFieldsObject().get("firstname"), is((Object) 1));
 	}
 
+	@Test // DATAMONGO-1729
+	public void doesNotCreateFieldsObjectForOpenProjection() {
+
+		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findAllBy");
+
+		assertThat(query.getFieldsObject(), is(nullValue()));
+	}
+
 	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object... args) {
 
 		Class<?>[] types = new Class<?>[args.length];
@@ -232,6 +241,8 @@ public class PartTreeMongoQueryUnitTests {
 
 		@Query(fields = "{ 'firstname' : 1 }")
 		List<Person> findBySex(Sex sex);
+
+		OpenProjection findAllBy();
 	}
 
 	interface PersonProjection {
@@ -255,5 +266,13 @@ public class PartTreeMongoQueryUnitTests {
 			this.firstname = firstname;
 			this.lastname = lastname;
 		}
+	}
+
+	interface OpenProjection {
+
+		String getFirstname();
+
+		@Value("#{target.firstname + ' ' + target.lastname}")
+		String getFullname();
 	}
 }
