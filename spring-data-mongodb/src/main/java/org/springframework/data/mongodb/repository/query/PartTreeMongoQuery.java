@@ -99,7 +99,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 			ReturnedType returnedType = processor.withDynamicProjection(accessor).getReturnedType();
 
-			if (returnedType.isProjecting()) {
+			if (returnedType.needsCustomConstruction()) {
 
 				Field fields = query.fields();
 
