@@ -1380,8 +1380,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return (T) dbref;
 		}
 
-		Object object = dbref == null ? null : path.getPathItem(dbref.getId(), dbref.getCollectionName());
-		return (T) (object != null ? object : readAndConvertDBRef(dbref, type, path, rawType));
+		T object =  dbref == null ? null : path.getPathItem(dbref.getId(), dbref.getCollectionName(), (Class<T>) rawType);
+		return object != null ? object : readAndConvertDBRef(dbref, type, path, rawType);
 	}
 
 	private <T> T readAndConvertDBRef(DBRef dbref, TypeInformation<?> type, ObjectPath path, final Class<?> rawType) {
