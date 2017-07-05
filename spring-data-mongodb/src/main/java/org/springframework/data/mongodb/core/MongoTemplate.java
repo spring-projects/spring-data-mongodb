@@ -2530,7 +2530,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 			Cursor c = cursor;
 			try {
-				c.close();
+
+				if (c != null) {
+					c.close();
+				}
+
 			} catch (RuntimeException ex) {
 				throw potentiallyConvertRuntimeException(ex, exceptionTranslator);
 			} finally {
