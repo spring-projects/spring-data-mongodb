@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,13 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
-import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.model.IndexOptions;
-import com.mongodb.reactivestreams.client.ListIndexesPublisher;
 
 /**
- * Default implementation of {@link IndexOperations}.
+ * Default implementation of {@link ReactiveIndexOperations}.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
@@ -53,11 +51,11 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	 *
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param collectionName must not be {@literal null}.
+	 * @param queryMapper must not be {@literal null}.
 	 */
 	public DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
 			QueryMapper queryMapper) {
-
-		this(mongoOperations, collectionName, queryMapper, null);
+		this(mongoOperations, collectionName, queryMapper, Optional.empty());
 	}
 
 	/**
@@ -65,9 +63,16 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	 *
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param collectionName must not be {@literal null}.
+	 * @param queryMapper must not be {@literal null}.
+	 * @param type used for mapping potential partial index filter expression, must not be {@literal null}.
 	 */
 	public DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
 			QueryMapper queryMapper, Class<?> type) {
+		this(mongoOperations, collectionName, queryMapper, Optional.of(type));
+	}
+
+	private DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
+			QueryMapper queryMapper, Optional<Class<?>> type) {
 
 		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null!");
 		Assert.notNull(collectionName, "Collection must not be null!");
@@ -76,7 +81,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.mongoOperations = mongoOperations;
 		this.collectionName = collectionName;
 		this.queryMapper = queryMapper;
-		this.type = Optional.ofNullable(type);
+		this.type = type;
 	}
 
 	/* (non-Javadoc)
@@ -88,26 +93,26 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 			Document indexOptions = indexDefinition.getIndexOptions();
 
-			if (indexOptions != null) {
-
-				IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
-
-				if (indexOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {
-
-					Assert.isInstanceOf(Document.class, indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
-
-					MongoPersistentEntity<?> entity = type
-							.map(val -> (MongoPersistentEntity) queryMapper.getMappingContext().getRequiredPersistentEntity(val))
-							.orElseGet(() -> lookupPersistentEntity(collectionName));
-
-					ops = ops.partialFilterExpression(
-							queryMapper.getMappedObject((Document) indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
-				}
-
-				return collection.createIndex(indexDefinition.getIndexKeys(), ops);
+			if (indexOptions == null) {
+				return collection.createIndex(indexDefinition.getIndexKeys());
 			}
 
-			return collection.createIndex(indexDefinition.getIndexKeys());
+			IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
+
+			if (indexOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {
+
+				Assert.isInstanceOf(Document.class, indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
+
+				MongoPersistentEntity<?> entity = type
+						.map(val -> (MongoPersistentEntity) queryMapper.getMappingContext().getRequiredPersistentEntity(val))
+						.orElseGet(() -> lookupPersistentEntity(collectionName));
+
+				ops = ops.partialFilterExpression(
+						queryMapper.getMappedObject(indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY, Document.class), entity));
+			}
+
+			return collection.createIndex(indexDefinition.getIndexKeys(), ops);
+
 		}).next();
 	}
 
@@ -115,24 +120,17 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 		Collection<? extends MongoPersistentEntity<?>> entities = queryMapper.getMappingContext().getPersistentEntities();
 
-		for (MongoPersistentEntity<?> entity : entities) {
-			if (entity.getCollection().equals(collection)) {
-				return entity;
-			}
-		}
-
-		return null;
+		return entities.stream() //
+				.filter(entity -> entity.getCollection().equals(collection)) //
+				.findFirst() //
+				.orElse(null);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveIndexOperations#dropIndex(java.lang.String)
 	 */
 	public Mono<Void> dropIndex(final String name) {
-
-		return mongoOperations.execute(collectionName, collection -> {
-
-			return Mono.from(collection.dropIndex(name));
-		}).flatMap(success -> Mono.<Void> empty()).next();
+		return mongoOperations.execute(collectionName, collection -> collection.dropIndex(name)).then();
 	}
 
 	/* (non-Javadoc)
@@ -147,11 +145,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	 */
 	public Flux<IndexInfo> getIndexInfo() {
 
-		return mongoOperations.execute(collectionName, collection -> {
-
-			ListIndexesPublisher<Document> indexesPublisher = collection.listIndexes(Document.class);
-
-			return Flux.from(indexesPublisher).map(IndexConverters.documentToIndexInfoConverter()::convert);
-		});
+		return mongoOperations.execute(collectionName, collection -> collection.listIndexes(Document.class)) //
+				.map(IndexConverters.documentToIndexInfoConverter()::convert);
 	}
 }

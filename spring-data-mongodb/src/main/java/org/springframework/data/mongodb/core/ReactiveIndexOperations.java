@@ -56,5 +56,4 @@ public interface ReactiveIndexOperations {
 	 * @return index information on the collection
 	 */
 	Flux<IndexInfo> getIndexInfo();
-
 }
