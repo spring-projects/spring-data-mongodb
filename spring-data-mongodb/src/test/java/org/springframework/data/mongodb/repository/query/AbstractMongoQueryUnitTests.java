@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -24,12 +26,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
-import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -39,6 +39,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithProjection;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -69,6 +72,9 @@ import com.mongodb.client.result.DeleteResult;
 public class AbstractMongoQueryUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
+	@Mock FindOperation<?> findOperationMock;
+	@Mock FindOperationWithProjection<?> withProjectionMock;
+	@Mock FindOperationWithQuery<?> withQueryMock;
 	@Mock BasicMongoPersistentEntity<?> persitentEntityMock;
 	@Mock MongoMappingContext mappingContextMock;
 	@Mock WriteResult writeResultMock;
@@ -87,26 +93,27 @@ public class AbstractMongoQueryUnitTests {
 		converter.afterPropertiesSet();
 
 		doReturn(converter).when(mongoOperationsMock).getConverter();
+		doReturn(findOperationMock).when(mongoOperationsMock).query(any());
+		doReturn(withProjectionMock).when(findOperationMock).inCollection(any());
+		doReturn(withQueryMock).when(withProjectionMock).as(any());
+		doReturn(withQueryMock).when(withQueryMock).matching(any());
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test // DATAMONGO-566
 	public void testDeleteExecutionCallsRemoveCorreclty() {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
-		verify(mongoOperationsMock, times(0)).find(Matchers.any(Query.class), Matchers.any(Class.class),
-				Matchers.anyString());
+		verify(mongoOperationsMock, times(1)).remove(any(), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(0)).find(any(), any(), any());
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test // DATAMONGO-566, DATAMONGO-1040
 	public void testDeleteExecutionLoadsListOfRemovedDocumentsWhenReturnTypeIsCollectionLike() {
 
 		createQueryForMethod("deleteByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(mongoOperationsMock, times(1)).findAllAndRemove(Mockito.any(Query.class), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(1)).findAllAndRemove(any(), eq(Person.class), eq("persons"));
 	}
 
 	@Test // DATAMONGO-566
@@ -115,21 +122,20 @@ public class AbstractMongoQueryUnitTests {
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
-		assertThat(query.execute(new Object[] { "fake" }), Is.<Object> is(0L));
+		assertThat(query.execute(new Object[] { "fake" }), is(0L));
 	}
 
 	@Test // DATAMONGO-566, DATAMONGO-978
 	public void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
 
 		when(deleteResultMock.getDeletedCount()).thenReturn(100L);
-		when(mongoOperationsMock.remove(Matchers.any(Query.class), eq(Person.class), eq("persons")))
-				.thenReturn(deleteResultMock);
+		when(mongoOperationsMock.remove(any(), eq(Person.class), eq("persons"))).thenReturn(deleteResultMock);
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
 		assertThat(query.execute(new Object[] { "fake" }), is((Object) 100L));
-		verify(mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(1)).remove(any(), eq(Person.class), eq("persons"));
 	}
 
 	@Test // DATAMONGO-957
@@ -140,7 +146,9 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(mongoOperationsMock, times(1)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(withProjectionMock).as(Person.class);
+		verify(withQueryMock).matching(captor.capture());
+		verify(findOperationMock).inCollection("persons");
 
 		assertThat(captor.getValue().getMeta().getComment(), nullValue());
 	}
@@ -153,7 +161,10 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(1)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(withProjectionMock).as(Person.class);
+		verify(withQueryMock).matching(captor.capture());
+		verify(findOperationMock).inCollection("persons");
+
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
@@ -165,7 +176,10 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(mongoOperationsMock, times(1)).count(captor.capture(), eq(Person.class), eq("persons"));
+		verify(withProjectionMock).as(Person.class);
+		verify(withQueryMock).matching(captor.capture());
+		verify(findOperationMock).inCollection("persons");
+
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
@@ -177,7 +191,10 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(1)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(withProjectionMock).as(Person.class);
+		verify(withQueryMock).matching(captor.capture());
+		verify(findOperationMock).inCollection("persons");
+
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
@@ -193,7 +210,9 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(withProjectionMock, times(2)).as(Person.class);
+		verify(withQueryMock, times(2)).matching(captor.capture());
+		verify(findOperationMock).inCollection("persons");
 
 		assertThat(captor.getAllValues().get(0).getSkip(), is(0L));
 		assertThat(captor.getAllValues().get(1).getSkip(), is(10L));
@@ -211,7 +230,9 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(withProjectionMock, times(2)).as(Person.class);
+		verify(withQueryMock, times(2)).matching(captor.capture());
+		verify(findOperationMock).inCollection("persons");
 
 		assertThat(captor.getAllValues().get(0).getLimit(), is(11));
 		assertThat(captor.getAllValues().get(1).getLimit(), is(11));
@@ -229,7 +250,9 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(withProjectionMock, times(2)).as(Person.class);
+		verify(withQueryMock, times(2)).matching(captor.capture());
+		verify(findOperationMock).inCollection("persons");
 
 		Document expectedSortObject = new Document().append("bar", -1);
 		assertThat(captor.getAllValues().get(0).getSortObject(), is(expectedSortObject));
@@ -240,8 +263,8 @@ public class AbstractMongoQueryUnitTests {
 	public void doesNotTryToPostProcessQueryResultIntoWrapperType() {
 
 		Person reference = new Person();
-		when(mongoOperationsMock.findOne(Mockito.any(Query.class), eq(Person.class), eq("persons"))).//
-				thenReturn(reference);
+
+		doReturn(reference).when(withQueryMock).oneValue();
 
 		AbstractMongoQuery query = createQueryForMethod("findByLastname", String.class);
 
@@ -269,7 +292,6 @@ public class AbstractMongoQueryUnitTests {
 	private static class MongoQueryFake extends AbstractMongoQuery {
 
 		private boolean isCountQuery;
-		private boolean isExistsQuery;
 		private boolean isDeleteQuery;
 
 		public MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
@@ -310,7 +332,7 @@ public class AbstractMongoQueryUnitTests {
 
 		List<Person> findByFirstname(String firstname);
 
-		@Meta(comment = "comment", flags = {org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT})
+		@Meta(comment = "comment", flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT })
 		Page<Person> findByFirstname(String firstnanme, Pageable pageable);
 
 		@Meta(comment = "comment")

@@ -19,11 +19,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -34,16 +30,16 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.ExecutableFindOperation;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.result.DeleteResult;
 
@@ -58,7 +54,7 @@ import com.mongodb.client.result.DeleteResult;
  */
 interface MongoQueryExecution {
 
-	Object execute(Query query, Class<?> type, String collection);
+	Object execute(Query query);
 
 	/**
 	 * {@link MongoQueryExecution} for collection returning queries.
@@ -68,16 +64,16 @@ interface MongoQueryExecution {
 	@RequiredArgsConstructor
 	final class CollectionExecution implements MongoQueryExecution {
 
-		private final @NonNull MongoOperations operations;
-		private final Pageable pageable;
+		private final @NonNull ExecutableFindOperation.FindOperationWithQuery<?> find;
+		private final @NonNull Pageable pageable;
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
 		 */
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return operations.find(query.with(pageable), type, collection);
+		public Object execute(Query query) {
+			return find.matching(query.with(pageable)).all();
 		}
 	}
 
@@ -89,24 +85,24 @@ interface MongoQueryExecution {
 	 * @since 1.5
 	 */
 	@RequiredArgsConstructor
-	final class SlicedExecution implements MongoQueryExecution {
+	static final class SlicedExecution implements MongoQueryExecution {
 
-		private final @NonNull MongoOperations operations;
+		private final @NonNull FindOperationWithQuery<?> find;
 		private final @NonNull Pageable pageable;
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
 		 */
 		@Override
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public Object execute(Query query, Class<?> type, String collection) {
+		public Object execute(Query query) {
 
 			int pageSize = pageable.getPageSize();
 
 			// Apply Pageable but tweak limit to peek into next page
 			Query modifiedQuery = query.with(pageable).limit(pageSize + 1);
-			List result = operations.find(modifiedQuery, type, collection);
+			List result = find.matching(modifiedQuery).all();
 
 			boolean hasNext = result.size() > pageSize;
 
@@ -121,19 +117,21 @@ interface MongoQueryExecution {
 	 * @author Mark Paluch
 	 */
 	@RequiredArgsConstructor
-	final class PagedExecution implements MongoQueryExecution {
+	static final class PagedExecution implements MongoQueryExecution {
 
-		private final @NonNull MongoOperations operations;
+		private final @NonNull FindOperationWithQuery<?> operation;
 		private final @NonNull Pageable pageable;
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
 		 */
 		@Override
-		public Object execute(final Query query, final Class<?> type, final String collection) {
+		public Object execute(Query query) {
 
-			final int overallLimit = query.getLimit();
+			int overallLimit = query.getLimit();
+
+			TerminatingFindOperation<?> matching = operation.matching(query);
 
 			// Apply raw pagination
 			query.with(pageable);
@@ -143,32 +141,11 @@ interface MongoQueryExecution {
 				query.limit((int) (overallLimit - pageable.getOffset()));
 			}
 
-			return PageableExecutionUtils.getPage(operations.find(query, type, collection), pageable, () -> {
+			return PageableExecutionUtils.getPage(matching.all(), pageable, () -> {
 
-				long count = operations.count(query, type, collection);
+				long count = matching.count();
 				return overallLimit != 0 ? Math.min(count, overallLimit) : count;
-
 			});
-		}
-	}
-
-	/**
-	 * {@link MongoQueryExecution} to return a single entity.
-	 *
-	 * @author Oliver Gierke
-	 */
-	@RequiredArgsConstructor
-	final class SingleEntityExecution implements MongoQueryExecution {
-
-		private final MongoOperations operations;
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
-		 */
-		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return operations.findOne(query, type, collection);
 		}
 	}
 
@@ -182,36 +159,15 @@ interface MongoQueryExecution {
 	@RequiredArgsConstructor
 	static final class CountExecution implements MongoQueryExecution {
 
-		private final MongoOperations operations;
+		private final @NonNull FindOperationWithQuery<?> operation;
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
 		 */
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return operations.count(query, type, collection);
-		}
-	}
-
-	/**
-	 * {@link MongoQueryExecution} to perform an exists projection.
-	 *
-	 * @author Mark Paluch
-	 * @since 1.10
-	 */
-	@RequiredArgsConstructor
-	static final class ExistsExecution implements MongoQueryExecution {
-
-		private final MongoOperations operations;
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
-		 */
-		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return operations.exists(query, type, collection);
+		public Object execute(Query query) {
+			return operation.count();
 		}
 	}
 
@@ -221,25 +177,28 @@ interface MongoQueryExecution {
 	 * @author Oliver Gierke
 	 */
 	@RequiredArgsConstructor
-	class GeoNearExecution implements MongoQueryExecution {
+	static class GeoNearExecution implements MongoQueryExecution {
 
 		private final MongoOperations operations;
+		private final MongoQueryMethod method;
 		private final MongoParameterAccessor accessor;
-		private final TypeInformation<?> returnType;
 
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
+		public Object execute(Query query) {
 
-			GeoResults<?> results = doExecuteQuery(query, type, collection);
-			return isListOfGeoResult() ? results.getContent() : results;
+			GeoResults<?> results = doExecuteQuery(query);
+			return isListOfGeoResult(method.getReturnType()) ? results.getContent() : results;
 		}
 
 		@SuppressWarnings("unchecked")
-		protected GeoResults<Object> doExecuteQuery(Query query, Class<?> type, String collection) {
+		protected GeoResults<Object> doExecuteQuery(Query query) {
+
+			Class<?> type = method.getReturnedObjectType();
+			String collection = method.getEntityInformation().getCollectionName();
 
 			Point nearLocation = accessor.getGeoNearLocation();
 			NearQuery nearQuery = NearQuery.near(nearLocation);
@@ -261,7 +220,7 @@ interface MongoQueryExecution {
 			return (GeoResults<Object>) operations.geoNear(nearQuery, type, collection);
 		}
 
-		private boolean isListOfGeoResult() {
+		private static boolean isListOfGeoResult(TypeInformation<?> returnType) {
 
 			if (!returnType.getType().equals(List.class)) {
 				return false;
@@ -278,20 +237,22 @@ interface MongoQueryExecution {
 	 * @author Oliver Gierke
 	 * @author Mark Paluch
 	 */
-	final class PagingGeoNearExecution extends GeoNearExecution {
+	static final class PagingGeoNearExecution extends GeoNearExecution {
 
 		private final MongoOperations operations;
+		private final MongoQueryMethod method;
 		private final MongoParameterAccessor accessor;
 		private final AbstractMongoQuery mongoQuery;
 
-		public PagingGeoNearExecution(MongoOperations operations, MongoParameterAccessor accessor,
-				TypeInformation<?> returnType, AbstractMongoQuery query) {
+		public PagingGeoNearExecution(MongoOperations operations, MongoQueryMethod method, MongoParameterAccessor accessor,
+				AbstractMongoQuery query) {
 
-			super(operations, accessor, returnType);
+			super(operations, method, accessor);
 
 			this.accessor = accessor;
 			this.operations = operations;
 			this.mongoQuery = query;
+			this.method = method;
 		}
 
 		/*
@@ -299,19 +260,20 @@ interface MongoQueryExecution {
 		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution.GeoNearExecution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
 		@Override
-		public Object execute(Query query, Class<?> type, final String collection) {
+		public Object execute(Query query) {
 
-			GeoResults<Object> geoResults = doExecuteQuery(query, type, collection);
+			String collectionName = method.getEntityInformation().getCollectionName();
+
+			GeoResults<Object> geoResults = doExecuteQuery(query);
 
 			Page<GeoResult<Object>> page = PageableExecutionUtils.getPage(geoResults.getContent(), accessor.getPageable(),
 					() -> {
 
-						ConvertingParameterAccessor parameterAccessor = new ConvertingParameterAccessor(operations.getConverter(),
-								accessor);
 						Query countQuery = mongoQuery
-								.applyQueryMetaAttributesWhenPresent(mongoQuery.createCountQuery(parameterAccessor));
+								.createCountQuery(new ConvertingParameterAccessor(operations.getConverter(), accessor));
+						countQuery = mongoQuery.applyQueryMetaAttributesWhenPresent(countQuery);
 
-						return operations.count(countQuery, collection);
+						return operations.count(countQuery, collectionName);
 
 					});
 
@@ -326,23 +288,26 @@ interface MongoQueryExecution {
 	 * @since 1.5
 	 */
 	@RequiredArgsConstructor
-	final class DeleteExecution implements MongoQueryExecution {
+	static final class DeleteExecution implements MongoQueryExecution {
 
 		private final MongoOperations operations;
 		private final MongoQueryMethod method;
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
 		 */
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
+		public Object execute(Query query) {
+
+			String collectionName = method.getEntityInformation().getCollectionName();
+			Class<?> type = method.getEntityInformation().getJavaType();
 
 			if (method.isCollectionQuery()) {
-				return operations.findAllAndRemove(query, type, collection);
+				return operations.findAllAndRemove(query, type, collectionName);
 			}
 
-			DeleteResult writeResult = operations.remove(query, type, collection);
+			DeleteResult writeResult = operations.remove(query, type, collectionName);
 			return writeResult != null ? writeResult.getDeletedCount() : 0L;
 		}
 	}
@@ -352,82 +317,21 @@ interface MongoQueryExecution {
 	 * @since 1.7
 	 */
 	@RequiredArgsConstructor
-	final class StreamExecution implements MongoQueryExecution {
+	static final class StreamExecution implements MongoQueryExecution {
 
-		private final @NonNull MongoOperations operations;
-		private final @NonNull Converter<Object, Object> resultProcessing;
+		private final @NonNull FindOperationWithQuery<?> operation;
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
 		 */
 		@Override
 		@SuppressWarnings("unchecked")
-		public Object execute(Query query, Class<?> type, String collection) {
+		public Object execute(Query query) {
 
-			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) operations.stream(query, type))
-					.map(new Function<Object, Object>() {
+			TerminatingFindOperation<?> matching = operation.matching(query);
 
-						@Override
-						public Object apply(Object t) {
-							return resultProcessing.convert(t);
-						}
-					});
-		}
-	}
-
-	/**
-	 * An {@link MongoQueryExecution} that wraps the results of the given delegate with the given result processing.
-	 *
-	 * @author Oliver Gierke
-	 * @since 1.9
-	 */
-	@RequiredArgsConstructor
-	final class ResultProcessingExecution implements MongoQueryExecution {
-
-		private final @NonNull MongoQueryExecution delegate;
-		private final @NonNull Converter<Object, Object> converter;
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
-		 */
-		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return converter.convert(delegate.execute(query, type, collection));
-		}
-	}
-
-	/**
-	 * A {@link Converter} to post-process all source objects using the given {@link ResultProcessor}.
-	 *
-	 * @author Oliver Gierke
-	 * @since 1.9
-	 */
-	@RequiredArgsConstructor
-	final class ResultProcessingConverter implements Converter<Object, Object> {
-
-		private final @NonNull ResultProcessor processor;
-		private final @NonNull MongoOperations operations;
-		private final @NonNull EntityInstantiators instantiators;
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
-		@Override
-		public Object convert(Object source) {
-
-			ReturnedType returnedType = processor.getReturnedType();
-
-			if (ClassUtils.isPrimitiveOrWrapper(returnedType.getReturnedType())) {
-				return source;
-			}
-
-			Converter<Object, Object> converter = new DtoInstantiatingConverter(returnedType.getReturnedType(),
-					operations.getConverter().getMappingContext(), instantiators);
-
-			return processor.processResult(source, converter);
+			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) matching.stream());
 		}
 	}
 }

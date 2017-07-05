@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -36,6 +35,9 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -50,7 +52,6 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -64,6 +65,8 @@ import org.springframework.util.ReflectionUtils;
 public class MongoQueryExecutionUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
+	@Mock FindOperation<?> findOperationMock;
+	@Mock FindOperationWithQuery<?> operationMock;
 	@Mock DbRefResolver dbRefResolver;
 
 	Point POINT = new Point(10, 20);
@@ -79,46 +82,54 @@ public class MongoQueryExecutionUnitTests {
 	public void setUp() throws Exception {
 
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, context);
+
 		when(mongoOperationsMock.getConverter()).thenReturn(converter);
+		when(mongoOperationsMock.query(any(Class.class))).thenReturn(findOperationMock);
 	}
 
 	@Test // DATAMONGO-1464
 	public void pagedExecutionShouldNotGenerateCountQueryIfQueryReportedNoResults() {
 
-		when(mongoOperationsMock.find(any(Query.class), eq(Person.class), eq("person")))
-				.thenReturn(Collections.<Person> emptyList());
+		TerminatingFindOperation<Object> terminating = mock(TerminatingFindOperation.class);
 
-		PagedExecution execution = new PagedExecution(mongoOperationsMock, PageRequest.of(0, 10));
-		execution.execute(new Query(), Person.class, "person");
+		doReturn(terminating).when(operationMock).matching(any(Query.class));
+		doReturn(Collections.emptyList()).when(terminating).all();
 
-		verify(mongoOperationsMock).find(any(Query.class), eq(Person.class), eq("person"));
-		verify(mongoOperationsMock, never()).count(any(Query.class), eq(Person.class), eq("person"));
+		PagedExecution execution = new PagedExecution(operationMock, PageRequest.of(0, 10));
+		execution.execute(new Query());
+
+		verify(terminating).all();
+		verify(terminating, never()).count();
 	}
 
 	@Test // DATAMONGO-1464
 	public void pagedExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() {
 
-		when(mongoOperationsMock.find(any(Query.class), eq(Person.class), eq("person")))
-				.thenReturn(Arrays.asList(new Person(), new Person(), new Person(), new Person()));
+		TerminatingFindOperation<Object> terminating = mock(TerminatingFindOperation.class);
 
-		PagedExecution execution = new PagedExecution(mongoOperationsMock, PageRequest.of(0, 10));
-		execution.execute(new Query(), Person.class, "person");
+		doReturn(terminating).when(operationMock).matching(any(Query.class));
+		doReturn(Arrays.asList(new Person(), new Person(), new Person(), new Person())).when(terminating).all();
 
-		verify(mongoOperationsMock).find(any(Query.class), eq(Person.class), eq("person"));
-		verify(mongoOperationsMock, never()).count(any(Query.class), eq(Person.class), eq("person"));
+		PagedExecution execution = new PagedExecution(operationMock, PageRequest.of(0, 10));
+		execution.execute(new Query());
+
+		verify(terminating).all();
+		verify(terminating, never()).count();
 	}
 
 	@Test // DATAMONGO-1464
 	public void pagedExecutionRetrievesObjectsForPageableOutOfRange() throws Exception {
 
-		when(mongoOperationsMock.find(any(Query.class), eq(Person.class), eq("person")))
-				.thenReturn(Collections.<Person> emptyList());
+		TerminatingFindOperation<Object> terminating = mock(TerminatingFindOperation.class);
 
-		PagedExecution execution = new PagedExecution(mongoOperationsMock, PageRequest.of(2, 10));
-		execution.execute(new Query(), Person.class, "person");
+		doReturn(terminating).when(operationMock).matching(any(Query.class));
+		doReturn(Collections.emptyList()).when(terminating).all();
 
-		verify(mongoOperationsMock).find(any(Query.class), eq(Person.class), eq("person"));
-		verify(mongoOperationsMock).count(any(Query.class), eq(Person.class), eq("person"));
+		PagedExecution execution = new PagedExecution(operationMock, PageRequest.of(2, 10));
+		execution.execute(new Query());
+
+		verify(terminating).all();
+		verify(terminating).count();
 	}
 
 	@Test // DATAMONGO-1464
@@ -133,9 +144,8 @@ public class MongoQueryExecutionUnitTests {
 		when(mongoOperationsMock.geoNear(any(NearQuery.class), eq(Person.class), eq("person")))
 				.thenReturn(new GeoResults<Person>(Arrays.asList(result, result, result, result)));
 
-		PagingGeoNearExecution execution = new PagingGeoNearExecution(mongoOperationsMock, accessor,
-				ClassTypeInformation.fromReturnTypeOf(method), query);
-		execution.execute(new Query(), Person.class, "person");
+		PagingGeoNearExecution execution = new PagingGeoNearExecution(mongoOperationsMock, queryMethod, accessor, query);
+		execution.execute(new Query());
 
 		verify(mongoOperationsMock).geoNear(any(NearQuery.class), eq(Person.class), eq("person"));
 		verify(mongoOperationsMock, never()).count(any(Query.class), eq("person"));
@@ -152,9 +162,8 @@ public class MongoQueryExecutionUnitTests {
 		when(mongoOperationsMock.geoNear(any(NearQuery.class), eq(Person.class), eq("person")))
 				.thenReturn(new GeoResults<Person>(Collections.<GeoResult<Person>> emptyList()));
 
-		PagingGeoNearExecution execution = new PagingGeoNearExecution(mongoOperationsMock, accessor,
-				ClassTypeInformation.fromReturnTypeOf(method), query);
-		execution.execute(new Query(), Person.class, "person");
+		PagingGeoNearExecution execution = new PagingGeoNearExecution(mongoOperationsMock, queryMethod, accessor, query);
+		execution.execute(new Query());
 
 		verify(mongoOperationsMock).geoNear(any(NearQuery.class), eq(Person.class), eq("person"));
 		verify(mongoOperationsMock).count(any(Query.class), eq("person"));
