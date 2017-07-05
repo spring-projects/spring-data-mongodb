@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.bson.Document;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
@@ -38,7 +38,7 @@ import com.mongodb.client.model.IndexOptions;
 
 /**
  * Default implementation of {@link IndexOperations}.
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Komi Innocent
@@ -56,7 +56,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	/**
 	 * Creates a new {@link DefaultIndexOperations}.
-	 * 
+	 *
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param collectionName must not be {@literal null}.
 	 * @param queryMapper must not be {@literal null}.
@@ -98,24 +98,22 @@ public class DefaultIndexOperations implements IndexOperations {
 
 			Document indexOptions = indexDefinition.getIndexOptions();
 
-			if (indexOptions != null) {
-
-				IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
-
-				if (indexOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {
-
-					Assert.isInstanceOf(Document.class, indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
-
-					ops.partialFilterExpression( mapper.getMappedObject(
-							(Document) indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), lookupPersistentEntity(type, collectionName)));
-				}
-
-				return collection.createIndex(indexDefinition.getIndexKeys(), ops);
+			if (indexOptions == null) {
+				return collection.createIndex(indexDefinition.getIndexKeys());
 			}
-			return collection.createIndex(indexDefinition.getIndexKeys());
-		}
 
-		);
+			IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
+
+			if (indexOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {
+
+				Assert.isInstanceOf(Document.class, indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
+
+				ops.partialFilterExpression(mapper.getMappedObject((Document) indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY),
+						lookupPersistentEntity(type, collectionName)));
+			}
+
+			return collection.createIndex(indexDefinition.getIndexKeys(), ops);
+		});
 	}
 
 	private MongoPersistentEntity<?> lookupPersistentEntity(Class<?> entityType, String collection) {
