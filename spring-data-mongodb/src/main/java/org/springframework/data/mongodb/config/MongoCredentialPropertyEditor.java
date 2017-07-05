@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -136,7 +138,12 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 
 		index = index != -1 ? index : text.lastIndexOf(OPTIONS_DELIMINATOR);
 
-		return index == -1 ? new String[] {} : text.substring(0, index).split(USERNAME_PASSWORD_DELIMINATOR);
+		if (index == -1) {
+			return new String[] {};
+		}
+
+		return Arrays.asList(text.substring(0, index).split(USERNAME_PASSWORD_DELIMINATOR)).stream()
+				.map(MongoCredentialPropertyEditor::decodeParameter).toArray(String[]::new);
 	}
 
 	private static String extractDB(String text) {
@@ -193,6 +200,14 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 
 		if (source.length == 0 || !StringUtils.hasText(source[0])) {
 			throw new IllegalArgumentException("Credentials need to specify username!");
+		}
+	}
+
+	private static String decodeParameter(String it) {
+		try {
+			return URLDecoder.decode(it, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new IllegalArgumentException("o_O UTF-8 not supported!", e);
 		}
 	}
 }

@@ -19,6 +19,8 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.*;
 import static org.hamcrest.core.IsNull.*;
 import static org.junit.Assert.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,6 +48,12 @@ public class MongoCredentialPropertyEditorUnitTests {
 	static final String USER_3_NAME = "CN=myName,OU=myOrgUnit,O=myOrg,L=myLocality,ST=myState,C=myCountry";
 	static final String USER_3_DB = "stark";
 
+	static final String USER_4_PLAIN_NAME = "m0ng0@dmin";
+	static final String USER_4_ENCODED_NAME;
+	static final String USER_4_PLAIN_PWD = "mo_res:bw6},Qsdxx@admin";
+	static final String USER_4_ENCODED_PWD;
+	static final String USER_4_DB = "targaryen";
+
 	static final String USER_1_AUTH_STRING = USER_1_NAME + ":" + USER_1_PWD + "@" + USER_1_DB;
 	static final String USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_1_AUTH_STRING + "?uri.authMechanism=PLAIN";
 
@@ -55,6 +63,8 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 	static final String USER_3_AUTH_STRING_WITH_X509_AUTH_MECHANISM = "'" + USER_3_NAME + "@" + USER_3_DB
 			+ "?uri.authMechanism=MONGODB-X509'";
+
+	static final String USER_4_AUTH_STRING;
 
 	static final MongoCredential USER_1_CREDENTIALS = MongoCredential.createCredential(USER_1_NAME, USER_1_DB,
 			USER_1_PWD.toCharArray());
@@ -68,7 +78,25 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 	static final MongoCredential USER_3_CREDENTIALS_X509_AUTH = MongoCredential.createMongoX509Credential(USER_3_NAME);
 
+	static final MongoCredential USER_4_CREDENTIALS = MongoCredential.createCredential(USER_4_PLAIN_NAME, USER_4_DB,
+			USER_4_PLAIN_PWD.toCharArray());
+
 	MongoCredentialPropertyEditor editor;
+
+	static {
+
+		String encodedUserName = null;
+		String encodedUserPassword = null;
+		try {
+			encodedUserName = URLEncoder.encode(USER_4_PLAIN_NAME, "UTF-8");
+			encodedUserPassword = URLEncoder.encode(USER_4_PLAIN_PWD, "UTF-8");
+		} catch (UnsupportedEncodingException e) {}
+
+		USER_4_ENCODED_NAME = encodedUserName;
+		USER_4_ENCODED_PWD = encodedUserPassword;
+		USER_4_AUTH_STRING = USER_4_ENCODED_NAME + ":" + USER_4_ENCODED_PWD + "@" + USER_4_DB;
+
+	}
 
 	@Before
 	public void setUp() {
@@ -201,5 +229,16 @@ public class MongoCredentialPropertyEditorUnitTests {
 		editor.setAsText("tyrion@?uri.authMechanism=MONGODB-CR");
 
 		editor.getValue();
+	}
+
+	@Test // DATAMONGO-1317
+	@SuppressWarnings("unchecked")
+	public void encodedUserNameAndPasswrodShouldBeDecoded() throws UnsupportedEncodingException {
+
+		editor.setAsText(USER_4_AUTH_STRING);
+
+		System.out.println("USER_4_AUTH_STRING: " + USER_4_AUTH_STRING);
+
+		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_4_CREDENTIALS));
 	}
 }

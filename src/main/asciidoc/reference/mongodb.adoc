@@ -362,6 +362,9 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
 
 In order to use authentication with XML configuration use the `credentials` attribue on `<mongo-client>`.
 
+NOTE: When using XML configuration along with username/password containing reserved characters `:`, `@`, `,` need to be URL encoded.
+Example: `m0ng0@dmin:mo_res:bw6},Qsdxx@admin@database` -> `m0ng0%40dmin:mo_res%3Abw6%7D%2CQsdxx%40admin@database`
+
 
 [[mongo.mongo-db-factory-xml]]
 === Registering a MongoDbFactory instance using XML based metadata
