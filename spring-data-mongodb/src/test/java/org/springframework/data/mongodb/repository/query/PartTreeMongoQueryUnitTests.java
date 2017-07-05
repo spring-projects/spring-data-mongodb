@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.IsTextQuery.*;
 
@@ -33,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -63,6 +65,7 @@ import com.mongodb.util.JSONParseException;
 public class PartTreeMongoQueryUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
+	@Mock FindOperation<?> findOperationMock;
 
 	MongoMappingContext mappingContext;
 
@@ -75,7 +78,8 @@ public class PartTreeMongoQueryUnitTests {
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
 		MongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 
-		when(mongoOperationsMock.getConverter()).thenReturn(converter);
+		doReturn(converter).when(mongoOperationsMock).getConverter();
+		doReturn(findOperationMock).when(mongoOperationsMock).query(any());
 	}
 
 	@Test // DATAMOGO-952

@@ -15,25 +15,20 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.EntityInstantiators;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithProjection;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.query.MongoQueryExecution.CollectionExecution;
-import org.springframework.data.mongodb.repository.query.MongoQueryExecution.CountExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
-import org.springframework.data.mongodb.repository.query.MongoQueryExecution.ExistsExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.GeoNearExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagingGeoNearExecution;
-import org.springframework.data.mongodb.repository.query.MongoQueryExecution.ResultProcessingConverter;
-import org.springframework.data.mongodb.repository.query.MongoQueryExecution.ResultProcessingExecution;
-import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SingleEntityExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.StreamExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.util.Assert;
 
 /**
@@ -48,7 +43,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
-	private final EntityInstantiators instantiators;
+	private final FindOperationWithProjection<?> findOperationWithProjection;
 
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
@@ -63,7 +58,12 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		this.method = method;
 		this.operations = operations;
-		this.instantiators = new EntityInstantiators();
+
+		ReturnedType returnedType = method.getResultProcessor().getReturnedType();
+
+		this.findOperationWithProjection = operations//
+				.query(returnedType.getDomainType())//
+				.inCollection(method.getEntityInformation().getCollectionName());
 	}
 
 	/* 
@@ -86,52 +86,36 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		applyQueryMetaAttributesWhenPresent(query);
 
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
-		String collection = method.getEntityInformation().getCollectionName();
+		ReturnedType returnedType = processor.getReturnedType();
+		FindOperationWithQuery<?> find = findOperationWithProjection.as(returnedType.getTypeToRead());
 
-		MongoQueryExecution execution = getExecution(query, accessor,
-				new ResultProcessingConverter(processor, operations, instantiators));
+		MongoQueryExecution execution = getExecution(accessor, find);
 
-		return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
+		return processor.processResult(execution.execute(query));
 	}
 
-	/**
-	 * Returns the execution instance to use.
-	 * 
-	 * @param query must not be {@literal null}.
-	 * @param parameters must not be {@literal null}.
-	 * @param accessor must not be {@literal null}.
-	 * @return
-	 */
-	private MongoQueryExecution getExecution(Query query, MongoParameterAccessor accessor,
-			Converter<Object, Object> resultProcessing) {
-
-		if (method.isStreamQuery()) {
-			return new StreamExecution(operations, resultProcessing);
-		}
-
-		return new ResultProcessingExecution(getExecutionToWrap(query, accessor), resultProcessing);
-	}
-
-	private MongoQueryExecution getExecutionToWrap(Query query, MongoParameterAccessor accessor) {
+	private MongoQueryExecution getExecution(MongoParameterAccessor accessor, FindOperationWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
 			return new DeleteExecution(operations, method);
 		} else if (method.isGeoNearQuery() && method.isPageQuery()) {
-			return new PagingGeoNearExecution(operations, accessor, method.getReturnType(), this);
+			return new PagingGeoNearExecution(operations, method, accessor, this);
 		} else if (method.isGeoNearQuery()) {
-			return new GeoNearExecution(operations, accessor, method.getReturnType());
+			return new GeoNearExecution(operations, method, accessor);
 		} else if (method.isSliceQuery()) {
-			return new SlicedExecution(operations, accessor.getPageable());
+			return new SlicedExecution(operation, accessor.getPageable());
+		} else if (method.isStreamQuery()) {
+			return new StreamExecution(operation);
 		} else if (method.isCollectionQuery()) {
-			return new CollectionExecution(operations, accessor.getPageable());
+			return q -> operation.matching(q.with(accessor.getPageable())).all();
 		} else if (method.isPageQuery()) {
-			return new PagedExecution(operations, accessor.getPageable());
+			return new PagedExecution(operation, accessor.getPageable());
 		} else if (isCountQuery()) {
-			return new CountExecution(operations);
+			return q -> operation.matching(q).count();
 		} else if (isExistsQuery()) {
-			return new ExistsExecution(operations);
+			return q -> operation.matching(q).exists();
 		} else {
-			return new SingleEntityExecution(operations);
+			return q -> operation.matching(q).oneValue();
 		}
 	}
 

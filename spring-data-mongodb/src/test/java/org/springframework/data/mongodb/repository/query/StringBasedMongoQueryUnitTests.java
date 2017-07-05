@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -36,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
@@ -67,6 +69,7 @@ public class StringBasedMongoQueryUnitTests {
 	SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	@Mock MongoOperations operations;
+	@Mock FindOperation<Object> findOperation;
 	@Mock DbRefResolver factory;
 
 	MongoConverter converter;
@@ -75,6 +78,8 @@ public class StringBasedMongoQueryUnitTests {
 	public void setUp() {
 
 		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
+
+		doReturn(findOperation).when(operations).query(any());
 	}
 
 	@Test
