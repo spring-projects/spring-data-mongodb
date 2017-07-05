@@ -2740,8 +2740,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		public void close() {
 
 			MongoCursor<Document> c = cursor;
+
 			try {
-				c.close();
+
+				if (c != null) {
+					c.close();
+				}
+
 			} catch (RuntimeException ex) {
 				throw potentiallyConvertRuntimeException(ex, exceptionTranslator);
 			} finally {
