@@ -31,7 +31,7 @@ import com.mongodb.MongoCredential;
 
 /**
  * Parse a {@link String} to a Collection of {@link MongoCredential}.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @since 1.7
@@ -41,10 +41,10 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 	private static final Pattern GROUP_PATTERN = Pattern.compile("(\\\\?')(.*?)\\1");
 
 	private static final String AUTH_MECHANISM_KEY = "uri.authMechanism";
-	private static final String USERNAME_PASSWORD_DELIMINATOR = ":";
-	private static final String DATABASE_DELIMINATOR = "@";
-	private static final String OPTIONS_DELIMINATOR = "?";
-	private static final String OPTION_VALUE_DELIMINATOR = "&";
+	private static final String USERNAME_PASSWORD_DELIMITER = ":";
+	private static final String DATABASE_DELIMITER = "@";
+	private static final String OPTIONS_DELIMITER = "?";
+	private static final String OPTION_VALUE_DELIMITER = "&";
 
 	/*
 	 * (non-Javadoc)
@@ -57,7 +57,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 			return;
 		}
 
-		List<MongoCredential> credentials = new ArrayList<MongoCredential>();
+		List<MongoCredential> credentials = new ArrayList<>();
 
 		for (String credentialString : extractCredentialsString(text)) {
 
@@ -117,7 +117,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 	private List<String> extractCredentialsString(String source) {
 
 		Matcher matcher = GROUP_PATTERN.matcher(source);
-		List<String> list = new ArrayList<String>();
+		List<String> list = new ArrayList<>();
 
 		while (matcher.find()) {
 
@@ -134,44 +134,44 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 
 	private static String[] extractUserNameAndPassword(String text) {
 
-		int index = text.lastIndexOf(DATABASE_DELIMINATOR);
+		int index = text.lastIndexOf(DATABASE_DELIMITER);
 
-		index = index != -1 ? index : text.lastIndexOf(OPTIONS_DELIMINATOR);
+		index = index != -1 ? index : text.lastIndexOf(OPTIONS_DELIMITER);
 
 		if (index == -1) {
 			return new String[] {};
 		}
 
-		return Arrays.asList(text.substring(0, index).split(USERNAME_PASSWORD_DELIMINATOR)).stream()
+		return Arrays.stream(text.substring(0, index).split(USERNAME_PASSWORD_DELIMITER))
 				.map(MongoCredentialPropertyEditor::decodeParameter).toArray(String[]::new);
 	}
 
 	private static String extractDB(String text) {
 
-		int dbSeperationIndex = text.lastIndexOf(DATABASE_DELIMINATOR);
+		int dbSeparationIndex = text.lastIndexOf(DATABASE_DELIMITER);
 
-		if (dbSeperationIndex == -1) {
+		if (dbSeparationIndex == -1) {
 			return "";
 		}
 
-		String tmp = text.substring(dbSeperationIndex + 1);
-		int optionsSeperationIndex = tmp.lastIndexOf(OPTIONS_DELIMINATOR);
+		String tmp = text.substring(dbSeparationIndex + 1);
+		int optionsSeparationIndex = tmp.lastIndexOf(OPTIONS_DELIMITER);
 
-		return optionsSeperationIndex > -1 ? tmp.substring(0, optionsSeperationIndex) : tmp;
+		return optionsSeparationIndex > -1 ? tmp.substring(0, optionsSeparationIndex) : tmp;
 	}
 
 	private static Properties extractOptions(String text) {
 
-		int optionsSeperationIndex = text.lastIndexOf(OPTIONS_DELIMINATOR);
-		int dbSeperationIndex = text.lastIndexOf(OPTIONS_DELIMINATOR);
+		int optionsSeparationIndex = text.lastIndexOf(OPTIONS_DELIMITER);
+		int dbSeparationIndex = text.lastIndexOf(OPTIONS_DELIMITER);
 
-		if (optionsSeperationIndex == -1 || dbSeperationIndex > optionsSeperationIndex) {
+		if (optionsSeparationIndex == -1 || dbSeparationIndex > optionsSeparationIndex) {
 			return new Properties();
 		}
 
 		Properties properties = new Properties();
 
-		for (String option : text.substring(optionsSeperationIndex + 1).split(OPTION_VALUE_DELIMINATOR)) {
+		for (String option : text.substring(optionsSeparationIndex + 1).split(OPTION_VALUE_DELIMITER)) {
 			String[] optionArgs = option.split("=");
 			properties.put(optionArgs[0], optionArgs[1]);
 		}
