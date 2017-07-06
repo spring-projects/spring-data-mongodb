@@ -21,6 +21,7 @@ import java.util.List;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -39,7 +40,7 @@ import org.springframework.util.StringUtils;
  */
 class ObjectPath {
 
-	public static final ObjectPath ROOT = new ObjectPath();
+	static final ObjectPath ROOT = new ObjectPath();
 
 	private final ObjectPathItem[] items;
 
@@ -71,7 +72,7 @@ class ObjectPath {
 	 * @param id must not be {@literal null}.
 	 * @return new instance of {@link ObjectPath}.
 	 */
-	public ObjectPath push(Object object, MongoPersistentEntity<?> entity, Object id) {
+	ObjectPath push(Object object, MongoPersistentEntity<?> entity, Object id) {
 
 		Assert.notNull(object, "Object must not be null!");
 		Assert.notNull(entity, "MongoPersistentEntity must not be null!");
@@ -90,7 +91,7 @@ class ObjectPath {
 	 * @deprecated use {@link #getPathItem(Object, String, Class)}.
 	 */
 	@Deprecated
-	public Object getPathItem(Object id, String collection) {
+	Object getPathItem(Object id, String collection) {
 
 		Assert.notNull(id, "Id must not be null!");
 		Assert.hasText(collection, "Collection name must not be null!");
@@ -99,11 +100,7 @@ class ObjectPath {
 
 			Object object = item.getObject();
 
-			if (object == null) {
-				continue;
-			}
-
-			if (item.getIdValue() == null) {
+			if (object == null || item.getIdValue() == null) {
 				continue;
 			}
 
@@ -153,7 +150,7 @@ class ObjectPath {
 	 *
 	 * @return
 	 */
-	public Object getCurrentObject() {
+	Object getCurrentObject() {
 		return items.length == 0 ? null : items[items.length - 1].getObject();
 	}
 
@@ -168,10 +165,10 @@ class ObjectPath {
 			return "[empty]";
 		}
 
-		List<String> strings = new ArrayList<String>(items.length);
+		List<String> strings = new ArrayList<>(items.length);
 
 		for (ObjectPathItem item : items) {
-			strings.add(item.object.toString());
+			strings.add(ObjectUtils.nullSafeToString(item.object));
 		}
 
 		return StringUtils.collectionToDelimitedString(strings, " -> ");
@@ -203,15 +200,15 @@ class ObjectPath {
 			this.collection = collection;
 		}
 
-		public Object getObject() {
+		Object getObject() {
 			return object;
 		}
 
-		public Object getIdValue() {
+		Object getIdValue() {
 			return idValue;
 		}
 
-		public String getCollection() {
+		String getCollection() {
 			return collection;
 		}
 	}
