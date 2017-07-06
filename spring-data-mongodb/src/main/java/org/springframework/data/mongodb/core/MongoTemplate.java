@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -131,6 +132,7 @@ import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.Filters;
@@ -609,14 +611,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
-		FindIterable<Document> iterable = execute(collectionName, new FindCallback(mappedQuery));
 
-		if (query.getCollation().isPresent()) {
-			iterable = iterable
-					.collation(query.getCollation().map(org.springframework.data.mongodb.core.Collation::toMongoCollation).get());
-		}
-
-		return iterable.iterator().hasNext();
+		return execute(collectionName, new ExistsCallback(mappedQuery,
+				query.getCollation().map(org.springframework.data.mongodb.core.Collation::toMongoCollation).orElse(null)));
 	}
 
 	// Find methods that take a Query to express the query and that return a List of objects.
@@ -2426,6 +2423,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			FindIterable<Document> iterable = collection.find(query);
 
 			return fields.filter(val -> !val.isEmpty()).map(iterable::projection).orElse(iterable);
+		}
+	}
+
+	/**
+	 * Optimized {@link CollectionCallback} that takes an already mappend query and a nullable
+	 * {@link com.mongodb.client.model.Collation} to execute a count query limited to one element.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
+	@RequiredArgsConstructor
+	private static class ExistsCallback implements CollectionCallback<Boolean> {
+
+		private final Document mappedQuery;
+		private final com.mongodb.client.model.Collation collation;
+
+		@Override
+		public Boolean doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
+			return collection.count(mappedQuery, new CountOptions().limit(1).collation(collation)) > 0;
 		}
 	}
 

@@ -81,6 +81,7 @@ import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -123,6 +124,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(db.runCommand(Mockito.any(), Mockito.any(Class.class))).thenReturn(commandResultDocument);
 		when(collection.find(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 		when(collection.mapReduce(Mockito.any(), Mockito.any())).thenReturn(mapReduceIterable);
+		when(collection.count(any(), any())).thenReturn(1L);
 		when(findIterable.projection(Mockito.any())).thenReturn(findIterable);
 		when(findIterable.sort(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.modifiers(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
@@ -666,7 +668,11 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.exists(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
 
-		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).count(any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(equalTo(com.mongodb.client.model.Collation.builder().locale("fr").build())));
 	}
 
 	@Test // DATAMONGO-1518
