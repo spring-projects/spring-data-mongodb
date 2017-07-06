@@ -41,6 +41,8 @@ import com.mongodb.client.FindIterable;
  */
 class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
+	private static final Query ALL_QUERY = new BasicQuery(new Document());
+
 	private final MongoTemplate template;
 
 	/**
@@ -61,7 +63,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new FindOperationSupport<>(template, domainType, domainType, null, null);
+		return new FindOperationSupport<>(template, domainType, domainType, null, ALL_QUERY);
 	}
 
 	/**
@@ -142,10 +144,20 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return () -> template.geoNear(nearQuery, domainType, getCollectionName(), returnType);
 		}
 
+		@Override
+		public long count() {
+			return template.count(query, domainType, getCollectionName());
+		}
+
+		@Override
+		public boolean exists() {
+			return template.exists(query, domainType, getCollectionName());
+		}
+
 		private List<T> doFind(CursorPreparer preparer) {
 
-			Document queryObject = query != null ? query.getQueryObject() : new Document();
-			Document fieldsObject = query != null ? query.getFieldsObject() : new Document();
+			Document queryObject = query.getQueryObject();
+			Document fieldsObject = query.getFieldsObject();
 
 			return template.doFind(getCollectionName(), queryObject, fieldsObject, domainType, returnType,
 					getCursorPreparer(query, preparer));
@@ -153,8 +165,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		private CloseableIterator<T> doStream() {
 
-			return template.doStream(query != null ? query : new BasicQuery(new Document()), domainType, getCollectionName(),
-					returnType);
+			return template.doStream(query, domainType, getCollectionName(), returnType);
 		}
 
 		private CursorPreparer getCursorPreparer(Query query, CursorPreparer preparer) {

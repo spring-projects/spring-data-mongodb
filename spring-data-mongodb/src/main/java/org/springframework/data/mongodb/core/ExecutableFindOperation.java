@@ -115,6 +115,20 @@ public interface ExecutableFindOperation {
 		 *         Never {@literal null}.
 		 */
 		CloseableIterator<T> stream();
+
+		/**
+		 * Get the number of matching elements.
+		 *
+		 * @return total number of matching elements.
+		 */
+		long count();
+
+		/**
+		 * Check for the presence of matching elements.
+		 *
+		 * @return {@literal true} if at least one matching element exists.
+		 */
+		boolean exists();
 	}
 
 	/**
