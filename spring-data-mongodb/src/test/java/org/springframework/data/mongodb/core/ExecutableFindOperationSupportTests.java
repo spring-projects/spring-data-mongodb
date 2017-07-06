@@ -31,6 +31,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.util.CloseableIterator;
 
@@ -240,6 +241,43 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1728
 	public void firstShouldReturnFirstEntryInCollection() {
 		assertThat(template.query(Person.class).first()).isNotEmpty();
+	}
+
+	@Test // DATAMONGO-1734
+	public void countShouldReturnNrOfElementsInCollectionWhenNoQueryPresent() {
+		assertThat(template.query(Person.class).count()).isEqualTo(2);
+	}
+
+	@Test // DATAMONGO-1734
+	public void countShouldReturnNrOfElementsMatchingQuery() {
+
+		assertThat(template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).count())
+				.isEqualTo(1);
+	}
+
+	@Test // DATAMONGO-1734
+	public void existsShouldReturnTrueIfAtLeastOneElementExistsInCollection() {
+		assertThat(template.query(Person.class).exists()).isTrue();
+	}
+
+	@Test // DATAMONGO-1734
+	public void existsShouldReturnFalseIfNoElementExistsInCollection() {
+
+		template.remove(new BasicQuery("{}"), STAR_WARS);
+
+		assertThat(template.query(Person.class).exists()).isFalse();
+	}
+
+	@Test // DATAMONGO-1734
+	public void existsShouldReturnTrueIfAtLeastOneElementMatchesQuery() {
+
+		assertThat(template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).exists())
+				.isTrue();
+	}
+
+	@Test // DATAMONGO-1734
+	public void existsShouldReturnFalseWhenNoElementMatchesQuery() {
+		assertThat(template.query(Person.class).matching(query(where("firstname").is("spock"))).exists()).isFalse();
 	}
 
 	@Data
