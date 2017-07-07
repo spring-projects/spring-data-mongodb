@@ -24,6 +24,9 @@ import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import org.springframework.data.geo.GeoResult;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
@@ -369,6 +372,73 @@ public interface ReactiveMongoOperations {
 	 * @return
 	 */
 	<T> Mono<T> findById(Object id, Class<T> entityClass, String collectionName);
+
+	/**
+	 * Execute an aggregation operation.
+	 * <p>
+	 * The raw results will be mapped to the given entity class. The name of the inputCollection is derived from the
+	 * inputType of the aggregation.
+	 * <p>
+	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
+	 * explanation mode will throw an {@link IllegalArgumentException}.
+	 *
+	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
+	 * @param collectionName The name of the input collection to use for the aggreation.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 */
+	<O> Flux<O> aggregate(TypedAggregation<?> aggregation, String collectionName, Class<O> outputType);
+
+	/**
+	 * Execute an aggregation operation.
+	 * <p/>
+	 * The raw results will be mapped to the given entity class and are returned as stream. The name of the
+	 * inputCollection is derived from the inputType of the aggregation.
+	 * <p/>
+	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
+	 * explanation mode will throw an {@link IllegalArgumentException}.
+	 *
+	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 */
+	<O> Flux<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType);
+
+	/**
+	 * Execute an aggregation operation.
+	 * <p/>
+	 * The raw results will be mapped to the given entity class.
+	 * <p/>
+	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
+	 * explanation mode will throw an {@link IllegalArgumentException}.
+	 *
+	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
+	 * @param inputType the inputType where the aggregation operation will read from, must not be {@literal null} or
+	 *          empty.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 */
+	<O> Flux<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
+
+	/**
+	 * Execute an aggregation operation.
+	 * <p/>
+	 * The raw results will be mapped to the given entity class.
+	 * <p/>
+	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
+	 * explanation mode will throw an {@link IllegalArgumentException}.
+	 *
+	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
+	 * @param collectionName the collection where the aggregation operation will read from, must not be {@literal null} or
+	 *          empty.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 */
+	<O> Flux<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType);
 
 	/**
 	 * Returns {@link Flux} of {@link GeoResult} for all entities matching the given {@link NearQuery}. Will consider

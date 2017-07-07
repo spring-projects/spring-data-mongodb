@@ -65,6 +65,11 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefProxyHandler;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DbRefResolverCallback;
@@ -119,6 +124,7 @@ import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
@@ -626,6 +632,84 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		String idKey = idProperty == null ? ID_FIELD : idProperty.getName();
 
 		return doFindOne(collectionName, new Document(idKey, id), null, entityClass, null);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.String, java.lang.Class)
+	 */
+	@Override
+	public <O> Flux<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName, Class<O> outputType) {
+
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+
+		AggregationOperationContext context = new TypeBasedAggregationOperationContext(aggregation.getInputType(),
+				mappingContext, queryMapper);
+		return aggregate(aggregation, inputCollectionName, outputType, context);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.Class)
+	 */
+	@Override
+	public <O> Flux<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType) {
+		return aggregate(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.Class, java.lang.Class)
+	 */
+	@Override
+	public <O> Flux<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
+
+		return aggregate(aggregation, determineCollectionName(inputType), outputType,
+				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.String, java.lang.Class)
+	 */
+	@Override
+	public <O> Flux<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
+		return aggregate(aggregation, collectionName, outputType, null);
+	}
+
+	protected <O> Flux<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
+			AggregationOperationContext context) {
+
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+		Assert.notNull(outputType, "Output type must not be null!");
+
+		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+
+		Document command = aggregation.toDocument(collectionName, rootContext);
+
+		Boolean explain = command.get("explain", Boolean.class);
+		if (explain != null && explain) {
+			throw new IllegalArgumentException("Can't use explain option with streaming!");
+		}
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Streaming aggregation: {}", serializeToJsonSafely(command));
+		}
+
+		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
+
+		return execute(collectionName, collection -> {
+
+			List<Document> pipeline = (List<Document>) command.get("pipeline");
+
+			AggregationOptions options = AggregationOptions.fromDocument(command);
+
+			AggregatePublisher<Document> cursor = collection.aggregate(pipeline).allowDiskUse(options.isAllowDiskUse())
+					.useCursor(true);
+
+			if (options.getCollation().isPresent()) {
+				cursor = cursor.collation(options.getCollation().map(Collation::toMongoCollation).get());
+			}
+
+			return Flux.from(cursor).map(readCallback::doWith);
+		});
 	}
 
 	/*
