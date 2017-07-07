@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ import org.springframework.util.StringUtils;
 
 /**
  * A {@link TypeSafeMatcher} that tests whether a given {@link Query} matches a query specification.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @param <T>
  */
 public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
@@ -41,6 +42,7 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 	protected IsQuery() {
 		query = new Document();
 		sort = new Document();
+		fields = new Document();
 	}
 
 	public static <T extends BasicQuery> IsQuery<T> isQuery() {

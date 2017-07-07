@@ -22,7 +22,6 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
@@ -37,11 +36,12 @@ import com.mongodb.client.FindIterable;
  * Implementation of {@link ExecutableFindOperation}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
-	private static final Query ALL_QUERY = new BasicQuery(new Document());
+	private static final Query ALL_QUERY = new Query();
 
 	private final MongoTemplate template;
 
@@ -164,7 +164,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		private CloseableIterator<T> doStream() {
-
 			return template.doStream(query, domainType, getCollectionName(), returnType);
 		}
 

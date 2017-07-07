@@ -204,13 +204,13 @@ public class QueryTests {
 		new Query().with(Sort.by(new Sort.Order("foo").ignoreCase()));
 	}
 
-	@Test // DATAMONGO-709
+	@Test // DATAMONGO-709, DATAMONGO-1735
 	@SuppressWarnings("unchecked")
 	public void shouldReturnClassHierarchyOfRestrictedTypes() {
 
 		Query query = new Query(where("name").is("foo")).restrict(SpecialDoc.class);
 		assertThat(query.toString(), is(
-				"Query: { \"name\" : \"foo\", \"_$RESTRICTED_TYPES\" : [ { $java : class org.springframework.data.mongodb.core.SpecialDoc } ] }, Fields: null, Sort: null"));
+				"Query: { \"name\" : \"foo\", \"_$RESTRICTED_TYPES\" : [ { $java : class org.springframework.data.mongodb.core.SpecialDoc } ] }, Fields: { }, Sort: { }"));
 		assertThat(query.getRestrictedTypes(), is(notNullValue()));
 		assertThat(query.getRestrictedTypes().size(), is(1));
 		assertThat(query.getRestrictedTypes(), hasItems(Arrays.asList(SpecialDoc.class).toArray(new Class<?>[0])));

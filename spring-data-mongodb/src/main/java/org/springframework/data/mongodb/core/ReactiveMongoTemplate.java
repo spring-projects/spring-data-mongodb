@@ -50,10 +50,10 @@ import org.springframework.data.convert.EntityReader;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Metric;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefProxyHandler;
@@ -1927,7 +1927,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	private Document getMappedSortObject(Query query, Class<?> type) {
 
-		if (query == null || query.getSortObject() == null) {
+		if (query == null) {
 			return null;
 		}
 
@@ -2279,7 +2279,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			findPublisherToUse = query.getCollation().map(Collation::toMongoCollation).map(findPublisher::collation)
 					.orElse(findPublisher);
 
-			if (query.getSkip() <= 0 && query.getLimit() <= 0 && query.getSortObject() == null
+			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
 					&& !StringUtils.hasText(query.getHint()) && !query.getMeta().hasValues()) {
 				return findPublisherToUse;
 			}

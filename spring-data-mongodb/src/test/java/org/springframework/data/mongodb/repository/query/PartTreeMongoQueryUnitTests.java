@@ -53,10 +53,11 @@ import com.mongodb.util.JSONParseException;
 
 /**
  * Unit tests for {@link PartTreeMongoQuery}.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PartTreeMongoQueryUnitTests {
@@ -131,9 +132,9 @@ public class PartTreeMongoQueryUnitTests {
 		deriveQueryFromMethod("findByAge", new Object[] { 1 });
 	}
 
-	@Test // DATAMONGO-1345
+	@Test // DATAMONGO-1345, DATAMONGO-1735
 	public void doesNotDeriveFieldSpecForNormalDomainType() {
-		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject(), is(nullValue()));
+		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject(), is(new Document()));
 	}
 
 	@Test // DATAMONGO-1345
@@ -173,12 +174,12 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(query.getFieldsObject().get("firstname"), is((Object) 1));
 	}
 
-	@Test // DATAMONGO-1729
+	@Test // DATAMONGO-1729, DATAMONGO-1735
 	public void doesNotCreateFieldsObjectForOpenProjection() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findAllBy");
 
-		assertThat(query.getFieldsObject(), is(nullValue()));
+		assertThat(query.getFieldsObject(), is(new Document()));
 	}
 
 	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object... args) {
