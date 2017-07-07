@@ -587,7 +587,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	public <T> T findOne(Query query, Class<T> entityClass, String collectionName) {
 
-		if (query.getSortObject() == null) {
+		if (ObjectUtils.isEmpty(query.getSortObject()) && !query.getCollation().isPresent()) {
 			return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass);
 		} else {
 			query.limit(1);
@@ -1470,9 +1470,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (query.getMeta() != null && query.getMeta().getMaxTimeMsec() != null) {
 				result = result.maxTime(query.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
 			}
-			if (query.getSortObject() != null) {
-				result = result.sort(query.getSortObject());
-			}
+			result = result.sort(query.getSortObject());
 
 			result = result.filter(queryMapper.getMappedObject(query.getQueryObject(), Optional.empty()));
 		}
@@ -2313,7 +2311,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	private Document getMappedSortObject(Query query, Class<?> type) {
 
-		if (query == null || query.getSortObject() == null) {
+		if (query == null || ObjectUtils.isEmpty(query.getSortObject())) {
 			return null;
 		}
 
@@ -2373,7 +2371,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		public FindOneCallback(Document query, Document fields) {
 			this.query = query;
-			this.fields = Optional.ofNullable(fields);
+			this.fields = Optional.ofNullable(fields).filter(it -> !ObjectUtils.isEmpty(fields));
 		}
 
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
@@ -2414,7 +2412,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		public FindCallback(Document query, Document fields) {
 
 			this.query = query != null ? query : new Document();
-			this.fields = Optional.ofNullable(fields);
+			this.fields = Optional.ofNullable(fields).filter(it -> !ObjectUtils.isEmpty(fields));
 		}
 
 		public FindIterable<Document> doInCollection(MongoCollection<Document> collection)
@@ -2607,9 +2605,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				return cursor;
 			}
 
-			if (query.getSkip() <= 0 && query.getLimit() <= 0
-					&& (query.getSortObject() == null || query.getSortObject().isEmpty()) && !StringUtils.hasText(query.getHint())
-					&& !query.getMeta().hasValues() && !query.getCollation().isPresent()) {
+			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
+					&& !StringUtils.hasText(query.getHint()) && !query.getMeta().hasValues()
+					&& !query.getCollation().isPresent()) {
 				return cursor;
 			}
 
@@ -2624,7 +2622,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				if (query.getLimit() > 0) {
 					cursorToUse = cursorToUse.limit(query.getLimit());
 				}
-				if (query.getSortObject() != null && !query.getSortObject().isEmpty()) {
+				if (!ObjectUtils.isEmpty(query.getSortObject())) {
 					Document sort = type != null ? getMappedSortObject(query, type) : query.getSortObject();
 					cursorToUse = cursorToUse.sort(sort);
 				}

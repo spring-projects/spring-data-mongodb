@@ -19,6 +19,7 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -37,6 +38,8 @@ import org.springframework.data.mongodb.core.Collation;
 import org.springframework.util.Assert;
 
 /**
+ * MongoDB Query object representing criteria, projection, sorting and query hints.
+ *
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -212,13 +215,14 @@ public class Query {
 		Assert.notNull(additionalTypes, "AdditionalTypes must not be null");
 
 		restrictedTypes.add(type);
-		for (Class<?> additionalType : additionalTypes) {
-			restrictedTypes.add(additionalType);
-		}
+		restrictedTypes.addAll(Arrays.asList(additionalTypes));
 
 		return this;
 	}
 
+	/**
+	 * @return the query {@link Document}.
+	 */
 	public Document getQueryObject() {
 
 		Document document = new Document();
@@ -234,14 +238,20 @@ public class Query {
 		return document;
 	}
 
+	/**
+	 * @return the field {@link Document}.
+	 */
 	public Document getFieldsObject() {
-		return this.fieldSpec == null ? null : fieldSpec.getFieldsObject();
+		return this.fieldSpec == null ? new Document() : fieldSpec.getFieldsObject();
 	}
 
+	/**
+	 * @return the sort {@link Document}.
+	 */
 	public Document getSortObject() {
 
 		if (this.sort.isUnsorted()) {
-			return null;
+			return new Document();
 		}
 
 		Document document = new Document();
