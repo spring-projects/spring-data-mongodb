@@ -696,7 +696,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		results = results == null ? Collections.emptyList() : results;
 
 		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<T>(
-				new ReadDocumentCallback<T>(mongoConverter, returnType, collectionName), near.getMetric());
+				new ProjectingReadCallback<>(mongoConverter, domainType, returnType, collectionName), near.getMetric());
 		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
 
 		int index = 0;
