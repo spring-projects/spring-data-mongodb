@@ -22,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -112,11 +113,14 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.data.projection.ProjectionInformation;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
 import org.springframework.data.util.Pair;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
@@ -176,6 +180,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private static final String ID_FIELD = "_id";
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
 	private static final Collection<String> ITERABLE_CLASSES;
+	public static final SpelAwareProxyProjectionFactory PROJECTION_FACTORY = new SpelAwareProxyProjectionFactory();
 
 	static {
 
@@ -372,14 +377,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				MongoPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(entityType);
 
-				Document mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), persistentEntity);
+				Document mappedFields = getMappedFieldsObject(query.getFieldsObject(), persistentEntity, returnType);
 				Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
 
 				FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType)
 						.prepare(collection.find(mappedQuery).projection(mappedFields));
 
 				return new CloseableIterableCursorAdapter<T>(cursor, exceptionTranslator,
-						new ReadDocumentCallback<T>(mongoConverter, returnType, collectionName));
+						new ProjectingReadCallback<>(mongoConverter, entityType, returnType, collectionName));
 			}
 		});
 	}
@@ -694,7 +699,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		results = results == null ? Collections.emptyList() : results;
 
 		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<T>(
-				new ReadDocumentCallback<T>(mongoConverter, returnType, collectionName), near.getMetric());
+				new ProjectingReadCallback<>(mongoConverter, domainType, returnType, collectionName), near.getMetric());
 		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
 
 		int index = 0;
@@ -2037,7 +2042,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(sourceClass);
 
-		Document mappedFields = queryMapper.getMappedFields(fields, entity);
+		Document mappedFields = getMappedFieldsObject(fields, entity, targetClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2046,7 +2051,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields), preparer,
-				new ReadDocumentCallback<T>(mongoConverter, targetClass, collectionName), collectionName);
+				new ProjectingReadCallback<>(mongoConverter, sourceClass, targetClass, collectionName), collectionName);
 	}
 
 	protected Document convertToDocument(CollectionOptions collectionOptions) {
@@ -2331,6 +2336,37 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return queryMapper.getMappedSort(query.getSortObject(), mappingContext.getPersistentEntity(type));
 	}
 
+	private Document getMappedFieldsObject(Document fields, MongoPersistentEntity<?> entity, Class<?> targetType) {
+		return queryMapper.getMappedFields(addFieldsForProjection(fields, entity.getType(), targetType), entity);
+	}
+
+	/**
+	 * For cases where {@code fields} is {@literal null} or {@literal empty} add fields required for creating the
+	 * projection (target) type if the {@code targetType} is a {@literal closed interface projection}.
+	 *
+	 * @param fields can be {@literal null}.
+	 * @param domainType must not be {@literal null}.
+	 * @param targetType must not be {@literal null}.
+	 * @return {@link Document} with fields to be included.
+	 */
+	private Document addFieldsForProjection(Document fields, Class<?> domainType, Class<?> targetType) {
+
+		if ((fields != null && !fields.isEmpty()) || !targetType.isInterface()
+				|| ClassUtils.isAssignable(domainType, targetType)) {
+			return fields;
+		}
+
+		ProjectionInformation projectionInformation = PROJECTION_FACTORY.getProjectionInformation(targetType);
+		if (projectionInformation.isClosed()) {
+
+			for (PropertyDescriptor descriptor : projectionInformation.getInputProperties()) {
+				fields.append(descriptor.getName(), 1);
+			}
+		}
+
+		return fields;
+	}
+
 	/**
 	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
 	 * exception if the conversation failed. Thus allows safe re-throwing of the return value.
@@ -2565,6 +2601,57 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				maybeEmitEvent(new AfterConvertEvent<T>(object, source, collectionName));
 			}
 			return source;
+		}
+	}
+
+	/**
+	 * {@link DocumentCallback} transforming {@link Document} into the given {@code targetType} or decorating the
+	 * {@code sourceType} with a {@literal projection} in case the {@code targetType} is an {@litera interface}.
+	 *
+	 * @param <S>
+	 * @param <T>
+	 * @since 2.0
+	 */
+	class ProjectingReadCallback<S, T> implements DocumentCallback<T> {
+
+		private final Class<S> entityType;
+		private final Class<T> targetType;
+		private final String collectionName;
+		private final EntityReader<Object, Bson> reader;
+
+		ProjectingReadCallback(EntityReader<Object, Bson> reader, Class<S> entityType, Class<T> targetType,
+				String collectionName) {
+
+			this.reader = reader;
+			this.entityType = entityType;
+			this.targetType = targetType;
+			this.collectionName = collectionName;
+		}
+
+		public T doWith(Document object) {
+
+			if (null != object) {
+				maybeEmitEvent(new AfterLoadEvent<>(object, targetType, collectionName));
+			}
+
+			T target = doRead(object, entityType, targetType);
+
+			if (null != target) {
+				maybeEmitEvent(new AfterConvertEvent<>(object, target, collectionName));
+			}
+
+			return target;
+		}
+
+		private T doRead(Document source, Class entityType, Class targetType) {
+
+			if (targetType != entityType && targetType.isInterface()) {
+
+				S target = (S) reader.read(entityType, source);
+				return (T) PROJECTION_FACTORY.createProjection(targetType, target);
+			}
+
+			return (T) reader.read(targetType, source);
 		}
 	}
 

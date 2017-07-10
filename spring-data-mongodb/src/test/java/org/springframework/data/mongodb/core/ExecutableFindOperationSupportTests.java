@@ -26,10 +26,12 @@ import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindOperation;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -47,27 +49,27 @@ import com.mongodb.MongoClient;
 public class ExecutableFindOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
+	private static final String STAR_WARS_PLANETS = "star-wars-universe";
 	MongoTemplate template;
 
 	Person han;
 	Person luke;
+
+	Planet alderan;
+	Planet dantooine;
 
 	@Before
 	public void setUp() {
 
 		template = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableFindOperationSupportTests"));
 		template.dropCollection(STAR_WARS);
+		template.dropCollection(STAR_WARS_PLANETS);
 
-		han = new Person();
-		han.firstname = "han";
-		han.id = "id-1";
+		template.indexOps(Planet.class).ensureIndex(
+				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
 
-		luke = new Person();
-		luke.firstname = "luke";
-		luke.id = "id-2";
-
-		template.save(han);
-		template.save(luke);
+		initPersons();
+		initPlanets();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
@@ -98,6 +100,13 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void findAllWithProjection() {
 		assertThat(template.query(Person.class).as(Jedi.class).all()).hasOnlyElementsOfType(Jedi.class).hasSize(2);
+	}
+
+	@Test // DATAMONGO-1733
+	public void findByReturningAllValuesAsClosedInterfaceProjection() {
+
+		assertThat(template.query(Person.class).as(PersonProjection.class).all())
+				.hasOnlyElementsOfTypes(PersonProjection.class);
 	}
 
 	@Test // DATAMONGO-1563
@@ -166,6 +175,26 @@ public class ExecutableFindOperationSupportTests {
 				.isIn(han, luke);
 	}
 
+	@Test // DATAMONGO-1733
+	public void findByReturningFirstValueAsClosedInterfaceProjection() {
+
+		PersonProjection result = template.query(Person.class).as(PersonProjection.class)
+				.matching(query(where("firstname").is("han"))).firstValue();
+
+		assertThat(result).isInstanceOf(PersonProjection.class);
+		assertThat(result.getFirstname()).isEqualTo("han");
+	}
+
+	@Test // DATAMONGO-1733
+	public void findByReturningFirstValueAsOpenInterfaceProjection() {
+
+		PersonSpELProjection result = template.query(Person.class).as(PersonSpELProjection.class)
+				.matching(query(where("firstname").is("han"))).firstValue();
+
+		assertThat(result).isInstanceOf(PersonSpELProjection.class);
+		assertThat(result.getName()).isEqualTo("han");
+	}
+
 	@Test // DATAMONGO-1563
 	public void streamAll() {
 
@@ -190,6 +219,33 @@ public class ExecutableFindOperationSupportTests {
 		}
 	}
 
+	@Test // DATAMONGO-1733
+	public void streamAllReturningResultsAsClosedInterfaceProjection() {
+
+		TerminatingFindOperation<PersonProjection> operation = template.query(Person.class).as(PersonProjection.class);
+
+		assertThat(operation.stream()) //
+				.hasSize(2) //
+				.allSatisfy(it -> {
+					assertThat(it).isInstanceOf(PersonProjection.class);
+					assertThat(it.getFirstname()).isNotBlank();
+				});
+	}
+
+	@Test // DATAMONGO-1733
+	public void streamAllReturningResultsAsOpenInterfaceProjection() {
+
+		TerminatingFindOperation<PersonSpELProjection> operation = template.query(Person.class)
+				.as(PersonSpELProjection.class);
+
+		assertThat(operation.stream()) //
+				.hasSize(2) //
+				.allSatisfy(it -> {
+					assertThat(it).isInstanceOf(PersonSpELProjection.class);
+					assertThat(it.getName()).isNotBlank();
+				});
+	}
+
 	@Test // DATAMONGO-1563
 	public void streamAllBy() {
 
@@ -201,15 +257,6 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void findAllNearBy() {
 
-		template.indexOps(Planet.class).ensureIndex(
-				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
-
-		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
-		Planet dantooine = new Planet("dantooine", new Point(-73.9928, 40.7193));
-
-		template.save(alderan);
-		template.save(dantooine);
-
 		GeoResults<Planet> results = template.query(Planet.class).near(NearQuery.near(-73.9667, 40.78).spherical(true))
 				.all();
 		assertThat(results.getContent()).hasSize(2);
@@ -219,22 +266,39 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void findAllNearByWithCollectionAndProjection() {
 
-		template.indexOps(Planet.class).ensureIndex(
-				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
-
-		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
-		Planet dantooine = new Planet("dantooine", new Point(-73.9928, 40.7193));
-
-		template.save(alderan);
-		template.save(dantooine);
-
-		GeoResults<Human> results = template.query(Object.class).inCollection(STAR_WARS).as(Human.class)
+		GeoResults<Human> results = template.query(Object.class).inCollection(STAR_WARS_PLANETS).as(Human.class)
 				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all();
 
 		assertThat(results.getContent()).hasSize(2);
 		assertThat(results.getContent().get(0).getDistance()).isNotNull();
 		assertThat(results.getContent().get(0).getContent()).isInstanceOf(Human.class);
 		assertThat(results.getContent().get(0).getContent().getId()).isEqualTo("alderan");
+	}
+
+	@Test // DATAMONGO-1733
+	public void findAllNearByReturningGeoResultContentAsClosedInterfaceProjection() {
+
+		GeoResults<PlanetProjection> results = template.query(Planet.class).as(PlanetProjection.class)
+				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all();
+
+		assertThat(results.getContent()).allSatisfy(it -> {
+
+			assertThat(it.getContent()).isInstanceOf(PlanetProjection.class);
+			assertThat(it.getContent().getName()).isNotBlank();
+		});
+	}
+
+	@Test // DATAMONGO-1733
+	public void findAllNearByReturningGeoResultContentAsOpenInterfaceProjection() {
+
+		GeoResults<PlanetSpELProjection> results = template.query(Planet.class).as(PlanetSpELProjection.class)
+				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all();
+
+		assertThat(results.getContent()).allSatisfy(it -> {
+
+			assertThat(it.getContent()).isInstanceOf(PlanetSpELProjection.class);
+			assertThat(it.getContent().getId()).isNotBlank();
+		});
 	}
 
 	@Test // DATAMONGO-1728
@@ -286,6 +350,16 @@ public class ExecutableFindOperationSupportTests {
 		String firstname;
 	}
 
+	interface PersonProjection {
+		String getFirstname();
+	}
+
+	public interface PersonSpELProjection {
+
+		@Value("#{target.firstname}")
+		String getName();
+	}
+
 	@Data
 	static class Human {
 		@Id String id;
@@ -299,10 +373,43 @@ public class ExecutableFindOperationSupportTests {
 
 	@Data
 	@AllArgsConstructor
-	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
+	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS_PLANETS)
 	static class Planet {
 
 		@Id String name;
 		Point coordinates;
+	}
+
+	interface PlanetProjection {
+		String getName();
+	}
+
+	interface PlanetSpELProjection {
+
+		@Value("#{target.name}")
+		String getId();
+	}
+
+	private void initPersons() {
+
+		han = new Person();
+		han.firstname = "han";
+		han.id = "id-1";
+
+		luke = new Person();
+		luke.firstname = "luke";
+		luke.id = "id-2";
+
+		template.save(han);
+		template.save(luke);
+	}
+
+	private void initPlanets() {
+
+		alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
+		dantooine = new Planet("dantooine", new Point(-73.9928, 40.7193));
+
+		template.save(alderan);
+		template.save(dantooine);
 	}
 }

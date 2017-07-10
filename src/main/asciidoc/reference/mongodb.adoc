@@ -1425,6 +1425,55 @@ AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", T
 
 WARNING: Indexes are only used if the collation used for the operation and the index collation matches.
 
+[[mongo.query.fluent-template-api]]
+=== Fluent Template API
+
+The `MongoOperations` interface is one of the central components when it comes to more low level interaction with MongoDB. It offers a wide range of methods covering needs from collection / index creation and CRUD operations to more advanced functionality like map-reduce and aggregations.
+One can find multiple overloads for each and every method. Most of them just cover optional / nullable parts of the API.
+
+`FluentMongoOperations` provide a more narrow interface for common methods of `MongoOperations` providing a more readable, fluent API.
+The entry points `insert(…)`, `find(…)`, `update(…)`, etc. follow a natural naming schema based on the operation to execute. Moving on from the entry point the API is designed to only offer context dependent methods guiding towards a terminating method that invokes the actual `MongoOperations` counterpart.
+
+====
+[source,java]
+----
+List<SWCharacter> all = ops.find(SWCharacter.class)
+  .inCollection("star-wars")                        <1>
+  .all();
+----
+<1> Skip this step if `SWCharacter` defines the collection via `@Document` or if using the class name as the collection name is just fine.
+====
+
+Sometimes a collection in MongoDB holds entities of different types. Like a `Jedi` within a collection of `SWCharacters`.
+To use different types for `Query` and return value mapping one can use `as(Class<?> targetType)` map results differently.
+
+====
+[source,java]
+----
+List<Jedi> all = ops.find(SWCharacter.class)    <1>
+  .as(Jedi.class)                               <2>
+  .matching(query(where("jedi").is(true)))
+  .all();
+----
+<1> The query fields are mapped against the `SWCharacter` type.
+<2> Resulting documents are mapped into `Jedi`.
+====
+
+TIP: It is possible to directly apply <<projections>> to resulting documents by providing just the `interface` type via `as(Class<?>)`.
+
+Switching between retrieving a single entity, multiple ones as `List` or `Stream` like is done via the terminating methods `first()`, `one()`, `all()` or `stream()`.
+
+When writing a geo-spatial query via `near(NearQuery)` the number of terminating methods is altered to just the ones valid for executing a `geoNear` command in MongoDB fetching entities as `GeoResult` within `GeoResults`.
+
+====
+[source,java]
+----
+GeoResults<Jedi> results = mongoOps.query(SWCharacter.class)
+  .as(Jedi.class)
+  .near(alderaan) // NearQuery.near(-73.9667, 40.78).maxDis…
+  .all();
+----
+====
 
 include::../{spring-data-commons-docs}/query-by-example.adoc[leveloffset=+1]
 include::query-by-example.adoc[leveloffset=+1]

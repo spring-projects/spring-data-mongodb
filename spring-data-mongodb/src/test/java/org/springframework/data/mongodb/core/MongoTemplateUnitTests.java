@@ -22,6 +22,8 @@ import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import lombok.Data;
+
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +46,7 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
@@ -61,6 +64,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
@@ -782,12 +786,70 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void groupShouldUseCollationWhenPresent() {
 
 		commandResultDocument.append("retval", Collections.emptySet());
-		template.group("collection-1", GroupBy.key("id").reduceFunction("bar").collation(Collation.of("fr")), AutogenerateableId.class);
+		template.group("collection-1", GroupBy.key("id").reduceFunction("bar").collation(Collation.of("fr")),
+				AutogenerateableId.class);
 
 		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
 		verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
 
-		assertThat(cmd.getValue().get("group", Document.class).get("collation", Document.class), equalTo(new Document("locale", "fr")));
+		assertThat(cmd.getValue().get("group", Document.class).get("collation", Document.class),
+				equalTo(new Document("locale", "fr")));
+	}
+
+	@Test // DATAMONGO-1733
+	public void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonProjection.class, null);
+
+		verify(findIterable).projection(eq(new Document("firstname", 1)));
+	}
+
+	@Test // DATAMONGO-1733
+	public void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
+
+		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, PersonProjection.class, null);
+
+		verify(findIterable).projection(eq(new Document("bar", 1)));
+	}
+
+	@Test // DATAMONGO-1733
+	public void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class, null);
+
+		verify(findIterable, never()).projection(any());
+	}
+
+	@Test // DATAMONGO-1733
+	public void doesNotApplyFieldsToDtoProjection() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class, null);
+
+		verify(findIterable, never()).projection(any());
+	}
+
+	@Test // DATAMONGO-1733
+	public void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
+
+		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class, null);
+
+		verify(findIterable).projection(eq(new Document("bar", 1)));
+	}
+
+	@Test // DATAMONGO-1733
+	public void doesNotApplyFieldsWhenTargetIsNotAProjection() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class, null);
+
+		verify(findIterable, never()).projection(any());
+	}
+
+	@Test // DATAMONGO-1733
+	public void doesNotApplyFieldsWhenTargetExtendsDomainType() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class, null);
+
+		verify(findIterable, never()).projection(any());
 	}
 
 	class AutogenerateableId {
@@ -817,6 +879,40 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		public String convert(AutogenerateableId source) {
 			return source.toString();
 		}
+	}
+
+	@Data
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
+	static class Person {
+
+		@Id String id;
+		String firstname;
+	}
+
+	static class PersonExtended extends Person {
+
+		String lastname;
+	}
+
+	interface PersonProjection {
+		String getFirstname();
+	}
+
+	public interface PersonSpELProjection {
+
+		@Value("#{target.firstname}")
+		String getName();
+	}
+
+	@Data
+	static class Human {
+		@Id String id;
+	}
+
+	@Data
+	static class Jedi {
+
+		@Field("firstname") String name;
 	}
 
 	class Wrapper {
