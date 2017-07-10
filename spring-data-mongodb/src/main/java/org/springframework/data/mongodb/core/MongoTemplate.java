@@ -112,6 +112,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
 import org.springframework.data.util.Pair;
@@ -176,6 +177,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private static final String ID_FIELD = "_id";
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
 	private static final Collection<String> ITERABLE_CLASSES;
+	public static final SpelAwareProxyProjectionFactory PROJECTION_FACTORY = new SpelAwareProxyProjectionFactory();
 
 	static {
 
@@ -2046,7 +2048,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields), preparer,
-				new ReadDocumentCallback<T>(mongoConverter, targetClass, collectionName), collectionName);
+				new ProjectingReadCallback<S, T>(mongoConverter, sourceClass, targetClass, collectionName), collectionName);
 	}
 
 	protected Document convertToDocument(CollectionOptions collectionOptions) {
@@ -2565,6 +2567,57 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				maybeEmitEvent(new AfterConvertEvent<T>(object, source, collectionName));
 			}
 			return source;
+		}
+	}
+
+	/**
+	 * {@link DocumentCallback} transforming {@link Document} into the given {@code targetType} or decorating the
+	 * {@code sourceType} with a {@literal projection} in case the {@code targetType} is an {@litera interface}.
+	 *
+	 * @param <S>
+	 * @param <T>
+	 * @since 2.0
+	 */
+	class ProjectingReadCallback<S, T> implements DocumentCallback<T> {
+
+		private final Class<S> entityType;
+		private final Class<T> targetType;
+		private final String collectionName;
+		private final EntityReader<Object, Bson> reader;
+
+		ProjectingReadCallback(EntityReader<Object, Bson> reader, Class<S> entityType, Class<T> targetType,
+				String collectionName) {
+
+			this.reader = reader;
+			this.entityType = entityType;
+			this.targetType = targetType;
+			this.collectionName = collectionName;
+		}
+
+		public T doWith(Document object) {
+
+			if (null != object) {
+				maybeEmitEvent(new AfterLoadEvent<>(object, targetType, collectionName));
+			}
+
+			T target = doRead(object, entityType, targetType);
+
+			if (null != target) {
+				maybeEmitEvent(new AfterConvertEvent<>(object, target, collectionName));
+			}
+
+			return target;
+		}
+
+		private T doRead(Document source, Class entityType, Class targetType) {
+
+			if (targetType != entityType && targetType.isInterface()) {
+
+				S target = (S) reader.read(entityType, source);
+				return (T) PROJECTION_FACTORY.createProjection(targetType, target);
+			}
+
+			return (T) reader.read(targetType, source);
 		}
 	}
 
