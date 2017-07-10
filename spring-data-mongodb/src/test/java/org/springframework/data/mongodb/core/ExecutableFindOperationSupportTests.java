@@ -24,6 +24,7 @@ import lombok.Data;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.GeoResults;
@@ -306,4 +307,35 @@ public class ExecutableFindOperationSupportTests {
 		@Id String name;
 		Point coordinates;
 	}
+
+	interface PersonProjection {
+		String getFirstname();
+	}
+
+	public interface PersonSpELProjection {
+
+		@Value("#{target.firstname}")
+		String getName();
+	}
+
+	@Test // DATAMONGO-1733
+	public void intoClosedProjectionInterface() {
+
+		PersonProjection projection = template.query(Person.class).as(PersonProjection.class)
+				.matching(query(where("firstname").is("han"))).firstValue();
+
+		assertThat(projection).isInstanceOf(PersonProjection.class);
+		assertThat(projection.getFirstname()).isEqualTo("han");
+	}
+
+	@Test // DATAMONGO-1733
+	public void intoOpenProjectionInterface() {
+
+		PersonSpELProjection projection = template.query(Person.class).as(PersonSpELProjection.class)
+				.matching(query(where("firstname").is("han"))).firstValue();
+
+		assertThat(projection).isInstanceOf(PersonSpELProjection.class);
+		assertThat(projection.getName()).isEqualTo("han");
+	}
+
 }
