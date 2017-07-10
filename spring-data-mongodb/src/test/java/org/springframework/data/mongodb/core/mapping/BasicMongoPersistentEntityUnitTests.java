@@ -15,27 +15,31 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.Iterator;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link BasicMongoPersistentEntity}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
@@ -254,6 +258,41 @@ public class BasicMongoPersistentEntityUnitTests {
 				ClassTypeInformation.from(DocumentWithComposedAnnotation.class));
 
 		assertThat(entity.getCollection(), is("custom-collection"));
+	}
+
+	@Test // DATACMNS-50
+	@SuppressWarnings("unchecked")
+	public void considersComparatorForPropertyOrder() {
+
+		BasicMongoPersistentEntity<org.springframework.data.mongodb.core.mapping.Person> entity = new BasicMongoPersistentEntity<org.springframework.data.mongodb.core.mapping.Person>(
+				ClassTypeInformation.from(org.springframework.data.mongodb.core.mapping.Person.class));
+
+		MongoPersistentProperty lastName = Mockito.mock(MongoPersistentProperty.class);
+		when(lastName.getFieldName()).thenReturn("lastName");
+		when(lastName.getFieldOrder()).thenReturn(2);
+
+		MongoPersistentProperty firstName = Mockito.mock(MongoPersistentProperty.class);
+		when(firstName.getFieldName()).thenReturn("firstName");
+		when(firstName.getFieldOrder()).thenReturn(1);
+
+		MongoPersistentProperty ssn = Mockito.mock(MongoPersistentProperty.class);
+		when(ssn.getFieldName()).thenReturn("ssn");
+		when(ssn.getFieldOrder()).thenReturn(3);
+
+		entity.addPersistentProperty(lastName);
+		entity.addPersistentProperty(firstName);
+		entity.addPersistentProperty(ssn);
+		entity.verify();
+
+		List<MongoPersistentProperty> properties = (List<MongoPersistentProperty>) ReflectionTestUtils.getField(entity,
+				"properties");
+
+		assertThat(properties.size(), is(3));
+		Iterator<MongoPersistentProperty> iterator = properties.iterator();
+
+		assertThat(iterator.next().getFieldName(), is("firstName"));
+		assertThat(iterator.next().getFieldName(), is("lastName"));
+		assertThat(iterator.next().getFieldName(), is("ssn"));
 	}
 
 	@Document(collection = "contacts")

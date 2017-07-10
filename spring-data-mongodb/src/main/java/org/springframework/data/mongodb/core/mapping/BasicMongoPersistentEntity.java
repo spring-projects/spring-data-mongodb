@@ -15,12 +15,6 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -43,6 +37,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * MongoDB specific {@link MongoPersistentEntity} implementation that adds Mongo specific meta-data such as the
  * collection name and the like.
@@ -53,8 +53,8 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
-		MongoPersistentEntity<T>, ApplicationContextAware {
+public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty>
+		implements MongoPersistentEntity<T>, ApplicationContextAware {
 
 	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @Field annotation!";
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -145,7 +145,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 */
 	@Override
 	public void verify() {
-
+		super.verify();
 		verifyFieldUniqueness();
 		verifyFieldTypes();
 	}
@@ -223,8 +223,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		Field currentIdPropertyField = currentIdProperty.getField();
 
 		if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
-			throw new MappingException(String.format(
-					"Attempt to add explicit id property %s but already have an property %s registered "
+			throw new MappingException(
+					String.format("Attempt to add explicit id property %s but already have an property %s registered "
 							+ "as explicit id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
 
 		} else if (newIdPropertyIsExplicit && !currentIdPropertyIsExplicit) {
@@ -235,8 +235,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			// no id property override - current property is explicitly defined
 
 		} else {
-			throw new MappingException(String.format(
-					"Attempt to add id property %s but already have an property %s registered "
+			throw new MappingException(
+					String.format("Attempt to add id property %s but already have an property %s registered "
 							+ "as id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
 		}
 
@@ -274,8 +274,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * 
 	 * @author Oliver Gierke
 	 */
-	private static class AssertFieldNameUniquenessHandler implements PropertyHandler<MongoPersistentProperty>,
-			AssociationHandler<MongoPersistentProperty> {
+	private static class AssertFieldNameUniquenessHandler
+			implements PropertyHandler<MongoPersistentProperty>, AssociationHandler<MongoPersistentProperty> {
 
 		private final Map<String, MongoPersistentProperty> properties = new HashMap<String, MongoPersistentProperty>();
 
@@ -293,8 +293,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			MongoPersistentProperty existingProperty = properties.get(fieldName);
 
 			if (existingProperty != null) {
-				throw new MappingException(String.format(AMBIGUOUS_FIELD_MAPPING, property.toString(),
-						existingProperty.toString(), fieldName));
+				throw new MappingException(
+						String.format(AMBIGUOUS_FIELD_MAPPING, property.toString(), existingProperty.toString(), fieldName));
 			}
 
 			properties.put(fieldName, property);
