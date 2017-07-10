@@ -31,6 +31,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindOperation;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -216,6 +217,33 @@ public class ExecutableFindOperationSupportTests {
 		try (Stream<Jedi> stream = template.query(Person.class).as(Jedi.class).stream()) {
 			assertThat(stream).hasOnlyElementsOfType(Jedi.class).hasSize(2);
 		}
+	}
+
+	@Test // DATAMONGO-1733
+	public void streamAllReturningResultsAsClosedInterfaceProjection() {
+
+		TerminatingFindOperation<PersonProjection> operation = template.query(Person.class).as(PersonProjection.class);
+
+		assertThat(operation.stream()) //
+				.hasSize(2) //
+				.allSatisfy(it -> {
+					assertThat(it).isInstanceOf(PersonProjection.class);
+					assertThat(it.getFirstname()).isNotBlank();
+				});
+	}
+
+	@Test // DATAMONGO-1733
+	public void streamAllReturningResultsAsOpenInterfaceProjection() {
+
+		TerminatingFindOperation<PersonSpELProjection> operation = template.query(Person.class)
+				.as(PersonSpELProjection.class);
+
+		assertThat(operation.stream()) //
+				.hasSize(2) //
+				.allSatisfy(it -> {
+					assertThat(it).isInstanceOf(PersonSpELProjection.class);
+					assertThat(it.getName()).isNotBlank();
+				});
 	}
 
 	@Test // DATAMONGO-1563

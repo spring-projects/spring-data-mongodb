@@ -381,7 +381,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 						.prepare(collection.find(mappedQuery).projection(mappedFields));
 
 				return new CloseableIterableCursorAdapter<T>(cursor, exceptionTranslator,
-						new ReadDocumentCallback<T>(mongoConverter, returnType, collectionName));
+						new ProjectingReadCallback<>(mongoConverter, entityType, returnType, collectionName));
 			}
 		});
 	}
