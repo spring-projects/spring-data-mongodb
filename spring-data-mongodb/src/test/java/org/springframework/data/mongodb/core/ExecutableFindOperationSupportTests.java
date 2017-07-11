@@ -22,6 +22,8 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.stream.Stream;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -33,7 +35,6 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
-import org.springframework.data.util.CloseableIterator;
 
 import com.mongodb.MongoClient;
 
@@ -168,7 +169,7 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void streamAll() {
 
-		try (CloseableIterator<Person> stream = template.query(Person.class).stream()) {
+		try (Stream<Person> stream = template.query(Person.class).stream()) {
 			assertThat(stream).containsExactlyInAnyOrder(han, luke);
 		}
 	}
@@ -176,7 +177,7 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void streamAllWithCollection() {
 
-		try (CloseableIterator<Human> stream = template.query(Human.class).inCollection(STAR_WARS).stream()) {
+		try (Stream<Human> stream = template.query(Human.class).inCollection(STAR_WARS).stream()) {
 			assertThat(stream).hasSize(2);
 		}
 	}
@@ -184,7 +185,7 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void streamAllWithProjection() {
 
-		try (CloseableIterator<Jedi> stream = template.query(Person.class).as(Jedi.class).stream()) {
+		try (Stream<Jedi> stream = template.query(Person.class).as(Jedi.class).stream()) {
 			assertThat(stream).hasOnlyElementsOfType(Jedi.class).hasSize(2);
 		}
 	}
@@ -192,9 +193,7 @@ public class ExecutableFindOperationSupportTests {
 	@Test // DATAMONGO-1563
 	public void streamAllBy() {
 
-		try (CloseableIterator<Person> stream = template.query(Person.class).matching(query(where("firstname").is("luke")))
-				.stream()) {
-
+		try (Stream<Person> stream = template.query(Person.class).matching(query(where("firstname").is("luke"))).stream()) {
 			assertThat(stream).containsExactlyInAnyOrder(luke);
 		}
 	}

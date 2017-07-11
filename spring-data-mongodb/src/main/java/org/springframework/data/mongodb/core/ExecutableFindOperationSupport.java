@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -26,6 +27,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -135,8 +137,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
-		public CloseableIterator<T> stream() {
-			return doStream();
+		public Stream<T> stream() {
+			return StreamUtils.createStreamFromIterator(doStream());
 		}
 
 		@Override

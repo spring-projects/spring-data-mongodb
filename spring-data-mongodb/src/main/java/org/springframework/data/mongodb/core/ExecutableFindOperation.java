@@ -17,11 +17,11 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.util.CloseableIterator;
 
 /**
  * {@link ExecutableFindOperation} allows creation and execution of MongoDB find operations in a fluent API style.
@@ -111,10 +111,10 @@ public interface ExecutableFindOperation {
 		/**
 		 * Stream all matching elements.
 		 *
-		 * @return a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.Cursor} that needs to be closed.
-		 *         Never {@literal null}.
+		 * @return a {@link Stream} that wraps the a Mongo DB {@link com.mongodb.Cursor} that needs to be closed. Never
+		 *         {@literal null}.
 		 */
-		CloseableIterator<T> stream();
+		Stream<T> stream();
 
 		/**
 		 * Get the number of matching elements.
