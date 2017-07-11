@@ -18,6 +18,7 @@ package spring.data.microbenchmark;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 
 import org.junit.Test;
@@ -26,12 +27,14 @@ import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -68,7 +71,7 @@ public class AbstractMicrobenchmark {
 			return;
 		}
 
-		new Runner(options(includes).build()).run();
+		publishResults(new Runner(options(includes).build()).run());
 	}
 
 	/**
@@ -302,5 +305,24 @@ public class AbstractMicrobenchmark {
 		optionsBuilder.result(reportFilePath);
 
 		return optionsBuilder;
+	}
+
+	/**
+	 * Publish results to an external system.
+	 *
+	 * @param results must not be {@literal null}.
+	 */
+	private void publishResults(Collection<RunResult> results) {
+
+		if (CollectionUtils.isEmpty(results) || !environment.containsProperty("publishTo")) {
+			return;
+		}
+
+		String uri = environment.getProperty("publishTo");
+		try {
+			ResultsWriter.forUri(uri).write(results);
+		} catch (Exception e) {
+			System.err.println(String.format("Cannot save benchmark results to '%s'. Error was %s.", uri, e));
+		}
 	}
 }
