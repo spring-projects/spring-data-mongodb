@@ -22,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,6 +68,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
@@ -112,12 +114,14 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.data.projection.ProjectionInformation;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
 import org.springframework.data.util.Pair;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
@@ -374,7 +378,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				MongoPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(entityType);
 
-				Document mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), persistentEntity);
+				Document mappedFields = getMappedFieldsObject(query.getFieldsObject(), persistentEntity, returnType);
 				Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
 
 				FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType)
@@ -2039,7 +2043,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(sourceClass);
 
-		Document mappedFields = queryMapper.getMappedFields(fields, entity);
+		Document mappedFields = getMappedFieldsObject(fields, entity, targetClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2048,7 +2052,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields), preparer,
-				new ProjectingReadCallback<S, T>(mongoConverter, sourceClass, targetClass, collectionName), collectionName);
+				new ProjectingReadCallback<>(mongoConverter, sourceClass, targetClass, collectionName), collectionName);
 	}
 
 	protected Document convertToDocument(CollectionOptions collectionOptions) {
@@ -2331,6 +2335,56 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return queryMapper.getMappedSort(query.getSortObject(), mappingContext.getPersistentEntity(type));
+	}
+
+	private Document getMappedFieldsObject(Document fields, MongoPersistentEntity<?> entity, Class<?> targetType) {
+
+		Document mappedFields = queryMapper.getMappedFields(fields, entity);
+		return addFieldsForProjection(mappedFields, entity.getType(), targetType);
+	}
+
+	/**
+	 * For cases where {@code mappedFields} is {@literal null} or {@literal empty} add fields required for creating the
+	 * projection (target) type if the {@code targetType} is a {@literal closed projection}.
+	 *
+	 * @param mappedFields can be {@literal null}.
+	 * @param domainType must not be {@literal null}.
+	 * @param targetType must not be {@literal null}.
+	 * @return {@link Document} with fields to be included.
+	 */
+	private Document addFieldsForProjection(Document mappedFields, Class<?> domainType, Class<?> targetType) {
+
+		if ((mappedFields != null && !mappedFields.isEmpty()) || ClassUtils.isAssignable(domainType, targetType)) {
+			return mappedFields;
+		}
+
+		Document fields = new Document();
+
+		if (!targetType.isInterface()) {
+
+			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetType);
+
+			for (MongoPersistentProperty property : entity) {
+				if (!property.isTransient()) {
+					fields.append(property.getFieldName(), 1);
+				}
+			}
+
+			return fields;
+		}
+
+		ProjectionInformation pi = PROJECTION_FACTORY.getProjectionInformation(targetType);
+		if (pi.isClosed()) {
+
+			for (PropertyDescriptor pd : pi.getInputProperties()) {
+
+				MongoPersistentProperty pp = ((MongoMappingContext) mappingContext).createPersistentProperty(Property.of(pd),
+						((MongoMappingContext) mappingContext).getPersistentEntity(targetType), MongoSimpleTypes.HOLDER);
+				fields.append(pp.getFieldName(), 1);
+			}
+		}
+
+		return fields;
 	}
 
 	/**
