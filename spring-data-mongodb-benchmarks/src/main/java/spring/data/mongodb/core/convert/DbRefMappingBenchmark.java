@@ -15,6 +15,9 @@
  */
 package spring.data.mongodb.core.convert;
 
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
+
 import lombok.Data;
 import spring.data.microbenchmark.AbstractMicrobenchmark;
 
@@ -30,7 +33,6 @@ import org.openjdk.jmh.annotations.TearDown;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.MongoClient;
@@ -40,7 +42,7 @@ import com.mongodb.ServerAddress;
  * @author Christoph Strobl
  */
 @State(Scope.Benchmark)
-public class DbRefMappingMongoConverterBenchmark extends AbstractMicrobenchmark {
+public class DbRefMappingBenchmark extends AbstractMicrobenchmark {
 
 	private static final String DB_NAME = "dbref-loading-benchmark";
 
@@ -56,7 +58,7 @@ public class DbRefMappingMongoConverterBenchmark extends AbstractMicrobenchmark 
 		client = new MongoClient(new ServerAddress());
 		template = new MongoTemplate(client, DB_NAME);
 
-		List<RefObject> refObjects = new ArrayList<RefObject>();
+		List<RefObject> refObjects = new ArrayList<>();
 		for (int i = 0; i < 1; i++) {
 			RefObject o = new RefObject();
 			template.save(o);
@@ -71,8 +73,8 @@ public class DbRefMappingMongoConverterBenchmark extends AbstractMicrobenchmark 
 		multipleDBRefs.refList = refObjects;
 		template.save(multipleDBRefs);
 
-		queryObjectWithDBRef = Query.query(Criteria.where("id").is(singleDBRef.id));
-		queryObjectWithDBRefList = Query.query(Criteria.where("id").is(multipleDBRefs.id));
+		queryObjectWithDBRef = query(where("id").is(singleDBRef.id));
+		queryObjectWithDBRefList = query(where("id").is(multipleDBRefs.id));
 	}
 
 	@TearDown
@@ -82,13 +84,13 @@ public class DbRefMappingMongoConverterBenchmark extends AbstractMicrobenchmark 
 		client.close();
 	}
 
-	@Benchmark
-	public ObjectWithDBRef readWithSingleDbRef() {
+	@Benchmark // DATAMONGO-1720
+	public ObjectWithDBRef readSingleDbRef() {
 		return template.findOne(queryObjectWithDBRef, ObjectWithDBRef.class);
 	}
 
-	@Benchmark
-	public ObjectWithDBRef readWithMultipleRefs() {
+	@Benchmark // DATAMONGO-1720
+	public ObjectWithDBRef readMultipleDbRefs() {
 		return template.findOne(queryObjectWithDBRefList, ObjectWithDBRef.class);
 	}
 

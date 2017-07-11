@@ -52,21 +52,61 @@ public class AbstractMicrobenchmark {
 
 	private final StandardEnvironment environment = new StandardEnvironment();
 
+	/**
+	 * Run matching {@link org.openjdk.jmh.annotations.Benchmark} methods with options collected from
+	 * {@link org.springframework.core.env.Environment}.
+	 *
+	 * @throws Exception
+	 * @see #options(String)
+	 */
 	@Test
 	public void run() throws Exception {
 
 		String includes = includes();
 
-		if(!includes.contains(org.springframework.util.ClassUtils.getShortName(getClass()))) {
+		if (!includes.contains(org.springframework.util.ClassUtils.getShortName(getClass()))) {
 			return;
 		}
 
 		new Runner(options(includes).build()).run();
 	}
 
+	/**
+	 * Get the regex for all benchmarks to be included in the run. By default every benchmark within classes matching the
+	 * current ones short name. <br />
+	 * The {@literal benchmark} command line argument allows overriding the defaults using {@code #} as class / method
+	 * name separator.
+	 *
+	 * @return never {@literal null}.
+	 * @see org.springframework.util.ClassUtils#getShortName(Class)
+	 */
+	protected String includes() {
+
+		String tests = environment.getProperty("benchmark", String.class);
+
+		if (!StringUtils.hasText(tests)) {
+			return ".*" + org.springframework.util.ClassUtils.getShortName(getClass()) + ".*";
+		}
+
+		if (!tests.contains("#")) {
+			return ".*" + tests + ".*";
+		}
+
+		String[] args = tests.split("#");
+		return ".*" + args[0] + "." + args[1];
+	}
+
+	/**
+	 * Collect all options for the {@link Runner}.
+	 *
+	 * @param includes regex for matching benchmarks to be included in the run.
+	 * @return never {@literal null}.
+	 * @throws Exception
+	 */
 	protected ChainedOptionsBuilder options(String includes) throws Exception {
 
 		ChainedOptionsBuilder optionsBuilder = new OptionsBuilder().include(includes).jvmArgs(jvmArgs());
+
 		optionsBuilder = warmup(optionsBuilder);
 		optionsBuilder = measure(optionsBuilder);
 		optionsBuilder = forks(optionsBuilder);
@@ -142,6 +182,37 @@ public class AbstractMicrobenchmark {
 		return environment.getProperty("warmupTime", Long.class, -1L);
 	}
 
+	/**
+	 * {@code project.version_yyyy-MM-dd_ClassName.json} eg.
+	 * {@literal 1.11.0.BUILD-SNAPSHOT_2017-03-07_MappingMongoConverterBenchmark.json}
+	 *
+	 * @return
+	 */
+	protected String reportFilename() {
+
+		StringBuilder sb = new StringBuilder();
+
+		if (environment.containsProperty("project.version")) {
+
+			sb.append(environment.getProperty("project.version"));
+			sb.append("_");
+		}
+
+		sb.append(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		sb.append("_");
+		sb.append(org.springframework.util.ClassUtils.getShortName(getClass()));
+		sb.append(".json");
+		return sb.toString();
+	}
+
+	/**
+	 * Apply measurement options to {@link ChainedOptionsBuilder}.
+	 *
+	 * @param optionsBuilder must not be {@literal null}.
+	 * @return {@link ChainedOptionsBuilder} with options applied.
+	 * @see #getMeasurementIterations()
+	 * @see #getMeasurementTime()
+	 */
 	private ChainedOptionsBuilder measure(ChainedOptionsBuilder optionsBuilder) {
 
 		int measurementIterations = getMeasurementIterations();
@@ -154,9 +225,18 @@ public class AbstractMicrobenchmark {
 		if (measurementTime > 0) {
 			optionsBuilder = optionsBuilder.measurementTime(TimeValue.seconds(measurementTime));
 		}
+
 		return optionsBuilder;
 	}
 
+	/**
+	 * Apply warmup options to {@link ChainedOptionsBuilder}.
+	 *
+	 * @param optionsBuilder must not be {@literal null}.
+	 * @return {@link ChainedOptionsBuilder} with options applied.
+	 * @see #getWarmupIterations()
+	 * @see #getWarmupTime()
+	 */
 	private ChainedOptionsBuilder warmup(ChainedOptionsBuilder optionsBuilder) {
 
 		int warmupIterations = getWarmupIterations();
@@ -169,12 +249,21 @@ public class AbstractMicrobenchmark {
 		if (warmupTime > 0) {
 			optionsBuilder = optionsBuilder.warmupTime(TimeValue.seconds(warmupTime));
 		}
+
 		return optionsBuilder;
 	}
 
+	/**
+	 * Apply forks option to {@link ChainedOptionsBuilder}.
+	 *
+	 * @param optionsBuilder must not be {@literal null}.
+	 * @return {@link ChainedOptionsBuilder} with options applied.
+	 * @see #getForksCount()
+	 */
 	private ChainedOptionsBuilder forks(ChainedOptionsBuilder optionsBuilder) {
 
 		int forks = getForksCount();
+
 		if (forks <= 0) {
 			return optionsBuilder;
 		}
@@ -182,9 +271,18 @@ public class AbstractMicrobenchmark {
 		return optionsBuilder.forks(forks);
 	}
 
+	/**
+	 * Apply report option to {@link ChainedOptionsBuilder}.
+	 *
+	 * @param optionsBuilder must not be {@literal null}.
+	 * @return {@link ChainedOptionsBuilder} with options applied.
+	 * @throws IOException if report file cannot be created.
+	 * @see #getReportDirectory()
+	 */
 	private ChainedOptionsBuilder report(ChainedOptionsBuilder optionsBuilder) throws IOException {
 
 		String reportDir = getReportDirectory();
+
 		if (!StringUtils.hasText(reportDir)) {
 			return optionsBuilder;
 		}
@@ -195,6 +293,7 @@ public class AbstractMicrobenchmark {
 		if (file.exists()) {
 			file.delete();
 		} else {
+
 			file.getParentFile().mkdirs();
 			file.createNewFile();
 		}
@@ -203,41 +302,5 @@ public class AbstractMicrobenchmark {
 		optionsBuilder.result(reportFilePath);
 
 		return optionsBuilder;
-	}
-
-	private String includes() {
-
-		String tests = environment.getProperty("benchmark", String.class);
-		if (!StringUtils.hasText(tests)) {
-			return ".*" + org.springframework.util.ClassUtils.getShortName(getClass()) + ".*";
-		}
-
-		if (!tests.contains("#")) {
-			return ".*" + tests + ".*";
-		}
-
-		String[] args = tests.split("#");
-		return ".*" + args[0] + "." + args[1];
-	}
-
-	/**
-	 * {@code project.version_yyyy-MM-dd_ClassName.json} eg.
-	 * {@literal 1.11.0.BUILD-SNAPSHOT_2017-03-07_MappingMongoConverterBenchmark.json}
-	 *
-	 * @return
-	 */
-	private String reportFilename() {
-
-		StringBuilder sb = new StringBuilder();
-
-		if (environment.containsProperty("project.version")) {
-			sb.append(environment.getProperty("project.version"));
-			sb.append("_");
-		}
-		sb.append(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-		sb.append("_");
-		sb.append(org.springframework.util.ClassUtils.getShortName(getClass()));
-		sb.append(".json");
-		return sb.toString();
 	}
 }

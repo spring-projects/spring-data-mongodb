@@ -54,14 +54,16 @@ import com.mongodb.ServerAddress;
 @State(Scope.Benchmark)
 public class MappingMongoConverterBenchmark extends AbstractMicrobenchmark {
 
+	private static final String DB_NAME = "mapping-mongo-converter-benchmark";
+
 	private MongoClient client;
 	private MongoMappingContext mappingContext;
 	private MappingMongoConverter converter;
-	private Document plainSource, sourceWithAddress;
-	private Customer customer;
+	private Document documentWith2Properties, documentWith2PropertiesAnd1Nested;
+	private Customer objectWith2PropertiesAnd1Nested;
 
-	private Document complexSource;
-	private SlightlyMoreComplexObject complexObject;
+	private Document documentWithFlatAndComplexPropertiesPlusListAndMap;
+	private SlightlyMoreComplexObject objectWithFlatAndComplexPropertiesPlusListAndMap;
 
 	@Setup
 	public void setUp() throws Exception {
@@ -72,75 +74,84 @@ public class MappingMongoConverterBenchmark extends AbstractMicrobenchmark {
 		this.mappingContext.setInitialEntitySet(Collections.singleton(Customer.class));
 		this.mappingContext.afterPropertiesSet();
 
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(new SimpleMongoDbFactory(client, "benchmark"));
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(new SimpleMongoDbFactory(client, DB_NAME));
 
 		this.converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		this.converter.setCustomConversions(new MongoCustomConversions(Collections.emptyList()));
 		this.converter.afterPropertiesSet();
 
-		this.plainSource = new Document("firstname", "Dave").append("lastname", "Matthews");
+		// just a flat document
+		this.documentWith2Properties = new Document("firstname", "Dave").append("lastname", "Matthews");
 
+		// document with a nested one
 		Document address = new Document("zipCode", "ABCDE").append("city", "Some Place");
-
-		this.sourceWithAddress = new Document("firstname", "Dave").//
+		this.documentWith2PropertiesAnd1Nested = new Document("firstname", "Dave").//
 				append("lastname", "Matthews").//
 				append("address", address);
 
-		this.customer = new Customer("Dave", "Matthews", new Address("zipCode", "City"));
+		// object equivalent of documentWith2PropertiesAnd1Nested
+		this.objectWith2PropertiesAnd1Nested = new Customer("Dave", "Matthews", new Address("zipCode", "City"));
 
-		complexObject = new SlightlyMoreComplexObject();
-		complexObject.id = UUID.randomUUID().toString();
-		complexObject.addressList = Arrays.asList(new Address("zip-1", "city-1"), new Address("zip-2", "city-2"));
-		complexObject.customer = customer;
-		complexObject.customerMap = new LinkedHashMap<>();
-		complexObject.customerMap.put("dave", customer);
-		complexObject.customerMap.put("deborah", new Customer("Deborah Anne", "Dyer", new Address("?", "london")));
-		complexObject.customerMap.put("eddie", new Customer("Eddie", "Vedder", new Address("??", "Seattle")));
-		complexObject.intOne = Integer.MIN_VALUE;
-		complexObject.intTwo = Integer.MAX_VALUE;
-		complexObject.location = new Point(-33.865143, 151.209900);
-		complexObject.renamedField = "supercalifragilisticexpialidocious";
-		complexObject.stringOne = "¯\\_(ツ)_/¯";
-		complexObject.stringTwo = " (╯°□°）╯︵ ┻━┻";
+		// a bit more challenging object with list & map conversion.
+		objectWithFlatAndComplexPropertiesPlusListAndMap = new SlightlyMoreComplexObject();
+		objectWithFlatAndComplexPropertiesPlusListAndMap.id = UUID.randomUUID().toString();
+		objectWithFlatAndComplexPropertiesPlusListAndMap.addressList = Arrays.asList(new Address("zip-1", "city-1"),
+				new Address("zip-2", "city-2"));
+		objectWithFlatAndComplexPropertiesPlusListAndMap.customer = objectWith2PropertiesAnd1Nested;
+		objectWithFlatAndComplexPropertiesPlusListAndMap.customerMap = new LinkedHashMap<>();
+		objectWithFlatAndComplexPropertiesPlusListAndMap.customerMap.put("dave", objectWith2PropertiesAnd1Nested);
+		objectWithFlatAndComplexPropertiesPlusListAndMap.customerMap.put("deborah",
+				new Customer("Deborah Anne", "Dyer", new Address("?", "london")));
+		objectWithFlatAndComplexPropertiesPlusListAndMap.customerMap.put("eddie",
+				new Customer("Eddie", "Vedder", new Address("??", "Seattle")));
+		objectWithFlatAndComplexPropertiesPlusListAndMap.intOne = Integer.MIN_VALUE;
+		objectWithFlatAndComplexPropertiesPlusListAndMap.intTwo = Integer.MAX_VALUE;
+		objectWithFlatAndComplexPropertiesPlusListAndMap.location = new Point(-33.865143, 151.209900);
+		objectWithFlatAndComplexPropertiesPlusListAndMap.renamedField = "supercalifragilisticexpialidocious";
+		objectWithFlatAndComplexPropertiesPlusListAndMap.stringOne = "¯\\_(ツ)_/¯";
+		objectWithFlatAndComplexPropertiesPlusListAndMap.stringTwo = " (╯°□°）╯︵ ┻━┻";
 
-		complexSource = Document.parse(
-				"{ \"_id\" : \"517f6aee-e9e0-44f0-88ed-f3694a019f27\", \"intOne\" : -2147483648, \"intTwo\" : 2147483647, \"stringOne\" : \"¯\\\\_(ツ)_/¯\", \"stringTwo\" : \" (╯°□°）╯︵ ┻━┻\", \"explicit-field-name\" : \"supercalifragilisticexpialidocious\", \"location\" : { \"x\" : -33.865143, \"y\" : 151.2099 }, \"customer\" : { \"firstname\" : \"Dave\", \"lastname\" : \"Matthews\", \"address\" : { \"zipCode\" : \"zipCode\", \"city\" : \"City\" } }, \"addressList\" : [{ \"zipCode\" : \"zip-1\", \"city\" : \"city-1\" }, { \"zipCode\" : \"zip-2\", \"city\" : \"city-2\" }], \"customerMap\" : { \"dave\" : { \"firstname\" : \"Dave\", \"lastname\" : \"Matthews\", \"address\" : { \"zipCode\" : \"zipCode\", \"city\" : \"City\" } }, \"deborah\" : { \"firstname\" : \"Deborah Anne\", \"lastname\" : \"Dyer\", \"address\" : { \"zipCode\" : \"?\", \"city\" : \"london\" } }, \"eddie\" : { \"firstname\" : \"Eddie\", \"lastname\" : \"Vedder\", \"address\" : { \"zipCode\" : \"??\", \"city\" : \"Seattle\" } } }, \"_class\" : \"spring.data.mongodb.core.convert.MappingMongoConverterBenchmark$SlightlyMoreComplexObject\" }");
+		// JSON equivalent of objectWithFlatAndComplexPropertiesPlusListAndMap
+		documentWithFlatAndComplexPropertiesPlusListAndMap = Document.parse(
+				"{ \"_id\" : \"517f6aee-e9e0-44f0-88ed-f3694a019f27\", \"intOne\" : -2147483648, \"intTwo\" : 2147483647, \"stringOne\" : \"¯\\\\_(ツ)_/¯\", \"stringTwo\" : \" (╯°□°）╯︵ ┻━┻\", \"explicit-field-name\" : \"supercalifragilisticexpialidocious\", \"location\" : { \"x\" : -33.865143, \"y\" : 151.2099 }, \"objectWith2PropertiesAnd1Nested\" : { \"firstname\" : \"Dave\", \"lastname\" : \"Matthews\", \"address\" : { \"zipCode\" : \"zipCode\", \"city\" : \"City\" } }, \"addressList\" : [{ \"zipCode\" : \"zip-1\", \"city\" : \"city-1\" }, { \"zipCode\" : \"zip-2\", \"city\" : \"city-2\" }], \"customerMap\" : { \"dave\" : { \"firstname\" : \"Dave\", \"lastname\" : \"Matthews\", \"address\" : { \"zipCode\" : \"zipCode\", \"city\" : \"City\" } }, \"deborah\" : { \"firstname\" : \"Deborah Anne\", \"lastname\" : \"Dyer\", \"address\" : { \"zipCode\" : \"?\", \"city\" : \"london\" } }, \"eddie\" : { \"firstname\" : \"Eddie\", \"lastname\" : \"Vedder\", \"address\" : { \"zipCode\" : \"??\", \"city\" : \"Seattle\" } } }, \"_class\" : \"spring.data.mongodb.core.convert.MappingMongoConverterBenchmark$SlightlyMoreComplexObject\" }");
 
 	}
 
 	@TearDown
 	public void tearDown() {
+
+		client.dropDatabase(DB_NAME);
 		client.close();
 	}
 
-	@Benchmark
-	public Customer readObject() {
-		return converter.read(Customer.class, plainSource);
+	@Benchmark // DATAMONGO-1720
+	public Customer readObjectWith2Properties() {
+		return converter.read(Customer.class, documentWith2Properties);
 	}
 
-	@Benchmark
-	public Customer readObjectWithNested() {
-		return converter.read(Customer.class, sourceWithAddress);
+	@Benchmark // DATAMONGO-1720
+	public Customer readObjectWith2tPropertiesAnd1NestedObject() {
+		return converter.read(Customer.class, documentWith2PropertiesAnd1Nested);
 	}
 
-	@Benchmark
-	public Document writeObject() {
+	@Benchmark // DATAMONGO-1720
+	public Document writeObjectWith2PropertiesAnd1NestedObject() {
 
 		Document sink = new Document();
-		converter.write(customer, sink);
+		converter.write(objectWith2PropertiesAnd1Nested, sink);
 		return sink;
 	}
 
-	@Benchmark
-	public Object complexRead() {
-		return converter.read(SlightlyMoreComplexObject.class, complexSource);
+	@Benchmark // DATAMONGO-1720
+	public Object readObjectWithListAndMapsOfComplexType() {
+		return converter.read(SlightlyMoreComplexObject.class, documentWithFlatAndComplexPropertiesPlusListAndMap);
 	}
 
-	@Benchmark
-	public Object complexWrite() {
+	@Benchmark // DATAMONGO-1720
+	public Object writeObjectWithListAndMapsOfComplexType() {
 
 		Document sink = new Document();
-		converter.write(complexObject, sink);
+		converter.write(objectWithFlatAndComplexPropertiesPlusListAndMap, sink);
 		return sink;
 	}
 
