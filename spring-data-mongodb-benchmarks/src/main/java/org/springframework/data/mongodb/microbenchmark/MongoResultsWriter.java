@@ -52,6 +52,9 @@ class MongoResultsWriter implements ResultsWriter {
 		StandardEnvironment env = new StandardEnvironment();
 
 		String projectVersion = env.getProperty("project.version", "unknown");
+		String gitBranch = env.getProperty("git.branch", "unknown");
+		String gitDirty = env.getProperty("git.dirty", "no");
+		String gitCommitId = env.getProperty("git.commit.id", "unknown");
 
 		MongoClientURI uri = new MongoClientURI(this.uri);
 		MongoClient client = new MongoClient(uri);
@@ -65,6 +68,9 @@ class MongoResultsWriter implements ResultsWriter {
 
 			Document sink = new Document();
 			sink.append("_version", projectVersion);
+			sink.append("_branch", gitBranch);
+			sink.append("_commit", gitCommitId);
+			sink.append("_dirty", gitDirty);
 			sink.append("_method", extractBenchmarkName(dbo.get("benchmark").toString()));
 			sink.append("_date", now);
 			sink.append("_snapshot", projectVersion.toLowerCase().contains("snapshot"));
@@ -75,7 +81,6 @@ class MongoResultsWriter implements ResultsWriter {
 		}
 
 		client.close();
-
 	}
 
 	/**
@@ -113,13 +118,13 @@ class MongoResultsWriter implements ResultsWriter {
 		return sanitized;
 	}
 
-	private String extractClass(String source) {
+	private static String extractClass(String source) {
 
 		String tmp = source.substring(0, source.lastIndexOf('.'));
 		return tmp.substring(tmp.lastIndexOf(".") + 1);
 	}
 
-	private String extractBenchmarkName(String source) {
+	private static String extractBenchmarkName(String source) {
 		return source.substring(source.lastIndexOf(".") + 1);
 	}
 

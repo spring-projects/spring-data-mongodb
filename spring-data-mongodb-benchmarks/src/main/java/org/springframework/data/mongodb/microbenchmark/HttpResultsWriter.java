@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.microbenchmark;
 
+import lombok.SneakyThrows;
+
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +26,7 @@ import java.time.Duration;
 import java.util.Collection;
 
 import org.openjdk.jmh.results.RunResult;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -39,24 +43,39 @@ class HttpResultsWriter implements ResultsWriter {
 	}
 
 	@Override
+	@SneakyThrows
 	public void write(Collection<RunResult> results) {
 
 		if (CollectionUtils.isEmpty(results)) {
 			return;
 		}
 
-		try {
+		StandardEnvironment env = new StandardEnvironment();
 
-			URLConnection connection = new URL(url).openConnection();
-			connection.setConnectTimeout((int) Duration.ofSeconds(1).toMillis());
-			connection.setDoOutput(true);
-			connection.setRequestProperty("Content-Type", "application/json");
+		String projectVersion = env.getProperty("project.version", "unknown");
+		String gitBranch = env.getProperty("git.branch", "unknown");
+		String gitDirty = env.getProperty("git.dirty", "no");
+		String gitCommitId = env.getProperty("git.commit.id", "unknown");
 
-			try (OutputStream output = connection.getOutputStream()) {
-				output.write(ResultsWriter.jsonifyResults(results).getBytes(StandardCharsets.UTF_8));
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+		HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+		connection.setConnectTimeout((int) Duration.ofSeconds(1).toMillis());
+		connection.setReadTimeout((int) Duration.ofSeconds(1).toMillis());
+		connection.setDoOutput(true);
+		connection.setRequestMethod("POST");
+
+		connection.setRequestProperty("Content-Type", "application/json");
+		connection.addRequestProperty("X-Project-Version", projectVersion);
+		connection.addRequestProperty("X-Git-Branch", gitBranch);
+		connection.addRequestProperty("X-Git-Dirty", gitDirty);
+		connection.addRequestProperty("X-Git-Commit-Id", gitCommitId);
+
+		try (OutputStream output = connection.getOutputStream()) {
+			output.write(ResultsWriter.jsonifyResults(results).getBytes(StandardCharsets.UTF_8));
+		}
+
+		if (connection.getResponseCode() >= 400) {
+			throw new IllegalStateException(
+					String.format("Status %d %s", connection.getResponseCode(), connection.getResponseMessage()));
 		}
 	}
 }

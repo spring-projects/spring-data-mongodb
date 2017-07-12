@@ -1,91 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-mongodb-parent</artifactId>
-        <version>2.0.0.BUILD-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+	<parent>
+		<groupId>org.springframework.data</groupId>
+		<artifactId>spring-data-mongodb-parent</artifactId>
+		<version>2.0.0.BUILD-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
 
-    <artifactId>spring-data-mongodb-benchmarks</artifactId>
-    <packaging>jar</packaging>
+	<artifactId>spring-data-mongodb-benchmarks</artifactId>
+	<packaging>jar</packaging>
 
-    <name>Spring Data MongoDB - Microbenchmarks</name>
+	<name>Spring Data MongoDB - Microbenchmarks</name>
 
-    <properties>
-        <skipTests>true</skipTests>  <!-- Skip tests by default; run only if -DskipTests=false is specified or benchmarks profile is activated  -->
-        <bundlor.enabled>false</bundlor.enabled>
-    </properties>
+	<properties>
+		<!-- Skip tests by default; run only if -DskipTests=false is specified or benchmarks profile is activated  -->
+		<skipTests>true</skipTests>
+	</properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>spring-data-mongodb</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-core</artifactId>
-            <version>${jmh.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-generator-annprocess</artifactId>
-            <version>${jmh.version}</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
+	<dependencies>
 
-    <profiles>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>spring-data-mongodb</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
-        <profile>
-            <id>benchmarks</id>
-            <properties>
-                <skipTests>false</skipTests>
-            </properties>
-        </profile>
-    </profiles>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit}</version>
+			<scope>compile</scope>
+		</dependency>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-jar</id>
-                        <phase>never</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <testSourceDirectory>${project.build.sourceDirectory}</testSourceDirectory>
-                    <testClassesDirectory>${project.build.outputDirectory}</testClassesDirectory>
-                    <excludes>
-                        <exclude>**/AbstractMicrobenchmark.java</exclude>
-                        <exclude>**/*$*.class</exclude>
-                        <exclude>**/generated/*.class</exclude>
-                    </excludes>
-                    <includes>
-                        <include>**/*Benchmark*</include>
-                    </includes>
-                    <systemPropertyVariables>
-                        <benchmarkReportDir>${project.build.directory}/reports/performance</benchmarkReportDir>
-                        <project.version>${project.version}</project.version>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+		<dependency>
+			<groupId>org.openjdk.jmh</groupId>
+			<artifactId>jmh-core</artifactId>
+			<version>${jmh.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openjdk.jmh</groupId>
+			<artifactId>jmh-generator-annprocess</artifactId>
+			<version>${jmh.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+	</dependencies>
+
+	<profiles>
+
+		<profile>
+			<id>benchmarks</id>
+			<properties>
+				<skipTests>false</skipTests>
+			</properties>
+		</profile>
+	</profiles>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>pl.project13.maven</groupId>
+				<artifactId>git-commit-id-plugin</artifactId>
+				<version>2.2.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>revision</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>default-jar</id>
+						<phase>never</phase>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<testSourceDirectory>${project.build.sourceDirectory}</testSourceDirectory>
+					<testClassesDirectory>${project.build.outputDirectory}</testClassesDirectory>
+					<excludes>
+						<exclude>**/AbstractMicrobenchmark.java</exclude>
+						<exclude>**/*$*.class</exclude>
+						<exclude>**/generated/*.class</exclude>
+					</excludes>
+					<includes>
+						<include>**/*Benchmark*</include>
+					</includes>
+					<systemPropertyVariables>
+						<benchmarkReportDir>${project.build.directory}/reports/performance</benchmarkReportDir>
+						<project.version>${project.version}</project.version>
+						<git.dirty>${git.dirty}</git.dirty>
+						<git.commit.id>${git.commit.id}</git.commit.id>
+						<git.branch>${git.branch}</git.branch>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
