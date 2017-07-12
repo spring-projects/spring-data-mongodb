@@ -820,15 +820,15 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void appliesFieldsToClosedDtoProjectionWhenQueryDoesNotDefineFields() {
+	public void doesNotApplyFieldsToDtoProjection() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class, null);
 
-		verify(findIterable).projection(eq(new Document("firstname", 1)));
+		verify(findIterable, never()).projection(any());
 	}
 
 	@Test // DATAMONGO-1733
-	public void doesNotApplyFieldsToClosedDtoProjectionWhenQueryDefinesFields() {
+	public void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
 		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class, null);
 

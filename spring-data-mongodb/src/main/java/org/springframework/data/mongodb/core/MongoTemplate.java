@@ -68,7 +68,6 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
@@ -2325,49 +2324,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	private Document getMappedFieldsObject(Document fields, MongoPersistentEntity<?> entity, Class<?> targetType) {
-
-		Document mappedFields = queryMapper.getMappedFields(fields, entity);
-		return addFieldsForProjection(mappedFields, entity.getType(), targetType);
+		return queryMapper.getMappedFields(addFieldsForProjection(fields, entity.getType(), targetType), entity);
 	}
 
 	/**
-	 * For cases where {@code mappedFields} is {@literal null} or {@literal empty} add fields required for creating the
-	 * projection (target) type if the {@code targetType} is a {@literal closed projection}.
+	 * For cases where {@code fields} is {@literal null} or {@literal empty} add fields required for creating the
+	 * projection (target) type if the {@code targetType} is a {@literal closed interface projection}.
 	 *
-	 * @param mappedFields can be {@literal null}.
+	 * @param fields can be {@literal null}.
 	 * @param domainType must not be {@literal null}.
 	 * @param targetType must not be {@literal null}.
 	 * @return {@link Document} with fields to be included.
 	 */
-	private Document addFieldsForProjection(Document mappedFields, Class<?> domainType, Class<?> targetType) {
+	private Document addFieldsForProjection(Document fields, Class<?> domainType, Class<?> targetType) {
 
-		if ((mappedFields != null && !mappedFields.isEmpty()) || ClassUtils.isAssignable(domainType, targetType)) {
-			return mappedFields;
-		}
-
-		Document fields = new Document();
-
-		if (!targetType.isInterface()) {
-
-			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetType);
-
-			for (MongoPersistentProperty property : entity) {
-				if (!property.isTransient()) {
-					fields.append(property.getFieldName(), 1);
-				}
-			}
-
+		if ((fields != null && !fields.isEmpty()) || !targetType.isInterface()
+				|| ClassUtils.isAssignable(domainType, targetType)) {
 			return fields;
 		}
 
-		ProjectionInformation pi = PROJECTION_FACTORY.getProjectionInformation(targetType);
-		if (pi.isClosed()) {
+		ProjectionInformation projectionInformation = PROJECTION_FACTORY.getProjectionInformation(targetType);
+		if (projectionInformation.isClosed()) {
 
-			for (PropertyDescriptor pd : pi.getInputProperties()) {
-
-				MongoPersistentProperty pp = ((MongoMappingContext) mappingContext).createPersistentProperty(Property.of(pd),
-						((MongoMappingContext) mappingContext).getPersistentEntity(targetType), MongoSimpleTypes.HOLDER);
-				fields.append(pp.getFieldName(), 1);
+			for (PropertyDescriptor descriptor : projectionInformation.getInputProperties()) {
+				fields.append(descriptor.getName(), 1);
 			}
 		}
 
