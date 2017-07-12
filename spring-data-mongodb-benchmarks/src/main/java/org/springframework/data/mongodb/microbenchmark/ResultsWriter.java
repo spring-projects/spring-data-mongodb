@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.microbenchmark;
 
+import lombok.SneakyThrows;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
@@ -57,10 +59,11 @@ interface ResultsWriter {
 		 * @return json string representation of results.
 		 * @see org.openjdk.jmh.results.format.JSONResultFormat
 		 */
+		@SneakyThrows
 		static String jsonifyResults(Collection<RunResult> results) {
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ResultFormatFactory.getInstance(ResultFormatType.JSON, new PrintStream(baos)).writeOut(results);
+			ResultFormatFactory.getInstance(ResultFormatType.JSON, new PrintStream(baos, true, "UTF-8")).writeOut(results);
 			return new String(baos.toByteArray(), Charset.forName("UTF-8"));
 		}
 	}

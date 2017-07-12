@@ -127,7 +127,7 @@ public class MappingMongoConverterBenchmark extends AbstractMicrobenchmark {
 	}
 
 	@Benchmark // DATAMONGO-1720
-	public Customer readObjectWith2tPropertiesAnd1NestedObject() {
+	public Customer readObjectWith2PropertiesAnd1NestedObject() {
 		return converter.read(Customer.class, documentWith2PropertiesAnd1Nested);
 	}
 
