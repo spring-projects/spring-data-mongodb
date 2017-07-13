@@ -18,32 +18,26 @@ package org.springframework.data.mongodb;
 import static de.schauderhaft.degraph.check.JCheck.*;
 import static org.junit.Assert.*;
 
-import org.junit.Test;
-import org.springframework.data.mongodb.core.GeoJsonConfiguration;
-import org.springframework.data.mongodb.core.query.MongoRegexCreator;
-
 import de.schauderhaft.degraph.configuration.NamedPattern;
+
+import org.junit.Test;
 
 /**
  * Tests package dependency constraints.
  *
  * @author Jens Schauder
+ * @author Oliver Gierke
  */
 public class DependencyTests {
 
 	@Test
 	public void noInternalPackageCycles() {
 
-		assertThat(
-				classpath() //
-						.noJars() //
-						.including("org.springframework.data.mongodb.**") //
-						// ignoring deprecated class that will be removed soon
-						.excluding(org.springframework.data.mongodb.core.IndexOperations.class.getCanonicalName())
-						.excluding(org.springframework.data.mongodb.core.IndexOperationsProvider.class.getCanonicalName())
-						.excluding(GeoJsonConfiguration.class.getCanonicalName())
-						.filterClasspath("*target/classes") //
-						.printOnFailure("degraph.graphml"), //
+		assertThat(classpath() //
+				.noJars() //
+				.including("org.springframework.data.mongodb.**") //
+				.filterClasspath("*target/classes") //
+				.printOnFailure("degraph.graphml"), //
 				violationFree() //
 		);
 	}
@@ -51,24 +45,16 @@ public class DependencyTests {
 	@Test
 	public void onlyConfigMayUseRepository() {
 
-		assertThat(
-				classpath() //
-						.including("org.springframework.data.**") //
-						// ignoring the MongoRegexCreator for now, since it still
-						// needs the reference to Part.Type to maintain the old API
-						.excluding(MongoRegexCreator.class.getCanonicalName() + "*")
-						// ignoring deprecated class that will be removed soon
-						.excluding(org.springframework.data.mongodb.core.IndexOperations.class.getCanonicalName())
-						.excluding(org.springframework.data.mongodb.core.IndexOperationsProvider.class.getCanonicalName())
-						.excluding(GeoJsonConfiguration.class.getCanonicalName())
-						.filterClasspath("*target/classes") //
-						.printOnFailure("onlyConfigMayUseRepository.graphml") //
-						.withSlicing("slices", //
-								"**.(config).**", //
-								new NamedPattern("**.cdi.**", "config"), //
-								"**.(repository).**", //
-								new NamedPattern("**", "other"))
-						.allow("config", "repository", "other"), //
+		assertThat(classpath() //
+				.including("org.springframework.data.**") //
+				.filterClasspath("*target/classes") //
+				.printOnFailure("onlyConfigMayUseRepository.graphml") //
+				.withSlicing("slices", //
+						"**.(config).**", //
+						new NamedPattern("**.cdi.**", "config"), //
+						"**.(repository).**", //
+						new NamedPattern("**", "other"))
+				.allow("config", "repository", "other"), //
 				violationFree() //
 		);
 	}
@@ -76,13 +62,12 @@ public class DependencyTests {
 	@Test
 	public void commonsInternaly() {
 
-		assertThat(
-				classpath() //
-						.noJars() //
-						.including("org.springframework.data.**") //
-						.excluding("org.springframework.data.mongodb.**") //
-						.filterClasspath("*target/classes") //
-						.printTo("commons.graphml"), //
+		assertThat(classpath() //
+				.noJars() //
+				.including("org.springframework.data.**") //
+				.excluding("org.springframework.data.mongodb.**") //
+				.filterClasspath("*target/classes") //
+				.printTo("commons.graphml"), //
 				violationFree() //
 		);
 	}

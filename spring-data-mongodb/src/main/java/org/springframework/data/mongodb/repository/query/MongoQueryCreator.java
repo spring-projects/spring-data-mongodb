@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
+import org.springframework.data.mongodb.core.query.MongoRegexCreator.MatchMode;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor.PotentiallyConvertingIterator;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
@@ -402,7 +403,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	private String toLikeRegex(String source, Part part) {
-		return MongoRegexCreator.INSTANCE.toRegularExpression(source, part.getType());
+		return MongoRegexCreator.INSTANCE.toRegularExpression(source, toMatchMode(part.getType()));
 	}
 
 	private boolean isSpherical(MongoPersistentProperty property) {
@@ -413,5 +414,28 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		}
 
 		return false;
+	}
+
+	private static MatchMode toMatchMode(Type type) {
+
+		switch (type) {
+			case NOT_CONTAINING:
+			case CONTAINING:
+				return MatchMode.CONTAINING;
+			case STARTING_WITH:
+				return MatchMode.STARTING_WITH;
+			case ENDING_WITH:
+				return MatchMode.ENDING_WITH;
+			case LIKE:
+			case NOT_LIKE:
+				return MatchMode.LIKE;
+			case REGEX:
+				return MatchMode.REGEX;
+			case NEGATING_SIMPLE_PROPERTY:
+			case SIMPLE_PROPERTY:
+				return MatchMode.EXACT;
+			default:
+				return MatchMode.DEFAULT;
+		}
 	}
 }

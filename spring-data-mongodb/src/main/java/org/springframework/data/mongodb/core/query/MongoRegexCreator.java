@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.regex.Pattern;
 
-import org.springframework.data.repository.query.parser.Part.Type;
-import org.springframework.data.util.StringMatcher;
-
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -30,21 +27,48 @@ public enum MongoRegexCreator {
 
 	INSTANCE;
 
-	private static final Pattern PUNCTATION_PATTERN = Pattern.compile("\\p{Punct}");
-
 	/**
-	 * Creates a regular expression String to be used with {@code $regex}.
-	 * 
-	 * @param source the plain String
-	 * @param type
-	 * @return {@literal source} when {@literal source} or {@literal type} is {@literal null}.
-	 * @deprecated use the {@link MongoRegexCreator#toRegularExpression(String, StringMatcher)} instead
+	 * Match modes for treatment of {@link String} values.
+	 *
+	 * @author Christoph Strobl
+	 * @author Jens Schauder
 	 */
-	@Deprecated
-	public String toRegularExpression(String source, Type type) {
+	public enum MatchMode {
 
-		return toRegularExpression(source, convert(type));
+		/**
+		 * Store specific default.
+		 */
+		DEFAULT,
+
+		/**
+		 * Matches the exact string
+		 */
+		EXACT,
+
+		/**
+		 * Matches string starting with pattern
+		 */
+		STARTING_WITH,
+
+		/**
+		 * Matches string ending with pattern
+		 */
+		ENDING_WITH,
+
+		/**
+		 * Matches string containing pattern
+		 */
+		CONTAINING,
+
+		/**
+		 * Treats strings as regular expression patterns
+		 */
+		REGEX,
+
+		LIKE;
 	}
+
+	private static final Pattern PUNCTATION_PATTERN = Pattern.compile("\\p{Punct}");
 
 	/**
 	 * Creates a regular expression String to be used with {@code $regex}.
@@ -53,7 +77,7 @@ public enum MongoRegexCreator {
 	 * @param matcherType the type of matching to perform
 	 * @return {@literal source} when {@literal source} or {@literal matcherType} is {@literal null}.
 	 */
-	public String toRegularExpression(String source, StringMatcher matcherType) {
+	public String toRegularExpression(String source, MatchMode matcherType) {
 
 		if (matcherType == null || source == null) {
 			return source;
@@ -62,30 +86,26 @@ public enum MongoRegexCreator {
 		String regex = prepareAndEscapeStringBeforeApplyingLikeRegex(source, matcherType);
 
 		switch (matcherType) {
-			case STARTING:
-				regex = "^" + regex;
-				break;
-			case ENDING:
-				regex = regex + "$";
-				break;
+			case STARTING_WITH:
+				return String.format("^%s", regex);
+			case ENDING_WITH:
+				return String.format("%s$", regex);
 			case CONTAINING:
-				regex = ".*" + regex + ".*";
-				break;
+				return String.format(".*%s.*", regex);
 			case EXACT:
-				regex = "^" + regex + "$";
+				return String.format("^%s$", regex);
 			default:
+				return regex;
 		}
-
-		return regex;
 	}
 
-	private String prepareAndEscapeStringBeforeApplyingLikeRegex(String source, StringMatcher matcherType) {
+	private String prepareAndEscapeStringBeforeApplyingLikeRegex(String source, MatchMode matcherType) {
 
-		if (StringMatcher.REGEX == matcherType) {
+		if (MatchMode.REGEX == matcherType) {
 			return source;
 		}
 
-		if (StringMatcher.LIKE != matcherType) {
+		if (MatchMode.LIKE != matcherType) {
 			return PUNCTATION_PATTERN.matcher(source).find() ? Pattern.quote(source) : source;
 		}
 
@@ -108,57 +128,13 @@ public enum MongoRegexCreator {
 		if (leadingWildcard) {
 			sb.append(".*");
 		}
+
 		sb.append(valueToUse);
+
 		if (trailingWildcard) {
 			sb.append(".*");
 		}
 
 		return sb.toString();
 	}
-
-	private StringMatcher convert(Type type) {
-
-		if (type == null)
-			return null;
-
-		switch (type) {
-
-			case NOT_LIKE:
-			case LIKE:
-				return StringMatcher.LIKE;
-			case STARTING_WITH:
-				return StringMatcher.STARTING;
-			case ENDING_WITH:
-				return StringMatcher.ENDING;
-			case NOT_CONTAINING:
-			case CONTAINING:
-				return StringMatcher.CONTAINING;
-			case REGEX:
-				return StringMatcher.REGEX;
-			case SIMPLE_PROPERTY:
-			case NEGATING_SIMPLE_PROPERTY:
-				return StringMatcher.EXACT;
-			case BETWEEN:
-			case IS_NOT_NULL:
-			case IS_NULL:
-			case LESS_THAN:
-			case LESS_THAN_EQUAL:
-			case GREATER_THAN:
-			case GREATER_THAN_EQUAL:
-			case BEFORE:
-			case AFTER:
-			case EXISTS:
-			case TRUE:
-			case FALSE:
-			case NOT_IN:
-			case IN:
-			case NEAR:
-			case WITHIN:
-			case IS_NOT_EMPTY:
-			case IS_EMPTY:
-				return StringMatcher.DEFAULT;
-		}
-		throw new IllegalStateException("Execution should never reach this position.");
-	}
-
 }
