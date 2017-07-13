@@ -18,12 +18,15 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -79,6 +82,15 @@ public class QueryMapper {
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoExampleMapper exampleMapper;
+
+	private HashMap<PP, PropertyPath> pathCache = new HashMap<>();
+
+	@EqualsAndHashCode
+	@AllArgsConstructor
+	static class PP {
+		String path;
+		TypeInformation<?> typeInformation;
+	}
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
@@ -187,9 +199,42 @@ public class QueryMapper {
 	 */
 	public Document getMappedFields(Document fieldsObject, MongoPersistentEntity<?> entity) {
 
-		Document mappedFields = fieldsObject != null ? getMappedObject(fieldsObject, entity) : new Document();
+//		Document mappedFields = fieldsObject != null ? getMappedObject(fieldsObject, entity) : new Document();
+		Document mappedFields = doGetMappedFields(fieldsObject, entity);
 		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
-		return mappedFields.keySet().isEmpty() ? null : mappedFields;
+		return mappedFields;
+	}
+
+	private Document doGetMappedFields(Document fieldsObject, MongoPersistentEntity<?> entity) {
+
+		if(fieldsObject == null || fieldsObject.isEmpty()) {
+			return new Document();
+		}
+
+		Document result = new Document();
+		for(Entry<String,Object> entry : fieldsObject.entrySet()) {
+//			result.put(entry.getKey(), entry.getValue());
+			try {
+
+				PP pp = new PP(entry.getKey(), entity.getTypeInformation());
+				PropertyPath path = pathCache.computeIfAbsent(pp, (it) -> {
+
+					return PropertyPath.from(entry.getKey().replaceAll("\\.\\d", ""), entity.getTypeInformation());
+				});
+
+
+				result.put(mappingContext.getPersistentPropertyPath(path).getLeafProperty().getFieldName(), entry.getValue());
+//			propertyPath.getLeafProperty().getFieldName()
+
+//			PersistentPropertyPath path = PersistentPropertyPath
+//			Field field = createPropertyField(entity, entry.getKey(), mappingContext);
+//				result.put(path.getLeafProperty().getFieldName(), entry.getValue());
+			} catch (Exception e) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+
+		return result;
 	}
 
 	public Document getMappedFields(Document fieldsObject, Optional<? extends MongoPersistentEntity<?>> entity) {

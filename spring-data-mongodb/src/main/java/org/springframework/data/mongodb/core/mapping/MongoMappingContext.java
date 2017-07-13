@@ -16,17 +16,22 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.Assert;
 
 /**
  * Default implementation of a {@link MappingContext} for MongoDB using {@link BasicMongoPersistentEntity} and
@@ -42,6 +47,7 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
 	private ApplicationContext context;
+	private final HashMap<PropertyPath, PersistentPropertyPath> pathsCache = new HashMap<>();
 
 	/**
 	 * Creates a new {@link MongoMappingContext}.
@@ -94,6 +100,11 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 		}
 
 		return entity;
+	}
+
+	@Override
+	public PersistentPropertyPath<MongoPersistentProperty> getPersistentPropertyPath(PropertyPath propertyPath) {
+		return pathsCache.computeIfAbsent(propertyPath, super::getPersistentPropertyPath);
 	}
 
 	/*
