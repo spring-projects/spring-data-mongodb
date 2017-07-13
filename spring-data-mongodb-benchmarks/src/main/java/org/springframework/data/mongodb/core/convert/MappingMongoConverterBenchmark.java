@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package spring.data.mongodb.core.convert;
+package org.springframework.data.mongodb.core.convert;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import spring.data.microbenchmark.AbstractMicrobenchmark;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,12 +37,9 @@ import org.openjdk.jmh.annotations.TearDown;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.microbenchmark.AbstractMicrobenchmark;
 
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
@@ -113,7 +109,7 @@ public class MappingMongoConverterBenchmark extends AbstractMicrobenchmark {
 
 		// JSON equivalent of objectWithFlatAndComplexPropertiesPlusListAndMap
 		documentWithFlatAndComplexPropertiesPlusListAndMap = Document.parse(
-				"{ \"_id\" : \"517f6aee-e9e0-44f0-88ed-f3694a019f27\", \"intOne\" : -2147483648, \"intTwo\" : 2147483647, \"stringOne\" : \"¯\\\\_(ツ)_/¯\", \"stringTwo\" : \" (╯°□°）╯︵ ┻━┻\", \"explicit-field-name\" : \"supercalifragilisticexpialidocious\", \"location\" : { \"x\" : -33.865143, \"y\" : 151.2099 }, \"objectWith2PropertiesAnd1Nested\" : { \"firstname\" : \"Dave\", \"lastname\" : \"Matthews\", \"address\" : { \"zipCode\" : \"zipCode\", \"city\" : \"City\" } }, \"addressList\" : [{ \"zipCode\" : \"zip-1\", \"city\" : \"city-1\" }, { \"zipCode\" : \"zip-2\", \"city\" : \"city-2\" }], \"customerMap\" : { \"dave\" : { \"firstname\" : \"Dave\", \"lastname\" : \"Matthews\", \"address\" : { \"zipCode\" : \"zipCode\", \"city\" : \"City\" } }, \"deborah\" : { \"firstname\" : \"Deborah Anne\", \"lastname\" : \"Dyer\", \"address\" : { \"zipCode\" : \"?\", \"city\" : \"london\" } }, \"eddie\" : { \"firstname\" : \"Eddie\", \"lastname\" : \"Vedder\", \"address\" : { \"zipCode\" : \"??\", \"city\" : \"Seattle\" } } }, \"_class\" : \"spring.data.mongodb.core.convert.MappingMongoConverterBenchmark$SlightlyMoreComplexObject\" }");
+				"{ \"_id\" : \"517f6aee-e9e0-44f0-88ed-f3694a019f27\", \"intOne\" : -2147483648, \"intTwo\" : 2147483647, \"stringOne\" : \"¯\\\\_(ツ)_/¯\", \"stringTwo\" : \" (╯°□°）╯︵ ┻━┻\", \"explicit-field-name\" : \"supercalifragilisticexpialidocious\", \"location\" : { \"x\" : -33.865143, \"y\" : 151.2099 }, \"objectWith2PropertiesAnd1Nested\" : { \"firstname\" : \"Dave\", \"lastname\" : \"Matthews\", \"address\" : { \"zipCode\" : \"zipCode\", \"city\" : \"City\" } }, \"addressList\" : [{ \"zipCode\" : \"zip-1\", \"city\" : \"city-1\" }, { \"zipCode\" : \"zip-2\", \"city\" : \"city-2\" }], \"customerMap\" : { \"dave\" : { \"firstname\" : \"Dave\", \"lastname\" : \"Matthews\", \"address\" : { \"zipCode\" : \"zipCode\", \"city\" : \"City\" } }, \"deborah\" : { \"firstname\" : \"Deborah Anne\", \"lastname\" : \"Dyer\", \"address\" : { \"zipCode\" : \"?\", \"city\" : \"london\" } }, \"eddie\" : { \"firstname\" : \"Eddie\", \"lastname\" : \"Vedder\", \"address\" : { \"zipCode\" : \"??\", \"city\" : \"Seattle\" } } }, \"_class\" : \"org.springframework.data.mongodb.core.convert.MappingMongoConverterBenchmark$SlightlyMoreComplexObject\" }");
 
 	}
 

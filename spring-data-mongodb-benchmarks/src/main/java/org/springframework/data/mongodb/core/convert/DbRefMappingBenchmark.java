@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package spring.data.mongodb.core.convert;
+package org.springframework.data.mongodb.core.convert;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
-import spring.data.microbenchmark.AbstractMicrobenchmark;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +33,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.microbenchmark.AbstractMicrobenchmark;
 
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
