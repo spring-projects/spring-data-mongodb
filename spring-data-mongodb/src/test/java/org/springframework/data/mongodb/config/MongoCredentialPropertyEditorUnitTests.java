@@ -237,8 +237,6 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText(USER_4_AUTH_STRING);
 
-		System.out.println("USER_4_AUTH_STRING: " + USER_4_AUTH_STRING);
-
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_4_CREDENTIALS));
 	}
 }
