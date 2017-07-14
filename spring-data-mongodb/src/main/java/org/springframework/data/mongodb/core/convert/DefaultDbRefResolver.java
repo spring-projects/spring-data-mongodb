@@ -316,6 +316,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 				return null;
 			}
 
+			ReflectionUtils.makeAccessible(method);
+
 			return method.invoke(target, args);
 		}
 
