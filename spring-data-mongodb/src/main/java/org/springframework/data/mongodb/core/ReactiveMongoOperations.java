@@ -55,7 +55,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  * @see Mono
  * @see <a href="http://projectreactor.io/docs/">Project Reactor</a>
  */
-public interface ReactiveMongoOperations {
+public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Returns the reactive operations that can be performed on indexes

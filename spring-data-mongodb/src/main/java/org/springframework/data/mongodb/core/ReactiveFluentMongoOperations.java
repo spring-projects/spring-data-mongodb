@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.reactivestreams.client.FindPublisher;
-
 /**
- * Simple callback interface to allow customization of a {@link FindPublisher}.
+ * Stripped down interface providing access to a fluent API that specifies a basic set of reactive MongoDB operations.
  *
- * @author Mark Paluch
+ * @since 2.0
  */
-interface FindPublisherPreparer {
-
-	/**
-	 * Prepare the given cursor (apply limits, skips and so on). Returns the prepared cursor.
-	 *
-	 * @param findPublisher must not be {@literal null}.
-	 */
-	<T> FindPublisher<T> prepare(FindPublisher<T> findPublisher);
-}
+public interface ReactiveFluentMongoOperations extends ReactiveFindOperation, ReactiveInsertOperation,
+		ReactiveUpdateOperation, ReactiveRemoveOperation, ReactiveAggregationOperation {}
