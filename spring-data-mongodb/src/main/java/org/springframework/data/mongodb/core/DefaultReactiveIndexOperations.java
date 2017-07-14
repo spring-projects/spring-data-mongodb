@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -85,7 +86,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveIndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
+	 * @see org.springframework.data.mongodb.core.index.ReactiveIndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
 	 */
 	public Mono<String> ensureIndex(final IndexDefinition indexDefinition) {
 
@@ -127,21 +128,21 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveIndexOperations#dropIndex(java.lang.String)
+	 * @see org.springframework.data.mongodb.core.index.ReactiveIndexOperations#dropIndex(java.lang.String)
 	 */
 	public Mono<Void> dropIndex(final String name) {
 		return mongoOperations.execute(collectionName, collection -> collection.dropIndex(name)).then();
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveIndexOperations#dropAllIndexes()
+	 * @see org.springframework.data.mongodb.core.index.ReactiveIndexOperations#dropAllIndexes()
 	 */
 	public Mono<Void> dropAllIndexes() {
 		return dropIndex("*");
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveIndexOperations#getIndexInfo()
+	 * @see org.springframework.data.mongodb.core.index.ReactiveIndexOperations#getIndexInfo()
 	 */
 	public Flux<IndexInfo> getIndexInfo() {
 

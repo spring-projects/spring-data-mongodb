@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package org.springframework.data.mongodb.repository.support;
 import java.io.Serializable;
 
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.IndexOperationsAdapter;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
+import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
@@ -29,7 +29,7 @@ import org.springframework.util.Assert;
 /**
  * {@link org.springframework.beans.factory.FactoryBean} to create
  * {@link org.springframework.data.mongodb.repository.ReactiveMongoRepository} instances.
- * 
+ *
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 2.0
@@ -54,7 +54,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 	/**
 	 * Configures the {@link ReactiveMongoOperations} to be used.
-	 * 
+	 *
 	 * @param operations the operations to set
 	 */
 	public void setReactiveMongoOperations(ReactiveMongoOperations operations) {
@@ -63,14 +63,14 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 	/**
 	 * Configures whether to automatically create indexes for the properties referenced in a query method.
-	 * 
+	 *
 	 * @param createIndexesForQueryMethods the createIndexesForQueryMethods to set
 	 */
 	public void setCreateIndexesForQueryMethods(boolean createIndexesForQueryMethods) {
 		this.createIndexesForQueryMethods = createIndexesForQueryMethods;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#setMappingContext(org.springframework.data.mapping.context.MappingContext)
 	 */
@@ -83,7 +83,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
 	 * #createRepositoryFactory()
@@ -103,7 +103,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 	/**
 	 * Creates and initializes a {@link RepositoryFactorySupport} instance.
-	 * 
+	 *
 	 * @param operations
 	 * @return
 	 */
@@ -113,7 +113,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
 	 * #afterPropertiesSet()

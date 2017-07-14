@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.reactivestreams.Subscription;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -228,8 +229,8 @@ public interface ReactiveMongoOperations {
 	 * <p/>
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
-	 * @param entityClass the parametrized type of the returned {@link Flux}.
 	 *
+	 * @param entityClass the parametrized type of the returned {@link Flux}.
 	 * @return the converted collection
 	 */
 	<T> Flux<T> findAll(Class<T> entityClass);
@@ -370,10 +371,10 @@ public interface ReactiveMongoOperations {
 	<T> Mono<T> findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Returns {@link Flux} of {@link GeoResult} for all entities matching the given {@link NearQuery}. Will consider entity mapping
-	 * information to determine the collection the query is ran against. Note, that MongoDB limits the number of results
-	 * by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect a particular number of
-	 * results.
+	 * Returns {@link Flux} of {@link GeoResult} for all entities matching the given {@link NearQuery}. Will consider
+	 * entity mapping information to determine the collection the query is ran against. Note, that MongoDB limits the
+	 * number of results by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect a
+	 * particular number of results.
 	 *
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
@@ -382,9 +383,9 @@ public interface ReactiveMongoOperations {
 	<T> Flux<GeoResult<T>> geoNear(NearQuery near, Class<T> entityClass);
 
 	/**
-	 * Returns {@link Flux} of {@link GeoResult} for all entities matching the given {@link NearQuery}. Note, that MongoDB limits the
-	 * number of results by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect a
-	 * particular number of results.
+	 * Returns {@link Flux} of {@link GeoResult} for all entities matching the given {@link NearQuery}. Note, that MongoDB
+	 * limits the number of results by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect
+	 * a particular number of results.
 	 *
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.

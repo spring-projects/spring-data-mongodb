@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
-
-import org.springframework.data.mongodb.core.index.IndexDefinition;
-import org.springframework.data.mongodb.core.index.IndexInfo;
+package org.springframework.data.mongodb.core.index;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
