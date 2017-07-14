@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import lombok.Value;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +31,8 @@ import org.springframework.util.StringUtils;
  * when resolving more nested objects. This allows to avoid re-resolving object instances that are logically equivalent
  * to already resolved ones.
  * <p>
- * An immutable ordered set of target objects for {@link Document} to {@link Object} conversions. Object paths can be
- * constructed by the {@link #toObjectPath(Object)} method and extended via {@link #push(Object)}.
+ * An immutable ordered set of target objects for {@link org.bson.Document} to {@link Object} conversions. Object paths
+ * can be extended via {@link #push(Object, MongoPersistentEntity, Object)}.
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -138,7 +140,7 @@ class ObjectPath {
 
 			if (collection.equals(item.getCollection()) && id.equals(item.getIdValue())
 					&& ClassUtils.isAssignable(type, object.getClass())) {
-				return (T) object;
+				return type.cast(object);
 			}
 		}
 
@@ -179,37 +181,13 @@ class ObjectPath {
 	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
+	 * @author Mark Paluch
 	 */
+	@Value
 	private static class ObjectPathItem {
 
-		private final Object object;
-		private final Object idValue;
-		private final String collection;
-
-		/**
-		 * Creates a new {@link ObjectPathItem}.
-		 *
-		 * @param object
-		 * @param idValue
-		 * @param collection
-		 */
-		ObjectPathItem(Object object, Object idValue, String collection) {
-
-			this.object = object;
-			this.idValue = idValue;
-			this.collection = collection;
-		}
-
-		Object getObject() {
-			return object;
-		}
-
-		Object getIdValue() {
-			return idValue;
-		}
-
-		String getCollection() {
-			return collection;
-		}
+		Object object;
+		Object idValue;
+		String collection;
 	}
 }
