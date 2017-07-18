@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -57,7 +57,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 
-import com.mongodb.WriteResult;
 import com.mongodb.client.result.DeleteResult;
 
 /**
@@ -77,7 +76,6 @@ public class AbstractMongoQueryUnitTests {
 	@Mock FindOperationWithQuery<?> withQueryMock;
 	@Mock BasicMongoPersistentEntity<?> persitentEntityMock;
 	@Mock MongoMappingContext mappingContextMock;
-	@Mock WriteResult writeResultMock;
 	@Mock DeleteResult deleteResultMock;
 
 	@Before
@@ -100,7 +98,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void testDeleteExecutionCallsRemoveCorreclty() {
+	public void testDeleteExecutionCallsRemoveCorrectly() {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
@@ -134,7 +132,7 @@ public class AbstractMongoQueryUnitTests {
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
-		assertThat(query.execute(new Object[] { "fake" }), is((Object) 100L));
+		assertThat(query.execute(new Object[] { "fake" }), is(100L));
 		verify(mongoOperationsMock, times(1)).remove(any(), eq(Person.class), eq("persons"));
 	}
 
@@ -268,7 +266,7 @@ public class AbstractMongoQueryUnitTests {
 
 		AbstractMongoQuery query = createQueryForMethod("findByLastname", String.class);
 
-		assertThat(query.execute(new Object[] { "lastname" }), is((Object) reference));
+		assertThat(query.execute(new Object[] { "lastname" }), is(reference));
 	}
 
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
@@ -282,16 +280,13 @@ public class AbstractMongoQueryUnitTests {
 
 			return new MongoQueryFake(queryMethod, mongoOperationsMock);
 
-		} catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException(e.getMessage(), e);
-		} catch (SecurityException e) {
+		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		}
 	}
 
 	private static class MongoQueryFake extends AbstractMongoQuery {
 
-		private boolean isCountQuery;
 		private boolean isDeleteQuery;
 
 		public MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
@@ -305,7 +300,7 @@ public class AbstractMongoQueryUnitTests {
 
 		@Override
 		protected boolean isCountQuery() {
-			return isCountQuery;
+			return false;
 		}
 
 		@Override

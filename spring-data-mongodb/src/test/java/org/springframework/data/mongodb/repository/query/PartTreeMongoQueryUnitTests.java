@@ -88,14 +88,13 @@ public class PartTreeMongoQueryUnitTests {
 		exception.expect(IllegalStateException.class);
 		exception.expectMessage("findByLastname");
 
-		deriveQueryFromMethod("findByLastname", new Object[] { "foo" });
+		deriveQueryFromMethod("findByLastname", "foo");
 	}
 
 	@Test // DATAMOGO-952
 	public void singleFieldJsonIncludeRestrictionShouldBeConsidered() {
 
-		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstname",
-				new Object[] { "foo" });
+		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstname", "foo");
 
 		assertThat(query.getFieldsObject(), is(new Document().append("firstname", 1)));
 	}
@@ -103,8 +102,8 @@ public class PartTreeMongoQueryUnitTests {
 	@Test // DATAMOGO-952
 	public void multiFieldJsonIncludeRestrictionShouldBeConsidered() {
 
-		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstnameAndLastname",
-				new Object[] { "foo", "bar" });
+		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstnameAndLastname", "foo",
+				"bar");
 
 		assertThat(query.getFieldsObject(), is(new Document().append("firstname", 1).append("lastname", 1)));
 	}
@@ -113,7 +112,7 @@ public class PartTreeMongoQueryUnitTests {
 	public void multiFieldJsonExcludeRestrictionShouldBeConsidered() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstnameAndLastname",
-				new Object[] { "foo", "bar" });
+				"foo", "bar");
 
 		assertThat(query.getFieldsObject(), is(new Document().append("firstname", 0).append("lastname", 0)));
 	}
@@ -121,8 +120,8 @@ public class PartTreeMongoQueryUnitTests {
 	@Test // DATAMOGO-973
 	public void shouldAddFullTextParamCorrectlyToDerivedQuery() {
 
-		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstname",
-				new Object[] { "text", TextCriteria.forDefaultLanguage().matching("search") });
+		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstname", "text",
+				TextCriteria.forDefaultLanguage().matching("search"));
 
 		assertThat(query, isTextQuery().searchingFor("search").where(new Criteria("firstname").is("text")));
 	}
@@ -131,9 +130,9 @@ public class PartTreeMongoQueryUnitTests {
 	public void propagatesRootExceptionForInvalidQuery() {
 
 		exception.expect(IllegalStateException.class);
-		exception.expectCause(is(org.hamcrest.Matchers.<Throwable> instanceOf(JSONParseException.class)));
+		exception.expectCause(is(instanceOf(JSONParseException.class)));
 
-		deriveQueryFromMethod("findByAge", new Object[] { 1 });
+		deriveQueryFromMethod("findByAge", 1);
 	}
 
 	@Test // DATAMONGO-1345, DATAMONGO-1735
@@ -146,8 +145,8 @@ public class PartTreeMongoQueryUnitTests {
 
 		Document fieldsObject = deriveQueryFromMethod("findPersonProjectedBy", new Object[0]).getFieldsObject();
 
-		assertThat(fieldsObject.get("firstname"), is((Object) 1));
-		assertThat(fieldsObject.get("lastname"), is((Object) 1));
+		assertThat(fieldsObject.get("firstname"), is(1));
+		assertThat(fieldsObject.get("lastname"), is(1));
 	}
 
 	@Test // DATAMONGO-1345
@@ -155,8 +154,8 @@ public class PartTreeMongoQueryUnitTests {
 
 		Document fieldsObject = deriveQueryFromMethod("findPersonDtoByAge", new Object[] { 42 }).getFieldsObject();
 
-		assertThat(fieldsObject.get("firstname"), is((Object) 1));
-		assertThat(fieldsObject.get("lastname"), is((Object) 1));
+		assertThat(fieldsObject.get("firstname"), is(1));
+		assertThat(fieldsObject.get("lastname"), is(1));
 	}
 
 	@Test // DATAMONGO-1345
@@ -164,9 +163,9 @@ public class PartTreeMongoQueryUnitTests {
 
 		Document fields = deriveQueryFromMethod("findDynamicallyProjectedBy", ExtendedProjection.class).getFieldsObject();
 
-		assertThat(fields.get("firstname"), is((Object) 1));
-		assertThat(fields.get("lastname"), is((Object) 1));
-		assertThat(fields.get("age"), is((Object) 1));
+		assertThat(fields.get("firstname"), is(1));
+		assertThat(fields.get("lastname"), is(1));
+		assertThat(fields.get("age"), is(1));
 	}
 
 	@Test // DATAMONGO-1500
@@ -174,8 +173,8 @@ public class PartTreeMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findBySex", Sex.FEMALE);
 
-		assertThat(query.getQueryObject().get("sex"), is((Object) Sex.FEMALE));
-		assertThat(query.getFieldsObject().get("firstname"), is((Object) 1));
+		assertThat(query.getQueryObject().get("sex"), is(Sex.FEMALE));
+		assertThat(query.getFieldsObject().get("firstname"), is(1));
 	}
 
 	@Test // DATAMONGO-1729, DATAMONGO-1735
@@ -210,9 +209,7 @@ public class PartTreeMongoQueryUnitTests {
 					mappingContext);
 
 			return new PartTreeMongoQuery(queryMethod, mongoOperationsMock);
-		} catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException(e.getMessage(), e);
-		} catch (SecurityException e) {
+		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		}
 	}
