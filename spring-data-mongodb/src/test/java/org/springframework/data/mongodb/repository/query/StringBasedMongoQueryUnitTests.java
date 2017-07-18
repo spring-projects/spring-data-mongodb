@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -83,7 +84,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test
-	public void bindsSimplePropertyCorrectly() throws Exception {
+	public void bindsSimplePropertyCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastname", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews");
@@ -95,7 +96,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test
-	public void bindsComplexPropertyCorrectly() throws Exception {
+	public void bindsComplexPropertyCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByAddress", Address.class);
 
@@ -114,7 +115,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test
-	public void bindsMultipleParametersCorrectly() throws Exception {
+	public void bindsMultipleParametersCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAndAddress", String.class, Address.class);
 
@@ -133,7 +134,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test
-	public void bindsNullParametersCorrectly() throws Exception {
+	public void bindsNullParametersCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByAddress", Address.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { null });
@@ -144,7 +145,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-821
-	public void bindsDbrefCorrectly() throws Exception {
+	public void bindsDbrefCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByHavingSizeFansNotZero");
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter);
@@ -154,19 +155,19 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void constructsDeleteQueryCorrectly() throws Exception {
+	public void constructsDeleteQueryCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("removeByLastname", String.class);
 		assertThat(mongoQuery.isDeleteQuery(), is(true));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-566
-	public void preventsDeleteAndCountFlagAtTheSameTime() throws Exception {
+	public void preventsDeleteAndCountFlagAtTheSameTime() {
 		createQueryForMethod("invalidMethod", String.class);
 	}
 
 	@Test // DATAMONGO-420
-	public void shouldSupportFindByParameterizedCriteriaAndFields() throws Exception {
+	public void shouldSupportFindByParameterizedCriteriaAndFields() {
 
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(converter,
 				StubParameterAccessor.getAccessor(converter, //
@@ -183,7 +184,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-420
-	public void shouldSupportRespectExistingQuotingInFindByTitleBeginsWithExplicitQuoting() throws Exception {
+	public void shouldSupportRespectExistingQuotingInFindByTitleBeginsWithExplicitQuoting() {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "fun");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByTitleBeginsWithExplicitQuoting", String.class);
@@ -195,7 +196,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-995, DATAMONGO-420
-	public void shouldParseQueryWithParametersInExpression() throws Exception {
+	public void shouldParseQueryWithParametersInExpression() {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, 1, 2, 3, 4);
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithParametersInExpression", int.class,
@@ -209,7 +210,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-995, DATAMONGO-420
-	public void bindsSimplePropertyAlreadyQuotedCorrectly() throws Exception {
+	public void bindsSimplePropertyAlreadyQuotedCorrectly() {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
@@ -221,7 +222,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-995, DATAMONGO-420
-	public void bindsSimplePropertyAlreadyQuotedWithRegexCorrectly() throws Exception {
+	public void bindsSimplePropertyAlreadyQuotedWithRegexCorrectly() {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
@@ -233,7 +234,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-995, DATAMONGO-420
-	public void bindsSimplePropertyWithRegexCorrectly() throws Exception {
+	public void bindsSimplePropertyWithRegexCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastname", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
@@ -245,7 +246,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1070
-	public void parsesDbRefDeclarationsCorrectly() throws Exception {
+	public void parsesDbRefDeclarationsCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("methodWithManuallyDefinedDbRef", String.class);
 		ConvertingParameterAccessor parameterAccessor = StubParameterAccessor.getAccessor(converter, "myid");
@@ -257,7 +258,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1072
-	public void shouldParseJsonKeyReplacementCorrectly() throws Exception {
+	public void shouldParseJsonKeyReplacementCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("methodWithPlaceholderInKeyOfJsonStructure", String.class,
 				String.class);
@@ -269,7 +270,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-990
-	public void shouldSupportExpressionsInCustomQueries() throws Exception {
+	public void shouldSupportExpressionsInCustomQueries() {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpression", String.class);
@@ -281,7 +282,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1244
-	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() throws Exception {
+	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndNestedObject", boolean.class,
@@ -294,7 +295,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1244
-	public void shouldSupportExpressionsInCustomQueriesWithMultipleNestedObjects() throws Exception {
+	public void shouldSupportExpressionsInCustomQueriesWithMultipleNestedObjects() {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndMultipleNestedObjects",
@@ -308,10 +309,10 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1290
-	public void shouldSupportNonQuotedBinaryDataReplacement() throws Exception {
+	public void shouldSupportNonQuotedBinaryDataReplacement() {
 
-		byte[] binaryData = "Matthews".getBytes("UTF-8");
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, binaryData);
+		byte[] binaryData = "Matthews".getBytes(StandardCharsets.UTF_8);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, (Object) binaryData);
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsBinary", byte[].class);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
@@ -322,7 +323,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1454
-	public void shouldSupportExistsProjection() throws Exception {
+	public void shouldSupportExistsProjection() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("existsByLastname", String.class);
 
@@ -330,7 +331,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1565
-	public void bindsPropertyReferenceMultipleTimesCorrectly() throws Exception {
+	public void bindsPropertyReferenceMultipleTimesCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByAgeQuotedAndUnquoted", Integer.TYPE);
 
@@ -347,7 +348,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1565
-	public void shouldIgnorePlaceholderPatternInReplacementValue() throws Exception {
+	public void shouldIgnorePlaceholderPatternInReplacementValue() {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "argWith?1andText",
 				"nothing-special");
@@ -360,7 +361,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1565
-	public void shouldQuoteStringReplacementCorrectly() throws Exception {
+	public void shouldQuoteStringReplacementCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews', password: 'foo");
@@ -372,7 +373,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1565
-	public void shouldQuoteStringReplacementContainingQuotesCorrectly() throws Exception {
+	public void shouldQuoteStringReplacementContainingQuotesCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews\", password: \"foo");
@@ -384,7 +385,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1565
-	public void shouldQuoteStringReplacementWithQuotationsCorrectly() throws Exception {
+	public void shouldQuoteStringReplacementWithQuotationsCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
@@ -395,7 +396,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1565, DATAMONGO-1575
-	public void shouldQuoteComplexQueryStringCorrectly() throws Exception {
+	public void shouldQuoteComplexQueryStringCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "{ $ne : \"calamity\" }");
@@ -405,7 +406,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1565, DATAMONGO-1575
-	public void shouldQuotationInQuotedComplexQueryString() throws Exception {
+	public void shouldQuotationInQuotedComplexQueryString() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
@@ -417,7 +418,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1575
-	public void shouldTakeBsonParameterAsIs() throws Exception {
+	public void shouldTakeBsonParameterAsIs() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByWithBsonArgument", Document.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
@@ -428,7 +429,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1575
-	public void shouldReplaceParametersInInQuotedExpressionOfNestedQueryOperator() throws Exception {
+	public void shouldReplaceParametersInInQuotedExpressionOfNestedQueryOperator() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameRegex", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity");
@@ -438,7 +439,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1603
-	public void shouldAllowReuseOfPlaceholderWithinQuery() throws Exception {
+	public void shouldAllowReuseOfPlaceholderWithinQuery() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByReusingPlaceholdersMultipleTimes", String.class,
 				String.class);
@@ -450,7 +451,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1603
-	public void shouldAllowReuseOfQuotedPlaceholderWithinQuery() throws Exception {
+	public void shouldAllowReuseOfQuotedPlaceholderWithinQuery() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByReusingPlaceholdersMultipleTimesWhenQuoted",
 				String.class, String.class);
@@ -462,7 +463,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1603
-	public void shouldAllowReuseOfQuotedPlaceholderWithinQueryAndIncludeSuffixCorrectly() throws Exception {
+	public void shouldAllowReuseOfQuotedPlaceholderWithinQueryAndIncludeSuffixCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod(
 				"findByReusingPlaceholdersMultipleTimesWhenQuotedAndSomeStuffAppended", String.class, String.class);
@@ -474,7 +475,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1603
-	public void shouldAllowQuotedParameterWithSuffixAppended() throws Exception {
+	public void shouldAllowQuotedParameterWithSuffixAppended() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByWhenQuotedAndSomeStuffAppended", String.class,
 				String.class);
@@ -485,7 +486,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1603
-	public void shouldCaptureReplacementWithComplexSuffixCorrectly() throws Exception {
+	public void shouldCaptureReplacementWithComplexSuffixCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByMultiRegex", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity");
@@ -497,7 +498,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1603
-	public void shouldAllowPlaceholderReuseInQuotedValue() throws Exception {
+	public void shouldAllowPlaceholderReuseInQuotedValue() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameRegex", String.class, String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
@@ -509,7 +510,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1605
-	public void findUsingSpelShouldRetainParameterType() throws Exception {
+	public void findUsingSpelShouldRetainParameterType() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByUsingSpel", Object.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, 100.01D);
@@ -519,7 +520,7 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1605
-	public void findUsingSpelShouldRetainNullValues() throws Exception {
+	public void findUsingSpelShouldRetainNullValues() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByUsingSpel", Object.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { null });
@@ -528,13 +529,19 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(new Document("arg0", null)));
 	}
 
-	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
+	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) {
 
-		Method method = SampleRepository.class.getMethod(name, parameters);
-		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
-				factory, converter.getMappingContext());
-		return new StringBasedMongoQuery(queryMethod, operations, PARSER, DefaultEvaluationContextProvider.INSTANCE);
+		try {
+
+			Method method = SampleRepository.class.getMethod(name, parameters);
+			ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
+					factory, converter.getMappingContext());
+			return new StringBasedMongoQuery(queryMethod, operations, PARSER, DefaultEvaluationContextProvider.INSTANCE);
+
+		} catch (Exception e) {
+			throw new IllegalArgumentException(e.getMessage(), e);
+		}
 	}
 
 	private interface SampleRepository extends Repository<Person, Long> {

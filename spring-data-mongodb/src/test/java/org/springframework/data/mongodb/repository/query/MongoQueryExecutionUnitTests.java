@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -37,6 +37,7 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindNearOperation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -58,15 +59,17 @@ import org.springframework.util.ReflectionUtils;
  * Unit tests for {@link MongoQueryExecution}.
  *
  * @author Mark Paluch
+ * @author Oliver Gierke
  * @soundtrack U Can't Touch This - MC Hammer
  */
 @RunWith(MockitoJUnitRunner.class)
-@SuppressWarnings("unchecked")
 public class MongoQueryExecutionUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
-	@Mock FindOperation<?> findOperationMock;
-	@Mock FindOperationWithQuery<?> operationMock;
+	@Mock FindOperation<Object> findOperationMock;
+	@Mock FindOperationWithQuery<Object> operationMock;
+	@Mock TerminatingFindOperation<Object> terminatingMock;
+	@Mock TerminatingFindNearOperation<Object> terminatingGeoMock;
 	@Mock DbRefResolver dbRefResolver;
 
 	Point POINT = new Point(10, 20);
@@ -77,12 +80,13 @@ public class MongoQueryExecutionUnitTests {
 	Method method = ReflectionUtils.findMethod(PersonRepository.class, "findByLocationNear", Point.class, Distance.class,
 			Pageable.class);
 	MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
+	MappingMongoConverter converter;
 
 	@Before
-	public void setUp() throws Exception {
+	@SuppressWarnings("unchecked")
+	public void setUp() {
 
-		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, context);
-
+		converter = new MappingMongoConverter(dbRefResolver, context);
 		when(mongoOperationsMock.getConverter()).thenReturn(converter);
 		when(mongoOperationsMock.query(any(Class.class))).thenReturn(findOperationMock);
 	}
@@ -90,83 +94,77 @@ public class MongoQueryExecutionUnitTests {
 	@Test // DATAMONGO-1464
 	public void pagedExecutionShouldNotGenerateCountQueryIfQueryReportedNoResults() {
 
-		TerminatingFindOperation<Object> terminating = mock(TerminatingFindOperation.class);
-
-		doReturn(terminating).when(operationMock).matching(any(Query.class));
-		doReturn(Collections.emptyList()).when(terminating).all();
+		doReturn(terminatingMock).when(operationMock).matching(any(Query.class));
+		doReturn(Collections.emptyList()).when(terminatingMock).all();
 
 		PagedExecution execution = new PagedExecution(operationMock, PageRequest.of(0, 10));
 		execution.execute(new Query());
 
-		verify(terminating).all();
-		verify(terminating, never()).count();
+		verify(terminatingMock).all();
+		verify(terminatingMock, never()).count();
 	}
 
 	@Test // DATAMONGO-1464
 	public void pagedExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() {
 
-		TerminatingFindOperation<Object> terminating = mock(TerminatingFindOperation.class);
-
-		doReturn(terminating).when(operationMock).matching(any(Query.class));
-		doReturn(Arrays.asList(new Person(), new Person(), new Person(), new Person())).when(terminating).all();
+		doReturn(terminatingMock).when(operationMock).matching(any(Query.class));
+		doReturn(Arrays.asList(new Person(), new Person(), new Person(), new Person())).when(terminatingMock).all();
 
 		PagedExecution execution = new PagedExecution(operationMock, PageRequest.of(0, 10));
 		execution.execute(new Query());
 
-		verify(terminating).all();
-		verify(terminating, never()).count();
+		verify(terminatingMock).all();
+		verify(terminatingMock, never()).count();
 	}
 
 	@Test // DATAMONGO-1464
-	public void pagedExecutionRetrievesObjectsForPageableOutOfRange() throws Exception {
+	public void pagedExecutionRetrievesObjectsForPageableOutOfRange() {
 
-		TerminatingFindOperation<Object> terminating = mock(TerminatingFindOperation.class);
-
-		doReturn(terminating).when(operationMock).matching(any(Query.class));
-		doReturn(Collections.emptyList()).when(terminating).all();
+		doReturn(terminatingMock).when(operationMock).matching(any(Query.class));
+		doReturn(Collections.emptyList()).when(terminatingMock).all();
 
 		PagedExecution execution = new PagedExecution(operationMock, PageRequest.of(2, 10));
 		execution.execute(new Query());
 
-		verify(terminating).all();
-		verify(terminating).count();
+		verify(terminatingMock).all();
+		verify(terminatingMock).count();
 	}
 
 	@Test // DATAMONGO-1464
-	public void pagingGeoExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() throws Exception {
+	public void pagingGeoExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() {
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
-				new Object[] { POINT, DISTANCE, PageRequest.of(0, 10) });
+		GeoResult<Person> result = new GeoResult<>(new Person(), DISTANCE);
+		when(findOperationMock.near(any(NearQuery.class))).thenReturn(terminatingGeoMock);
+		doReturn(new GeoResults<>(Arrays.asList(result, result, result, result))).when(terminatingGeoMock).all();
+
+		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(converter,
+				new MongoParametersParameterAccessor(queryMethod, new Object[] { POINT, DISTANCE, PageRequest.of(0, 10) }));
 
 		PartTreeMongoQuery query = new PartTreeMongoQuery(queryMethod, mongoOperationsMock);
-		GeoResult<Person> result = new GeoResult<Person>(new Person(), DISTANCE);
 
-		when(mongoOperationsMock.geoNear(any(NearQuery.class), eq(Person.class), eq("person")))
-				.thenReturn(new GeoResults<Person>(Arrays.asList(result, result, result, result)));
-
-		PagingGeoNearExecution execution = new PagingGeoNearExecution(mongoOperationsMock, queryMethod, accessor, query);
+		PagingGeoNearExecution execution = new PagingGeoNearExecution(findOperationMock, queryMethod, accessor, query);
 		execution.execute(new Query());
 
-		verify(mongoOperationsMock).geoNear(any(NearQuery.class), eq(Person.class), eq("person"));
-		verify(mongoOperationsMock, never()).count(any(Query.class), eq("person"));
+		verify(terminatingGeoMock).all();
 	}
 
 	@Test // DATAMONGO-1464
-	public void pagingGeoExecutionRetrievesObjectsForPageableOutOfRange() throws Exception {
+	public void pagingGeoExecutionRetrievesObjectsForPageableOutOfRange() {
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
-				new Object[] { POINT, DISTANCE, PageRequest.of(2, 10) });
+		when(findOperationMock.near(any(NearQuery.class))).thenReturn(terminatingGeoMock);
+		doReturn(new GeoResults<>(Collections.emptyList())).when(terminatingGeoMock).all();
+		doReturn(terminatingMock).when(findOperationMock).matching(any(Query.class));
+
+		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(converter,
+				new MongoParametersParameterAccessor(queryMethod, new Object[] { POINT, DISTANCE, PageRequest.of(2, 10) }));
 
 		PartTreeMongoQuery query = new PartTreeMongoQuery(queryMethod, mongoOperationsMock);
 
-		when(mongoOperationsMock.geoNear(any(NearQuery.class), eq(Person.class), eq("person")))
-				.thenReturn(new GeoResults<Person>(Collections.<GeoResult<Person>> emptyList()));
-
-		PagingGeoNearExecution execution = new PagingGeoNearExecution(mongoOperationsMock, queryMethod, accessor, query);
+		PagingGeoNearExecution execution = new PagingGeoNearExecution(findOperationMock, queryMethod, accessor, query);
 		execution.execute(new Query());
 
-		verify(mongoOperationsMock).geoNear(any(NearQuery.class), eq(Person.class), eq("person"));
-		verify(mongoOperationsMock).count(any(Query.class), eq("person"));
+		verify(terminatingGeoMock).all();
+		verify(terminatingMock).count();
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {

@@ -24,7 +24,6 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Geo
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagingGeoNearExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
-import org.springframework.data.mongodb.repository.query.MongoQueryExecution.StreamExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
@@ -33,7 +32,7 @@ import org.springframework.util.Assert;
 
 /**
  * Base class for {@link RepositoryQuery} implementations for Mongo.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -47,7 +46,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
-	 * 
+	 *
 	 * @param method must not be {@literal null}.
 	 * @param operations must not be {@literal null}.
 	 */
@@ -66,7 +65,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 				.inCollection(method.getEntityInformation().getCollectionName());
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.RepositoryQuery#getQueryMethod()
 	 */
@@ -80,8 +79,9 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 */
 	public Object execute(Object[] parameters) {
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method, parameters);
-		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), accessor));
+		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
+				new MongoParametersParameterAccessor(method, parameters));
+		Query query = createQuery(accessor);
 
 		applyQueryMetaAttributesWhenPresent(query);
 
@@ -94,18 +94,18 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		return processor.processResult(execution.execute(query));
 	}
 
-	private MongoQueryExecution getExecution(MongoParameterAccessor accessor, FindOperationWithQuery<?> operation) {
+	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindOperationWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
 			return new DeleteExecution(operations, method);
 		} else if (method.isGeoNearQuery() && method.isPageQuery()) {
-			return new PagingGeoNearExecution(operations, method, accessor, this);
+			return new PagingGeoNearExecution(operation, method, accessor, this);
 		} else if (method.isGeoNearQuery()) {
-			return new GeoNearExecution(operations, method, accessor);
+			return new GeoNearExecution(operation, method, accessor);
 		} else if (method.isSliceQuery()) {
 			return new SlicedExecution(operation, accessor.getPageable());
 		} else if (method.isStreamQuery()) {
-			return new StreamExecution(operation);
+			return q -> operation.matching(q).stream();
 		} else if (method.isCollectionQuery()) {
 			return q -> operation.matching(q.with(accessor.getPageable())).all();
 		} else if (method.isPageQuery()) {
@@ -132,7 +132,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * Creates a {@link Query} instance using the given {@link ConvertingParameterAccessor}. Will delegate to
 	 * {@link #createQuery(ConvertingParameterAccessor)} by default but allows customization of the count query to be
 	 * triggered.
-	 * 
+	 *
 	 * @param accessor must not be {@literal null}.
 	 * @return
 	 */
@@ -142,7 +142,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	/**
 	 * Creates a {@link Query} instance using the given {@link ParameterAccessor}
-	 * 
+	 *
 	 * @param accessor must not be {@literal null}.
 	 * @return
 	 */
@@ -150,7 +150,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	/**
 	 * Returns whether the query should get a count projection applied.
-	 * 
+	 *
 	 * @return
 	 */
 	protected abstract boolean isCountQuery();
@@ -165,7 +165,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	/**
 	 * Return weather the query should delete matching documents.
-	 * 
+	 *
 	 * @return
 	 * @since 1.5
 	 */
