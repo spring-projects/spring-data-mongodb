@@ -115,11 +115,15 @@ public class MappingMongoConverterUnitTests {
 	@Before
 	public void setUp() {
 
+		CustomConversions conversions = new CustomConversions();
+
 		mappingContext = new MongoMappingContext();
 		mappingContext.setApplicationContext(context);
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		mappingContext.afterPropertiesSet();
 
 		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
 	}
 
