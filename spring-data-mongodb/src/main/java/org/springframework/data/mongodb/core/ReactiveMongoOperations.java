@@ -376,17 +376,19 @@ public interface ReactiveMongoOperations {
 	/**
 	 * Execute an aggregation operation.
 	 * <p>
-	 * The raw results will be mapped to the given entity class. The name of the inputCollection is derived from the
-	 * inputType of the aggregation.
+	 * The raw results will be mapped to the given entity class.
 	 * <p>
-	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
-	 * explanation mode will throw an {@link IllegalArgumentException}.
+	 * Aggregation streaming cannot be used with {@link AggregationOptions#isExplain() aggregation explain} nor with
+	 * {@link AggregationOptions#getCursorBatchSize()}. Enabling explanation mode or setting batch size cause
+	 * {@link IllegalArgumentException}.
 	 *
-	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
+	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations. Must not be
 	 *          {@literal null}.
-	 * @param collectionName The name of the input collection to use for the aggreation.
-	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
+	 * @param collectionName The name of the input collection to use for the aggregation. Must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned {@link Flux}. Must not be {@literal null}.
 	 * @return The results of the aggregation operation.
+	 * @throws IllegalArgumentException if {@code aggregation}, {@code collectionName} or {@code outputType} is
+	 *           {@literal null}.
 	 */
 	<O> Flux<O> aggregate(TypedAggregation<?> aggregation, String collectionName, Class<O> outputType);
 
@@ -394,32 +396,37 @@ public interface ReactiveMongoOperations {
 	 * Execute an aggregation operation.
 	 * <p/>
 	 * The raw results will be mapped to the given entity class and are returned as stream. The name of the
-	 * inputCollection is derived from the inputType of the aggregation.
+	 * inputCollection is derived from the {@link TypedAggregation#getInputType() aggregation input type}.
 	 * <p/>
-	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
-	 * explanation mode will throw an {@link IllegalArgumentException}.
+	 * Aggregation streaming cannot be used with {@link AggregationOptions#isExplain() aggregation explain} nor with
+	 * {@link AggregationOptions#getCursorBatchSize()}. Enabling explanation mode or setting batch size cause
+	 * {@link IllegalArgumentException}.
 	 *
-	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
+	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations. Must not be
 	 *          {@literal null}.
-	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned {@link Flux}. Must not be {@literal null}.
 	 * @return The results of the aggregation operation.
+	 * @throws IllegalArgumentException if {@code aggregation} or {@code outputType} is {@literal null}.
 	 */
 	<O> Flux<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation.
 	 * <p/>
-	 * The raw results will be mapped to the given entity class.
+	 * The raw results will be mapped to the given {@code ouputType}. The name of the inputCollection is derived from the
+	 * {@code inputType}.
 	 * <p/>
-	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
-	 * explanation mode will throw an {@link IllegalArgumentException}.
+	 * Aggregation streaming cannot be used with {@link AggregationOptions#isExplain() aggregation explain} nor with
+	 * {@link AggregationOptions#getCursorBatchSize()}. Enabling explanation mode or setting batch size cause
+	 * {@link IllegalArgumentException}.
 	 *
-	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
+	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations. Must not be
 	 *          {@literal null}.
-	 * @param inputType the inputType where the aggregation operation will read from, must not be {@literal null} or
-	 *          empty.
-	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
+	 * @param inputType the inputType where the aggregation operation will read from. Must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned {@link Flux}. Must not be {@literal null}.
 	 * @return The results of the aggregation operation.
+	 * @throws IllegalArgumentException if {@code aggregation}, {@code inputType} or {@code outputType} is
+	 *           {@literal null}.
 	 */
 	<O> Flux<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
 
@@ -428,15 +435,18 @@ public interface ReactiveMongoOperations {
 	 * <p/>
 	 * The raw results will be mapped to the given entity class.
 	 * <p/>
-	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
-	 * explanation mode will throw an {@link IllegalArgumentException}.
+	 * Aggregation streaming cannot be used with {@link AggregationOptions#isExplain() aggregation explain} nor with
+	 * {@link AggregationOptions#getCursorBatchSize()}. Enabling explanation mode or setting batch size cause
+	 * {@link IllegalArgumentException}.
 	 *
-	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
+	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations. Must not be
 	 *          {@literal null}.
-	 * @param collectionName the collection where the aggregation operation will read from, must not be {@literal null} or
+	 * @param collectionName the collection where the aggregation operation will read from. Must not be {@literal null} or
 	 *          empty.
-	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned {@link Flux}. Must not be {@literal null}.
 	 * @return The results of the aggregation operation.
+	 * @throws IllegalArgumentException if {@code aggregation}, {@code collectionName} or {@code outputType} is
+	 *           {@literal null}.
 	 */
 	<O> Flux<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType);
 

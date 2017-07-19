@@ -111,6 +111,16 @@ public class AggregationOptions {
 	}
 
 	/**
+	 * Obtain a new {@link Builder} for constructing {@link AggregationOptions}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.0
+	 */
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	/**
 	 * Enables writing to temporary files. When set to true, aggregation stages can write data to the _tmp subdirectory in
 	 * the dbPath directory.
 	 *

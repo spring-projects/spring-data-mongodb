@@ -33,6 +33,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * Factory to create {@link MongoDatabase} instances from a {@link MongoClient} instance.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, ReactiveMongoDatabaseFactory {
@@ -103,14 +104,8 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 
 		Assert.hasText(dbName, "Database name must not be empty.");
 
-		MongoDatabase db = ReactiveMongoDbUtils.getMongoDatabase(mongo, dbName);
-
-		if (writeConcern != null) {
-
-			db = db.withWriteConcern(writeConcern);
-		}
-
-		return db;
+		MongoDatabase db = mongo.getDatabase(dbName);
+		return writeConcern != null ? db.withWriteConcern(writeConcern) : db;
 	}
 
 	/**
@@ -119,6 +114,7 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 * @see DisposableBean#destroy()
 	 */
 	public void destroy() throws Exception {
+
 		if (mongoInstanceCreated) {
 			mongo.close();
 		}
