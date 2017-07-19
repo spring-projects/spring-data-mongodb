@@ -22,7 +22,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -63,6 +70,7 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DbRefResolverCallback;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
@@ -1925,8 +1933,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	private static MappingMongoConverter getDefaultMongoConverter() {
 
-		MappingMongoConverter converter = new MappingMongoConverter(NO_OP_REF_RESOLVER, new MongoMappingContext());
+		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		context.afterPropertiesSet();
+
+		MappingMongoConverter converter = new MappingMongoConverter(NO_OP_REF_RESOLVER, context);
+		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
+
 		return converter;
 	}
 

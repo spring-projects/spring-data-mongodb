@@ -81,6 +81,7 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
@@ -2308,8 +2309,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private static final MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
-		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
+		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		mappingContext.afterPropertiesSet();
+
+		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
+
 		return converter;
 	}
 
