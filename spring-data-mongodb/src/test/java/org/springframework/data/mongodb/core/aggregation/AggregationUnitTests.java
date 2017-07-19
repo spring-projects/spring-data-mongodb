@@ -382,7 +382,6 @@ public class AggregationUnitTests {
 						.as("foosum") //
 		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
-		System.out.println("agg: " + agg);
 		@SuppressWarnings("unchecked")
 		Document secondProjection = ((List<Document>) agg.get("pipeline")).get(1);
 		Document fields = getAsDocument(secondProjection, "$group");

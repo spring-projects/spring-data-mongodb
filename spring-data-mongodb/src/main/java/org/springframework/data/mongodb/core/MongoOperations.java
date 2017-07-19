@@ -322,7 +322,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 *
-	 * @param entityClass the parameterized type of the returned list
+	 * @param entityClass the parametrized type of the returned list
 	 * @return the converted collection
 	 */
 	<T> List<T> findAll(Class<T> entityClass);
@@ -336,7 +336,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 *
-	 * @param entityClass the parameterized type of the returned list.
+	 * @param entityClass the parametrized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the converted collection
 	 */
@@ -351,7 +351,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param inputCollectionName the collection where the group operation will read from
 	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
 	 *          reduce function.
-	 * @param entityClass The parameterized type of the returned list
+	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the group operation
 	 */
 	<T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
@@ -366,7 +366,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param inputCollectionName the collection where the group operation will read from
 	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
 	 *          reduce function.
-	 * @param entityClass The parameterized type of the returned list
+	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the group operation
 	 */
 	<T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
@@ -378,7 +378,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
 	 *          {@literal null}.
 	 * @param collectionName The name of the input collection to use for the aggreation.
-	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
@@ -390,7 +390,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
 	 *          {@literal null}.
-	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
@@ -403,7 +403,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          {@literal null}.
 	 * @param inputType the inputType where the aggregation operation will read from, must not be {@literal null} or
 	 *          empty.
-	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
@@ -416,7 +416,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          {@literal null}.
 	 * @param collectionName the collection where the aggregation operation will read from, must not be {@literal null} or
 	 *          empty.
-	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
@@ -435,7 +435,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
 	 *          {@literal null}.
 	 * @param collectionName The name of the input collection to use for the aggreation.
-	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 2.0
 	 */
@@ -453,7 +453,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
 	 *          {@literal null}.
-	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 2.0
 	 */
@@ -472,7 +472,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          {@literal null}.
 	 * @param inputType the inputType where the aggregation operation will read from, must not be {@literal null} or
 	 *          empty.
-	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 2.0
 	 */
@@ -491,7 +491,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          {@literal null}.
 	 * @param collectionName the collection where the aggregation operation will read from, must not be {@literal null} or
 	 *          empty.
-	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 2.0
 	 */
@@ -504,7 +504,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
-	 * @param entityClass The parameterized type of the returned list
+	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
@@ -517,7 +517,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
-	 * @param entityClass The parameterized type of the returned list
+	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
@@ -532,7 +532,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
-	 * @param entityClass The parameterized type of the returned list
+	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
@@ -546,7 +546,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
-	 * @param entityClass The parameterized type of the returned list
+	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
@@ -589,7 +589,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parameterized type of the returned list.
+	 * @param entityClass the parametrized type of the returned list.
 	 * @return the converted object
 	 */
 	<T> T findOne(Query query, Class<T> entityClass);
@@ -606,7 +606,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parameterized type of the returned list.
+	 * @param entityClass the parametrized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the converted object
 	 */
@@ -627,7 +627,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Determine result of given {@link Query} contains at least one element.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find a record.
-	 * @param entityClass the parameterized type.
+	 * @param entityClass the parametrized type.
 	 * @return
 	 */
 	boolean exists(Query query, Class<?> entityClass);
@@ -636,7 +636,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Determine result of given {@link Query} contains at least one element.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find a record.
-	 * @param entityClass the parameterized type.
+	 * @param entityClass the parametrized type.
 	 * @param collectionName name of the collection to check for objects.
 	 * @return
 	 */
@@ -653,7 +653,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parameterized type of the returned list.
+	 * @param entityClass the parametrized type of the returned list.
 	 * @return the List of converted objects
 	 */
 	<T> List<T> find(Query query, Class<T> entityClass);
@@ -669,7 +669,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parameterized type of the returned list.
+	 * @param entityClass the parametrized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the List of converted objects
 	 */
@@ -704,7 +704,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.
 	 * @param update the {@link Update} to apply on matching documents.
-	 * @param entityClass the parameterized type.
+	 * @param entityClass the parametrized type.
 	 * @return
 	 */
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
@@ -716,7 +716,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.
 	 * @param update the {@link Update} to apply on matching documents.
-	 * @param entityClass the parameterized type.
+	 * @param entityClass the parametrized type.
 	 * @param collectionName the collection to query.
 	 * @return
 	 */
@@ -731,7 +731,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          fields specification.
 	 * @param update the {@link Update} to apply on matching documents.
 	 * @param options the {@link FindAndModifyOptions} holding additional information.
-	 * @param entityClass the parameterized type.
+	 * @param entityClass the parametrized type.
 	 * @return
 	 */
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
@@ -745,7 +745,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          fields specification.
 	 * @param update the {@link Update} to apply on matching documents.
 	 * @param options the {@link FindAndModifyOptions} holding additional information.
-	 * @param entityClass the parameterized type.
+	 * @param entityClass the parametrized type.
 	 * @param collectionName the collection to query.
 	 * @return
 	 */
@@ -764,7 +764,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parameterized type of the returned list.
+	 * @param entityClass the parametrized type of the returned list.
 	 * @return the converted object
 	 */
 	<T> T findAndRemove(Query query, Class<T> entityClass);
@@ -781,7 +781,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param entityClass the parameterized type of the returned list.
+	 * @param entityClass the parametrized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the converted object
 	 */

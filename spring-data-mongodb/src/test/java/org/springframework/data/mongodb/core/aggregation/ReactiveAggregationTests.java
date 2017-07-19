@@ -38,6 +38,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * Integration test for aggregation via {@link org.springframework.data.mongodb.core.ReactiveMongoTemplate}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
@@ -59,27 +60,13 @@ public class ReactiveAggregationTests {
 	}
 
 	private void cleanDb() {
+
 		StepVerifier
 				.create(reactiveMongoTemplate.dropCollection(INPUT_COLLECTION) //
 						.then(reactiveMongoTemplate.dropCollection(OUTPUT_COLLECTION)) //
 						.then(reactiveMongoTemplate.dropCollection(Product.class)) //
 						.then(reactiveMongoTemplate.dropCollection(City.class))) //
 				.verifyComplete();
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1646
-	public void shouldHandleMissingInputCollection() {
-		reactiveMongoTemplate.aggregate(newAggregation(), (String) null, TagCount.class);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1646
-	public void shouldHandleMissingAggregationPipeline() {
-		reactiveMongoTemplate.aggregate(null, INPUT_COLLECTION, TagCount.class);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1646
-	public void shouldHandleMissingEntityClass() {
-		reactiveMongoTemplate.aggregate(newAggregation(), INPUT_COLLECTION, null);
 	}
 
 	@Test // DATAMONGO-1646
