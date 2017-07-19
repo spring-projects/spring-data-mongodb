@@ -43,10 +43,8 @@ import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 
 /**
  * Factory to create {@link MongoRepository} instances.
@@ -57,12 +55,6 @@ import org.springframework.util.ClassUtils;
  * @author Mark Paluch
  */
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
-
-	// TODO: to we need this here and in ReactiveWrappers?
-	private static final boolean PROJECT_REACTOR_PRESENT = ClassUtils.isPresent("reactor.core.publisher.Flux",
-			QueryExecutionConverters.class.getClassLoader());
-	private static final boolean RXJAVA_OBSERVABLE_PRESENT = ClassUtils.isPresent("rx.Observable",
-			QueryExecutionConverters.class.getClassLoader());
 
 	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 
