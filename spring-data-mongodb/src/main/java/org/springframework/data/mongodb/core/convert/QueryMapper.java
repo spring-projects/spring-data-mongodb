@@ -15,11 +15,16 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -33,13 +38,13 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
 import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -54,6 +59,8 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * A helper class to encapsulate any modifications of a Query object before it gets submitted to the database.
@@ -79,6 +86,8 @@ public class QueryMapper {
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoExampleMapper exampleMapper;
+
+	private final PropertyPaths propertyPaths = new PropertyPaths();
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
@@ -172,10 +181,6 @@ public class QueryMapper {
 		return mappedSort;
 	}
 
-	public Document getMappedSort(Document sortObject, Optional<? extends MongoPersistentEntity<?>> entity) {
-		return getMappedSort(sortObject, entity.orElse(null));
-	}
-
 	/**
 	 * Maps fields to retrieve to the {@link MongoPersistentEntity}s properties. <br />
 	 * Also onverts and potentially adds missing property {@code $meta} representation.
@@ -187,13 +192,29 @@ public class QueryMapper {
 	 */
 	public Document getMappedFields(Document fieldsObject, MongoPersistentEntity<?> entity) {
 
-		Document mappedFields = fieldsObject != null ? getMappedObject(fieldsObject, entity) : new Document();
+		Document mappedFields = doGetMappedFields(fieldsObject, entity);
 		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
-		return mappedFields.keySet().isEmpty() ? null : mappedFields;
+		return mappedFields;
 	}
 
-	public Document getMappedFields(Document fieldsObject, Optional<? extends MongoPersistentEntity<?>> entity) {
-		return getMappedFields(fieldsObject, entity.orElse(null));
+	private Document doGetMappedFields(Document fieldsObject, MongoPersistentEntity<?> entity) {
+
+		if (CollectionUtils.isEmpty(fieldsObject)) {
+			return new Document();
+		}
+
+		Document result = new Document();
+		for (Entry<String, Object> entry : fieldsObject.entrySet()) {
+			try {
+
+				PropertyPath path = propertyPaths.getOrCreate(entry.getKey(), entity.getTypeInformation());
+				result.put(mappingContext.getPersistentPropertyPath(path).getLeafProperty().getFieldName(), entry.getValue());
+			} catch (Exception e) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+
+		return result;
 	}
 
 	private void mapMetaAttributes(Document source, MongoPersistentEntity<?> entity, MetaMapping metaMapping) {
@@ -245,7 +266,7 @@ public class QueryMapper {
 	 */
 	protected Field createPropertyField(MongoPersistentEntity<?> entity, String key,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		return entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
+		return entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext, propertyPaths);
 	}
 
 	/**
@@ -393,8 +414,8 @@ public class QueryMapper {
 		}
 
 		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
-		return entity.hasIdProperty() && (type.equals(DBRef.class)
-				|| entity.getRequiredIdProperty().getActualType().isAssignableFrom(type));
+		return entity.hasIdProperty()
+				&& (type.equals(DBRef.class) || entity.getRequiredIdProperty().getActualType().isAssignableFrom(type));
 	}
 
 	/**
@@ -778,6 +799,7 @@ public class QueryMapper {
 		private final MongoPersistentProperty property;
 		private final PersistentPropertyPath<MongoPersistentProperty> path;
 		private final Association<MongoPersistentProperty> association;
+		private final PropertyPaths propertyPaths;
 
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
@@ -788,8 +810,8 @@ public class QueryMapper {
 		 * @param context must not be {@literal null}.
 		 */
 		public MetadataBackedField(String name, MongoPersistentEntity<?> entity,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
-			this(name, entity, context, null);
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context, PropertyPaths paths) {
+			this(name, entity, context, null, paths);
 		}
 
 		/**
@@ -803,7 +825,7 @@ public class QueryMapper {
 		 */
 		public MetadataBackedField(String name, MongoPersistentEntity<?> entity,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
-				MongoPersistentProperty property) {
+				MongoPersistentProperty property, PropertyPaths paths) {
 
 			super(name);
 
@@ -812,6 +834,7 @@ public class QueryMapper {
 			this.entity = entity;
 			this.mappingContext = context;
 
+			this.propertyPaths = paths;
 			this.path = getPath(name);
 			this.property = path == null ? property : path.getLeafProperty();
 			this.association = findAssociation();
@@ -823,7 +846,7 @@ public class QueryMapper {
 		 */
 		@Override
 		public MetadataBackedField with(String name) {
-			return new MetadataBackedField(name, entity, mappingContext, property);
+			return new MetadataBackedField(name, entity, mappingContext, property, propertyPaths);
 		}
 
 		/*
@@ -923,7 +946,7 @@ public class QueryMapper {
 
 			try {
 
-				PropertyPath path = PropertyPath.from(pathExpression.replaceAll("\\.\\d", ""), entity.getTypeInformation());
+				PropertyPath path = propertyPaths.getOrCreate(pathExpression, entity.getTypeInformation());
 				PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
 
 				Iterator<MongoPersistentProperty> iterator = propertyPath.iterator();
@@ -1111,5 +1134,34 @@ public class QueryMapper {
 
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
+	}
+
+	/**
+	 * {@link PropertyPaths} caches {@link PropertyPath} based on their String path and {@link TypeInformation}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
+	 static class PropertyPaths {
+
+		private Map<CacheKey, PropertyPath> pathCache = new HashMap<>();
+
+		PropertyPath getOrCreate(String path, TypeInformation<?> typeInformation) {
+
+			return pathCache.computeIfAbsent(new CacheKey(path, typeInformation),
+					(it) -> PropertyPath.from(it.path.replaceAll("\\.\\d", ""), it.typeInformation));
+		}
+
+		@EqualsAndHashCode
+		@AllArgsConstructor
+		private static class CacheKey {
+
+			String path;
+			TypeInformation<?> typeInformation;
+		}
+	}
+
+	protected PropertyPaths getPropertyPaths() {
+		return propertyPaths;
 	}
 }

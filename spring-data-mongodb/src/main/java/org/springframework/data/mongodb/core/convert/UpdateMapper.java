@@ -241,7 +241,7 @@ public class UpdateMapper extends QueryMapper {
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		return entity == null ? super.createPropertyField(entity, key, mappingContext)
-				: new MetadataBackedUpdateField(entity, key, mappingContext);
+				: new MetadataBackedUpdateField(entity, key, mappingContext, getPropertyPaths());
 	}
 
 	private static Document getSortObject(Sort sort) {
@@ -278,9 +278,9 @@ public class UpdateMapper extends QueryMapper {
 		 * @param mappingContext must not be {@literal null}.
 		 */
 		public MetadataBackedUpdateField(MongoPersistentEntity<?> entity, String key,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, PropertyPaths paths) {
 
-			super(key.replaceAll("\\.\\$", ""), entity, mappingContext);
+			super(key.replaceAll("\\.\\$", ""), entity, mappingContext, paths);
 			this.key = key;
 		}
 
