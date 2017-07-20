@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 import java.util.Optional;
@@ -74,14 +77,15 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
+	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableFindSupport<T>
 			implements ExecutableFind<T>, FindWithCollection<T>, FindWithProjection<T>, FindWithQuery<T> {
 
-		private final MongoTemplate template;
-		private final Class<?> domainType;
-		private final Class<T> returnType;
-		private final String collection;
-		private final Query query;
+		@NonNull MongoTemplate template;
+		@NonNull Class<?> domainType;
+		Class<T> returnType;
+		String collection;
+		Query query;
 
 		@Override
 		public FindWithProjection<T> inCollection(String collection) {

@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
@@ -56,7 +59,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ExecutableRemoveSupport<>(tempate, null, domainType, null);
+		return new ExecutableRemoveSupport<>(tempate, domainType, null, null);
 	}
 
 	/**
@@ -64,19 +67,20 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
+	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableRemoveSupport<T> implements ExecutableRemove<T>, RemoveWithCollection<T> {
 
-		private final MongoTemplate template;
-		private final Query query;
-		private final Class<T> domainType;
-		private final String collection;
+		@NonNull MongoTemplate template;
+		@NonNull Class<T> domainType;
+		Query query;
+		String collection;
 
 		@Override
 		public RemoveWithQuery<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
 
-			return new ExecutableRemoveSupport<>(template, query, domainType, collection);
+			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
 		}
 
 		@Override
@@ -84,7 +88,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 
 			Assert.notNull(query, "Query must not be null!");
 
-			return new ExecutableRemoveSupport<>(template, query, domainType, collection);
+			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
 		}
 
 		@Override

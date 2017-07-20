@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.util.Optional;
 
@@ -56,7 +59,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ExecutableUpdateSupport<>(template, null, domainType, null, null, null);
+		return new ExecutableUpdateSupport<>(template, domainType, null, null, null, null);
 	}
 
 	/**
@@ -64,22 +67,23 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
+	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableUpdateSupport<T>
 			implements ExecutableUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T> {
 
-		private final MongoTemplate template;
-		private final Query query;
-		private final Class<T> domainType;
-		private final Update update;
-		private final String collection;
-		private final FindAndModifyOptions options;
+		@NonNull MongoTemplate template;
+		@NonNull Class<T> domainType;
+		Query query;
+		Update update;
+		String collection;
+		FindAndModifyOptions options;
 
 		@Override
 		public TerminatingUpdate<T> apply(Update update) {
 
 			Assert.notNull(update, "Update must not be null!");
 
-			return new ExecutableUpdateSupport<>(template, query, domainType, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
 		@Override
@@ -87,7 +91,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
 
-			return new ExecutableUpdateSupport<>(template, query, domainType, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
 		@Override
@@ -114,7 +118,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 			Assert.notNull(query, "Query must not be null!");
 
-			return new ExecutableUpdateSupport<>(template, query, domainType, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
 		@Override
@@ -127,7 +131,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 			Assert.notNull(options, "Options must not be null!");
 
-			return new ExecutableUpdateSupport<>(template, query, domainType, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {

@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -53,7 +56,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ExecutableAggregationSupport<>(template, null, domainType, null);
+		return new ExecutableAggregationSupport<>(template, domainType, null, null);
 	}
 
 	/**
@@ -61,20 +64,21 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
+	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableAggregationSupport<T>
 			implements AggregationWithAggregation<T>, ExecutableAggregation<T>, TerminatingAggregation<T> {
 
-		private final MongoTemplate template;
-		private final Aggregation aggregation;
-		private final Class<T> domainType;
-		private final String collection;
+		@NonNull MongoTemplate template;
+		@NonNull Class<T> domainType;
+		Aggregation aggregation;
+		String collection;
 
 		@Override
 		public AggregationWithAggregation<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
 
-			return new ExecutableAggregationSupport<>(template, aggregation, domainType, collection);
+			return new ExecutableAggregationSupport<>(template, domainType, aggregation, collection);
 		}
 
 		@Override
@@ -82,7 +86,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 
 			Assert.notNull(aggregation, "Aggregation must not be null!");
 
-			return new ExecutableAggregationSupport<>(template, aggregation, domainType, collection);
+			return new ExecutableAggregationSupport<>(template, domainType, aggregation, collection);
 		}
 
 		@Override
