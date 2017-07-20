@@ -54,10 +54,10 @@ public interface ExecutableFindOperation {
 	 * Start creating a find operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link FindOperation}.
+	 * @return new instance of {@link ExecutableFind}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	<T> FindOperation<T> query(Class<T> domainType);
+	<T> ExecutableFind<T> query(Class<T> domainType);
 
 	/**
 	 * Trigger find execution by calling one of the terminating methods.
@@ -65,7 +65,7 @@ public interface ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface TerminatingFindOperation<T> {
+	interface TerminatingFind<T> {
 
 		/**
 		 * Get exactly zero or one result.
@@ -137,7 +137,7 @@ public interface ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface TerminatingFindNearOperation<T> {
+	interface TerminatingFindNear<T> {
 
 		/**
 		 * Find all matching elements and return them as {@link org.springframework.data.geo.GeoResult}.
@@ -153,25 +153,25 @@ public interface ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface FindOperationWithQuery<T> extends TerminatingFindOperation<T> {
+	interface FindWithQuery<T> extends TerminatingFind<T> {
 
 		/**
 		 * Set the filter query to be used.
 		 *
 		 * @param query must not be {@literal null}.
-		 * @return new instance of {@link TerminatingFindOperation}.
+		 * @return new instance of {@link TerminatingFind}.
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
-		TerminatingFindOperation<T> matching(Query query);
+		TerminatingFind<T> matching(Query query);
 
 		/**
 		 * Set the filter query for the geoNear execution.
 		 *
 		 * @param nearQuery must not be {@literal null}.
-		 * @return new instance of {@link TerminatingFindNearOperation}.
+		 * @return new instance of {@link TerminatingFindNear}.
 		 * @throws IllegalArgumentException if nearQuery is {@literal null}.
 		 */
-		TerminatingFindNearOperation<T> near(NearQuery nearQuery);
+		TerminatingFindNear<T> near(NearQuery nearQuery);
 	}
 
 	/**
@@ -180,17 +180,17 @@ public interface ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface FindOperationWithCollection<T> extends FindOperationWithQuery<T> {
+	interface FindWithCollection<T> extends FindWithQuery<T> {
 
 		/**
 		 * Explicitly set the name of the collection to perform the query on. <br />
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link FindOperationWithProjection}.
+		 * @return new instance of {@link FindWithProjection}.
 		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
-		FindOperationWithProjection<T> inCollection(String collection);
+		FindWithProjection<T> inCollection(String collection);
 	}
 
 	/**
@@ -199,7 +199,7 @@ public interface ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface FindOperationWithProjection<T> extends FindOperationWithQuery<T> {
+	interface FindWithProjection<T> extends FindWithQuery<T> {
 
 		/**
 		 * Define the target type fields should be mapped to. <br />
@@ -207,17 +207,17 @@ public interface ExecutableFindOperation {
 		 *
 		 * @param resultType must not be {@literal null}.
 		 * @param <R> result type.
-		 * @return new instance of {@link FindOperationWithProjection}.
+		 * @return new instance of {@link FindWithProjection}.
 		 * @throws IllegalArgumentException if resultType is {@literal null}.
 		 */
-		<R> FindOperationWithQuery<R> as(Class<R> resultType);
+		<R> FindWithQuery<R> as(Class<R> resultType);
 	}
 
 	/**
-	 * {@link FindOperation} provides methods for constructing lookup operations in a fluent way.
+	 * {@link ExecutableFind} provides methods for constructing lookup operations in a fluent way.
 	 *
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface FindOperation<T> extends FindOperationWithCollection<T>, FindOperationWithProjection<T> {}
+	interface ExecutableFind<T> extends FindWithCollection<T>, FindWithProjection<T> {}
 }

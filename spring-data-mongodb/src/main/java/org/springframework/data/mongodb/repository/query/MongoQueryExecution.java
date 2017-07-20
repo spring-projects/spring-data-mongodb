@@ -30,8 +30,8 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindOperation;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -64,7 +64,7 @@ interface MongoQueryExecution {
 	@RequiredArgsConstructor
 	final class SlicedExecution implements MongoQueryExecution {
 
-		private final @NonNull FindOperationWithQuery<?> find;
+		private final @NonNull FindWithQuery<?> find;
 		private final @NonNull Pageable pageable;
 
 		/*
@@ -96,7 +96,7 @@ interface MongoQueryExecution {
 	@RequiredArgsConstructor
 	final class PagedExecution implements MongoQueryExecution {
 
-		private final @NonNull FindOperationWithQuery<?> operation;
+		private final @NonNull FindWithQuery<?> operation;
 		private final @NonNull Pageable pageable;
 
 		/*
@@ -108,7 +108,7 @@ interface MongoQueryExecution {
 
 			int overallLimit = query.getLimit();
 
-			TerminatingFindOperation<?> matching = operation.matching(query);
+			TerminatingFind<?> matching = operation.matching(query);
 
 			// Apply raw pagination
 			query.with(pageable);
@@ -134,7 +134,7 @@ interface MongoQueryExecution {
 	@RequiredArgsConstructor
 	class GeoNearExecution implements MongoQueryExecution {
 
-		private final @NonNull FindOperationWithQuery<?> operation;
+		private final @NonNull FindWithQuery<?> operation;
 		private final @NonNull MongoQueryMethod method;
 		private final @NonNull MongoParameterAccessor accessor;
 
@@ -191,12 +191,12 @@ interface MongoQueryExecution {
 	 */
 	final class PagingGeoNearExecution extends GeoNearExecution {
 
-		private final FindOperationWithQuery<?> operation;
+		private final FindWithQuery<?> operation;
 		private final ConvertingParameterAccessor accessor;
 		private final AbstractMongoQuery mongoQuery;
 
-		PagingGeoNearExecution(FindOperationWithQuery<?> operation, MongoQueryMethod method,
-				ConvertingParameterAccessor accessor, AbstractMongoQuery query) {
+		PagingGeoNearExecution(FindWithQuery<?> operation, MongoQueryMethod method, ConvertingParameterAccessor accessor,
+				AbstractMongoQuery query) {
 
 			super(operation, method, accessor);
 

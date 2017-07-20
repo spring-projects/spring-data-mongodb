@@ -42,6 +42,7 @@ import com.mongodb.client.result.UpdateResult;
  * </pre>
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 public interface ExecutableUpdateOperation {
@@ -50,17 +51,16 @@ public interface ExecutableUpdateOperation {
 	 * Start creating an update operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link UpdateOperation}.
+	 * @return new instance of {@link ExecutableUpdate}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	<T> UpdateOperation<T> update(Class<T> domainType);
+	<T> ExecutableUpdate<T> update(Class<T> domainType);
 
 	/**
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface UpdateOperation<T>
-			extends UpdateOperationWithCollection<T>, UpdateOperationWithQuery<T>, UpdateOperationWithUpdate<T> {}
+	interface ExecutableUpdate<T> extends UpdateWithCollection<T>, UpdateWithQuery<T>, UpdateWithUpdate<T> {}
 
 	/**
 	 * Declare the {@link Update} to apply.
@@ -68,16 +68,16 @@ public interface ExecutableUpdateOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface UpdateOperationWithUpdate<T> {
+	interface UpdateWithUpdate<T> {
 
 		/**
 		 * Set the {@link Update} to be applied.
 		 *
 		 * @param update must not be {@literal null}.
-		 * @return new instance of {@link TerminatingUpdateOperation}.
+		 * @return new instance of {@link TerminatingUpdate}.
 		 * @throws IllegalArgumentException if update is {@literal null}.
 		 */
-		TerminatingUpdateOperation<T> apply(Update update);
+		TerminatingUpdate<T> apply(Update update);
 	}
 
 	/**
@@ -86,17 +86,17 @@ public interface ExecutableUpdateOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface UpdateOperationWithCollection<T> {
+	interface UpdateWithCollection<T> {
 
 		/**
 		 * Explicitly set the name of the collection to perform the query on. <br />
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link UpdateOperationWithCollection}.
+		 * @return new instance of {@link UpdateWithCollection}.
 		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
-		UpdateOperationWithQuery<T> inCollection(String collection);
+		UpdateWithQuery<T> inCollection(String collection);
 	}
 
 	/**
@@ -105,16 +105,16 @@ public interface ExecutableUpdateOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface UpdateOperationWithQuery<T> extends UpdateOperationWithUpdate<T> {
+	interface UpdateWithQuery<T> extends UpdateWithUpdate<T> {
 
 		/**
 		 * Filter documents by given {@literal query}.
 		 *
 		 * @param query must not be {@literal null}.
-		 * @return new instance of {@link UpdateOperationWithQuery}.
+		 * @return new instance of {@link UpdateWithQuery}.
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
-		UpdateOperationWithUpdate<T> matching(Query query);
+		UpdateWithUpdate<T> matching(Query query);
 	}
 
 	/**
@@ -132,13 +132,13 @@ public interface ExecutableUpdateOperation {
 		 * @return new instance of {@link FindAndModifyWithOptions}.
 		 * @throws IllegalArgumentException if options is {@literal null}.
 		 */
-		TerminatingFindAndModifyOperation<T> withOptions(FindAndModifyOptions options);
+		TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options);
 	}
 
 	/**
 	 * Trigger findAndModify execution by calling one of the terminating methods.
 	 */
-	interface TerminatingFindAndModifyOperation<T> {
+	interface TerminatingFindAndModify<T> {
 
 		/**
 		 * Find, modify and return the first matching document.
@@ -154,7 +154,7 @@ public interface ExecutableUpdateOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface TerminatingUpdateOperation<T> extends TerminatingFindAndModifyOperation<T>, FindAndModifyWithOptions<T> {
+	interface TerminatingUpdate<T> extends TerminatingFindAndModify<T>, FindAndModifyWithOptions<T> {
 
 		/**
 		 * Update all matching documents in the collection.

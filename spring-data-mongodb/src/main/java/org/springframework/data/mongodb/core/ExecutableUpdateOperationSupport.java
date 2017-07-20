@@ -32,6 +32,7 @@ import com.mongodb.client.result.UpdateResult;
  * Implementation of {@link ExecutableUpdateOperation}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
@@ -51,11 +52,11 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	}
 
 	@Override
-	public <T> UpdateOperation<T> update(Class<T> domainType) {
+	public <T> ExecutableUpdate<T> update(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new UpdateOperationSupport<>(template, null, domainType, null, null, null);
+		return new ExecutableUpdateSupport<>(template, null, domainType, null, null, null);
 	}
 
 	/**
@@ -63,8 +64,8 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
-	static class UpdateOperationSupport<T> implements UpdateOperation<T>, UpdateOperationWithCollection<T>,
-			UpdateOperationWithQuery<T>, TerminatingUpdateOperation<T> {
+	static class ExecutableUpdateSupport<T>
+			implements ExecutableUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T> {
 
 		private final MongoTemplate template;
 		private final Query query;
@@ -74,19 +75,19 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		private final FindAndModifyOptions options;
 
 		@Override
-		public TerminatingUpdateOperation<T> apply(Update update) {
+		public TerminatingUpdate<T> apply(Update update) {
 
 			Assert.notNull(update, "Update must not be null!");
 
-			return new UpdateOperationSupport<>(template, query, domainType, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, query, domainType, update, collection, options);
 		}
 
 		@Override
-		public UpdateOperationWithQuery<T> inCollection(String collection) {
+		public UpdateWithQuery<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
 
-			return new UpdateOperationSupport<>(template, query, domainType, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, query, domainType, update, collection, options);
 		}
 
 		@Override
@@ -109,11 +110,11 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
-		public UpdateOperationWithUpdate<T> matching(Query query) {
+		public UpdateWithUpdate<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null!");
 
-			return new UpdateOperationSupport<>(template, query, domainType, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, query, domainType, update, collection, options);
 		}
 
 		@Override
@@ -122,11 +123,11 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
-		public TerminatingFindAndModifyOperation<T> withOptions(FindAndModifyOptions options) {
+		public TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options) {
 
 			Assert.notNull(options, "Options must not be null!");
 
-			return new UpdateOperationSupport<>(template, query, domainType, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, query, domainType, update, collection, options);
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {

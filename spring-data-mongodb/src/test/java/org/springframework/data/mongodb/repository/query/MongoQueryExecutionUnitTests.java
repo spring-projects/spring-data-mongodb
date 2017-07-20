@@ -35,10 +35,10 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindNearOperation;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindOperation;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindNear;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -66,10 +66,10 @@ import org.springframework.util.ReflectionUtils;
 public class MongoQueryExecutionUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
-	@Mock FindOperation<Object> findOperationMock;
-	@Mock FindOperationWithQuery<Object> operationMock;
-	@Mock TerminatingFindOperation<Object> terminatingMock;
-	@Mock TerminatingFindNearOperation<Object> terminatingGeoMock;
+	@Mock ExecutableFind<Object> findOperationMock;
+	@Mock FindWithQuery<Object> operationMock;
+	@Mock TerminatingFind<Object> terminatingMock;
+	@Mock TerminatingFindNear<Object> terminatingGeoMock;
 	@Mock DbRefResolver dbRefResolver;
 
 	Point POINT = new Point(10, 20);

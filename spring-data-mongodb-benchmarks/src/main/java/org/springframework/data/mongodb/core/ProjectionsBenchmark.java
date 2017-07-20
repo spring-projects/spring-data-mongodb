@@ -21,8 +21,8 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.TearDown;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindOperation;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.microbenchmark.AbstractMicrobenchmark;
@@ -45,12 +45,12 @@ public class ProjectionsBenchmark extends AbstractMicrobenchmark {
 
 	private Person source;
 
-	private FindOperationWithQuery<Person> asPerson;
-	private FindOperationWithQuery<DtoProjection> asDtoProjection;
-	private FindOperationWithQuery<ClosedProjection> asClosedProjection;
-	private FindOperationWithQuery<OpenProjection> asOpenProjection;
+	private FindWithQuery<Person> asPerson;
+	private FindWithQuery<DtoProjection> asDtoProjection;
+	private FindWithQuery<ClosedProjection> asClosedProjection;
+	private FindWithQuery<OpenProjection> asOpenProjection;
 
-	private TerminatingFindOperation<Person> asPersonWithFieldsRestriction;
+	private TerminatingFind<Person> asPersonWithFieldsRestriction;
 	private Document fields = new Document("firstname", 1);
 
 	@Setup

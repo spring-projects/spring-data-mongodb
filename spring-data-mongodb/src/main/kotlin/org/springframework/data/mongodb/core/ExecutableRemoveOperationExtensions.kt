@@ -21,16 +21,18 @@ import kotlin.reflect.KClass
  * Extension for [ExecutableRemoveOperation.remove] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-fun <T : Any> ExecutableRemoveOperation.remove(entityClass: KClass<T>): ExecutableRemoveOperation.RemoveOperation<T> =
-		remove(entityClass.java)
+fun <T : Any> ExecutableRemoveOperation.remove(entityClass: KClass<T>): ExecutableRemoveOperation.ExecutableRemove<T> =
+        remove(entityClass.java)
 
 /**
  * Extension for [ExecutableRemoveOperation.remove] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-inline fun <reified T : Any> ExecutableRemoveOperation.remove(): ExecutableRemoveOperation.RemoveOperation<T> =
-		remove(T::class.java)
+inline fun <reified T : Any> ExecutableRemoveOperation.remove(): ExecutableRemoveOperation.ExecutableRemove<T> =
+        remove(T::class.java)

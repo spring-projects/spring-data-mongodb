@@ -39,6 +39,7 @@ import com.mongodb.client.result.DeleteResult;
  * </pre>
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 public interface ExecutableRemoveOperation {
@@ -47,36 +48,36 @@ public interface ExecutableRemoveOperation {
 	 * Start creating a remove operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link RemoveOperation}.
+	 * @return new instance of {@link ExecutableRemove}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	<T> RemoveOperation<T> remove(Class<T> domainType);
+	<T> ExecutableRemove<T> remove(Class<T> domainType);
 
 	/**
-	 * Collection override (Optional).
+	 * Collection override (optional).
 	 *
 	 * @param <T>
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface RemoveOperationWithCollection<T> extends RemoveOperationWithQuery<T> {
+	interface RemoveWithCollection<T> extends RemoveWithQuery<T> {
 
 		/**
 		 * Explicitly set the name of the collection to perform the query on. <br />
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link RemoveOperationWithCollection}.
+		 * @return new instance of {@link RemoveWithCollection}.
 		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
-		RemoveOperationWithQuery<T> inCollection(String collection);
+		RemoveWithQuery<T> inCollection(String collection);
 	}
 
 	/**
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface TerminatingRemoveOperation<T> {
+	interface TerminatingRemove<T> {
 
 		/**
 		 * Remove all documents matching.
@@ -100,21 +101,21 @@ public interface ExecutableRemoveOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface RemoveOperationWithQuery<T> extends TerminatingRemoveOperation<T> {
+	interface RemoveWithQuery<T> extends TerminatingRemove<T> {
 
 		/**
 		 * Define the query filtering elements.
 		 *
 		 * @param query must not be {@literal null}.
-		 * @return new instance of {@link TerminatingRemoveOperation}.
+		 * @return new instance of {@link TerminatingRemove}.
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
-		TerminatingRemoveOperation<T> matching(Query query);
+		TerminatingRemove<T> matching(Query query);
 	}
 
 	/**
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface RemoveOperation<T> extends RemoveOperationWithCollection<T> {}
+	interface ExecutableRemove<T> extends RemoveWithCollection<T> {}
 }

@@ -61,11 +61,11 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	}
 
 	@Override
-	public <T> FindOperation<T> query(Class<T> domainType) {
+	public <T> ExecutableFind<T> query(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new FindOperationSupport<>(template, domainType, domainType, null, ALL_QUERY);
+		return new ExecutableFindSupport<>(template, domainType, domainType, null, ALL_QUERY);
 	}
 
 	/**
@@ -74,8 +74,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
-	static class FindOperationSupport<T> implements FindOperation<T>, FindOperationWithCollection<T>,
-			FindOperationWithProjection<T>, FindOperationWithQuery<T> {
+	static class ExecutableFindSupport<T>
+			implements ExecutableFind<T>, FindWithCollection<T>, FindWithProjection<T>, FindWithQuery<T> {
 
 		private final MongoTemplate template;
 		private final Class<?> domainType;
@@ -84,27 +84,27 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		private final Query query;
 
 		@Override
-		public FindOperationWithProjection<T> inCollection(String collection) {
+		public FindWithProjection<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection name must not be null nor empty!");
 
-			return new FindOperationSupport<>(template, domainType, returnType, collection, query);
+			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
 		}
 
 		@Override
-		public <T1> FindOperationWithQuery<T1> as(Class<T1> returnType) {
+		public <T1> FindWithQuery<T1> as(Class<T1> returnType) {
 
 			Assert.notNull(returnType, "ReturnType must not be null!");
 
-			return new FindOperationSupport<>(template, domainType, returnType, collection, query);
+			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
 		}
 
 		@Override
-		public TerminatingFindOperation<T> matching(Query query) {
+		public TerminatingFind<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null!");
 
-			return new FindOperationSupport<>(template, domainType, returnType, collection, query);
+			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
 		}
 
 		@Override
@@ -142,7 +142,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
-		public TerminatingFindNearOperation<T> near(NearQuery nearQuery) {
+		public TerminatingFindNear<T> near(NearQuery nearQuery) {
 			return () -> template.geoNear(nearQuery, domainType, getCollectionName(), returnType);
 		}
 

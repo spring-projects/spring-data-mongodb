@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithProjection;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithProjection;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
@@ -42,7 +42,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
-	private final FindOperationWithProjection<?> findOperationWithProjection;
+	private final FindWithProjection<?> findOperationWithProjection;
 
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
@@ -87,14 +87,14 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		ReturnedType returnedType = processor.getReturnedType();
-		FindOperationWithQuery<?> find = findOperationWithProjection.as(returnedType.getTypeToRead());
+		FindWithQuery<?> find = findOperationWithProjection.as(returnedType.getTypeToRead());
 
 		MongoQueryExecution execution = getExecution(accessor, find);
 
 		return processor.processResult(execution.execute(query));
 	}
 
-	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindOperationWithQuery<?> operation) {
+	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
 			return new DeleteExecution(operations, method);

@@ -30,6 +30,7 @@ import com.mongodb.bulk.BulkWriteResult;
  * Implementation of {@link ExecutableInsertOperation}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
@@ -50,11 +51,11 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 	}
 
 	@Override
-	public <T> InsertOperation<T> insert(Class<T> domainType) {
+	public <T> ExecutableInsert<T> insert(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new InsertOperationSupport<>(template, domainType, null, null);
+		return new ExecutableInsertSupport<>(template, domainType, null, null);
 	}
 
 	/**
@@ -62,7 +63,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
-	static class InsertOperationSupport<T> implements InsertOperation<T> {
+	static class ExecutableInsertSupport<T> implements ExecutableInsert<T> {
 
 		private final MongoTemplate template;
 		private final Class<T> domainType;
@@ -95,19 +96,19 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		}
 
 		@Override
-		public InsertOperationWithBulkMode<T> inCollection(String collection) {
+		public InsertWithBulkMode<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty.");
 
-			return new InsertOperationSupport<>(template, domainType, collection, bulkMode);
+			return new ExecutableInsertSupport<>(template, domainType, collection, bulkMode);
 		}
 
 		@Override
-		public TerminatingBulkInsertOperation<T> withBulkMode(BulkMode bulkMode) {
+		public TerminatingBulkInsert<T> withBulkMode(BulkMode bulkMode) {
 
 			Assert.notNull(bulkMode, "BulkMode must not be null!");
 
-			return new InsertOperationSupport<>(template, domainType, collection, bulkMode);
+			return new ExecutableInsertSupport<>(template, domainType, collection, bulkMode);
 		}
 
 		private String getCollectionName() {
