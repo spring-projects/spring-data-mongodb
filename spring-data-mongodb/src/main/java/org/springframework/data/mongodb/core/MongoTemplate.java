@@ -20,9 +20,9 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -180,7 +180,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private static final String ID_FIELD = "_id";
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
 	private static final Collection<String> ITERABLE_CLASSES;
-	public static final SpelAwareProxyProjectionFactory PROJECTION_FACTORY = new SpelAwareProxyProjectionFactory();
 
 	static {
 
@@ -198,6 +197,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
+	private final SpelAwareProxyProjectionFactory projectionFactory;
 
 	private WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
@@ -241,6 +241,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter(mongoDbFactory) : mongoConverter;
 		this.queryMapper = new QueryMapper(this.mongoConverter);
 		this.updateMapper = new UpdateMapper(this.mongoConverter);
+		this.projectionFactory = new SpelAwareProxyProjectionFactory();
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
@@ -303,10 +304,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		prepareIndexCreator(applicationContext);
 
 		eventPublisher = applicationContext;
+
 		if (mappingContext instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 		}
+
 		resourceLoader = applicationContext;
+
+		projectionFactory.setBeanFactory(applicationContext);
+		projectionFactory.setBeanClassLoader(applicationContext.getClassLoader());
 	}
 
 	/**
@@ -2356,12 +2362,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			return fields;
 		}
 
-		ProjectionInformation projectionInformation = PROJECTION_FACTORY.getProjectionInformation(targetType);
-		if (projectionInformation.isClosed()) {
+		ProjectionInformation projectionInformation = projectionFactory.getProjectionInformation(targetType);
 
-			for (PropertyDescriptor descriptor : projectionInformation.getInputProperties()) {
-				fields.append(descriptor.getName(), 1);
-			}
+		if (projectionInformation.isClosed()) {
+			projectionInformation.getInputProperties().forEach(it -> fields.append(it.getName(), 1));
 		}
 
 		return fields;
@@ -2612,46 +2616,35 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param <T>
 	 * @since 2.0
 	 */
-	class ProjectingReadCallback<S, T> implements DocumentCallback<T> {
+	@RequiredArgsConstructor
+	private class ProjectingReadCallback<S, T> implements DocumentCallback<T> {
 
-		private final Class<S> entityType;
-		private final Class<T> targetType;
-		private final String collectionName;
-		private final EntityReader<Object, Bson> reader;
+		private final @NonNull EntityReader<Object, Bson> reader;
+		private final @NonNull Class<S> entityType;
+		private final @NonNull Class<T> targetType;
+		private final @NonNull String collectionName;
 
-		ProjectingReadCallback(EntityReader<Object, Bson> reader, Class<S> entityType, Class<T> targetType,
-				String collectionName) {
-
-			this.reader = reader;
-			this.entityType = entityType;
-			this.targetType = targetType;
-			this.collectionName = collectionName;
-		}
-
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.MongoTemplate.DocumentCallback#doWith(org.bson.Document)
+		 */
+		@SuppressWarnings("unchecked")
 		public T doWith(Document object) {
 
-			if (null != object) {
-				maybeEmitEvent(new AfterLoadEvent<>(object, targetType, collectionName));
+			if (object == null) {
+				return null;
 			}
 
-			T target = doRead(object, entityType, targetType);
+			Class<?> typeToRead = targetType.isInterface() || targetType.isAssignableFrom(entityType) ? entityType
+					: targetType;
+			Object source = reader.read(typeToRead, object);
+			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
 
-			if (null != target) {
-				maybeEmitEvent(new AfterConvertEvent<>(object, target, collectionName));
+			if (result == null) {
+				maybeEmitEvent(new AfterConvertEvent<>(object, result, collectionName));
 			}
 
-			return target;
-		}
-
-		private T doRead(Document source, Class entityType, Class targetType) {
-
-			if (targetType != entityType && targetType.isInterface()) {
-
-				S target = (S) reader.read(entityType, source);
-				return (T) PROJECTION_FACTORY.createProjection(targetType, target);
-			}
-
-			return (T) reader.read(targetType, source);
+			return (T) result;
 		}
 	}
 

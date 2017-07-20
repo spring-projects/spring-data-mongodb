@@ -343,9 +343,16 @@ public class ExecutableFindOperationSupportTests {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("spock"))).exists()).isFalse();
 	}
 
+	@Test // DATAMONGO-1734
+	public void returnsTargetObjectDirectlyIfProjectionInterfaceIsImplemented() {
+		assertThat(template.query(Person.class).as(Contact.class).all()).allMatch(it -> it instanceof Person);
+	}
+
+	interface Contact {}
+
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
-	static class Person {
+	static class Person implements Contact {
 		@Id String id;
 		String firstname;
 	}
