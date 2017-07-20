@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core
 
+import com.nhaarman.mockito_kotlin.verify
 import example.first.First
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +26,7 @@ import org.mockito.junit.MockitoJUnitRunner
 
 /**
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner::class)
 class ExecutableAggregationOperationExtensionsTests {
@@ -34,13 +36,15 @@ class ExecutableAggregationOperationExtensionsTests {
 
 	@Test // DATAMONGO-1689
 	fun `aggregateAndReturn(KClass) extension should call its Java counterpart`() {
+
 		operation.aggregateAndReturn(First::class)
-		Mockito.verify(operation, Mockito.times(1)).aggregateAndReturn(First::class.java)
+		verify(operation).aggregateAndReturn(First::class.java)
 	}
 
 	@Test // DATAMONGO-1689
 	fun `aggregateAndReturn() with reified type parameter extension should call its Java counterpart`() {
+
 		operation.aggregateAndReturn<First>()
-		Mockito.verify(operation, Mockito.times(1)).aggregateAndReturn(First::class.java)
+		verify(operation).aggregateAndReturn(First::class.java)
 	}
 }
