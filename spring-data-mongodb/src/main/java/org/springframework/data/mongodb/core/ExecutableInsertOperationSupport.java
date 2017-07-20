@@ -15,11 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -63,12 +66,13 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
+	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableInsertSupport<T> implements ExecutableInsert<T> {
 
-		private final MongoTemplate template;
-		private final Class<T> domainType;
-		private final String collection;
-		private final BulkMode bulkMode;
+		@NonNull MongoTemplate template;
+		@NonNull Class<T> domainType;
+		String collection;
+		BulkMode bulkMode;
 
 		@Override
 		public void one(T object) {
