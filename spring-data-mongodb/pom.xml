@@ -107,14 +107,12 @@
 		<dependency>
 		 	<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
-			<version>${reactor}</version>
 			<optional>true</optional>
 		</dependency>
 
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
-			<version>${reactor}</version>
 			<optional>true</optional>
 		</dependency>
 
@@ -238,7 +236,7 @@
 			<version>0.1.4</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<!-- Kotlin extension -->
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
