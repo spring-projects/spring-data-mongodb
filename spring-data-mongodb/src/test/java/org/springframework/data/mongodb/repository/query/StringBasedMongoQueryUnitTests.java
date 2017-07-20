@@ -38,7 +38,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
@@ -70,7 +70,7 @@ public class StringBasedMongoQueryUnitTests {
 	SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	@Mock MongoOperations operations;
-	@Mock FindOperation<Object> findOperation;
+	@Mock ExecutableFind<Object> findOperation;
 	@Mock DbRefResolver factory;
 
 	MongoConverter converter;

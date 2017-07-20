@@ -24,19 +24,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
@@ -1815,7 +1804,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableFindOperation#query(java.lang.Class)
 	 */
 	@Override
-	public <T> FindOperation<T> query(Class<T> domainType) {
+	public <T> ExecutableFind<T> query(Class<T> domainType) {
 		return new ExecutableFindOperationSupport(this).query(domainType);
 	}
 
@@ -1824,7 +1813,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation#update(java.lang.Class)
 	 */
 	@Override
-	public <T> UpdateOperation<T> update(Class<T> domainType) {
+	public <T> ExecutableUpdate<T> update(Class<T> domainType) {
 		return new ExecutableUpdateOperationSupport(this).update(domainType);
 	}
 
@@ -1833,7 +1822,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation#remove(java.lang.Class)
 	 */
 	@Override
-	public <T> RemoveOperation<T> remove(Class<T> domainType) {
+	public <T> ExecutableRemove<T> remove(Class<T> domainType) {
 		return new ExecutableRemoveOperationSupport(this).remove(domainType);
 	}
 
@@ -1842,7 +1831,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation#aggregateAndReturn(java.lang.Class)
 	 */
 	@Override
-	public <T> AggregationOperation<T> aggregateAndReturn(Class<T> domainType) {
+	public <T> ExecutableAggregation<T> aggregateAndReturn(Class<T> domainType) {
 		return new ExecutableAggregationOperationSupport(this).aggregateAndReturn(domainType);
 	}
 
@@ -1851,7 +1840,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#insert(java.lang.Class)
 	 */
 	@Override
-	public <T> InsertOperation<T> insert(Class<T> domainType) {
+	public <T> ExecutableInsert<T> insert(Class<T> domainType) {
 		return new ExecutableInsertOperationSupport(this).insert(domainType);
 	}
 

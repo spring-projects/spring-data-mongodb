@@ -31,6 +31,7 @@ import com.mongodb.client.result.DeleteResult;
  * Implementation of {@link ExecutableRemoveOperation}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
@@ -51,11 +52,11 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 	}
 
 	@Override
-	public <T> RemoveOperation<T> remove(Class<T> domainType) {
+	public <T> ExecutableRemove<T> remove(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new RemoveOperationSupport<>(tempate, null, domainType, null);
+		return new ExecutableRemoveSupport<>(tempate, null, domainType, null);
 	}
 
 	/**
@@ -63,7 +64,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
-	static class RemoveOperationSupport<T> implements RemoveOperation<T>, RemoveOperationWithCollection<T> {
+	static class ExecutableRemoveSupport<T> implements ExecutableRemove<T>, RemoveWithCollection<T> {
 
 		private final MongoTemplate template;
 		private final Query query;
@@ -71,19 +72,19 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		private final String collection;
 
 		@Override
-		public RemoveOperationWithQuery<T> inCollection(String collection) {
+		public RemoveWithQuery<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
 
-			return new RemoveOperationSupport<>(template, query, domainType, collection);
+			return new ExecutableRemoveSupport<>(template, query, domainType, collection);
 		}
 
 		@Override
-		public TerminatingRemoveOperation<T> matching(Query query) {
+		public TerminatingRemove<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null!");
 
-			return new RemoveOperationSupport<>(template, query, domainType, collection);
+			return new ExecutableRemoveSupport<>(template, query, domainType, collection);
 		}
 
 		@Override

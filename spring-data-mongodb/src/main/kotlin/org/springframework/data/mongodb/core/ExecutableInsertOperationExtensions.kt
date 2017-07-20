@@ -21,16 +21,18 @@ import kotlin.reflect.KClass
  * Extension for [ExecutableInsertOperation.insert] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-fun <T : Any> ExecutableInsertOperation.insert(entityClass: KClass<T>): ExecutableInsertOperation.InsertOperation<T> =
-		insert(entityClass.java)
+fun <T : Any> ExecutableInsertOperation.insert(entityClass: KClass<T>): ExecutableInsertOperation.ExecutableInsert<T> =
+        insert(entityClass.java)
 
 /**
  * Extension for [ExecutableInsertOperation.insert] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-inline fun <reified T : Any> ExecutableInsertOperation.insert(): ExecutableInsertOperation.InsertOperation<T> =
-		insert(T::class.java)
+inline fun <reified T : Any> ExecutableInsertOperation.insert(): ExecutableInsertOperation.ExecutableInsert<T> =
+        insert(T::class.java)

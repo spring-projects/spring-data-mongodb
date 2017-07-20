@@ -21,37 +21,41 @@ import kotlin.reflect.KClass
  * Extension for [ExecutableFindOperation.query] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-fun <T : Any> ExecutableFindOperation.query(entityClass: KClass<T>): ExecutableFindOperation.FindOperation<T> =
-		query(entityClass.java)
+fun <T : Any> ExecutableFindOperation.query(entityClass: KClass<T>): ExecutableFindOperation.ExecutableFind<T> =
+        query(entityClass.java)
 
 /**
  * Extension for [ExecutableFindOperation.query] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-inline fun <reified T : Any> ExecutableFindOperation.query(): ExecutableFindOperation.FindOperation<T> =
-		query(T::class.java)
+inline fun <reified T : Any> ExecutableFindOperation.query(): ExecutableFindOperation.ExecutableFind<T> =
+        query(T::class.java)
 
 
 /**
- * Extension for [ExecutableFindOperation.FindOperationWithProjection.as] providing a [KClass] based variant.
+ * Extension for [ExecutableFindOperation.FindWithProjection. as] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-fun <T : Any> ExecutableFindOperation.FindOperationWithProjection<T>.asType(resultType: KClass<T>): ExecutableFindOperation.FindOperationWithQuery<T> =
-		`as`(resultType.java)
+fun <T : Any> ExecutableFindOperation.FindWithProjection<T>.asType(resultType: KClass<T>): ExecutableFindOperation.FindWithQuery<T> =
+        `as`(resultType.java)
 
 /**
- * Extension for [ExecutableFindOperation.FindOperationWithProjection.as] leveraging reified type parameters.
+ * Extension for [ExecutableFindOperation.FindWithProjection. as] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-inline fun <reified T : Any> ExecutableFindOperation.FindOperationWithProjection<T>.asType(): ExecutableFindOperation.FindOperationWithQuery<T> =
-		`as`(T::class.java)
+inline fun <reified T : Any> ExecutableFindOperation.FindWithProjection<T>.asType(): ExecutableFindOperation.FindWithQuery<T> =
+        `as`(T::class.java)
 
 

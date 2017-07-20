@@ -37,6 +37,7 @@ import com.mongodb.bulk.BulkWriteResult;
  * </pre>
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 public interface ExecutableInsertOperation {
@@ -45,10 +46,10 @@ public interface ExecutableInsertOperation {
 	 * Start creating an insert operation for given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link InsertOperation}.
+	 * @return new instance of {@link ExecutableInsert}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	<T> InsertOperation<T> insert(Class<T> domainType);
+	<T> ExecutableInsert<T> insert(Class<T> domainType);
 
 	/**
 	 * Trigger insert execution by calling one of the terminating methods.
@@ -56,7 +57,7 @@ public interface ExecutableInsertOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface TerminatingInsertOperation<T> extends TerminatingBulkInsertOperation<T> {
+	interface TerminatingInsert<T> extends TerminatingBulkInsert<T> {
 
 		/**
 		 * Insert exactly one object.
@@ -81,7 +82,7 @@ public interface ExecutableInsertOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface TerminatingBulkInsertOperation<T> {
+	interface TerminatingBulkInsert<T> {
 
 		/**
 		 * Bulk write collection of objects.
@@ -97,41 +98,40 @@ public interface ExecutableInsertOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface InsertOperation<T>
-			extends TerminatingInsertOperation<T>, InsertOperationWithCollection<T>, InsertOperationWithBulkMode<T> {}
+	interface ExecutableInsert<T> extends TerminatingInsert<T>, InsertWithCollection<T>, InsertWithBulkMode<T> {}
 
 	/**
-	 * Collection override (Optional).
+	 * Collection override (optional).
 	 *
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface InsertOperationWithCollection<T> {
+	interface InsertWithCollection<T> {
 
 		/**
 		 * Explicitly set the name of the collection. <br />
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link InsertOperationWithBulkMode}.
+		 * @return new instance of {@link InsertWithBulkMode}.
 		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
-		InsertOperationWithBulkMode<T> inCollection(String collection);
+		InsertWithBulkMode<T> inCollection(String collection);
 	}
 
 	/**
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface InsertOperationWithBulkMode<T> extends TerminatingInsertOperation<T> {
+	interface InsertWithBulkMode<T> extends TerminatingInsert<T> {
 
 		/**
 		 * Define the {@link BulkMode} to use for bulk insert operation.
 		 *
 		 * @param bulkMode must not be {@literal null}.
-		 * @return new instance of {@link TerminatingBulkInsertOperation}.
+		 * @return new instance of {@link TerminatingBulkInsert}.
 		 * @throws IllegalArgumentException if bulkMode is {@literal null}.
 		 */
-		TerminatingBulkInsertOperation<T> withBulkMode(BulkMode bulkMode);
+		TerminatingBulkInsert<T> withBulkMode(BulkMode bulkMode);
 	}
 }

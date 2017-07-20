@@ -31,7 +31,7 @@ import org.springframework.data.util.CloseableIterator;
  *     <code>
  *         aggregateAndReturn(Jedi.class)
  *             .by(newAggregation(Human.class, project("These are not the droids you are looking for")))
- *             .get();
+ *             .all();
  *     </code>
  * </pre>
  *
@@ -47,10 +47,10 @@ public interface ExecutableAggregationOperation {
 	 * input type for he aggregation.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link AggregationOperation}.
+	 * @return new instance of {@link ExecutableAggregation}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
-	<T> AggregationOperation<T> aggregateAndReturn(Class<T> domainType);
+	<T> ExecutableAggregation<T> aggregateAndReturn(Class<T> domainType);
 
 	/**
 	 * Collection override (Optional).
@@ -58,17 +58,17 @@ public interface ExecutableAggregationOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface AggregationOperationWithCollection<T> {
+	interface AggregationWithCollection<T> {
 
 		/**
 		 * Explicitly set the name of the collection to perform the query on. <br />
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link AggregationOperationWithAggregation}.
+		 * @return new instance of {@link AggregationWithAggregation}.
 		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
-		AggregationOperationWithAggregation<T> inCollection(String collection);
+		AggregationWithAggregation<T> inCollection(String collection);
 	}
 
 	/**
@@ -77,7 +77,7 @@ public interface ExecutableAggregationOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface TerminatingAggregationOperation<T> {
+	interface TerminatingAggregation<T> {
 
 		/**
 		 * Apply pipeline operations as specified and get all matching elements.
@@ -102,22 +102,21 @@ public interface ExecutableAggregationOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface AggregationOperationWithAggregation<T> {
+	interface AggregationWithAggregation<T> {
 
 		/**
 		 * Set the aggregation to be used.
 		 *
 		 * @param aggregation must not be {@literal null}.
-		 * @return new instance of {@link TerminatingAggregationOperation}.
+		 * @return new instance of {@link TerminatingAggregation}.
 		 * @throws IllegalArgumentException if aggregation is {@literal null}.
 		 */
-		TerminatingAggregationOperation<T> by(Aggregation aggregation);
+		TerminatingAggregation<T> by(Aggregation aggregation);
 	}
 
 	/**
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface AggregationOperation<T>
-			extends AggregationOperationWithCollection<T>, AggregationOperationWithAggregation<T> {}
+	interface ExecutableAggregation<T> extends AggregationWithCollection<T>, AggregationWithAggregation<T> {}
 }

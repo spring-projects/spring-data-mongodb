@@ -34,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -65,7 +65,7 @@ import com.mongodb.util.JSONParseException;
 public class PartTreeMongoQueryUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
-	@Mock FindOperation<?> findOperationMock;
+	@Mock ExecutableFind<?> findOperationMock;
 
 	MongoMappingContext mappingContext;
 

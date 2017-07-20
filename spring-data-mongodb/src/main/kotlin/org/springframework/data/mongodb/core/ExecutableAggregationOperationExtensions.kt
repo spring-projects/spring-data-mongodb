@@ -21,16 +21,18 @@ import kotlin.reflect.KClass
  * Extension for [ExecutableAggregationOperation.aggregateAndReturn] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-fun <T : Any> ExecutableAggregationOperation.aggregateAndReturn(entityClass: KClass<T>): ExecutableAggregationOperation.AggregationOperation<T> =
-		aggregateAndReturn(entityClass.java)
+fun <T : Any> ExecutableAggregationOperation.aggregateAndReturn(entityClass: KClass<T>): ExecutableAggregationOperation.ExecutableAggregation<T> =
+        aggregateAndReturn(entityClass.java)
 
 /**
  * Extension for [ExecutableAggregationOperation.aggregateAndReturn] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
+ * @author Mark Paluch
  * @since 2.0
  */
-inline fun <reified T : Any> ExecutableAggregationOperation.aggregateAndReturn(): ExecutableAggregationOperation.AggregationOperation<T> =
-		aggregateAndReturn(T::class.java)
+inline fun <reified T : Any> ExecutableAggregationOperation.aggregateAndReturn(): ExecutableAggregationOperation.ExecutableAggregation<T> =
+        aggregateAndReturn(T::class.java)

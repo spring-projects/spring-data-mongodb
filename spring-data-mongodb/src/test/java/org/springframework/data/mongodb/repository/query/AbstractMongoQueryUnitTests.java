@@ -39,9 +39,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperation;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithProjection;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindOperationWithQuery;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithProjection;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -71,9 +71,9 @@ import com.mongodb.client.result.DeleteResult;
 public class AbstractMongoQueryUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
-	@Mock FindOperation<?> findOperationMock;
-	@Mock FindOperationWithProjection<?> withProjectionMock;
-	@Mock FindOperationWithQuery<?> withQueryMock;
+	@Mock ExecutableFind<?> findOperationMock;
+	@Mock FindWithProjection<?> withProjectionMock;
+	@Mock FindWithQuery<?> withQueryMock;
 	@Mock BasicMongoPersistentEntity<?> persitentEntityMock;
 	@Mock MongoMappingContext mappingContextMock;
 	@Mock DeleteResult deleteResultMock;
