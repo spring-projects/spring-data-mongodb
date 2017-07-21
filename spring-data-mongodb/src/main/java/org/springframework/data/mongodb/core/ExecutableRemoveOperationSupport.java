@@ -22,8 +22,6 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
-import org.bson.Document;
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -38,6 +36,8 @@ import com.mongodb.client.result.DeleteResult;
  * @since 2.0
  */
 class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
+
+	private static final Query ALL_QUERY = new Query();
 
 	private final MongoTemplate tempate;
 
@@ -54,12 +54,16 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		this.tempate = template;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation#remove(java.lang.Class)
+	 */
 	@Override
 	public <T> ExecutableRemove<T> remove(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ExecutableRemoveSupport<>(tempate, domainType, null, null);
+		return new ExecutableRemoveSupport<>(tempate, domainType, ALL_QUERY, null);
 	}
 
 	/**
@@ -75,6 +79,10 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		Query query;
 		String collection;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.RemoveWithCollection#inCollection(java.lang.String)
+		 */
 		@Override
 		public RemoveWithQuery<T> inCollection(String collection) {
 
@@ -83,6 +91,10 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.RemoveWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
+		 */
 		@Override
 		public TerminatingRemove<T> matching(Query query) {
 
@@ -91,28 +103,32 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove#all()
+		 */
 		@Override
 		public DeleteResult all() {
 
 			String collectionName = getCollectionName();
 
-			return template.doRemove(collectionName, getQuery(), domainType);
+			return template.doRemove(collectionName, query, domainType);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove#findAndRemove()
+		 */
 		@Override
 		public List<T> findAndRemove() {
 
 			String collectionName = getCollectionName();
 
-			return template.doFindAndDelete(collectionName, getQuery(), domainType);
+			return template.doFindAndDelete(collectionName, query, domainType);
 		}
 
 		private String getCollectionName() {
 			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
-		}
-
-		private Query getQuery() {
-			return query != null ? query : new BasicQuery(new Document());
 		}
 	}
 }

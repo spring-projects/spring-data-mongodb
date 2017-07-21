@@ -27,9 +27,10 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
- * Implementation of {@link ExecutableAggregationOperation} operating directly on {@link ReactiveMongoTemplate}.
+ * Implementation of {@link ReactiveAggregationOperation} operating directly on {@link ReactiveMongoTemplate}.
  *
  * @author Mark Paluch
+ * @autor Christoph Strobl
  * @since 2.0
  */
 class ReactiveAggregationOperationSupport implements ReactiveAggregationOperation {
@@ -49,6 +50,10 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 		this.template = template;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveAggregationOperation#aggregateAndReturn(java.lang.Class)
+	 */
 	@Override
 	public <T> ReactiveAggregation<T> aggregateAndReturn(Class<T> domainType) {
 
@@ -67,6 +72,10 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 		Aggregation aggregation;
 		String collection;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveAggregationOperation.AggregationOperationWithCollection#inCollection(java.lang.String)
+		 */
 		@Override
 		public AggregationOperationWithAggregation<T> inCollection(String collection) {
 
@@ -75,6 +84,10 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 			return new ReactiveAggregationSupport<>(template, domainType, aggregation, collection);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveAggregationOperation.AggregationOperationWithAggregation#by(org.springframework.data.mongodb.core.Aggregation)
+		 */
 		@Override
 		public TerminatingAggregationOperation<T> by(Aggregation aggregation) {
 
@@ -83,6 +96,10 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 			return new ReactiveAggregationSupport<>(template, domainType, aggregation, collection);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveAggregationOperation.TerminatingAggregationOperation#all()
+		 */
 		@Override
 		public Flux<T> all() {
 			return template.aggregate(aggregation, getCollectionName(aggregation), domainType);

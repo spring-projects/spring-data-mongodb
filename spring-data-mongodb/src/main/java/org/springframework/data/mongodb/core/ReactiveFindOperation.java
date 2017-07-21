@@ -44,6 +44,7 @@ import org.springframework.data.mongodb.core.query.Query;
  * </pre>
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 public interface ReactiveFindOperation {
@@ -52,7 +53,7 @@ public interface ReactiveFindOperation {
 	 * Start creating a find operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link ReactiveFind}.
+	 * @return new instance of {@link ReactiveFind}. Never {@literal null}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
 	<T> ReactiveFind<T> query(Class<T> domainType);
@@ -65,7 +66,7 @@ public interface ReactiveFindOperation {
 		/**
 		 * Get exactly zero or one result.
 		 *
-		 * @return {@link Mono#empty()} if no match found.
+		 * @return {@link Mono#empty()} if no match found. Never {@literal null}.
 		 * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if more than one match found.
 		 */
 		Mono<T> one();
@@ -73,7 +74,7 @@ public interface ReactiveFindOperation {
 		/**
 		 * Get the first or no result.
 		 *
-		 * @return {@link Mono#empty()} if no match found.
+		 * @return {@link Mono#empty()} if no match found. Never {@literal null}.
 		 */
 		Mono<T> first();
 
@@ -87,14 +88,14 @@ public interface ReactiveFindOperation {
 		/**
 		 * Get the number of matching elements.
 		 *
-		 * @return total number of matching elements.
+		 * @return {@link Mono} emitting total number of matching elements. Never {@literal null}.
 		 */
 		Mono<Long> count();
 
 		/**
 		 * Check for the presence of matching elements.
 		 *
-		 * @return {@literal true} if at least one matching element exists.
+		 * @return {@link Mono} emitting {@literal true} if at least one matching element exists. Never {@literal null}.
 		 */
 		Mono<Boolean> exists();
 	}

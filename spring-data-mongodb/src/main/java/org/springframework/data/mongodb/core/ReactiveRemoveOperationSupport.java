@@ -32,6 +32,7 @@ import com.mongodb.client.result.DeleteResult;
  * Implementation of {@link ReactiveRemoveOperation}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 @RequiredArgsConstructor
@@ -41,12 +42,16 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 
 	private final @NonNull ReactiveMongoTemplate tempate;
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation#remove(java.lang.Class)
+	 */
 	@Override
 	public <T> ReactiveRemove<T> remove(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ReactiveRemoveSupport<>(tempate, domainType, null, null);
+		return new ReactiveRemoveSupport<>(tempate, domainType, ALL_QUERY, null);
 	}
 
 	@RequiredArgsConstructor
@@ -58,6 +63,10 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 		Query query;
 		String collection;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation.RemoveWithCollection#inCollection(String)
+		 */
 		@Override
 		public RemoveWithQuery<T> inCollection(String collection) {
 
@@ -66,6 +75,10 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 			return new ReactiveRemoveSupport<>(template, domainType, query, collection);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation.RemoveWithQuery#matching(org.springframework.data.mongodb.core.Query)
+		 */
 		@Override
 		public TerminatingRemove<T> matching(Query query) {
 
@@ -74,28 +87,33 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 			return new ReactiveRemoveSupport<>(template, domainType, query, collection);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation.TerminatingRemove#all()
+		 */
 		@Override
 		public Mono<DeleteResult> all() {
 
 			String collectionName = getCollectionName();
 
-			return template.doRemove(collectionName, getQuery(), domainType);
+			return template.doRemove(collectionName, query, domainType);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation.TerminatingRemove#findAndRemove()
+		 */
 		@Override
 		public Flux<T> findAndRemove() {
 
 			String collectionName = getCollectionName();
 
-			return template.doFindAndDelete(collectionName, getQuery(), domainType);
+			return template.doFindAndDelete(collectionName, query, domainType);
 		}
 
 		private String getCollectionName() {
 			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
 		}
 
-		private Query getQuery() {
-			return query != null ? query : ALL_QUERY;
-		}
 	}
 }

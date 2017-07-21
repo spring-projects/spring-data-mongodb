@@ -27,7 +27,7 @@ fun <T : Any> ReactiveUpdateOperation.update(entityClass: KClass<T>): ReactiveUp
 		update(entityClass.java)
 
 /**
- * Extension for [ReactiveUpdateOperation.insert] leveraging reified type parameters.
+ * Extension for [ReactiveUpdateOperation.update] leveraging reified type parameters.
  *
  * @author Mark Paluch
  * @since 2.0
