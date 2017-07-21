@@ -95,12 +95,6 @@ public interface ExecutableInsertOperation {
 	}
 
 	/**
-	 * @author Christoph Strobl
-	 * @since 2.0
-	 */
-	interface ExecutableInsert<T> extends TerminatingInsert<T>, InsertWithCollection<T>, InsertWithBulkMode<T> {}
-
-	/**
 	 * Collection override (optional).
 	 *
 	 * @author Christoph Strobl
@@ -134,4 +128,10 @@ public interface ExecutableInsertOperation {
 		 */
 		TerminatingBulkInsert<T> withBulkMode(BulkMode bulkMode);
 	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
+	interface ExecutableInsert<T> extends TerminatingInsert<T>, InsertWithCollection<T>, InsertWithBulkMode<T> {}
 }

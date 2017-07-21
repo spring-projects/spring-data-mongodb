@@ -20,10 +20,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Optional;
-
-import org.bson.Document;
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.util.Assert;
@@ -40,6 +36,8 @@ import com.mongodb.client.result.UpdateResult;
  */
 class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
+	private static final Query ALL_QUERY = new Query();
+
 	private final MongoTemplate template;
 
 	/**
@@ -54,12 +52,16 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		this.template = template;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation#update(java.lang.Class)
+	 */
 	@Override
 	public <T> ExecutableUpdate<T> update(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ExecutableUpdateSupport<>(template, domainType, null, null, null, null);
+		return new ExecutableUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null);
 	}
 
 	/**
@@ -78,6 +80,10 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		String collection;
 		FindAndModifyOptions options;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithUpdate#apply(Update)
+		 */
 		@Override
 		public TerminatingUpdate<T> apply(Update update) {
 
@@ -86,6 +92,10 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithCollection#inCollection(java.lang.String)
+		 */
 		@Override
 		public UpdateWithQuery<T> inCollection(String collection) {
 
@@ -94,38 +104,10 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
-		@Override
-		public UpdateResult first() {
-			return doUpdate(false, false);
-		}
-
-		@Override
-		public UpdateResult upsert() {
-			return doUpdate(true, true);
-		}
-
-		@Override
-		public Optional<T> findAndModify() {
-
-			String collectionName = getCollectionName();
-
-			return Optional.ofNullable(template.findAndModify(query != null ? query : new BasicQuery(new Document()), update,
-					options, domainType, collectionName));
-		}
-
-		@Override
-		public UpdateWithUpdate<T> matching(Query query) {
-
-			Assert.notNull(query, "Query must not be null!");
-
-			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
-		}
-
-		@Override
-		public UpdateResult all() {
-			return doUpdate(true, false);
-		}
-
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.FindAndModifyWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndModifyOptions)
+		 */
 		@Override
 		public TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options) {
 
@@ -134,13 +116,56 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
+		 */
+		@Override
+		public UpdateWithUpdate<T> matching(Query query) {
+
+			Assert.notNull(query, "Query must not be null!");
+
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingUpdate#all()
+		 */
+		@Override
+		public UpdateResult all() {
+			return doUpdate(true, false);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingUpdate#first()
+		 */
+		@Override
+		public UpdateResult first() {
+			return doUpdate(false, false);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingUpdate#upsert()
+		 */
+		@Override
+		public UpdateResult upsert() {
+			return doUpdate(true, true);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingFindAndModify#findAndModifyValue()
+		 */
+		@Override
+		public T findAndModifyValue() {
+			return template.findAndModify(query, update, options, domainType, getCollectionName());
+		}
+
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {
-
-			String collectionName = getCollectionName();
-
-			Query query = this.query != null ? this.query : new BasicQuery(new Document());
-
-			return template.doUpdate(collectionName, query, update, domainType, upsert, multi);
+			return template.doUpdate(getCollectionName(), query, update, domainType, upsert, multi);
 		}
 
 		private String getCollectionName() {

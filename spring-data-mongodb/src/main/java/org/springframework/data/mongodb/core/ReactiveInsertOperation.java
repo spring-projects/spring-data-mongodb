@@ -36,6 +36,7 @@ import java.util.Collection;
  * </pre>
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 public interface ReactiveInsertOperation {
@@ -44,7 +45,7 @@ public interface ReactiveInsertOperation {
 	 * Start creating an insert operation for given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link ReactiveInsert}.
+	 * @return new instance of {@link ReactiveInsert}. Never {@literal null}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
 	<T> ReactiveInsert<T> insert(Class<T> domainType);
@@ -58,6 +59,7 @@ public interface ReactiveInsertOperation {
 		 * Insert exactly one object.
 		 *
 		 * @param object must not be {@literal null}.
+		 * @return {@link Mono} emitting the inserted {@code object} when operation has completed. Never {@literal null}.
 		 * @throws IllegalArgumentException if object is {@literal null}.
 		 */
 		Mono<T> one(T object);
@@ -66,12 +68,11 @@ public interface ReactiveInsertOperation {
 		 * Insert a collection of objects.
 		 *
 		 * @param objects must not be {@literal null}.
+		 * @return {@literal Flux} emitting the inserted {@code objects} ony by one. Never {@literal null}.
 		 * @throws IllegalArgumentException if objects is {@literal null}.
 		 */
 		Flux<T> all(Collection<? extends T> objects);
 	}
-
-	interface ReactiveInsert<T> extends TerminatingInsert<T>, InsertWithCollection<T> {}
 
 	/**
 	 * Collection override (optional).
@@ -83,9 +84,11 @@ public interface ReactiveInsertOperation {
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link TerminatingInsert}.
+		 * @return new instance of {@link TerminatingInsert}. Never {@literal null}.
 		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
 		TerminatingInsert<T> inCollection(String collection);
 	}
+
+	interface ReactiveInsert<T> extends TerminatingInsert<T>, InsertWithCollection<T> {}
 }

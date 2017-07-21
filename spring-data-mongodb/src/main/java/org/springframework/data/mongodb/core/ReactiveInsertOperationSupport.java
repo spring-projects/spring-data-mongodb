@@ -31,6 +31,7 @@ import org.springframework.util.StringUtils;
  * Implementation of {@link ReactiveInsertOperation}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 @RequiredArgsConstructor
@@ -38,6 +39,10 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 
 	private final @NonNull ReactiveMongoTemplate template;
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveInsertOperation#insert(java.lang.Class)
+	 */
 	@Override
 	public <T> ReactiveInsert<T> insert(Class<T> domainType) {
 
@@ -54,6 +59,10 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 		@NonNull Class<T> domainType;
 		String collection;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveInsertOperation.TerminatingInsert#one(java.lang.Object)
+		 */
 		@Override
 		public Mono<T> one(T object) {
 
@@ -62,6 +71,10 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 			return template.insert(object, getCollectionName());
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveInsertOperation.TerminatingInsert#all(java.util.Collection)
+		 */
 		@Override
 		public Flux<T> all(Collection<? extends T> objects) {
 
@@ -70,6 +83,10 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 			return template.insert(objects, getCollectionName());
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveInsertOperation.InsertWithCollection#inCollection(java.lang.String)
+		 */
 		@Override
 		public ReactiveInsert<T> inCollection(String collection) {
 

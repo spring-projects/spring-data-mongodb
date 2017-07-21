@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
  * </pre>
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 public interface ReactiveAggregationOperation {
@@ -46,7 +47,7 @@ public interface ReactiveAggregationOperation {
 	 * input type for he aggregation.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link ReactiveAggregation}.
+	 * @return new instance of {@link ReactiveAggregation}. Never {@literal null}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
 	<T> ReactiveAggregation<T> aggregateAndReturn(Class<T> domainType);
@@ -61,8 +62,8 @@ public interface ReactiveAggregationOperation {
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link AggregationOperationWithAggregation}.
-		 * @throws IllegalArgumentException if collection is {@literal null}.
+		 * @return new instance of {@link AggregationOperationWithAggregation}. Never {@literal null}.
+		 * @throws IllegalArgumentException if collection is {@literal null} or empty.
 		 */
 		AggregationOperationWithAggregation<T> inCollection(String collection);
 	}
@@ -89,7 +90,7 @@ public interface ReactiveAggregationOperation {
 		 * Set the aggregation to be used.
 		 *
 		 * @param aggregation must not be {@literal null}.
-		 * @return new instance of {@link TerminatingAggregationOperation}.
+		 * @return new instance of {@link TerminatingAggregationOperation}. Never {@literal null}.
 		 * @throws IllegalArgumentException if aggregation is {@literal null}.
 		 */
 		TerminatingAggregationOperation<T> by(Aggregation aggregation);

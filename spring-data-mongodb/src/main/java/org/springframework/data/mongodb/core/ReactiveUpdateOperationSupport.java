@@ -31,6 +31,7 @@ import com.mongodb.client.result.UpdateResult;
  * Implementation of {@link ReactiveUpdateOperation}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 @RequiredArgsConstructor
@@ -40,12 +41,16 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 
 	private final @NonNull ReactiveMongoTemplate template;
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation#update(java.lang.Class)
+	 */
 	@Override
 	public <T> ReactiveUpdate<T> update(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ReactiveUpdateSupport<>(template, domainType, null, null, null, null);
+		return new ReactiveUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null);
 	}
 
 	@RequiredArgsConstructor
@@ -60,6 +65,10 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		String collection;
 		FindAndModifyOptions options;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#apply(org.springframework.data.mongodb.core.query.Update)
+		 */
 		@Override
 		public TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.Update update) {
 
@@ -68,6 +77,10 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithCollection#inCollection(java.lang.String)
+		 */
 		@Override
 		public UpdateWithQuery<T> inCollection(String collection) {
 
@@ -76,24 +89,40 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate#first()
+		 */
 		@Override
 		public Mono<UpdateResult> first() {
 			return doUpdate(false, false);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate#upsert()
+		 */
 		@Override
 		public Mono<UpdateResult> upsert() {
 			return doUpdate(true, true);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingFindAndModify#findAndModify()
+		 */
 		@Override
 		public Mono<T> findAndModify() {
 
 			String collectionName = getCollectionName();
 
-			return template.findAndModify(query != null ? query : ALL_QUERY, update, options, domainType, collectionName);
+			return template.findAndModify(query, update, options, domainType, collectionName);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithQuery#matching(org.springframework.data.mongodb.core.Query)
+		 */
 		@Override
 		public UpdateWithUpdate<T> matching(Query query) {
 
@@ -102,11 +131,19 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, options);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate#all()
+		 */
 		@Override
 		public Mono<UpdateResult> all() {
 			return doUpdate(true, false);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.FindAndModifyWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndModifyOptions)
+		 */
 		@Override
 		public TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options) {
 
@@ -116,12 +153,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		}
 
 		private Mono<UpdateResult> doUpdate(boolean multi, boolean upsert) {
-
-			String collectionName = getCollectionName();
-
-			Query query = this.query != null ? this.query : ALL_QUERY;
-
-			return template.doUpdate(collectionName, query, update, domainType, upsert, multi);
+			return template.doUpdate(getCollectionName(), query, update, domainType, upsert, multi);
 		}
 
 		private String getCollectionName() {

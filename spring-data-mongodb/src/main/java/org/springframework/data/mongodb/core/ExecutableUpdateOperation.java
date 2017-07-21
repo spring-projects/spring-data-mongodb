@@ -57,12 +57,6 @@ public interface ExecutableUpdateOperation {
 	<T> ExecutableUpdate<T> update(Class<T> domainType);
 
 	/**
-	 * @author Christoph Strobl
-	 * @since 2.0
-	 */
-	interface ExecutableUpdate<T> extends UpdateWithCollection<T>, UpdateWithQuery<T>, UpdateWithUpdate<T> {}
-
-	/**
 	 * Declare the {@link Update} to apply.
 	 *
 	 * @author Christoph Strobl
@@ -145,7 +139,16 @@ public interface ExecutableUpdateOperation {
 		 *
 		 * @return {@link Optional#empty()} if nothing found.
 		 */
-		Optional<T> findAndModify();
+		default Optional<T> findAndModify() {
+			return Optional.ofNullable(findAndModifyValue());
+		}
+
+		/**
+		 * Find, modify and return the first matching document.
+		 *
+		 * @return {@literal null} if nothing found.
+		 */
+		T findAndModifyValue();
 	}
 
 	/**
@@ -177,4 +180,10 @@ public interface ExecutableUpdateOperation {
 		 */
 		UpdateResult upsert();
 	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
+	interface ExecutableUpdate<T> extends UpdateWithCollection<T>, UpdateWithQuery<T>, UpdateWithUpdate<T> {}
 }

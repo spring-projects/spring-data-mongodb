@@ -13,13 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core
+
+import kotlin.reflect.KClass
 
 /**
- * Stripped down interface providing access to a fluent API that specifies a basic set of reactive MongoDB operations.
+ * Extension for [ExecutableUpdateOperation.update] providing a [KClass] based variant.
  *
- * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
-public interface ReactiveFluentMongoOperations extends ReactiveFindOperation, ReactiveInsertOperation,
-		ReactiveUpdateOperation, ReactiveRemoveOperation, ReactiveAggregationOperation {}
+fun <T : Any> ExecutableUpdateOperation.update(entityClass: KClass<T>): ExecutableUpdateOperation.ExecutableUpdate<T> =
+		update(entityClass.java)
+
+/**
+ * Extension for [ExecutableUpdateOperation.update] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @since 2.0
+ */
+inline fun <reified T : Any> ExecutableUpdateOperation.update(): ExecutableUpdateOperation.ExecutableUpdate<T> =
+		update(T::class.java)

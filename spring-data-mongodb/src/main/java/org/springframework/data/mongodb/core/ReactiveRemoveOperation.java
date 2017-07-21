@@ -40,6 +40,7 @@ import com.mongodb.client.result.DeleteResult;
  * </pre>
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 public interface ReactiveRemoveOperation {
@@ -48,7 +49,7 @@ public interface ReactiveRemoveOperation {
 	 * Start creating a remove operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link ReactiveRemove}.
+	 * @return new instance of {@link ReactiveRemove}. Never {@literal null}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
 	<T> ReactiveRemove<T> remove(Class<T> domainType);
@@ -61,7 +62,7 @@ public interface ReactiveRemoveOperation {
 		/**
 		 * Remove all documents matching.
 		 *
-		 * @return the {@link DeleteResult}. Never {@literal null}.
+		 * @return {@link Mono} emitting the {@link DeleteResult}. Never {@literal null}.
 		 */
 		Mono<DeleteResult> all();
 
@@ -86,8 +87,8 @@ public interface ReactiveRemoveOperation {
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link RemoveWithCollection}.
-		 * @throws IllegalArgumentException if collection is {@literal null}.
+		 * @return new instance of {@link RemoveWithCollection}. Never {@literal null}.
+		 * @throws IllegalArgumentException if collection is {@literal null} or empty.
 		 */
 		RemoveWithQuery<T> inCollection(String collection);
 	}
@@ -101,7 +102,7 @@ public interface ReactiveRemoveOperation {
 		 * Define the query filtering elements.
 		 *
 		 * @param query must not be {@literal null}.
-		 * @return new instance of {@link TerminatingRemove}.
+		 * @return new instance of {@link TerminatingRemove}. Never {@literal null}.
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		TerminatingRemove<T> matching(Query query);

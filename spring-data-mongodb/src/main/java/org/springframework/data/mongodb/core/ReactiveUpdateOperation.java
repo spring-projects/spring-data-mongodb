@@ -41,6 +41,7 @@ import com.mongodb.client.result.UpdateResult;
  * </pre>
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 public interface ReactiveUpdateOperation {
@@ -49,7 +50,7 @@ public interface ReactiveUpdateOperation {
 	 * Start creating an update operation for the given {@literal domainType}.
 	 *
 	 * @param domainType must not be {@literal null}.
-	 * @return new instance of {@link ReactiveUpdate}.
+	 * @return new instance of {@link ReactiveUpdate}. Never {@literal null}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
 	<T> ReactiveUpdate<T> update(Class<T> domainType);
@@ -62,7 +63,7 @@ public interface ReactiveUpdateOperation {
 		/**
 		 * Find, modify and return the first matching document.
 		 *
-		 * @return {@link Mono#empty()} if nothing found.
+		 * @return {@link Mono#empty()} if nothing found. Never {@literal null}.
 		 */
 		Mono<T> findAndModify();
 	}
@@ -94,8 +95,6 @@ public interface ReactiveUpdateOperation {
 		Mono<UpdateResult> upsert();
 	}
 
-	interface ReactiveUpdate<T> extends UpdateWithCollection<T>, UpdateWithQuery<T>, UpdateWithUpdate<T> {}
-
 	/**
 	 * Declare the {@link org.springframework.data.mongodb.core.query.Update} to apply.
 	 */
@@ -105,7 +104,7 @@ public interface ReactiveUpdateOperation {
 		 * Set the {@link org.springframework.data.mongodb.core.query.Update} to be applied.
 		 *
 		 * @param update must not be {@literal null}.
-		 * @return new instance of {@link TerminatingUpdate}.
+		 * @return new instance of {@link TerminatingUpdate}. Never {@literal null}.
 		 * @throws IllegalArgumentException if update is {@literal null}.
 		 */
 		TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.Update update);
@@ -121,8 +120,8 @@ public interface ReactiveUpdateOperation {
 		 * Skip this step to use the default collection derived from the domain type.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link UpdateWithCollection}.
-		 * @throws IllegalArgumentException if collection is {@literal null}.
+		 * @return new instance of {@link UpdateWithCollection}. Never {@literal null}.
+		 * @throws IllegalArgumentException if collection is {@literal null} or empty.
 		 */
 		UpdateWithQuery<T> inCollection(String collection);
 	}
@@ -136,7 +135,7 @@ public interface ReactiveUpdateOperation {
 		 * Filter documents by given {@literal query}.
 		 *
 		 * @param query must not be {@literal null}.
-		 * @return new instance of {@link UpdateWithQuery}.
+		 * @return new instance of {@link UpdateWithQuery}. Never {@literal null}.
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		UpdateWithUpdate<T> matching(Query query);
@@ -152,9 +151,11 @@ public interface ReactiveUpdateOperation {
 		 * {@link org.springframework.data.mongodb.core.query.Update}.
 		 *
 		 * @param options must not be {@literal null}.
-		 * @return new instance of {@link FindAndModifyWithOptions}.
+		 * @return new instance of {@link TerminatingFindAndModify}. Never {@literal null}.
 		 * @throws IllegalArgumentException if options is {@literal null}.
 		 */
 		TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options);
 	}
+
+	interface ReactiveUpdate<T> extends UpdateWithCollection<T>, UpdateWithQuery<T>, UpdateWithUpdate<T> {}
 }

@@ -126,6 +126,17 @@ public class ExecutableUpdateOperationSupportTests {
 				"Han");
 	}
 
+	@Test // DATAMONGO-1719
+	public void findAndModifyValue() {
+
+		Person result = template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han"))
+				.findAndModifyValue();
+
+		assertThat(result).isEqualTo(han);
+		assertThat(template.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
+				"Han");
+	}
+
 	@Test // DATAMONGO-1563
 	public void findAndModify() {
 
