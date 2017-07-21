@@ -25,6 +25,7 @@ import reactor.test.StepVerifier;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
@@ -41,6 +42,7 @@ import com.mongodb.reactivestreams.client.MongoClients;
  * Integration tests for {@link ReactiveFindOperationSupport}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class ReactiveFindOperationSupportTests {
 
@@ -139,6 +141,29 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
+	public void findAllByWithClosedInterfaceProjection() {
+
+		StepVerifier.create(
+				template.query(Person.class).as(PersonProjection.class).matching(query(where("firstname").is("luke"))).all())
+				.consumeNextWith(it -> {
+
+					assertThat(it).isInstanceOf(PersonProjection.class);
+					assertThat(it.getFirstname()).isEqualTo("luke");
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1719
+	public void findAllByWithOpenInterfaceProjection() {
+
+		StepVerifier.create(template.query(Person.class).as(PersonSpELProjection.class)
+				.matching(query(where("firstname").is("luke"))).all()).consumeNextWith(it -> {
+
+					assertThat(it).isInstanceOf(PersonSpELProjection.class);
+					assertThat(it.getName()).isEqualTo("luke");
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1719
 	public void findBy() {
 
 		StepVerifier.create(template.query(Person.class).matching(query(where("firstname").is("luke"))).one())
@@ -198,6 +223,48 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
+	public void findAllNearByReturningGeoResultContentAsClosedInterfaceProjection() {
+
+		blocking.indexOps(Planet.class).ensureIndex(
+				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
+
+		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
+		Planet dantooine = new Planet("dantooine", new Point(-73.9928, 40.7193));
+
+		blocking.save(alderan);
+		blocking.save(dantooine);
+
+		StepVerifier.create(template.query(Planet.class).as(PlanetProjection.class)
+				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all()).consumeNextWith(it -> {
+
+					assertThat(it.getDistance()).isNotNull();
+					assertThat(it.getContent()).isInstanceOf(PlanetProjection.class);
+					assertThat(it.getContent().getName()).isEqualTo("alderan");
+				}).expectNextCount(1).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1719
+	public void findAllNearByReturningGeoResultContentAsOpenInterfaceProjection() {
+
+		blocking.indexOps(Planet.class).ensureIndex(
+				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
+
+		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
+		Planet dantooine = new Planet("dantooine", new Point(-73.9928, 40.7193));
+
+		blocking.save(alderan);
+		blocking.save(dantooine);
+
+		StepVerifier.create(template.query(Planet.class).as(PlanetSpELProjection.class)
+				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all()).consumeNextWith(it -> {
+
+					assertThat(it.getDistance()).isNotNull();
+					assertThat(it.getContent()).isInstanceOf(PlanetSpELProjection.class);
+					assertThat(it.getContent().getId()).isEqualTo("alderan");
+				}).expectNextCount(1).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1719
 	public void firstShouldReturnFirstEntryInCollection() {
 		StepVerifier.create(template.query(Person.class).first()).expectNextCount(1).verifyComplete();
 	}
@@ -243,11 +310,23 @@ public class ReactiveFindOperationSupportTests {
 				.expectNext(false).verifyComplete();
 	}
 
+	interface Contact {}
+
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
-	static class Person {
+	static class Person implements Contact {
 		@Id String id;
 		String firstname;
+	}
+
+	interface PersonProjection {
+		String getFirstname();
+	}
+
+	public interface PersonSpELProjection {
+
+		@Value("#{target.firstname}")
+		String getName();
 	}
 
 	@Data
@@ -268,5 +347,15 @@ public class ReactiveFindOperationSupportTests {
 
 		@Id String name;
 		Point coordinates;
+	}
+
+	interface PlanetProjection {
+		String getName();
+	}
+
+	interface PlanetSpELProjection {
+
+		@Value("#{target.name}")
+		String getId();
 	}
 }
