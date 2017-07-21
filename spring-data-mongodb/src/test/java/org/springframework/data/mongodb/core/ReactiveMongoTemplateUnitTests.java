@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
+import lombok.Data;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
@@ -33,13 +34,16 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplateUnitTests.AutogenerateableId;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -257,4 +261,91 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
 	}
 
+	@Test // DATAMONGO-1719
+	public void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonProjection.class, null)
+				.subscribe();
+
+		verify(findPublisher).projection(eq(new Document("firstname", 1)));
+	}
+
+	@Test // DATAMONGO-1719
+	public void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
+
+		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, PersonProjection.class, null)
+				.subscribe();
+
+		verify(findPublisher).projection(eq(new Document("bar", 1)));
+	}
+
+	@Test // DATAMONGO-1719
+	public void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class, null)
+				.subscribe();
+
+		verify(findPublisher, never()).projection(any());
+	}
+
+	@Test // DATAMONGO-1719
+	public void doesNotApplyFieldsToDtoProjection() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class, null).subscribe();
+
+		verify(findPublisher, never()).projection(any());
+	}
+
+	@Test // DATAMONGO-1719
+	public void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
+
+		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class, null).subscribe();
+
+		verify(findPublisher).projection(eq(new Document("bar", 1)));
+	}
+
+	@Test // DATAMONGO-1719
+	public void doesNotApplyFieldsWhenTargetIsNotAProjection() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class, null).subscribe();
+
+		verify(findPublisher, never()).projection(any());
+	}
+
+	@Test // DATAMONGO-1719
+	public void doesNotApplyFieldsWhenTargetExtendsDomainType() {
+
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class, null).subscribe();
+
+		verify(findPublisher, never()).projection(any());
+	}
+
+	@Data
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
+	static class Person {
+
+		@Id String id;
+		String firstname;
+	}
+
+	static class PersonExtended extends Person {
+
+		String lastname;
+	}
+
+	interface PersonProjection {
+		String getFirstname();
+	}
+
+	public interface PersonSpELProjection {
+
+		@Value("#{target.firstname}")
+		String getName();
+	}
+
+	@Data
+	static class Jedi {
+
+		@Field("firstname") String name;
+	}
 }
