@@ -50,7 +50,7 @@ class CriteriaExtensionsTests {
 	}
 
 	@Test
-	fun `inValues() extension should call its Java counterpart`() {
+	fun `inValues(varags) extension should call its Java counterpart`() {
 
 		val foo = "foo"
 		val bar = "bar"
@@ -61,10 +61,30 @@ class CriteriaExtensionsTests {
 	}
 
 	@Test
-	fun `inValues() extension should support nullable values`() {
+	fun `inValues(varags) extension should support nullable values`() {
 
 		criteria.inValues(null, null)
 
 		Mockito.verify(criteria, Mockito.times(1)).`in`(null, null)
+	}
+
+	@Test
+	fun `inValues(Collection) extension should call its Java counterpart`() {
+
+		val c = listOf("foo", "bar")
+
+		criteria.inValues(c)
+
+		Mockito.verify(criteria, Mockito.times(1)).`in`(c)
+	}
+
+	@Test
+	fun `inValues(Collection) extension should support nullable values`() {
+
+		val c = listOf("foo", null, "bar")
+
+		criteria.inValues(c)
+
+		Mockito.verify(criteria, Mockito.times(1)).`in`(c)
 	}
 }
