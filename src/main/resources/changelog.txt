@@ -1,6 +1,20 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.5.RELEASE (2017-07-24)
+----------------------------------------------
+* DATAMONGO-1744 - Improve default setup for MappingMongoConverter.
+* DATAMONGO-1729 - Open projection does not fetch all properties.
+* DATAMONGO-1725 - Potential NullPointerException in CloseableIterableCursorAdapter.
+* DATAMONGO-1723 - Fix unit tests after API changes in Spring Data Commons.
+* DATAMONGO-1720 - Add JMH benchmark module.
+* DATAMONGO-1718 - MongoTemplate.findAndRemoveAll(Query, String) delegates to wrong overload.
+* DATAMONGO-1711 - Release 1.10.5 (Ingalls SR5).
+* DATAMONGO-1703 - Allow referencing views in object graphs containing circular dependencies.
+* DATAMONGO-1697 - @Version used by @EnableMongoAuditing does not increase when using collection name in MongoTemplate's updateFirst. Unexpected, not described by reference documentation.
+* DATAMONGO-1678 - DefaultBulkOperations do not map Query and Update objects properly.
+
+
 Changes in version 2.0.0.M4 (2017-06-14)
 ----------------------------------------
 * DATAMONGO-1716 - Upgrade to Reactive Streams driver 1.5.0.
