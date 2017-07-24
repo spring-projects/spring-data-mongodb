@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -107,6 +106,7 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
 import org.springframework.data.util.Pair;
+import org.springframework.data.util.StreamUtils;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -971,7 +971,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			documentList.add(document);
 		}
 
-		List<Object> ids = consolidateIdentifiers(insertDocumentList(collectionName, documentList), documentList);
+		List<Object> ids = insertDocumentList(collectionName, documentList);
 
 		int i = 0;
 		for (T obj : batchToSave) {
@@ -1086,9 +1086,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	// TODO: 2.0 - Change method signature to return List<Object> and return all identifiers (DATAMONGO-1513,
-	// DATAMONGO-1519)
-	protected List<ObjectId> insertDocumentList(final String collectionName, final List<Document> documents) {
+	protected List<Object> insertDocumentList(final String collectionName, final List<Document> documents) {
+
 		if (documents.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -1097,33 +1096,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			LOGGER.debug("Inserting list of Documents containing {} items", documents.size());
 		}
 
-		execute(collectionName, new CollectionCallback<Void>() {
-			public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT_LIST, collectionName, null,
-						null, null);
-				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+		execute(collectionName, collection -> {
 
-				if (writeConcernToUse == null) {
-					collection.insertMany(documents);
-				} else {
-					collection.withWriteConcern(writeConcernToUse).insertMany(documents);
-				}
+			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT_LIST, collectionName, null,
+					null, null);
+			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
-				return null;
+			if (writeConcernToUse == null) {
+				collection.insertMany(documents);
+			} else {
+				collection.withWriteConcern(writeConcernToUse).insertMany(documents);
 			}
+
+			return null;
 		});
 
-		List<ObjectId> ids = new ArrayList<ObjectId>();
-		for (Document dbo : documents) {
-			Object id = dbo.get(ID_FIELD);
-			if (id instanceof ObjectId) {
-				ids.add((ObjectId) id);
-			} else {
-				// no id was generated
-				ids.add(null);
-			}
-		}
-		return ids;
+		return documents.stream()//
+				.map(it -> it.get(ID_FIELD))//
+				.collect(StreamUtils.toUnmodifiableList());
 	}
 
 	protected Object saveDocument(final String collectionName, final Document dbDoc, final Class<?> entityClass) {
@@ -2372,28 +2362,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			PersistenceExceptionTranslator exceptionTranslator) {
 		RuntimeException resolved = exceptionTranslator.translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
-	}
-
-	/**
-	 * Returns all identifiers for the given documents. Will augment the given identifiers and fill in only the ones that
-	 * are {@literal null} currently. This would've been better solved in {@link #insertDBObjectList(String, List)}
-	 * directly but would require a signature change of that method.
-	 *
-	 * @param ids
-	 * @param documents
-	 * @return TODO: Remove for 2.0 and change method signature of {@link #insertDBObjectList(String, List)}.
-	 */
-	private static List<Object> consolidateIdentifiers(List<ObjectId> ids, List<Document> documents) {
-
-		List<Object> result = new ArrayList<Object>(ids.size());
-
-		for (int i = 0; i < ids.size(); i++) {
-
-			ObjectId objectId = ids.get(i);
-			result.add(objectId == null ? documents.get(i).get(ID_FIELD) : objectId);
-		}
-
-		return result;
 	}
 
 	// Callback implementations
