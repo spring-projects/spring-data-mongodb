@@ -42,6 +42,14 @@ class CriteriaExtensionsTests {
 	}
 
 	@Test
+	fun `isEqualTo() extension should support nullable value`() {
+
+		criteria.isEqualTo(null)
+
+		Mockito.verify(criteria, Mockito.times(1)).`is`(null)
+	}
+
+	@Test
 	fun `inValues() extension should call its Java counterpart`() {
 
 		val foo = "foo"
@@ -50,5 +58,13 @@ class CriteriaExtensionsTests {
 		criteria.inValues(foo, bar)
 
 		Mockito.verify(criteria, Mockito.times(1)).`in`(foo, bar)
+	}
+
+	@Test
+	fun `inValues() extension should support nullable values`() {
+
+		criteria.inValues(null, null)
+
+		Mockito.verify(criteria, Mockito.times(1)).`in`(null, null)
 	}
 }
