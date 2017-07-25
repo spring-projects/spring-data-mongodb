@@ -1,6 +1,39 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.0.RC1 (2017-07-25)
+-----------------------------------------
+* DATAMONGO-1748 - Add Kotlin extensions for Criteria API.
+* DATAMONGO-1746 - Inherit Project Reactor version from dependency management.
+* DATAMONGO-1744 - Improve default setup for MappingMongoConverter.
+* DATAMONGO-1739 - Change TerminatingFindOperation.stream() to return a Stream directly.
+* DATAMONGO-1738 - Move to fluent API for repository query execution.
+* DATAMONGO-1735 - Sort and fields objects in Query should not be null.
+* DATAMONGO-1734 - Add count() & exists to fluent API.
+* DATAMONGO-1733 - Allow usage of projection interfaces in FluentMongoOperations.
+* DATAMONGO-1730 - Adapt to API changes in mapping subsystem.
+* DATAMONGO-1729 - Open projection does not fetch all properties.
+* DATAMONGO-1728 - ExecutableFindOperation.find(…).first() fails with NPE.
+* DATAMONGO-1726 - Add terminating findOne/findFirst methods to FluentMongoOperations returning null value instead of Optional.
+* DATAMONGO-1725 - Potential NullPointerException in CloseableIterableCursorAdapter.
+* DATAMONGO-1723 - Fix unit tests after API changes in Spring Data Commons.
+* DATAMONGO-1721 - Fix dependency cycles.
+* DATAMONGO-1720 - Add JMH benchmark module.
+* DATAMONGO-1719 - Add fluent alternative for ReactiveMongoOperations.
+* DATAMONGO-1718 - MongoTemplate.findAndRemoveAll(Query, String) delegates to wrong overload.
+* DATAMONGO-1717 - Release 2.0 RC1 (Kay).
+* DATAMONGO-1715 - Remove spring-data-mongodb-log4j module.
+* DATAMONGO-1713 - MongoCredentialPropertyEditor improperly resolves the credential string.
+* DATAMONGO-1705 - Deprecate cross-store support.
+* DATAMONGO-1703 - Allow referencing views in object graphs containing circular dependencies.
+* DATAMONGO-1702 - Switch repository implementation to use fragments.
+* DATAMONGO-1697 - @Version used by @EnableMongoAuditing does not increase when using collection name in MongoTemplate's updateFirst. Unexpected, not described by reference documentation.
+* DATAMONGO-1682 - Add partial index support to ReactiveIndexOperations.
+* DATAMONGO-1678 - DefaultBulkOperations do not map Query and Update objects properly.
+* DATAMONGO-1646 - Support reactive aggregation streaming.
+* DATAMONGO-1519 - Change MongoTemplate.insertDBObjectList(…) to return List<Object> instead of List<ObjectId>.
+
+
 Changes in version 1.10.5.RELEASE (2017-07-24)
 ----------------------------------------------
 * DATAMONGO-1744 - Improve default setup for MappingMongoConverter.
