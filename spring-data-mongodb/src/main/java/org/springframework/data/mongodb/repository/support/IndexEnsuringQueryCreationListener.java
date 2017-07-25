@@ -22,11 +22,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.repository.query.MongoEntityMetadata;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.repository.core.support.QueryCreationListener;
@@ -68,6 +68,11 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 	public void onCreation(PartTreeMongoQuery query) {
 
 		PartTree tree = query.getTree();
+
+		if (!tree.hasPredicate()) {
+			return;
+		}
+
 		Index index = new Index();
 		index.named(query.getQueryMethod().getName());
 		Sort sort = tree.getSort();
