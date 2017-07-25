@@ -1,6 +1,13 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.0.RC2 (2017-07-25)
+-----------------------------------------
+* DATAMONGO-1753 - IndexEnsuringQueryCreationListener should skip queries without criteria.
+* DATAMONGO-1752 - Executing repository methods with closed projection fails.
+* DATAMONGO-1751 - Release 2.0 RC2 (Kay).
+
+
 Changes in version 2.0.0.RC1 (2017-07-25)
 -----------------------------------------
 * DATAMONGO-1748 - Add Kotlin extensions for Criteria API.
