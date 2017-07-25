@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * @author Oliver Gierke
  */
-public interface PersonSummary {
+public interface PersonExcerpt {
 
-	String getFirstname();
-
-	String getLastname();
+	@Value("#{target.firstname + ' ' + target.lastname}")
+	String getFullName();
 }

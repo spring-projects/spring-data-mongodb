@@ -86,8 +86,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		applyQueryMetaAttributesWhenPresent(query);
 
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
-		ReturnedType returnedType = processor.getReturnedType();
-		FindWithQuery<?> find = findOperationWithProjection.as(returnedType.getTypeToRead());
+		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+
+		FindWithQuery<?> find = typeToRead == null //
+				? findOperationWithProjection //
+				: findOperationWithProjection.as(typeToRead);
 
 		MongoQueryExecution execution = getExecution(accessor, find);
 

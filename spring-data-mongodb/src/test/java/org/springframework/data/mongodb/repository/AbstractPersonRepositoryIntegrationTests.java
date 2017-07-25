@@ -16,8 +16,10 @@
 package org.springframework.data.mongodb.repository;
 
 import static java.util.Arrays.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
 import static org.springframework.data.geo.Metrics.*;
 
 import java.util.ArrayList;
@@ -928,7 +930,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-1030
 	public void executesSingleEntityQueryWithProjectionCorrectly() {
 
-		PersonSummary result = repository.findSummaryByLastname("Beauford");
+		PersonSummaryDto result = repository.findSummaryByLastname("Beauford");
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.firstname, is("Carter"));
@@ -1164,5 +1166,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		repository.deleteByThePersonsFirstname("Dave");
 
 		assertThat(repository.countByThePersonsFirstname("Dave"), is(0L));
+	}
+
+	@Test // DATAMONGO-1752
+	public void readsOpenProjection() {
+		assertThat(repository.findOpenProjectionBy()).isNotEmpty();
+	}
+
+	@Test // DATAMONGO-1752
+	public void readsClosedProjection() {
+		assertThat(repository.findClosedProjectionBy()).isNotEmpty();
 	}
 }

@@ -286,7 +286,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	Page<Person> findTop3ByLastnameStartingWith(String lastname, Pageable pageRequest);
 
 	// DATAMONGO-1030
-	PersonSummary findSummaryByLastname(String lastname);
+	PersonSummaryDto findSummaryByLastname(String lastname);
 
 	@Query("{ ?0 : ?1 }")
 	List<Person> findByKeyValue(String key, String value);
@@ -325,4 +325,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@DeleteQuery("{ 'firstname' : ?0 }") // DATAMONGO-1539
 	void deleteByThePersonsFirstname(String firstname);
+
+	// DATAMONGO-1752
+	Iterable<PersonExcerpt> findOpenProjectionBy();
+
+	// DATAMONGO-1752
+	Iterable<PersonSummary> findClosedProjectionBy();
 }
