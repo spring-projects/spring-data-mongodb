@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
@@ -34,7 +33,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @since 2.0
  * @see org.springframework.data.repository.reactive.ReactiveSortingRepository
- * @see org.springframework.data.repository.reactive.RxJava1SortingRepository
+ * @see org.springframework.data.repository.reactive.RxJava2SortingRepository
  */
 public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
 		extends RepositoryFactoryBeanSupport<T, S, ID> {

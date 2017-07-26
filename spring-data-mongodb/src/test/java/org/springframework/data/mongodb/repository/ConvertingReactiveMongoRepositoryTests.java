@@ -44,7 +44,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
-import org.springframework.data.repository.reactive.RxJava1SortingRepository;
 import org.springframework.data.repository.reactive.RxJava2SortingRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
@@ -286,13 +285,17 @@ public class ConvertingReactiveMongoRepositoryTests {
 	}
 
 	@Repository
-	interface RxJava1PersonRepostitory extends RxJava1SortingRepository<ReactivePerson, String> {
+	interface RxJava1PersonRepostitory extends org.springframework.data.repository.Repository<ReactivePerson, String> {
 
 		Observable<ReactivePerson> findByFirstnameAndLastname(String firstname, String lastname);
 
 		Single<ReactivePerson> findByLastname(String lastname);
 
 		Single<ProjectedPerson> findProjectedByLastname(String lastname);
+
+		Single<Boolean> existsById(String id);
+
+		Single<Boolean> existsById(Single<String> id);
 	}
 
 	@Repository

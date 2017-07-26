@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.repository.custom;
 
 import org.springframework.data.mongodb.repository.User;
-import org.springframework.data.repository.reactive.RxJava1CrudRepository;
+import org.springframework.data.repository.reactive.RxJava2CrudRepository;
 
 /**
  * @author Mark Paluch
  */
 public interface CustomReactiveMongoRepository
-		extends RxJava1CrudRepository<User, String>, CustomReactiveMongoRepositoryCustom {
+		extends RxJava2CrudRepository<User, String>, CustomReactiveMongoRepositoryCustom {
 
 }

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.repository.config;
 
 import static org.junit.Assert.*;
@@ -34,7 +33,7 @@ import org.springframework.data.repository.config.AnnotationRepositoryConfigurat
 import org.springframework.data.repository.config.RepositoryConfiguration;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.data.repository.reactive.RxJava1CrudRepository;
+import org.springframework.data.repository.reactive.RxJava2CrudRepository;
 
 /**
  * Unit tests for {@link ReactiveMongoRepositoryConfigurationExtension}.
@@ -108,7 +107,7 @@ public class ReactiveMongoRepositoryConfigurationExtensionUnitTests {
 
 	interface SampleRepository extends ReactiveCrudRepository<Sample, Long> {}
 
-	interface UnannotatedRepository extends RxJava1CrudRepository<Store, Long> {}
+	interface UnannotatedRepository extends RxJava2CrudRepository<Store, Long> {}
 
 	interface StoreRepository extends ReactiveMongoRepository<Store, Long> {}
 }
