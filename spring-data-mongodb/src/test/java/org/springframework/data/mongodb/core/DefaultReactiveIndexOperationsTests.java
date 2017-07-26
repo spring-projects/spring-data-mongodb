@@ -59,7 +59,7 @@ public class DefaultReactiveIndexOperationsTests {
 	static class Config extends AbstractReactiveMongoConfiguration {
 
 		@Override
-		public MongoClient mongoClient() {
+		public MongoClient reactiveMongoClient() {
 			return MongoClients.create();
 		}
 

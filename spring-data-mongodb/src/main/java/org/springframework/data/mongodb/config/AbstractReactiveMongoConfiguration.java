@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.config;
 
 import org.springframework.context.annotation.Bean;
@@ -21,9 +20,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
-import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 
 import com.mongodb.reactivestreams.client.MongoClient;
@@ -39,12 +38,12 @@ import com.mongodb.reactivestreams.client.MongoClient;
 public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurationSupport {
 
 	/**
-	 * Return the {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want to expose a
+	 * Return the Reactive Streams {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want to expose a
 	 * {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}.
 	 *
 	 * @return
 	 */
-	public abstract MongoClient mongoClient();
+	public abstract MongoClient reactiveMongoClient();
 
 	/**
 	 * Creates a {@link ReactiveMongoTemplate}.
@@ -53,30 +52,29 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 	 */
 	@Bean
 	public ReactiveMongoOperations reactiveMongoTemplate() throws Exception {
-		return new ReactiveMongoTemplate(mongoDbFactory(), mappingMongoConverter());
+		return new ReactiveMongoTemplate(reactiveMongoDbFactory(), mappingMongoConverter());
 	}
 
 	/**
 	 * Creates a {@link SimpleMongoDbFactory} to be used by the {@link MongoTemplate}. Will use the {@link Mongo} instance
-	 * configured in {@link #mongoClient()}.
+	 * configured in {@link #reactiveMongoClient()}.
 	 *
-	 * @see #mongoClient()
+	 * @see #reactiveMongoClient()
 	 * @see #reactiveMongoTemplate()
 	 * @return
-	 * @throws Exception
 	 */
 	@Bean
-	public ReactiveMongoDatabaseFactory mongoDbFactory() {
-		return new SimpleReactiveMongoDatabaseFactory(mongoClient(), getDatabaseName());
+	public ReactiveMongoDatabaseFactory reactiveMongoDbFactory() {
+		return new SimpleReactiveMongoDatabaseFactory(reactiveMongoClient(), getDatabaseName());
 	}
 
 	/**
-	 * Creates a {@link MappingMongoConverter} using the configured {@link #mongoDbFactory()} and
+	 * Creates a {@link MappingMongoConverter} using the configured {@link #reactiveMongoDbFactory()} and
 	 * {@link #mongoMappingContext()}. Will get {@link #customConversions()} applied.
 	 *
 	 * @see #customConversions()
 	 * @see #mongoMappingContext()
-	 * @see #mongoDbFactory()
+	 * @see #reactiveMongoDbFactory()
 	 * @return
 	 * @throws Exception
 	 */

@@ -155,7 +155,7 @@ public class AppConfig {
   /*
    * Use the Reactive Streams Mongo Client API to create a com.mongodb.reactivestreams.client.MongoClient instance.
    */
-   public @Bean MongoClient mongoClient()  {
+   public @Bean MongoClient reactiveMongoClient()  {
        return MongoClients.create("mongodb://localhost");
    }
 }
@@ -262,7 +262,7 @@ To register a `ReactiveMongoDatabaseFactory` instance with the container, you wr
 @Configuration
 public class MongoConfiguration {
 
-  public @Bean ReactiveMongoDatabaseFactory mongoDatabaseFactory() {
+  public @Bean ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory() {
     return new SimpleReactiveMongoDatabaseFactory(MongoClients.create(), "database");
   }
 }
@@ -275,12 +275,12 @@ To define the username and password create MongoDB connection string and pass it
 @Configuration
 public class MongoConfiguration {
 
-  public @Bean ReactiveMongoDatabaseFactory mongoDatabaseFactory() {
-    return new SimpleMongoDbFactory(MongoClients.create("mongodb://joe:secret@localhost"), "database", userCredentials);
+  public @Bean ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory() {
+    return new SimpleReactiveMongoDatabaseFactory(MongoClients.create("mongodb://joe:secret@localhost"), "database");
   }
 
   public @Bean ReactiveMongoTemplate reactiveMongoTemplate() {
-    return new ReactiveMongoTemplate(mongoDatabaseFactory());
+    return new ReactiveMongoTemplate(reactiveMongoDatabaseFactory());
   }
 }
 ----
@@ -318,12 +318,12 @@ You can use Java to create and register an instance of `ReactiveMongoTemplate` a
 @Configuration
 public class AppConfig {
 
-  public @Bean MongoClient mongoClient() {
+  public @Bean MongoClient reactiveMongoClient() {
       return MongoClients.create("mongodb://localhost");
   }
 
   public @Bean ReactiveMongoTemplate reactiveMongoTemplate() {
-      return new ReactiveMongoTemplate(mongoClient(), "mydatabase");
+      return new ReactiveMongoTemplate(reactiveMongoClient(), "mydatabase");
   }
 }
 ----
