@@ -51,7 +51,7 @@ public class ReactiveMongoTemplateCollationTests {
 	static class Config extends AbstractReactiveMongoConfiguration {
 
 		@Override
-		public com.mongodb.reactivestreams.client.MongoClient mongoClient() {
+		public com.mongodb.reactivestreams.client.MongoClient reactiveMongoClient() {
 			return MongoClients.create();
 		}
 

@@ -54,7 +54,7 @@ public class AbstractReactiveMongoConfigurationIntegrationTests {
 	static class ReactiveConfiguration extends AbstractReactiveMongoConfiguration {
 
 		@Override
-		public MongoClient mongoClient() {
+		public MongoClient reactiveMongoClient() {
 			return MongoClients.create();
 		}
 
