@@ -1,6 +1,11 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.6.RELEASE (2017-07-26)
+----------------------------------------------
+* DATAMONGO-1750 - Release 1.10.6 (Ingalls SR6).
+
+
 Changes in version 2.0.0.RC2 (2017-07-25)
 -----------------------------------------
 * DATAMONGO-1753 - IndexEnsuringQueryCreationListener should skip queries without criteria.
