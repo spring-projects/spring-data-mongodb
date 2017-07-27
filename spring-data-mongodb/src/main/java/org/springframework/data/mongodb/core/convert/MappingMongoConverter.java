@@ -41,12 +41,12 @@ import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
 import org.springframework.data.mapping.model.PropertyValueProvider;
@@ -86,6 +86,7 @@ import com.mongodb.DBRef;
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
 
 	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions. Parent object was: %4$s";
+	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter!";
 
 	protected static final Logger LOGGER = LoggerFactory.getLogger(MappingMongoConverter.class);
 
@@ -240,6 +241,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// Retrieve persistent entity info
 
 		Document target = bson instanceof BasicDBObject ? new Document((BasicDBObject) bson) : (Document) bson;
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
+
+		if (entity == null) {
+			throw new MappingException(String.format(INVALID_TYPE_TO_READ, target, typeToUse.getType()));
+		}
 
 		return read((MongoPersistentEntity<S>) mappingContext.getRequiredPersistentEntity(typeToUse), target, path);
 	}

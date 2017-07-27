@@ -1790,6 +1790,19 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(ClassWithEnumProperty.class, source).enumSet, is(EnumSet.noneOf(SampleEnum.class)));
 	}
 
+	@Test // DATAMONGO-1757
+	public void failsReadingDocumentIntoSimpleType() {
+
+		org.bson.Document nested = new org.bson.Document("key", "value");
+		org.bson.Document source = new org.bson.Document("map", new org.bson.Document("key", nested));
+
+		exception.expect(MappingException.class);
+		exception.expectMessage(nested.toString());
+		exception.expectMessage(Long.class.getName());
+
+		converter.read(TypeWithMapOfLongValues.class, source);
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2139,5 +2152,9 @@ public class MappingMongoConverterUnitTests {
 
 	static class TypeWithPropertyInNestedField {
 		@Field("nested.sample") String sample;
+	}
+
+	static class TypeWithMapOfLongValues {
+		Map<String, Long> map;
 	}
 }
