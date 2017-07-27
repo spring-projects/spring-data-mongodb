@@ -40,7 +40,6 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
-import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
@@ -147,7 +146,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	public void setTypeMapper(MongoTypeMapper typeMapper) {
 		this.typeMapper = typeMapper == null
-				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext) : typeMapper;
+				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext)
+				: typeMapper;
 	}
 
 	/*
@@ -307,14 +307,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	private void readProperties(MongoPersistentEntity<?> entity, PersistentPropertyAccessor accessor,
-			MongoPersistentProperty idProperty, DocumentAccessor documentAccessor,
-			MongoDbPropertyValueProvider valueProvider, DbRefResolverCallback callback) {
-
+			MongoPersistentProperty idProperty, DocumentAccessor documentAccessor, MongoDbPropertyValueProvider valueProvider,
+			DbRefResolverCallback callback) {
 
 		for (MongoPersistentProperty prop : entity) {
 
-			if(prop.isAssociation() && !entity.isConstructorArgument(prop)) {
-				readAssociation(prop.getAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback );
+			if (prop.isAssociation() && !entity.isConstructorArgument(prop)) {
+				readAssociation(prop.getAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback);
 				continue;
 			}
 			// we skip the id property since it was already set
@@ -326,8 +325,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
-			if(prop.isAssociation()) {
-				readAssociation(prop.getAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback );
+			if (prop.isAssociation()) {
+				readAssociation(prop.getAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback);
 				continue;
 			}
 
@@ -338,15 +337,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private void readAssociation(Association<MongoPersistentProperty> association, PersistentPropertyAccessor accessor,
 			DocumentAccessor documentAccessor, DbRefProxyHandler handler, DbRefResolverCallback callback) {
 
-			MongoPersistentProperty property = association.getInverse();
-			Object value = documentAccessor.get(property);
+		MongoPersistentProperty property = association.getInverse();
+		Object value = documentAccessor.get(property);
 
-			if (value == null) {
-				return;
-			}
+		if (value == null) {
+			return;
+		}
 
-			DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
-			accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
+		DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
+		accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
 	}
 
 	/*
@@ -466,11 +465,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// Write the properties
 		for (MongoPersistentProperty prop : entity) {
 
-
 			if (prop.equals(idProperty) || !prop.isWritable()) {
 				continue;
 			}
-			if(prop.isAssociation()) {
+			if (prop.isAssociation()) {
 				writeAssociation(prop.getAssociation(), accessor, dbObjectAccessor);
 				continue;
 			}
@@ -492,9 +490,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private void writeAssociation(Association<MongoPersistentProperty> association, PersistentPropertyAccessor accessor,
 			DocumentAccessor dbObjectAccessor) {
 
-			MongoPersistentProperty inverseProp = association.getInverse();
+		MongoPersistentProperty inverseProp = association.getInverse();
 
-			writePropertyInternal(accessor.getProperty(inverseProp), dbObjectAccessor, inverseProp);
+		writePropertyInternal(accessor.getProperty(inverseProp), dbObjectAccessor, inverseProp);
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -556,7 +554,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
-				? mappingContext.getRequiredPersistentEntity(obj.getClass()) : mappingContext.getRequiredPersistentEntity(type);
+				? mappingContext.getRequiredPersistentEntity(obj.getClass())
+				: mappingContext.getRequiredPersistentEntity(type);
 
 		Object existingValue = accessor.get(prop);
 		Document document = existingValue instanceof Document ? (Document) existingValue : new Document();
@@ -775,7 +774,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return conversions.hasCustomWriteTarget(key.getClass(), String.class)
-				? (String) getPotentiallyConvertedSimpleWrite(key) : key.toString();
+				? (String) getPotentiallyConvertedSimpleWrite(key)
+				: key.toString();
 	}
 
 	/**
@@ -1387,7 +1387,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return (T) dbref;
 		}
 
-		T object =  dbref == null ? null : path.getPathItem(dbref.getId(), dbref.getCollectionName(), (Class<T>) rawType);
+		T object = dbref == null ? null : path.getPathItem(dbref.getId(), dbref.getCollectionName(), (Class<T>) rawType);
 		return object != null ? object : readAndConvertDBRef(dbref, type, path, rawType);
 	}
 
@@ -1421,7 +1421,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		List<Document> referencedRawDocuments = dbrefs.size() == 1
-				? Collections.singletonList(readRef(dbrefs.iterator().next())) : bulkReadRefs(dbrefs);
+				? Collections.singletonList(readRef(dbrefs.iterator().next()))
+				: bulkReadRefs(dbrefs);
 		String collectionName = dbrefs.iterator().next().getCollectionName();
 
 		List<T> targeList = new ArrayList<>(dbrefs.size());
