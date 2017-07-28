@@ -559,6 +559,16 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(fields, "foosum"), isBsonObject().containing("$first.$cond.else", "no-answer"));
 	}
 
+	@Test // DATAMONGO-1756
+	public void projectOperationShouldRenderNestedFieldNamesCorrectly() {
+
+		Document agg = newAggregation(project().and("value1.value").plus("value2.value").as("val")).toDocument("collection",
+				Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(extractPipelineElement(agg, 0, "$project"),
+				is(equalTo(new Document("val", new Document("$add", Arrays.asList("$value1.value", "$value2.value"))))));
+	}
+
 	private Document extractPipelineElement(Document agg, int index, String operation) {
 
 		List<Document> pipeline = (List<Document>) agg.get("pipeline");

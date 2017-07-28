@@ -338,6 +338,18 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(age, isBsonObject().containing("$ifNull.[1]._class", Age.class.getName()));
 	}
 
+	@Test // DATAMONGO-1756
+	public void projectOperationShouldRenderNestedFieldNamesCorrectlyForTypedAggregation() {
+
+		AggregationOperationContext context = getContext(Wrapper.class);
+
+		Document agg = newAggregation(Wrapper.class, project().and("nested1.value1").plus("nested2.value2").as("val"))
+				.toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"), is(
+				equalTo(new Document("val", new Document("$add", Arrays.asList("$nested1.value1", "$field2.nestedValue2"))))));
+	}
+
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "person")
 	public static class FooPerson {
 
@@ -407,5 +419,16 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	static class Bar {
 
 		String name;
+	}
+
+	static class Wrapper {
+
+		Nested nested1;
+		@org.springframework.data.mongodb.core.mapping.Field("field2") Nested nested2;
+	}
+
+	static class Nested {
+		String value1;
+		@org.springframework.data.mongodb.core.mapping.Field("nestedValue2") String value2;
 	}
 }
