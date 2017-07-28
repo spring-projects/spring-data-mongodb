@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -54,7 +55,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link TypeBasedAggregationOperationContext}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Mark Paluch
@@ -336,6 +337,19 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(age, isBsonObject().containing("$ifNull.[1]._class", Age.class.getName()));
 	}
 
+	@Test // DATAMONGO-1756
+	public void projectOperationShouldRenderNestedFieldNamesCorrectlyForTypedAggregation() {
+
+		AggregationOperationContext context = getContext(Wrapper.class);
+
+		DBObject agg = newAggregation(Wrapper.class, project().and("nested1.value1").plus("nested2.value2").as("val"))
+				.toDbObject("collection", context);
+
+		BasicDBObject project = (BasicDBObject) getPipelineElementFromAggregationAt(agg, 0).get("$project");
+		assertThat(project, is(equalTo(new BasicDBObject("val", new BasicDBObject("$add",
+				new BasicDbListBuilder().add("$nested1.value1").add("$field2.nestedValue2").get())))));
+	}
+
 	@Document(collection = "person")
 	public static class FooPerson {
 
@@ -405,5 +419,16 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	static class Bar {
 
 		String name;
+	}
+
+	static class Wrapper {
+
+		Nested nested1;
+		@org.springframework.data.mongodb.core.mapping.Field("field2") Nested nested2;
+	}
+
+	static class Nested {
+		String value1;
+		@org.springframework.data.mongodb.core.mapping.Field("nestedValue2") String value2;
 	}
 }

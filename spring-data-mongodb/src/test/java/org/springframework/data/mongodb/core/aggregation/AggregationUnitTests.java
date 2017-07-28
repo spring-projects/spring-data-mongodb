@@ -40,7 +40,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link Aggregation}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -562,6 +562,16 @@ public class AggregationUnitTests {
 				new BasicDBObject("$gte", new BasicDbListBuilder().add("$a").add(42).get())));
 		assertThat(getAsDBObject(fields, "foosum"), isBsonObject().containing("$first.$cond.then", "answer"));
 		assertThat(getAsDBObject(fields, "foosum"), isBsonObject().containing("$first.$cond.else", "no-answer"));
+	}
+
+	@Test // DATAMONGO-1756
+	public void projectOperationShouldRenderNestedFieldNamesCorrectly() {
+
+		DBObject agg = newAggregation(project().and("value1.value").plus("value2.value").as("val")).toDbObject("collection",
+				Aggregation.DEFAULT_CONTEXT);
+
+		assertThat((BasicDBObject) extractPipelineElement(agg, 0, "$project"), is(equalTo(new BasicDBObject("val",
+				new BasicDBObject("$add", new BasicDbListBuilder().add("$value1.value").add("$value2.value").get())))));
 	}
 
 	private DBObject extractPipelineElement(DBObject agg, int index, String operation) {

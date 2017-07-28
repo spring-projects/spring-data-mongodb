@@ -1408,7 +1408,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			protected List<Object> getOperationArguments(AggregationOperationContext context) {
 
 				List<Object> result = new ArrayList<Object>(values.size());
-				result.add(context.getReference(getField().getName()).toString());
+				result.add(context.getReference(getField()).toString());
 
 				for (Object element : values) {
 
