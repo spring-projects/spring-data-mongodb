@@ -656,6 +656,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return doFindOne(collectionName, new BasicDBObject(idKey, id), null, entityClass);
 	}
 
+	public <T> List<T> distinct(Query query, String field, String collectionName) {
+		DBCollection collection = this.getCollection(collectionName);
+		List list = collection.distinct(field, query.getQueryObject());
+		return (List<T>)list;
+	}
+
+	public <T,Z>  List<T> distinct(Query query, String field, Class<Z> entityClass) {
+		String collectionName = this.getCollectionName(entityClass);
+		return distinct(query, field, collectionName);
+	}
+
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass) {
 		return geoNear(near, entityClass, determineCollectionName(entityClass));
 	}
