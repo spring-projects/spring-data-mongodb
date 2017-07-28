@@ -113,6 +113,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Laszlo Csontos
+ * @author duozhilin
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -724,6 +725,39 @@ public class MongoTemplateTests {
 		assertThat(found1, notNullValue());
 		assertThat(found2, notNullValue());
 		assertThat(notFound, nullValue());
+	}
+
+	@Test
+	public void testDistinct() {
+		Address address1 = new Address();
+		address1.state = "PA";
+		address1.city = "Philadelphia";
+
+		Address address2 = new Address();
+		address2.state = "PA";
+		address2.city = " New York";
+
+		MyPerson person1 = new MyPerson();
+		person1.name = "Ben";
+		person1.address = address1;
+
+		MyPerson person2 = new MyPerson();
+		person2.name = "Eric";
+		person2.address = address2;
+
+		template.save(person1);
+		template.save(person2);
+
+		List<String> nameList = template.distinct("name", MyPerson.class, String.class);
+		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
+
+		Query query = new BasicQuery("{'address.state' : 'PA'}");
+		nameList = template.distinct(query, "name", MyPerson.class, String.class);
+		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
+
+		String collectionName = template.determineCollectionName(MyPerson.class);
+		nameList = template.distinct(query, "name", collectionName, String.class);
+		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
 	}
 
 	@Test
