@@ -117,15 +117,12 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.Cursor;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
@@ -164,6 +161,7 @@ import com.mongodb.util.JSONParseException;
  * @author Laszlo Csontos
  * @author Maninder Singh
  * @author Borislav Rangelov
+ * @author duozhilin
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
@@ -797,6 +795,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return doFindOne(collectionName, new Document(idKey, id), new Document(), entityClass);
+	}
+
+	public <T, Z> List<T> distinct(String field, Class<Z> entityClass, Class<T> resultClass) {
+		return distinct(new Query(), field, determineCollectionName(entityClass), resultClass);
+	}
+
+	public <T, Z> List<T> distinct(Query query, String field, Class<Z> entityClass, Class<T> resultClass) {
+		return distinct(query, field, determineCollectionName(entityClass), resultClass);
+	}
+
+	public <T> List<T> distinct(Query query, String field, String collectionName, Class<T> resultClass) {
+		MongoCollection<Document> collection = this.getCollection(collectionName);
+		DistinctIterable<T> iterable = collection.distinct(field, query.getQueryObject(), resultClass);
+
+		MongoCursor<T> cursor = iterable.iterator();
+
+		List<T> result = new ArrayList<T>();
+
+		while (cursor.hasNext()) {
+			T object = cursor.next();
+			result.add(object);
+		}
+
+		return result;
 	}
 
 	@Override
