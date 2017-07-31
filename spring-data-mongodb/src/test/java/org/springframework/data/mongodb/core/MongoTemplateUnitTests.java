@@ -136,7 +136,9 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(findIterable.collation(Mockito.any())).thenReturn(findIterable);
 		when(findIterable.limit(anyInt())).thenReturn(findIterable);
 		when(mapReduceIterable.collation(Mockito.any())).thenReturn(mapReduceIterable);
+		when(mapReduceIterable.sort(Mockito.any())).thenReturn(mapReduceIterable);
 		when(mapReduceIterable.iterator()).thenReturn(cursor);
+		when(mapReduceIterable.filter(any())).thenReturn(mapReduceIterable);
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
@@ -435,7 +437,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
 		when(output.limit(anyInt())).thenReturn(output);
-		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
+		when(output.sort(any())).thenReturn(output);
 		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
@@ -456,7 +458,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
 		when(output.limit(anyInt())).thenReturn(output);
-		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
+		when(output.sort(any())).thenReturn(output);
 		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
@@ -477,8 +479,11 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
 		when(output.limit(anyInt())).thenReturn(output);
+		when(output.sort(any())).thenReturn(output);
+		when(output.filter(any())).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
+
 
 		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
 
@@ -494,7 +499,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
 		when(output.limit(anyInt())).thenReturn(output);
-		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
+		when(output.sort(any())).thenReturn(output);
 		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
@@ -655,7 +660,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1518
 	public void findShouldUseCollationWhenPresent() {
 
-		template.find(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
+		template.find(new BasicQuery("{'foo' : 'bar'}").collation(Collation.of("fr")), AutogenerateableId.class);
 
 		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
@@ -663,7 +668,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1518
 	public void findOneShouldUseCollationWhenPresent() {
 
-		template.findOne(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
+		template.findOne(new BasicQuery("{'foo' : 'bar'}").collation(Collation.of("fr")), AutogenerateableId.class);
 
 		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
@@ -817,7 +822,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class, null);
 
-		verify(findIterable, never()).projection(any());
+		verify(findIterable).projection(eq(new Document()));
 	}
 
 	@Test // DATAMONGO-1733
@@ -825,7 +830,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class, null);
 
-		verify(findIterable, never()).projection(any());
+		verify(findIterable).projection(eq(new Document()));
 	}
 
 	@Test // DATAMONGO-1733
@@ -841,7 +846,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class, null);
 
-		verify(findIterable, never()).projection(any());
+		verify(findIterable).projection(eq(new Document()));
 	}
 
 	@Test // DATAMONGO-1733
@@ -849,7 +854,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class, null);
 
-		verify(findIterable, never()).projection(any());
+		verify(findIterable).projection(eq(new Document()));
 	}
 
 	class AutogenerateableId {

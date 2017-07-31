@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -36,7 +37,7 @@ public class UnwindOperation
 		implements AggregationOperation, FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation {
 
 	private final ExposedField field;
-	private final ExposedField arrayIndex;
+	private final @Nullable ExposedField arrayIndex;
 	private final boolean preserveNullAndEmptyArrays;
 
 	/**
@@ -185,8 +186,8 @@ public class UnwindOperation
 	 */
 	public static final class UnwindOperationBuilder implements PathBuilder, IndexBuilder, EmptyArraysBuilder {
 
-		private Field field;
-		private Field arrayIndex;
+		private @Nullable Field field;
+		private @Nullable Field arrayIndex;
 
 		private UnwindOperationBuilder() {}
 

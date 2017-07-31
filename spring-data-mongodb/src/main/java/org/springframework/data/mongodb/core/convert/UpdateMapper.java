@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 
 /**
  * A subclass of {@link QueryMapper} that retains type information on the mongo types.
@@ -60,7 +61,7 @@ public class UpdateMapper extends QueryMapper {
 	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#getMappedObject(Bson, MongoPersistentEntity)
 	 */
 	@Override
-	public Document getMappedObject(Bson query, MongoPersistentEntity<?> entity) {
+	public Document getMappedObject(Bson query, @Nullable MongoPersistentEntity<?> entity) {
 
 		Document document = super.getMappedObject(query, entity);
 
@@ -102,10 +103,10 @@ public class UpdateMapper extends QueryMapper {
 	/**
 	 * Returns {@literal true} if the given {@link Document} is an update object that uses update operators.
 	 * 
-	 * @param updateObj
+	 * @param updateObj can be {@literal null}.
 	 * @return {@literal true} if the given {@link Document} is an update object.
 	 */
-	public static boolean isUpdateObject(Document updateObj) {
+	public static boolean isUpdateObject(@Nullable Document updateObj) {
 
 		if (updateObj == null) {
 			return false;
@@ -128,7 +129,7 @@ public class UpdateMapper extends QueryMapper {
 	 *      org.springframework.data.mongodb.core.mapping.MongoPersistentEntity)
 	 */
 	@Override
-	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
+	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
 		return converter.convertToMongoType(source,
 				entity == null ? ClassTypeInformation.OBJECT : getTypeHintForEntity(source, entity));
 	}
@@ -184,23 +185,23 @@ public class UpdateMapper extends QueryMapper {
 	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#isAssociationConversionNecessary(org.springframework.data.mongodb.core.convert.QueryMapper.Field, java.lang.Object)
 	 */
 	@Override
-	protected boolean isAssociationConversionNecessary(Field documentField, Object value) {
+	protected boolean isAssociationConversionNecessary(Field documentField, @Nullable Object value) {
 		return super.isAssociationConversionNecessary(documentField, value) || documentField.containsAssociation();
 	}
 
-	private boolean isUpdateModifier(Object value) {
+	private boolean isUpdateModifier(@Nullable Object value) {
 		return value instanceof Modifier || value instanceof Modifiers;
 	}
 
-	private boolean isQuery(Object value) {
+	private boolean isQuery(@Nullable Object value) {
 		return value instanceof Query;
 	}
 
-	private Document getMappedValue(Field field, Modifier modifier) {
+	private Document getMappedValue(@Nullable Field field, Modifier modifier) {
 		return new Document(modifier.getKey(), getMappedModifier(field, modifier));
 	}
 
-	private Object getMappedModifier(Field field, Modifier modifier) {
+	private Object getMappedModifier(@Nullable Field field, Modifier modifier) {
 
 		Object value = modifier.getValue();
 

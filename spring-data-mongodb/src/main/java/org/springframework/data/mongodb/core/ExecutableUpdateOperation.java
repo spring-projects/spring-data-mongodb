@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.client.result.UpdateResult;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link ExecutableUpdateOperation} allows creation and execution of MongoDB update / findAndModify operations in a
@@ -148,6 +149,7 @@ public interface ExecutableUpdateOperation {
 		 *
 		 * @return {@literal null} if nothing found.
 		 */
+		@Nullable
 		T findAndModifyValue();
 	}
 

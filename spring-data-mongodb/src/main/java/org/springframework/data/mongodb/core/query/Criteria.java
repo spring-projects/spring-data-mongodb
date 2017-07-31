@@ -35,6 +35,7 @@ import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -59,7 +60,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	private static final Object NOT_SET = new Object();
 
-	private String key;
+	private @Nullable String key;
 	private List<Criteria> criteriaChain;
 	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 	private Object isValue = NOT_SET;
@@ -615,6 +616,11 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 
+	/*
+	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getKey()
+	 */
+	@Override
+	@Nullable
 	public String getKey() {
 		return this.key;
 	}

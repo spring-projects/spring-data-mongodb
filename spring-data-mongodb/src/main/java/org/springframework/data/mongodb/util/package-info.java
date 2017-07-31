@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 /**
- *
  * @author Thomas Darimont
  */
+@org.springframework.lang.NonNullApi
 package org.springframework.data.mongodb.util;
+

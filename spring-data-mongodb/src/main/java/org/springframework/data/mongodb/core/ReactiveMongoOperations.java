@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -98,7 +99,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param readPreference read preferences to use, can be {@literal null}.
 	 * @return a result object returned by the action
 	 */
-	Mono<Document> executeCommand(Document command, ReadPreference readPreference);
+	Mono<Document> executeCommand(Document command, @Nullable ReadPreference readPreference);
 
 	/**
 	 * Executes a {@link ReactiveDatabaseCallback} translating any exceptions as necessary.
@@ -312,11 +313,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Determine result of given {@link Query} contains at least one element.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find a record.
-	 * @param entityClass the parametrized type.
+	 * @param entityClass the parametrized type. Can be {@literal null}.
 	 * @param collectionName name of the collection to check for objects.
 	 * @return
 	 */
-	Mono<Boolean> exists(Query query, Class<?> entityClass, String collectionName);
+	Mono<Boolean> exists(Query query, @Nullable Class<?> entityClass, String collectionName);
 
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity class to a {@link Flux} of the specified type.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.lang.Nullable;
 
 import com.google.common.base.Function;
 import com.mongodb.BasicDBObject;
@@ -58,9 +59,7 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 				new Function<DBObject, T>() {
 
 					@Override
-					public T apply(DBObject input) {
-
-						;
+					public T apply(@Nullable DBObject input) {
 						return operations.getConverter().read(type, new Document((BasicDBObject) input));
 					}
 				}, new SpringDataMongodbSerializer(operations.getConverter()));
@@ -73,7 +72,7 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 	 * @see com.querydsl.mongodb.AbstractMongodbQuery#getCollection(java.lang.Class)
 	 */
 	@Override
-	protected DBCollection getCollection(Class<?> type) {
+	protected DBCollection getCollection(@Nullable Class<?> type) {
 		return ((MongoTemplate) operations).getMongoDbFactory().getLegacyDb()
 				.getCollection(operations.getCollectionName(type));
 	}

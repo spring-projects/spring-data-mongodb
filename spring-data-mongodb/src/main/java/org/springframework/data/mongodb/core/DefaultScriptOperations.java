@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import org.bson.types.ObjectId;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -56,7 +57,7 @@ class DefaultScriptOperations implements ScriptOperations {
 
 	/**
 	 * Creates new {@link DefaultScriptOperations} using given {@link MongoOperations}.
-	 * 
+	 *
 	 * @param mongoOperations must not be {@literal null}.
 	 */
 	public DefaultScriptOperations(MongoOperations mongoOperations) {

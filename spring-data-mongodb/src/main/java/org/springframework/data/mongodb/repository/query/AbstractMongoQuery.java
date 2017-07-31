@@ -77,6 +77,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
 	 */
+	@Override
 	public Object execute(Object[] parameters) {
 
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),

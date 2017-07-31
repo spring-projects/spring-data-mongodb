@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
 
 import com.mongodb.MapReduceCommand;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Mark Pollack
@@ -31,15 +32,15 @@ import com.mongodb.MapReduceCommand;
  */
 public class MapReduceOptions {
 
-	private String outputCollection;
+	private @Nullable String outputCollection;
 
 	private Optional<String> outputDatabase = Optional.empty();
 	private MapReduceCommand.OutputType outputType = MapReduceCommand.OutputType.REPLACE;
 	private Map<String, Object> scopeVariables = new HashMap<String, Object>();
 	private Map<String, Object> extraOptions = new HashMap<String, Object>();
-	private Boolean jsMode;
+	private @Nullable Boolean jsMode;
 	private Boolean verbose = Boolean.TRUE;
-	private Integer limit;
+	private @Nullable Integer limit;
 
 	private Optional<Boolean> outputSharded = Optional.empty();
 	private Optional<String> finalizeFunction = Optional.empty();
@@ -251,6 +252,7 @@ public class MapReduceOptions {
 		return this.jsMode;
 	}
 
+	@Nullable
 	public String getOutputCollection() {
 		return this.outputCollection;
 	}
@@ -276,6 +278,7 @@ public class MapReduceOptions {
 	 * 
 	 * @return {@literal null} if not set.
 	 */
+	@Nullable
 	public Integer getLimit() {
 		return limit;
 	}

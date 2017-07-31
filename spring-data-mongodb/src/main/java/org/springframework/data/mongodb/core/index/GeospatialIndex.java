@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -33,13 +34,13 @@ import org.springframework.util.StringUtils;
 public class GeospatialIndex implements IndexDefinition {
 
 	private final String field;
-	private String name;
-	private Integer min;
-	private Integer max;
-	private Integer bits;
+	private @Nullable String name;
+	private @Nullable Integer min;
+	private @Nullable Integer max;
+	private @Nullable Integer bits;
 	private GeoSpatialIndexType type = GeoSpatialIndexType.GEO_2D;
 	private Double bucketSize = 1.0;
-	private String additionalField;
+	private @Nullable String additionalField;
 	private Optional<IndexFilter> filter = Optional.empty();
 	private Optional<Collation> collation = Optional.empty();
 

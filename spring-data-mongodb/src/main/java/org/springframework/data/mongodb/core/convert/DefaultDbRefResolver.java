@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
@@ -44,6 +45,7 @@ import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
@@ -89,10 +91,11 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	@Override
 	public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
-			DbRefProxyHandler handler) {
+							   DbRefProxyHandler handler) {
 
 		Assert.notNull(property, "Property must not be null!");
 		Assert.notNull(callback, "Callback must not be null!");
+		Assert.notNull(handler, "Handler must not be null!");
 
 		if (isLazyDbRef(property)) {
 			return createLazyLoadingProxy(property, dbref, callback, handler);
@@ -262,7 +265,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		private final PersistenceExceptionTranslator exceptionTranslator;
 
 		private volatile boolean resolved;
-		private Object result;
+		private @Nullable Object result;
 		private DBRef dbref;
 
 		static {
@@ -301,7 +304,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @see org.aopalliance.intercept.MethodInterceptor#invoke(org.aopalliance.intercept.MethodInvocation)
 		 */
 		@Override
-		public Object invoke(MethodInvocation invocation) throws Throwable {
+		public Object invoke(@Nullable MethodInvocation invocation) throws Throwable {
 			return intercept(invocation.getThis(), invocation.getMethod(), invocation.getArguments(), null);
 		}
 
@@ -310,7 +313,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @see org.springframework.cglib.proxy.MethodInterceptor#intercept(java.lang.Object, java.lang.reflect.Method, java.lang.Object[], org.springframework.cglib.proxy.MethodProxy)
 		 */
 		@Override
-		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+		public Object intercept(@Nullable Object obj, @Nullable Method method, @Nullable Object[] args, @Nullable MethodProxy proxy) throws Throwable {
 
 			if (INITIALIZE_METHOD.equals(method)) {
 				return ensureResolved();

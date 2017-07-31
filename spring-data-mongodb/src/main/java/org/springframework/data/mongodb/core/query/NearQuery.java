@@ -24,7 +24,9 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Builder class to build near-queries.
@@ -36,40 +38,39 @@ import org.springframework.util.Assert;
 public final class NearQuery {
 
 	private final Point point;
-	private Query query;
-	private Distance maxDistance;
-	private Distance minDistance;
+	private @Nullable Query query;
+	private @Nullable Distance maxDistance;
+	private @Nullable Distance minDistance;
 	private Metric metric;
 	private boolean spherical;
-	private Long num;
-	private Long skip;
+	private @Nullable Long num;
+	private @Nullable Long skip;
 
 	/**
 	 * Creates a new {@link NearQuery}.
 	 * 
 	 * @param point must not be {@literal null}.
+	 * @param metric must not be {@literal null}.
 	 */
 	private NearQuery(Point point, Metric metric) {
 
 		Assert.notNull(point, "Point must not be null!");
+		Assert.notNull(metric, "Metric must not be null!");
 
 		this.point = point;
 		this.spherical = false;
-
-		if (metric != null) {
-			in(metric);
-		}
+		this.metric = metric;
 	}
 
 	/**
 	 * Creates a new {@link NearQuery} starting near the given coordinates.
 	 * 
-	 * @param i
-	 * @param j
+	 * @param x
+	 * @param y
 	 * @return
 	 */
 	public static NearQuery near(double x, double y) {
-		return near(x, y, null);
+		return near(x, y, Metrics.NEUTRAL);
 	}
 
 	/**
@@ -79,7 +80,7 @@ public final class NearQuery {
 	 * 
 	 * @param x
 	 * @param y
-	 * @param metric
+	 * @param metric must not be {@literal null}.
 	 * @return
 	 */
 	public static NearQuery near(double x, double y, Metric metric) {
@@ -93,7 +94,7 @@ public final class NearQuery {
 	 * @return
 	 */
 	public static NearQuery near(Point point) {
-		return near(point, null);
+		return near(point, Metrics.NEUTRAL);
 	}
 
 	/**
@@ -102,7 +103,7 @@ public final class NearQuery {
 	 * initially set {@link Metric}.
 	 * 
 	 * @param point must not be {@literal null}.
-	 * @param metric
+	 * @param metric must not be {@literal null}.
 	 * @return
 	 */
 	public static NearQuery near(Point point, Metric metric) {
@@ -116,7 +117,7 @@ public final class NearQuery {
 	 * @return will never be {@literal null}.
 	 */
 	public Metric getMetric() {
-		return metric == null ? Metrics.NEUTRAL : metric;
+		return metric;
 	}
 
 	/**
@@ -191,7 +192,7 @@ public final class NearQuery {
 
 	/**
 	 * Sets the maximum distance to the given {@link Distance}. Will set the returned {@link Metric} to be the one of the
-	 * given {@link Distance} if no {@link Metric} was set before.
+	 * given {@link Distance} if {@link Metric} was {@link Metrics#NEUTRAL} before.
 	 * 
 	 * @param distance must not be {@literal null}.
 	 * @return
@@ -204,7 +205,7 @@ public final class NearQuery {
 			this.spherical(true);
 		}
 
-		if (this.metric == null) {
+		if (ObjectUtils.nullSafeEquals(Metrics.NEUTRAL, this.metric)) {
 			in(distance.getMetric());
 		}
 
@@ -275,6 +276,7 @@ public final class NearQuery {
 	 * 
 	 * @return
 	 */
+	@Nullable
 	public Distance getMaxDistance() {
 		return this.maxDistance;
 	}
@@ -285,6 +287,7 @@ public final class NearQuery {
 	 * @return
 	 * @since 1.7
 	 */
+	@Nullable
 	public Distance getMinDistance() {
 		return this.minDistance;
 	}
@@ -378,6 +381,7 @@ public final class NearQuery {
 	public NearQuery query(Query query) {
 
 		Assert.notNull(query, "Cannot apply 'null' query on NearQuery.");
+
 		this.query = query;
 		this.skip = query.getSkip();
 
@@ -390,6 +394,7 @@ public final class NearQuery {
 	/**
 	 * @return the number of elements to skip.
 	 */
+	@Nullable
 	public Long getSkip() {
 		return skip;
 	}

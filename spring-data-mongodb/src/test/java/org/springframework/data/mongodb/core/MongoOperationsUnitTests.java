@@ -201,7 +201,7 @@ public abstract class MongoOperationsUnitTests {
 			public void doWith(MongoOperations operations) {
 				operations.executeCommand("");
 			}
-		}.assertDataAccessException();
+		}.assertException(IllegalArgumentException.class);
 	}
 
 	@Test

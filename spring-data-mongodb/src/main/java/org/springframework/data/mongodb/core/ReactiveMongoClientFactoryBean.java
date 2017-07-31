@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.data.mongodb.core;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.async.client.MongoClientSettings;
@@ -37,10 +38,10 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 
 	private static final PersistenceExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new MongoExceptionTranslator();
 
-	private String connectionString;
-	private String host;
-	private Integer port;
-	private MongoClientSettings mongoClientSettings;
+	private @Nullable String connectionString;
+	private @Nullable String host;
+	private @Nullable Integer port;
+	private @Nullable MongoClientSettings mongoClientSettings;
 	private PersistenceExceptionTranslator exceptionTranslator = DEFAULT_EXCEPTION_TRANSLATOR;
 
 	/**
@@ -48,7 +49,7 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 	 *
 	 * @param host
 	 */
-	public void setHost(String host) {
+	public void setHost(@Nullable String host) {
 		this.host = host;
 	}
 
@@ -66,7 +67,7 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 	 *
 	 * @param connectionString
 	 */
-	public void setConnectionString(String connectionString) {
+	public void setConnectionString(@Nullable String connectionString) {
 		this.connectionString = connectionString;
 	}
 
@@ -75,7 +76,7 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 	 *
 	 * @param mongoClientSettings
 	 */
-	public void setMongoClientSettings(MongoClientSettings mongoClientSettings) {
+	public void setMongoClientSettings(@Nullable MongoClientSettings mongoClientSettings) {
 		this.mongoClientSettings = mongoClientSettings;
 	}
 
@@ -84,7 +85,7 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 	 *
 	 * @param exceptionTranslator
 	 */
-	public void setExceptionTranslator(PersistenceExceptionTranslator exceptionTranslator) {
+	public void setExceptionTranslator(@Nullable PersistenceExceptionTranslator exceptionTranslator) {
 		this.exceptionTranslator = exceptionTranslator == null ? DEFAULT_EXCEPTION_TRANSLATOR : exceptionTranslator;
 	}
 
@@ -118,7 +119,7 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 	}
 
 	@Override
-	protected void destroyInstance(MongoClient instance) throws Exception {
+	protected void destroyInstance(@Nullable MongoClient instance) throws Exception {
 		instance.close();
 	}
 

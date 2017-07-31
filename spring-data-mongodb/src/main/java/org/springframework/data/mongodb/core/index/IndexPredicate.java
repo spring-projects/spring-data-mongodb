@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,18 @@
 
 package org.springframework.data.mongodb.core.index;
 
+import org.springframework.lang.Nullable;
+
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public abstract class IndexPredicate {
 
-	private String name;
+	private @Nullable String name;
 	private IndexDirection direction = IndexDirection.ASCENDING;
 	private boolean unique = false;
 
+	@Nullable
 	public String getName() {
 		return name;
 	}

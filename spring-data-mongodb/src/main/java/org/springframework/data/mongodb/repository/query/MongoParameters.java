@@ -29,7 +29,10 @@ import org.springframework.data.mongodb.repository.query.MongoParameters.MongoPa
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
  * Custom extension of {@link Parameters} discovering additional
@@ -42,8 +45,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	private final int rangeIndex;
 	private final int maxDistanceIndex;
 	private final Integer fullTextIndex;
-
-	private Integer nearIndex;
+	private final Integer nearIndex;
 
 	/**
 	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
@@ -64,11 +66,12 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.rangeIndex = getTypeIndex(parameterTypeInfo, Range.class, Distance.class);
 		this.maxDistanceIndex = this.rangeIndex == -1 ? getTypeIndex(parameterTypeInfo, Distance.class, null) : -1;
 
-		if (this.nearIndex == null && isGeoNearMethod) {
-			this.nearIndex = getNearIndex(parameterTypes);
-		} else if (this.nearIndex == null) {
-			this.nearIndex = -1;
+		int index = findNearIndexInParameters(method);
+		if (index == -1 && isGeoNearMethod) {
+			index = getNearIndex(parameterTypes);
 		}
+
+		this.nearIndex = index;
 	}
 
 	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, Integer nearIndex,
@@ -102,25 +105,35 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return -1;
 	}
 
+	private int findNearIndexInParameters(Method method) {
+
+		int index = -1;
+		for (java.lang.reflect.Parameter p : method.getParameters()) {
+
+			MongoParameter param = createParameter(MethodParameter.forParameter(p));
+			if (param.isManuallyAnnotatedNearParameter()) {
+				if(index == -1) {
+					index = param.getIndex();
+				} else {
+					throw new IllegalStateException(String.format("Found multiple @Near annotations ond method %s! Only one allowed!",
+							method.toString()));
+				}
+
+			}
+		}
+		return index;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
 	 */
 	@Override
 	protected MongoParameter createParameter(MethodParameter parameter) {
-
-		MongoParameter mongoParameter = new MongoParameter(parameter);
-
-		// Detect manually annotated @Near Point and reject multiple annotated ones
-		if (this.nearIndex == null && mongoParameter.isManuallyAnnotatedNearParameter()) {
-			this.nearIndex = mongoParameter.getIndex();
-		} else if (mongoParameter.isManuallyAnnotatedNearParameter()) {
-			throw new IllegalStateException(String.format("Found multiple @Near annotations ond method %s! Only one allowed!",
-					parameter.getMethod().toString()));
-		}
-
-		return mongoParameter;
+		return new MongoParameter(parameter);
 	}
+
+
 
 	public int getDistanceRangeIndex() {
 		return -1;
@@ -180,7 +193,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex);
 	}
 
-	private int getTypeIndex(List<TypeInformation<?>> parameterTypes, Class<?> type, Class<?> componentType) {
+	private int getTypeIndex(List<TypeInformation<?>> parameterTypes, Class<?> type, @Nullable Class<?> componentType) {
 
 		for (int i = 0; i < parameterTypes.size(); i++) {
 

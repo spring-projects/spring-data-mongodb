@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -46,8 +47,8 @@ public class IndexInfo {
 	private final boolean unique;
 	private final boolean sparse;
 	private final String language;
-	private String partialFilterExpression;
-	private Document collation;
+	private @Nullable String partialFilterExpression;
+	private @Nullable Document collation;
 
 	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse, String language) {
 
@@ -167,6 +168,7 @@ public class IndexInfo {
 	 * @return
 	 * @since 1.0
 	 */
+	@Nullable
 	public String getPartialFilterExpression() {
 		return partialFilterExpression;
 	}

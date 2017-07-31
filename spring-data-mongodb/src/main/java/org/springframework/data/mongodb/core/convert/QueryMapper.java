@@ -33,13 +33,13 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
 import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBList;
@@ -108,7 +109,7 @@ public class QueryMapper {
 	 * @return
 	 */
 	@SuppressWarnings("deprecation")
-	public Document getMappedObject(Bson query, MongoPersistentEntity<?> entity) {
+	public Document getMappedObject(Bson query, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (isNestedKeyword(query)) {
 			return getMappedKeyword(new Keyword(query), entity);
@@ -161,10 +162,12 @@ public class QueryMapper {
 	 * @return
 	 * @since 1.6
 	 */
-	public Document getMappedSort(Document sortObject, MongoPersistentEntity<?> entity) {
+	public Document getMappedSort(Document sortObject, @Nullable MongoPersistentEntity<?> entity) {
 
-		if (sortObject == null) {
-			return null;
+		Assert.notNull(sortObject, "SortObject must not be null!");
+
+		if (sortObject.isEmpty()) {
+			return new Document();
 		}
 
 		Document mappedSort = getMappedObject(sortObject, entity);
@@ -172,33 +175,27 @@ public class QueryMapper {
 		return mappedSort;
 	}
 
-	public Document getMappedSort(Document sortObject, Optional<? extends MongoPersistentEntity<?>> entity) {
-		return getMappedSort(sortObject, entity.orElse(null));
-	}
-
 	/**
 	 * Maps fields to retrieve to the {@link MongoPersistentEntity}s properties. <br />
-	 * Also onverts and potentially adds missing property {@code $meta} representation.
+	 * Also converts and potentially adds missing property {@code $meta} representation.
 	 *
-	 * @param fieldsObject
-	 * @param entity
+	 * @param fieldsObject must not be {@literal null}.
+	 * @param entity can be {@litearl null}.
 	 * @return
 	 * @since 1.6
 	 */
-	public Document getMappedFields(Document fieldsObject, MongoPersistentEntity<?> entity) {
+	public Document getMappedFields(Document fieldsObject, @Nullable MongoPersistentEntity<?> entity) {
 
-		Document mappedFields = fieldsObject != null ? getMappedObject(fieldsObject, entity) : new Document();
+		Assert.notNull(fieldsObject, "FieldsObject must not be null!");
+
+		Document mappedFields = fieldsObject.isEmpty() ? new Document() : getMappedObject(fieldsObject, entity);
 		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
-		return mappedFields.keySet().isEmpty() ? null : mappedFields;
+		return mappedFields;
 	}
 
-	public Document getMappedFields(Document fieldsObject, Optional<? extends MongoPersistentEntity<?>> entity) {
-		return getMappedFields(fieldsObject, entity.orElse(null));
-	}
+	private void mapMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity, MetaMapping metaMapping) {
 
-	private void mapMetaAttributes(Document source, MongoPersistentEntity<?> entity, MetaMapping metaMapping) {
-
-		if (entity == null || source == null) {
+		if (entity == null) {
 			return;
 		}
 
@@ -373,7 +370,7 @@ public class QueryMapper {
 	 * @param value
 	 * @return
 	 */
-	protected boolean isAssociationConversionNecessary(Field documentField, Object value) {
+	protected boolean isAssociationConversionNecessary(Field documentField, @Nullable Object value) {
 
 		Assert.notNull(documentField, "Document field must not be null!");
 
@@ -393,8 +390,8 @@ public class QueryMapper {
 		}
 
 		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
-		return entity.hasIdProperty() && (type.equals(DBRef.class)
-				|| entity.getRequiredIdProperty().getActualType().isAssignableFrom(type));
+		return entity.hasIdProperty()
+				&& (type.equals(DBRef.class) || entity.getRequiredIdProperty().getActualType().isAssignableFrom(type));
 	}
 
 	/**
@@ -437,7 +434,7 @@ public class QueryMapper {
 	 * @param entity
 	 * @return the converted mongo type or null if source is null
 	 */
-	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
+	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
 		return converter.convertToMongoType(source, entity == null ? null : entity.getTypeInformation());
 	}
 
@@ -490,7 +487,7 @@ public class QueryMapper {
 	 * @param value can be {@literal null}.
 	 * @return
 	 */
-	protected final boolean isDocument(Object value) {
+	protected final boolean isDocument(@Nullable Object value) {
 		return value instanceof Document;
 	}
 
@@ -500,7 +497,7 @@ public class QueryMapper {
 	 * @param value can be {@literal null}.
 	 * @return
 	 */
-	protected final boolean isDBObject(Object value) {
+	protected final boolean isDBObject(@Nullable Object value) {
 		return value instanceof DBObject;
 	}
 
@@ -511,7 +508,7 @@ public class QueryMapper {
 	 * @param value can be {@literal null}.
 	 * @return
 	 */
-	protected final Entry<String, Object> createMapEntry(Field field, Object value) {
+	protected final Entry<String, Object> createMapEntry(Field field, @Nullable Object value) {
 		return createMapEntry(field.getMappedKey(), value);
 	}
 
@@ -522,7 +519,7 @@ public class QueryMapper {
 	 * @param value can be {@literal null}
 	 * @return
 	 */
-	private Entry<String, Object> createMapEntry(String key, Object value) {
+	private Entry<String, Object> createMapEntry(String key, @Nullable Object value) {
 
 		Assert.hasText(key, "Key must not be null or empty!");
 		return Collections.singletonMap(key, value).entrySet().iterator().next();
@@ -543,7 +540,8 @@ public class QueryMapper {
 	 * @param id
 	 * @return
 	 */
-	public Object convertId(Object id) {
+	@Nullable
+	public Object convertId(@Nullable Object id) {
 
 		if (id == null) {
 			return null;
@@ -712,8 +710,9 @@ public class QueryMapper {
 		 * property that represents the value to handle. This means it'll be the leaf property for plain paths or the
 		 * association property in case we refer to an association somewhere in the path.
 		 *
-		 * @return
+		 * @return can be {@literal null}.
 		 */
+		@Nullable
 		public MongoPersistentProperty getProperty() {
 			return null;
 		}
@@ -721,8 +720,9 @@ public class QueryMapper {
 		/**
 		 * Returns the {@link MongoPersistentEntity} that field is conatined in.
 		 *
-		 * @return
+		 * @return can be {@literal null}.
 		 */
+		@Nullable
 		public MongoPersistentEntity<?> getPropertyEntity() {
 			return null;
 		}
@@ -754,6 +754,7 @@ public class QueryMapper {
 			return false;
 		}
 
+		@Nullable
 		public Association<MongoPersistentProperty> getAssociation() {
 			return null;
 		}
@@ -803,7 +804,7 @@ public class QueryMapper {
 		 */
 		public MetadataBackedField(String name, MongoPersistentEntity<?> entity,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
-				MongoPersistentProperty property) {
+				@Nullable MongoPersistentProperty property) {
 
 			super(name);
 
@@ -884,6 +885,7 @@ public class QueryMapper {
 		 *
 		 * @return
 		 */
+		@Nullable
 		private Association<MongoPersistentProperty> findAssociation() {
 
 			if (this.path != null) {

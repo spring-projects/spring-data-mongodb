@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link MongoPersistentProperty} caching access to {@link #isIdProperty()} and {@link #getFieldName()}.
@@ -26,11 +27,11 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
  */
 public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty {
 
-	private Boolean isIdProperty;
-	private Boolean isAssociation;
-	private String fieldName;
-	private Boolean usePropertyAccess;
-	private Boolean isTransient;
+	private @Nullable Boolean isIdProperty;
+	private @Nullable Boolean isAssociation;
+	private @Nullable String fieldName;
+	private @Nullable Boolean usePropertyAccess;
+	private @Nullable Boolean isTransient;
 
 	/**
 	 * Creates a new {@link CachingMongoPersistentProperty}.

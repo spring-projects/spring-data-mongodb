@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.geo.Point;
+import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -64,7 +65,8 @@ public class GeoJsonModule extends SimpleModule {
 		 * @see com.fasterxml.jackson.databind.JsonDeserializer#deserialize(com.fasterxml.jackson.core.JsonParser, com.fasterxml.jackson.databind.DeserializationContext)
 		 */
 		@Override
-		public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+		public T deserialize(@Nullable JsonParser jp, @Nullable DeserializationContext ctxt)
+				throws IOException, JsonProcessingException {
 
 			JsonNode node = jp.readValueAsTree();
 			JsonNode coordinates = node.get("coordinates");

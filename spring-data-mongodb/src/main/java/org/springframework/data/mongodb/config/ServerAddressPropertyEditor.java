@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -34,6 +35,7 @@ import com.mongodb.ServerAddress;
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
@@ -49,7 +51,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
 	 */
 	@Override
-	public void setAsText(String replicaSetString) {
+	public void setAsText(@Nullable String replicaSetString) {
 
 		if (!StringUtils.hasText(replicaSetString)) {
 			setValue(null);

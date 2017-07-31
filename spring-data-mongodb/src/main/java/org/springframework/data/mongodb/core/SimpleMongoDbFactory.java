@@ -21,6 +21,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.DB;
@@ -44,7 +45,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	private final boolean mongoInstanceCreated;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 
-	private WriteConcern writeConcern;
+	private @Nullable WriteConcern writeConcern;
 
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClientURI}.

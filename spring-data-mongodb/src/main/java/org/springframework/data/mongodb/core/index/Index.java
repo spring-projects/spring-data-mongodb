@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.bson.Document;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -40,7 +41,7 @@ public class Index implements IndexDefinition {
 	}
 
 	private final Map<String, Direction> fieldSpec = new LinkedHashMap<String, Direction>();
-	private String name;
+	private @Nullable String name;
 	private boolean unique = false;
 	private boolean dropDuplicates = false;
 	private boolean sparse = false;

@@ -60,6 +60,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -94,9 +95,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected final DbRefResolver dbRefResolver;
 	protected final DefaultDbRefProxyHandler dbRefProxyHandler;
 
-	protected ApplicationContext applicationContext;
+	protected @Nullable ApplicationContext applicationContext;
 	protected MongoTypeMapper typeMapper;
-	protected String mapKeyDotReplacement = null;
+	protected @Nullable String mapKeyDotReplacement = null;
 
 	private SpELContext spELContext;
 
@@ -142,12 +143,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * {@link DefaultMongoTypeMapper} by default. Setting this to {@literal null} will reset the {@link TypeMapper} to the
 	 * default one.
 	 *
-	 * @param typeMapper the typeMapper to set
+	 * @param typeMapper the typeMapper to set. Can be {@literal null}.
 	 */
-	public void setTypeMapper(MongoTypeMapper typeMapper) {
+	public void setTypeMapper(@Nullable MongoTypeMapper typeMapper) {
 		this.typeMapper = typeMapper == null
-				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext)
-				: typeMapper;
+				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext) : typeMapper;
 	}
 
 	/*
@@ -165,9 +165,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * object to fail. If further customization of the translation is needed, have a look at
 	 * {@link #potentiallyEscapeMapKey(String)} as well as {@link #potentiallyUnescapeMapKey(String)}.
 	 *
-	 * @param mapKeyDotReplacement the mapKeyDotReplacement to set
+	 * @param mapKeyDotReplacement the mapKeyDotReplacement to set. Can be {@literal null}.
 	 */
-	public void setMapKeyDotReplacement(String mapKeyDotReplacement) {
+	public void setMapKeyDotReplacement(@Nullable String mapKeyDotReplacement) {
 		this.mapKeyDotReplacement = mapKeyDotReplacement;
 	}
 
@@ -352,7 +352,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#toDBRef(java.lang.Object, org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
 	 */
-	public DBRef toDBRef(Object object, MongoPersistentProperty referringProperty) {
+	public DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referringProperty) {
 
 		org.springframework.data.mongodb.core.mapping.DBRef annotation = null;
 
@@ -404,7 +404,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param bson
 	 */
 	@SuppressWarnings("unchecked")
-	protected void writeInternal(final Object obj, final Bson bson, final TypeInformation<?> typeHint) {
+	protected void writeInternal(@Nullable Object obj, final Bson bson, final TypeInformation<?> typeHint) {
 
 		if (null == obj) {
 			return;
@@ -434,7 +434,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		addCustomTypeKeyIfNecessary(typeHint, obj, bson);
 	}
 
-	protected void writeInternal(Object obj, final Bson bson, MongoPersistentEntity<?> entity) {
+	protected void writeInternal(@Nullable Object obj, final Bson bson, MongoPersistentEntity<?> entity) {
 
 		if (obj == null) {
 			return;
@@ -554,8 +554,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
-				? mappingContext.getRequiredPersistentEntity(obj.getClass())
-				: mappingContext.getRequiredPersistentEntity(type);
+				? mappingContext.getRequiredPersistentEntity(obj.getClass()) : mappingContext.getRequiredPersistentEntity(type);
 
 		Object existingValue = accessor.get(prop);
 		Document document = existingValue instanceof Document ? (Document) existingValue : new Document();
@@ -774,8 +773,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return conversions.hasCustomWriteTarget(key.getClass(), String.class)
-				? (String) getPotentiallyConvertedSimpleWrite(key)
-				: key.toString();
+				? (String) getPotentiallyConvertedSimpleWrite(key) : key.toString();
 	}
 
 	/**
@@ -1117,6 +1115,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#convertToMongoType(java.lang.Object, org.springframework.data.util.TypeInformation)
 	 */
 	@SuppressWarnings("unchecked")
+	@Override
 	public Object convertToMongoType(Object obj, TypeInformation<?> typeInformation) {
 
 		if (obj == null) {
@@ -1421,8 +1420,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		List<Document> referencedRawDocuments = dbrefs.size() == 1
-				? Collections.singletonList(readRef(dbrefs.iterator().next()))
-				: bulkReadRefs(dbrefs);
+				? Collections.singletonList(readRef(dbrefs.iterator().next())) : bulkReadRefs(dbrefs);
 		String collectionName = dbrefs.iterator().next().getCollectionName();
 
 		List<T> targeList = new ArrayList<>(dbrefs.size());

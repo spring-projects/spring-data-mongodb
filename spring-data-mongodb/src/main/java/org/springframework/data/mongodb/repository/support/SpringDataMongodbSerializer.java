@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -118,7 +119,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 * @see com.querydsl.mongodb.MongodbSerializer#asDocument(java.lang.String, java.lang.Object)
 	 */
 	@Override
-	protected DBObject asDBObject(String key, Object value) {
+	protected DBObject asDBObject(@Nullable String key, @Nullable Object value) {
 
 		value = value instanceof Optional ? ((Optional) value).orElse(null) : value;
 
@@ -135,7 +136,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 * @see com.querydsl.mongodb.MongodbSerializer#isReference(com.querydsl.core.types.Path)
 	 */
 	@Override
-	protected boolean isReference(Path<?> path) {
+	protected boolean isReference(@Nullable Path<?> path) {
 
 		MongoPersistentProperty property = getPropertyForPotentialDbRef(path);
 		return property == null ? false : property.isAssociation();
@@ -146,7 +147,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 * @see com.querydsl.mongodb.MongodbSerializer#asReference(java.lang.Object)
 	 */
 	@Override
-	protected DBRef asReference(Object constant) {
+	protected DBRef asReference(@Nullable Object constant) {
 		return asReference(constant, null);
 	}
 
@@ -159,7 +160,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 * @see com.querydsl.mongodb.MongodbSerializer#asDBKey(com.querydsl.core.types.Operation, int)
 	 */
 	@Override
-	protected String asDBKey(Operation<?> expr, int index) {
+	protected String asDBKey(@Nullable Operation<?> expr, int index) {
 
 		Expression<?> arg = expr.getArg(index);
 		String key = super.asDBKey(expr, index);
@@ -183,7 +184,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 * (non-Javadoc)
 	 * @see com.querydsl.mongodb.MongodbSerializer#convert(com.querydsl.core.types.Path, com.querydsl.core.types.Constant)
 	 */
-	protected Object convert(Path<?> path, Constant<?> constant) {
+	protected Object convert(@Nullable Path<?> path, @Nullable Constant<?> constant) {
 
 		if (!isReference(path)) {
 			return super.convert(path, constant);

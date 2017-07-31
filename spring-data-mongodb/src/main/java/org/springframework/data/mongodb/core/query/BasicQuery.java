@@ -63,8 +63,8 @@ public class BasicQuery extends Query {
 	 */
 	public BasicQuery(String query, String fields) {
 
-		this.queryObject = query != null ? Document.parse(query) : new Document();
-		this.fieldsObject = fields != null ? Document.parse(fields) : new Document();
+		this(query != null ? Document.parse(query) : new Document(),
+				fields != null ? Document.parse(fields) : new Document());
 	}
 
 	/**
@@ -81,6 +81,7 @@ public class BasicQuery extends Query {
 
 		this.queryObject = queryObject;
 		this.fieldsObject = fieldsObject;
+		this.sortObject = new Document();
 	}
 
 	/*
@@ -111,19 +112,10 @@ public class BasicQuery extends Query {
 	@Override
 	public Document getFieldsObject() {
 
-		if (fieldsObject == null) {
-			return super.getFieldsObject();
-		}
-
-		if (super.getFieldsObject() != null) {
-
-			Document combinedFieldsObject = new Document();
-			combinedFieldsObject.putAll(fieldsObject);
-			combinedFieldsObject.putAll(super.getFieldsObject());
-			return combinedFieldsObject;
-		}
-
-		return fieldsObject;
+		Document combinedFieldsObject = new Document();
+		combinedFieldsObject.putAll(fieldsObject);
+		combinedFieldsObject.putAll(super.getFieldsObject());
+		return combinedFieldsObject;
 	}
 
 	/*
@@ -134,10 +126,7 @@ public class BasicQuery extends Query {
 	public Document getSortObject() {
 
 		Document result = new Document();
-
-		if (sortObject != null) {
-			result.putAll(sortObject);
-		}
+		result.putAll(sortObject);
 
 		Document overrides = super.getSortObject();
 		result.putAll(overrides);

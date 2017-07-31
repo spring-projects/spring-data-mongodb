@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -33,11 +34,11 @@ import org.springframework.util.StringUtils;
  */
 public class TextIndexDefinition implements IndexDefinition {
 
-	private String name;
+	private @Nullable String name;
 	private Set<TextIndexedFieldSpec> fieldSpecs;
-	private String defaultLanguage;
-	private String languageOverride;
-	private IndexFilter filter;
+	private @Nullable String defaultLanguage;
+	private @Nullable String languageOverride;
+	private @Nullable IndexFilter filter;
 
 	TextIndexDefinition() {
 		fieldSpecs = new LinkedHashSet<TextIndexedFieldSpec>();
@@ -142,7 +143,7 @@ public class TextIndexDefinition implements IndexDefinition {
 	public static class TextIndexedFieldSpec {
 
 		private final String fieldname;
-		private final Float weight;
+		private final @Nullable Float weight;
 
 		/**
 		 * Create new {@link TextIndexedFieldSpec} for given fieldname without any weight.
@@ -159,7 +160,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * @param fieldname
 		 * @param weight
 		 */
-		public TextIndexedFieldSpec(String fieldname, Float weight) {
+		public TextIndexedFieldSpec(String fieldname, @Nullable Float weight) {
 
 			Assert.hasText(fieldname, "Text index field cannot be blank.");
 			this.fieldname = fieldname;
@@ -180,6 +181,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * 
 		 * @return
 		 */
+		@Nullable
 		public Float getWeight() {
 			return weight;
 		}
@@ -304,7 +306,8 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * 
 		 * @param language
 		 * @return
-		 * @see <a href="https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index">https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index</a>
+		 * @see <a href=
+		 *      "https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index">https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index</a>
 		 */
 		public TextIndexDefinitionBuilder withDefaultLanguage(String language) {
 

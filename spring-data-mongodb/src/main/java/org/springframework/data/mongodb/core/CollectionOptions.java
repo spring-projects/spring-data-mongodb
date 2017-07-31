@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -29,26 +30,27 @@ import org.springframework.util.Assert;
  */
 public class CollectionOptions {
 
-	private Long maxDocuments;
-	private Long size;
-	private Boolean capped;
-	private Collation collation;
+	private @Nullable Long maxDocuments;
+	private @Nullable Long size;
+	private @Nullable Boolean capped;
+	private @Nullable Collation collation;
 
 	/**
 	 * Constructs a new <code>CollectionOptions</code> instance.
 	 *
-	 * @param size the collection size in bytes, this data space is preallocated.
-	 * @param maxDocuments the maximum number of documents in the collection.
+	 * @param size the collection size in bytes, this data space is preallocated. Can be {@literal null}.
+	 * @param maxDocuments the maximum number of documents in the collection. Can be {@literal null}.
 	 * @param capped true to created a "capped" collection (fixed size with auto-FIFO behavior based on insertion order),
-	 *          false otherwise.
+	 *          false otherwise. Can be {@literal null}.
 	 * @deprecated since 2.0 please use {@link CollectionOptions#empty()} as entry point.
 	 */
 	@Deprecated
-	public CollectionOptions(Long size, Long maxDocuments, Boolean capped) {
+	public CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped) {
 		this(size, maxDocuments, capped, null);
 	}
 
-	private CollectionOptions(Long size, Long maxDocuments, Boolean capped, Collation collation) {
+	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
+			@Nullable Collation collation) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
@@ -120,7 +122,7 @@ public class CollectionOptions {
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.0
 	 */
-	public CollectionOptions collation(Collation collation) {
+	public CollectionOptions collation(@Nullable Collation collation) {
 		return new CollectionOptions(size, maxDocuments, capped, collation);
 	}
 

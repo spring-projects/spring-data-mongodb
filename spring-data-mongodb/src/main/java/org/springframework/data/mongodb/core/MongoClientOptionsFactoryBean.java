@@ -27,6 +27,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import org.springframework.lang.Nullable;
 
 /**
  * A factory bean for construction of a {@link MongoClientOptions} instance.
@@ -66,14 +67,14 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	private int serverSelectionTimeout = DEFAULT_MONGO_OPTIONS.getServerSelectionTimeout();
 
 	private boolean ssl;
-	private SSLSocketFactory sslSocketFactory;
+	private @Nullable SSLSocketFactory sslSocketFactory;
 
 	/**
 	 * Set the {@link MongoClient} description.
 	 *
 	 * @param description
 	 */
-	public void setDescription(String description) {
+	public void setDescription(@Nullable  String description) {
 		this.description = description;
 	}
 
@@ -166,7 +167,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	 *
 	 * @param readPreference
 	 */
-	public void setReadPreference(ReadPreference readPreference) {
+	public void setReadPreference(@Nullable ReadPreference readPreference) {
 		this.readPreference = readPreference;
 	}
 
@@ -176,14 +177,14 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	 *
 	 * @param writeConcern
 	 */
-	public void setWriteConcern(WriteConcern writeConcern) {
+	public void setWriteConcern(@Nullable WriteConcern writeConcern) {
 		this.writeConcern = writeConcern;
 	}
 
 	/**
 	 * @param socketFactory
 	 */
-	public void setSocketFactory(SocketFactory socketFactory) {
+	public void setSocketFactory(@Nullable SocketFactory socketFactory) {
 		this.socketFactory = socketFactory;
 	}
 
@@ -248,7 +249,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	 *
 	 * @param sslSocketFactory
 	 */
-	public void setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
+	public void setSslSocketFactory(@Nullable SSLSocketFactory sslSocketFactory) {
 
 		this.sslSocketFactory = sslSocketFactory;
 		this.ssl = sslSocketFactory != null;

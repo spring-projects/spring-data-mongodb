@@ -19,6 +19,7 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -195,7 +196,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			return template.exists(query, domainType, getCollectionName());
 		}
 
-		private Flux<T> doFind(FindPublisherPreparer preparer) {
+		private Flux<T> doFind(@Nullable FindPublisherPreparer preparer) {
 
 			Document queryObject = query.getQueryObject();
 			Document fieldsObject = query.getFieldsObject();

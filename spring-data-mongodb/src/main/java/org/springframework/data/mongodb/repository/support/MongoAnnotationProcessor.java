@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import com.querydsl.core.annotations.QueryEmbedded;
 import com.querydsl.core.annotations.QueryEntities;
 import com.querydsl.core.annotations.QuerySupertype;
 import com.querydsl.core.annotations.QueryTransient;
+import org.springframework.lang.Nullable;
 
 /**
  * Annotation processor to create Querydsl query types for QueryDsl annotated classes.
@@ -48,7 +49,7 @@ public class MongoAnnotationProcessor extends AbstractQuerydslProcessor {
 	 * @see com.mysema.query.apt.AbstractQuerydslProcessor#createConfiguration(javax.annotation.processing.RoundEnvironment)
 	 */
 	@Override
-	protected Configuration createConfiguration(RoundEnvironment roundEnv) {
+	protected Configuration createConfiguration(@Nullable RoundEnvironment roundEnv) {
 
 		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running " + getClass().getSimpleName());
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
 
+import org.springframework.lang.Nullable;
+
 import com.mongodb.ReadPreference;
 
 /**
@@ -32,7 +34,7 @@ public class ReadPreferencePropertyEditor extends PropertyEditorSupport {
 	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
 	 */
 	@Override
-	public void setAsText(String readPreferenceString) throws IllegalArgumentException {
+	public void setAsText(@Nullable String readPreferenceString) throws IllegalArgumentException {
 
 		if (readPreferenceString == null) {
 			return;
@@ -59,8 +61,8 @@ public class ReadPreferencePropertyEditor extends PropertyEditorSupport {
 		} else if ("NEAREST".equalsIgnoreCase(readPreferenceString)) {
 			setValue(ReadPreference.nearest());
 		} else {
-			throw new IllegalArgumentException(String.format("Cannot find matching ReadPreference for %s",
-					readPreferenceString));
+			throw new IllegalArgumentException(
+					String.format("Cannot find matching ReadPreference for %s", readPreferenceString));
 		}
 	}
 }

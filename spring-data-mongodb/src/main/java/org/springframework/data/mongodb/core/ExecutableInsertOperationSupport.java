@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -75,8 +76,8 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 
 		@NonNull MongoTemplate template;
 		@NonNull Class<T> domainType;
-		String collection;
-		BulkMode bulkMode;
+		@Nullable String collection;
+		@Nullable BulkMode bulkMode;
 
 		/*
 		 * (non-Javadoc)

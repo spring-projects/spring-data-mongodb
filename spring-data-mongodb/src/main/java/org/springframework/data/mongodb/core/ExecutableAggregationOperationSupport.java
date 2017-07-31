@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -74,8 +75,8 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 
 		@NonNull MongoTemplate template;
 		@NonNull Class<T> domainType;
-		Aggregation aggregation;
-		String collection;
+		@Nullable Aggregation aggregation;
+		@Nullable String collection;
 
 		/*
 		 * (non-Javadoc)

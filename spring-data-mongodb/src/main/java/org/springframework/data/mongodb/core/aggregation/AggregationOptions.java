@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
@@ -242,8 +243,8 @@ public class AggregationOptions {
 
 		private boolean allowDiskUse;
 		private boolean explain;
-		private Document cursor;
-		private Collation collation;
+		private @Nullable Document cursor;
+		private @Nullable Collation collation;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.

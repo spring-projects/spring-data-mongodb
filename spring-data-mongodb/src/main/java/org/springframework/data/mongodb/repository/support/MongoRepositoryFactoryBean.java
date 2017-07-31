@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -33,7 +34,7 @@ import org.springframework.util.Assert;
 public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
 
-	private MongoOperations operations;
+	private @Nullable MongoOperations operations;
 	private boolean createIndexesForQueryMethods = false;
 	private boolean mappingContextConfigured = false;
 
@@ -88,7 +89,8 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		RepositoryFactorySupport factory = getFactoryInstance(operations);
 
 		if (createIndexesForQueryMethods) {
-			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(collectionName -> operations.indexOps(collectionName)));
+			factory.addQueryCreationListener(
+					new IndexEnsuringQueryCreationListener(collectionName -> operations.indexOps(collectionName)));
 		}
 
 		return factory;
@@ -115,7 +117,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	public void afterPropertiesSet() {
 
 		super.afterPropertiesSet();
-		Assert.notNull(operations, "MongoTemplate must not be null!");
+		Assert.state(operations != null, "MongoTemplate must not be null!");
 
 		if (!mappingContextConfigured) {
 			setMappingContext(operations.getConverter().getMappingContext());

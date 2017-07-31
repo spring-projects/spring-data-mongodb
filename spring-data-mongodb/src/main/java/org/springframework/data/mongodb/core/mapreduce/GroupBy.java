@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Nullable;
 
 /**
  * Collects the parameters required to perform a group operation on a collection. The query condition and the input
@@ -30,8 +31,8 @@ import org.springframework.data.mongodb.core.query.Collation;
  */
 public class GroupBy {
 
-	private Document initialDocument;
-	private String reduce;
+	private @Nullable Document initialDocument;
+	private @Nullable String reduce;
 
 	private Optional<Document> keys = Optional.empty();
 	private Optional<String> keyFunction = Optional.empty();

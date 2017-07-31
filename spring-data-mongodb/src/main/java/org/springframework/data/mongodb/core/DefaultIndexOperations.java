@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.MongoException;
@@ -52,7 +53,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	private final MongoDbFactory mongoDbFactory;
 	private final String collectionName;
 	private final QueryMapper mapper;
-	private final Class<?> type;
+	private final @Nullable Class<?> type;
 
 	/**
 	 * Creates a new {@link DefaultIndexOperations}.
@@ -62,7 +63,6 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * @param queryMapper must not be {@literal null}.
 	 */
 	public DefaultIndexOperations(MongoDbFactory mongoDbFactory, String collectionName, QueryMapper queryMapper) {
-
 		this(mongoDbFactory, collectionName, queryMapper, null);
 	}
 
@@ -76,7 +76,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * @since 1.10
 	 */
 	public DefaultIndexOperations(MongoDbFactory mongoDbFactory, String collectionName, QueryMapper queryMapper,
-			Class<?> type) {
+			@Nullable Class<?> type) {
 
 		Assert.notNull(mongoDbFactory, "MongoDbFactory must not be null!");
 		Assert.notNull(collectionName, "Collection name can not be null!");
@@ -116,7 +116,8 @@ public class DefaultIndexOperations implements IndexOperations {
 		});
 	}
 
-	private MongoPersistentEntity<?> lookupPersistentEntity(Class<?> entityType, String collection) {
+	@Nullable
+	private MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
 
 		if (entityType != null) {
 			return mapper.getMappingContext().getRequiredPersistentEntity(entityType);
@@ -185,6 +186,7 @@ public class DefaultIndexOperations implements IndexOperations {
 		});
 	}
 
+	@Nullable
 	public <T> T execute(CollectionCallback<T> callback) {
 
 		Assert.notNull(callback, "CollectionCallback must not be null!");

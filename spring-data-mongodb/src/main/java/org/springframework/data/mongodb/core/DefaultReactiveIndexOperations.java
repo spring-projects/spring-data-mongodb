@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
+import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -68,7 +69,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	 * @param type used for mapping potential partial index filter expression, must not be {@literal null}.
 	 */
 	public DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
-			QueryMapper queryMapper, Class<?> type) {
+			QueryMapper queryMapper, @Nullable Class<?> type) {
 		this(mongoOperations, collectionName, queryMapper, Optional.of(type));
 	}
 
@@ -85,7 +86,8 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.type = type;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.index.ReactiveIndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
 	 */
 	public Mono<String> ensureIndex(final IndexDefinition indexDefinition) {
@@ -117,6 +119,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		}).next();
 	}
 
+	@Nullable
 	private MongoPersistentEntity<?> lookupPersistentEntity(String collection) {
 
 		Collection<? extends MongoPersistentEntity<?>> entities = queryMapper.getMappingContext().getPersistentEntities();

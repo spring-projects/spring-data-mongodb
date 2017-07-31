@@ -37,6 +37,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -57,7 +58,7 @@ public class MongoQueryMethod extends QueryMethod {
 	private final Method method;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-	private MongoEntityMetadata<?> metadata;
+	private @Nullable MongoEntityMetadata<?> metadata;
 
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.

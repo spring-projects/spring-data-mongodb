@@ -29,9 +29,9 @@ import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -39,6 +39,7 @@ import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -176,13 +177,17 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		 * (non-Javadoc)
 		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
-		public int compare(MongoPersistentProperty o1, MongoPersistentProperty o2) {
+		public int compare(@Nullable MongoPersistentProperty o1, @Nullable MongoPersistentProperty o2) {
 
-			if (o1.getFieldOrder() == Integer.MAX_VALUE) {
+			if (o1 != null && o1.getFieldOrder() == Integer.MAX_VALUE) {
 				return 1;
 			}
 
-			if (o2.getFieldOrder() == Integer.MAX_VALUE) {
+			if (o2 != null && o2.getFieldOrder() == Integer.MAX_VALUE) {
+				return -1;
+			}
+
+			if (o1 == null && o2 == null) {
 				return -1;
 			}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.query;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Oliver Gierke
@@ -25,17 +26,18 @@ public interface CriteriaDefinition {
 
 	/**
 	 * Get {@link Document} representation.
-	 * 
-	 * @return
+	 *
+	 * @return never {@literal null}.
 	 */
 	Document getCriteriaObject();
 
 	/**
 	 * Get the identifying {@literal key}.
-	 * 
-	 * @return
+	 *
+	 * @return can be {@literal null}.
 	 * @since 1.6
 	 */
+	@Nullable
 	String getKey();
 
 }

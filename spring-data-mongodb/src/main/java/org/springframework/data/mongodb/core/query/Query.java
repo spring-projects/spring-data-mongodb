@@ -34,6 +34,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -55,7 +56,7 @@ public class Query {
 	private Sort sort = Sort.unsorted();
 	private long skip;
 	private int limit;
-	private String hint;
+	private @Nullable String hint;
 
 	private Meta meta = new Meta();
 
@@ -282,6 +283,7 @@ public class Query {
 	/**
 	 * @return
 	 */
+	@Nullable
 	public String getHint() {
 		return hint;
 	}

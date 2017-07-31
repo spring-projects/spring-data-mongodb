@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.util.Assert;
+
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Mongo server administration exposed via JMX annotations
@@ -42,34 +43,34 @@ public class MongoAdmin implements MongoAdminOperations {
 	}
 
 	/* (non-Javadoc)
-	  * @see org.springframework.data.mongodb.core.core.MongoAdminOperations#dropDatabase(java.lang.String)
-	  */
+	 * @see org.springframework.data.mongodb.core.core.MongoAdminOperations#dropDatabase(java.lang.String)
+	 */
 	@ManagedOperation
 	public void dropDatabase(String databaseName) {
 		getDB(databaseName).drop();
 	}
 
 	/* (non-Javadoc)
-	  * @see org.springframework.data.mongodb.core.core.MongoAdminOperations#createDatabase(java.lang.String)
-	  */
+	 * @see org.springframework.data.mongodb.core.core.MongoAdminOperations#createDatabase(java.lang.String)
+	 */
 	@ManagedOperation
 	public void createDatabase(String databaseName) {
 		getDB(databaseName);
 	}
 
 	/* (non-Javadoc)
-	  * @see org.springframework.data.mongodb.core.core.MongoAdminOperations#getDatabaseStats(java.lang.String)
-	  */
+	 * @see org.springframework.data.mongodb.core.core.MongoAdminOperations#getDatabaseStats(java.lang.String)
+	 */
 	@ManagedOperation
 	public String getDatabaseStats(String databaseName) {
-		return getDB(databaseName).runCommand(new Document("dbStats", 1).append("scale" , 1024)).toJson();
+		return getDB(databaseName).runCommand(new Document("dbStats", 1).append("scale", 1024)).toJson();
 	}
 
 	@ManagedOperation
 	public String getServerStatus() {
-		return getDB("admin").runCommand(new Document("serverStatus", 1).append("rangeDeleter", 1).append("repl", 1)).toJson();
+		return getDB("admin").runCommand(new Document("serverStatus", 1).append("rangeDeleter", 1).append("repl", 1))
+				.toJson();
 	}
-
 
 	MongoDatabase getDB(String databaseName) {
 		return mongoClient.getDatabase(databaseName);
