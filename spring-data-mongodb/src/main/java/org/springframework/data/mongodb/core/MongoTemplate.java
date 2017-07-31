@@ -655,6 +655,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doFindOne(collectionName, new Document(idKey, id), null, entityClass);
 	}
 
+	public <T,Z>  List<T> distinct(String field, Class<Z> entityClass, Class<T> resultClass) {
+		return distinct(new Query(), field, determineCollectionName(entityClass), resultClass);
+	}
+
 	public <T,Z>  List<T> distinct(Query query, String field, Class<Z> entityClass, Class<T> resultClass) {
 		return distinct(query, field, determineCollectionName(entityClass), resultClass);
 	}

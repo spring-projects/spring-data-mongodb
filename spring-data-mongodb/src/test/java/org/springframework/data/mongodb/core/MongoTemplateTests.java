@@ -784,8 +784,11 @@ public class MongoTemplateTests {
 		template.save(person1);
 		template.save(person2);
 
+		List<String> nameList = template.distinct("name", MyPerson.class, String.class);
+		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
+
 		Query query = new BasicQuery("{'address.state' : 'PA'}");
-		List<String> nameList = template.distinct(query, "name", MyPerson.class, String.class);
+		nameList = template.distinct(query, "name", MyPerson.class, String.class);
 		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
 
 		String collectionName = template.determineCollectionName(MyPerson.class);
