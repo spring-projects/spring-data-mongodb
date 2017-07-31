@@ -124,6 +124,7 @@ import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
@@ -652,6 +653,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return doFindOne(collectionName, new Document(idKey, id), null, entityClass);
+	}
+
+	public <T,Z>  List<T> distinct(String field, Class<Z> entityClass, Class<T> resultClass) {
+		return distinct(new Query(), field, determineCollectionName(entityClass), resultClass);
+	}
+
+	public <T,Z>  List<T> distinct(Query query, String field, Class<Z> entityClass, Class<T> resultClass) {
+		return distinct(query, field, determineCollectionName(entityClass), resultClass);
+	}
+
+	public <T> List<T> distinct(Query query, String field, String collectionName, Class<T> resultClass) {
+		MongoCollection<Document> collection = this.getCollection(collectionName);
+		DistinctIterable<T> iterable = collection.distinct(field, query.getQueryObject(), resultClass);
+
+		MongoCursor<T> cursor = iterable.iterator();
+
+		List<T> result = new ArrayList<T>();
+
+		while (cursor.hasNext()) {
+			T object = cursor.next();
+			result.add(object);
+		}
+
+		return result;
 	}
 
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass) {
