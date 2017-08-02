@@ -59,6 +59,7 @@ import com.mongodb.util.JSON;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TypeBasedAggregationOperationContextUnitTests {
