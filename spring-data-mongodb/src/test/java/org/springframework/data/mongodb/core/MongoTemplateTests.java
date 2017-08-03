@@ -136,6 +136,7 @@ import static org.springframework.data.mongodb.core.query.Update.update;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Laszlo Csontos
+ * @author duozhilin
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")

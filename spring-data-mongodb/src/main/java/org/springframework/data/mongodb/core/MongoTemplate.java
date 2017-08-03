@@ -173,6 +173,7 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.ser
  * @author Laszlo Csontos
  * @author Maninder Singh
  * @author Borislav Rangelov
+ * @author duozhilin
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
