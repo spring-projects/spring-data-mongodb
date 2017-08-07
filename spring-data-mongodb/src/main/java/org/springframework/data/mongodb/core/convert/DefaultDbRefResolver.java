@@ -25,7 +25,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -46,7 +48,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
@@ -61,6 +62,8 @@ import com.mongodb.DBRef;
  * @since 1.4
  */
 public class DefaultDbRefResolver implements DbRefResolver {
+
+	private static final String ID = "_id";
 
 	private final MongoDbFactory mongoDbFactory;
 	private final PersistenceExceptionTranslator exceptionTranslator;
@@ -144,10 +147,37 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			ids.add(ref.getId());
 		}
 
+		Map<Object, DBObject> documentsById = getDocumentsById(ids, collection);
+		List<DBObject> result = new ArrayList<DBObject>(ids.size());
+
+		for (Object id : ids) {
+			result.add(documentsById.get(id));
+		}
+
+		return result;
+	}
+
+	/**
+	 * Returns all documents with the given ids contained in the given collection mapped by their ids.
+	 * 
+	 * @param ids must not be {@literal null}.
+	 * @param collection must not be {@literal null} or empty.
+	 * @return
+	 */
+	private Map<Object, DBObject> getDocumentsById(List<Object> ids, String collection) {
+
+		Assert.notNull(ids, "Ids must not be null!");
+		Assert.hasText(collection, "Collection must not be null or empty!");
+
 		DB db = mongoDbFactory.getDb();
-		List<DBObject> result = db.getCollection(collection)
-				.find(new BasicDBObjectBuilder().add("_id", new BasicDBObject("$in", ids)).get()).toArray();
-		Collections.sort(result, new DbRefByReferencePositionComparator(ids));
+		BasicDBObject query = new BasicDBObject(ID, new BasicDBObject("$in", ids));
+		List<DBObject> documents = db.getCollection(collection).find(query).toArray();
+		Map<Object, DBObject> result = new HashMap<Object, DBObject>(documents.size());
+
+		for (DBObject document : documents) {
+			result.put(document.get(ID), document);
+		}
+
 		return result;
 	}
 
@@ -469,7 +499,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 */
 		@Override
 		public int compare(DBObject o1, DBObject o2) {
-			return Integer.compare(reference.indexOf(o1.get("_id")), reference.indexOf(o2.get("_id")));
+			return Integer.compare(reference.indexOf(o1.get(ID)), reference.indexOf(o2.get(ID)));
 		}
 	}
 }

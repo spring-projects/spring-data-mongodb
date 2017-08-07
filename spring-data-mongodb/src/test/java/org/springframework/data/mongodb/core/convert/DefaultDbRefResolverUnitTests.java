@@ -118,4 +118,17 @@ public class DefaultDbRefResolverUnitTests {
 
 		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2)), contains(o1, o2));
 	}
+
+	@Test // DATAMONGO-1765
+	public void bulkFetchContainsDuplicates() {
+
+		DBObject document = new BasicDBObject("_id", new ObjectId());
+
+		DBRef ref1 = new DBRef("collection-1", document.get("_id"));
+		DBRef ref2 = new DBRef("collection-1", document.get("_id"));
+
+		when(cursorMock.toArray()).thenReturn(Arrays.asList(document));
+
+		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2)), contains(document, document));
+	}
 }
