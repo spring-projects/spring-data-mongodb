@@ -23,9 +23,11 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -142,8 +144,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		}
 
 		String collection = refs.iterator().next().getCollectionName();
+		List<Object> ids = new ArrayList<>(refs.size());
 
-		List<Object> ids = new ArrayList<Object>(refs.size());
 		for (DBRef ref : refs) {
 
 			if (!collection.equals(ref.getCollectionName())) {
@@ -155,10 +157,14 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		}
 
 		MongoDatabase db = mongoDbFactory.getDb();
-		List<Document> result = new ArrayList<>();
-		db.getCollection(collection).find(new Document("_id", new Document("$in", ids))).into(result);
-		result.sort(new DbRefByReferencePositionComparator(ids));
-		return result;
+
+		List<Document> result = db.getCollection(collection) //
+				.find(new Document("_id", new Document("$in", ids))) //
+				.into(new ArrayList<>());
+
+		return ids.stream() //
+				.flatMap(id -> documentWithId(id, result)) //
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -221,6 +227,20 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	private boolean isLazyDbRef(MongoPersistentProperty property) {
 		return property.getDBRef() != null && property.getDBRef().lazy();
+	}
+
+	/**
+	 * Returns document with the given identifier from the given list of {@link Document}s.
+	 * 
+	 * @param identifier
+	 * @param documents
+	 * @return
+	 */
+	private static Stream<Document> documentWithId(Object identifier, Collection<Document> documents) {
+
+		return documents.stream() //
+				.filter(it -> it.get("_id").equals(identifier)) //
+				.limit(1);
 	}
 
 	/**
@@ -447,39 +467,6 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			}
 
 			return result;
-		}
-	}
-
-	/**
-	 * {@link Comparator} for sorting {@link Document} that have been loaded in random order by a predefined list of
-	 * reference identifiers.
-	 *
-	 * @author Christoph Strobl
-	 * @author Oliver Gierke
-	 * @since 1.10
-	 */
-	private static class DbRefByReferencePositionComparator implements Comparator<Document> {
-
-		private final List<Object> reference;
-
-		/**
-		 * Creates a new {@link DbRefByReferencePositionComparator} for the given list of reference identifiers.
-		 *
-		 * @param referenceIds must not be {@literal null}.
-		 */
-		public DbRefByReferencePositionComparator(List<Object> referenceIds) {
-
-			Assert.notNull(referenceIds, "Reference identifiers must not be null!");
-			this.reference = new ArrayList<Object>(referenceIds);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-		 */
-		@Override
-		public int compare(Document o1, Document o2) {
-			return Integer.compare(reference.indexOf(o1.get("_id")), reference.indexOf(o2.get("_id")));
 		}
 	}
 }
