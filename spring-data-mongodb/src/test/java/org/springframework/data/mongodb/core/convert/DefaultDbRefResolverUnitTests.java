@@ -64,7 +64,7 @@ public class DefaultDbRefResolverUnitTests {
 		when(factoryMock.getDb()).thenReturn(dbMock);
 		when(dbMock.getCollection(anyString())).thenReturn(collectionMock);
 		when(collectionMock.find(Mockito.any(DBObject.class))).thenReturn(cursorMock);
-		when(cursorMock.toArray()).thenReturn(Collections.<DBObject>emptyList());
+		when(cursorMock.toArray()).thenReturn(Collections.<DBObject> emptyList());
 
 		resolver = new DefaultDbRefResolver(factoryMock);
 	}
@@ -100,7 +100,7 @@ public class DefaultDbRefResolverUnitTests {
 	@Test // DATAMONGO-1194
 	public void bulkFetchShouldReturnEarlyForEmptyLists() {
 
-		resolver.bulkFetch(Collections.<DBRef>emptyList());
+		resolver.bulkFetch(Collections.<DBRef> emptyList());
 
 		verify(collectionMock, never()).find(Mockito.any(DBObject.class));
 	}
