@@ -15,16 +15,11 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 
 import org.bson.Document;
@@ -35,9 +30,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -88,7 +81,7 @@ public class DefaultDbRefResolverUnitTests {
 		Document _id = DocumentTestUtils.getAsDocument(captor.getValue(), "_id");
 		Iterable<Object> $in = DocumentTestUtils.getTypedValue(_id, "$in", Iterable.class);
 
-		assertThat($in, iterableWithSize(2));
+		assertThat($in).hasSize(2);
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1194
@@ -117,19 +110,9 @@ public class DefaultDbRefResolverUnitTests {
 		DBRef ref1 = new DBRef("collection-1", o1.get("_id"));
 		DBRef ref2 = new DBRef("collection-1", o2.get("_id"));
 
-		when(cursorMock.into(any())).then(new Answer<Object>() {
+		when(cursorMock.into(any())).then(invocation -> Arrays.asList(o2, o1));
 
-			@Override
-			public Object answer(InvocationOnMock invocation) throws Throwable {
-
-				Collection<Document> collection = (Collection<Document>) invocation.getArguments()[0];
-				collection.add(o2);
-				collection.add(o1);
-				return collection;
-			}
-		});
-
-		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2)), contains(o1, o2));
+		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(o1, o2);
 	}
 
 	@Test // DATAMONGO-1765
