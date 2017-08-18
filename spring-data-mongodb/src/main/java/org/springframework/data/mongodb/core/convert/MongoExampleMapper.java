@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.NullHandler;
 import org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
@@ -42,6 +43,7 @@ import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.support.ExampleMatcherAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -91,7 +93,7 @@ public class MongoExampleMapper {
 
 		Document reference = (Document) converter.convertToMongoType(example.getProbe());
 
-		if (entity.getIdProperty() != null) {
+		if (entity.getIdProperty() != null && ClassUtils.isAssignable(entity.getType(), example.getProbeType())) {
 
 			Object identifier = entity.getIdentifierAccessor(example.getProbe()).getIdentifier();
 			if (identifier == null) {
@@ -107,9 +109,7 @@ public class MongoExampleMapper {
 				: new Document(SerializationUtils.flattenMap(reference));
 		Document result = example.getMatcher().isAllMatching() ? flattened : orConcatenate(flattened);
 
-		this.converter.getTypeMapper().writeTypeRestrictions(result, getTypesToMatch(example));
-
-		return result;
+		return updateTypeRestrictions(result, example);
 	}
 
 	private static Document orConcatenate(Document source) {
@@ -287,5 +287,40 @@ public class MongoExampleMapper {
 			default:
 				return MatchMode.DEFAULT;
 		}
+	}
+
+	private Document updateTypeRestrictions(Document query, Example example) {
+
+		Document result = new Document();
+
+		if (isTypeRestricting(example.getMatcher())) {
+
+			result.putAll(query);
+			this.converter.getTypeMapper().writeTypeRestrictions(result, getTypesToMatch(example));
+			return result;
+		}
+
+		for (Map.Entry<String, Object> entry : query.entrySet()) {
+			if (!this.converter.getTypeMapper().isTypeKey(entry.getKey())) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+
+		return result;
+	}
+
+	private boolean isTypeRestricting(ExampleMatcher matcher) {
+
+		if (matcher.getIgnoredPaths().isEmpty()) {
+			return true;
+		}
+
+		for (String path : matcher.getIgnoredPaths()) {
+			if (this.converter.getTypeMapper().isTypeKey(path)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

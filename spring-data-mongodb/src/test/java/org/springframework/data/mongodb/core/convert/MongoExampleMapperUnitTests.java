@@ -24,6 +24,7 @@ import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.conversions.Bson;
@@ -36,8 +37,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers;
-import org.springframework.data.domain.ExampleMatcher.StringMatcher;
+import org.springframework.data.domain.ExampleMatcher.*;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.ClassWithGeoTypes;
@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.IsBsonObject;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Christoph Strobl
@@ -432,6 +433,53 @@ public class MongoExampleMapperUnitTests {
 		Example<FlatDocument> example = Example.of(probe, ExampleMatcher.matchingAny());
 
 		assertThat(mapper.getMappedExample(example), isBsonObject().containing("$or").containing("_class"));
+	}
+
+	@Test // DATAMONGO-1768
+	public void allowIgnoringTypeRestrictionBySettingUpTypeKeyAsAnIgnoredPath() {
+
+		WrapperDocument probe = new WrapperDocument();
+		probe.flatDoc = new FlatDocument();
+		probe.flatDoc.stringValue = "conflux";
+
+		org.bson.Document document = mapper
+				.getMappedExample(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_class")));
+
+		assertThat(document, isBsonObject().notContaining("_class"));
+	}
+
+	@Test // DATAMONGO-1768
+	public void allowIgnoringTypeRestrictionBySettingUpTypeKeyAsAnIgnoredPathWhenUsingCustomTypeMapper() {
+
+		WrapperDocument probe = new WrapperDocument();
+		probe.flatDoc = new FlatDocument();
+		probe.flatDoc.stringValue = "conflux";
+
+		MappingMongoConverter mappingMongoConverter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		mappingMongoConverter.setTypeMapper(new DefaultMongoTypeMapper() {
+
+			@Override
+			public boolean isTypeKey(String key) {
+				return "_foo".equals(key);
+			}
+
+			@Override
+			public void writeTypeRestrictions(org.bson.Document result, Set<Class<?>> restrictedTypes) {
+				result.put("_foo", "bar");
+			}
+
+			@Override
+			public void writeType(TypeInformation<?> info, Bson sink) {
+				((org.bson.Document) sink).put("_foo",	 "bar");
+
+			}
+		});
+		mappingMongoConverter.afterPropertiesSet();
+
+		org.bson.Document document = new MongoExampleMapper(mappingMongoConverter)
+				.getMappedExample(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_foo")));
+
+		assertThat(document, isBsonObject().notContaining("_class").notContaining("_foo"));
 	}
 
 	static class FlatDocument {
