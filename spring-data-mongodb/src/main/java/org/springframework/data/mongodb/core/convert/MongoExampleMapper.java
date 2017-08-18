@@ -28,6 +28,7 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.NullHandler;
 import org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
@@ -41,6 +42,7 @@ import org.springframework.data.repository.core.support.ExampleMatcherAccessor;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -99,8 +101,8 @@ public class MongoExampleMapper {
 
 		DBObject reference = (DBObject) converter.convertToMongoType(example.getProbe());
 
-		if (entity.hasIdProperty() && entity.getIdentifierAccessor(example.getProbe()).getIdentifier() == null) {
-			reference.removeField(entity.getIdProperty().getFieldName());
+		if (entity.hasIdProperty() &&  ClassUtils.isAssignable(entity.getType(), example.getProbeType())) {
+			if (entity.getIdentifierAccessor(example.getProbe()).getIdentifier() == null) {reference.removeField(entity.getIdProperty().getFieldName());}
 		}
 
 		ExampleMatcherAccessor matcherAccessor = new ExampleMatcherAccessor(example.getMatcher());
@@ -111,9 +113,7 @@ public class MongoExampleMapper {
 				: new BasicDBObject(SerializationUtils.flattenMap(reference));
 		DBObject result = example.getMatcher().isAllMatching() ? flattened : orConcatenate(flattened);
 
-		this.converter.getTypeMapper().writeTypeRestrictions(result, getTypesToMatch(example));
-
-		return result;
+		return updateTypeRestrictions(result, example);
 	}
 
 	private static DBObject orConcatenate(DBObject source) {
@@ -271,5 +271,40 @@ public class MongoExampleMapper {
 		if (ignoreCase) {
 			dbo.put("$options", "i");
 		}
+	}
+
+	private DBObject updateTypeRestrictions(DBObject query, Example example) {
+
+		DBObject result = new BasicDBObject();
+
+		if (isTypeRestricting(example.getMatcher())) {
+
+			result.putAll(query);
+			this.converter.getTypeMapper().writeTypeRestrictions(result, getTypesToMatch(example));
+			return result;
+		}
+
+		for (String key : query.keySet()) {
+			if (!this.converter.getTypeMapper().isTypeKey(key)) {
+				result.put(key, query.get(key));
+			}
+		}
+
+		return result;
+	}
+
+	private boolean isTypeRestricting(ExampleMatcher matcher) {
+
+		if (matcher.getIgnoredPaths().isEmpty()) {
+			return true;
+		}
+
+		for (String path : matcher.getIgnoredPaths()) {
+			if (this.converter.getTypeMapper().isTypeKey(path)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }
