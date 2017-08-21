@@ -46,6 +46,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.UntypedExample;
 import org.springframework.data.mongodb.test.util.IsBsonObject;
 import org.springframework.data.util.TypeInformation;
 
@@ -470,7 +471,7 @@ public class MongoExampleMapperUnitTests {
 
 			@Override
 			public void writeType(TypeInformation<?> info, Bson sink) {
-				((org.bson.Document) sink).put("_foo",	 "bar");
+				((org.bson.Document) sink).put("_foo", "bar");
 
 			}
 		});
@@ -480,6 +481,17 @@ public class MongoExampleMapperUnitTests {
 				.getMappedExample(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_foo")));
 
 		assertThat(document, isBsonObject().notContaining("_class").notContaining("_foo"));
+	}
+
+	@Test // DATAMONGO-1768
+	public void untypedExampleShouldNotInfereTypeRestriction() {
+
+		WrapperDocument probe = new WrapperDocument();
+		probe.flatDoc = new FlatDocument();
+		probe.flatDoc.stringValue = "conflux";
+
+		org.bson.Document document = mapper.getMappedExample(UntypedExample.of(probe));
+		assertThat(document, isBsonObject().notContaining("_class"));
 	}
 
 	static class FlatDocument {
