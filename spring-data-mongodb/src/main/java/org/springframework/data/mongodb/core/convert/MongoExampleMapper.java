@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.NullHandler;
 import org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
@@ -40,6 +39,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator.MatchMode;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
+import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
 import org.springframework.data.support.ExampleMatcherAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -293,7 +293,7 @@ public class MongoExampleMapper {
 
 		Document result = new Document();
 
-		if (isTypeRestricting(example.getMatcher())) {
+		if (isTypeRestricting(example)) {
 
 			result.putAll(query);
 			this.converter.getTypeMapper().writeTypeRestrictions(result, getTypesToMatch(example));
@@ -309,13 +309,17 @@ public class MongoExampleMapper {
 		return result;
 	}
 
-	private boolean isTypeRestricting(ExampleMatcher matcher) {
+	private boolean isTypeRestricting(Example example) {
 
-		if (matcher.getIgnoredPaths().isEmpty()) {
+		if (example.getMatcher() instanceof UntypedExampleMatcher) {
+			return false;
+		}
+
+		if (example.getMatcher().getIgnoredPaths().isEmpty()) {
 			return true;
 		}
 
-		for (String path : matcher.getIgnoredPaths()) {
+		for (String path : example.getMatcher().getIgnoredPaths()) {
 			if (this.converter.getTypeMapper().isTypeKey(path)) {
 				return false;
 			}
