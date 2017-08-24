@@ -48,16 +48,26 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * Mapper from {@link Example} to a query {@link Document}.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Jens Schauder
  * @since 1.8
+ * @see Example
+ * @see org.springframework.data.domain.ExampleMatcher
+ * @see UntypedExampleMatcher
  */
 public class MongoExampleMapper {
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoConverter converter;
 
+	/**
+	 * Create a new {@link MongoTypeMapper} given {@link MongoConverter}.
+	 *
+	 * @param converter must not be {@literal null}.
+	 */
 	public MongoExampleMapper(MongoConverter converter) {
 
 		this.converter = converter;
@@ -112,80 +122,14 @@ public class MongoExampleMapper {
 		return updateTypeRestrictions(result, example);
 	}
 
-	private static Document orConcatenate(Document source) {
-
-		List<Document> foo = new ArrayList<Document>(source.keySet().size());
-
-		for (String key : source.keySet()) {
-			foo.add(new Document(key, source.get(key)));
-		}
-
-		return new Document("$or", foo);
-	}
-
-	private Set<Class<?>> getTypesToMatch(Example<?> example) {
-
-		Set<Class<?>> types = new HashSet<Class<?>>();
-
-		for (TypeInformation<?> reference : mappingContext.getManagedTypes()) {
-			if (example.getProbeType().isAssignableFrom(reference.getType())) {
-				types.add(reference.getType());
-			}
-		}
-
-		return types;
-	}
-
-	private String getMappedPropertyPath(String path, Class<?> probeType) {
-
-		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(probeType);
-
-		Iterator<String> parts = Arrays.asList(path.split("\\.")).iterator();
-
-		final Stack<MongoPersistentProperty> stack = new Stack<MongoPersistentProperty>();
-
-		List<String> resultParts = new ArrayList<String>();
-
-		while (parts.hasNext()) {
-
-			String part = parts.next();
-			MongoPersistentProperty prop = entity.getPersistentProperty(part);
-
-			if (prop == null) {
-
-				entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> {
-					if (property.getFieldName().equals(part)) {
-						stack.push(property);
-					}
-				});
-
-				if (stack.isEmpty()) {
-					return "";
-				}
-
-				prop = stack.pop();
-			}
-
-			resultParts.add(prop.getName());
-
-			if (prop.isEntity() && mappingContext.hasPersistentEntityFor(prop.getActualType())) {
-				entity = mappingContext.getRequiredPersistentEntity(prop.getActualType());
-			} else {
-				break;
-			}
-		}
-
-		return StringUtils.collectionToDelimitedString(resultParts, ".");
-	}
-
 	private void applyPropertySpecs(String path, Document source, Class<?> probeType,
 			ExampleMatcherAccessor exampleSpecAccessor) {
 
-		if (!(source instanceof Document)) {
+		if (source == null) {
 			return;
 		}
 
-		Iterator<Map.Entry<String, Object>> iter = ((Document) source).entrySet().iterator();
+		Iterator<Map.Entry<String, Object>> iter = source.entrySet().iterator();
 
 		while (iter.hasNext()) {
 
@@ -237,56 +181,46 @@ public class MongoExampleMapper {
 		}
 	}
 
-	private boolean isEmptyIdProperty(Entry<String, Object> entry) {
-		return entry.getKey().equals("_id") && entry.getValue() == null || entry.getValue().equals(Optional.empty());
-	}
+	private String getMappedPropertyPath(String path, Class<?> probeType) {
 
-	private void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher, boolean ignoreCase) {
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(probeType);
 
-		Document document = new Document();
+		Iterator<String> parts = Arrays.asList(path.split("\\.")).iterator();
 
-		if (StringMatcher.DEFAULT == stringMatcher) {
+		final Stack<MongoPersistentProperty> stack = new Stack<>();
 
-			if (ignoreCase) {
-				document.put("$regex", Pattern.quote((String) entry.getValue()));
-				entry.setValue(document);
+		List<String> resultParts = new ArrayList<>();
+
+		while (parts.hasNext()) {
+
+			String part = parts.next();
+			MongoPersistentProperty prop = entity.getPersistentProperty(part);
+
+			if (prop == null) {
+
+				entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> {
+					if (property.getFieldName().equals(part)) {
+						stack.push(property);
+					}
+				});
+
+				if (stack.isEmpty()) {
+					return "";
+				}
+
+				prop = stack.pop();
 			}
-		} else {
 
-			String expression = MongoRegexCreator.INSTANCE.toRegularExpression((String) entry.getValue(),
-					toMatchMode(stringMatcher));
-			document.put("$regex", expression);
-			entry.setValue(document);
+			resultParts.add(prop.getName());
+
+			if (prop.isEntity() && mappingContext.hasPersistentEntityFor(prop.getActualType())) {
+				entity = mappingContext.getRequiredPersistentEntity(prop.getActualType());
+			} else {
+				break;
+			}
 		}
 
-		if (ignoreCase) {
-			document.put("$options", "i");
-		}
-	}
-
-	/**
-	 * Return the {@link MatchMode} for the given {@link StringMatcher}.
-	 * 
-	 * @param matcher must not be {@literal null}.
-	 * @return
-	 */
-	private static MatchMode toMatchMode(StringMatcher matcher) {
-
-		switch (matcher) {
-			case CONTAINING:
-				return MatchMode.CONTAINING;
-			case STARTING:
-				return MatchMode.STARTING_WITH;
-			case ENDING:
-				return MatchMode.ENDING_WITH;
-			case EXACT:
-				return MatchMode.EXACT;
-			case REGEX:
-				return MatchMode.REGEX;
-			case DEFAULT:
-			default:
-				return MatchMode.DEFAULT;
-		}
+		return StringUtils.collectionToDelimitedString(resultParts, ".");
 	}
 
 	private Document updateTypeRestrictions(Document query, Example example) {
@@ -326,5 +260,82 @@ public class MongoExampleMapper {
 		}
 
 		return true;
+	}
+
+	private Set<Class<?>> getTypesToMatch(Example<?> example) {
+
+		Set<Class<?>> types = new HashSet<>();
+
+		for (TypeInformation<?> reference : mappingContext.getManagedTypes()) {
+			if (example.getProbeType().isAssignableFrom(reference.getType())) {
+				types.add(reference.getType());
+			}
+		}
+
+		return types;
+	}
+
+	private static boolean isEmptyIdProperty(Entry<String, Object> entry) {
+		return entry.getKey().equals("_id") && entry.getValue() == null || entry.getValue().equals(Optional.empty());
+	}
+
+	private static void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher,
+			boolean ignoreCase) {
+
+		Document document = new Document();
+
+		if (StringMatcher.DEFAULT == stringMatcher) {
+
+			if (ignoreCase) {
+				document.put("$regex", Pattern.quote((String) entry.getValue()));
+				entry.setValue(document);
+			}
+		} else {
+
+			String expression = MongoRegexCreator.INSTANCE.toRegularExpression((String) entry.getValue(),
+					toMatchMode(stringMatcher));
+			document.put("$regex", expression);
+			entry.setValue(document);
+		}
+
+		if (ignoreCase) {
+			document.put("$options", "i");
+		}
+	}
+
+	private static Document orConcatenate(Document source) {
+
+		List<Document> or = new ArrayList<>(source.keySet().size());
+
+		for (String key : source.keySet()) {
+			or.add(new Document(key, source.get(key)));
+		}
+
+		return new Document("$or", or);
+	}
+
+	/**
+	 * Return the {@link MatchMode} for the given {@link StringMatcher}.
+	 *
+	 * @param matcher must not be {@literal null}.
+	 * @return
+	 */
+	private static MatchMode toMatchMode(StringMatcher matcher) {
+
+		switch (matcher) {
+			case CONTAINING:
+				return MatchMode.CONTAINING;
+			case STARTING:
+				return MatchMode.STARTING_WITH;
+			case ENDING:
+				return MatchMode.ENDING_WITH;
+			case EXACT:
+				return MatchMode.EXACT;
+			case REGEX:
+				return MatchMode.REGEX;
+			case DEFAULT:
+			default:
+				return MatchMode.DEFAULT;
+		}
 	}
 }

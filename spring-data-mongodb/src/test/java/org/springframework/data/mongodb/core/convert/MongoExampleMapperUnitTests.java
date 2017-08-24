@@ -484,7 +484,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1768
-	public void untypedExampleShouldNotInfereTypeRestriction() {
+	public void untypedExampleShouldNotInferTypeRestriction() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();

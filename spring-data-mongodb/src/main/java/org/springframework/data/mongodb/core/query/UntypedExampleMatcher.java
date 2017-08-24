@@ -15,36 +15,29 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Set;
 
 import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.util.Assert;
 
 /**
  * {@link ExampleMatcher} implementation for query by example (QBE). Unlike plain {@link ExampleMatcher} this untyped
- * counterpart does not enforce a strict type match when executing the query. This allows to use totally unrelated
- * example documents as references for querying collections as long as the used field/property names match.
+ * counterpart does not enforce type matching when executing the query. This allows to query unrelated example documents
+ * as references for querying collections as long as the used field/property names match.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 @EqualsAndHashCode
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class UntypedExampleMatcher implements ExampleMatcher {
 
-	private final ExampleMatcher delegate;
-
-	/**
-	 * Creates new {@link UntypedExampleMatcher}.
-	 *
-	 * @param delegate must not be {@literal null}.
-	 */
-	private UntypedExampleMatcher(ExampleMatcher delegate) {
-
-		Assert.notNull(delegate, "Delegate must not be null!");
-		this.delegate = delegate;
-	}
+	private final @NonNull ExampleMatcher delegate;
 
 	/*
 	 * (non-Javadoc)
@@ -167,7 +160,7 @@ public class UntypedExampleMatcher implements ExampleMatcher {
 		return delegate.getNullHandler();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.domain.ExampleMatcher#getDefaultStringMatcher()
 	 */
@@ -175,7 +168,7 @@ public class UntypedExampleMatcher implements ExampleMatcher {
 		return delegate.getDefaultStringMatcher();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.domain.ExampleMatcher#isIgnoreCaseEnabled()
 	 */
