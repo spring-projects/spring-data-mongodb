@@ -33,7 +33,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.UntypedExample;
+import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
 
 import com.mongodb.MongoClient;
 
@@ -199,7 +199,7 @@ public class QueryByExampleTests {
 		NotAPersonButStillMatchingFields probe = new NotAPersonButStillMatchingFields();
 		probe.lastname = "stark";
 
-		Query query = new Query(new Criteria().alike(UntypedExample.of(probe)));
+		Query query = new Query(new Criteria().alike(Example.of(probe, UntypedExampleMatcher.matching())));
 		List<Person> result = operations.find(query, Person.class);
 
 		assertThat(result, hasSize(2));

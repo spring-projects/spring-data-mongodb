@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.NullHandler;
 import org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
@@ -40,7 +39,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator.MatchMode;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
-import org.springframework.data.mongodb.core.query.UntypedExample;
+import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
 import org.springframework.data.support.ExampleMatcherAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -312,7 +311,7 @@ public class MongoExampleMapper {
 
 	private boolean isTypeRestricting(Example example) {
 
-		if(example instanceof UntypedExample) {
+		if (example.getMatcher() instanceof UntypedExampleMatcher) {
 			return false;
 		}
 

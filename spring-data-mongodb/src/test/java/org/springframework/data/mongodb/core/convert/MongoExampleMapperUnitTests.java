@@ -46,7 +46,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.query.UntypedExample;
+import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
 import org.springframework.data.mongodb.test.util.IsBsonObject;
 import org.springframework.data.util.TypeInformation;
 
@@ -490,7 +490,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		org.bson.Document document = mapper.getMappedExample(UntypedExample.of(probe));
+		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
 		assertThat(document, isBsonObject().notContaining("_class"));
 	}
 
