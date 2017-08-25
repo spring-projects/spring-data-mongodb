@@ -289,7 +289,7 @@ public class MongoExampleMapperUnitTests {
 		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
 		com.mongodb.DBRef reference = getTypedValue(dbo, "referenceDocument", com.mongodb.DBRef.class);
 
-		assertThat(reference.getId(), Is.<Object>is("200"));
+		assertThat(reference.getId(), Is.<Object> is("200"));
 		assertThat(reference.getCollectionName(), is("refDoc"));
 	}
 
@@ -312,8 +312,8 @@ public class MongoExampleMapperUnitTests {
 
 		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
 
-		assertThat(dbo.get("legacyPoint.x"), Is.<Object>is(10D));
-		assertThat(dbo.get("legacyPoint.y"), Is.<Object>is(20D));
+		assertThat(dbo.get("legacyPoint.x"), Is.<Object> is(10D));
+		assertThat(dbo.get("legacyPoint.y"), Is.<Object> is(20D));
 	}
 
 	@Test // DATAMONGO-1245
@@ -434,8 +434,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		DBObject dbo = mapper
-				.getMappedExample(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_class")));
+		DBObject dbo = mapper.getMappedExample(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_class")));
 
 		assertThat(dbo, isBsonObject().notContaining("_class"));
 	}
