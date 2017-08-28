@@ -20,11 +20,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * Collects the results of executing an aggregation operation.
- * 
+ *
  * @author Tobias Trelle
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -37,11 +38,11 @@ public class AggregationResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;
 	private final Document rawResults;
-	private final String serverUsed;
+	private final @Nullable String serverUsed;
 
 	/**
 	 * Creates a new {@link AggregationResults} instance from the given mapped and raw results.
-	 * 
+	 *
 	 * @param mappedResults must not be {@literal null}.
 	 * @param rawResults must not be {@literal null}.
 	 */
@@ -57,7 +58,7 @@ public class AggregationResults<T> implements Iterable<T> {
 
 	/**
 	 * Returns the aggregation results.
-	 * 
+	 *
 	 * @return
 	 */
 	public List<T> getMappedResults() {
@@ -66,10 +67,11 @@ public class AggregationResults<T> implements Iterable<T> {
 
 	/**
 	 * Returns the unique mapped result. Assumes no result or exactly one.
-	 * 
+	 *
 	 * @return
 	 * @throws IllegalArgumentException in case more than one result is available.
 	 */
+	@Nullable
 	public T getUniqueMappedResult() {
 		Assert.isTrue(mappedResults.size() < 2, "Expected unique result or null, but got more than one!");
 		return mappedResults.size() == 1 ? mappedResults.get(0) : null;
@@ -85,16 +87,17 @@ public class AggregationResults<T> implements Iterable<T> {
 
 	/**
 	 * Returns the server that has been used to perform the aggregation.
-	 * 
+	 *
 	 * @return
 	 */
+	@Nullable
 	public String getServerUsed() {
 		return serverUsed;
 	}
 
 	/**
 	 * Returns the raw result that was returned by the server.
-	 * 
+	 *
 	 * @return
 	 * @since 1.6
 	 */
@@ -102,6 +105,7 @@ public class AggregationResults<T> implements Iterable<T> {
 		return rawResults;
 	}
 
+	@Nullable
 	private String parseServerUsed() {
 
 		Object object = rawResults.get("serverUsed");

@@ -16,10 +16,11 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.lang.Nullable;
 
 /**
  * MongoDB specific {@link PersistentEntity} abstraction.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
@@ -27,14 +28,14 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 
 	/**
 	 * Returns the collection the entity shall be persisted to.
-	 * 
+	 *
 	 * @return
 	 */
 	String getCollection();
 
 	/**
 	 * Returns the default language to be used for this entity.
-	 * 
+	 *
 	 * @since 1.6
 	 * @return
 	 */
@@ -42,16 +43,17 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 
 	/**
 	 * Returns the property holding text score value.
-	 * 
+	 *
 	 * @since 1.6
 	 * @see #hasTextScoreProperty()
 	 * @return {@literal null} if not present.
 	 */
+	@Nullable
 	MongoPersistentProperty getTextScoreProperty();
 
 	/**
 	 * Returns whether the entity has a {@link TextScore} property.
-	 * 
+	 *
 	 * @since 1.6
 	 * @return true if property annotated with {@link TextScore} is present.
 	 */

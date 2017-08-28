@@ -24,15 +24,17 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 /**
  * Mongo-specific {@link ParametersParameterAccessor} to allow access to the {@link Distance} parameter.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
@@ -41,7 +43,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 
 	/**
 	 * Creates a new {@link MongoParametersParameterAccessor}.
-	 * 
+	 *
 	 * @param method must not be {@literal null}.
 	 * @param values must not be {@literal null}.
 	 */
@@ -103,6 +105,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
 	 */
+	@Nullable
 	@Override
 	public TextCriteria getFullText() {
 		int index = method.getParameters().getFullTextParameterIndex();
@@ -130,7 +133,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 						ClassUtils.getShortName(fullText.getClass())));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
 	 */

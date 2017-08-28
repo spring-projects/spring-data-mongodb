@@ -1,11 +1,11 @@
 /*
- * Copyright 2011-2017 by the original author(s).
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,6 +33,7 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -42,12 +43,13 @@ import com.mongodb.MongoURI;
 
 /**
  * {@link BeanDefinitionParser} to parse {@code db-factory} elements into {@link BeanDefinition}s.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Viktor Khoroshko
+ * @author Mark Paluch
  */
 public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
@@ -62,7 +64,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES = Collections.unmodifiableSet(mongoUriAllowedAdditionalAttributes);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#resolveId(org.w3c.dom.Element, org.springframework.beans.factory.support.AbstractBeanDefinition, org.springframework.beans.factory.xml.ParserContext)
 	 */
@@ -74,7 +76,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		return StringUtils.hasText(id) ? id : BeanNames.DB_FACTORY_BEAN_NAME;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#parseInternal(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext)
 	 */
@@ -119,7 +121,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	/**
 	 * Registers a default {@link BeanDefinition} of a {@link Mongo} instance and returns the name under which the
 	 * {@link Mongo} instance was registered under.
-	 * 
+	 *
 	 * @param element must not be {@literal null}.
 	 * @param parserContext must not be {@literal null}.
 	 * @return
@@ -138,11 +140,12 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	 * attributes. <br />
 	 * Errors when configured element contains {@literal uri} or {@literal client-uri} along with other attributes except
 	 * {@literal write-concern} and/or {@literal id}.
-	 * 
+	 *
 	 * @param element must not be {@literal null}.
 	 * @param parserContext
 	 * @return {@literal null} in case no client-/uri defined.
 	 */
+	@Nullable
 	private BeanDefinition getMongoUri(Element element, ParserContext parserContext) {
 
 		boolean hasClientUri = element.hasAttribute("client-uri");

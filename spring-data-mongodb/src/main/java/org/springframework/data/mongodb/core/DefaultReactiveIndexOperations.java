@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
-import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,7 +25,9 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.model.IndexOptions;
@@ -69,7 +69,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	 * @param type used for mapping potential partial index filter expression, must not be {@literal null}.
 	 */
 	public DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
-			QueryMapper queryMapper, @Nullable Class<?> type) {
+			QueryMapper queryMapper, Class<?> type) {
 		this(mongoOperations, collectionName, queryMapper, Optional.of(type));
 	}
 
@@ -95,10 +95,6 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		return mongoOperations.execute(collectionName, collection -> {
 
 			Document indexOptions = indexDefinition.getIndexOptions();
-
-			if (indexOptions == null) {
-				return collection.createIndex(indexDefinition.getIndexKeys());
-			}
 
 			IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
 

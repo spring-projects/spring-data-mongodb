@@ -113,7 +113,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 	@SuppressWarnings("unchecked")
 	private <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
-			RepositoryInformation information) {
+			@Nullable RepositoryInformation information) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
 

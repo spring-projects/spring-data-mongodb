@@ -137,7 +137,7 @@ public class Index implements IndexDefinition {
 	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
 	 * @since 1.10
 	 */
-	public Index partial(IndexFilter filter) {
+	public Index partial(@Nullable IndexFilter filter) {
 
 		this.filter = Optional.ofNullable(filter);
 		return this;
@@ -153,7 +153,7 @@ public class Index implements IndexDefinition {
 	 * @return
 	 * @since 2.0
 	 */
-	public Index collation(Collation collation) {
+	public Index collation(@Nullable Collation collation) {
 
 		this.collation = Optional.ofNullable(collation);
 		return this;

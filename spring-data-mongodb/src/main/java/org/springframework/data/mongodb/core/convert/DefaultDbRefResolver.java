@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.bson.Document;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
@@ -91,7 +90,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	@Override
 	public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
-							   DbRefProxyHandler handler) {
+			DbRefProxyHandler handler) {
 
 		Assert.notNull(property, "Property must not be null!");
 		Assert.notNull(callback, "Callback must not be null!");
@@ -179,8 +178,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @param callback must not be {@literal null}.
 	 * @return
 	 */
-	private Object createLazyLoadingProxy(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
-			DbRefProxyHandler handler) {
+	private Object createLazyLoadingProxy(MongoPersistentProperty property, @Nullable DBRef dbref,
+			DbRefResolverCallback callback, DbRefProxyHandler handler) {
 
 		Class<?> propertyType = property.getType();
 		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, dbref, exceptionTranslator, callback);
@@ -234,7 +233,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 	/**
 	 * Returns document with the given identifier from the given list of {@link Document}s.
-	 * 
+	 *
 	 * @param identifier
 	 * @param documents
 	 * @return
@@ -265,8 +264,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		private final PersistenceExceptionTranslator exceptionTranslator;
 
 		private volatile boolean resolved;
+		private final @Nullable DBRef dbref;
 		private @Nullable Object result;
-		private DBRef dbref;
 
 		static {
 			try {
@@ -286,7 +285,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @param dbref can be {@literal null}.
 		 * @param callback must not be {@literal null}.
 		 */
-		public LazyLoadingInterceptor(MongoPersistentProperty property, DBRef dbref,
+		public LazyLoadingInterceptor(MongoPersistentProperty property, @Nullable DBRef dbref,
 				PersistenceExceptionTranslator exceptionTranslator, DbRefResolverCallback callback) {
 
 			Assert.notNull(property, "Property must not be null!");
@@ -312,8 +311,9 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * (non-Javadoc)
 		 * @see org.springframework.cglib.proxy.MethodInterceptor#intercept(java.lang.Object, java.lang.reflect.Method, java.lang.Object[], org.springframework.cglib.proxy.MethodProxy)
 		 */
+		@Nullable
 		@Override
-		public Object intercept(@Nullable Object obj, @Nullable Method method, @Nullable Object[] args, @Nullable MethodProxy proxy) throws Throwable {
+		public Object intercept(Object obj, Method method, Object[] args, @Nullable MethodProxy proxy) throws Throwable {
 
 			if (INITIALIZE_METHOD.equals(method)) {
 				return ensureResolved();
@@ -360,7 +360,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @param proxy
 		 * @return
 		 */
-		private String proxyToString(Object proxy) {
+		private String proxyToString(@Nullable Object proxy) {
 
 			StringBuilder description = new StringBuilder();
 			if (dbref != null) {
@@ -381,7 +381,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @param proxy
 		 * @return
 		 */
-		private int proxyHashCode(Object proxy) {
+		private int proxyHashCode(@Nullable Object proxy) {
 			return proxyToString(proxy).hashCode();
 		}
 
@@ -392,7 +392,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @param that
 		 * @return
 		 */
-		private boolean proxyEquals(Object proxy, Object that) {
+		private boolean proxyEquals(@Nullable Object proxy, Object that) {
 
 			if (!(that instanceof LazyLoadingProxy)) {
 				return false;
@@ -410,6 +410,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 *
 		 * @return
 		 */
+		@Nullable
 		private Object ensureResolved() {
 
 			if (!resolved) {
@@ -453,6 +454,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 *
 		 * @return
 		 */
+		@Nullable
 		private synchronized Object resolve() {
 
 			if (!resolved) {

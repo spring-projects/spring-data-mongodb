@@ -19,6 +19,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import reactor.core.publisher.Flux;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
@@ -28,6 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
@@ -39,8 +42,6 @@ import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.GeoNearExecution;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.ClassUtils;
-
-import reactor.core.publisher.Flux;
 
 /**
  * Unit tests for {@link ReactiveMongoQueryExecution}.
@@ -80,6 +81,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 
 		Method geoNear = ClassUtils.getMethod(GeoRepo.class, "geoNear");
 		Query query = new Query();
+		when(parameterAccessor.getPageable()).thenReturn(Pageable.unpaged());
 		when(parameterAccessor.getGeoNearLocation()).thenReturn(new Point(1, 2));
 		when(parameterAccessor.getDistanceRange()).thenReturn(new Range<>(null, null));
 

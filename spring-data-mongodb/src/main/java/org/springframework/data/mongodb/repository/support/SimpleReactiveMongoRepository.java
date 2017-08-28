@@ -380,7 +380,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(entityStream, "The given Publisher of entities must not be null!");
 
 		return Flux.from(entityStream)//
-				.map(it -> entityInformation.getRequiredId(it))//
+				.map(entityInformation::getRequiredId)//
 				.flatMap(this::deleteById)//
 				.then();
 	}
@@ -403,10 +403,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	}
 
 	private Flux<T> findAll(Query query) {
-
-		if (query == null) {
-			return Flux.empty();
-		}
 
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}

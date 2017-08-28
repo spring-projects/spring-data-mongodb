@@ -35,7 +35,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * A subclass of {@link QueryMapper} that retains type information on the mongo types.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -47,7 +47,7 @@ public class UpdateMapper extends QueryMapper {
 
 	/**
 	 * Creates a new {@link UpdateMapper} using the given {@link MongoConverter}.
-	 * 
+	 *
 	 * @param converter must not be {@literal null}.
 	 */
 	public UpdateMapper(MongoConverter converter) {
@@ -102,7 +102,7 @@ public class UpdateMapper extends QueryMapper {
 
 	/**
 	 * Returns {@literal true} if the given {@link Document} is an update object that uses update operators.
-	 * 
+	 *
 	 * @param updateObj can be {@literal null}.
 	 * @return {@literal true} if the given {@link Document} is an update object.
 	 */
@@ -124,7 +124,7 @@ public class UpdateMapper extends QueryMapper {
 	/**
 	 * Converts the given source object to a mongo type retaining the original type information of the source type on the
 	 * mongo type.
-	 * 
+	 *
 	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#delegateConvertToMongoType(java.lang.Object,
 	 *      org.springframework.data.mongodb.core.mapping.MongoPersistentEntity)
 	 */
@@ -217,7 +217,7 @@ public class UpdateMapper extends QueryMapper {
 		return converter.convertToMongoType(value, typeHint);
 	}
 
-	private TypeInformation<?> getTypeHintForEntity(Object source, MongoPersistentEntity<?> entity) {
+	private TypeInformation<?> getTypeHintForEntity(@Nullable Object source, MongoPersistentEntity<?> entity) {
 
 		TypeInformation<?> info = entity.getTypeInformation();
 		Class<?> type = info.getActualType().getType();
@@ -233,7 +233,7 @@ public class UpdateMapper extends QueryMapper {
 		return NESTED_DOCUMENT;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#createPropertyField(org.springframework.data.mongodb.core.mapping.MongoPersistentEntity, java.lang.String, org.springframework.data.mapping.context.MappingContext)
 	 */
@@ -261,7 +261,7 @@ public class UpdateMapper extends QueryMapper {
 	 * containing a {@literal $} before handing it to the super class to make sure property lookups and transformations
 	 * continue to work as expected. We provide a custom property converter to re-applied the cleaned up {@literal $}s
 	 * when constructing the mapped key.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
@@ -273,7 +273,7 @@ public class UpdateMapper extends QueryMapper {
 		 * Creates a new {@link MetadataBackedField} with the given {@link MongoPersistentEntity}, key and
 		 * {@link MappingContext}. We clean up the key before handing it up to the super class to make sure it continues to
 		 * work as expected.
-		 * 
+		 *
 		 * @param entity must not be {@literal null}.
 		 * @param key must not be {@literal null} or empty.
 		 * @param mappingContext must not be {@literal null}.
@@ -294,7 +294,7 @@ public class UpdateMapper extends QueryMapper {
 			return this.getPath() == null ? key : super.getMappedKey();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.MetadataBackedField#getPropertyConverter()
 		 */
@@ -314,7 +314,7 @@ public class UpdateMapper extends QueryMapper {
 
 		/**
 		 * {@link Converter} retaining positional parameter {@literal $} for {@link Association}s.
-		 * 
+		 *
 		 * @author Christoph Strobl
 		 */
 		protected static class UpdateAssociationConverter extends AssociationConverter {
@@ -323,7 +323,7 @@ public class UpdateMapper extends QueryMapper {
 
 			/**
 			 * Creates a new {@link AssociationConverter} for the given {@link Association}.
-			 * 
+			 *
 			 * @param association must not be {@literal null}.
 			 */
 			public UpdateAssociationConverter(Association<MongoPersistentProperty> association, String key) {
@@ -332,7 +332,7 @@ public class UpdateMapper extends QueryMapper {
 				this.mapper = new KeyMapper(key);
 			}
 
-			/* 
+			/*
 			 * (non-Javadoc)
 			 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 			 */

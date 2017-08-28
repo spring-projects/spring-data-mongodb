@@ -36,8 +36,6 @@ public interface FieldsExposingAggregationOperation extends AggregationOperation
 	/**
 	 * Marker interface for {@link AggregationOperation} that inherits fields from previous operations.
 	 */
-	static interface InheritsFieldsAggregationOperation extends FieldsExposingAggregationOperation {
-
-	}
+	interface InheritsFieldsAggregationOperation extends FieldsExposingAggregationOperation {}
 
 }

@@ -31,7 +31,7 @@ import org.springframework.util.Assert;
 
 /**
  * {@link CdiRepositoryBean} to create Mongo repository instances.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  */
@@ -41,13 +41,13 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 
 	/**
 	 * Creates a new {@link MongoRepositoryBean}.
-	 * 
+	 *
 	 * @param operations must not be {@literal null}.
 	 * @param qualifiers must not be {@literal null}.
 	 * @param repositoryType must not be {@literal null}.
 	 * @param beanManager must not be {@literal null}.
 	 * @param detector detector for the custom {@link org.springframework.data.repository.Repository} implementations
-	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
+	 *          {@link CustomRepositoryImplementationDetector}, can be {@link Optional#empty()}.
 	 */
 	public MongoRepositoryBean(Bean<MongoOperations> operations, Set<Annotation> qualifiers, Class<T> repositoryType,
 			BeanManager beanManager, Optional<CustomRepositoryImplementationDetector> detector) {

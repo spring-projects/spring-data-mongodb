@@ -35,6 +35,7 @@ import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -77,7 +78,7 @@ class ExpressionEvaluatingParameterBinder {
 	 * Bind values provided by {@link MongoParameterAccessor} to placeholders in {@literal raw} while considering
 	 * potential conversions and parameter types.
 	 *
-	 * @param raw can be {@literal null} or empty.
+	 * @param raw can be empty.
 	 * @param accessor must not be {@literal null}.
 	 * @param bindingContext must not be {@literal null}.
 	 * @return {@literal null} if given {@code raw} value is empty.
@@ -85,7 +86,7 @@ class ExpressionEvaluatingParameterBinder {
 	public String bind(String raw, MongoParameterAccessor accessor, BindingContext bindingContext) {
 
 		if (!StringUtils.hasText(raw)) {
-			return null;
+			return raw;
 		}
 
 		return replacePlaceholders(raw, accessor, bindingContext);
@@ -147,7 +148,8 @@ class ExpressionEvaluatingParameterBinder {
 	 * @param raw the raw binding value
 	 * @param isExpression {@literal true} if the binding value results from a SpEL expression.
 	 */
-	private void postProcessQuotedBinding(StringBuffer buffer, String valueForBinding, Object raw, boolean isExpression) {
+	private void postProcessQuotedBinding(StringBuffer buffer, String valueForBinding, @Nullable Object raw,
+			boolean isExpression) {
 
 		int quotationMarkIndex = buffer.length() - valueForBinding.length() - 1;
 		char quotationMark = buffer.charAt(quotationMarkIndex);
@@ -230,6 +232,7 @@ class ExpressionEvaluatingParameterBinder {
 	 * @param parameterValues must not be {@literal null}.
 	 * @return
 	 */
+	@Nullable
 	private Object evaluateExpression(String expressionString, MongoParameters parameters, Object[] parameterValues) {
 
 		EvaluationContext evaluationContext = evaluationContextProvider.getEvaluationContext(parameters, parameterValues);
@@ -390,7 +393,7 @@ class ExpressionEvaluatingParameterBinder {
 		private int parameterIndex;
 		private final String parameter;
 		private final boolean quoted;
-		private final String suffix;
+		private final @Nullable String suffix;
 
 		/*
 		 * (non-Javadoc)

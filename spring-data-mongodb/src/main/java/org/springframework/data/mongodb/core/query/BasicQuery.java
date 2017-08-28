@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import static org.springframework.util.ObjectUtils.*;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -42,14 +43,14 @@ public class BasicQuery extends Query {
 	 *
 	 * @param query may be {@literal null}.
 	 */
-	public BasicQuery(String query) {
+	public BasicQuery(@Nullable String query) {
 		this(query, null);
 	}
 
 	/**
 	 * Create a new {@link BasicQuery} given a query {@link Document}.
 	 *
-	 * @param queryObject may be {@literal null}.
+	 * @param queryObject must not be {@literal null}.
 	 */
 	public BasicQuery(Document queryObject) {
 		this(queryObject, new Document());
@@ -61,7 +62,7 @@ public class BasicQuery extends Query {
 	 * @param query may be {@literal null}.
 	 * @param fields may be {@literal null}.
 	 */
-	public BasicQuery(String query, String fields) {
+	public BasicQuery(@Nullable String query, @Nullable String fields) {
 
 		this(query != null ? Document.parse(query) : new Document(),
 				fields != null ? Document.parse(fields) : new Document());

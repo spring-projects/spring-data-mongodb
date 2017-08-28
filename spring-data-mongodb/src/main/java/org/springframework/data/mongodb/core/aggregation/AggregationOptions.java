@@ -71,7 +71,8 @@ public class AggregationOptions {
 	 * @param collation collation for string comparison. Can be {@literal null}.
 	 * @since 2.0
 	 */
-	public AggregationOptions(boolean allowDiskUse, boolean explain, Document cursor, Collation collation) {
+	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
+			@Nullable Collation collation) {
 
 		this.allowDiskUse = allowDiskUse;
 		this.explain = explain;
@@ -301,7 +302,7 @@ public class AggregationOptions {
 		 * @param collation can be {@literal null}.
 		 * @return
 		 */
-		public Builder collation(Collation collation) {
+		public Builder collation(@Nullable Collation collation) {
 
 			this.collation = collation;
 			return this;

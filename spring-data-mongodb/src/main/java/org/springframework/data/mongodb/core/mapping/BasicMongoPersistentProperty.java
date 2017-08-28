@@ -24,12 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -73,7 +74,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @param fieldNamingStrategy
 	 */
 	public BasicMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
-			SimpleTypeHolder simpleTypeHolder, FieldNamingStrategy fieldNamingStrategy) {
+			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
 
 		super(property, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
@@ -152,6 +153,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return StringUtils.hasText(getAnnotatedFieldName());
 	}
 
+	@Nullable
 	private String getAnnotatedFieldName() {
 
 		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
@@ -193,6 +195,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDBRef()
 	 */
+	@Nullable
 	public DBRef getDBRef() {
 		return findAnnotation(DBRef.class);
 	}

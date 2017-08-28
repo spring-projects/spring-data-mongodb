@@ -19,6 +19,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link MongoEntityInformation} implementation using a {@link MongoPersistentEntity} instance to lookup the necessary
@@ -33,7 +34,7 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 		implements MongoEntityInformation<T, ID> {
 
 	private final MongoPersistentEntity<T> entityMetadata;
-	private final String customCollectionName;
+	private final @Nullable String customCollectionName;
 	private final Class<ID> fallbackIdType;
 
 	/**
@@ -52,7 +53,7 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 	 * @param entity must not be {@literal null}.
 	 * @param fallbackIdType can be {@literal null}.
 	 */
-	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, Class<ID> fallbackIdType) {
+	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, @Nullable Class<ID> fallbackIdType) {
 		this(entity, null, fallbackIdType);
 	}
 
@@ -76,8 +77,8 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 	 * @param idType can be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	private MappingMongoEntityInformation(MongoPersistentEntity<T> entity, String customCollectionName,
-			Class<ID> idType) {
+	private MappingMongoEntityInformation(MongoPersistentEntity<T> entity, @Nullable String customCollectionName,
+			@Nullable Class<ID> idType) {
 
 		super(entity);
 
@@ -112,6 +113,6 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 			return super.getIdType();
 		}
 
-		return fallbackIdType != null ? fallbackIdType : (Class<ID>) ObjectId.class;
+		return fallbackIdType;
 	}
 }

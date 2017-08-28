@@ -20,6 +20,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.DBDecoderFactory;
 import com.mongodb.DBEncoderFactory;
@@ -27,7 +28,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import org.springframework.lang.Nullable;
 
 /**
  * A factory bean for construction of a {@link MongoClientOptions} instance.
@@ -41,7 +41,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	private static final MongoClientOptions DEFAULT_MONGO_OPTIONS = MongoClientOptions.builder().build();
 
-	private String description = DEFAULT_MONGO_OPTIONS.getDescription();
+	private @Nullable String description = DEFAULT_MONGO_OPTIONS.getDescription();
 	private int minConnectionsPerHost = DEFAULT_MONGO_OPTIONS.getMinConnectionsPerHost();
 	private int connectionsPerHost = DEFAULT_MONGO_OPTIONS.getConnectionsPerHost();
 	private int threadsAllowedToBlockForConnectionMultiplier = DEFAULT_MONGO_OPTIONS
@@ -52,11 +52,11 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	private int connectTimeout = DEFAULT_MONGO_OPTIONS.getConnectTimeout();
 	private int socketTimeout = DEFAULT_MONGO_OPTIONS.getSocketTimeout();
 	private boolean socketKeepAlive = DEFAULT_MONGO_OPTIONS.isSocketKeepAlive();
-	private ReadPreference readPreference = DEFAULT_MONGO_OPTIONS.getReadPreference();
+	private @Nullable ReadPreference readPreference = DEFAULT_MONGO_OPTIONS.getReadPreference();
 	private DBDecoderFactory dbDecoderFactory = DEFAULT_MONGO_OPTIONS.getDbDecoderFactory();
 	private DBEncoderFactory dbEncoderFactory = DEFAULT_MONGO_OPTIONS.getDbEncoderFactory();
-	private WriteConcern writeConcern = DEFAULT_MONGO_OPTIONS.getWriteConcern();
-	private SocketFactory socketFactory = DEFAULT_MONGO_OPTIONS.getSocketFactory();
+	private @Nullable WriteConcern writeConcern = DEFAULT_MONGO_OPTIONS.getWriteConcern();
+	private @Nullable SocketFactory socketFactory = DEFAULT_MONGO_OPTIONS.getSocketFactory();
 	private boolean cursorFinalizerEnabled = DEFAULT_MONGO_OPTIONS.isCursorFinalizerEnabled();
 	private boolean alwaysUseMBeans = DEFAULT_MONGO_OPTIONS.isAlwaysUseMBeans();
 	private int heartbeatFrequency = DEFAULT_MONGO_OPTIONS.getHeartbeatFrequency();
@@ -74,7 +74,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	 *
 	 * @param description
 	 */
-	public void setDescription(@Nullable  String description) {
+	public void setDescription(@Nullable String description) {
 		this.description = description;
 	}
 
@@ -270,11 +270,13 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
 	 */
+	@SuppressWarnings("ConstantConditions")
 	@Override
 	protected MongoClientOptions createInstance() throws Exception {
 
 		SocketFactory socketFactoryToUse = ssl
-				? (sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault()) : this.socketFactory;
+				? (sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault())
+				: this.socketFactory;
 
 		return MongoClientOptions.builder() //
 				.alwaysUseMBeans(this.alwaysUseMBeans) //

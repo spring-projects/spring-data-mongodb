@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,18 @@ package org.springframework.data.mongodb;
 
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception being thrown in case we cannot connect to a MongoDB instance.
- * 
+ *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class CannotGetMongoDbConnectionException extends DataAccessResourceFailureException {
 
 	private final UserCredentials credentials;
-	private final String database;
+	private final @Nullable String database;
 
 	private static final long serialVersionUID = 1172099106475265589L;
 
@@ -40,7 +42,7 @@ public class CannotGetMongoDbConnectionException extends DataAccessResourceFailu
 		this(msg, null, UserCredentials.NO_CREDENTIALS);
 	}
 
-	public CannotGetMongoDbConnectionException(String msg, String database, UserCredentials credentials) {
+	public CannotGetMongoDbConnectionException(String msg, @Nullable String database, UserCredentials credentials) {
 		super(msg);
 		this.database = database;
 		this.credentials = credentials;
@@ -48,7 +50,7 @@ public class CannotGetMongoDbConnectionException extends DataAccessResourceFailu
 
 	/**
 	 * Returns the {@link UserCredentials} that were used when trying to connect to the MongoDB instance.
-	 * 
+	 *
 	 * @return
 	 */
 	public UserCredentials getCredentials() {
@@ -57,9 +59,10 @@ public class CannotGetMongoDbConnectionException extends DataAccessResourceFailu
 
 	/**
 	 * Returns the name of the database trying to be accessed.
-	 * 
+	 *
 	 * @return
 	 */
+	@Nullable
 	public String getDatabase() {
 		return database;
 	}

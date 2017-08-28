@@ -31,7 +31,7 @@ import com.mongodb.ServerAddress;
 
 /**
  * Parse a {@link String} to a {@link ServerAddress} array. The format is host1:port1,host2:port2,host3:port3.
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -80,10 +80,11 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
 	/**
 	 * Parses the given source into a {@link ServerAddress}.
-	 * 
+	 *
 	 * @param source
 	 * @return the
 	 */
+	@Nullable
 	private ServerAddress parseServerAddress(String source) {
 
 		if (!StringUtils.hasText(source)) {
@@ -114,7 +115,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
 	/**
 	 * Extract the host and port from the given {@link String}.
-	 * 
+	 *
 	 * @param addressAndPortSource must not be {@literal null}.
 	 * @return
 	 */

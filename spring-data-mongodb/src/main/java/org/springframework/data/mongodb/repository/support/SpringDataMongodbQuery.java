@@ -27,9 +27,10 @@ import com.mongodb.DBObject;
 import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
- * Spring Data specific {@link MongodbQuery} implementation.
- * 
+ * Spring Data specific {@link AbstractMongodbQuery} implementation.
+ *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> {
 
@@ -37,7 +38,7 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 
 	/**
 	 * Creates a new {@link SpringDataMongodbQuery}.
-	 * 
+	 *
 	 * @param operations must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 */
@@ -47,7 +48,7 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 
 	/**
 	 * Creates a new {@link SpringDataMongodbQuery} to query the given collection.
-	 * 
+	 *
 	 * @param operations must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
@@ -72,7 +73,7 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 	 * @see com.querydsl.mongodb.AbstractMongodbQuery#getCollection(java.lang.Class)
 	 */
 	@Override
-	protected DBCollection getCollection(@Nullable Class<?> type) {
+	protected DBCollection getCollection(Class<?> type) {
 		return ((MongoTemplate) operations).getMongoDbFactory().getLegacyDb()
 				.getCollection(operations.getCollectionName(type));
 	}

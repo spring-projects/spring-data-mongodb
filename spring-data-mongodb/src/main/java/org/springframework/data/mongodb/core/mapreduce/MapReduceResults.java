@@ -19,13 +19,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.MapReduceOutput;
 
 /**
  * Collects the results of performing a MapReduce operations.
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -35,14 +36,14 @@ import com.mongodb.MapReduceOutput;
 public class MapReduceResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;
-	private final Document rawResults;
-	private final String outputCollection;
+	private final @Nullable Document rawResults;
+	private final @Nullable String outputCollection;
 	private final MapReduceTiming mapReduceTiming;
 	private final MapReduceCounts mapReduceCounts;
 
 	/**
 	 * Creates a new {@link MapReduceResults} from the given mapped results and the raw one.
-	 * 
+	 *
 	 * @param mappedResults must not be {@literal null}.
 	 * @param rawResults must not be {@literal null}.
 	 * @deprecated since 1.7. Please use {@link #MapReduceResults(List, MapReduceOutput)}
@@ -62,7 +63,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 
 	/**
 	 * Creates a new {@link MapReduceResults} from the given mapped results and the {@link MapReduceOutput}.
-	 * 
+	 *
 	 * @param mappedResults must not be {@literal null}.
 	 * @param mapReduceOutput must not be {@literal null}.
 	 * @since 1.7
@@ -95,6 +96,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 		return mapReduceCounts;
 	}
 
+	@Nullable
 	public String getOutputCollection() {
 		return outputCollection;
 	}
@@ -121,7 +123,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 
 	/**
 	 * Returns the value of the source's field with the given key as {@link Long}.
-	 * 
+	 *
 	 * @param source
 	 * @param key
 	 * @return
@@ -135,7 +137,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 
 	/**
 	 * Parses the raw {@link Document} result into a {@link MapReduceCounts} value object.
-	 * 
+	 *
 	 * @param rawResults
 	 * @return
 	 */
@@ -156,10 +158,11 @@ public class MapReduceResults<T> implements Iterable<T> {
 
 	/**
 	 * Parses the output collection from the raw {@link Document} result.
-	 * 
+	 *
 	 * @param rawResults
 	 * @return
 	 */
+	@Nullable
 	private static String parseOutputCollection(Document rawResults) {
 
 		Object resultField = rawResults.get("result");

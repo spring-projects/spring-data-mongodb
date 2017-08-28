@@ -43,6 +43,7 @@ import org.springframework.expression.spel.ast.PropertyOrFieldReference;
 import org.springframework.expression.spel.standard.SpelExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -64,7 +65,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	/**
 	 * Creates a new {@link SpelExpressionTransformer}.
 	 */
-	public SpelExpressionTransformer() {
+	SpelExpressionTransformer() {
 
 		List<ExpressionNodeConversion<? extends ExpressionNode>> conversions = new ArrayList<ExpressionNodeConversion<? extends ExpressionNode>>();
 		conversions.add(new OperatorNodeConversion(this));
@@ -190,12 +191,12 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 * the previous context.
 		 *
 		 * @param node must not be {@literal null}.
-		 * @param parent
-		 * @param operation
+		 * @param parent may be {@literal null}.
+		 * @param operation may be {@literal null}.
 		 * @param context must not be {@literal null}.
 		 * @return
 		 */
-		protected Object transform(ExpressionNode node, ExpressionNode parent, Document operation,
+		protected Object transform(ExpressionNode node, @Nullable ExpressionNode parent, @Nullable Document operation,
 				AggregationExpressionTransformationContext<?> context) {
 
 			Assert.notNull(node, "ExpressionNode must not be null!");
@@ -290,7 +291,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		}
 
 		private Object convertUnaryMinusOp(ExpressionTransformationContextSupport<OperatorNode> context,
-				Object leftResult) {
+				@Nullable Object leftResult) {
 
 			Object result = leftResult instanceof Number ? leftResult
 					: new Document("$multiply", Arrays.<Object> asList(Integer.valueOf(-1), leftResult));
@@ -320,7 +321,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 */
 	private static class IndexerNodeConversion extends ExpressionNodeConversion<ExpressionNode> {
 
-		public IndexerNodeConversion(AggregationExpressionTransformer transformer) {
+		IndexerNodeConversion(AggregationExpressionTransformer transformer) {
 			super(transformer);
 		}
 
@@ -350,7 +351,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 */
 	private static class InlineListNodeConversion extends ExpressionNodeConversion<ExpressionNode> {
 
-		public InlineListNodeConversion(AggregationExpressionTransformer transformer) {
+		InlineListNodeConversion(AggregationExpressionTransformer transformer) {
 			super(transformer);
 		}
 
@@ -358,6 +359,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
 		 */
+		@Nullable
 		@Override
 		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 
@@ -389,7 +391,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 */
 	private static class PropertyOrFieldReferenceNodeConversion extends ExpressionNodeConversion<ExpressionNode> {
 
-		public PropertyOrFieldReferenceNodeConversion(AggregationExpressionTransformer transformer) {
+		PropertyOrFieldReferenceNodeConversion(AggregationExpressionTransformer transformer) {
 			super(transformer);
 		}
 
@@ -422,7 +424,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 */
 	private static class LiteralNodeConversion extends ExpressionNodeConversion<LiteralNode> {
 
-		public LiteralNodeConversion(AggregationExpressionTransformer transformer) {
+		LiteralNodeConversion(AggregationExpressionTransformer transformer) {
 			super(transformer);
 		}
 
@@ -469,7 +471,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 */
 	private static class MethodReferenceNodeConversion extends ExpressionNodeConversion<MethodReferenceNode> {
 
-		public MethodReferenceNodeConversion(AggregationExpressionTransformer transformer) {
+		MethodReferenceNodeConversion(AggregationExpressionTransformer transformer) {
 			super(transformer);
 		}
 
@@ -482,6 +484,8 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 			MethodReferenceNode node = context.getCurrentNode();
 			AggregationMethodReference methodReference = node.getMethodReference();
+
+			Assert.state(methodReference != null, "Cannot resolve current node to AggregationMethodReference!");
 
 			Object args = null;
 
@@ -519,7 +523,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 */
 	private static class CompoundExpressionNodeConversion extends ExpressionNodeConversion<ExpressionNode> {
 
-		public CompoundExpressionNodeConversion(AggregationExpressionTransformer transformer) {
+		CompoundExpressionNodeConversion(AggregationExpressionTransformer transformer) {
 			super(transformer);
 		}
 
@@ -561,7 +565,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 *
 		 * @param transformer must not be {@literal null}.
 		 */
-		public NotOperatorNodeConversion(AggregationExpressionTransformer transformer) {
+		NotOperatorNodeConversion(AggregationExpressionTransformer transformer) {
 			super(transformer);
 		}
 
@@ -603,7 +607,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 *
 		 * @param transformer must not be {@literal null}.
 		 */
-		public ValueRetrievingNodeConversion(AggregationExpressionTransformer transformer) {
+		ValueRetrievingNodeConversion(AggregationExpressionTransformer transformer) {
 			super(transformer);
 		}
 

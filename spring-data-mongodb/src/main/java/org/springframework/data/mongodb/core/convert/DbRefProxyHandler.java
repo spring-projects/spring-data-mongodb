@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,15 @@
 package org.springframework.data.mongodb.core.convert;
 
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
 
 /**
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public interface DbRefProxyHandler {
 
-	Object populateId(MongoPersistentProperty property, DBRef source, Object proxy);
+	Object populateId(MongoPersistentProperty property, @Nullable DBRef source, Object proxy);
 }

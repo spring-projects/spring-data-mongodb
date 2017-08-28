@@ -23,6 +23,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -65,7 +66,7 @@ class DocumentAccessor {
 	 * @param prop must not be {@literal null}.
 	 * @param value
 	 */
-	public void put(MongoPersistentProperty prop, Object value) {
+	public void put(MongoPersistentProperty prop, @Nullable Object value) {
 
 		Assert.notNull(prop, "MongoPersistentProperty must not be null!");
 		String fieldName = prop.getFieldName();
@@ -98,6 +99,7 @@ class DocumentAccessor {
 	 * @param property must not be {@literal null}.
 	 * @return
 	 */
+	@Nullable
 	public Object get(MongoPersistentProperty property) {
 
 		String fieldName = property.getFieldName();
@@ -176,6 +178,7 @@ class DocumentAccessor {
 	 * @param source can be {@literal null}.
 	 * @return
 	 */
+	@Nullable
 	@SuppressWarnings("unchecked")
 	private static Map<String, Object> getAsMap(Object source) {
 

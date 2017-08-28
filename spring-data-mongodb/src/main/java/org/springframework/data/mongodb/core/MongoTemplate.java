@@ -236,7 +236,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
 		// We create indexes based on mapping events
-		if (null != mappingContext && mappingContext instanceof MongoMappingContext) {
+		if (mappingContext instanceof MongoMappingContext) {
 			indexCreator = new MongoPersistentEntityIndexCreator((MongoMappingContext) mappingContext, this);
 			eventPublisher = new MongoMappingEventPublisher(indexCreator);
 			if (mappingContext instanceof ApplicationEventPublisherAware) {
@@ -251,7 +251,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *
 	 * @param resultChecking
 	 */
-	public void setWriteResultChecking(WriteResultChecking resultChecking) {
+	public void setWriteResultChecking(@Nullable WriteResultChecking resultChecking) {
 		this.writeResultChecking = resultChecking == null ? DEFAULT_WRITE_RESULT_CHECKING : resultChecking;
 	}
 
@@ -272,7 +272,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param writeConcernResolver
 	 */
 	public void setWriteConcernResolver(@Nullable WriteConcernResolver writeConcernResolver) {
-		this.writeConcernResolver = writeConcernResolver;
+		this.writeConcernResolver = writeConcernResolver == null ? DefaultWriteConcernResolver.INSTANCE
+				: writeConcernResolver;
 	}
 
 	/**
@@ -324,7 +325,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 		}
 
-		if (context instanceof ConfigurableApplicationContext) {
+		if (context instanceof ConfigurableApplicationContext && indexCreator != null) {
 			((ConfigurableApplicationContext) context).addApplicationListener(indexCreator);
 		}
 	}
@@ -392,7 +393,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(java.lang.String) 
+	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(java.lang.String)
 	 */
 	@Override
 	public Document executeCommand(final String jsonCommand) {
@@ -408,7 +409,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(org.bson.Document) 
+	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(org.bson.Document)
 	 */
 	@Override
 	public Document executeCommand(final Document command) {
@@ -445,7 +446,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeQuery(org.springframework.data.mongodb.core.query.Query, java.lang.String, org.springframework.data.mongodb.core.DocumentCallbackHandler) 
+	 * @see org.springframework.data.mongodb.core.MongoOperations#executeQuery(org.springframework.data.mongodb.core.query.Query, java.lang.String, org.springframework.data.mongodb.core.DocumentCallbackHandler)
 	 */
 	@Override
 	public void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch) {
@@ -991,7 +992,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		doInsert(collectionName, objectToSave, this.mongoConverter);
 	}
 
-	protected void ensureNotIterable(Object o) {
+	protected void ensureNotIterable(@Nullable Object o) {
 		if (null != o) {
 			if (o.getClass().isArray() || ITERABLE_CLASSES.contains(o.getClass().getName())) {
 				throw new IllegalArgumentException("Cannot use a collection here.");
@@ -1455,7 +1456,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	private void increaseVersionForUpdateIfNecessary(MongoPersistentEntity<?> persistentEntity, Update update) {
+	private void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity, Update update) {
 
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
@@ -1463,18 +1464,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				update.inc(versionFieldName, 1L);
 			}
 		}
-	}
-
-	private boolean documentContainsVersionProperty(Document document, MongoPersistentEntity<?> persistentEntity) {
-
-		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
-
-			MongoPersistentProperty property = persistentEntity.getRequiredVersionProperty();
-
-			return document.containsKey(property.getFieldName());
-		}
-
-		return false;
 	}
 
 	@Override
@@ -2191,7 +2180,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
-		Document mappedFields = fields == null ? null : queryMapper.getMappedObject(fields, entity);
+		Document mappedFields = queryMapper.getMappedObject(fields, entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findOne using query: {} fields: {} for class: {} in collection: {}", serializeToJsonSafely(query),
@@ -2318,7 +2307,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	protected <T> T doFindAndModify(String collectionName, Document query, Document fields, Document sort,
-			Class<T> entityClass, Update update, FindAndModifyOptions options) {
+			Class<T> entityClass, Update update, @Nullable FindAndModifyOptions options) {
 
 		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
 
@@ -2469,7 +2458,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	private void executeQueryInternal(CollectionCallback<FindIterable<Document>> collectionCallback,
-			CursorPreparer preparer, DocumentCallbackHandler callbackHandler, String collectionName) {
+			@Nullable CursorPreparer preparer, DocumentCallbackHandler callbackHandler, String collectionName) {
 
 		try {
 
@@ -2502,17 +2491,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return exceptionTranslator;
 	}
 
+	@Nullable
 	private MongoPersistentEntity<?> getPersistentEntity(@Nullable Class<?> type) {
 		return type != null ? mappingContext.getPersistentEntity(type) : null;
 	}
 
+	@Nullable
 	private MongoPersistentProperty getIdPropertyFor(Class<?> type) {
 
 		MongoPersistentEntity<?> persistentEntity = getPersistentEntity(type);
 		return persistentEntity != null ? persistentEntity.getIdProperty() : null;
 	}
 
-	private <T> String determineEntityCollectionName(T obj) {
+	@Nullable
+	private <T> String determineEntityCollectionName(@Nullable T obj) {
 		if (null != obj) {
 			return determineCollectionName(obj.getClass());
 		}
@@ -2520,7 +2512,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return null;
 	}
 
-	String determineCollectionName(Class<?> entityClass) {
+	String determineCollectionName(@Nullable Class<?> entityClass) {
 
 		if (entityClass == null) {
 			throw new InvalidDataAccessApiUsageException(
@@ -2530,7 +2522,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return mappingContext.getRequiredPersistentEntity(entityClass).getCollection();
 	}
 
-	private static final MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
+	private static MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
 		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());
@@ -2570,8 +2562,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private Document addFieldsForProjection(Document fields, Class<?> domainType, Class<?> targetType) {
 
-		if ((fields != null && !fields.isEmpty()) || !targetType.isInterface()
-				|| ClassUtils.isAssignable(domainType, targetType)) {
+		if (!fields.isEmpty() || !targetType.isInterface() || ClassUtils.isAssignable(domainType, targetType)) {
 			return fields;
 		}
 
@@ -2615,7 +2606,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		public FindOneCallback(Document query, Document fields) {
 			this.query = query;
-			this.fields = Optional.ofNullable(fields).filter(it -> !ObjectUtils.isEmpty(fields));
+			this.fields = Optional.of(fields).filter(it -> !ObjectUtils.isEmpty(fields));
 		}
 
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
@@ -2701,7 +2692,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final Document sort;
 		private final Optional<Collation> collation;
 
-		public FindAndRemoveCallback(Document query, Document fields, Document sort, Collation collation) {
+		public FindAndRemoveCallback(Document query, Document fields, Document sort, @Nullable Collation collation) {
 
 			this.query = query;
 			this.fields = fields;
@@ -2790,7 +2781,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		@Nullable
-		public T doWith(@Nullable Document object) {
+		public T doWith(Document object) {
 			if (null != object) {
 				maybeEmitEvent(new AfterLoadEvent<T>(object, type, collectionName));
 			}
@@ -2878,8 +2869,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	class QueryCursorPreparer implements CursorPreparer {
 
-		private final Query query;
-		private final Class<?> type;
+		private final @Nullable Query query;
+		private final @Nullable Class<?> type;
 
 		public QueryCursorPreparer(@Nullable Query query, @Nullable Class<?> type) {
 
@@ -3001,7 +2992,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@AllArgsConstructor(access = AccessLevel.PACKAGE)
 	static class CloseableIterableCursorAdapter<T> implements CloseableIterator<T> {
 
-		private volatile MongoCursor<Document> cursor;
+		private volatile @Nullable MongoCursor<Document> cursor;
 		private PersistenceExceptionTranslator exceptionTranslator;
 		private DocumentCallback<T> objectReadCallback;
 
@@ -3023,6 +3014,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		@Override
 		public boolean hasNext() {
 
+			MongoCursor<Document> cursor = this.cursor;
+
 			if (cursor == null) {
 				return false;
 			}
@@ -3034,6 +3027,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 		}
 
+		@Nullable
 		@Override
 		public T next() {
 

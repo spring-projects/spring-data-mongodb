@@ -33,6 +33,7 @@ import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.result.DeleteResult;
@@ -124,7 +125,7 @@ interface ReactiveMongoQueryExecution {
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		protected Flux<GeoResult<Object>> doExecuteQuery(Query query, Class<?> type, String collection) {
+		protected Flux<GeoResult<Object>> doExecuteQuery(@Nullable Query query, Class<?> type, String collection) {
 
 			Point nearLocation = accessor.getGeoNearLocation();
 			NearQuery nearQuery = NearQuery.near(nearLocation);
@@ -138,10 +139,7 @@ interface ReactiveMongoQueryExecution {
 			distances.getLowerBound().getValue().ifPresent(it -> nearQuery.minDistance(it).in(it.getMetric()));
 
 			Pageable pageable = accessor.getPageable();
-
-			if (pageable != null) {
-				nearQuery.with(pageable);
-			}
+			nearQuery.with(pageable);
 
 			return (Flux) operations.geoNear(nearQuery, type, collection);
 		}

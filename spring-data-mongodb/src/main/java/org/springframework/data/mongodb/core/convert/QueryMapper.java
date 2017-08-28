@@ -240,7 +240,7 @@ public class QueryMapper {
 	 * @param mappingContext
 	 * @return
 	 */
-	protected Field createPropertyField(MongoPersistentEntity<?> entity, String key,
+	protected Field createPropertyField(@Nullable MongoPersistentEntity<?> entity, String key,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 		return entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
 	}
@@ -252,7 +252,7 @@ public class QueryMapper {
 	 * @param entity
 	 * @return
 	 */
-	protected Document getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity) {
+	protected Document getMappedKeyword(Keyword keyword, @Nullable MongoPersistentEntity<?> entity) {
 
 		// $or/$nor
 		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
@@ -302,6 +302,7 @@ public class QueryMapper {
 	 * @param newKey the key the value will be bound to eventually
 	 * @return
 	 */
+	@Nullable
 	@SuppressWarnings("unchecked")
 	protected Object getMappedValue(Field documentField, Object value) {
 
@@ -401,7 +402,8 @@ public class QueryMapper {
 	 * @param entity
 	 * @return
 	 */
-	protected Object convertSimpleOrDocument(Object source, MongoPersistentEntity<?> entity) {
+	@Nullable
+	protected Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (source instanceof List) {
 			return delegateConvertToMongoType(source, entity);
@@ -434,6 +436,7 @@ public class QueryMapper {
 	 * @param entity
 	 * @return the converted mongo type or null if source is null
 	 */
+	@Nullable
 	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
 		return converter.convertToMongoType(source, entity == null ? null : entity.getTypeInformation());
 	}
@@ -449,7 +452,8 @@ public class QueryMapper {
 	 * @param property
 	 * @return
 	 */
-	protected Object convertAssociation(Object source, MongoPersistentProperty property) {
+	@Nullable
+	protected Object convertAssociation(@Nullable Object source, @Nullable MongoPersistentProperty property) {
 
 		if (property == null || source == null || source instanceof Document || source instanceof DBObject) {
 			return source;
@@ -516,7 +520,7 @@ public class QueryMapper {
 	 * Creates a new {@link Entry} with the given key and value.
 	 *
 	 * @param key must not be {@literal null} or empty.
-	 * @param value can be {@literal null}
+	 * @param value can be {@literal null}.
 	 * @return
 	 */
 	private Entry<String, Object> createMapEntry(String key, @Nullable Object value) {
@@ -777,8 +781,8 @@ public class QueryMapper {
 		private final MongoPersistentEntity<?> entity;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 		private final MongoPersistentProperty property;
-		private final PersistentPropertyPath<MongoPersistentProperty> path;
-		private final Association<MongoPersistentProperty> association;
+		private final @Nullable PersistentPropertyPath<MongoPersistentProperty> path;
+		private final @Nullable Association<MongoPersistentProperty> association;
 
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
@@ -911,6 +915,7 @@ public class QueryMapper {
 			return path == null ? name : path.toDotPath(isAssociation() ? getAssociationConverter() : getPropertyConverter());
 		}
 
+		@Nullable
 		protected PersistentPropertyPath<MongoPersistentProperty> getPath() {
 			return path;
 		}

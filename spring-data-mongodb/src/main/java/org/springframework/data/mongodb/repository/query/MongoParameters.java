@@ -29,23 +29,22 @@ import org.springframework.data.mongodb.repository.query.MongoParameters.MongoPa
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
-import org.springframework.util.ClassUtils;
 
 /**
  * Custom extension of {@link Parameters} discovering additional
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MongoParameters extends Parameters<MongoParameters, MongoParameter> {
 
 	private final int rangeIndex;
 	private final int maxDistanceIndex;
-	private final Integer fullTextIndex;
-	private final Integer nearIndex;
+	private final @Nullable Integer fullTextIndex;
+	private final @Nullable Integer nearIndex;
 
 	/**
 	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
@@ -74,8 +73,8 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.nearIndex = index;
 	}
 
-	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, Integer nearIndex,
-			Integer fullTextIndex, int rangeIndex) {
+	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, @Nullable Integer nearIndex,
+			@Nullable Integer fullTextIndex, int rangeIndex) {
 
 		super(parameters);
 

@@ -32,7 +32,7 @@ import org.springframework.lang.Nullable;
 /**
  * Default implementation of a {@link MappingContext} for MongoDB using {@link BasicMongoPersistentEntity} and
  * {@link BasicMongoPersistentProperty} as primary abstractions.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  */
@@ -54,11 +54,11 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	/**
 	 * Configures the {@link FieldNamingStrategy} to be used to determine the field name if no manual mapping is applied.
 	 * Defaults to a strategy using the plain property name.
-	 * 
+	 *
 	 * @param fieldNamingStrategy the {@link FieldNamingStrategy} to be used to determine the field name if no manual
 	 *          mapping is applied.
 	 */
-	public void setFieldNamingStrategy(FieldNamingStrategy fieldNamingStrategy) {
+	public void setFieldNamingStrategy(@Nullable FieldNamingStrategy fieldNamingStrategy) {
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? DEFAULT_NAMING_STRATEGY : fieldNamingStrategy;
 	}
 

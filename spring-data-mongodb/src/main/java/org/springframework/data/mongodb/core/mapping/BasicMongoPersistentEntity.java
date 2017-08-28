@@ -64,7 +64,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	private final String language;
 
 	private final StandardEvaluationContext context;
-	private final Expression expression;
+	private final @Nullable Expression expression;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
@@ -82,11 +82,11 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		this.context = new StandardEvaluationContext();
 
 		if (this.isAnnotationPresent(Document.class)) {
-			Document document = this.findAnnotation(Document.class);
+			Document document = this.getRequiredAnnotation(Document.class);
 
 			this.collection = StringUtils.hasText(document.collection()) ? document.collection() : fallback;
 			this.language = StringUtils.hasText(document.language()) ? document.language() : "";
-			this.expression = document != null ? detectExpression(document) : null;
+			this.expression = detectExpression(document);
 		} else {
 
 			this.collection = fallback;
@@ -127,6 +127,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getTextScoreProperty()
 	 */
+	@Nullable
 	@Override
 	public MongoPersistentProperty getTextScoreProperty() {
 		return getPersistentProperty(TextScore.class);
@@ -257,11 +258,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * @param document can be {@literal null}
 	 * @return
 	 */
+	@Nullable
 	private static Expression detectExpression(Document document) {
-
-		if (document == null) {
-			return null;
-		}
 
 		String collection = document.collection();
 

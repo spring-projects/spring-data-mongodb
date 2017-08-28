@@ -30,6 +30,7 @@ import org.springframework.util.Assert;
  * closed border. Which means that the first and last {@link Point} have to have same coordinate pairs.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.7
  * @see <a href="http://geojson.org/geojson-spec.html#polygon">http://geojson.org/geojson-spec.html#polygon</a>
  */
@@ -47,9 +48,9 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 	 * @param second must not be {@literal null}.
 	 * @param third must not be {@literal null}.
 	 * @param fourth must not be {@literal null}.
-	 * @param others can be {@literal null}.
+	 * @param others can be empty.
 	 */
-	public GeoJsonPolygon(Point first, Point second, Point third, Point fourth, final Point... others) {
+	public GeoJsonPolygon(Point first, Point second, Point third, Point fourth, Point... others) {
 		this(asList(first, second, third, fourth, others));
 	}
 
@@ -71,11 +72,11 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 	 * @param second must not be {@literal null}.
 	 * @param third must not be {@literal null}.
 	 * @param fourth must not be {@literal null}.
-	 * @param others can be {@literal null}.
+	 * @param others can be empty.
 	 * @return new {@link GeoJsonPolygon}.
 	 * @since 1.10
 	 */
-	public GeoJsonPolygon withInnerRing(Point first, Point second, Point third, Point fourth, final Point... others) {
+	public GeoJsonPolygon withInnerRing(Point first, Point second, Point third, Point fourth, Point... others) {
 		return withInnerRing(asList(first, second, third, fourth, others));
 	}
 
@@ -129,7 +130,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 		return Collections.unmodifiableList(this.coordinates);
 	}
 
-	private static List<Point> asList(Point first, Point second, Point third, Point fourth, final Point... others) {
+	private static List<Point> asList(Point first, Point second, Point third, Point fourth, Point... others) {
 
 		ArrayList<Point> result = new ArrayList<Point>(3 + others.length);
 

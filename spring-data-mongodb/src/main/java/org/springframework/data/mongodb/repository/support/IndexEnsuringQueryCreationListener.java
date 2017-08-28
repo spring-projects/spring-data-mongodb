@@ -38,7 +38,7 @@ import org.springframework.util.Assert;
 /**
  * {@link QueryCreationListener} inspecting {@link PartTreeMongoQuery}s and creating an index for the properties it
  * refers to.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Christoph Strobl
@@ -52,7 +52,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 
 	/**
 	 * Creates a new {@link IndexEnsuringQueryCreationListener} using the given {@link MongoOperations}.
-	 * 
+	 *
 	 * @param indexOperationsProvider must not be {@literal null}.
 	 */
 	public IndexEnsuringQueryCreationListener(IndexOperationsProvider indexOperationsProvider) {
@@ -87,7 +87,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		}
 
 		// Add fixed sorting criteria to index
-		if (sort != null) {
+		if (sort.isSorted()) {
 			for (Order order : sort) {
 				index.on(order.getProperty(), order.getDirection());
 			}
@@ -100,7 +100,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 
 	private static Direction toDirection(Sort sort, String property) {
 
-		if (sort == null) {
+		if (sort.isUnsorted()) {
 			return Direction.DESC;
 		}
 

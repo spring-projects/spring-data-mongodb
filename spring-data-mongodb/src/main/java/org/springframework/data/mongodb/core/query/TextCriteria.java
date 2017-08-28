@@ -25,21 +25,22 @@ import org.springframework.util.StringUtils;
 
 /**
  * Implementation of {@link CriteriaDefinition} to be used for full text search.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 1.6
  */
 public class TextCriteria implements CriteriaDefinition {
 
 	private final List<Term> terms;
-	private String language;
+	private @Nullable String language;
 	private @Nullable Boolean caseSensitive;
 	private @Nullable Boolean diacriticSensitive;
 
 	/**
 	 * Creates a new {@link TextCriteria}.
-	 * 
+	 *
 	 * @see #forDefaultLanguage()
 	 * @see #forLanguage(String)
 	 */
@@ -47,7 +48,7 @@ public class TextCriteria implements CriteriaDefinition {
 		this(null);
 	}
 
-	private TextCriteria(String language) {
+	private TextCriteria(@Nullable String language) {
 
 		this.language = language;
 		this.terms = new ArrayList<Term>();
@@ -55,7 +56,7 @@ public class TextCriteria implements CriteriaDefinition {
 
 	/**
 	 * Returns a new {@link TextCriteria} for the default language.
-	 * 
+	 *
 	 * @return
 	 */
 	public static TextCriteria forDefaultLanguage() {
@@ -65,7 +66,7 @@ public class TextCriteria implements CriteriaDefinition {
 	/**
 	 * For a full list of supported languages see the mongodb reference manual for
 	 * <a href="https://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
-	 * 
+	 *
 	 * @param language
 	 * @return
 	 */
@@ -77,7 +78,7 @@ public class TextCriteria implements CriteriaDefinition {
 
 	/**
 	 * Configures the {@link TextCriteria} to match any of the given words.
-	 * 
+	 *
 	 * @param words the words to match.
 	 * @return
 	 */
@@ -92,7 +93,7 @@ public class TextCriteria implements CriteriaDefinition {
 
 	/**
 	 * Adds given {@link Term} to criteria.
-	 * 
+	 *
 	 * @param term must not be {@literal null}.
 	 */
 	public TextCriteria matching(Term term) {
@@ -141,7 +142,7 @@ public class TextCriteria implements CriteriaDefinition {
 
 	/**
 	 * Given value will treated as a single phrase.
-	 * 
+	 *
 	 * @param phrase
 	 * @return
 	 */
@@ -155,7 +156,7 @@ public class TextCriteria implements CriteriaDefinition {
 
 	/**
 	 * Given value will treated as a single phrase.
-	 * 
+	 *
 	 * @param phrase
 	 * @return
 	 */

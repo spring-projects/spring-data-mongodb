@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.BindingContext;
 import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -213,7 +214,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		 * Returns a list of {@link ParameterBinding}s found in the given {@code input} or an
 		 * {@link Collections#emptyList()}.
 		 *
-		 * @param input can be {@literal null} or empty.
+		 * @param input can be empty.
 		 * @param bindings must not be {@literal null}.
 		 * @return
 		 */
@@ -372,7 +373,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 		private final int parameterIndex;
 		private final boolean quoted;
-		private final String expression;
+		private final @Nullable String expression;
 
 		/**
 		 * Creates a new {@link ParameterBinding} with the given {@code parameterIndex} and {@code quoted} information.
@@ -384,7 +385,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			this(parameterIndex, quoted, null);
 		}
 
-		public ParameterBinding(int parameterIndex, boolean quoted, String expression) {
+		public ParameterBinding(int parameterIndex, boolean quoted, @Nullable String expression) {
 
 			this.parameterIndex = parameterIndex;
 			this.quoted = quoted;
@@ -403,6 +404,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			return "?" + (isExpression() ? "expr" : "") + parameterIndex;
 		}
 
+		@Nullable
 		public String getExpression() {
 			return expression;
 		}

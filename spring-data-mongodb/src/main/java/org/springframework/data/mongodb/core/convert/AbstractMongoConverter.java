@@ -102,7 +102,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	 */
 	@Override
 	public ConversionService getConversionService() {
-		return conversionService != null ? conversionService : new DefaultConversionService();
+		return conversionService;
 	}
 
 	/* (non-Javadoc)

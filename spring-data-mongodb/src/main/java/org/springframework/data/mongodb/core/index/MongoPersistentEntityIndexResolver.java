@@ -31,8 +31,8 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
-import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexedFieldSpec;
@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -54,6 +55,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Martin Macko
+ * @author Mark Paluch
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -109,8 +111,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				try {
 					if (persistentProperty.isEntity()) {
-						indexInformation.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(),
-								persistentProperty.getFieldName(), root.getCollection(), guard));
+						indexInformation
+								.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getRequiredActualType(),
+										persistentProperty.getFieldName(), root.getCollection(), guard));
 					}
 
 					IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(
@@ -176,6 +179,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return indexInformation;
 	}
 
+	@Nullable
 	private IndexDefinitionHolder createIndexDefinitionHolderForProperty(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
@@ -261,8 +265,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "")
 							+ persistentProperty.getFieldName();
 
+					TextIndexedFieldSpec parentFieldSpec = includeOptions.getParentFieldSpec();
 					Float weight = indexed != null ? indexed.weight()
-							: (includeOptions.getParentFieldSpec() != null ? includeOptions.getParentFieldSpec().getWeight() : 1.0F);
+							: (parentFieldSpec != null ? parentFieldSpec.getWeight() : 1.0F);
 
 					if (persistentProperty.isEntity()) {
 
@@ -274,7 +279,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 						try {
 							appendTextIndexInformation(propertyDotPath, indexDefinitionBuilder,
-									mappingContext.getRequiredPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
+									mappingContext.getRequiredPersistentEntity(persistentProperty.getActualType()), optionsForNestedType,
+									guard);
 						} catch (CyclicPropertyReferenceException e) {
 							LOGGER.info(e.getMessage());
 						} catch (InvalidDataAccessApiUsageException e) {
@@ -321,8 +327,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	@SuppressWarnings("deprecation")
-	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String collection,
-			CompoundIndex index, MongoPersistentEntity<?> entity) {
+	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String collection, CompoundIndex index,
+			MongoPersistentEntity<?> entity) {
 
 		CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(
 				resolveCompoundIndexKeyFromStringDefinition(dotPath, index.def()));
@@ -444,7 +450,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private String pathAwareIndexName(String indexName, String dotPath, MongoPersistentProperty property) {
+	private String pathAwareIndexName(String indexName, String dotPath, @Nullable MongoPersistentProperty property) {
 
 		String nameToUse = StringUtils.hasText(indexName) ? indexName : "";
 
@@ -611,10 +617,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		private static final long serialVersionUID = -3762979307658772277L;
 
 		private final String propertyName;
-		private final Class<?> type;
+		private final @Nullable Class<?> type;
 		private final String dotPath;
 
-		public CyclicPropertyReferenceException(String propertyName, Class<?> type, String dotPath) {
+		public CyclicPropertyReferenceException(String propertyName, @Nullable Class<?> type, String dotPath) {
 
 			this.propertyName = propertyName;
 			this.type = type;
@@ -710,9 +716,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		private final IncludeStrategy strategy;
 
-		private final TextIndexedFieldSpec parentFieldSpec;
+		private final @Nullable TextIndexedFieldSpec parentFieldSpec;
 
-		public TextIndexIncludeOptions(IncludeStrategy strategy, TextIndexedFieldSpec parentFieldSpec) {
+		public TextIndexIncludeOptions(IncludeStrategy strategy, @Nullable TextIndexedFieldSpec parentFieldSpec) {
 			this.strategy = strategy;
 			this.parentFieldSpec = parentFieldSpec;
 		}
@@ -725,6 +731,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return strategy;
 		}
 
+		@Nullable
 		public TextIndexedFieldSpec getParentFieldSpec() {
 			return parentFieldSpec;
 		}

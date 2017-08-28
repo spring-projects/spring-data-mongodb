@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -39,7 +40,7 @@ import com.mongodb.DBRef;
 
 /**
  * Custom {@link ParameterAccessor} that uses a {@link MongoWriter} to serialize parameters into Mongo format.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
@@ -52,7 +53,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} with the given {@link MongoWriter} and delegate.
-	 * 
+	 *
 	 * @param writer must not be {@literal null}.
 	 * @param delegate must not be {@literal null}.
 	 */
@@ -136,12 +137,13 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	/**
 	 * Converts the given value with the underlying {@link MongoWriter}.
-	 * 
+	 *
 	 * @param value can be {@literal null}.
 	 * @param typeInformation can be {@literal null}.
 	 * @return
 	 */
-	private Object getConvertedValue(Object value, TypeInformation<?> typeInformation) {
+	@Nullable
+	private Object getConvertedValue(Object value, @Nullable TypeInformation<?> typeInformation) {
 		return writer.convertToMongoType(value, typeInformation == null ? null : typeInformation.getActualType());
 	}
 
@@ -155,7 +157,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	/**
 	 * Custom {@link Iterator} to convert items before returning them.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	private class ConvertingIterator implements PotentiallyConvertingIterator {
@@ -164,7 +166,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 		/**
 		 * Creates a new {@link ConvertingIterator} for the given delegate.
-		 * 
+		 *
 		 * @param delegate
 		 */
 		public ConvertingIterator(Iterator<Object> delegate) {
@@ -229,11 +231,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * Returns the given object as {@link Collection}. Will do a copy of it if it implements {@link Iterable} or is an
 	 * array. Will return an empty {@link Collection} in case {@literal null} is given. Will wrap all other types into a
 	 * single-element collection.
-	 * 
+	 *
 	 * @param source
 	 * @return
 	 */
-	private static Collection<?> asCollection(Object source) {
+	private static Collection<?> asCollection(@Nullable Object source) {
 
 		if (source instanceof Iterable) {
 
@@ -263,14 +265,14 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	/**
 	 * Custom {@link Iterator} that adds a method to access elements in a converted manner.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	public interface PotentiallyConvertingIterator extends Iterator<Object> {
 
 		/**
 		 * Returns the next element which has already been converted.
-		 * 
+		 *
 		 * @return
 		 */
 		Object nextConverted(MongoPersistentProperty property);

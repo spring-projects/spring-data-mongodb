@@ -98,10 +98,6 @@ public class DefaultIndexOperations implements IndexOperations {
 
 			Document indexOptions = indexDefinition.getIndexOptions();
 
-			if (indexOptions == null) {
-				return collection.createIndex(indexDefinition.getIndexKeys());
-			}
-
 			IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
 
 			if (indexOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {

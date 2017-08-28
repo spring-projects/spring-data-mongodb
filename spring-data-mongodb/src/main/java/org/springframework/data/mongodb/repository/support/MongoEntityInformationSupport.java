@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -26,6 +27,7 @@ import org.springframework.util.ClassUtils;
  * {@link MongoPersistentEntity}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.10
  */
 final class MongoEntityInformationSupport {
@@ -40,7 +42,8 @@ final class MongoEntityInformationSupport {
 	 * @return never {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	static <T, ID> MongoEntityInformation<T, ID> entityInformationFor(MongoPersistentEntity<?> entity, Class<?> idType) {
+	static <T, ID> MongoEntityInformation<T, ID> entityInformationFor(MongoPersistentEntity<?> entity,
+			@Nullable Class<?> idType) {
 
 		Assert.notNull(entity, "Entity must not be null!");
 

@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import java.util.Locale;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link Query} implementation to be used to for performing full text searches.
@@ -55,7 +56,7 @@ public class TextQuery extends Query {
 	 * @see TextCriteria#forLanguage(String)
 	 * @see TextCriteria#matching(String)
 	 */
-	public TextQuery(String wordsAndPhrases, String language) {
+	public TextQuery(String wordsAndPhrases, @Nullable String language) {
 		super(TextCriteria.forLanguage(language).matching(wordsAndPhrases));
 	}
 
@@ -67,7 +68,7 @@ public class TextQuery extends Query {
 	 * @param wordsAndPhrases
 	 * @param locale
 	 */
-	public TextQuery(String wordsAndPhrases, Locale locale) {
+	public TextQuery(String wordsAndPhrases, @Nullable Locale locale) {
 		this(wordsAndPhrases, locale != null ? locale.getLanguage() : (String) null);
 	}
 
@@ -157,10 +158,6 @@ public class TextQuery extends Query {
 		}
 
 		Document fields = super.getFieldsObject();
-
-		if (fields == null) {
-			fields = new Document();
-		}
 
 		fields.put(getScoreFieldName(), META_TEXT_SCORE);
 		return fields;

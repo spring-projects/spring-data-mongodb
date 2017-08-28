@@ -144,7 +144,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	private <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
-			RepositoryMetadata metadata) {
+			@Nullable RepositoryMetadata metadata) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
 		return MongoEntityInformationSupport.<T, ID> entityInformationFor(entity,

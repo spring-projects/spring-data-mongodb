@@ -16,12 +16,13 @@
 package org.springframework.data.mongodb.core.index;
 
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
  * Value object for an index field.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
@@ -33,20 +34,20 @@ public final class IndexField {
 	}
 
 	private final String key;
-	private final Direction direction;
+	private final @Nullable Direction direction;
 	private final Type type;
 	private final Float weight;
 
-	private IndexField(String key, Direction direction, Type type) {
+	private IndexField(String key, @Nullable Direction direction, @Nullable Type type) {
 		this(key, direction, type, Float.NaN);
 	}
 
-	private IndexField(String key, Direction direction, Type type, Float weight) {
+	private IndexField(String key, @Nullable Direction direction, @Nullable Type type, @Nullable Float weight) {
 
 		Assert.hasText(key, "Key must not be null or empty");
 
 		if (Type.GEO.equals(type) || Type.TEXT.equals(type)) {
-			Assert.isTrue(direction == null, "Geo/Text indexes must not have a direction!");
+			Assert.isNull(direction, "Geo/Text indexes must not have a direction!");
 		} else {
 			Assert.notNull(direction, "Default indexes require a direction");
 		}
@@ -58,7 +59,7 @@ public final class IndexField {
 	}
 
 	public static IndexField create(String key, Direction order) {
-		
+
 		Assert.notNull(order, "Direction must not be null!");
 
 		return new IndexField(key, order, Type.DEFAULT);
@@ -66,7 +67,7 @@ public final class IndexField {
 
 	/**
 	 * Creates a geo {@link IndexField} for the given key.
-	 * 
+	 *
 	 * @param key must not be {@literal null} or empty.
 	 * @return
 	 */
@@ -76,7 +77,7 @@ public final class IndexField {
 
 	/**
 	 * Creates a text {@link IndexField} for the given key.
-	 * 
+	 *
 	 * @since 1.6
 	 */
 	public static IndexField text(String key, Float weight) {
@@ -92,16 +93,17 @@ public final class IndexField {
 
 	/**
 	 * Returns the direction of the {@link IndexField} or {@literal null} in case we have a geo index field.
-	 * 
+	 *
 	 * @return the direction
 	 */
+	@Nullable
 	public Direction getDirection() {
 		return direction;
 	}
 
 	/**
 	 * Returns whether the {@link IndexField} is a geo index field.
-	 * 
+	 *
 	 * @return true if type is {@link Type#GEO}.
 	 */
 	public boolean isGeo() {
@@ -110,7 +112,7 @@ public final class IndexField {
 
 	/**
 	 * Returns whether the {@link IndexField} is a text index field.
-	 * 
+	 *
 	 * @return true if type is {@link Type#TEXT}
 	 * @since 1.6
 	 */

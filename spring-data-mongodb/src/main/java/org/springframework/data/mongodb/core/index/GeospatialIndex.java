@@ -25,11 +25,12 @@ import org.springframework.util.StringUtils;
 
 /**
  * Value object to capture data to create a geo index.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Laurent Canet
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class GeospatialIndex implements IndexDefinition {
 
@@ -46,7 +47,7 @@ public class GeospatialIndex implements IndexDefinition {
 
 	/**
 	 * Creates a new {@link GeospatialIndex} for the given field.
-	 * 
+	 *
 	 * @param field must not be empty or {@literal null}.
 	 */
 	public GeospatialIndex(String field) {
@@ -132,7 +133,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
 	 * @since 1.10
 	 */
-	public GeospatialIndex partial(IndexFilter filter) {
+	public GeospatialIndex partial(@Nullable IndexFilter filter) {
 
 		this.filter = Optional.ofNullable(filter);
 		return this;
@@ -148,7 +149,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @return
 	 * @since 2.0
 	 */
-	public GeospatialIndex collation(Collation collation) {
+	public GeospatialIndex collation(@Nullable Collation collation) {
 
 		this.collation = Optional.ofNullable(collation);
 		return this;
@@ -183,11 +184,8 @@ public class GeospatialIndex implements IndexDefinition {
 		return document;
 	}
 
+	@Nullable
 	public Document getIndexOptions() {
-
-		if (!StringUtils.hasText(name) && min == null && max == null && bucketSize == null) {
-			return null;
-		}
 
 		Document document = new Document();
 		if (StringUtils.hasText(name)) {
@@ -215,9 +213,7 @@ public class GeospatialIndex implements IndexDefinition {
 
 			case GEO_HAYSTACK:
 
-				if (bucketSize != null) {
-					document.put("bucketSize", bucketSize);
-				}
+				document.put("bucketSize", bucketSize);
 				break;
 		}
 

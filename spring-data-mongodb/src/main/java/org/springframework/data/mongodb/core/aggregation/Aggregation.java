@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -619,7 +620,7 @@ public class Aggregation {
 		 * @param fieldRef may be {@literal null}.
 		 * @return
 		 */
-		public static boolean isReferingToSystemVariable(String fieldRef) {
+		public static boolean isReferingToSystemVariable(@Nullable String fieldRef) {
 
 			if (fieldRef == null || !fieldRef.startsWith(PREFIX) || fieldRef.length() <= 2) {
 				return false;

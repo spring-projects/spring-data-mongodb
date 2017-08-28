@@ -103,6 +103,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 *
 	 * @return
 	 */
+	@Nullable
 	String getAnnotatedQuery() {
 		return findAnnotatedQuery().orElse(null);
 	}
@@ -204,6 +205,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 *
 	 * @return
 	 */
+	@Nullable
 	Query getQueryAnnotation() {
 		return AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
 	}
@@ -226,6 +228,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return
 	 * @since 1.6
 	 */
+	@Nullable
 	Meta getMetaAnnotation() {
 		return AnnotatedElementUtils.findMergedAnnotation(method, Meta.class);
 	}
@@ -236,6 +239,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return
 	 * @since 2.0
 	 */
+	@Nullable
 	Tailable getTailableAnnotation() {
 		return AnnotatedElementUtils.findMergedAnnotation(method, Tailable.class);
 	}

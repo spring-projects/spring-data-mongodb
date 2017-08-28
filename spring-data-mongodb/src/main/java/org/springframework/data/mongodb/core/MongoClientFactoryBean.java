@@ -34,8 +34,9 @@ import com.mongodb.ServerAddress;
 
 /**
  * Convenient factory for configuring MongoDB.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.7
  */
 public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> implements PersistenceExceptionTranslator {
@@ -52,7 +53,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 
 	/**
 	 * Set the {@link MongoClientOptions} to be used when creating {@link MongoClient}.
-	 * 
+	 *
 	 * @param mongoClientOptions
 	 */
 	public void setMongoClientOptions(@Nullable MongoClientOptions mongoClientOptions) {
@@ -61,7 +62,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 
 	/**
 	 * Set the list of credentials to be used when creating {@link MongoClient}.
-	 * 
+	 *
 	 * @param credentials can be {@literal null}.
 	 */
 	public void setCredentials(@Nullable MongoCredential[] credentials) {
@@ -70,7 +71,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 
 	/**
 	 * Set the list of {@link ServerAddress} to build up a replica set for.
-	 * 
+	 *
 	 * @param replicaSetSeeds can be {@literal null}.
 	 */
 	public void setReplicaSetSeeds(@Nullable ServerAddress[] replicaSetSeeds) {
@@ -79,7 +80,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 
 	/**
 	 * Configures the host to connect to.
-	 * 
+	 *
 	 * @param host
 	 */
 	public void setHost(@Nullable String host) {
@@ -88,7 +89,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 
 	/**
 	 * Configures the port to connect to.
-	 * 
+	 *
 	 * @param port
 	 */
 	public void setPort(int port) {
@@ -97,7 +98,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 
 	/**
 	 * Configures the {@link PersistenceExceptionTranslator} to use.
-	 * 
+	 *
 	 * @param exceptionTranslator
 	 */
 	public void setExceptionTranslator(@Nullable PersistenceExceptionTranslator exceptionTranslator) {
@@ -121,7 +122,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 		return exceptionTranslator.translateExceptionIfPossible(ex);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
 	 */
@@ -132,14 +133,10 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 			mongoClientOptions = MongoClientOptions.builder().build();
 		}
 
-		if (credentials == null) {
-			credentials = Collections.emptyList();
-		}
-
 		return createMongoClient();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#destroyInstance(java.lang.Object)
 	 */
@@ -170,7 +167,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 
 	/**
 	 * Returns the given array as {@link List} with all {@literal null} elements removed.
-	 * 
+	 *
 	 * @param elements the elements to filter <T>, can be {@literal null}.
 	 * @return a new unmodifiable {@link List#} from the given elements without {@literal null}s.
 	 */

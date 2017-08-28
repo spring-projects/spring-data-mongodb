@@ -24,11 +24,12 @@ import org.springframework.expression.spel.ast.Literal;
 import org.springframework.expression.spel.ast.MethodReference;
 import org.springframework.expression.spel.ast.Operator;
 import org.springframework.expression.spel.ast.OperatorNot;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * A value object for nodes in an expression. Allows iterating ove potentially available child {@link ExpressionNode}s.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -42,7 +43,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 
 	/**
 	 * Creates a new {@link ExpressionNode} from the given {@link SpelNode} and {@link ExpressionState}.
-	 * 
+	 *
 	 * @param node must not be {@literal null}.
 	 * @param state must not be {@literal null}.
 	 */
@@ -58,17 +59,13 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	/**
 	 * Factory method to create {@link ExpressionNode}'s according to the given {@link SpelNode} and
 	 * {@link ExpressionState}.
-	 * 
+	 *
 	 * @param node
 	 * @param state must not be {@literal null}.
 	 * @return an {@link ExpressionNode} for the given {@link SpelNode} or {@literal null} if {@literal null} was given
 	 *         for the {@link SpelNode}.
 	 */
 	public static ExpressionNode from(SpelNode node, ExpressionState state) {
-
-		if (node == null) {
-			return null;
-		}
 
 		if (node instanceof Operator) {
 			return new OperatorNode((Operator) node, state);
@@ -91,7 +88,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 
 	/**
 	 * Returns the name of the {@link ExpressionNode}.
-	 * 
+	 *
 	 * @return
 	 */
 	public String getName() {
@@ -100,7 +97,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 
 	/**
 	 * Returns whether the current {@link ExpressionNode} is backed by the given type.
-	 * 
+	 *
 	 * @param type must not be {@literal null}.
 	 * @return
 	 */
@@ -112,17 +109,17 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 
 	/**
 	 * Returns whether the given {@link ExpressionNode} is representing the same backing node type as the current one.
-	 * 
+	 *
 	 * @param node
 	 * @return
 	 */
-	boolean isOfSameTypeAs(ExpressionNode node) {
+	boolean isOfSameTypeAs(@Nullable ExpressionNode node) {
 		return node == null ? false : this.node.getClass().equals(node.node.getClass());
 	}
 
 	/**
 	 * Returns whether the {@link ExpressionNode} is a mathematical operation.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isMathematicalOperation() {
@@ -141,7 +138,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 
 	/**
 	 * Returns whether the {@link ExpressionNode} is a literal.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isLiteral() {
@@ -150,16 +147,17 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 
 	/**
 	 * Returns the value of the current node.
-	 * 
+	 *
 	 * @return
 	 */
+	@Nullable
 	public Object getValue() {
 		return node.getValue(state);
 	}
 
 	/**
 	 * Returns whether the current node has child nodes.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean hasChildren() {
@@ -168,7 +166,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 
 	/**
 	 * Returns the child {@link ExpressionNode} with the given index.
-	 * 
+	 *
 	 * @param index must not be negative.
 	 * @return
 	 */
@@ -180,7 +178,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 
 	/**
 	 * Returns whether the {@link ExpressionNode} has a first child node that is not of the given type.
-	 * 
+	 *
 	 * @param type must not be {@literal null}.
 	 * @return
 	 */
@@ -192,7 +190,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 
 	/**
 	 * Creates a new {@link ExpressionNode} from the given {@link SpelNode}.
-	 * 
+	 *
 	 * @param node
 	 * @return
 	 */

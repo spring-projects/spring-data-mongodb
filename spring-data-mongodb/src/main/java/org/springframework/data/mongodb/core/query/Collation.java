@@ -15,6 +15,11 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.util.Locale;
 import java.util.Optional;
 
@@ -28,11 +33,6 @@ import com.mongodb.client.model.CollationAlternate;
 import com.mongodb.client.model.CollationCaseFirst;
 import com.mongodb.client.model.CollationMaxVariable;
 import com.mongodb.client.model.CollationStrength;
-
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Central abstraction for MongoDB collation support. <br />
@@ -274,7 +274,7 @@ public class Collation {
 	public Collation alternate(Alternate alternate) {
 
 		Collation newInstance = copy();
-		newInstance.alternate = Optional.ofNullable(alternate);
+		newInstance.alternate = Optional.of(alternate);
 		return newInstance;
 	}
 
@@ -302,10 +302,10 @@ public class Collation {
 	 * @param backwards must not be {@literal null}.
 	 * @return new {@link Collation}.
 	 */
-	public Collation backwards(Boolean backwards) {
+	public Collation backwards(boolean backwards) {
 
 		Collation newInstance = copy();
-		newInstance.backwards = Optional.ofNullable(backwards);
+		newInstance.backwards = Optional.of(backwards);
 		return newInstance;
 	}
 
@@ -333,10 +333,10 @@ public class Collation {
 	 * @param normalization must not be {@literal null}.
 	 * @return new {@link Collation}.
 	 */
-	public Collation normalization(Boolean normalization) {
+	public Collation normalization(boolean normalization) {
 
 		Collation newInstance = copy();
-		newInstance.normalization = Optional.ofNullable(normalization);
+		newInstance.normalization = Optional.of(normalization);
 		return newInstance;
 	}
 
