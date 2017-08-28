@@ -28,8 +28,8 @@
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>2.0.0.BUILD-SNAPSHOT</springdata.commons>
-		<mongo>3.4.2</mongo>
-		<mongo.reactivestreams>1.5.0</mongo.reactivestreams>
+		<mongo>3.5.0</mongo>
+		<mongo.reactivestreams>1.6.0</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
 	</properties>
 
@@ -115,11 +115,11 @@
 
 	<profiles>
 
-		<profile>
+		<!-- not-yet available profile>
 
-			<id>mongo34-next</id>
+			<id>mongo35-next</id>
 			<properties>
-				<mongo>3.4.3-SNAPSHOT</mongo>
+				<mongo>3.5.1-SNAPSHOT</mongo>
 			</properties>
 
 			<repositories>
@@ -129,13 +129,13 @@
 				</repository>
 			</repositories>
 
-		</profile>
+		</profile -->
 
 		<profile>
 
-			<id>mongo35-next</id>
+			<id>mongo36-next</id>
 			<properties>
-				<mongo>3.5.0-SNAPSHOT</mongo>
+				<mongo>3.6.0-SNAPSHOT</mongo>
 			</properties>
 
 			<repositories>

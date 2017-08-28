@@ -141,7 +141,7 @@ public class QueryTests {
 		Query q = new Query(
 				where("name").regex("^T.*").and("age").gt(20).lt(80).and("city").in("Stockholm", "London", "New York"));
 		Document expected = Document
-				.parse("{ \"name\" : { \"$regex\" : \"^T.*\"} , \"age\" : { \"$gt\" : 20 , \"$lt\" : 80} , "
+				.parse("{ \"name\" : { \"$regex\" : \"^T.*\", \"$options\" : \"\" } , \"age\" : { \"$gt\" : 20 , \"$lt\" : 80} , "
 						+ "\"city\" : { \"$in\" : [ \"Stockholm\" , \"London\" , \"New York\"]}}");
 
 		Assert.assertEquals(expected.toJson(), q.getQueryObject().toJson());
@@ -177,7 +177,7 @@ public class QueryTests {
 	@Test
 	public void testQueryWithRegex() {
 		Query q = new Query(where("name").regex("b.*"));
-		Document expected = Document.parse("{ \"name\" : { \"$regex\" : \"b.*\"}}");
+		Document expected = Document.parse("{ \"name\" : { \"$regex\" : \"b.*\", \"$options\" : \"\" }}");
 		Assert.assertEquals(expected.toJson(), q.getQueryObject().toJson());
 	}
 

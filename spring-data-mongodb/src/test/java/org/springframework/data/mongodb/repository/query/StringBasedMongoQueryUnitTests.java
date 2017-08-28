@@ -30,7 +30,6 @@ import java.util.Map;
 import javax.xml.bind.DatatypeConverter;
 
 import org.bson.BSON;
-import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -417,7 +416,7 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(new Document("lastname", "{ $ne : \"\\\"calamity\\\"\" }")));
 	}
 
-	@Test // DATAMONGO-1575
+	@Test // DATAMONGO-1575, DATAMONGO-1770
 	public void shouldTakeBsonParameterAsIs() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByWithBsonArgument", Document.class);
@@ -425,17 +424,17 @@ public class StringBasedMongoQueryUnitTests {
 				new Document("$regex", "^calamity$"));
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document("arg0", new BsonRegularExpression("^calamity$"))));
+		assertThat(query.getQueryObject(), is(new Document("arg0", new Document("$regex", "^calamity$"))));
 	}
 
-	@Test // DATAMONGO-1575
+	@Test // DATAMONGO-1575, DATAMONGO-1770
 	public void shouldReplaceParametersInInQuotedExpressionOfNestedQueryOperator() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameRegex", String.class);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document("lastname", new BsonRegularExpression("^(calamity)"))));
+		assertThat(query.getQueryObject(), is(new Document("lastname", new Document("$regex", "^(calamity)"))));
 	}
 
 	@Test // DATAMONGO-1603
