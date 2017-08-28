@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import com.mongodb.MongoClient;
 
 /**
  * Expose basic server information via JMX
- * 
+ *
  * @author Mark Pollack
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -40,14 +40,14 @@ public class ServerInfo extends AbstractMonitor {
 
 	/**
 	 * Returns the hostname of the used server reported by MongoDB.
-	 * 
+	 *
 	 * @return the reported hostname can also be an IP address.
 	 * @throws UnknownHostException
 	 */
 	@ManagedOperation(description = "Server host name")
 	public String getHostName() throws UnknownHostException {
 
-		/* 
+		/*
 		 * UnknownHostException is not necessary anymore, but clients could have
 		 * called this method in a try..catch(UnknownHostException) already
 		 */
