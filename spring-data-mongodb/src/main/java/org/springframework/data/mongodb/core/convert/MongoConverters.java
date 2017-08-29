@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import reactor.core.publisher.Flux;
-
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
@@ -29,9 +28,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.bson.Document;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.EncoderContext;
+import org.bson.codecs.configuration.CodecConfigurationException;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.json.JsonReader;
+import org.bson.json.JsonWriter;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
-import org.reactivestreams.Publisher;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -53,7 +58,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-abstract class MongoConverters {
+public abstract class MongoConverters {
 
 	/**
 	 * Private constructor to prevent instantiation.
@@ -445,6 +450,86 @@ abstract class MongoConverters {
 		@Override
 		public AtomicInteger convert(Integer source) {
 			return source != null ? new AtomicInteger(source) : null;
+		}
+	}
+
+	public static ConverterFactory<Object, Document> codecAwareObjectToDocumentConverter(CodecRegistry registry) {
+		return new CodecAwareDocumentConverterFactory(registry);
+	}
+
+	public static ConverterFactory<Document, Object> codecAwareDocumentToObjectConverter(CodecRegistry registry) {
+		return new CodecAwareToObjectConverterFactory(registry);
+	}
+
+	/**
+	 * TODO: Move to a better place
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
+	@WritingConverter
+	static class CodecAwareDocumentConverterFactory implements ConverterFactory<Object, Document>, ConditionalConverter {
+
+		private final CodecRegistry registry;
+
+		CodecAwareDocumentConverterFactory(CodecRegistry registry) {
+			this.registry = registry;
+		}
+
+		@Override
+		public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
+
+			try {
+				return registry.get(sourceType.getType()) != null;
+			} catch (CodecConfigurationException ex) {}
+			return false;
+		}
+
+		@Override
+		public <T extends Document> Converter<Object, T> getConverter(Class<T> targetType) {
+
+			return (source) -> {
+
+				Codec codec = registry.get(source.getClass());
+				StringWriter sw = new StringWriter();
+				codec.encode(new JsonWriter(sw), source, EncoderContext.builder().build());
+				sw.flush();
+				return (T) Document.parse(sw.toString());
+			};
+		}
+	}
+
+	/**
+	 * TODO: Move to a better place
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
+	@ReadingConverter
+	static class CodecAwareToObjectConverterFactory implements ConverterFactory<Document, Object>, ConditionalConverter {
+
+		private final CodecRegistry registry;
+
+		CodecAwareToObjectConverterFactory(CodecRegistry registry) {
+			this.registry = registry;
+		}
+
+		@Override
+		public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
+
+			try {
+				return registry.get(targetType.getType()) != null;
+			} catch (CodecConfigurationException ex) {}
+			return false;
+		}
+
+		@Override
+		public <T extends Object> Converter<Document, T> getConverter(Class<T> targetType) {
+			return (source) -> {
+
+				Codec codec = registry.get(targetType);
+				return (T) codec.decode(new JsonReader(source.toJson()), DecoderContext.builder().build());
+			};
 		}
 	}
 }

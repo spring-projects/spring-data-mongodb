@@ -15,14 +15,22 @@
  */
 package org.springframework.data.mongodb.config;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.ConverterFactory;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.lang.Nullable;
 
@@ -40,8 +48,7 @@ import com.mongodb.MongoClient;
  * @see MongoConfigurationSupport
  */
 @Configuration
-public abstract class
-AbstractMongoConfiguration extends MongoConfigurationSupport {
+public abstract class AbstractMongoConfiguration extends MongoConfigurationSupport {
 
 	/**
 	 * Return the {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want to expose a
@@ -90,6 +97,22 @@ AbstractMongoConfiguration extends MongoConfigurationSupport {
 
 		Package mappingBasePackage = getClass().getPackage();
 		return mappingBasePackage == null ? null : mappingBasePackage.getName();
+	}
+
+	@Override
+	public CustomConversions customConversions() {
+
+		CodecRegistry registry = mongoDbFactory().getCodecRegistry();
+
+		// only add the codec aware converters if necessary
+		if (!MongoClient.getDefaultCodecRegistry().equals(registry)) {
+
+			List<ConverterFactory> cf = Arrays.asList(MongoConverters.codecAwareDocumentToObjectConverter(registry),
+					MongoConverters.codecAwareObjectToDocumentConverter(registry));
+			return new MongoCustomConversions(cf);
+		}
+
+		return super.customConversions();
 	}
 
 	/**

@@ -21,10 +21,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
+import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.convert.ConverterBuilder.ConverterAware;
 import org.springframework.data.convert.JodaTimeConverters;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
@@ -59,6 +65,13 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	}
 
 	/**
+	 * TODO: actually checking if a ConverterFactory is capable of converting to a desired target type should be part of
+	 * SD-Commons in {@link org.springframework.data.convert.CustomConversions}.
+	 */
+
+	private final GenericConversionService cs;
+
+	/**
 	 * Creates an empty {@link MongoCustomConversions} object.
 	 */
 	MongoCustomConversions() {
@@ -71,7 +84,69 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	 * @param converters must not be {@literal null}.
 	 */
 	public MongoCustomConversions(List<?> converters) {
+
 		super(STORE_CONVERSIONS, converters);
+		this.cs = converters.isEmpty() ? null : new GenericConversionService();
+		if (!converters.isEmpty()) {
+			converters.forEach(it -> registerConverterIn(it, cs));
+		}
+	}
+
+	private void registerConverterIn(Object candidate, ConverterRegistry conversionService) {
+
+		if (candidate instanceof Converter) {
+			conversionService.addConverter(Converter.class.cast(candidate));
+		}
+
+		if (candidate instanceof ConverterFactory) {
+			conversionService.addConverterFactory(ConverterFactory.class.cast(candidate));
+		}
+
+		if (candidate instanceof GenericConverter) {
+			conversionService.addConverter(GenericConverter.class.cast(candidate));
+		}
+
+		if (candidate instanceof ConverterAware) {
+			ConverterAware.class.cast(candidate).getConverters().forEach(it -> registerConverterIn(it, conversionService));
+		}
+
+	}
+
+	// TODO: should actually be part of sd commons.
+	@Override
+	public Optional<Class<?>> getCustomWriteTarget(Class<?> sourceType, Class<?> requestedTargetType) {
+
+		Optional<Class<?>> target = super.getCustomWriteTarget(sourceType, requestedTargetType);
+
+		if (cs == null) {
+			return target;
+		}
+
+		if (!target.isPresent()) {
+			return target;
+		}
+
+		if (cs.canConvert(sourceType, requestedTargetType)) {
+			return target;
+		}
+
+		return Optional.empty();
+	}
+
+	// TODO: should actually be part of sd commons
+	@Override
+	public boolean hasCustomReadTarget(Class<?> sourceType, Class<?> targetType) {
+
+		boolean x = super.hasCustomReadTarget(sourceType, targetType);
+
+		if (cs == null) {
+			return x;
+		}
+		if (!x) {
+			return false;
+		}
+
+		return cs.canConvert(sourceType, targetType);
 	}
 
 	@WritingConverter
