@@ -6,6 +6,9 @@ jdk:
 before_script:
   - mongod --version
 
+services:
+  - mongodb
+
 env:
   matrix:
     - PROFILE=ci
@@ -16,9 +19,7 @@ env:
 addons:
   apt:
     sources:
-      - mongodb-upstart
-      - sourceline: 'deb [arch=amd64] http://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.4 multiverse'
-        key_url: 'https://www.mongodb.org/static/pgp/server-3.4.asc'
+      - mongodb-3.4-precise
     packages:
     - mongodb-org-server
     - mongodb-org-shell
