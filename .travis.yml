@@ -5,6 +5,7 @@ jdk:
 
 before_script:
   - mongod --version
+  - mongo admin --eval 'db.adminCommand({setFeatureCompatibilityVersion:"3.4"});'
 
 services:
   - mongodb
