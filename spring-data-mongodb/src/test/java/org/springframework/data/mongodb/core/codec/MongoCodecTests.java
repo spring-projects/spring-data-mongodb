@@ -30,6 +30,8 @@ import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +74,14 @@ public class MongoCodecTests {
 		}
 	}
 
+	@Before
+	public void setUp() {
+
+		template.dropCollection(NonCodecType.class);
+		template.dropCollection(Wrapper.class);
+		template.dropCollection(TypeHavingCodecRegistered.class);
+	}
+
 	@Test // DATAMONGO-1175
 	public void shouldUseConverterCodecRegistryOnRootType() {
 
@@ -86,6 +96,23 @@ public class MongoCodecTests {
 		TypeHavingCodecRegistered loaded = template.findOne(query(where("id").is(source.id)),
 				TypeHavingCodecRegistered.class);
 		assertThat(loaded.name).isEqualTo("o.O");
+	}
+
+	@Test // DATAMONGO-1175
+	public void shouldUseCodecWhenMappingQueryObject() {
+
+		TypeHavingCodecRegistered source = new TypeHavingCodecRegistered();
+		template.save(source);
+
+		/*
+		 * This actually fails as we do not know how the codec renders the document internally.
+		 * To have it work, we'd need to create and keep empty reference objects around to check the field mappings.
+		 * Still this might not work, as the document might change its representation depending on the given input values.
+		 */
+		TypeHavingCodecRegistered loaded = template.findOne(query(where("name").is("o.O")),
+				TypeHavingCodecRegistered.class);
+
+		assertThat(loaded).isNotNull().hasFieldOrPropertyWithValue("id", source.id);
 	}
 
 	@Test // DATAMONGO-1175

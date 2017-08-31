@@ -68,8 +68,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	 * TODO: actually checking if a ConverterFactory is capable of converting to a desired target type should be part of
 	 * SD-Commons in {@link org.springframework.data.convert.CustomConversions}.
 	 */
-
 	private final GenericConversionService cs;
+	private final GenericConversionService storeConversions;
 
 	/**
 	 * Creates an empty {@link MongoCustomConversions} object.
@@ -87,9 +87,13 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 		super(STORE_CONVERSIONS, converters);
 		this.cs = converters.isEmpty() ? null : new GenericConversionService();
+		this.storeConversions = new GenericConversionService();
 		if (!converters.isEmpty()) {
 			converters.forEach(it -> registerConverterIn(it, cs));
+			converters.forEach(it -> registerConverterIn(it, storeConversions));
 		}
+
+		STORE_CONVERTERS.forEach(it -> registerConverterIn(it, storeConversions));
 	}
 
 	private void registerConverterIn(Object candidate, ConverterRegistry conversionService) {
@@ -110,6 +114,15 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			ConverterAware.class.cast(candidate).getConverters().forEach(it -> registerConverterIn(it, conversionService));
 		}
 
+	}
+
+	// TODO: should actually be part of sd commons.
+	@Override
+	public Optional<Class<?>> getCustomWriteTarget(Class<?> sourceType) {
+
+		// TODO: hacking - still missing the default converters.
+		Optional<Class<?>> x = super.getCustomWriteTarget(sourceType);
+		return x.isPresent() && storeConversions.canConvert(sourceType, x.get()) ? x : Optional.empty();
 	}
 
 	// TODO: should actually be part of sd commons.
