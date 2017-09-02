@@ -1,5 +1,5 @@
 /*
- * Copyright 2016. the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.springframework.util.Assert;
  * Gateway to {@literal String} aggregation operations.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.10
  */
 public class StringOperators {
@@ -122,7 +123,7 @@ public class StringOperators {
 		}
 
 		private Concat createConcat() {
-			return fieldReference != null ? Concat.valueOf(fieldReference) : Concat.valueOf(expression);
+			return usesFieldRef() ? Concat.valueOf(fieldReference) : Concat.valueOf(expression);
 		}
 
 		/**
@@ -149,7 +150,7 @@ public class StringOperators {
 		}
 
 		private Substr createSubstr() {
-			return fieldReference != null ? Substr.valueOf(fieldReference) : Substr.valueOf(expression);
+			return usesFieldRef() ? Substr.valueOf(fieldReference) : Substr.valueOf(expression);
 		}
 
 		/**
@@ -158,7 +159,7 @@ public class StringOperators {
 		 * @return
 		 */
 		public ToLower toLower() {
-			return fieldReference != null ? ToLower.lowerValueOf(fieldReference) : ToLower.lowerValueOf(expression);
+			return usesFieldRef() ? ToLower.lowerValueOf(fieldReference) : ToLower.lowerValueOf(expression);
 		}
 
 		/**
@@ -167,7 +168,7 @@ public class StringOperators {
 		 * @return
 		 */
 		public ToUpper toUpper() {
-			return fieldReference != null ? ToUpper.upperValueOf(fieldReference) : ToUpper.upperValueOf(expression);
+			return usesFieldRef() ? ToUpper.upperValueOf(fieldReference) : ToUpper.upperValueOf(expression);
 		}
 
 		/**
@@ -210,7 +211,7 @@ public class StringOperators {
 		}
 
 		private StrCaseCmp createStrCaseCmp() {
-			return fieldReference != null ? StrCaseCmp.valueOf(fieldReference) : StrCaseCmp.valueOf(expression);
+			return usesFieldRef() ? StrCaseCmp.valueOf(fieldReference) : StrCaseCmp.valueOf(expression);
 		}
 
 		/**
@@ -256,7 +257,7 @@ public class StringOperators {
 		}
 
 		private IndexOfBytes.SubstringBuilder createIndexOfBytesSubstringBuilder() {
-			return fieldReference != null ? IndexOfBytes.valueOf(fieldReference) : IndexOfBytes.valueOf(expression);
+			return usesFieldRef() ? IndexOfBytes.valueOf(fieldReference) : IndexOfBytes.valueOf(expression);
 		}
 
 		/**
@@ -302,7 +303,7 @@ public class StringOperators {
 		}
 
 		private IndexOfCP.SubstringBuilder createIndexOfCPSubstringBuilder() {
-			return fieldReference != null ? IndexOfCP.valueOf(fieldReference) : IndexOfCP.valueOf(expression);
+			return usesFieldRef() ? IndexOfCP.valueOf(fieldReference) : IndexOfCP.valueOf(expression);
 		}
 
 		/**
@@ -339,7 +340,7 @@ public class StringOperators {
 		}
 
 		private Split createSplit() {
-			return fieldReference != null ? Split.valueOf(fieldReference) : Split.valueOf(expression);
+			return usesFieldRef() ? Split.valueOf(fieldReference) : Split.valueOf(expression);
 		}
 
 		/**
@@ -349,7 +350,7 @@ public class StringOperators {
 		 * @return
 		 */
 		public StrLenBytes length() {
-			return fieldReference != null ? StrLenBytes.stringLengthOf(fieldReference)
+			return usesFieldRef() ? StrLenBytes.stringLengthOf(fieldReference)
 					: StrLenBytes.stringLengthOf(expression);
 		}
 
@@ -360,7 +361,7 @@ public class StringOperators {
 		 * @return
 		 */
 		public StrLenCP lengthCP() {
-			return fieldReference != null ? StrLenCP.stringLengthOfCP(fieldReference) : StrLenCP.stringLengthOfCP(expression);
+			return usesFieldRef() ? StrLenCP.stringLengthOfCP(fieldReference) : StrLenCP.stringLengthOfCP(expression);
 		}
 
 		/**
@@ -387,7 +388,11 @@ public class StringOperators {
 		}
 
 		private SubstrCP createSubstrCP() {
-			return fieldReference != null ? SubstrCP.valueOf(fieldReference) : SubstrCP.valueOf(expression);
+			return usesFieldRef() ? SubstrCP.valueOf(fieldReference) : SubstrCP.valueOf(expression);
+		}
+
+		private boolean usesFieldRef() {
+			return fieldReference != null;
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,20 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.0
  */
 public class BsonUtils {
 
+	@SuppressWarnings("unchecked")
+	@Nullable
 	public static <T> T get(Bson bson, String key) {
 		return (T) asMap(bson).get(key);
 	}
@@ -43,7 +47,7 @@ public class BsonUtils {
 		throw new IllegalArgumentException("o_O what's that? Cannot read values from " + bson.getClass());
 	}
 
-	public static void addToMap(Bson bson, String key, Object value) {
+	public static void addToMap(Bson bson, String key, @Nullable Object value) {
 
 		if (bson instanceof Document) {
 			((Document) bson).put(key, value);

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import javax.validation.constraints.Null;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +39,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.Cursor;
 import com.mongodb.ReadPreference;
@@ -95,7 +97,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return
 	 * @since 1.7
 	 */
-	Document executeCommand(Document command, ReadPreference readPreference);
+	Document executeCommand(Document command, @Nullable ReadPreference readPreference);
 
 	/**
 	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler.
@@ -112,10 +114,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p/>
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
+	 * @param action callback object that specifies the MongoDB actions to perform on the passed in DB instance. Must not
+	 *          be {@literal null}.
 	 * @param <T> return type
-	 * @param action callback object that specifies the MongoDB actions to perform on the passed in DB instance.
-	 * @return a result object returned by the action or <tt>null</tt>
+	 * @return a result object returned by the action or {@literal null}.
 	 */
+	@Nullable
 	<T> T execute(DbCallback<T> action);
 
 	/**
@@ -123,11 +127,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p/>
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
-	 * @param entityClass class that determines the collection to use
 	 * @param <T> return type
-	 * @param action callback object that specifies the MongoDB action
-	 * @return a result object returned by the action or <tt>null</tt>
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
+	 * @param action callback object that specifies the MongoDB action. Must not be {@literal null}.
+	 * @return a result object returned by the action or {@literal null}.
 	 */
+	@Nullable
 	<T> T execute(Class<?> entityClass, CollectionCallback<T> action);
 
 	/**
@@ -136,10 +141,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param <T> return type
-	 * @param collectionName the name of the collection that specifies which DBCollection instance will be passed into
-	 * @param action callback object that specifies the MongoDB action the callback action.
-	 * @return a result object returned by the action or <tt>null</tt>
+	 * @param collectionName the name of the collection that specifies which DBCollection instance will be passed into.
+	 *          Must not be {@literal null} or empty.
+	 * @param action callback object that specifies the MongoDB action the callback action. Must not be {@literal null}.
+	 * @return a result object returned by the action or {@literal null}.
 	 */
+	@Nullable
 	<T> T execute(String collectionName, CollectionCallback<T> action);
 
 	/**
@@ -182,11 +189,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Create a collection with a name based on the provided entity class using the options.
 	 *
-	 * @param entityClass class that determines the collection to create
+	 * @param entityClass class that determines the collection to create. Must not be {@literal null}.
 	 * @param collectionOptions options to use when creating the collection.
 	 * @return the created collection
 	 */
-	<T> MongoCollection<Document> createCollection(Class<T> entityClass, CollectionOptions collectionOptions);
+	<T> MongoCollection<Document> createCollection(Class<T> entityClass, @Nullable CollectionOptions collectionOptions);
 
 	/**
 	 * Create an uncapped collection with the provided name.
@@ -199,11 +206,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Create a collection with the provided name and options.
 	 *
-	 * @param collectionName name of the collection
+	 * @param collectionName name of the collection. Must not be {@literal null} nor empty.
 	 * @param collectionOptions options to use when creating the collection.
 	 * @return the created collection
 	 */
-	MongoCollection<Document> createCollection(String collectionName, CollectionOptions collectionOptions);
+	MongoCollection<Document> createCollection(String collectionName, @Nullable CollectionOptions collectionOptions);
 
 	/**
 	 * A set of collection names.
@@ -217,7 +224,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p/>
 	 * Translate any exceptions as necessary.
 	 *
-	 * @param collectionName name of the collection
+	 * @param collectionName name of the collection. Must not be {@literal null}.
 	 * @return an existing collection or a newly created one.
 	 */
 	MongoCollection<Document> getCollection(String collectionName);
@@ -227,7 +234,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p/>
 	 * Translate any exceptions as necessary.
 	 *
-	 * @param entityClass class that determines the name of the collection
+	 * @param entityClass class that determines the name of the collection. Must not be {@literal null}.
 	 * @return true if a collection with the given name is found, false otherwise.
 	 */
 	<T> boolean collectionExists(Class<T> entityClass);
@@ -237,7 +244,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p/>
 	 * Translate any exceptions as necessary.
 	 *
-	 * @param collectionName name of the collection
+	 * @param collectionName name of the collection. Must not be {@literal null}.
 	 * @return true if a collection with the given name is found, false otherwise.
 	 */
 	boolean collectionExists(String collectionName);
@@ -247,7 +254,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p/>
 	 * Translate any exceptions as necessary.
 	 *
-	 * @param entityClass class that determines the collection to drop/delete.
+	 * @param entityClass class that determines the collection to drop/delete. Must not be {@literal null}.
 	 */
 	<T> void dropCollection(Class<T> entityClass);
 
@@ -307,11 +314,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Returns a new {@link BulkOperations} for the given entity type and collection name.
 	 *
 	 * @param mode the {@link BulkMode} to use for bulk operations, must not be {@literal null}.
-	 * @param entityClass the name of the entity class, must not be {@literal null}.
+	 * @param entityClass the name of the entity class. Can be {@literal null}.
 	 * @param collectionName the name of the collection to work on, must not be {@literal null} or empty.
 	 * @return {@link BulkOperations} on the named collection associated with the given entity class.
 	 */
-	BulkOperations bulkOps(BulkMode mode, Class<?> entityType, String collectionName);
+	BulkOperations bulkOps(BulkMode mode, @Nullable Class<?> entityType, String collectionName);
 
 	/**
 	 * Query for a list of objects of type T from the collection used by the entity class.
@@ -369,7 +376,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the group operation
 	 */
-	<T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
+	<T> GroupByResults<T> group(@Nullable Criteria criteria, String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
 
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class. The name of the
@@ -500,11 +507,10 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Execute a map-reduce operation. The map-reduce operation will be formed with an output type of INLINE
 	 *
-	 * @param inputCollectionName the collection where the map-reduce will read from
-	 * @param mapFunction The JavaScript map function
+	 * @param inputCollectionName the collection where the map-reduce will read from. Must not be {@literal null}.
+	 * @param mapFunction The JavaScript map function.
 	 * @param reduceFunction The JavaScript reduce function
-	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
-	 * @param entityClass The parametrized type of the returned list
+	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
@@ -513,26 +519,25 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Execute a map-reduce operation that takes additional map-reduce options.
 	 *
-	 * @param inputCollectionName the collection where the map-reduce will read from
+	 * @param inputCollectionName the collection where the map-reduce will read from. Must not be {@literal null}.
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
-	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
-	 * @param entityClass The parametrized type of the returned list
+	 * @param mapReduceOptions Options that specify detailed map-reduce behavior.
+	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
-			MapReduceOptions mapReduceOptions, Class<T> entityClass);
+			@Nullable MapReduceOptions mapReduceOptions, Class<T> entityClass);
 
 	/**
 	 * Execute a map-reduce operation that takes a query. The map-reduce operation will be formed with an output type of
 	 * INLINE
 	 *
-	 * @param query The query to use to select the data for the map phase
-	 * @param inputCollectionName the collection where the map-reduce will read from
+	 * @param query The query to use to select the data for the map phase. Must not be {@literal null}.
+	 * @param inputCollectionName the collection where the map-reduce will read from. Must not be {@literal null}.
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
-	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
-	 * @param entityClass The parametrized type of the returned list
+	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
@@ -541,16 +546,16 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Execute a map-reduce operation that takes a query and additional map-reduce options
 	 *
-	 * @param query The query to use to select the data for the map phase
-	 * @param inputCollectionName the collection where the map-reduce will read from
+	 * @param query The query to use to select the data for the map phase. Must not be {@literal null}.
+	 * @param inputCollectionName the collection where the map-reduce will read from. Must not be {@literal null}.
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
-	 * @param entityClass The parametrized type of the returned list
+	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
 	 */
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
-			MapReduceOptions mapReduceOptions, Class<T> entityClass);
+			@Nullable MapReduceOptions mapReduceOptions, Class<T> entityClass);
 
 	/**
 	 * Returns {@link GeoResults} for all entities matching the given {@link NearQuery}. Will consider entity mapping
@@ -572,7 +577,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
 	 * @param collectionName the collection to trigger the query against. If no collection name is given the entity class
-	 *          will be inspected.
+	 *          will be inspected. Must not be {@literal null} nor empty.
 	 * @return
 	 */
 	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName);
@@ -592,6 +597,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass the parametrized type of the returned list.
 	 * @return the converted object
 	 */
+	@Nullable
 	<T> T findOne(Query query, Class<T> entityClass);
 
 	/**
@@ -610,6 +616,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the converted object
 	 */
+	@Nullable
 	<T> T findOne(Query query, Class<T> entityClass, String collectionName);
 
 	/**
@@ -636,11 +643,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Determine result of given {@link Query} contains at least one element.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find a record.
-	 * @param entityClass the parametrized type.
+	 * @param entityClass the parametrized type. Can be {@literal null}.
 	 * @param collectionName name of the collection to check for objects.
 	 * @return
 	 */
-	boolean exists(Query query, Class<?> entityClass, String collectionName);
+	boolean exists(Query query, @Nullable Class<?> entityClass, String collectionName);
 
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity class to a List of the specified type.
@@ -652,8 +659,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * feature rich {@link Query}.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
+	 *          specification. Must not be {@literal null}.
+	 * @param entityClass the parametrized type of the returned list. Must not be {@literal null}.
 	 * @return the List of converted objects
 	 */
 	<T> List<T> find(Query query, Class<T> entityClass);
@@ -668,9 +675,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * feature rich {@link Query}.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 *          specification
-	 * @param entityClass the parametrized type of the returned list.
-	 * @param collectionName name of the collection to retrieve the objects from
+	 *          specification. Must not be {@literal null}.
+	 * @param entityClass the parametrized type of the returned list. Must not be {@literal null}.
+	 * @param collectionName name of the collection to retrieve the objects from. Must not be {@literal null}.
 	 * @return the List of converted objects
 	 */
 	<T> List<T> find(Query query, Class<T> entityClass, String collectionName);
@@ -680,10 +687,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * derived from the given target class as well.
 	 *
 	 * @param <T>
-	 * @param id the id of the document to return.
-	 * @param entityClass the type the document shall be converted into.
+	 * @param id the id of the document to return. Must not be {@literal null}.
+	 * @param entityClass the type the document shall be converted into. Must not be {@literal null}.
 	 * @return the document with the given id mapped onto the given target class.
 	 */
+	@Nullable
 	<T> T findById(Object id, Class<T> entityClass);
 
 	/**
@@ -693,8 +701,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass the type to convert the document to
 	 * @param collectionName the collection to query for the document
 	 * @param <T>
-	 * @return
+	 * @return {@literal null} if document does not exist.
 	 */
+	@Nullable
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
@@ -702,11 +711,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 *          fields specification.
-	 * @param update the {@link Update} to apply on matching documents.
-	 * @param entityClass the parametrized type.
-	 * @return
+	 *          fields specification. Must not be {@literal null}.
+	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
+	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @return {@literal null} if not found.
 	 */
+	@Nullable
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
 
 	/**
@@ -714,12 +724,13 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 *          fields specification.
-	 * @param update the {@link Update} to apply on matching documents.
-	 * @param entityClass the parametrized type.
-	 * @param collectionName the collection to query.
-	 * @return
+	 *          fields specification. Must not be {@literal null}.
+	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
+	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @param collectionName the collection to query. Must not be {@literal null}.
+	 * @return {@literal null} if not found.
 	 */
+	@Nullable
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
 	/**
@@ -732,8 +743,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param update the {@link Update} to apply on matching documents.
 	 * @param options the {@link FindAndModifyOptions} holding additional information.
 	 * @param entityClass the parametrized type.
-	 * @return
+	 * @return {@literal null} if not found.
 	 */
+	@Nullable
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
@@ -742,13 +754,14 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 *          fields specification.
-	 * @param update the {@link Update} to apply on matching documents.
-	 * @param options the {@link FindAndModifyOptions} holding additional information.
-	 * @param entityClass the parametrized type.
-	 * @param collectionName the collection to query.
-	 * @return
+	 *          fields specification. Must not be {@literal null}.
+	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
+	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @param collectionName the collection to query. Must not be {@literal null}.
+	 * @return {@literal null} if not found.
 	 */
+	@Nullable
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName);
 
@@ -767,6 +780,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass the parametrized type of the returned list.
 	 * @return the converted object
 	 */
+	@Nullable
 	<T> T findAndRemove(Query query, Class<T> entityClass);
 
 	/**
@@ -785,12 +799,13 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @return the converted object
 	 */
+	@Nullable
 	<T> T findAndRemove(Query query, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.
 	 *
-	 * @param query
+	 * @param query must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
 	 * @return
 	 */
@@ -801,7 +816,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * must solely consist of document field references as we lack type information to map potential property references
 	 * onto document fields. Use {@link #count(Query, Class, String)} to get full type specific support.
 	 *
-	 * @param query
+	 * @param query must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
 	 * @return
 	 * @see #count(Query, Class, String)
@@ -812,12 +827,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Returns the number of documents for the given {@link Query} by querying the given collection using the given entity
 	 * class to map the given {@link Query}.
 	 *
-	 * @param query
-	 * @param entityClass must not be {@literal null}.
+	 * @param query must not be {@literal null}.
+	 * @param entityClass can be be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
 	 * @return
 	 */
-	long count(Query query, Class<?> entityClass, String collectionName);
+	long count(Query query, @Nullable Class<?> entityClass, String collectionName);
 
 	/**
 	 * Insert the object into the collection for the entity type of the object to save.
@@ -833,7 +848,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 *
-	 * @param objectToSave the object to store in the collection.
+	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 */
 	void insert(Object objectToSave);
 
@@ -845,24 +860,24 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 *
-	 * @param objectToSave the object to store in the collection
-	 * @param collectionName name of the collection to store the object in
+	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
+	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 */
 	void insert(Object objectToSave, String collectionName);
 
 	/**
 	 * Insert a Collection of objects into a collection in a single batch write to the database.
 	 *
-	 * @param batchToSave the list of objects to save.
-	 * @param entityClass class that determines the collection to use
+	 * @param batchToSave the list of objects to save. Must not be {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 */
 	void insert(Collection<? extends Object> batchToSave, Class<?> entityClass);
 
 	/**
 	 * Insert a list of objects into the specified collection in a single batch write to the database.
 	 *
-	 * @param batchToSave the list of objects to save.
-	 * @param collectionName name of the collection to store the object in
+	 * @param batchToSave the list of objects to save. Must not be {@literal null}.
+	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 */
 	void insert(Collection<? extends Object> batchToSave, String collectionName);
 
@@ -870,7 +885,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
 	 * class.
 	 *
-	 * @param collectionToSave the list of objects to save.
+	 * @param collectionToSave the list of objects to save. Must not be {@literal null}.
 	 */
 	void insertAll(Collection<? extends Object> objectsToSave);
 
@@ -887,7 +902,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert" >
 	 * Spring's Type Conversion"</a> for more details.
 	 *
-	 * @param objectToSave the object to store in the collection
+	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 */
 	void save(Object objectToSave);
 
@@ -904,8 +919,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert">Spring's
 	 * Type Conversion"</a> for more details.
 	 *
-	 * @param objectToSave the object to store in the collection
-	 * @param collectionName name of the collection to store the object in
+	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
+	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 */
 	void save(Object objectToSave, String collectionName);
 
@@ -913,9 +928,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
 	 * combining the query document and the update document.
 	 *
-	 * @param query the query document that specifies the criteria used to select a record to be upserted
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing object
-	 * @param entityClass class that determines the collection to use
+	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object. Must not be {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	UpdateResult upsert(Query query, Update update, Class<?> entityClass);
@@ -938,10 +955,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
 	 * combining the query document and the update document.
 	 *
-	 * @param query the query document that specifies the criteria used to select a record to be upserted
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing object
-	 * @param entityClass class of the pojo to be operated on
-	 * @param collectionName name of the collection to update the object in
+	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object. Must not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	UpdateResult upsert(Query query, Update update, Class<?> entityClass, String collectionName);
@@ -964,10 +983,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
 	 * domain type information. Use {@link #updateFirst(Query, Update, Class, String)} to get full type specific support.
 	 *
-	 * @param query the query document that specifies the criteria used to select a record to be updated
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object.
-	 * @param collectionName name of the collection to update the object in
+	 *          object. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	UpdateResult updateFirst(Query query, Update update, String collectionName);
@@ -976,11 +996,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
 	 * the provided updated document.
 	 *
-	 * @param query the query document that specifies the criteria used to select a record to be updated
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object.
-	 * @param entityClass class of the pojo to be operated on
-	 * @param collectionName name of the collection to update the object in
+	 *          object. Must not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	UpdateResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName);
@@ -989,10 +1010,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
 	 * with the provided updated document.
 	 *
-	 * @param query the query document that specifies the criteria used to select a record to be updated
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object.
-	 * @param entityClass class that determines the collection to use
+	 *          object. Must not be {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	UpdateResult updateMulti(Query query, Update update, Class<?> entityClass);
@@ -1003,10 +1025,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
 	 * domain type information. Use {@link #updateMulti(Query, Update, Class, String)} to get full type specific support.
 	 *
-	 * @param query the query document that specifies the criteria used to select a record to be updated
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object.
-	 * @param collectionName name of the collection to update the object in
+	 *          object. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	UpdateResult updateMulti(Query query, Update update, String collectionName);
@@ -1015,11 +1038,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
 	 * with the provided updated document.
 	 *
-	 * @param query the query document that specifies the criteria used to select a record to be updated
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object.
-	 * @param entityClass class of the pojo to be operated on
-	 * @param collectionName name of the collection to update the object in
+	 *          object. Must not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	UpdateResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName);
@@ -1027,7 +1051,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Remove the given object from the collection by id.
 	 *
-	 * @param object
+	 * @param object must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @throws IllegalArgumentException when {@code object} to remove is {@literal null}.
 	 */
 	DeleteResult remove(Object object);
 
@@ -1036,6 +1062,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param object
 	 * @param collection must not be {@literal null} or empty.
+	 * @thorws IllegalArgumentException when {@code object} or {@code collection} is {@literal null}.
 	 */
 	DeleteResult remove(Object object, String collection);
 

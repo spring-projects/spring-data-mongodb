@@ -22,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -76,9 +77,9 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		@NonNull MongoTemplate template;
 		@NonNull Class<T> domainType;
 		Query query;
-		Update update;
-		String collection;
-		FindAndModifyOptions options;
+		@Nullable Update update;
+		@Nullable String collection;
+		@Nullable FindAndModifyOptions options;
 
 		/*
 		 * (non-Javadoc)
@@ -160,8 +161,8 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingFindAndModify#findAndModifyValue()
 		 */
 		@Override
-		public T findAndModifyValue() {
-			return template.findAndModify(query, update, options, domainType, getCollectionName());
+		public @Nullable T findAndModifyValue() {
+			return template.findAndModify(query, update, options != null ? options : new FindAndModifyOptions(), domainType, getCollectionName());
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {

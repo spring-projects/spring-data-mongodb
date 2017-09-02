@@ -44,6 +44,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -129,7 +130,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getQueryLookupStrategy(org.springframework.data.repository.query.QueryLookupStrategy.Key, org.springframework.data.repository.query.EvaluationContextProvider)
 	 */
 	@Override
-	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
+	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
 			EvaluationContextProvider evaluationContextProvider) {
 		return Optional.of(new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext));
 	}
@@ -143,7 +144,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	private <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
-			RepositoryMetadata metadata) {
+			@Nullable RepositoryMetadata metadata) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
 		return MongoEntityInformationSupport.<T, ID> entityInformationFor(entity,

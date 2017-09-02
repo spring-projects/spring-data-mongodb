@@ -164,10 +164,7 @@ interface MongoQueryExecution {
 			distances.getUpperBound().getValue().ifPresent(it -> nearQuery.maxDistance(it).in(it.getMetric()));
 
 			Pageable pageable = accessor.getPageable();
-
-			if (pageable != null) {
-				nearQuery.with(pageable);
-			}
+			nearQuery.with(pageable);
 
 			return (GeoResults<Object>) operation.near(nearQuery).all();
 		}

@@ -35,6 +35,7 @@ import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -59,10 +60,10 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	private static final Object NOT_SET = new Object();
 
-	private String key;
+	private @Nullable String key;
 	private List<Criteria> criteriaChain;
 	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
-	private Object isValue = NOT_SET;
+	private @Nullable Object isValue = NOT_SET;
 
 	public Criteria() {
 		this.criteriaChain = new ArrayList<Criteria>();
@@ -129,7 +130,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param o
 	 * @return
 	 */
-	public Criteria is(Object o) {
+	public Criteria is(@Nullable Object o) {
 
 		if (!isValue.equals(NOT_SET)) {
 			throw new InvalidMongoDbApiUsageException(
@@ -155,7 +156,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/ne/">MongoDB Query operator: $ne</a>
 	 */
-	public Criteria ne(Object o) {
+	public Criteria ne(@Nullable Object o) {
 		criteria.put("$ne", o);
 		return this;
 	}
@@ -351,7 +352,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/not/">MongoDB Query operator: $not</a>
 	 */
-	private Criteria not(Object value) {
+	private Criteria not(@Nullable Object value) {
 		criteria.put("$not", value);
 		return this;
 	}
@@ -375,7 +376,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/regex/">MongoDB Query operator: $regex</a>
 	 */
-	public Criteria regex(String re, String options) {
+	public Criteria regex(String re, @Nullable String options) {
 		return regex(toPattern(re, options));
 	}
 
@@ -407,7 +408,7 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 
-	private Pattern toPattern(String regex, String options) {
+	private Pattern toPattern(String regex, @Nullable String options) {
 
 		Assert.notNull(regex, "Regex string must not be null!");
 
@@ -615,6 +616,11 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 
+	/*
+	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getKey()
+	 */
+	@Override
+	@Nullable
 	public String getKey() {
 		return this.key;
 	}

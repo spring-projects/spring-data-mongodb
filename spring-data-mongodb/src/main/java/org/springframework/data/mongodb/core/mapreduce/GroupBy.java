@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Nullable;
 
 /**
  * Collects the parameters required to perform a group operation on a collection. The query condition and the input
@@ -27,11 +28,12 @@ import org.springframework.data.mongodb.core.query.Collation;
  *
  * @author Mark Pollack
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class GroupBy {
 
-	private Document initialDocument;
-	private String reduce;
+	private @Nullable Document initialDocument;
+	private @Nullable String reduce;
 
 	private Optional<Document> keys = Optional.empty();
 	private Optional<String> keyFunction = Optional.empty();
@@ -51,7 +53,7 @@ public class GroupBy {
 
 	// NOTE GroupByCommand does not handle keyfunction.
 
-	public GroupBy(String key, boolean isKeyFunction) {
+	public GroupBy(@Nullable String key, boolean isKeyFunction) {
 
 		Document document = new Document();
 		if (isKeyFunction) {
@@ -88,7 +90,7 @@ public class GroupBy {
 	 * @param initialDocument can be {@literal null}.
 	 * @return
 	 */
-	public GroupBy initialDocument(String initialDocument) {
+	public GroupBy initialDocument(@Nullable String initialDocument) {
 
 		initial = Optional.ofNullable(initialDocument);
 		return this;
@@ -100,7 +102,7 @@ public class GroupBy {
 	 * @param initialDocument can be {@literal null}.
 	 * @return
 	 */
-	public GroupBy initialDocument(Document initialDocument) {
+	public GroupBy initialDocument(@Nullable Document initialDocument) {
 
 		this.initialDocument = initialDocument;
 		return this;
@@ -124,7 +126,7 @@ public class GroupBy {
 	 * @param finalizeFunction
 	 * @return
 	 */
-	public GroupBy finalizeFunction(String finalizeFunction) {
+	public GroupBy finalizeFunction(@Nullable String finalizeFunction) {
 
 		finalize = Optional.ofNullable(finalizeFunction);
 		return this;
@@ -137,7 +139,7 @@ public class GroupBy {
 	 * @return
 	 * @since 2.0
 	 */
-	public GroupBy collation(Collation collation) {
+	public GroupBy collation(@Nullable Collation collation) {
 
 		this.collation = Optional.ofNullable(collation);
 		return this;

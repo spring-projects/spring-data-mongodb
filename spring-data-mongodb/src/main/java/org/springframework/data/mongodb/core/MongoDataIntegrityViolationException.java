@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.WriteResult;
@@ -40,7 +41,7 @@ public class MongoDataIntegrityViolationException extends DataIntegrityViolation
 	 * @param actionOperation the {@link MongoActionOperation} that caused the exception, must not be {@literal null}.
 	 */
 	public MongoDataIntegrityViolationException(String message, WriteResult writeResult,
-			MongoActionOperation actionOperation) {
+												MongoActionOperation actionOperation) {
 
 		super(message);
 

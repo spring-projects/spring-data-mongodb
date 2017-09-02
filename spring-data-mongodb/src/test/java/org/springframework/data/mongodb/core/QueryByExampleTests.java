@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
 
 import com.mongodb.MongoClient;
 
@@ -166,12 +167,59 @@ public class QueryByExampleTests {
 		assertThat(result, hasItems(p1, p2));
 	}
 
+	@Test // DATAMONGO-1768
+	public void typedExampleMatchesNothingIfTypesDoNotMatch() {
+
+		NotAPersonButStillMatchingFields probe = new NotAPersonButStillMatchingFields();
+		probe.lastname = "stark";
+
+		Query query = new Query(new Criteria().alike(Example.of(probe)));
+		List<Person> result = operations.find(query, Person.class);
+
+		assertThat(result, hasSize(0));
+	}
+
+	@Test // DATAMONGO-1768
+	public void exampleIgnoringClassTypeKeyMatchesCorrectly() {
+
+		NotAPersonButStillMatchingFields probe = new NotAPersonButStillMatchingFields();
+		probe.lastname = "stark";
+
+		Query query = new Query(
+				new Criteria().alike(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_class"))));
+		List<Person> result = operations.find(query, Person.class);
+
+		assertThat(result, hasSize(2));
+		assertThat(result, hasItems(p1, p3));
+	}
+
+	@Test // DATAMONGO-1768
+	public void untypedExampleMatchesCorrectly() {
+
+		NotAPersonButStillMatchingFields probe = new NotAPersonButStillMatchingFields();
+		probe.lastname = "stark";
+
+		Query query = new Query(new Criteria().alike(Example.of(probe, UntypedExampleMatcher.matching())));
+		List<Person> result = operations.find(query, Person.class);
+
+		assertThat(result, hasSize(2));
+		assertThat(result, hasItems(p1, p3));
+	}
+
 	@Document(collection = "dramatis-personae")
 	@EqualsAndHashCode
 	@ToString
 	static class Person {
 
 		@Id String id;
+		String firstname, middlename;
+		@Field("last_name") String lastname;
+	}
+
+	@EqualsAndHashCode
+	@ToString
+	static class NotAPersonButStillMatchingFields {
+
 		String firstname, middlename;
 		@Field("last_name") String lastname;
 	}

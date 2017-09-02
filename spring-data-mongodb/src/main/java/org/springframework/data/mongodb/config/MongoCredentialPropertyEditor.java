@@ -25,6 +25,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoCredential;
@@ -51,7 +52,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
 	 */
 	@Override
-	public void setAsText(String text) throws IllegalArgumentException {
+	public void setAsText(@Nullable String text) throws IllegalArgumentException {
 
 		if (!StringUtils.hasText(text)) {
 			return;

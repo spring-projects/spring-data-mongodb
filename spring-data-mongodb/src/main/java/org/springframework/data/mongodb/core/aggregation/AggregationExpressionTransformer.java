@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,16 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldRefe
 import org.springframework.data.mongodb.core.spel.ExpressionNode;
 import org.springframework.data.mongodb.core.spel.ExpressionTransformationContextSupport;
 import org.springframework.data.mongodb.core.spel.ExpressionTransformer;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * Interface to type an {@link ExpressionTransformer} to the contained
  * {@link AggregationExpressionTransformationContext}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.4
  */
 interface AggregationExpressionTransformer
@@ -36,7 +38,7 @@ interface AggregationExpressionTransformer
 
 	/**
 	 * A special {@link ExpressionTransformationContextSupport} to be aware of the {@link AggregationOperationContext}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
@@ -47,14 +49,14 @@ interface AggregationExpressionTransformer
 
 		/**
 		 * Creates an {@link AggregationExpressionTransformationContext}.
-		 * 
+		 *
 		 * @param currentNode must not be {@literal null}.
-		 * @param parentNode
-		 * @param previousOperationObject
+		 * @param parentNode may be {@literal null}.
+		 * @param previousOperationObject may be {@literal null}.
 		 * @param aggregationContext must not be {@literal null}.
 		 */
-		public AggregationExpressionTransformationContext(T currentNode, ExpressionNode parentNode,
-				Document previousOperationObject, AggregationOperationContext context) {
+		public AggregationExpressionTransformationContext(T currentNode, @Nullable ExpressionNode parentNode,
+				@Nullable Document previousOperationObject, AggregationOperationContext context) {
 
 			super(currentNode, parentNode, previousOperationObject);
 
@@ -64,7 +66,7 @@ interface AggregationExpressionTransformer
 
 		/**
 		 * Returns the underlying {@link AggregationOperationContext}.
-		 * 
+		 *
 		 * @return
 		 */
 		public AggregationOperationContext getAggregationContext() {
@@ -73,7 +75,7 @@ interface AggregationExpressionTransformer
 
 		/**
 		 * Returns the {@link FieldReference} for the current {@link ExpressionNode}.
-		 * 
+		 *
 		 * @return
 		 */
 		public FieldReference getFieldReference() {

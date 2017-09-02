@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 /**
  * Event being thrown before a domain object is converted to be persisted.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class BeforeConvertEvent<T> extends MongoMappingEvent<T> {
 
@@ -28,9 +29,9 @@ public class BeforeConvertEvent<T> extends MongoMappingEvent<T> {
 
 	/**
 	 * Creates new {@link BeforeConvertEvent}.
-	 * 
+	 *
 	 * @param source must not be {@literal null}.
-	 * @param collectionName can be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
 	 * @since 1.8
 	 */
 	public BeforeConvertEvent(T source, String collectionName) {

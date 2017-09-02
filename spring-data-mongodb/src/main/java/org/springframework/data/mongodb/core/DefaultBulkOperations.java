@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.Pair;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.BulkWriteException;
@@ -67,7 +68,7 @@ class DefaultBulkOperations implements BulkOperations {
 	private final List<WriteModel<Document>> models = new ArrayList<>();
 
 	private PersistenceExceptionTranslator exceptionTranslator;
-	private WriteConcern defaultWriteConcern;
+	private @Nullable WriteConcern defaultWriteConcern;
 
 	private BulkWriteOptions bulkOptions;
 
@@ -99,7 +100,7 @@ class DefaultBulkOperations implements BulkOperations {
 	 *
 	 * @param exceptionTranslator can be {@literal null}.
 	 */
-	public void setExceptionTranslator(PersistenceExceptionTranslator exceptionTranslator) {
+	public void setExceptionTranslator(@Nullable PersistenceExceptionTranslator exceptionTranslator) {
 		this.exceptionTranslator = exceptionTranslator == null ? new MongoExceptionTranslator() : exceptionTranslator;
 	}
 
@@ -108,7 +109,7 @@ class DefaultBulkOperations implements BulkOperations {
 	 *
 	 * @param defaultWriteConcern can be {@literal null}.
 	 */
-	void setDefaultWriteConcern(WriteConcern defaultWriteConcern) {
+	void setDefaultWriteConcern(@Nullable WriteConcern defaultWriteConcern) {
 		this.defaultWriteConcern = defaultWriteConcern;
 	}
 

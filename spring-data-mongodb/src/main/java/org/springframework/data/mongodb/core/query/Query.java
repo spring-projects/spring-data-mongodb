@@ -20,7 +20,6 @@ import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -51,11 +51,11 @@ public class Query {
 
 	private final Set<Class<?>> restrictedTypes = new HashSet<>();
 	private final Map<String, CriteriaDefinition> criteria = new LinkedHashMap<>();
-	private Field fieldSpec = null;
+	private @Nullable Field fieldSpec = null;
 	private Sort sort = Sort.unsorted();
 	private long skip;
 	private int limit;
-	private String hint;
+	private @Nullable String hint;
 
 	private Meta meta = new Meta();
 
@@ -198,7 +198,7 @@ public class Query {
 	 * @return the restrictedTypes
 	 */
 	public Set<Class<?>> getRestrictedTypes() {
-		return restrictedTypes == null ? Collections.emptySet() : restrictedTypes;
+		return restrictedTypes;
 	}
 
 	/**
@@ -282,6 +282,7 @@ public class Query {
 	/**
 	 * @return
 	 */
+	@Nullable
 	public String getHint() {
 		return hint;
 	}
@@ -415,7 +416,7 @@ public class Query {
 	 * @return
 	 * @since 2.0
 	 */
-	public Query collation(Collation collation) {
+	public Query collation(@Nullable Collation collation) {
 
 		this.collation = Optional.ofNullable(collation);
 		return this;

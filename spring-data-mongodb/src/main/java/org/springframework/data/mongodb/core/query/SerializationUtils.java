@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,16 @@ import java.util.Map.Entry;
 
 import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.util.JSON;
 
 /**
  * Utility methods for JSON serialization.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public abstract class SerializationUtils {
 
@@ -41,7 +43,7 @@ public abstract class SerializationUtils {
 
 	/**
 	 * Flattens out a given {@link Document}.
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * {
@@ -49,7 +51,7 @@ public abstract class SerializationUtils {
 	 *   nested : { value : "conflux"}
 	 * }
 	 * </code>
-	 * will result in 
+	 * will result in
 	 * <code>
 	 * {
 	 *   _id : 1
@@ -57,12 +59,12 @@ public abstract class SerializationUtils {
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @param source can be {@literal null}.
 	 * @return {@link Collections#emptyMap()} when source is {@literal null}
 	 * @since 1.8
 	 */
-	public static Map<String, Object> flattenMap(Document source) {
+	public static Map<String, Object> flattenMap(@Nullable Document source) {
 
 		if (source == null) {
 			return Collections.emptyMap();
@@ -105,11 +107,12 @@ public abstract class SerializationUtils {
 	 * Serializes the given object into pseudo-JSON meaning it's trying to create a JSON representation as far as possible
 	 * but falling back to the given object's {@link Object#toString()} method if it's not serializable. Useful for
 	 * printing raw {@link Document}s containing complex values before actually converting them into Mongo native types.
-	 * 
+	 *
 	 * @param value
 	 * @return
 	 */
-	public static String serializeToJsonSafely(Object value) {
+	@Nullable
+	public static String serializeToJsonSafely(@Nullable Object value) {
 
 		if (value == null) {
 			return null;
@@ -122,8 +125,6 @@ public abstract class SerializationUtils {
 				return toString((Collection<?>) value);
 			} else if (value instanceof Map) {
 				return toString((Map<?, ?>) value);
-			} else if (value instanceof Document) {
-				return toString(((Document) value));
 			} else {
 				return String.format("{ $java : %s }", value.toString());
 			}
@@ -150,7 +151,7 @@ public abstract class SerializationUtils {
 	 * Creates a string representation from the given {@link Iterable} prepending the postfix, applying the given
 	 * {@link Converter} to each element before adding it to the result {@link String}, concatenating each element with
 	 * {@literal ,} and applying the postfix.
-	 * 
+	 *
 	 * @param source
 	 * @param prefix
 	 * @param postfix

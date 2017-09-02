@@ -62,7 +62,7 @@ public class GridFsTemplateIntegrationTests {
 
 	@Before
 	public void setUp() {
-		operations.delete(null);
+		operations.delete(new Query());
 	}
 
 	@Test // DATAMONGO-6
@@ -164,17 +164,22 @@ public class GridFsTemplateIntegrationTests {
 		assertEquals(((BsonObjectId) files.get(2).getId()).getValue(), third);
 	}
 
-	@Test // DATAMONGO-534
-	public void queryingWithNullQueryReturnsAllFiles() throws IOException {
+	@Test // DATAMONGO-534, DATAMONGO-1762
+	public void queryingWithEmptyQueryReturnsAllFiles() throws IOException {
 
 		ObjectId reference = operations.store(resource.getInputStream(), "foo.xml");
 
 		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
-		GridFSFindIterable result = operations.find(null);
+		GridFSFindIterable result = operations.find(new Query());
 		result.into(files);
 
 		assertThat(files, hasSize(1));
 		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), reference);
+	}
+
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1762
+	public void queryingWithNullQueryThrowsException() {
+		operations.find(null);
 	}
 
 	@Test // DATAMONGO-813

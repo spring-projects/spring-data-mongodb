@@ -23,6 +23,7 @@ import lombok.experimental.FieldDefaults;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -77,7 +78,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		@NonNull MongoTemplate template;
 		@NonNull Class<T> domainType;
 		Query query;
-		String collection;
+		@Nullable String collection;
 
 		/*
 		 * (non-Javadoc)

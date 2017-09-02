@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.geo.Point;
+import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,9 +35,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * A Jackson {@link Module} to register custom {@link JsonSerializer} and {@link JsonDeserializer}s for GeoJSON types.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 1.7
  */
 public class GeoJsonModule extends SimpleModule {
@@ -63,8 +65,10 @@ public class GeoJsonModule extends SimpleModule {
 		 * (non-Javadoc)
 		 * @see com.fasterxml.jackson.databind.JsonDeserializer#deserialize(com.fasterxml.jackson.core.JsonParser, com.fasterxml.jackson.databind.DeserializationContext)
 		 */
+		@Nullable
 		@Override
-		public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+		public T deserialize(@Nullable JsonParser jp, @Nullable DeserializationContext ctxt)
+				throws IOException, JsonProcessingException {
 
 			JsonNode node = jp.readValueAsTree();
 			JsonNode coordinates = node.get("coordinates");
@@ -77,20 +81,22 @@ public class GeoJsonModule extends SimpleModule {
 
 		/**
 		 * Perform the actual deserialization given the {@literal coordinates} as {@link ArrayNode}.
-		 * 
+		 *
 		 * @param coordinates
 		 * @return
 		 */
+		@Nullable
 		protected abstract T doDeserialize(ArrayNode coordinates);
 
 		/**
 		 * Get the {@link GeoJsonPoint} representation of given {@link ArrayNode} assuming {@code node.[0]} represents
 		 * {@literal x - coordinate} and {@code node.[1]} is {@literal y}.
-		 * 
+		 *
 		 * @param node can be {@literal null}.
 		 * @return {@literal null} when given a {@code null} value.
 		 */
-		protected GeoJsonPoint toGeoJsonPoint(ArrayNode node) {
+		@Nullable
+		protected GeoJsonPoint toGeoJsonPoint(@Nullable ArrayNode node) {
 
 			if (node == null) {
 				return null;
@@ -102,11 +108,12 @@ public class GeoJsonModule extends SimpleModule {
 		/**
 		 * Get the {@link Point} representation of given {@link ArrayNode} assuming {@code node.[0]} represents
 		 * {@literal x - coordinate} and {@code node.[1]} is {@literal y}.
-		 * 
+		 *
 		 * @param node can be {@literal null}.
 		 * @return {@literal null} when given a {@code null} value.
 		 */
-		protected Point toPoint(ArrayNode node) {
+		@Nullable
+		protected Point toPoint(@Nullable ArrayNode node) {
 
 			if (node == null) {
 				return null;
@@ -117,11 +124,11 @@ public class GeoJsonModule extends SimpleModule {
 
 		/**
 		 * Get the points nested within given {@link ArrayNode}.
-		 * 
+		 *
 		 * @param node can be {@literal null}.
 		 * @return {@literal empty list} when given a {@code null} value.
 		 */
-		protected List<Point> toPoints(ArrayNode node) {
+		protected List<Point> toPoints(@Nullable ArrayNode node) {
 
 			if (node == null) {
 				return Collections.emptyList();
@@ -144,13 +151,13 @@ public class GeoJsonModule extends SimpleModule {
 
 	/**
 	 * {@link JsonDeserializer} converting GeoJSON representation of {@literal Point}.
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * { "type": "Point", "coordinates": [10.0, 20.0] }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
@@ -160,6 +167,7 @@ public class GeoJsonModule extends SimpleModule {
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.geo.GeoJsonModule.GeoJsonDeserializer#doDeserialize(com.fasterxml.jackson.databind.node.ArrayNode)
 		 */
+		@Nullable
 		@Override
 		protected GeoJsonPoint doDeserialize(ArrayNode coordinates) {
 			return toGeoJsonPoint(coordinates);
@@ -168,18 +176,18 @@ public class GeoJsonModule extends SimpleModule {
 
 	/**
 	 * {@link JsonDeserializer} converting GeoJSON representation of {@literal LineString}.
-	 * 
+	 *
 	 * <pre>
 	 * <code>
-	 * { 
-	 *   "type": "LineString", 
-	 *   "coordinates": [ 
+	 * {
+	 *   "type": "LineString",
+	 *   "coordinates": [
 	 *     [10.0, 20.0], [30.0, 40.0], [50.0, 60.0]
 	 *   ]
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
@@ -197,18 +205,18 @@ public class GeoJsonModule extends SimpleModule {
 
 	/**
 	 * {@link JsonDeserializer} converting GeoJSON representation of {@literal MultiPoint}.
-	 * 
+	 *
 	 * <pre>
 	 * <code>
-	 * { 
-	 *   "type": "MultiPoint", 
-	 *   "coordinates": [ 
+	 * {
+	 *   "type": "MultiPoint",
+	 *   "coordinates": [
 	 *     [10.0, 20.0], [30.0, 40.0], [50.0, 60.0]
 	 *   ]
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
@@ -226,19 +234,19 @@ public class GeoJsonModule extends SimpleModule {
 
 	/**
 	 * {@link JsonDeserializer} converting GeoJSON representation of {@literal MultiLineString}.
-	 * 
+	 *
 	 * <pre>
 	 * <code>
-	 * { 
-	 *   "type": "MultiLineString", 
+	 * {
+	 *   "type": "MultiLineString",
 	 *   "coordinates": [
-	 *     [ [10.0, 20.0], [30.0, 40.0] ], 
+	 *     [ [10.0, 20.0], [30.0, 40.0] ],
 	 *     [ [50.0, 60.0] , [70.0, 80.0] ]
 	 *   ]
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
@@ -265,18 +273,18 @@ public class GeoJsonModule extends SimpleModule {
 
 	/**
 	 * {@link JsonDeserializer} converting GeoJSON representation of {@literal Polygon}.
-	 * 
+	 *
 	 * <pre>
 	 * <code>
-	 * { 
-	 *   "type": "Polygon", 
-	 *   "coordinates": [ 
-	 *     [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0] ] 
+	 * {
+	 *   "type": "Polygon",
+	 *   "coordinates": [
+	 *     [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0] ]
 	 *   ]
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
@@ -286,6 +294,7 @@ public class GeoJsonModule extends SimpleModule {
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.geo.GeoJsonModule.GeoJsonDeserializer#doDeserialize(com.fasterxml.jackson.databind.node.ArrayNode)
 		 */
+		@Nullable
 		@Override
 		protected GeoJsonPolygon doDeserialize(ArrayNode coordinates) {
 
@@ -301,11 +310,11 @@ public class GeoJsonModule extends SimpleModule {
 
 	/**
 	 * {@link JsonDeserializer} converting GeoJSON representation of {@literal MultiPolygon}.
-	 * 
+	 *
 	 * <pre>
 	 * <code>
-	 * { 
-	 *   "type": "MultiPolygon", 
+	 * {
+	 *   "type": "MultiPolygon",
 	 *   "coordinates": [
 	 *     [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
 	 *     [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
@@ -314,7 +323,7 @@ public class GeoJsonModule extends SimpleModule {
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
@@ -330,7 +339,7 @@ public class GeoJsonModule extends SimpleModule {
 			List<GeoJsonPolygon> polygones = new ArrayList<GeoJsonPolygon>(coordinates.size());
 
 			for (JsonNode polygon : coordinates) {
-				for (JsonNode ring : (ArrayNode) polygon) {
+				for (JsonNode ring : polygon) {
 					polygones.add(new GeoJsonPolygon(toPoints((ArrayNode) ring)));
 				}
 			}

@@ -25,6 +25,7 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -51,12 +52,12 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 	private final Field connectFrom;
 	private final Field connectTo;
 	private final Field as;
-	private final Long maxDepth;
-	private final Field depthField;
-	private final CriteriaDefinition restrictSearchWithMatch;
+	private final @Nullable Long maxDepth;
+	private final @Nullable Field depthField;
+	private final @Nullable CriteriaDefinition restrictSearchWithMatch;
 
 	private GraphLookupOperation(String from, List<Object> startWith, Field connectFrom, Field connectTo, Field as,
-			Long maxDepth, Field depthField, CriteriaDefinition restrictSearchWithMatch) {
+			@Nullable Long maxDepth, @Nullable Field depthField, @Nullable CriteriaDefinition restrictSearchWithMatch) {
 
 		this.from = from;
 		this.startWith = startWith;
@@ -214,9 +215,9 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 	static final class GraphLookupOperationFromBuilder
 			implements FromBuilder, StartWithBuilder, ConnectFromBuilder, ConnectToBuilder {
 
-		private String from;
-		private List<? extends Object> startWith;
-		private String connectFrom;
+		private @Nullable String from;
+		private @Nullable List<? extends Object> startWith;
+		private @Nullable String connectFrom;
 
 		/* (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.FromBuilder#from(java.lang.String)
@@ -336,9 +337,9 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		private final List<Object> startWith;
 		private final Field connectFrom;
 		private final Field connectTo;
-		private Long maxDepth;
-		private Field depthField;
-		private CriteriaDefinition restrictSearchWithMatch;
+		private @Nullable Long maxDepth;
+		private @Nullable Field depthField;
+		private @Nullable CriteriaDefinition restrictSearchWithMatch;
 
 		protected GraphLookupOperationBuilder(String from, List<? extends Object> startWith, String connectFrom,
 				String connectTo) {

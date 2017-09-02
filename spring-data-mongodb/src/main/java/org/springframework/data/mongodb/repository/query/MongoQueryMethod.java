@@ -37,6 +37,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -57,7 +58,7 @@ public class MongoQueryMethod extends QueryMethod {
 	private final Method method;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-	private MongoEntityMetadata<?> metadata;
+	private @Nullable MongoEntityMetadata<?> metadata;
 
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
@@ -102,6 +103,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 *
 	 * @return
 	 */
+	@Nullable
 	String getAnnotatedQuery() {
 		return findAnnotatedQuery().orElse(null);
 	}
@@ -203,6 +205,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 *
 	 * @return
 	 */
+	@Nullable
 	Query getQueryAnnotation() {
 		return AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
 	}
@@ -225,6 +228,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return
 	 * @since 1.6
 	 */
+	@Nullable
 	Meta getMetaAnnotation() {
 		return AnnotatedElementUtils.findMergedAnnotation(method, Meta.class);
 	}
@@ -235,6 +239,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return
 	 * @since 2.0
 	 */
+	@Nullable
 	Tailable getTailableAnnotation() {
 		return AnnotatedElementUtils.findMergedAnnotation(method, Tailable.class);
 	}

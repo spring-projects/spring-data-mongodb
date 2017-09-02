@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.PropertyAccessor;
 import org.springframework.expression.TypedValue;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link PropertyAccessor} to allow entity based field access to {@link Document}s.
@@ -47,7 +48,7 @@ class DocumentPropertyAccessor extends MapAccessor {
 	 * @see org.springframework.context.expression.MapAccessor#canRead(org.springframework.expression.EvaluationContext, java.lang.Object, java.lang.String)
 	 */
 	@Override
-	public boolean canRead(EvaluationContext context, Object target, String name) {
+	public boolean canRead(EvaluationContext context, @Nullable Object target, String name) {
 		return true;
 	}
 
@@ -57,7 +58,11 @@ class DocumentPropertyAccessor extends MapAccessor {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public TypedValue read(EvaluationContext context, Object target, String name) {
+	public TypedValue read(EvaluationContext context, @Nullable Object target, String name) {
+
+		if (target == null) {
+			return TypedValue.NULL;
+		}
 
 		Map<String, Object> source = (Map<String, Object>) target;
 

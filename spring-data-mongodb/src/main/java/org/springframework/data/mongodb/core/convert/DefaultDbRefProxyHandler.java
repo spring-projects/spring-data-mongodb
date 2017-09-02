@@ -23,6 +23,7 @@ import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
 
@@ -56,7 +57,7 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 	 * @see org.springframework.data.mongodb.core.convert.DbRefProxyHandler#populateId(com.mongodb.DBRef, java.lang.Object)
 	 */
 	@Override
-	public Object populateId(MongoPersistentProperty property, DBRef source, Object proxy) {
+	public Object populateId(MongoPersistentProperty property, @Nullable DBRef source, Object proxy) {
 
 		if (source == null) {
 			return proxy;

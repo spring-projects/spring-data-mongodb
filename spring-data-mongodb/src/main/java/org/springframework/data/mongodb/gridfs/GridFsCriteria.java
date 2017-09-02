@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.gridfs;
 
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.lang.Nullable;
 
 /**
  * GridFs-specific helper class to define {@link Criteria}s.
@@ -49,7 +50,8 @@ public class GridFsCriteria extends Criteria {
 	 * @param metadataKey
 	 * @return
 	 */
-	public static GridFsCriteria whereMetaData(String metadataKey) {
+	public static GridFsCriteria whereMetaData(@Nullable String metadataKey) {
+
 		String extension = metadataKey == null ? "" : "." + metadataKey;
 		return new GridFsCriteria(String.format("metadata%s", extension));
 	}

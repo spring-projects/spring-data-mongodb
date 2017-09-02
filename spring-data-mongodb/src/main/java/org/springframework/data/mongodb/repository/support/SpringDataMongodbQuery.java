@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.lang.Nullable;
 
 import com.google.common.base.Function;
 import com.mongodb.BasicDBObject;
@@ -26,9 +27,10 @@ import com.mongodb.DBObject;
 import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
- * Spring Data specific {@link MongodbQuery} implementation.
- * 
+ * Spring Data specific {@link AbstractMongodbQuery} implementation.
+ *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> {
 
@@ -36,7 +38,7 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 
 	/**
 	 * Creates a new {@link SpringDataMongodbQuery}.
-	 * 
+	 *
 	 * @param operations must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 */
@@ -46,7 +48,7 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 
 	/**
 	 * Creates a new {@link SpringDataMongodbQuery} to query the given collection.
-	 * 
+	 *
 	 * @param operations must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
@@ -58,9 +60,7 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 				new Function<DBObject, T>() {
 
 					@Override
-					public T apply(DBObject input) {
-
-						;
+					public T apply(@Nullable DBObject input) {
 						return operations.getConverter().read(type, new Document((BasicDBObject) input));
 					}
 				}, new SpringDataMongodbSerializer(operations.getConverter()));

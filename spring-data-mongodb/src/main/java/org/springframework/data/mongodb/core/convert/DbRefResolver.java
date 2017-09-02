@@ -21,6 +21,7 @@ import org.bson.Document;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
 
@@ -45,6 +46,7 @@ public interface DbRefResolver {
 	 * @param callback will never be {@literal null}.
 	 * @return
 	 */
+	@Nullable
 	Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler proxyHandler);
 
@@ -67,6 +69,7 @@ public interface DbRefResolver {
 	 * @return
 	 * @since 1.7
 	 */
+	@Nullable
 	Document fetch(DBRef dbRef);
 
 	/**

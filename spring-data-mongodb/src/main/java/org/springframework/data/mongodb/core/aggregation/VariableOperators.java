@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -334,8 +335,8 @@ public class VariableOperators {
 		 */
 		public static class ExpressionVariable {
 
-			private final String variableName;
-			private final Object expression;
+			private final @Nullable String variableName;
+			private final @Nullable Object expression;
 
 			/**
 			 * Creates new {@link ExpressionVariable}.
@@ -343,7 +344,7 @@ public class VariableOperators {
 			 * @param variableName can be {@literal null}.
 			 * @param expression can be {@literal null}.
 			 */
-			private ExpressionVariable(String variableName, Object expression) {
+			private ExpressionVariable(@Nullable String variableName, @Nullable Object expression) {
 
 				this.variableName = variableName;
 				this.expression = expression;

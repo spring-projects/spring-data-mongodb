@@ -60,6 +60,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -94,9 +95,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected final DbRefResolver dbRefResolver;
 	protected final DefaultDbRefProxyHandler dbRefProxyHandler;
 
-	protected ApplicationContext applicationContext;
+	protected @Nullable ApplicationContext applicationContext;
 	protected MongoTypeMapper typeMapper;
-	protected String mapKeyDotReplacement = null;
+	protected @Nullable String mapKeyDotReplacement = null;
 
 	private SpELContext spELContext;
 
@@ -142,9 +143,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * {@link DefaultMongoTypeMapper} by default. Setting this to {@literal null} will reset the {@link TypeMapper} to the
 	 * default one.
 	 *
-	 * @param typeMapper the typeMapper to set
+	 * @param typeMapper the typeMapper to set. Can be {@literal null}.
 	 */
-	public void setTypeMapper(MongoTypeMapper typeMapper) {
+	public void setTypeMapper(@Nullable MongoTypeMapper typeMapper) {
 		this.typeMapper = typeMapper == null
 				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext)
 				: typeMapper;
@@ -165,9 +166,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * object to fail. If further customization of the translation is needed, have a look at
 	 * {@link #potentiallyEscapeMapKey(String)} as well as {@link #potentiallyUnescapeMapKey(String)}.
 	 *
-	 * @param mapKeyDotReplacement the mapKeyDotReplacement to set
+	 * @param mapKeyDotReplacement the mapKeyDotReplacement to set. Can be {@literal null}.
 	 */
-	public void setMapKeyDotReplacement(String mapKeyDotReplacement) {
+	public void setMapKeyDotReplacement(@Nullable String mapKeyDotReplacement) {
 		this.mapKeyDotReplacement = mapKeyDotReplacement;
 	}
 
@@ -201,8 +202,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return read(type, bson, ObjectPath.ROOT);
 	}
 
+	@Nullable
 	@SuppressWarnings("unchecked")
-	private <S extends Object> S read(TypeInformation<S> type, Bson bson, ObjectPath path) {
+	private <S extends Object> S read(TypeInformation<S> type, @Nullable Bson bson, ObjectPath path) {
 
 		if (null == bson) {
 			return null;
@@ -262,6 +264,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				path);
 	}
 
+	@Nullable
 	private <S extends Object> S read(final MongoPersistentEntity<S> entity, final Document bson, final ObjectPath path) {
 
 		DefaultSpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(bson, spELContext);
@@ -307,8 +310,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	private void readProperties(MongoPersistentEntity<?> entity, PersistentPropertyAccessor accessor,
-			MongoPersistentProperty idProperty, DocumentAccessor documentAccessor, MongoDbPropertyValueProvider valueProvider,
-			DbRefResolverCallback callback) {
+			@Nullable MongoPersistentProperty idProperty, DocumentAccessor documentAccessor,
+			MongoDbPropertyValueProvider valueProvider, DbRefResolverCallback callback) {
 
 		for (MongoPersistentProperty prop : entity) {
 
@@ -352,7 +355,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#toDBRef(java.lang.Object, org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
 	 */
-	public DBRef toDBRef(Object object, MongoPersistentProperty referringProperty) {
+	public DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referringProperty) {
 
 		org.springframework.data.mongodb.core.mapping.DBRef annotation = null;
 
@@ -404,7 +407,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param bson
 	 */
 	@SuppressWarnings("unchecked")
-	protected void writeInternal(final Object obj, final Bson bson, final TypeInformation<?> typeHint) {
+	protected void writeInternal(@Nullable Object obj, final Bson bson, final TypeInformation<?> typeHint) {
 
 		if (null == obj) {
 			return;
@@ -434,7 +437,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		addCustomTypeKeyIfNecessary(typeHint, obj, bson);
 	}
 
-	protected void writeInternal(Object obj, final Bson bson, MongoPersistentEntity<?> entity) {
+	protected void writeInternal(@Nullable Object obj, final Bson bson, MongoPersistentEntity<?> entity) {
 
 		if (obj == null) {
 			return;
@@ -797,7 +800,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param value must not be {@literal null}.
 	 * @param bson must not be {@literal null}.
 	 */
-	protected void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, Bson bson) {
+	protected void addCustomTypeKeyIfNecessary(@Nullable TypeInformation<?> type, Object value, Bson bson) {
 
 		Class<?> reference = type != null ? type.getActualType().getType() : Object.class;
 		Class<?> valueType = ClassUtils.getUserClass(value.getClass());
@@ -831,7 +834,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param value
 	 * @return
 	 */
-	private Object getPotentiallyConvertedSimpleWrite(Object value) {
+	@Nullable
+	private Object getPotentiallyConvertedSimpleWrite(@Nullable Object value) {
 
 		if (value == null) {
 			return null;
@@ -862,8 +866,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param target must not be {@literal null}.
 	 * @return
 	 */
+	@Nullable
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Object getPotentiallyConvertedSimpleRead(Object value, Class<?> target) {
+	private Object getPotentiallyConvertedSimpleRead(@Nullable Object value, Class<?> target) {
 
 		if (value == null || target == null || target.isAssignableFrom(value.getClass())) {
 			return value;
@@ -1065,7 +1070,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				String.format("Cannot read %s. as map. Given Bson must be a Document or DBObject!", bson.getClass()));
 	}
 
-	private static void addToMap(Bson bson, String key, Object value) {
+	private static void addToMap(Bson bson, String key, @Nullable Object value) {
 
 		if (bson instanceof Document) {
 			((Document) bson).put(key, value);
@@ -1116,8 +1121,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#convertToMongoType(java.lang.Object, org.springframework.data.util.TypeInformation)
 	 */
+	@Nullable
 	@SuppressWarnings("unchecked")
-	public Object convertToMongoType(Object obj, TypeInformation<?> typeInformation) {
+	@Override
+	public Object convertToMongoType(@Nullable Object obj, TypeInformation<?> typeInformation) {
 
 		if (obj == null) {
 			return null;
@@ -1275,7 +1282,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 *
 		 * @param source must not be {@literal null}.
 		 * @param evaluator must not be {@literal null}.
-		 * @param path can be {@literal null}.
+		 * @param path must not be {@literal null}.
 		 */
 		public MongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
@@ -1294,7 +1301,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 *
 		 * @param accessor must not be {@literal null}.
 		 * @param evaluator must not be {@literal null}.
-		 * @param path can be {@literal null}.
+		 * @param path must not be {@literal null}.
 		 */
 		public MongoDbPropertyValueProvider(DocumentAccessor accessor, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
@@ -1311,6 +1318,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
 		 */
+		@Nullable
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
 
 			String expression = property.getSpelExpression();
@@ -1360,6 +1368,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 	}
 
+	@Nullable
 	@SuppressWarnings("unchecked")
 	<T> T readValue(Object value, TypeInformation<?> type, ObjectPath path) {
 
@@ -1380,8 +1389,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 	}
 
+	@Nullable
 	@SuppressWarnings("unchecked")
-	private <T> T potentiallyReadOrResolveDbRef(DBRef dbref, TypeInformation<?> type, ObjectPath path, Class<?> rawType) {
+	private <T> T potentiallyReadOrResolveDbRef(@Nullable DBRef dbref, TypeInformation<?> type, ObjectPath path,
+			Class<?> rawType) {
 
 		if (rawType.equals(DBRef.class)) {
 			return (T) dbref;
@@ -1391,7 +1402,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return object != null ? object : readAndConvertDBRef(dbref, type, path, rawType);
 	}
 
-	private <T> T readAndConvertDBRef(DBRef dbref, TypeInformation<?> type, ObjectPath path, final Class<?> rawType) {
+	@Nullable
+	private <T> T readAndConvertDBRef(@Nullable DBRef dbref, TypeInformation<?> type, ObjectPath path,
+			final Class<?> rawType) {
 
 		List<T> result = bulkReadAndConvertDBRefs(Collections.singletonList(dbref), type, path, rawType);
 		return CollectionUtils.isEmpty(result) ? null : result.iterator().next();

@@ -21,23 +21,25 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * {@link IndexDefinition} to span multiple keys for text search.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.6
  */
 public class TextIndexDefinition implements IndexDefinition {
 
-	private String name;
+	private @Nullable String name;
 	private Set<TextIndexedFieldSpec> fieldSpecs;
-	private String defaultLanguage;
-	private String languageOverride;
-	private IndexFilter filter;
+	private @Nullable String defaultLanguage;
+	private @Nullable String languageOverride;
+	private @Nullable IndexFilter filter;
 
 	TextIndexDefinition() {
 		fieldSpecs = new LinkedHashSet<TextIndexedFieldSpec>();
@@ -45,7 +47,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 	/**
 	 * Creates a {@link TextIndexDefinition} for all fields in the document.
-	 * 
+	 *
 	 * @return
 	 */
 	public static TextIndexDefinition forAllFields() {
@@ -54,7 +56,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 	/**
 	 * Get {@link TextIndexDefinitionBuilder} to create {@link TextIndexDefinition}.
-	 * 
+	 *
 	 * @return
 	 */
 	public static TextIndexDefinitionBuilder builder() {
@@ -77,7 +79,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 	/**
 	 * Returns if the {@link TextIndexDefinition} has fields assigned.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean hasFieldSpec() {
@@ -146,7 +148,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Create new {@link TextIndexedFieldSpec} for given fieldname without any weight.
-		 * 
+		 *
 		 * @param fieldname
 		 */
 		public TextIndexedFieldSpec(String fieldname) {
@@ -155,11 +157,11 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Create new {@link TextIndexedFieldSpec} for given fieldname and weight.
-		 * 
+		 *
 		 * @param fieldname
 		 * @param weight
 		 */
-		public TextIndexedFieldSpec(String fieldname, Float weight) {
+		public TextIndexedFieldSpec(String fieldname, @Nullable Float weight) {
 
 			Assert.hasText(fieldname, "Text index field cannot be blank.");
 			this.fieldname = fieldname;
@@ -168,7 +170,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Get the fieldname associated with the {@link TextIndexedFieldSpec}.
-		 * 
+		 *
 		 * @return
 		 */
 		public String getFieldname() {
@@ -177,7 +179,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Get the weight associated with the {@link TextIndexedFieldSpec}.
-		 * 
+		 *
 		 * @return
 		 */
 		public Float getWeight() {
@@ -188,7 +190,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * @return true if {@link #weight} has a value that is a valid number.
 		 */
 		public boolean isWeighted() {
-			return this.weight != null && this.weight.compareTo(1.0F) != 0;
+			return this.weight.compareTo(1.0F) != 0;
 		}
 
 		@Override
@@ -218,7 +220,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 	/**
 	 * {@link TextIndexDefinitionBuilder} helps defining options for creating {@link TextIndexDefinition}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.6
 	 */
@@ -233,7 +235,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Define the name to be used when creating the index in the store.
-		 * 
+		 *
 		 * @param name
 		 * @return
 		 */
@@ -243,9 +245,9 @@ public class TextIndexDefinition implements IndexDefinition {
 		}
 
 		/**
-		 * Define the index to span all fields using wilcard. <br/>
+		 * Define the index to span all fields using wildcard. <br/>
 		 * <strong>NOTE</strong> {@link TextIndexDefinition} cannot contain any other fields when defined with wildcard.
-		 * 
+		 *
 		 * @return
 		 */
 		public TextIndexDefinitionBuilder onAllFields() {
@@ -260,7 +262,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Include given fields with default weight.
-		 * 
+		 *
 		 * @param fieldnames
 		 * @return
 		 */
@@ -274,7 +276,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Include given field with default weight.
-		 * 
+		 *
 		 * @param fieldname
 		 * @return
 		 */
@@ -284,7 +286,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Include given field with weight.
-		 * 
+		 *
 		 * @param fieldname
 		 * @return
 		 */
@@ -301,10 +303,11 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Define the default language to be used when indexing documents.
-		 * 
+		 *
 		 * @param language
 		 * @return
-		 * @see <a href="https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index">https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index</a>
+		 * @see <a href=
+		 *      "https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index">https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index</a>
 		 */
 		public TextIndexDefinitionBuilder withDefaultLanguage(String language) {
 
@@ -314,7 +317,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Define field for language override.
-		 * 
+		 *
 		 * @param fieldname
 		 * @return
 		 */
@@ -339,7 +342,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
 		 * @since 1.10
 		 */
-		public TextIndexDefinitionBuilder partial(IndexFilter filter) {
+		public TextIndexDefinitionBuilder partial(@Nullable IndexFilter filter) {
 
 			this.instance.filter = filter;
 			return this;

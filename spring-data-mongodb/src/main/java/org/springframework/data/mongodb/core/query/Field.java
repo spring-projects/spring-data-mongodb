@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -37,7 +38,7 @@ public class Field {
 	private final Map<String, Integer> criteria = new HashMap<String, Integer>();
 	private final Map<String, Object> slices = new HashMap<String, Object>();
 	private final Map<String, Criteria> elemMatchs = new HashMap<String, Criteria>();
-	private String postionKey;
+	private @Nullable String postionKey;
 	private int positionValue;
 
 	public Field include(String key) {

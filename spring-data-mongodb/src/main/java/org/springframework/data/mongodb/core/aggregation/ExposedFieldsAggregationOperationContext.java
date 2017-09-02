@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -53,7 +54,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 		this.rootContext = rootContext;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
 	 */
@@ -62,7 +63,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 		return rootContext.getMappedObject(document);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.ExposedFields.AvailableField)
 	 */
@@ -71,7 +72,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 		return getReference(field, field.getTarget());
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
 	 */
@@ -83,11 +84,11 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	/**
 	 * Returns a {@link FieldReference} to the given {@link Field} with the given {@code name}.
 	 *
-	 * @param field may be {@literal null}
-	 * @param name must not be {@literal null}
+	 * @param field may be {@literal null}.
+	 * @param name must not be {@literal null}.
 	 * @return
 	 */
-	private FieldReference getReference(Field field, String name) {
+	private FieldReference getReference(@Nullable Field field, String name) {
 
 		Assert.notNull(name, "Name must not be null!");
 
@@ -100,13 +101,15 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	}
 
 	/**
-	 * Resolves a {@link field}/{@link name} for a {@link FieldReference} if possible.
+	 * Resolves a {@link Field}/{@code name} for a {@link FieldReference} if possible.
 	 *
-	 * @param field may be {@literal null}
-	 * @param name must not be {@literal null}
-	 * @return the resolved reference or {@literal null}
+	 * @param field may be {@literal null}.
+	 * @param name must not be {@literal null}.
+	 * @return the resolved reference or {@literal null}.
 	 */
-	protected FieldReference resolveExposedField(Field field, String name) {
+	@Nullable
+	protected FieldReference resolveExposedField(@Nullable Field field, String name) {
+
 		ExposedField exposedField = exposedFields.getField(name);
 
 		if (exposedField != null) {

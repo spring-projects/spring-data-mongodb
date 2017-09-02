@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
 
 /**
  * CDI extension to export Mongo repositories.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  */
@@ -93,7 +93,7 @@ public class MongoRepositoryExtension extends CdiRepositoryExtensionSupport {
 
 	/**
 	 * Creates a {@link CdiRepositoryBean} for the repository of the given type.
-	 * 
+	 *
 	 * @param <T> the type of the repository.
 	 * @param repositoryType the class representing the repository.
 	 * @param qualifiers the qualifiers to be applied to the bean.
@@ -113,6 +113,6 @@ public class MongoRepositoryExtension extends CdiRepositoryExtensionSupport {
 
 		// Construct and return the repository bean.
 		return new MongoRepositoryBean<T>(mongoOperations, qualifiers, repositoryType, beanManager,
-				Optional.ofNullable(getCustomImplementationDetector()));
+				Optional.of(getCustomImplementationDetector()));
 	}
 }

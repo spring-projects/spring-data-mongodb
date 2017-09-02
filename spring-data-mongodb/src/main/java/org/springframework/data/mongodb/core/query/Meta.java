@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,14 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * Meta-data for {@link Query} instances.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @author Mark Paluch
@@ -53,13 +54,14 @@ public class Meta {
 	/**
 	 * @return {@literal null} if not set.
 	 */
+	@Nullable
 	public Long getMaxTimeMsec() {
 		return getValue(MetaKey.MAX_TIME_MS.key);
 	}
 
 	/**
 	 * Set the maximum time limit in milliseconds for processing operations.
-	 * 
+	 *
 	 * @param maxTimeMsec
 	 */
 	public void setMaxTimeMsec(long maxTimeMsec) {
@@ -68,24 +70,25 @@ public class Meta {
 
 	/**
 	 * Set the maximum time limit for processing operations.
-	 * 
+	 *
 	 * @param timeout
 	 * @param timeUnit
 	 */
-	public void setMaxTime(long timeout, TimeUnit timeUnit) {
+	public void setMaxTime(long timeout, @Nullable TimeUnit timeUnit) {
 		setValue(MetaKey.MAX_TIME_MS.key, (timeUnit != null ? timeUnit : TimeUnit.MILLISECONDS).toMillis(timeout));
 	}
 
 	/**
 	 * @return {@literal null} if not set.
 	 */
+	@Nullable
 	public Long getMaxScan() {
 		return getValue(MetaKey.MAX_SCAN.key);
 	}
 
 	/**
 	 * Only scan the specified number of documents.
-	 * 
+	 *
 	 * @param maxScan
 	 */
 	public void setMaxScan(long maxScan) {
@@ -94,7 +97,7 @@ public class Meta {
 
 	/**
 	 * Add a comment to the query.
-	 * 
+	 *
 	 * @param comment
 	 */
 	public void setComment(String comment) {
@@ -104,13 +107,14 @@ public class Meta {
 	/**
 	 * @return {@literal null} if not set.
 	 */
+	@Nullable
 	public String getComment() {
 		return getValue(MetaKey.COMMENT.key);
 	}
 
 	/**
 	 * Using snapshot prevents the cursor from returning a document more than once.
-	 * 
+	 *
 	 * @param useSnapshot
 	 */
 	public void setSnapshot(boolean useSnapshot) {
@@ -154,7 +158,7 @@ public class Meta {
 
 	/**
 	 * Get {@link Iterable} of set meta values.
-	 * 
+	 *
 	 * @return
 	 */
 	public Iterable<Entry<String, Object>> values() {
@@ -163,11 +167,11 @@ public class Meta {
 
 	/**
 	 * Sets or removes the value in case of {@literal null} or empty {@link String}.
-	 * 
+	 *
 	 * @param key must not be {@literal null} or empty.
 	 * @param value
 	 */
-	private void setValue(String key, Object value) {
+	private void setValue(String key, @Nullable Object value) {
 
 		Assert.hasText(key, "Meta key must not be 'null' or blank.");
 
@@ -177,6 +181,7 @@ public class Meta {
 		this.values.put(key, value);
 	}
 
+	@Nullable
 	@SuppressWarnings("unchecked")
 	private <T> T getValue(String key) {
 		return (T) this.values.get(key);

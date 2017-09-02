@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -36,7 +37,7 @@ public class GroupByResults<T> implements Iterable<T> {
 
 	private double count;
 	private int keys;
-	private String serverUsed;
+	private @Nullable String serverUsed;
 
 	public GroupByResults(List<T> mappedResults, Document rawResults) {
 
@@ -59,6 +60,7 @@ public class GroupByResults<T> implements Iterable<T> {
 		return keys;
 	}
 
+	@Nullable
 	public String getServerUsed() {
 		return serverUsed;
 	}

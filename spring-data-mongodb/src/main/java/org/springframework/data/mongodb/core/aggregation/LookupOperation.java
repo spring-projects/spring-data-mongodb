@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -28,14 +29,15 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.9
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/lookup/">MongoDB Aggregation Framework: $lookup</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/lookup/">MongoDB Aggregation Framework:
+ *      $lookup</a>
  */
 public class LookupOperation implements FieldsExposingAggregationOperation, InheritsFieldsAggregationOperation {
 
-	private Field from;
-	private Field localField;
-	private Field foreignField;
-	private ExposedField as;
+	private final Field from;
+	private final Field localField;
+	private final Field foreignField;
+	private final ExposedField as;
 
 	/**
 	 * Creates a new {@link LookupOperation} for the given {@link Field}s.
@@ -56,10 +58,6 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		this.localField = localField;
 		this.foreignField = foreignField;
 		this.as = new ExposedField(as, true);
-	}
-
-	private LookupOperation() {
-		// used by builder
 	}
 
 	/*
@@ -143,11 +141,10 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 	public static final class LookupOperationBuilder
 			implements FromBuilder, LocalFieldBuilder, ForeignFieldBuilder, AsBuilder {
 
-		private final LookupOperation lookupOperation;
-
-		private LookupOperationBuilder() {
-			this.lookupOperation = new LookupOperation();
-		}
+		private @Nullable Field from;
+		private @Nullable Field localField;
+		private @Nullable Field foreignField;
+		private @Nullable ExposedField as;
 
 		/**
 		 * Creates new builder for {@link LookupOperation}.
@@ -162,7 +159,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		public LocalFieldBuilder from(String name) {
 
 			Assert.hasText(name, "'From' must not be null or empty!");
-			lookupOperation.from = Fields.field(name);
+			from = Fields.field(name);
 			return this;
 		}
 
@@ -170,16 +167,16 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		public LookupOperation as(String name) {
 
 			Assert.hasText(name, "'As' must not be null or empty!");
-			lookupOperation.as = new ExposedField(Fields.field(name), true);
-			return new LookupOperation(lookupOperation.from, lookupOperation.localField, lookupOperation.foreignField,
-					lookupOperation.as);
+			as = new ExposedField(Fields.field(name), true);
+			return new LookupOperation(from, localField, foreignField,
+					as);
 		}
 
 		@Override
 		public AsBuilder foreignField(String name) {
 
 			Assert.hasText(name, "'ForeignField' must not be null or empty!");
-			lookupOperation.foreignField = Fields.field(name);
+			foreignField = Fields.field(name);
 			return this;
 		}
 
@@ -187,7 +184,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		public ForeignFieldBuilder localField(String name) {
 
 			Assert.hasText(name, "'LocalField' must not be null or empty!");
-			lookupOperation.localField = Fields.field(name);
+			localField = Fields.field(name);
 			return this;
 		}
 	}

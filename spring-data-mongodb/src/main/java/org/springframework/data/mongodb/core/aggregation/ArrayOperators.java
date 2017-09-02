@@ -1,5 +1,5 @@
 /*
- * Copyright 2016. the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.AsBuilder;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -414,9 +415,9 @@ public class ArrayOperators {
 	 */
 	public static class Filter implements AggregationExpression {
 
-		private Object input;
-		private ExposedField as;
-		private Object condition;
+		private @Nullable Object input;
+		private @Nullable ExposedField as;
+		private @Nullable Object condition;
 
 		private Filter() {
 			// used by builder

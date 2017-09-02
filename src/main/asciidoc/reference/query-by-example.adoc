@@ -69,3 +69,29 @@ Spring Data MongoDB provides support for the following matching options:
 | `{"firstname" : { $regex: /firstname/, $options: 'i'}}`
 
 |===
+
+[[query-by-example.untyped]]
+== Untyped Example
+
+By default `Example` is strictly typed. This means the mapped query will have a type match included restricting it to probe assignable types. Eg. when sticking with the default type key `_class` the query has restrictions like `_class : { $in : [ com.acme.Person] }`.
+
+By using the `UntypedExampleMatcher` it is possible bypasses the default behavior and skip the type restriction. So as long as field names match nearly any domain type can be used as the probe for creating the reference.
+
+.Untyped Example Query
+====
+[source, java]
+----
+
+class JustAnArbitraryClassWithMatchingFieldName {
+  @Field("lastname") String value;
+}
+
+JustAnArbitraryClassWithMatchingFieldNames probe = new JustAnArbitraryClassWithMatchingFieldNames();
+probe.value = "stark";
+
+Example example = Example.of(probe, UntypedExampleMatcher.matching());
+
+Query query = new Query(new Criteria().alike(example));
+List<Person> result = template.find(query, Person.class);
+----
+====

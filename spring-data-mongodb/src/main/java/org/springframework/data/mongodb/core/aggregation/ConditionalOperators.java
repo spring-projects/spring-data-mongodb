@@ -1,5 +1,5 @@
 /*
- * Copyright 2016. the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Co
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -33,6 +34,7 @@ import org.springframework.util.ClassUtils;
  * Gateway to {@literal conditional expressions} that evaluate their argument expressions as booleans to a value.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.10
  */
 public class ConditionalOperators {
@@ -121,9 +123,11 @@ public class ConditionalOperators {
 
 	public static class ConditionalOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
-		private final CriteriaDefinition criteriaDefinition;
+		private final @Nullable String fieldReference;
+
+		private final @Nullable AggregationExpression expression;
+
+		private final @Nullable CriteriaDefinition criteriaDefinition;
 
 		/**
 		 * Creates new {@link ConditionalOperatorFactory} for given {@literal fieldReference}.
@@ -358,7 +362,7 @@ public class ConditionalOperators {
 		 */
 		static final class IfNullOperatorBuilder implements IfNullBuilder, ThenBuilder {
 
-			private Object condition;
+			private @Nullable Object condition;
 
 			private IfNullOperatorBuilder() {}
 
@@ -850,8 +854,8 @@ public class ConditionalOperators {
 		 */
 		static class ConditionalExpressionBuilder implements WhenBuilder, ThenBuilder, OtherwiseBuilder {
 
-			private Object condition;
-			private Object thenValue;
+			private @Nullable Object condition;
+			private @Nullable Object thenValue;
 
 			private ConditionalExpressionBuilder() {}
 

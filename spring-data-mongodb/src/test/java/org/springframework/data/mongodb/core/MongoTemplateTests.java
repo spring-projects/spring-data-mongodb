@@ -722,7 +722,7 @@ public class MongoTemplateTests {
 		p = template.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Person.class);
 		assertThat(p.getAge(), is(26));
 
-		p = template.findAndModify(query, update, null, Person.class, "person");
+		p = template.findAndModify(query, update, new FindAndModifyOptions(), Person.class, "person");
 		assertThat(p.getAge(), is(26));
 		p = template.findOne(query, Person.class);
 		assertThat(p.getAge(), is(27));
@@ -1220,7 +1220,7 @@ public class MongoTemplateTests {
 		});
 	}
 
-	@Test // DATADOC-166
+	@Test(expected = IllegalArgumentException.class) // DATADOC-166, DATAMONGO-1762
 	public void removingNullIsANoOp() {
 		template.remove((Object) null);
 	}
@@ -1290,7 +1290,7 @@ public class MongoTemplateTests {
 		DBRef first = new DBRef("foo", new ObjectId());
 		DBRef second = new DBRef("bar", new ObjectId());
 
-		template.updateFirst(null, update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
+		template.updateFirst(new Query(), update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
 	}
 
 	class ClassWithDBRefs {
@@ -1351,7 +1351,7 @@ public class MongoTemplateTests {
 		template.save(dave);
 		template.save(carter);
 
-		assertThat(template.count(null, Person.class), is(2L));
+		assertThat(template.count(new Query(), Person.class), is(2L));
 		assertThat(template.count(query(where("firstName").is("Carter")), Person.class), is(1L));
 	}
 
@@ -1632,11 +1632,9 @@ public class MongoTemplateTests {
 		assertThat(person.version, is(0));
 	}
 
-	@Test // DATAMONGO-568
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-568, DATAMONGO-1762
 	public void queryCantBeNull() {
-
-		List<PersonWithIdPropertyOfTypeObjectId> result = template.findAll(PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(template.find(null, PersonWithIdPropertyOfTypeObjectId.class), is(result));
+		template.find(null, PersonWithIdPropertyOfTypeObjectId.class);
 	}
 
 	@Test // DATAMONGO-620

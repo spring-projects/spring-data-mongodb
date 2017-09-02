@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -54,7 +55,7 @@ class ObjectPath {
 	 * Creates a new {@link ObjectPath} from the given parent {@link ObjectPath} by adding the provided
 	 * {@link ObjectPathItem} to it.
 	 *
-	 * @param parent can be {@literal null}.
+	 * @param parent must not be {@literal null}.
 	 * @param item
 	 */
 	private ObjectPath(ObjectPath parent, ObjectPath.ObjectPathItem item) {
@@ -74,7 +75,7 @@ class ObjectPath {
 	 * @param id must not be {@literal null}.
 	 * @return new instance of {@link ObjectPath}.
 	 */
-	ObjectPath push(Object object, MongoPersistentEntity<?> entity, Object id) {
+	ObjectPath push(Object object, MongoPersistentEntity<?> entity, @Nullable Object id) {
 
 		Assert.notNull(object, "Object must not be null!");
 		Assert.notNull(entity, "MongoPersistentEntity must not be null!");
@@ -92,6 +93,7 @@ class ObjectPath {
 	 * @return
 	 * @deprecated use {@link #getPathItem(Object, String, Class)}.
 	 */
+	@Nullable
 	@Deprecated
 	Object getPathItem(Object id, String collection) {
 
@@ -124,6 +126,7 @@ class ObjectPath {
 	 * @return {@literal null} when no match found.
 	 * @since 2.0
 	 */
+	@Nullable
 	<T> T getPathItem(Object id, String collection, Class<T> type) {
 
 		Assert.notNull(id, "Id must not be null!");
@@ -152,6 +155,7 @@ class ObjectPath {
 	 *
 	 * @return
 	 */
+	@Nullable
 	Object getCurrentObject() {
 		return items.length == 0 ? null : items[items.length - 1].getObject();
 	}
@@ -187,7 +191,7 @@ class ObjectPath {
 	private static class ObjectPathItem {
 
 		Object object;
-		Object idValue;
+		@Nullable Object idValue;
 		String collection;
 	}
 }

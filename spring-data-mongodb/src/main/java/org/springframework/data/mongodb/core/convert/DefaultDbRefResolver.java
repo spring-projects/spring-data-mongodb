@@ -23,9 +23,11 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -42,6 +44,7 @@ import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
@@ -91,6 +94,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		Assert.notNull(property, "Property must not be null!");
 		Assert.notNull(callback, "Callback must not be null!");
+		Assert.notNull(handler, "Handler must not be null!");
 
 		if (isLazyDbRef(property)) {
 			return createLazyLoadingProxy(property, dbref, callback, handler);
@@ -142,8 +146,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		}
 
 		String collection = refs.iterator().next().getCollectionName();
+		List<Object> ids = new ArrayList<>(refs.size());
 
-		List<Object> ids = new ArrayList<Object>(refs.size());
 		for (DBRef ref : refs) {
 
 			if (!collection.equals(ref.getCollectionName())) {
@@ -155,10 +159,14 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		}
 
 		MongoDatabase db = mongoDbFactory.getDb();
-		List<Document> result = new ArrayList<>();
-		db.getCollection(collection).find(new Document("_id", new Document("$in", ids))).into(result);
-		result.sort(new DbRefByReferencePositionComparator(ids));
-		return result;
+
+		List<Document> result = db.getCollection(collection) //
+				.find(new Document("_id", new Document("$in", ids))) //
+				.into(new ArrayList<>());
+
+		return ids.stream() //
+				.flatMap(id -> documentWithId(id, result)) //
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -170,8 +178,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @param callback must not be {@literal null}.
 	 * @return
 	 */
-	private Object createLazyLoadingProxy(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
-			DbRefProxyHandler handler) {
+	private Object createLazyLoadingProxy(MongoPersistentProperty property, @Nullable DBRef dbref,
+			DbRefResolverCallback callback, DbRefProxyHandler handler) {
 
 		Class<?> propertyType = property.getType();
 		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, dbref, exceptionTranslator, callback);
@@ -224,6 +232,20 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	}
 
 	/**
+	 * Returns document with the given identifier from the given list of {@link Document}s.
+	 *
+	 * @param identifier
+	 * @param documents
+	 * @return
+	 */
+	private static Stream<Document> documentWithId(Object identifier, Collection<Document> documents) {
+
+		return documents.stream() //
+				.filter(it -> it.get("_id").equals(identifier)) //
+				.limit(1);
+	}
+
+	/**
 	 * A {@link MethodInterceptor} that is used within a lazy loading proxy. The property resolving is delegated to a
 	 * {@link DbRefResolverCallback}. The resolving process is triggered by a method invocation on the proxy and is
 	 * guaranteed to be performed only once.
@@ -242,8 +264,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		private final PersistenceExceptionTranslator exceptionTranslator;
 
 		private volatile boolean resolved;
-		private Object result;
-		private DBRef dbref;
+		private final @Nullable DBRef dbref;
+		private @Nullable Object result;
 
 		static {
 			try {
@@ -263,7 +285,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @param dbref can be {@literal null}.
 		 * @param callback must not be {@literal null}.
 		 */
-		public LazyLoadingInterceptor(MongoPersistentProperty property, DBRef dbref,
+		public LazyLoadingInterceptor(MongoPersistentProperty property, @Nullable DBRef dbref,
 				PersistenceExceptionTranslator exceptionTranslator, DbRefResolverCallback callback) {
 
 			Assert.notNull(property, "Property must not be null!");
@@ -281,7 +303,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @see org.aopalliance.intercept.MethodInterceptor#invoke(org.aopalliance.intercept.MethodInvocation)
 		 */
 		@Override
-		public Object invoke(MethodInvocation invocation) throws Throwable {
+		public Object invoke(@Nullable MethodInvocation invocation) throws Throwable {
 			return intercept(invocation.getThis(), invocation.getMethod(), invocation.getArguments(), null);
 		}
 
@@ -289,8 +311,9 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * (non-Javadoc)
 		 * @see org.springframework.cglib.proxy.MethodInterceptor#intercept(java.lang.Object, java.lang.reflect.Method, java.lang.Object[], org.springframework.cglib.proxy.MethodProxy)
 		 */
+		@Nullable
 		@Override
-		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+		public Object intercept(Object obj, Method method, Object[] args, @Nullable MethodProxy proxy) throws Throwable {
 
 			if (INITIALIZE_METHOD.equals(method)) {
 				return ensureResolved();
@@ -337,7 +360,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @param proxy
 		 * @return
 		 */
-		private String proxyToString(Object proxy) {
+		private String proxyToString(@Nullable Object proxy) {
 
 			StringBuilder description = new StringBuilder();
 			if (dbref != null) {
@@ -358,7 +381,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @param proxy
 		 * @return
 		 */
-		private int proxyHashCode(Object proxy) {
+		private int proxyHashCode(@Nullable Object proxy) {
 			return proxyToString(proxy).hashCode();
 		}
 
@@ -369,7 +392,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * @param that
 		 * @return
 		 */
-		private boolean proxyEquals(Object proxy, Object that) {
+		private boolean proxyEquals(@Nullable Object proxy, Object that) {
 
 			if (!(that instanceof LazyLoadingProxy)) {
 				return false;
@@ -387,6 +410,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 *
 		 * @return
 		 */
+		@Nullable
 		private Object ensureResolved() {
 
 			if (!resolved) {
@@ -430,6 +454,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 *
 		 * @return
 		 */
+		@Nullable
 		private synchronized Object resolve() {
 
 			if (!resolved) {
@@ -447,39 +472,6 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			}
 
 			return result;
-		}
-	}
-
-	/**
-	 * {@link Comparator} for sorting {@link Document} that have been loaded in random order by a predefined list of
-	 * reference identifiers.
-	 *
-	 * @author Christoph Strobl
-	 * @author Oliver Gierke
-	 * @since 1.10
-	 */
-	private static class DbRefByReferencePositionComparator implements Comparator<Document> {
-
-		private final List<Object> reference;
-
-		/**
-		 * Creates a new {@link DbRefByReferencePositionComparator} for the given list of reference identifiers.
-		 *
-		 * @param referenceIds must not be {@literal null}.
-		 */
-		public DbRefByReferencePositionComparator(List<Object> referenceIds) {
-
-			Assert.notNull(referenceIds, "Reference identifiers must not be null!");
-			this.reference = new ArrayList<Object>(referenceIds);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-		 */
-		@Override
-		public int compare(Document o1, Document o2) {
-			return Integer.compare(reference.indexOf(o1.get("_id")), reference.indexOf(o2.get("_id")));
 		}
 	}
 }

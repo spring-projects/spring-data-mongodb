@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Mark Pollak
@@ -30,7 +31,7 @@ public class FindAndModifyOptions {
 	private boolean upsert;
 	private boolean remove;
 
-	private Collation collation;
+	private @Nullable Collation collation;
 
 	/**
 	 * Static factory method to create a FindAndModifyOptions instance
@@ -46,7 +47,7 @@ public class FindAndModifyOptions {
 	 * @return
 	 * @since 2.0
 	 */
-	public static FindAndModifyOptions of(FindAndModifyOptions source) {
+	public static FindAndModifyOptions of(@Nullable FindAndModifyOptions source) {
 
 		FindAndModifyOptions options = new FindAndModifyOptions();
 		if (source == null) {
@@ -83,7 +84,7 @@ public class FindAndModifyOptions {
 	 * @return
 	 * @since 2.0
 	 */
-	public FindAndModifyOptions collation(Collation collation) {
+	public FindAndModifyOptions collation(@Nullable Collation collation) {
 
 		this.collation = collation;
 		return this;

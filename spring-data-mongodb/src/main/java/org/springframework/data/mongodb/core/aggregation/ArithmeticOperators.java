@@ -92,7 +92,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Abs abs() {
-			return fieldReference != null ? Abs.absoluteValueOf(fieldReference) : Abs.absoluteValueOf(expression);
+			return usesFieldRef() ? Abs.absoluteValueOf(fieldReference) : Abs.absoluteValueOf(expression);
 		}
 
 		/**
@@ -134,7 +134,7 @@ public class ArithmeticOperators {
 		}
 
 		private Add createAdd() {
-			return fieldReference != null ? Add.valueOf(fieldReference) : Add.valueOf(expression);
+			return usesFieldRef() ? Add.valueOf(fieldReference) : Add.valueOf(expression);
 		}
 
 		/**
@@ -144,7 +144,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Ceil ceil() {
-			return fieldReference != null ? Ceil.ceilValueOf(fieldReference) : Ceil.ceilValueOf(expression);
+			return usesFieldRef() ? Ceil.ceilValueOf(fieldReference) : Ceil.ceilValueOf(expression);
 		}
 
 		/**
@@ -186,7 +186,7 @@ public class ArithmeticOperators {
 		}
 
 		private Divide createDivide() {
-			return fieldReference != null ? Divide.valueOf(fieldReference) : Divide.valueOf(expression);
+			return usesFieldRef() ? Divide.valueOf(fieldReference) : Divide.valueOf(expression);
 		}
 
 		/**
@@ -195,7 +195,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Exp exp() {
-			return fieldReference != null ? Exp.expValueOf(fieldReference) : Exp.expValueOf(expression);
+			return usesFieldRef() ? Exp.expValueOf(fieldReference) : Exp.expValueOf(expression);
 		}
 
 		/**
@@ -205,7 +205,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Floor floor() {
-			return fieldReference != null ? Floor.floorValueOf(fieldReference) : Floor.floorValueOf(expression);
+			return usesFieldRef() ? Floor.floorValueOf(fieldReference) : Floor.floorValueOf(expression);
 		}
 
 		/**
@@ -215,7 +215,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Ln ln() {
-			return fieldReference != null ? Ln.lnValueOf(fieldReference) : Ln.lnValueOf(expression);
+			return usesFieldRef() ? Ln.lnValueOf(fieldReference) : Ln.lnValueOf(expression);
 		}
 
 		/**
@@ -258,7 +258,7 @@ public class ArithmeticOperators {
 		}
 
 		private Log createLog() {
-			return fieldReference != null ? Log.valueOf(fieldReference) : Log.valueOf(expression);
+			return usesFieldRef() ? Log.valueOf(fieldReference) : Log.valueOf(expression);
 		}
 
 		/**
@@ -267,7 +267,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Log10 log10() {
-			return fieldReference != null ? Log10.log10ValueOf(fieldReference) : Log10.log10ValueOf(expression);
+			return usesFieldRef() ? Log10.log10ValueOf(fieldReference) : Log10.log10ValueOf(expression);
 		}
 
 		/**
@@ -310,7 +310,7 @@ public class ArithmeticOperators {
 		}
 
 		private Mod createMod() {
-			return fieldReference != null ? Mod.valueOf(fieldReference) : Mod.valueOf(expression);
+			return usesFieldRef() ? Mod.valueOf(fieldReference) : Mod.valueOf(expression);
 		}
 
 		/**
@@ -350,7 +350,7 @@ public class ArithmeticOperators {
 		}
 
 		private Multiply createMultiply() {
-			return fieldReference != null ? Multiply.valueOf(fieldReference) : Multiply.valueOf(expression);
+			return usesFieldRef() ? Multiply.valueOf(fieldReference) : Multiply.valueOf(expression);
 		}
 
 		/**
@@ -390,7 +390,7 @@ public class ArithmeticOperators {
 		}
 
 		private Pow createPow() {
-			return fieldReference != null ? Pow.valueOf(fieldReference) : Pow.valueOf(expression);
+			return usesFieldRef() ? Pow.valueOf(fieldReference) : Pow.valueOf(expression);
 		}
 
 		/**
@@ -399,7 +399,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Sqrt sqrt() {
-			return fieldReference != null ? Sqrt.sqrtOf(fieldReference) : Sqrt.sqrtOf(expression);
+			return usesFieldRef() ? Sqrt.sqrtOf(fieldReference) : Sqrt.sqrtOf(expression);
 		}
 
 		/**
@@ -439,7 +439,7 @@ public class ArithmeticOperators {
 		}
 
 		private Subtract createSubtract() {
-			return fieldReference != null ? Subtract.valueOf(fieldReference) : Subtract.valueOf(expression);
+			return usesFieldRef() ? Subtract.valueOf(fieldReference) : Subtract.valueOf(expression);
 		}
 
 		/**
@@ -448,7 +448,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Trunc trunc() {
-			return fieldReference != null ? Trunc.truncValueOf(fieldReference) : Trunc.truncValueOf(expression);
+			return usesFieldRef() ? Trunc.truncValueOf(fieldReference) : Trunc.truncValueOf(expression);
 		}
 
 		/**
@@ -457,7 +457,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Sum sum() {
-			return fieldReference != null ? AccumulatorOperators.Sum.sumOf(fieldReference)
+			return usesFieldRef() ? AccumulatorOperators.Sum.sumOf(fieldReference)
 					: AccumulatorOperators.Sum.sumOf(expression);
 		}
 
@@ -467,7 +467,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Avg avg() {
-			return fieldReference != null ? AccumulatorOperators.Avg.avgOf(fieldReference)
+			return usesFieldRef() ? AccumulatorOperators.Avg.avgOf(fieldReference)
 					: AccumulatorOperators.Avg.avgOf(expression);
 		}
 
@@ -477,7 +477,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Max max() {
-			return fieldReference != null ? AccumulatorOperators.Max.maxOf(fieldReference)
+			return usesFieldRef() ? AccumulatorOperators.Max.maxOf(fieldReference)
 					: AccumulatorOperators.Max.maxOf(expression);
 		}
 
@@ -487,7 +487,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public Min min() {
-			return fieldReference != null ? AccumulatorOperators.Min.minOf(fieldReference)
+			return usesFieldRef() ? AccumulatorOperators.Min.minOf(fieldReference)
 					: AccumulatorOperators.Min.minOf(expression);
 		}
 
@@ -497,7 +497,7 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public StdDevPop stdDevPop() {
-			return fieldReference != null ? AccumulatorOperators.StdDevPop.stdDevPopOf(fieldReference)
+			return usesFieldRef() ? AccumulatorOperators.StdDevPop.stdDevPopOf(fieldReference)
 					: AccumulatorOperators.StdDevPop.stdDevPopOf(expression);
 		}
 
@@ -507,8 +507,12 @@ public class ArithmeticOperators {
 		 * @return
 		 */
 		public StdDevSamp stdDevSamp() {
-			return fieldReference != null ? AccumulatorOperators.StdDevSamp.stdDevSampOf(fieldReference)
+			return usesFieldRef() ? AccumulatorOperators.StdDevSamp.stdDevSampOf(fieldReference)
 					: AccumulatorOperators.StdDevSamp.stdDevSampOf(expression);
+		}
+
+		private boolean usesFieldRef() {
+			return fieldReference != null;
 		}
 	}
 

@@ -28,6 +28,7 @@ import org.springframework.expression.spel.ast.LongLiteral;
 import org.springframework.expression.spel.ast.NullLiteral;
 import org.springframework.expression.spel.ast.RealLiteral;
 import org.springframework.expression.spel.ast.StringLiteral;
+import org.springframework.lang.Nullable;
 
 /**
  * A node representing a literal in an expression.
@@ -72,7 +73,7 @@ public class LiteralNode extends ExpressionNode {
 	 * @param parent
 	 * @return
 	 */
-	public boolean isUnaryMinus(ExpressionNode parent) {
+	public boolean isUnaryMinus(@Nullable ExpressionNode parent) {
 
 		if (!(parent instanceof OperatorNode)) {
 			return false;

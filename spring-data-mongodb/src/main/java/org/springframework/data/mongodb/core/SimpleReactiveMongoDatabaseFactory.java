@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.ConnectionString;
@@ -41,9 +42,10 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	private final MongoClient mongo;
 	private final String databaseName;
 	private final boolean mongoInstanceCreated;
+
 	private final PersistenceExceptionTranslator exceptionTranslator;
 
-	private WriteConcern writeConcern;
+	private @Nullable WriteConcern writeConcern;
 
 	/**
 	 * Creates a new {@link SimpleReactiveMongoDatabaseFactory} instance from the given {@link ConnectionString}.

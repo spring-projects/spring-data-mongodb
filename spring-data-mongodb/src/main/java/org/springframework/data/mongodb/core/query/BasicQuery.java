@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import static org.springframework.util.ObjectUtils.*;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -42,14 +43,14 @@ public class BasicQuery extends Query {
 	 *
 	 * @param query may be {@literal null}.
 	 */
-	public BasicQuery(String query) {
+	public BasicQuery(@Nullable String query) {
 		this(query, null);
 	}
 
 	/**
 	 * Create a new {@link BasicQuery} given a query {@link Document}.
 	 *
-	 * @param queryObject may be {@literal null}.
+	 * @param queryObject must not be {@literal null}.
 	 */
 	public BasicQuery(Document queryObject) {
 		this(queryObject, new Document());
@@ -61,10 +62,10 @@ public class BasicQuery extends Query {
 	 * @param query may be {@literal null}.
 	 * @param fields may be {@literal null}.
 	 */
-	public BasicQuery(String query, String fields) {
+	public BasicQuery(@Nullable String query, @Nullable String fields) {
 
-		this.queryObject = query != null ? Document.parse(query) : new Document();
-		this.fieldsObject = fields != null ? Document.parse(fields) : new Document();
+		this(query != null ? Document.parse(query) : new Document(),
+				fields != null ? Document.parse(fields) : new Document());
 	}
 
 	/**
@@ -81,6 +82,7 @@ public class BasicQuery extends Query {
 
 		this.queryObject = queryObject;
 		this.fieldsObject = fieldsObject;
+		this.sortObject = new Document();
 	}
 
 	/*
@@ -111,19 +113,10 @@ public class BasicQuery extends Query {
 	@Override
 	public Document getFieldsObject() {
 
-		if (fieldsObject == null) {
-			return super.getFieldsObject();
-		}
-
-		if (super.getFieldsObject() != null) {
-
-			Document combinedFieldsObject = new Document();
-			combinedFieldsObject.putAll(fieldsObject);
-			combinedFieldsObject.putAll(super.getFieldsObject());
-			return combinedFieldsObject;
-		}
-
-		return fieldsObject;
+		Document combinedFieldsObject = new Document();
+		combinedFieldsObject.putAll(fieldsObject);
+		combinedFieldsObject.putAll(super.getFieldsObject());
+		return combinedFieldsObject;
 	}
 
 	/*
@@ -134,10 +127,7 @@ public class BasicQuery extends Query {
 	public Document getSortObject() {
 
 		Document result = new Document();
-
-		if (sortObject != null) {
-			result.putAll(sortObject);
-		}
+		result.putAll(sortObject);
 
 		Document overrides = super.getSortObject();
 		result.putAll(overrides);

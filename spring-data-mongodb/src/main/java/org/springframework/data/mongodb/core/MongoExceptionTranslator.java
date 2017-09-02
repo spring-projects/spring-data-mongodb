@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.util.MongoDbErrorCodes;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.BulkWriteException;
@@ -67,6 +68,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	 * (non-Javadoc)
 	 * @see org.springframework.dao.support.PersistenceExceptionTranslator#translateExceptionIfPossible(java.lang.RuntimeException)
 	 */
+	@Nullable
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
 		// Check for well-known MongoException subclasses.

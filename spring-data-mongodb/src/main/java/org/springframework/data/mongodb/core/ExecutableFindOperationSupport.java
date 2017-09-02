@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.StreamUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -88,7 +89,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		@NonNull MongoTemplate template;
 		@NonNull Class<?> domainType;
 		Class<T> returnType;
-		String collection;
+		@Nullable String collection;
 		Query query;
 
 		/*
@@ -204,7 +205,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return template.exists(query, domainType, getCollectionName());
 		}
 
-		private List<T> doFind(CursorPreparer preparer) {
+		private List<T> doFind(@Nullable CursorPreparer preparer) {
 
 			Document queryObject = query.getQueryObject();
 			Document fieldsObject = query.getFieldsObject();
@@ -217,8 +218,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return template.doStream(query, domainType, getCollectionName(), returnType);
 		}
 
-		private CursorPreparer getCursorPreparer(Query query, CursorPreparer preparer) {
-			return query == null || preparer != null ? preparer : template.new QueryCursorPreparer(query, domainType);
+		private CursorPreparer getCursorPreparer(Query query, @Nullable CursorPreparer preparer) {
+			return preparer != null ? preparer : template.new QueryCursorPreparer(query, domainType);
 		}
 
 		private String getCollectionName() {
@@ -236,10 +237,10 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	 */
 	static class DelegatingQueryCursorPreparer implements CursorPreparer {
 
-		private final CursorPreparer delegate;
+		private final @Nullable CursorPreparer delegate;
 		private Optional<Integer> limit = Optional.empty();
 
-		DelegatingQueryCursorPreparer(CursorPreparer delegate) {
+		DelegatingQueryCursorPreparer(@Nullable CursorPreparer delegate) {
 			this.delegate = delegate;
 		}
 

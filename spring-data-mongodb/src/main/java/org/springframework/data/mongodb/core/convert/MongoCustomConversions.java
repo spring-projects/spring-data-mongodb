@@ -28,6 +28,7 @@ import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.data.convert.JodaTimeConverters;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
+import org.springframework.lang.Nullable;
 
 /**
  * Value object to capture custom conversion. {@link MongoCustomConversions} also act as factory for
@@ -94,8 +95,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * (non-Javadoc)
 		 * @see org.springframework.core.convert.converter.GenericConverter#convert(java.lang.Object, org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)
 		 */
-		public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
-			return source.toString();
+		public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+			return source != null ? source.toString() : null;
 		}
 	}
 }

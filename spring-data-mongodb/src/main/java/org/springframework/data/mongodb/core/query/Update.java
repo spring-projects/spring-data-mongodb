@@ -31,6 +31,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -848,7 +849,7 @@ public class Update {
 		 * @return never {@literal null}.
 		 * @since 1.7
 		 */
-		public PushOperatorBuilder atPosition(Position position) {
+		public PushOperatorBuilder atPosition(@Nullable Position position) {
 
 			if (position == null || Position.LAST.equals(position)) {
 				return this;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,13 @@ package org.springframework.data.mongodb.core;
 
 import org.bson.Document;
 import org.springframework.dao.DataAccessException;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 
 /**
- * Callback interface for executing actions against a {@link MongoCollection}
+ * Callback interface for executing actions against a {@link MongoCollection}.
  *
  * @author Mark Pollak
  * @author Grame Rocher
@@ -35,10 +36,11 @@ public interface CollectionCallback<T> {
 
 	/**
 	 * @param collection never {@literal null}.
-	 * @return
+	 * @return can be {@literal null}.
 	 * @throws MongoException
 	 * @throws DataAccessException
 	 */
+	@Nullable
 	T doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException;
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -30,10 +31,11 @@ import com.mongodb.ServerAddress;
 
 /**
  * Parse a {@link String} to a {@link ServerAddress} array. The format is host1:port1,host2:port2,host3:port3.
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
@@ -49,7 +51,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
 	 */
 	@Override
-	public void setAsText(String replicaSetString) {
+	public void setAsText(@Nullable String replicaSetString) {
 
 		if (!StringUtils.hasText(replicaSetString)) {
 			setValue(null);
@@ -78,10 +80,11 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
 	/**
 	 * Parses the given source into a {@link ServerAddress}.
-	 * 
+	 *
 	 * @param source
 	 * @return the
 	 */
+	@Nullable
 	private ServerAddress parseServerAddress(String source) {
 
 		if (!StringUtils.hasText(source)) {
@@ -112,7 +115,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
 	/**
 	 * Extract the host and port from the given {@link String}.
-	 * 
+	 *
 	 * @param addressAndPortSource must not be {@literal null}.
 	 * @return
 	 */

@@ -22,6 +22,7 @@ import org.bson.types.ObjectId;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.gridfs.GridFSFile;
@@ -53,7 +54,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param metadata can be {@literal null}.
 	 * @return the {@link GridFSFile} just created
 	 */
-	ObjectId store(InputStream content, Object metadata);
+	ObjectId store(InputStream content, @Nullable Object metadata);
 
 	/**
 	 * Stores the given content into a file with the given name.
@@ -62,7 +63,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param metadata can be {@literal null}.
 	 * @return the {@link GridFSFile} just created
 	 */
-	ObjectId store(InputStream content, Document metadata);
+	ObjectId store(InputStream content, @Nullable Document metadata);
 
 	/**
 	 * Stores the given content into a file with the given name and content type.
@@ -72,18 +73,18 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param contentType can be {@literal null}.
 	 * @return the {@link GridFSFile} just created
 	 */
-	ObjectId store(InputStream content, String filename, String contentType);
+	ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType);
 
 	/**
 	 * Stores the given content into a file with the given name using the given metadata. The metadata object will be
 	 * marshalled before writing.
 	 * 
 	 * @param content must not be {@literal null}.
-	 * @param filename must not be {@literal null} or empty.
+	 * @param filename can be {@literal null} or empty.
 	 * @param metadata can be {@literal null}.
 	 * @return the {@link GridFSFile} just created
 	 */
-	ObjectId store(InputStream content, String filename, Object metadata);
+	ObjectId store(InputStream content, @Nullable String filename, @Nullable Object metadata);
 
 	/**
 	 * Stores the given content into a file with the given name and content type using the given metadata. The metadata
@@ -95,7 +96,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param metadata can be {@literal null}
 	 * @return the {@link GridFSFile} just created
 	 */
-	ObjectId store(InputStream content, String filename, String contentType, Object metadata);
+	ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType, @Nullable Object metadata);
 
 	/**
 	 * Stores the given content into a file with the given name using the given metadata.
@@ -105,7 +106,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param metadata can be {@literal null}.
 	 * @return the {@link GridFSFile} just created
 	 */
-	ObjectId store(InputStream content, String filename, Document metadata);
+	ObjectId store(InputStream content, @Nullable String filename, @Nullable Document metadata);
 
 	/**
 	 * Stores the given content into a file with the given name and content type using the given metadata.
@@ -116,14 +117,14 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param metadata can be {@literal null}.
 	 * @return the {@link GridFSFile} just created
 	 */
-	ObjectId store(InputStream content, String filename, String contentType, Document metadata);
+	ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType, @Nullable Document metadata);
 
 	/**
 	 * Returns all files matching the given query. Note, that currently {@link Sort} criterias defined at the
 	 * {@link Query} will not be regarded as MongoDB does not support ordering for GridFS file access.
 	 * 
 	 * @see <a href="https://jira.mongodb.org/browse/JAVA-431">MongoDB Jira: JAVA-431</a>
-	 * @param query
+	 * @param query must not be {@literal null}.
 	 * @return
 	 */
 	GridFSFindIterable find(Query query);
@@ -131,22 +132,23 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	/**
 	 * Returns a single file matching the given query or {@literal null} in case no file matches.
 	 * 
-	 * @param query
+	 * @param query must not be {@literal null}.
 	 * @return
 	 */
+	@Nullable
 	com.mongodb.client.gridfs.model.GridFSFile findOne(Query query);
 
 	/**
 	 * Deletes all files matching the given {@link Query}.
 	 * 
-	 * @param query
+	 * @param query must not be {@literal null}.
 	 */
 	void delete(Query query);
 
 	/**
 	 * Returns all {@link GridFsResource} with the given file name.
 	 * 
-	 * @param filename
+	 * @param filename must not be {@literal null}.
 	 * @return the resource if it exists or {@literal null}.
 	 * @see ResourcePatternResolver#getResource(String)
 	 */
@@ -155,7 +157,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	/**
 	 * Returns all {@link GridFsResource}s matching the given file name pattern.
 	 * 
-	 * @param filenamePattern
+	 * @param filenamePattern must not be {@literal null}.
 	 * @return
 	 * @see ResourcePatternResolver#getResources(String)
 	 */

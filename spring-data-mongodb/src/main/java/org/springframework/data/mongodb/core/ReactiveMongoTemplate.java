@@ -20,8 +20,6 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.projection.ProjectionInformation;
-import org.springframework.util.ClassUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -39,6 +37,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -105,10 +105,13 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.data.projection.ProjectionInformation;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.Optionals;
 import org.springframework.data.util.Pair;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -179,12 +182,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private final UpdateMapper updateMapper;
 	private final SpelAwareProxyProjectionFactory projectionFactory;
 
-	private WriteConcern writeConcern;
+	private @Nullable WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
-	private ReadPreference readPreference;
-	private ApplicationEventPublisher eventPublisher;
-	private MongoPersistentEntityIndexCreator indexCreator;
+	private @Nullable ReadPreference readPreference;
+	private @Nullable ApplicationEventPublisher eventPublisher;
+	private @Nullable MongoPersistentEntityIndexCreator indexCreator;
 
 	/**
 	 * Constructor used for a basic template configuration.
@@ -209,9 +212,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * Constructor used for a basic template configuration.
 	 *
 	 * @param mongoDatabaseFactory must not be {@literal null}.
-	 * @param mongoConverter
+	 * @param mongoConverter can be {@literal null}.
 	 */
-	public ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory, MongoConverter mongoConverter) {
+	public ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory,
+			@Nullable MongoConverter mongoConverter) {
 
 		Assert.notNull(mongoDatabaseFactory, "ReactiveMongoDatabaseFactory must not be null!");
 
@@ -226,7 +230,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		mappingContext = this.mongoConverter.getMappingContext();
 		// We create indexes based on mapping events
 
-		if (null != mappingContext && mappingContext instanceof MongoMappingContext) {
+		if (mappingContext instanceof MongoMappingContext) {
 			indexCreator = new MongoPersistentEntityIndexCreator((MongoMappingContext) mappingContext,
 					(collectionName) -> IndexOperationsAdapter.blocking(indexOps(collectionName)));
 			eventPublisher = new MongoMappingEventPublisher(indexCreator);
@@ -242,7 +246,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *
 	 * @param resultChecking
 	 */
-	public void setWriteResultChecking(WriteResultChecking resultChecking) {
+	public void setWriteResultChecking(@Nullable WriteResultChecking resultChecking) {
 		this.writeResultChecking = resultChecking == null ? DEFAULT_WRITE_RESULT_CHECKING : resultChecking;
 	}
 
@@ -251,18 +255,18 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * configured on the {@link MongoDbFactory} will apply. If you configured a {@link Mongo} instance no
 	 * {@link WriteConcern} will be used.
 	 *
-	 * @param writeConcern
+	 * @param writeConcern can be {@literal null}.
 	 */
-	public void setWriteConcern(WriteConcern writeConcern) {
+	public void setWriteConcern(@Nullable WriteConcern writeConcern) {
 		this.writeConcern = writeConcern;
 	}
 
 	/**
 	 * Configures the {@link WriteConcernResolver} to be used with the template.
 	 *
-	 * @param writeConcernResolver
+	 * @param writeConcernResolver can be {@literal null}.
 	 */
-	public void setWriteConcernResolver(WriteConcernResolver writeConcernResolver) {
+	public void setWriteConcernResolver(@Nullable WriteConcernResolver writeConcernResolver) {
 		this.writeConcernResolver = writeConcernResolver;
 	}
 
@@ -370,7 +374,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#executeCommand(org.bson.Document, com.mongodb.ReadPreference)
 	 */
-	public Mono<Document> executeCommand(final Document command, final ReadPreference readPreference) {
+	public Mono<Document> executeCommand(final Document command, @Nullable ReadPreference readPreference) {
 
 		Assert.notNull(command, "Command must not be null!");
 
@@ -609,7 +613,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#exists(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
-	public Mono<Boolean> exists(final Query query, final Class<?> entityClass, String collectionName) {
+	public Mono<Boolean> exists(final Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException("Query passed in to exist can't be null");
@@ -639,7 +643,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#find(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
-	public <T> Flux<T> find(final Query query, Class<T> entityClass, String collectionName) {
+	public <T> Flux<T> find(@Nullable Query query, Class<T> entityClass, String collectionName) {
 
 		if (query == null) {
 			return findAll(entityClass, collectionName);
@@ -722,7 +726,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @return never {@literal null}.
 	 */
 	protected <O> Flux<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
-			AggregationOperationContext context) {
+			@Nullable AggregationOperationContext context) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
@@ -904,7 +908,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
-	public Mono<Long> count(final Query query, final Class<?> entityClass, String collectionName) {
+	public Mono<Long> count(@Nullable Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
@@ -1241,7 +1245,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	private MongoCollection<Document> prepareCollection(MongoCollection<Document> collection,
-			WriteConcern writeConcernToUse) {
+			@Nullable WriteConcern writeConcernToUse) {
 		MongoCollection<Document> collectionToUse = collection;
 
 		if (writeConcernToUse != null) {
@@ -1355,8 +1359,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
-	protected Mono<UpdateResult> doUpdate(final String collectionName, final Query query, final Update update,
-			final Class<?> entityClass, final boolean upsert, final boolean multi) {
+	protected Mono<UpdateResult> doUpdate(final String collectionName, @Nullable Query query, @Nullable Update update,
+			@Nullable Class<?> entityClass, final boolean upsert, final boolean multi) {
 
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
 
@@ -1407,7 +1411,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return result.next();
 	}
 
-	private void increaseVersionForUpdateIfNecessary(MongoPersistentEntity<?> persistentEntity, Update update) {
+	private void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity, Update update) {
 
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
@@ -1417,7 +1421,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 	}
 
-	private boolean dbObjectContainsVersionProperty(Document document, MongoPersistentEntity<?> persistentEntity) {
+	private boolean dbObjectContainsVersionProperty(Document document,
+			@Nullable MongoPersistentEntity<?> persistentEntity) {
 
 		if (persistentEntity == null || !persistentEntity.hasVersionProperty()) {
 			return false;
@@ -1578,7 +1583,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#remove(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
-	public Mono<DeleteResult> remove(Query query, Class<?> entityClass, String collectionName) {
+	public Mono<DeleteResult> remove(Query query, @Nullable Class<?> entityClass, String collectionName) {
 		return doRemove(collectionName, query, entityClass);
 	}
 
@@ -1663,7 +1668,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
 	@Override
-	public <T> Flux<T> findAllAndRemove(Query query, Class<T> entityClass, String collectionName) {
+	public <T> Flux<T> findAllAndRemove(Query query, @Nullable Class<T> entityClass, String collectionName) {
 		return doFindAndDelete(collectionName, query, entityClass);
 	}
 
@@ -1789,10 +1794,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
+	 * @param collation can be {@literal null}.
 	 * @return the {@link List} of converted objects.
 	 */
-	protected <T> Mono<T> doFindOne(String collectionName, Document query, Document fields, Class<T> entityClass,
-			Collation collation) {
+	protected <T> Mono<T> doFindOne(String collectionName, Document query, @Nullable Document fields,
+			Class<T> entityClass, @Nullable Collation collation) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
@@ -1842,7 +1848,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	protected <S, T> Flux<T> doFind(String collectionName, Document query, Document fields, Class<S> entityClass,
-			FindPublisherPreparer preparer, DocumentCallback<T> objectCallback) {
+			@Nullable FindPublisherPreparer preparer, DocumentCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -1889,15 +1895,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * For cases where {@code fields} is {@literal null} or {@literal empty} add fields required for creating the
 	 * projection (target) type if the {@code targetType} is a {@literal closed interface projection}.
 	 *
-	 * @param fields can be {@literal null}.
+	 * @param fields must not be {@literal null}.
 	 * @param domainType must not be {@literal null}.
 	 * @param targetType must not be {@literal null}.
 	 * @return {@link Document} with fields to be included.
 	 */
 	private Document addFieldsForProjection(Document fields, Class<?> domainType, Class<?> targetType) {
 
-		if ((fields != null && !fields.isEmpty()) || !targetType.isInterface()
-				|| ClassUtils.isAssignable(domainType, targetType)) {
+		if (!fields.isEmpty() || !targetType.isInterface() || ClassUtils.isAssignable(domainType, targetType)) {
 			return fields;
 		}
 
@@ -1910,9 +1915,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return fields;
 	}
 
-	protected CreateCollectionOptions convertToCreateCollectionOptions(CollectionOptions collectionOptions) {
+	protected CreateCollectionOptions convertToCreateCollectionOptions(@Nullable CollectionOptions collectionOptions) {
 
 		CreateCollectionOptions result = new CreateCollectionOptions();
+
 		if (collectionOptions != null) {
 
 			collectionOptions.getCapped().ifPresent(result::capped);
@@ -1920,6 +1926,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			collectionOptions.getMaxDocuments().ifPresent(result::maxDocuments);
 			collectionOptions.getCollation().map(Collation::toMongoCollation).ifPresent(result::collation);
 		}
+
 		return result;
 	}
 
@@ -2066,18 +2073,20 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * The returned {@link WriteConcern} will be defaulted to {@link WriteConcern#ACKNOWLEDGED} when
 	 * {@link WriteResultChecking} is set to {@link WriteResultChecking#EXCEPTION}.
 	 *
-	 * @param mongoAction any WriteConcern already configured or null
-	 * @return The prepared WriteConcern or null
+	 * @param mongoAction any WriteConcern already configured or {@literal null}.
+	 * @return The prepared WriteConcern or {@literal null}.
 	 * @see #setWriteConcern(WriteConcern)
 	 * @see #setWriteConcernResolver(WriteConcernResolver)
 	 */
+	@Nullable
 	protected WriteConcern prepareWriteConcern(MongoAction mongoAction) {
 
 		WriteConcern wc = writeConcernResolver.resolve(mongoAction);
 		return potentiallyForceAcknowledgedWrite(wc);
 	}
 
-	private WriteConcern potentiallyForceAcknowledgedWrite(WriteConcern wc) {
+	@Nullable
+	private WriteConcern potentiallyForceAcknowledgedWrite(@Nullable WriteConcern wc) {
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)
 				&& MongoClientVersion.isMongo3Driver()) {
@@ -2121,14 +2130,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *
 	 * @param collectionCallback the callback to retrieve the {@link FindPublisher} with, must not be {@literal null}.
 	 * @param preparer the {@link FindPublisherPreparer} to potentially modify the {@link FindPublisher} before iterating
-	 *          over it, may be {@literal null}
+	 *          over it, may be {@literal null}.
 	 * @param objectCallback the {@link DocumentCallback} to transform {@link Document}s into the actual domain type, must
 	 *          not be {@literal null}.
 	 * @param collectionName the collection to be queried, must not be {@literal null}.
 	 * @return
 	 */
 	private <T> Flux<T> executeFindMultiInternal(ReactiveCollectionQueryCallback<Document> collectionCallback,
-			FindPublisherPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
+			@Nullable FindPublisherPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
 
 		return createFlux(collectionName, collection -> {
 
@@ -2184,17 +2193,23 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return resolved == null ? ex : resolved;
 	}
 
-	private MongoPersistentEntity<?> getPersistentEntity(Class<?> type) {
+	@Nullable
+	private MongoPersistentEntity<?> getPersistentEntity(@Nullable Class<?> type) {
 		return type == null ? null : mappingContext.getPersistentEntity(type);
 	}
 
-	private MongoPersistentProperty getIdPropertyFor(Class<?> type) {
+	@Nullable
+	private MongoPersistentProperty getIdPropertyFor(@Nullable Class<?> type) {
+
+		if (type == null) {
+			return null;
+		}
 
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(type);
 		return persistentEntity != null ? persistentEntity.getIdProperty() : null;
 	}
 
-	private <T> String determineEntityCollectionName(T obj) {
+	private <T> String determineEntityCollectionName(@Nullable T obj) {
 
 		if (null != obj) {
 			return determineCollectionName(obj.getClass());
@@ -2291,7 +2306,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final Optional<Document> fields;
 		private final Optional<Collation> collation;
 
-		FindOneCallback(Document query, Document fields, Collation collation) {
+		FindOneCallback(Document query, @Nullable Document fields, @Nullable Collation collation) {
 			this.query = query;
 			this.fields = Optional.ofNullable(fields);
 			this.collation = Optional.ofNullable(collation);
@@ -2327,10 +2342,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	private static class FindCallback implements ReactiveCollectionQueryCallback<Document> {
 
-		private final Document query;
-		private final Document fields;
+		private final @Nullable Document query;
+		private final @Nullable Document fields;
 
-		FindCallback(Document query) {
+		FindCallback(@Nullable Document query) {
 			this(query, null);
 		}
 
@@ -2370,7 +2385,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final Document sort;
 		private final Optional<Collation> collation;
 
-		FindAndRemoveCallback(Document query, Document fields, Document sort, Collation collation) {
+		FindAndRemoveCallback(Document query, Document fields, Document sort, @Nullable Collation collation) {
 
 			this.query = query;
 			this.fields = fields;
@@ -2509,7 +2524,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			this.collectionName = collectionName;
 		}
 
-		public T doWith(Document object) {
+		public T doWith(@Nullable Document object) {
 
 			if (null != object) {
 				maybeEmitEvent(new AfterLoadEvent<T>(object, type, collectionName));
@@ -2540,7 +2555,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final @NonNull Class<T> targetType;
 		private final @NonNull String collectionName;
 
-		public T doWith(Document object) {
+		@Nullable
+		public T doWith(@Nullable Document object) {
 
 			if (object == null) {
 				return null;
@@ -2604,10 +2620,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	class QueryFindPublisherPreparer implements FindPublisherPreparer {
 
-		private final Query query;
-		private final Class<?> type;
+		private final @Nullable Query query;
+		private final @Nullable Class<?> type;
 
-		QueryFindPublisherPreparer(Query query, Class<?> type) {
+		QueryFindPublisherPreparer(@Nullable Query query, @Nullable Class<?> type) {
 
 			this.query = query;
 			this.type = type;
@@ -2687,12 +2703,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	static class NoOpDbRefResolver implements DbRefResolver {
 
 		@Override
-		public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
-				DbRefProxyHandler proxyHandler) {
+		@Nullable
+		public Object resolveDbRef(@Nonnull MongoPersistentProperty property, @Nonnull DBRef dbref,
+				@Nonnull DbRefResolverCallback callback, @Nonnull DbRefProxyHandler proxyHandler) {
 			return null;
 		}
 
 		@Override
+		@Nullable
 		public DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation,
 				MongoPersistentEntity<?> entity, Object id) {
 			return null;
@@ -2705,7 +2723,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		@Override
 		public List<Document> bulkFetch(List<DBRef> dbRefs) {
-			return null;
+			return Collections.emptyList();
 		}
 	}
 }

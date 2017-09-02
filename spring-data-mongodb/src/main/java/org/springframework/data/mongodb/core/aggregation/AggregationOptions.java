@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
@@ -70,7 +71,8 @@ public class AggregationOptions {
 	 * @param collation collation for string comparison. Can be {@literal null}.
 	 * @since 2.0
 	 */
-	public AggregationOptions(boolean allowDiskUse, boolean explain, Document cursor, Collation collation) {
+	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
+			@Nullable Collation collation) {
 
 		this.allowDiskUse = allowDiskUse;
 		this.explain = explain;
@@ -242,8 +244,8 @@ public class AggregationOptions {
 
 		private boolean allowDiskUse;
 		private boolean explain;
-		private Document cursor;
-		private Collation collation;
+		private @Nullable Document cursor;
+		private @Nullable Collation collation;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
@@ -300,7 +302,7 @@ public class AggregationOptions {
 		 * @param collation can be {@literal null}.
 		 * @return
 		 */
-		public Builder collation(Collation collation) {
+		public Builder collation(@Nullable Collation collation) {
 
 			this.collation = collation;
 			return this;

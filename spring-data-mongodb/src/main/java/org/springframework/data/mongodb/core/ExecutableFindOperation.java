@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link ExecutableFindOperation} allows creation and execution of MongoDB find operations in a fluent API style.
@@ -83,6 +84,7 @@ public interface ExecutableFindOperation {
 		 * @return {@literal null} if no match found.
 		 * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if more than one match found.
 		 */
+		@Nullable
 		T oneValue();
 
 		/**
@@ -99,6 +101,7 @@ public interface ExecutableFindOperation {
 		 *
 		 * @return {@literal null} if no match found.
 		 */
+		@Nullable
 		T firstValue();
 
 		/**

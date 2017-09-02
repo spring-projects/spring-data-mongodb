@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
 	public void onApplicationEvent(MongoMappingEvent<?> event) {
 
 		if (event instanceof AfterLoadEvent) {

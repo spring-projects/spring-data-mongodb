@@ -15,18 +15,13 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -35,14 +30,15 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 import com.mongodb.DBRef;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Unit tests for {@link DefaultDbRefResolver}.
@@ -85,7 +81,7 @@ public class DefaultDbRefResolverUnitTests {
 		Document _id = DocumentTestUtils.getAsDocument(captor.getValue(), "_id");
 		Iterable<Object> $in = DocumentTestUtils.getTypedValue(_id, "$in", Iterable.class);
 
-		assertThat($in, iterableWithSize(2));
+		assertThat($in).hasSize(2);
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1194
@@ -100,7 +96,7 @@ public class DefaultDbRefResolverUnitTests {
 	@Test // DATAMONGO-1194
 	public void bulkFetchShouldReturnEarlyForEmptyLists() {
 
-		resolver.bulkFetch(Collections.<DBRef>emptyList());
+		resolver.bulkFetch(Collections.<DBRef> emptyList());
 
 		verify(collectionMock, never()).find(Mockito.any(Document.class));
 	}
@@ -114,17 +110,21 @@ public class DefaultDbRefResolverUnitTests {
 		DBRef ref1 = new DBRef("collection-1", o1.get("_id"));
 		DBRef ref2 = new DBRef("collection-1", o2.get("_id"));
 
-		when(cursorMock.into(any())).then(new Answer<Object>() {
-			@Override
-			public Object answer(InvocationOnMock invocation) throws Throwable {
+		when(cursorMock.into(any())).then(invocation -> Arrays.asList(o2, o1));
 
-				Collection<Document> collection = (Collection<Document>) invocation.getArguments()[0];
-				collection.add(o2);
-				collection.add(o1);
-				return collection;
-			}
-		});
+		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(o1, o2);
+	}
 
-		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2)), contains(o1, o2));
+	@Test // DATAMONGO-1765
+	public void bulkFetchContainsDuplicates() {
+
+		Document document = new Document("_id", new ObjectId());
+
+		DBRef ref1 = new DBRef("collection-1", document.get("_id"));
+		DBRef ref2 = new DBRef("collection-1", document.get("_id"));
+
+		when(cursorMock.into(any())).then(invocation -> Arrays.asList(document));
+
+		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(document, document);
 	}
 }

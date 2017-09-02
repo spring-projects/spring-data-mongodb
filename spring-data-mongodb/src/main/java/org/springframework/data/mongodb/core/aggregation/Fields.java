@@ -23,13 +23,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * Value object to capture a list of {@link Field} instances.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @since 1.3
@@ -46,7 +47,7 @@ public final class Fields implements Iterable<Field> {
 
 	/**
 	 * Creates a new {@link Fields} instance from the given {@link Fields}.
-	 * 
+	 *
 	 * @param fields must not be {@literal null} or empty.
 	 * @return
 	 */
@@ -58,7 +59,7 @@ public final class Fields implements Iterable<Field> {
 
 	/**
 	 * Creates a new {@link Fields} instance for {@link Field}s with the given names.
-	 * 
+	 *
 	 * @param names must not be {@literal null}.
 	 * @return
 	 */
@@ -77,7 +78,7 @@ public final class Fields implements Iterable<Field> {
 
 	/**
 	 * Creates a {@link Field} with the given name.
-	 * 
+	 *
 	 * @param name must not be {@literal null} or empty.
 	 * @return
 	 */
@@ -101,7 +102,7 @@ public final class Fields implements Iterable<Field> {
 
 	/**
 	 * Creates a new {@link Fields} instance using the given {@link Field}s.
-	 * 
+	 *
 	 * @param fields must not be {@literal null}.
 	 */
 	private Fields(List<Field> fields) {
@@ -139,7 +140,7 @@ public final class Fields implements Iterable<Field> {
 
 	/**
 	 * Creates a new {@link Fields} instance with a new {@link Field} of the given name added.
-	 * 
+	 *
 	 * @param name must not be {@literal null}.
 	 * @return
 	 */
@@ -166,6 +167,7 @@ public final class Fields implements Iterable<Field> {
 		return result;
 	}
 
+	@Nullable
 	public Field getField(String name) {
 
 		for (Field field : fields) {
@@ -177,7 +179,7 @@ public final class Fields implements Iterable<Field> {
 		return null;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Iterable#iterator()
 	 */
@@ -196,7 +198,7 @@ public final class Fields implements Iterable<Field> {
 
 	/**
 	 * Value object to encapsulate a field in an aggregation operation.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	static class AggregationField implements Field {
@@ -207,7 +209,7 @@ public final class Fields implements Iterable<Field> {
 
 		/**
 		 * Creates an aggregation field with the given {@code name}.
-		 * 
+		 *
 		 * @see AggregationField#AggregationField(String, String).
 		 * @param name must not be {@literal null} or empty
 		 */
@@ -220,15 +222,15 @@ public final class Fields implements Iterable<Field> {
 		 * <p>
 		 * The {@code name} serves as an alias for the actual backing document field denoted by {@code target}. If no target
 		 * is set explicitly, the name will be used as target.
-		 * 
+		 *
 		 * @param name must not be {@literal null} or empty
 		 * @param target
 		 */
-		public AggregationField(String name, String target) {
+		public AggregationField(String name, @Nullable String target) {
 
 			raw = name;
-			String nameToSet = cleanUp(name);
-			String targetToSet = cleanUp(target);
+			String nameToSet = name != null ? cleanUp(name) : null;
+			String targetToSet = target != null ? cleanUp(target) : null;
 
 			Assert.hasText(nameToSet, "AggregationField name must not be null or empty!");
 
@@ -241,11 +243,7 @@ public final class Fields implements Iterable<Field> {
 			}
 		}
 
-		private static final String cleanUp(String source) {
-
-			if (source == null) {
-				return source;
-			}
+		private static String cleanUp(String source) {
 
 			if (Aggregation.SystemVariable.isReferingToSystemVariable(source)) {
 				return source;
@@ -301,7 +299,7 @@ public final class Fields implements Iterable<Field> {
 			return raw;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */
@@ -310,7 +308,7 @@ public final class Fields implements Iterable<Field> {
 			return String.format("AggregationField - name: %s, target: %s", name, target);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
@@ -330,7 +328,7 @@ public final class Fields implements Iterable<Field> {
 			return this.name.equals(that.name) && ObjectUtils.nullSafeEquals(this.target, that.target);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#hashCode()
 		 */

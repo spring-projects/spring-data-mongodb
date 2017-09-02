@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,7 +25,9 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.model.IndexOptions;
@@ -85,7 +86,8 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.type = type;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.index.ReactiveIndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
 	 */
 	public Mono<String> ensureIndex(final IndexDefinition indexDefinition) {
@@ -93,10 +95,6 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		return mongoOperations.execute(collectionName, collection -> {
 
 			Document indexOptions = indexDefinition.getIndexOptions();
-
-			if (indexOptions == null) {
-				return collection.createIndex(indexDefinition.getIndexKeys());
-			}
 
 			IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
 
@@ -117,6 +115,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		}).next();
 	}
 
+	@Nullable
 	private MongoPersistentEntity<?> lookupPersistentEntity(String collection) {
 
 		Collection<? extends MongoPersistentEntity<?>> entities = queryMapper.getMappingContext().getPersistentEntities();

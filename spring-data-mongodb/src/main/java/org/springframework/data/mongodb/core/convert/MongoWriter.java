@@ -19,6 +19,7 @@ import org.bson.conversions.Bson;
 import org.springframework.data.convert.EntityWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
 
@@ -40,7 +41,10 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	 * @param obj can be {@literal null}.
 	 * @return
 	 */
-	Object convertToMongoType(Object obj);
+	@Nullable
+	default Object convertToMongoType(@Nullable Object obj) {
+		return convertToMongoType(obj, null);
+	}
 
 	/**
 	 * Converts the given object into one Mongo will be able to store natively but retains the type information in case
@@ -50,7 +54,8 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	 * @param typeInformation can be {@literal null}.
 	 * @return
 	 */
-	Object convertToMongoType(Object obj, TypeInformation<?> typeInformation);
+	@Nullable
+	Object convertToMongoType(@Nullable Object obj, @Nullable TypeInformation<?> typeInformation);
 
 	/**
 	 * Creates a {@link DBRef} to refer to the given object.
@@ -60,5 +65,5 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	 *          the {@link DBRef} object to create. Can be {@literal null}.
 	 * @return will never be {@literal null}.
 	 */
-	DBRef toDBRef(Object object, MongoPersistentProperty referingProperty);
+	DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referingProperty);
 }

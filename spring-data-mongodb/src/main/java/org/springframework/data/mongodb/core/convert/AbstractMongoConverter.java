@@ -28,6 +28,8 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerT
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObjectIdConverter;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * Base class for {@link MongoConverter} implementations. Sets up a {@link GenericConversionService} and populates basic
@@ -36,6 +38,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObj
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public abstract class AbstractMongoConverter implements MongoConverter, InitializingBean {
 
@@ -46,18 +49,20 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	/**
 	 * Creates a new {@link AbstractMongoConverter} using the given {@link GenericConversionService}.
 	 *
-	 * @param conversionService
+	 * @param conversionService can be {@literal null} and defaults to {@link DefaultConversionService}.
 	 */
-	public AbstractMongoConverter(GenericConversionService conversionService) {
+	public AbstractMongoConverter(@Nullable GenericConversionService conversionService) {
 		this.conversionService = conversionService == null ? new DefaultConversionService() : conversionService;
 	}
 
 	/**
 	 * Registers the given custom conversions with the converter.
 	 *
-	 * @param conversions
+	 * @param conversions must not be {@literal null}.
 	 */
 	public void setCustomConversions(CustomConversions conversions) {
+
+		Assert.notNull(conversions, "Conversions must not be null!");
 		this.conversions = conversions;
 	}
 
@@ -66,7 +71,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	 *
 	 * @param instantiators
 	 */
-	public void setInstantiators(EntityInstantiators instantiators) {
+	public void setInstantiators(@Nullable EntityInstantiators instantiators) {
 		this.instantiators = instantiators == null ? new EntityInstantiators() : instantiators;
 	}
 
@@ -93,16 +98,9 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#convertToMongoType(java.lang.Object)
-	 */
-	public Object convertToMongoType(Object obj) {
-		return convertToMongoType(obj, null);
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.core.convert.MongoConverter#getConversionService()
 	 */
+	@Override
 	public ConversionService getConversionService() {
 		return conversionService;
 	}

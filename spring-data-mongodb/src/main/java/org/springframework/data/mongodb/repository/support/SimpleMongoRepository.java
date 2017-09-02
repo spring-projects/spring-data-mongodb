@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -355,7 +356,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return where(entityInformation.getIdAttribute()).is(id);
 	}
 
-	private List<T> findAll(Query query) {
+	private List<T> findAll(@Nullable Query query) {
 
 		if (query == null) {
 			return Collections.emptyList();

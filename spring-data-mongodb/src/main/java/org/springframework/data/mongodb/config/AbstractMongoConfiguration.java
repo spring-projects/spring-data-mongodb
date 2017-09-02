@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.MongoClient;
 
@@ -84,6 +85,7 @@ AbstractMongoConfiguration extends MongoConfigurationSupport {
 	 * @deprecated use {@link #getMappingBasePackages()} instead.
 	 */
 	@Deprecated
+	@Nullable
 	protected String getMappingBasePackage() {
 
 		Package mappingBasePackage = getClass().getPackage();

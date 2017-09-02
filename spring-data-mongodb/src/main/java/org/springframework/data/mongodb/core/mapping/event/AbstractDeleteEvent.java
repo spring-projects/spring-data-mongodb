@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 by the original author(s).
+ * Copyright 2013-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,29 @@
 package org.springframework.data.mongodb.core.mapping.event;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 
 /**
  * Base class for delete events.
- * 
+ *
  * @author Martin Baumgartner
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<Document> {
 
 	private static final long serialVersionUID = 1L;
-	private final Class<T> type;
+	private final @Nullable Class<T> type;
 
 	/**
 	 * Creates a new {@link AbstractDeleteEvent} for the given {@link Document} and type.
-	 * 
+	 *
 	 * @param document must not be {@literal null}.
-	 * @param type can be {@literal null}.
-	 * @param collectionName can be {@literal null}.
+	 * @param type may be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
 	 * @since 1.8
 	 */
-	public AbstractDeleteEvent(Document document, Class<T> type, String collectionName) {
+	public AbstractDeleteEvent(Document document, @Nullable Class<T> type, String collectionName) {
 
 		super(document, document, collectionName);
 		this.type = type;
@@ -44,9 +46,10 @@ public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<Document>
 
 	/**
 	 * Returns the type for which the {@link AbstractDeleteEvent} shall be invoked for.
-	 * 
+	 *
 	 * @return
 	 */
+	@Nullable
 	public Class<T> getType() {
 		return type;
 	}

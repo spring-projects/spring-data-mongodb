@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.springframework.expression.spel.ExpressionState;
 import org.springframework.expression.spel.ast.MethodReference;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -33,6 +34,7 @@ import org.springframework.util.ObjectUtils;
  * @author Thomas Darimont
  * @author Sebastien Gerard
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MethodReferenceNode extends ExpressionNode {
 
@@ -172,6 +174,7 @@ public class MethodReferenceNode extends ExpressionNode {
 	 *
 	 * @Deprecated since 1.10. Please use {@link #getMethodReference()}.
 	 */
+	@Nullable
 	@Deprecated
 	public String getMethodName() {
 
@@ -185,6 +188,7 @@ public class MethodReferenceNode extends ExpressionNode {
 	 * @return can be {@literal null}.
 	 * @since 1.10
 	 */
+	@Nullable
 	public AggregationMethodReference getMethodReference() {
 
 		String name = getName();
@@ -198,9 +202,9 @@ public class MethodReferenceNode extends ExpressionNode {
 	 */
 	public static final class AggregationMethodReference {
 
-		private final String mongoOperator;
-		private final ArgumentType argumentType;
-		private final String[] argumentMap;
+		private final @Nullable String mongoOperator;
+		private final @Nullable ArgumentType argumentType;
+		private final @Nullable String[] argumentMap;
 
 		/**
 		 * Creates new {@link AggregationMethodReference}.
@@ -209,7 +213,8 @@ public class MethodReferenceNode extends ExpressionNode {
 		 * @param argumentType can be {@literal null}.
 		 * @param argumentMap can be {@literal null}.
 		 */
-		private AggregationMethodReference(String mongoOperator, ArgumentType argumentType, String[] argumentMap) {
+		private AggregationMethodReference(@Nullable String mongoOperator, @Nullable ArgumentType argumentType,
+				@Nullable String[] argumentMap) {
 
 			this.mongoOperator = mongoOperator;
 			this.argumentType = argumentType;
@@ -221,6 +226,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		 *
 		 * @return can be {@literal null}.
 		 */
+		@Nullable
 		public String getMongoOperator() {
 			return this.mongoOperator;
 		}
@@ -230,6 +236,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		 *
 		 * @return never {@literal null}.
 		 */
+		@Nullable
 		public ArgumentType getArgumentType() {
 			return this.argumentType;
 		}

@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import org.bson.Document;
@@ -32,6 +31,7 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBList;
@@ -57,26 +57,27 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 	private static final TypeInformation<Map> MAP_TYPE_INFO = ClassTypeInformation.from(Map.class);
 
 	private final TypeAliasAccessor<Bson> accessor;
-	private final String typeKey;
+	private final @Nullable String typeKey;
 
 	public DefaultMongoTypeMapper() {
 		this(DEFAULT_TYPE_KEY);
 	}
 
-	public DefaultMongoTypeMapper(String typeKey) {
+	public DefaultMongoTypeMapper(@Nullable String typeKey) {
 		this(typeKey, Arrays.asList(new SimpleTypeInformationMapper()));
 	}
 
-	public DefaultMongoTypeMapper(String typeKey, MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
+	public DefaultMongoTypeMapper(@Nullable String typeKey,
+			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
 		this(typeKey, new DocumentTypeAliasAccessor(typeKey), mappingContext,
 				Arrays.asList(new SimpleTypeInformationMapper()));
 	}
 
-	public DefaultMongoTypeMapper(String typeKey, List<? extends TypeInformationMapper> mappers) {
+	public DefaultMongoTypeMapper(@Nullable String typeKey, List<? extends TypeInformationMapper> mappers) {
 		this(typeKey, new DocumentTypeAliasAccessor(typeKey), null, mappers);
 	}
 
-	private DefaultMongoTypeMapper(String typeKey, TypeAliasAccessor<Bson> accessor,
+	private DefaultMongoTypeMapper(@Nullable String typeKey, TypeAliasAccessor<Bson> accessor,
 			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext,
 			List<? extends TypeInformationMapper> mappers) {
 
@@ -99,9 +100,9 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#writeTypeRestrictions(java.util.Set)
 	 */
 	@Override
-	public void writeTypeRestrictions(Document result, Set<Class<?>> restrictedTypes) {
+	public void writeTypeRestrictions(Document result, @Nullable Set<Class<?>> restrictedTypes) {
 
-		if (restrictedTypes == null || restrictedTypes.isEmpty()) {
+		if (ObjectUtils.isEmpty(restrictedTypes)) {
 			return;
 		}
 
@@ -111,7 +112,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 
 			Alias typeAlias = getAliasFor(ClassTypeInformation.from(restrictedType));
 
-			if (typeAlias != null && !ObjectUtils.nullSafeEquals(Alias.NONE, typeAlias) && typeAlias.isPresent()) {
+			if (!ObjectUtils.nullSafeEquals(Alias.NONE, typeAlias) && typeAlias.isPresent()) {
 				restrictedMappedTypes.add(typeAlias.getValue());
 			}
 		}
@@ -135,9 +136,9 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 	 */
 	public static final class DocumentTypeAliasAccessor implements TypeAliasAccessor<Bson> {
 
-		private final String typeKey;
+		private final @Nullable String typeKey;
 
-		public DocumentTypeAliasAccessor(String typeKey) {
+		public DocumentTypeAliasAccessor(@Nullable String typeKey) {
 			this.typeKey = typeKey;
 		}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,13 @@ package org.springframework.data.mongodb.util;
 
 import java.util.HashMap;
 
+import org.springframework.lang.Nullable;
+
 /**
  * {@link MongoDbErrorCodes} holds MongoDB specific error codes outlined in {@literal mongo/base/error_codes.err}.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.8
  */
 public final class MongoDbErrorCodes {
@@ -114,27 +117,27 @@ public final class MongoDbErrorCodes {
 		errorCodes.putAll(permissionDeniedCodes);
 	}
 
-	public static boolean isDataIntegrityViolationCode(Integer errorCode) {
+	public static boolean isDataIntegrityViolationCode(@Nullable Integer errorCode) {
 		return errorCode == null ? false : dataIntegrityViolationCodes.containsKey(errorCode);
 	}
 
-	public static boolean isDataAccessResourceFailureCode(Integer errorCode) {
+	public static boolean isDataAccessResourceFailureCode(@Nullable Integer errorCode) {
 		return errorCode == null ? false : dataAccessResourceFailureCodes.containsKey(errorCode);
 	}
 
-	public static boolean isDuplicateKeyCode(Integer errorCode) {
+	public static boolean isDuplicateKeyCode(@Nullable Integer errorCode) {
 		return errorCode == null ? false : duplicateKeyCodes.containsKey(errorCode);
 	}
 
-	public static boolean isPermissionDeniedCode(Integer errorCode) {
+	public static boolean isPermissionDeniedCode(@Nullable Integer errorCode) {
 		return errorCode == null ? false : permissionDeniedCodes.containsKey(errorCode);
 	}
 
-	public static boolean isInvalidDataAccessApiUsageCode(Integer errorCode) {
+	public static boolean isInvalidDataAccessApiUsageCode(@Nullable Integer errorCode) {
 		return errorCode == null ? false : invalidDataAccessApiUsageExeption.containsKey(errorCode);
 	}
 
-	public static String getErrorDescription(Integer errorCode) {
+	public static String getErrorDescription(@Nullable Integer errorCode) {
 		return errorCode == null ? null : errorCodes.get(errorCode);
 	}
 }

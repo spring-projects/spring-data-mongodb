@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,14 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import org.springframework.lang.Nullable;
+
 /**
  * A {@link Term} defines one or multiple words {@link Type#WORD} or phrases {@link Type#PHRASE} to be used in the
  * context of full text search.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.6
  */
 public class Term {
@@ -34,7 +37,7 @@ public class Term {
 
 	/**
 	 * Creates a new {@link Term} of {@link Type#WORD}.
-	 * 
+	 *
 	 * @param raw
 	 */
 	public Term(String raw) {
@@ -43,18 +46,18 @@ public class Term {
 
 	/**
 	 * Creates a new {@link Term} of given {@link Type}.
-	 * 
+	 *
 	 * @param raw
 	 * @param type defaulted to {@link Type#WORD} if {@literal null}.
 	 */
-	public Term(String raw, Type type) {
+	public Term(String raw, @Nullable Type type) {
 		this.raw = raw;
 		this.type = type == null ? Type.WORD : type;
 	}
 
 	/**
 	 * Negates the term.
-	 * 
+	 *
 	 * @return
 	 */
 	public Term negate() {
@@ -78,7 +81,7 @@ public class Term {
 
 	/**
 	 * Get formatted representation of term.
-	 * 
+	 *
 	 * @return
 	 */
 	public String getFormatted() {
