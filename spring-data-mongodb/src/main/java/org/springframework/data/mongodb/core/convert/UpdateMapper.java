@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.util.Collection;
 import java.util.Map.Entry;
 
 import org.springframework.core.convert.converter.Converter;
@@ -159,6 +160,10 @@ public class UpdateMapper extends QueryMapper {
 
 		if (source == null || type.isInterface() || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
 			return info;
+		}
+
+		if (source instanceof Collection) {
+			return NESTED_DOCUMENT;
 		}
 
 		if (!type.equals(source.getClass())) {

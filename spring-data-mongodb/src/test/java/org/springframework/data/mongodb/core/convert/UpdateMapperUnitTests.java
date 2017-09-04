@@ -901,6 +901,34 @@ public class UpdateMapperUnitTests {
 		}
 	}
 
+	@Test // DATAMONGO-1772
+	public void mappingShouldAddTypeKeyInListOfInterfaceTypeContainedInConcreteObjectCorrectly() {
+
+		ConcreteInner inner = new ConcreteInner();
+		inner.interfaceTypeList = Collections.<SomeInterfaceType> singletonList(new SomeInterfaceImpl());
+		List<ConcreteInner> list = Collections.singletonList(inner);
+
+		DBObject mappedUpdate = mapper.getMappedObject(new Update().set("concreteInnerList", list).getUpdateObject(),
+				context.getPersistentEntity(Outer.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$set.concreteInnerList.[0].interfaceTypeList.[0]._class")
+				.notContaining("$set.concreteInnerList.[0]._class"));
+	}
+
+	@Test // DATAMONGO-1772
+	public void mappingShouldAddTypeKeyInListOfAbstractTypeContainedInConcreteObjectCorrectly() {
+
+		ConcreteInner inner = new ConcreteInner();
+		inner.abstractTypeList = Collections.<SomeAbstractType> singletonList(new SomeInterfaceImpl());
+		List<ConcreteInner> list = Collections.singletonList(inner);
+
+		DBObject mappedUpdate = mapper.getMappedObject(new Update().set("concreteInnerList", list).getUpdateObject(),
+				context.getPersistentEntity(Outer.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$set.concreteInnerList.[0].abstractTypeList.[0]._class")
+				.notContaining("$set.concreteInnerList.[0]._class"));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1187,4 +1215,26 @@ public class UpdateMapperUnitTests {
 		Integer intValue;
 		int primIntValue;
 	}
+
+	static class Outer {
+		List<ConcreteInner> concreteInnerList;
+	}
+
+	static class ConcreteInner {
+		List<SomeInterfaceType> interfaceTypeList;
+		List<SomeAbstractType> abstractTypeList;
+	}
+
+	interface SomeInterfaceType {
+
+	}
+
+	static abstract class SomeAbstractType {
+
+	}
+
+	static class SomeInterfaceImpl extends SomeAbstractType implements SomeInterfaceType {
+
+	}
+
 }
