@@ -461,6 +461,11 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.findOne(new Query(), Sample.class)).expectNext(data).verifyComplete();
 	}
 
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1774
+	public void removeWithNullShouldThrowError() {
+		template.remove((Object)null).subscribe();
+	}
+
 	@Test // DATAMONGO-1774
 	public void removeWithEmptyMonoShouldDoNothing() {
 
