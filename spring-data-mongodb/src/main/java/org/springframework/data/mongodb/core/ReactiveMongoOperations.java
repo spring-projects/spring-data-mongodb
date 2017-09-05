@@ -898,7 +898,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Remove the given object from the collection by id.
 	 *
-	 * @param object
+	 * @param object must not be {@literal null}.
 	 * @return
 	 */
 	Mono<DeleteResult> remove(Object object);
@@ -906,7 +906,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Removes the given object from the given collection.
 	 *
-	 * @param object
+	 * @param object must not be {@literal null}.
 	 * @param collection must not be {@literal null} or empty.
 	 */
 	Mono<DeleteResult> remove(Object object, String collection);

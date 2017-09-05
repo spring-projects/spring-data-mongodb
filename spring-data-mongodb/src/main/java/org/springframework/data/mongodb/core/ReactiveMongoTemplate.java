@@ -1455,9 +1455,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public Mono<DeleteResult> remove(Object object) {
 
-		if (object == null) {
-			return null;
-		}
+		Assert.notNull(object, "Object must not be null!");
 
 		return remove(getIdQueryFor(object), object.getClass());
 	}
@@ -1468,11 +1466,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public Mono<DeleteResult> remove(Object object, String collection) {
 
+		Assert.notNull(object, "Object must not be null!");
 		Assert.hasText(collection, "Collection name must not be null or empty!");
-
-		if (object == null) {
-			return null;
-		}
 
 		return doRemove(collection, getIdQueryFor(object), object.getClass());
 	}
