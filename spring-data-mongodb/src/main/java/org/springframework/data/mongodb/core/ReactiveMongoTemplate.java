@@ -1446,7 +1446,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public Mono<DeleteResult> remove(Mono<? extends Object> objectToRemove, String collection) {
-		return objectToRemove.flatMap(o -> remove(objectToRemove, collection));
+		return objectToRemove.flatMap(it -> remove(it, collection));
 	}
 
 	/*
