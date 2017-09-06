@@ -489,7 +489,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#createCollection(java.lang.Class, org.springframework.data.mongodb.core.CollectionOptions)
 	 */
 	public <T> Mono<MongoCollection<Document>> createCollection(Class<T> entityClass,
-			CollectionOptions collectionOptions) {
+			@Nullable CollectionOptions collectionOptions) {
 		return createCollection(determineCollectionName(entityClass), collectionOptions);
 	}
 
@@ -928,12 +928,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <T> Mono<T> insert(Mono<? extends T> objectToSave) {
+
+		Assert.notNull(objectToSave, "Mono to insert must not be null!");
+
 		return objectToSave.flatMap(this::insert);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insert(org.reactivestreams.Publisher, java.lang.Class)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insert(reactor.core.publisher.Mono, java.lang.Class)
 	 */
 	@Override
 	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, Class<?> entityClass) {
@@ -942,10 +945,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insert(org.reactivestreams.Publisher, java.lang.String)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insert(reactor.core.publisher.Mono, java.lang.String)
 	 */
 	@Override
 	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName) {
+
+		Assert.notNull(batchToSave, "Batch to insert must not be null!");
+
 		return Flux.from(batchToSave).flatMap(collection -> insert(collection, collectionName));
 	}
 
@@ -954,6 +960,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insert(java.lang.Object)
 	 */
 	public <T> Mono<T> insert(T objectToSave) {
+
+		Assert.notNull(objectToSave, "Object to insert must not be null!");
 
 		ensureNotIterable(objectToSave);
 		return insert(objectToSave, determineEntityCollectionName(objectToSave));
@@ -964,6 +972,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insert(java.lang.Object, java.lang.String)
 	 */
 	public <T> Mono<T> insert(T objectToSave, String collectionName) {
+
+		Assert.notNull(objectToSave, "Object to insert must not be null!");
 
 		ensureNotIterable(objectToSave);
 		return doInsert(collectionName, objectToSave, this.mongoConverter);
@@ -1018,7 +1028,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insertAll(org.reactivestreams.Publisher)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#insertAll(reactor.core.publisher.Mono)
 	 */
 	@Override
 	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> objectsToSave) {
@@ -1088,6 +1098,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <T> Mono<T> save(Mono<? extends T> objectToSave) {
+
+		Assert.notNull(objectToSave, "Mono to save must not be null!");
+
 		return objectToSave.flatMap(this::save);
 	}
 
@@ -1097,6 +1110,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <T> Mono<T> save(Mono<? extends T> objectToSave, String collectionName) {
+
+		Assert.notNull(objectToSave, "Mono to save must not be null!");
+
 		return objectToSave.flatMap(o -> save(o, collectionName));
 	}
 
@@ -1445,8 +1461,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#remove(reactor.core.publisher.Mono, java.lang.String)
 	 */
 	@Override
-	public Mono<DeleteResult> remove(Mono<? extends Object> objectToRemove, String collection) {
-		return objectToRemove.flatMap(it -> remove(it, collection));
+	public Mono<DeleteResult> remove(Mono<? extends Object> objectToRemove, String collectionName) {
+		return objectToRemove.flatMap(it -> remove(it, collectionName));
 	}
 
 	/*
@@ -1464,12 +1480,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#remove(java.lang.Object, java.lang.String)
 	 */
-	public Mono<DeleteResult> remove(Object object, String collection) {
+	public Mono<DeleteResult> remove(Object object, String collectionName) {
 
 		Assert.notNull(object, "Object must not be null!");
-		Assert.hasText(collection, "Collection name must not be null or empty!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		return doRemove(collection, getIdQueryFor(object), object.getClass());
+		return doRemove(collectionName, getIdQueryFor(object), object.getClass());
 	}
 
 	/**
@@ -1582,8 +1598,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doRemove(collectionName, query, entityClass);
 	}
 
-	protected <T> Mono<DeleteResult> doRemove(final String collectionName, final Query query,
-			final Class<T> entityClass) {
+	protected <T> Mono<DeleteResult> doRemove(String collectionName, Query query, @Nullable Class<T> entityClass) {
 
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null!");
@@ -1645,8 +1660,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <T> Flux<T> findAllAndRemove(Query query, String collectionName) {
-
-		return findAllAndRemove(query, null, collectionName);
+		return (Flux<T>) findAllAndRemove(query, Object.class, collectionName);
 	}
 
 	/*
@@ -1663,7 +1677,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
 	@Override
-	public <T> Flux<T> findAllAndRemove(Query query, @Nullable Class<T> entityClass, String collectionName) {
+	public <T> Flux<T> findAllAndRemove(Query query, Class<T> entityClass, String collectionName) {
 		return doFindAndDelete(collectionName, query, entityClass);
 	}
 
@@ -1681,7 +1695,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
 	@Override
-	public <T> Flux<T> tail(Query query, Class<T> entityClass, String collectionName) {
+	public <T> Flux<T> tail(@Nullable Query query, Class<T> entityClass, String collectionName) {
 
 		if (query == null) {
 
@@ -1938,7 +1952,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @return the List of converted objects.
 	 */
 	protected <T> Mono<T> doFindAndRemove(String collectionName, Document query, Document fields, Document sort,
-			Collation collation, Class<T> entityClass) {
+			@Nullable Collation collation, Class<T> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
@@ -1954,8 +1968,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <T> Mono<T> doFindAndModify(String collectionName, Document query, Document fields, Document sort,
 			Class<T> entityClass, Update update, FindAndModifyOptions options) {
-
-		FindAndModifyOptions optionsToUse = options != null ? options : new FindAndModifyOptions();
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -1973,7 +1985,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						collectionName));
 			}
 
-			return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, optionsToUse),
+			return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, options),
 					new ReadDocumentCallback<T>(this.mongoConverter, entityClass, collectionName), collectionName);
 		});
 	}
@@ -1990,7 +2002,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param savedObject
 	 * @param id
 	 */
-	private void populateIdIfNecessary(Object savedObject, Object id) {
+	private void populateIdIfNecessary(Object savedObject, @Nullable Object id) {
 
 		if (id == null) {
 			return;
@@ -2030,22 +2042,20 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	protected void ensureNotIterable(Object o) {
-		if (null != o) {
 
-			boolean isIterable = o.getClass().isArray();
+		boolean isIterable = o.getClass().isArray();
 
-			if (!isIterable) {
-				for (Class iterableClass : ITERABLE_CLASSES) {
-					if (iterableClass.isAssignableFrom(o.getClass()) || o.getClass().getName().equals(iterableClass.getName())) {
-						isIterable = true;
-						break;
-					}
+		if (!isIterable) {
+			for (Class iterableClass : ITERABLE_CLASSES) {
+				if (iterableClass.isAssignableFrom(o.getClass()) || o.getClass().getName().equals(iterableClass.getName())) {
+					isIterable = true;
+					break;
 				}
 			}
+		}
 
-			if (isIterable) {
-				throw new IllegalArgumentException("Cannot use a collection here.");
-			}
+		if (isIterable) {
+			throw new IllegalArgumentException("Cannot use a collection here.");
 		}
 	}
 
@@ -2213,7 +2223,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return null;
 	}
 
-	String determineCollectionName(Class<?> entityClass) {
+	String determineCollectionName(@Nullable Class<?> entityClass) {
 
 		if (entityClass == null) {
 			throw new InvalidDataAccessApiUsageException(
