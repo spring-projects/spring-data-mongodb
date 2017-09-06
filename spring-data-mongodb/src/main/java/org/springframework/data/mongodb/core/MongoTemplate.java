@@ -1475,12 +1475,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public DeleteResult remove(Object object, String collection) {
+	public DeleteResult remove(Object object, String collectionName) {
 
 		Assert.notNull(object, "Object must not be null!");
-		Assert.hasText(collection, "Collection name must not be null or empty!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		return doRemove(collection, getIdQueryFor(object), object.getClass());
+		return doRemove(collectionName, getIdQueryFor(object), object.getClass());
 	}
 
 	/**
