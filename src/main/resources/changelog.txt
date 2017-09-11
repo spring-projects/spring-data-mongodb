@@ -1,6 +1,15 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.7.RELEASE (2017-09-11)
+----------------------------------------------
+* DATAMONGO-1772 - Type hint not added when updating nested list elements with inheritance.
+* DATAMONGO-1768 - QueryByExample FindOne : probe type.
+* DATAMONGO-1765 - Duplicate elements in DBRefs list not correctly mapped.
+* DATAMONGO-1756 - Aggregation project and arithmetic operation not working with nested fields.
+* DATAMONGO-1755 - Release 1.10.7 (Ingalls SR7).
+
+
 Changes in version 1.10.6.RELEASE (2017-07-26)
 ----------------------------------------------
 * DATAMONGO-1750 - Release 1.10.6 (Ingalls SR6).
