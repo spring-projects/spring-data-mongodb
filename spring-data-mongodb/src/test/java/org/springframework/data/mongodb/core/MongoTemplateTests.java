@@ -15,8 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -3254,6 +3258,17 @@ public class MongoTemplateTests {
 		assertThat(result, hasSize(2));
 		assertThat(result, containsInAnyOrder(bran, rickon));
 		assertThat(template.count(new BasicQuery("{}"), template.determineCollectionName(Sample.class)), is(equalTo(1L)));
+	}
+
+	@Test // DATAMONGO-1779
+	public void appliesQueryLimitToEmptyQuery() {
+
+		Sample first = new Sample("1", "Dave Matthews");
+		Sample second = new Sample("2", "Carter Beauford");
+
+		template.insertAll(Arrays.asList(first, second));
+
+		assertThat(template.find(new Query().limit(1), Sample.class)).hasSize(1);
 	}
 
 	static class TypeWithNumbers {

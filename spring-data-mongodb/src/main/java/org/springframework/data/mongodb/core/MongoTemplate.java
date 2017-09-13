@@ -761,15 +761,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.MongoOperations#findOne(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
 	@Override
-	public <T> List<T> find(final Query query, Class<T> entityClass, String collectionName) {
+	public <T> List<T> find(Query query, Class<T> entityClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 		Assert.notNull(entityClass, "EntityClass must not be null!");
-
-		if (query.getQueryObject().isEmpty() && query.getSortObject().isEmpty()) {
-			return findAll(entityClass, collectionName);
-		}
 
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
 				new QueryCursorPreparer(query, entityClass));
