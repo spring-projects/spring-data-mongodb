@@ -6,8 +6,15 @@
 * Upgrade to Java 8.
 * Usage of the `Document` API instead of `DBObject`.
 * <<mongo.reactive>>.
+* <<mongo.reactive.repositories.infinite-streams,Tailable Cursor>> queries.
 * Support for aggregation result streaming via Java 8 `Stream`.
+* <<mongo.query.fluent-template-api,Fluent Collection API>> for CRUD and aggregation operations.
+* Kotlin extensions for Template and Collection API.
 * Integration of collations for collection and index creation and query operations.
+* Query-by-Example support without type matching.
+* Add support for isolation ``Update``s.
+* Tooling support for null-safety via Spring's `@NonNullApi` and `@Nullable` annotations.
+* Deprecated cross-store support and removed Log4j appender.
 
 [[new-features.1-10-0]]
 == What's new in Spring Data MongoDB 1.10
