@@ -65,7 +65,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 	/**
 	 * Test resolution of {@link Indexed}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 */
 	public static class IndexResolutionTests {
@@ -310,7 +310,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 	/**
 	 * Test resolution of {@link GeoSpatialIndexed}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 */
 	public static class GeoSpatialIndexResolutionTests {
@@ -423,7 +423,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 	/**
 	 * Test resolution of {@link CompoundIndexes}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 */
 	public static class CompoundIndexResolutionTests {
@@ -914,6 +914,17 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					.resolveIndexForEntity(selfCyclingEntity);
 		}
 
+		@Test // DATAMONGO-1782
+		public void shouldAllowMultiplePathsToDeeplyType() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					NoCycleManyPathsToDeepValueObject.class);
+
+			assertIndexPathAndCollection("l3.valueObject.value", "rules", indexDefinitions.get(0));
+			assertIndexPathAndCollection("l2.l3.valueObject.value", "rules", indexDefinitions.get(1));
+			assertThat(indexDefinitions, hasSize(2));
+		}
+
 		@Test // DATAMONGO-1025
 		public void shouldUsePathIndexAsIndexNameForDocumentsHavingNamedNestedCompoundIndexFixedOnCollection() {
 
@@ -1071,6 +1082,25 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			@Indexed String foo;
 		}
 
+		@Document(collection = "rules")
+		static class NoCycleManyPathsToDeepValueObject {
+
+			private NoCycleLevel3 l3;
+			private NoCycleLevel2 l2;
+		}
+
+		static class NoCycleLevel2 {
+			private NoCycleLevel3 l3;
+		}
+
+		static class NoCycleLevel3 {
+			private ValueObject valueObject;
+		}
+
+		static class ValueObject {
+			@Indexed private String value;
+		}
+
 		@Document
 		static class SimilarityHolingBean {
 
@@ -1187,7 +1217,6 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		static class EntityWithGenericTypeWrapperAsElement {
 			List<GenericEntityWrapper<DocumentWithNamedIndex>> listWithGeneircTypeElement;
 		}
-
 	}
 
 	private static List<IndexDefinitionHolder> prepareMappingContextAndResolveIndexForType(Class<?> type) {

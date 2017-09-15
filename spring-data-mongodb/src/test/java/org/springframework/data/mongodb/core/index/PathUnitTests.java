@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -31,8 +31,9 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
  * Unit tests for {@link Path}.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PathUnitTests {
@@ -45,39 +46,26 @@ public class PathUnitTests {
 		when(entityMock.getType()).thenReturn((Class) Object.class);
 	}
 
-	@Test // DATAMONGO-962
-	public void shouldIdentifyCycleForOwnerOfSameTypeAndMatchingPath() {
+	@Test // DATAMONGO-962, DATAMONGO-1782
+	public void shouldIdentifyCycle() {
 
-		MongoPersistentProperty property = createPersistentPropertyMock(entityMock, "foo");
-		assertThat(new Path(property, "foo.bar").cycles(property, "foo.bar.bar"), is(true));
-	}
+		MongoPersistentProperty foo = createPersistentPropertyMock(entityMock, "foo");
+		MongoPersistentProperty bar = createPersistentPropertyMock(entityMock, "bar");
 
-	@Test // DATAMONGO-962
-	@SuppressWarnings("rawtypes")
-	public void shouldAllowMatchingPathForDifferentOwners() {
-
-		MongoPersistentProperty existing = createPersistentPropertyMock(entityMock, "foo");
-
-		MongoPersistentEntity entityOfDifferentType = Mockito.mock(MongoPersistentEntity.class);
-		when(entityOfDifferentType.getType()).thenReturn(String.class);
-		MongoPersistentProperty toBeVerified = createPersistentPropertyMock(entityOfDifferentType, "foo");
-
-		assertThat(new Path(existing, "foo.bar").cycles(toBeVerified, "foo.bar.bar"), is(false));
-	}
-
-	@Test // DATAMONGO-962
-	public void shouldAllowEqaulPropertiesOnDifferentPaths() {
-
-		MongoPersistentProperty property = createPersistentPropertyMock(entityMock, "foo");
-		assertThat(new Path(property, "foo.bar").cycles(property, "foo2.bar.bar"), is(false));
+		assertThat(Path.of(foo).append(bar).isCycle(), is(false));
+		assertThat(Path.of(foo).append(bar).append(bar).isCycle(), is(true));
+		assertThat(Path.of(foo).append(bar).append(bar).toCyclePath(), is(equalTo("bar -> bar")));
+		assertThat(Path.of(foo).append(bar).append(bar).toString(), is(equalTo("foo -> bar -> bar")));
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private MongoPersistentProperty createPersistentPropertyMock(MongoPersistentEntity owner, String fieldname) {
+	private static MongoPersistentProperty createPersistentPropertyMock(MongoPersistentEntity owner, String fieldname) {
 
 		MongoPersistentProperty property = Mockito.mock(MongoPersistentProperty.class);
+
 		when(property.getOwner()).thenReturn(owner);
-		when(property.getFieldName()).thenReturn(fieldname);
+		when(property.getName()).thenReturn(fieldname);
+
 		return property;
 	}
 }
