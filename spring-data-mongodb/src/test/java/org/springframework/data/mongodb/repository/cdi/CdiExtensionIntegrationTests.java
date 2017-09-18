@@ -18,8 +18,9 @@ package org.springframework.data.mongodb.repository.cdi;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-import org.apache.webbeans.cditest.CdiTestContainer;
-import org.apache.webbeans.cditest.CdiTestContainerLoader;
+import javax.enterprise.inject.se.SeContainer;
+import javax.enterprise.inject.se.SeContainerInitializer;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,29 +28,32 @@ import org.springframework.data.mongodb.repository.Person;
 
 /**
  * Integration tests for {@link MongoRepositoryExtension}.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  */
 public class CdiExtensionIntegrationTests {
 
-	static CdiTestContainer container;
+	static SeContainer container;
 
 	@BeforeClass
-	public static void setUp() throws Exception {
-		container = CdiTestContainerLoader.getCdiContainer();
-		container.bootContainer();
+	public static void setUp() {
+
+		container = SeContainerInitializer.newInstance() //
+				.disableDiscovery() //
+				.addPackages(CdiExtensionIntegrationTests.class) //
+				.initialize();
 	}
 
 	@AfterClass
-	public static void tearDown() throws Exception {
-		container.shutdownContainer();
+	public static void tearDown() {
+		container.close();
 	}
 
-	@Test
+	@Test // DATAMONGO-356, DATAMONGO-1785
 	public void bootstrapsRepositoryCorrectly() {
 
-		RepositoryClient client = container.getInstance(RepositoryClient.class);
+		RepositoryClient client = container.select(RepositoryClient.class).get();
 		CdiPersonRepository repository = client.getRepository();
 
 		assertThat(repository, is(notNullValue()));
@@ -63,11 +67,10 @@ public class CdiExtensionIntegrationTests {
 		assertThat(repository.findById(person.getId()).get().getId(), is(result.getId()));
 	}
 
-	@Test // DATAMONGO-1017
+	@Test // DATAMONGO-1017, DATAMONGO-1785
 	public void returnOneFromCustomImpl() {
 
-		RepositoryClient repositoryConsumer = container.getInstance(RepositoryClient.class);
+		RepositoryClient repositoryConsumer = container.select(RepositoryClient.class).get();
 		assertThat(repositoryConsumer.getSamplePersonRepository().returnOne(), is(1));
 	}
-
 }

@@ -29,7 +29,7 @@ import nl.jqno.equalsverifier.Warning;
 
 /**
  * Unit tests for {@link BasicQuery}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author John Willemin
