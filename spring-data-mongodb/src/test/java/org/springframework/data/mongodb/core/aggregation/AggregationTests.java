@@ -84,6 +84,7 @@ import com.mongodb.client.MongoCollection;
  * @author Mark Paluch
  * @author Nikolay Bogdanov
  * @author Maninder Singh
+ * @author Sergey Shcherbakov
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -799,6 +800,49 @@ public class AggregationTests {
 		assertThat(((Number) good.get("score")).longValue(), is(equalTo(9000L)));
 	}
 
+	@Test // DATAMONGO-1784
+	public void shouldAllowSumUsingConditionalExpressions() {
+		
+		mongoTemplate.dropCollection(CarPerson.class);
+		
+		CarPerson person1 = new CarPerson("first1", "last1", new CarDescriptor.Entry("MAKE1", "MODEL1", 2000),
+				new CarDescriptor.Entry("MAKE1", "MODEL2", 2001));
+		
+		CarPerson person2 = new CarPerson("first2", "last2", new CarDescriptor.Entry("MAKE3", "MODEL4", 2014));
+		CarPerson person3 = new CarPerson("first3", "last3", new CarDescriptor.Entry("MAKE2", "MODEL5", 2015));
+		
+		mongoTemplate.save(person1);
+		mongoTemplate.save(person2);
+		mongoTemplate.save(person3);
+		
+		TypedAggregation<CarPerson> agg = Aggregation.newAggregation(CarPerson.class,
+				unwind("descriptors.carDescriptor.entries"), //
+				project() //
+				.and(ConditionalOperators //
+						.when(Criteria.where("descriptors.carDescriptor.entries.make").is("MAKE1")).then("good")
+						.otherwise("meh"))
+				.as("make") //
+				.and("descriptors.carDescriptor.entries.model").as("model") //
+				.and("descriptors.carDescriptor.entries.year").as("year"), //
+				group("make").sum(ConditionalOperators //
+						.when(Criteria.where("year").gte(2012)) //
+						.then(1) //
+						.otherwise(9000)).as("score"),
+				sort(ASC, "make"));
+		
+		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
+		
+		assertThat(result.getMappedResults(), hasSize(2));
+		
+		Document meh = result.getMappedResults().get(0);
+		assertThat((String) meh.get("_id"), is(equalTo("meh")));
+		assertThat(((Number) meh.get("score")).longValue(), is(equalTo(2L)));
+		
+		Document good = result.getMappedResults().get(1);
+		assertThat((String) good.get("_id"), is(equalTo("good")));
+		assertThat(((Number) good.get("score")).longValue(), is(equalTo(18000L)));
+	}
+	
 	/**
 	 * @see <a href=
 	 *      "https://docs.mongodb.com/manual/tutorial/aggregation-with-user-preference-data/#return-the-five-most-common-likes">Return
