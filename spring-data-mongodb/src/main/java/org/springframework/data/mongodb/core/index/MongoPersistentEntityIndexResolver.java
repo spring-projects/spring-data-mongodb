@@ -622,6 +622,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			 */
 			String toCyclePath() {
 
+				if(!cycle) {
+					return "";
+				}
+
 				for (int i = 0; i < this.elements.size(); i++) {
 
 					int index = indexOf(this.elements, this.elements.get(i), i + 1);

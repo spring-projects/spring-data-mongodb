@@ -52,10 +52,34 @@ public class PathUnitTests {
 		MongoPersistentProperty foo = createPersistentPropertyMock(entityMock, "foo");
 		MongoPersistentProperty bar = createPersistentPropertyMock(entityMock, "bar");
 
-		assertThat(Path.of(foo).append(bar).isCycle(), is(false));
-		assertThat(Path.of(foo).append(bar).append(bar).isCycle(), is(true));
-		assertThat(Path.of(foo).append(bar).append(bar).toCyclePath(), is(equalTo("bar -> bar")));
-		assertThat(Path.of(foo).append(bar).append(bar).toString(), is(equalTo("foo -> bar -> bar")));
+		Path path = Path.of(foo).append(bar).append(bar);
+
+		assertThat(path.isCycle(), is(true));
+		assertThat(path.toCyclePath(), is(equalTo("bar -> bar")));
+		assertThat(path.toString(), is(equalTo("foo -> bar -> bar")));
+	}
+
+	@Test // DATAMONGO-1782
+	public void isCycleShouldReturnFalseWhenNoCyclePresent() {
+
+		MongoPersistentProperty foo = createPersistentPropertyMock(entityMock, "foo");
+		MongoPersistentProperty bar = createPersistentPropertyMock(entityMock, "bar");
+
+		Path path = Path.of(foo).append(bar);
+
+		assertThat(path.isCycle(), is(false));
+		assertThat(path.toCyclePath(), is(equalTo("")));
+		assertThat(path.toString(), is(equalTo("foo -> bar")));
+	}
+
+	@Test // DATAMONGO-1782
+	public void isCycleShouldReturnFalseCycleForNonEqualProperties() {
+
+		MongoPersistentProperty foo = createPersistentPropertyMock(entityMock, "foo");
+		MongoPersistentProperty bar = createPersistentPropertyMock(entityMock, "bar");
+		MongoPersistentProperty bar2 = createPersistentPropertyMock(mock(MongoPersistentEntity.class), "bar");
+
+		assertThat(Path.of(foo).append(bar).append(bar2).isCycle(), is(false));
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
