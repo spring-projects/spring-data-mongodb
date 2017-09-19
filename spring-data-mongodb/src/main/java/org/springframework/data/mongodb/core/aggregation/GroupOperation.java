@@ -40,6 +40,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Gustavo de Geus
  * @author Christoph Strobl
+ * @author Sergey Shcherbakov
  * @since 1.3
  * @see <a href="https://docs.mongodb.org/manual/reference/aggregation/group/">MongoDB Aggregation Framework: $group</a>
  */
@@ -155,6 +156,17 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 */
 	public GroupOperationBuilder sum(String reference) {
 		return sum(reference, null);
+	}
+
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $sum}-expression for the given
+	 * {@link AggregationExpression}.
+	 *
+	 * @param expr
+	 * @return
+	 */
+	public GroupOperationBuilder sum(AggregationExpression expr) {
+		return newBuilder(GroupOps.SUM, null, expr);
 	}
 
 	private GroupOperationBuilder sum(String reference, Object value) {
