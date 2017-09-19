@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,37 +105,35 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		Document document = root.findAnnotation(Document.class);
 		Assert.notNull(document, "Given entity is not collection root.");
 
-		final List<IndexDefinitionHolder> indexInformation = new ArrayList<IndexDefinitionHolder>();
+		final List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", root.getCollection(), root));
 		indexInformation.addAll(potentiallyCreateTextIndexDefinition(root));
 
-		final CycleGuard guard = new CycleGuard();
-
-		root.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
-
-			@Override
-			public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
-
-				try {
-					if (persistentProperty.isEntity()) {
-						indexInformation.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(),
-								persistentProperty.getFieldName(), Path.of(persistentProperty), root.getCollection(), guard));
-					}
-
-					IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(
-							persistentProperty.getFieldName(), root.getCollection(), persistentProperty);
-					if (indexDefinitionHolder != null) {
-						indexInformation.add(indexDefinitionHolder);
-					}
-				} catch (CyclicPropertyReferenceException e) {
-					LOGGER.info(e.getMessage());
-				}
-			}
-		});
+		root.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> this
+				.potentiallyAddIndexForProperty(root, property, indexInformation, new CycleGuard()));
 
 		indexInformation.addAll(resolveIndexesForDbrefs("", root.getCollection(), root));
 
 		return indexInformation;
+	}
+
+	private void potentiallyAddIndexForProperty(MongoPersistentEntity<?> root, MongoPersistentProperty persistentProperty,
+			List<IndexDefinitionHolder> indexes, CycleGuard guard) {
+
+		try {
+			if (persistentProperty.isEntity()) {
+				indexes.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(),
+						persistentProperty.getFieldName(), Path.of(persistentProperty), root.getCollection(), guard));
+			}
+
+			IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(
+					persistentProperty.getFieldName(), root.getCollection(), persistentProperty);
+			if (indexDefinitionHolder != null) {
+				indexes.add(indexDefinitionHolder);
+			}
+		} catch (CyclicPropertyReferenceException e) {
+			LOGGER.info(e.getMessage());
+		}
 	}
 
 	/**
@@ -153,39 +152,40 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
 
-		final List<IndexDefinitionHolder> indexInformation = new ArrayList<IndexDefinitionHolder>();
+		final List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions(dotPath, collection, entity));
 
-		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
-
-			@Override
-			public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
-
-				String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "")
-						+ persistentProperty.getFieldName();
-				Path propertyPath = path.append(persistentProperty);
-				guard.protect(persistentProperty, propertyPath);
-
-				if (persistentProperty.isEntity()) {
-					try {
-						indexInformation.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(),
-								propertyDotPath, propertyPath, collection, guard));
-					} catch (CyclicPropertyReferenceException e) {
-						LOGGER.info(e.getMessage());
-					}
-				}
-
-				IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath,
-						collection, persistentProperty);
-				if (indexDefinitionHolder != null) {
-					indexInformation.add(indexDefinitionHolder);
-				}
-			}
-		});
+		entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> this
+				.guradAndPotentiallyAddIndexForProperty(property, dotPath, path, collection, indexInformation, guard));
 
 		indexInformation.addAll(resolveIndexesForDbrefs(dotPath, collection, entity));
 
 		return indexInformation;
+	}
+
+	private void guradAndPotentiallyAddIndexForProperty(MongoPersistentProperty persistentProperty, String dotPath,
+			Path path, String collection, List<IndexDefinitionHolder> indexes, CycleGuard guard) {
+
+		String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "") + persistentProperty.getFieldName();
+
+		Path propertyPath = path.append(persistentProperty);
+		guard.protect(persistentProperty, propertyPath);
+
+		if (persistentProperty.isEntity()) {
+			try {
+				indexes.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(), propertyDotPath,
+						propertyPath, collection, guard));
+			} catch (CyclicPropertyReferenceException e) {
+				LOGGER.info(e.getMessage());
+			}
+		}
+
+		IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
+				persistentProperty);
+
+		if (indexDefinitionHolder != null) {
+			indexes.add(indexDefinitionHolder);
+		}
 	}
 
 	@Nullable
@@ -319,13 +319,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	protected List<IndexDefinitionHolder> createCompoundIndexDefinitions(String dotPath, String fallbackCollection,
 			MongoPersistentEntity<?> entity) {
 
-		List<IndexDefinitionHolder> indexDefinitions = new ArrayList<IndexDefinitionHolder>();
+		List<IndexDefinitionHolder> indexDefinitions = new ArrayList<>();
 		CompoundIndexes indexes = entity.findAnnotation(CompoundIndexes.class);
 
 		if (indexes != null) {
-			for (CompoundIndex index : indexes.value()) {
-				indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index, entity));
-			}
+			indexDefinitions = Arrays.stream(indexes.value())
+					.map(index -> createCompoundIndexDefinition(dotPath, fallbackCollection, index, entity))
+					.collect(Collectors.toList());
 		}
 
 		CompoundIndex index = entity.findAnnotation(CompoundIndex.class);
@@ -395,6 +395,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persitentProperty
 	 * @return
 	 */
+	@Nullable
 	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persitentProperty) {
 
@@ -439,6 +440,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persistentProperty
 	 * @return
 	 */
+	@Nullable
 	protected IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
@@ -482,32 +484,31 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private List<IndexDefinitionHolder> resolveIndexesForDbrefs(final String path, final String collection,
 			MongoPersistentEntity<?> entity) {
 
-		final List<IndexDefinitionHolder> indexes = new ArrayList<IndexDefinitionHolder>(0);
-		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
-
-			@Override
-			public void doWithAssociation(Association<MongoPersistentProperty> association) {
-
-				MongoPersistentProperty property = association.getInverse();
-
-				String propertyDotPath = (StringUtils.hasText(path) ? path + "." : "") + property.getFieldName();
-
-				if (property.isAnnotationPresent(GeoSpatialIndexed.class) || property.isAnnotationPresent(TextIndexed.class)) {
-					throw new MappingException(
-							String.format("Cannot create geospatial-/text- index on DBRef in collection '%s' for path '%s'.",
-									collection, propertyDotPath));
-				}
-
-				IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath,
-						collection, property);
-
-				if (indexDefinitionHolder != null) {
-					indexes.add(indexDefinitionHolder);
-				}
-			}
-		});
-
+		final List<IndexDefinitionHolder> indexes = new ArrayList<>(0);
+		entity.doWithAssociations((AssociationHandler<MongoPersistentProperty>) association -> this
+				.resolveAndAddIndexesForAssociation(association, indexes, path, collection));
 		return indexes;
+	}
+
+	private void resolveAndAddIndexesForAssociation(Association<MongoPersistentProperty> association,
+			List<IndexDefinitionHolder> indexes, String path, String collection) {
+
+		MongoPersistentProperty property = association.getInverse();
+
+		String propertyDotPath = (StringUtils.hasText(path) ? path + "." : "") + property.getFieldName();
+
+		if (property.isAnnotationPresent(GeoSpatialIndexed.class) || property.isAnnotationPresent(TextIndexed.class)) {
+			throw new MappingException(
+					String.format("Cannot create geospatial-/text- index on DBRef in collection '%s' for path '%s'.", collection,
+							propertyDotPath));
+		}
+
+		IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
+				property);
+
+		if (indexDefinitionHolder != null) {
+			indexes.add(indexDefinitionHolder);
+		}
 	}
 
 	/**
@@ -519,7 +520,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 */
 	static class CycleGuard {
 
-		private final Set<String> seenProperties = new HashSet<String>();
+		private final Set<String> seenProperties = new HashSet<>();
 
 		/**
 		 * Detect a cycle in a property path if the property was seen at least once.
@@ -573,7 +574,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		@EqualsAndHashCode
 		static class Path {
 
-			private static final Path EMPTY = new Path(Collections.<PersistentProperty<?>> emptyList(), false);
+			private static final Path EMPTY = new Path(Collections.emptyList(), false);
 
 			private final List<PersistentProperty<?>> elements;
 			private final boolean cycle;
@@ -594,7 +595,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			 * @since 1.10.8
 			 */
 			static Path of(PersistentProperty<?> initial) {
-				return new Path(Collections.<PersistentProperty<?>> singletonList(initial), false);
+				return new Path(Collections.singletonList(initial), false);
 			}
 
 			/**
@@ -606,7 +607,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			 */
 			Path append(PersistentProperty<?> breadcrumb) {
 
-				List<PersistentProperty<?>> elements = new ArrayList<PersistentProperty<?>>(this.elements.size() + 1);
+				List<PersistentProperty<?>> elements = new ArrayList<>(this.elements.size() + 1);
 				elements.addAll(this.elements);
 				elements.add(breadcrumb);
 
@@ -638,6 +639,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			 * @since 1.10.8
 			 */
 			String toCyclePath() {
+
+				if (!cycle) {
+					return "";
+				}
 
 				for (int i = 0; i < this.elements.size(); i++) {
 
