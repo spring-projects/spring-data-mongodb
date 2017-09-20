@@ -835,11 +835,11 @@ public class AggregationTests {
 		assertThat(result.getMappedResults(), hasSize(2));
 
 		Document meh = result.getMappedResults().get(0);
-		assertThat((String) meh.get("_id"), is(equalTo("meh")));
+		assertThat(meh.get("_id"), is(equalTo("meh")));
 		assertThat(((Number) meh.get("score")).longValue(), is(equalTo(2L)));
 
 		Document good = result.getMappedResults().get(1);
-		assertThat((String) good.get("_id"), is(equalTo("good")));
+		assertThat(good.get("_id"), is(equalTo("good")));
 		assertThat(((Number) good.get("score")).longValue(), is(equalTo(18000L)));
 	}
 

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
  * Unit tests for {@link GroupOperation}.
@@ -214,6 +215,29 @@ public class GroupOperationUnitTests {
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "fieldStdDevPop");
 
 		assertThat(push, is(new Document("$stdDevPop", "$field")));
+	}
+
+	@Test // DATAMONGO-1784
+	public void shouldRenderSumWithExpressionInGroup() {
+
+		GroupOperation groupOperation = Aggregation //
+				.group("username") //
+				.sum(ConditionalOperators //
+						.when(Criteria.where("foo").is("bar")) //
+						.then(1) //
+						.otherwise(-1)) //
+				.as("foobar");
+
+		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
+		Document foobar = DocumentTestUtils.getAsDocument(groupClause, "foobar");
+
+		assertThat(foobar.get("$sum"), is(new Document("$cond",
+				new Document("if", new Document("$eq", Arrays.asList("$foo", "bar"))).append("then", 1).append("else", -1))));
+	}
+
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1784
+	public void sumWithNullExpressionShouldThrowException() {
+		Aggregation.group("username").sum((AggregationExpression) null);
 	}
 
 	private Document extractDocumentFromGroupOperation(GroupOperation groupOperation) {

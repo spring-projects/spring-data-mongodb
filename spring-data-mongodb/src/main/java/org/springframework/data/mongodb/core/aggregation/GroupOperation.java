@@ -160,10 +160,14 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 * Generates an {@link GroupOperationBuilder} for an {@code $sum}-expression for the given
 	 * {@link AggregationExpression}.
 	 *
-	 * @param expr
-	 * @return
+	 * @param expr must not be {@literal null}.
+	 * @return new instance of {@link GroupOperationBuilder}. Never {@literal null}.
+	 * @throws IllegalArgumentException when {@code expr} is {@literal null}.
+	 * @since 1.10.8
 	 */
 	public GroupOperationBuilder sum(AggregationExpression expr) {
+
+		Assert.notNull(expr, "Expr must not be null!");
 		return newBuilder(GroupOps.SUM, null, expr);
 	}
 
