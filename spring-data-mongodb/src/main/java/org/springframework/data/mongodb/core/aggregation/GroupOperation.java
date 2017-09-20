@@ -19,12 +19,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -162,10 +160,14 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 * Generates an {@link GroupOperationBuilder} for an {@code $sum}-expression for the given
 	 * {@link AggregationExpression}.
 	 *
-	 * @param expr
-	 * @return
+	 * @param expr must not be {@literal null}.
+	 * @return new instance of {@link GroupOperationBuilder}. Never {@literal null}.
+	 * @throws IllegalArgumentException when {@code expr} is {@literal null}.
+	 * @since 1.10.8
 	 */
 	public GroupOperationBuilder sum(AggregationExpression expr) {
+
+		Assert.notNull(expr, "Expr must not be null!");
 		return newBuilder(GroupOps.SUM, null, expr);
 	}
 
@@ -208,7 +210,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $last}-expression for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $last}-expression for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -228,7 +231,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for a {@code $first}-expression for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for a {@code $first}-expression for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -248,7 +252,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $avg}-expression for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $avg}-expression for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -292,7 +297,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $min}-expression that for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $min}-expression that for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -312,7 +318,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $max}-expression that for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $max}-expression that for the given
+	 * {@link AggregationExpression}.
 	 * 
 	 * @param expr
 	 * @return
@@ -334,7 +341,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevSamp}-expression that for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevSamp}-expression that for the given
+	 * {@link AggregationExpression}.
 	 *
 	 * @param expr must not be {@literal null}.
 	 * @return never {@literal null}.
@@ -356,7 +364,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
-	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevPop}-expression that for the given {@link AggregationExpression}.
+	 * Generates an {@link GroupOperationBuilder} for an {@code $stdDevPop}-expression that for the given
+	 * {@link AggregationExpression}.
 	 *
 	 * @param expr must not be {@literal null}.
 	 * @return never {@literal null}.
@@ -430,14 +439,14 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	private static enum GroupOps implements Keyword {
 
-		SUM("$sum"), LAST("$last"), FIRST("$first"), PUSH("$push"), AVG("$avg"), MIN("$min"), MAX("$max"), ADD_TO_SET("$addToSet"), STD_DEV_POP("$stdDevPop"), STD_DEV_SAMP("$stdDevSamp");
+		SUM("$sum"), LAST("$last"), FIRST("$first"), PUSH("$push"), AVG("$avg"), MIN("$min"), MAX("$max"), ADD_TO_SET(
+				"$addToSet"), STD_DEV_POP("$stdDevPop"), STD_DEV_SAMP("$stdDevSamp");
 
 		private String mongoOperator;
 
 		GroupOps(String mongoOperator) {
 			this.mongoOperator = mongoOperator;
 		}
-
 
 		@Override
 		public String toString() {

@@ -24,6 +24,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -216,6 +217,31 @@ public class GroupOperationUnitTests {
 		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "fieldStdDevPop");
 
 		assertThat(push, is((DBObject) new BasicDBObject("$stdDevPop", "$field")));
+	}
+
+	@Test // DATAMONGO-1784
+	public void shouldRenderSumWithExpressionInGroup() {
+
+		GroupOperation groupOperation = Aggregation //
+				.group("username") //
+				.sum(ConditionalOperators //
+						.when(Criteria.where("foo").is("bar")) //
+						.then(1) //
+						.otherwise(-1)) //
+				.as("foobar");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject foobar = DBObjectTestUtils.getAsDBObject(groupClause, "foobar");
+
+		assertThat((DBObject) foobar.get("$sum"),
+				is((DBObject) new BasicDBObject("$cond",
+						new BasicDBObject("if", new BasicDBObject("$eq", Arrays.asList("$foo", "bar"))).append("then", 1)
+								.append("else", -1))));
+	}
+
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1784
+	public void sumWithNullExpressionShouldThrowException() {
+		Aggregation.group("username").sum((AggregationExpression) null);
 	}
 
 	private DBObject extractDbObjectFromGroupOperation(GroupOperation groupOperation) {

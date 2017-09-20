@@ -152,7 +152,7 @@ public class AggregationTests {
 	/**
 	 * Imports the sample dataset (zips.json) if necessary (e.g. if it doesn't exist yet). The dataset can originally be
 	 * found on the mongodb aggregation framework example website:
-	 * 
+	 *
 	 * @see <a href="https://docs.mongodb.org/manual/tutorial/aggregation-examples/">MongoDB Aggregation Examples</a>
 	 */
 	private void initSampleDataIfNecessary() {
@@ -344,7 +344,7 @@ public class AggregationTests {
 	public void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
 		/*
 		 //complex mongodb aggregation framework example from https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		db.zipInfo.aggregate( 
+		db.zipInfo.aggregate(
 			{
 			   $group: {
 			      _id: {
@@ -451,18 +451,18 @@ public class AggregationTests {
 	@Test // DATAMONGO-586
 	public void findStatesWithPopulationOver10MillionAggregationExample() {
 		/*
-		 //complex mongodb aggregation framework example from 
+		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		 
-		 db.zipcodes.aggregate( 
+
+		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
 				      _id:"$state",
 				      totalPop:{ $sum:"$pop"}
 		 			 }
 				},
-				{ 
-		 			$sort: { _id: 1, "totalPop": 1 } 
+				{
+		 			$sort: { _id: 1, "totalPop": 1 }
 		 		},
 				{
 				   $match: {
