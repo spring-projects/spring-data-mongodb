@@ -425,8 +425,7 @@ public class UpdateTests {
 
 		Update update = new Update().max("key", 10);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$max", new Document("key", 10))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$max", new Document("key", 10))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -434,8 +433,7 @@ public class UpdateTests {
 
 		Update update = new Update().min("key", 10);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$min", new Document("key", 10))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$min", new Document("key", 10))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -444,8 +442,7 @@ public class UpdateTests {
 		Update update = new Update().max("key", 10);
 		update.max("key", 99);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$max", new Document("key", 99))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$max", new Document("key", 99))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -454,8 +451,7 @@ public class UpdateTests {
 		Update update = new Update().min("key", 10);
 		update.min("key", 99);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$min", new Document("key", 99))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$min", new Document("key", 99))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -464,8 +460,7 @@ public class UpdateTests {
 		Date date = new Date();
 		Update update = new Update().max("key", date);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$max", new Document("key", date))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$max", new Document("key", date))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -474,8 +469,7 @@ public class UpdateTests {
 		Date date = new Date();
 		Update update = new Update().min("key", date);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$min", new Document("key", date))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$min", new Document("key", date))));
 	}
 
 	@Test // DATAMONGO-1777

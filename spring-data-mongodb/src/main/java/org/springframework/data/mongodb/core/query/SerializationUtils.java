@@ -17,10 +17,9 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
@@ -70,7 +69,7 @@ public abstract class SerializationUtils {
 			return Collections.emptyMap();
 		}
 
-		Map<String, Object> result = new HashMap<String, Object>();
+		Map<String, Object> result = new LinkedHashMap<>();
 		toFlatMap("", source, result);
 		return result;
 	}
@@ -80,12 +79,12 @@ public abstract class SerializationUtils {
 		if (source instanceof Document) {
 
 			Document document = (Document) source;
-			Iterator<Map.Entry<String, Object>> iter = document.entrySet().iterator();
-			String pathPrefix = currentPath.isEmpty() ? "" : currentPath + ".";
+			Iterator<Map.Entry<String, Object>> it = document.entrySet().iterator();
+			String pathPrefix = currentPath.isEmpty() ? "" : currentPath + '.';
 
-			while (iter.hasNext()) {
+			while (it.hasNext()) {
 
-				Map.Entry<String, Object> entry = iter.next();
+				Map.Entry<String, Object> entry = it.next();
 
 				if (entry.getKey().startsWith("$")) {
 					if (map.containsKey(currentPath)) {
@@ -133,19 +132,12 @@ public abstract class SerializationUtils {
 	}
 
 	private static String toString(Map<?, ?> source) {
-		return iterableToDelimitedString(source.entrySet(), "{ ", " }", new Converter<Entry<?, ?>, Object>() {
-			public Object convert(Entry<?, ?> source) {
-				return String.format("\"%s\" : %s", source.getKey(), serializeToJsonSafely(source.getValue()));
-			}
-		});
+		return iterableToDelimitedString(source.entrySet(), "{ ", " }",
+				entry -> String.format("\"%s\" : %s", entry.getKey(), serializeToJsonSafely(entry.getValue())));
 	}
 
 	private static String toString(Collection<?> source) {
-		return iterableToDelimitedString(source, "[ ", " ]", new Converter<Object, Object>() {
-			public Object convert(Object source) {
-				return serializeToJsonSafely(source);
-			}
-		});
+		return iterableToDelimitedString(source, "[ ", " ]", SerializationUtils::serializeToJsonSafely);
 	}
 
 	/**
@@ -166,6 +158,7 @@ public abstract class SerializationUtils {
 		Iterator<T> iterator = source.iterator();
 
 		while (iterator.hasNext()) {
+
 			builder.append(transformer.convert(iterator.next()));
 			if (iterator.hasNext()) {
 				builder.append(", ");
