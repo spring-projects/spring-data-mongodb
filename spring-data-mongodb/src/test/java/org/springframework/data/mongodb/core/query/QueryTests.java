@@ -210,7 +210,7 @@ public class QueryTests {
 
 		Query query = new Query(where("name").is("foo")).restrict(SpecialDoc.class);
 		assertThat(query.toString(), is(
-				"Query: { \"name\" : \"foo\", \"_$RESTRICTED_TYPES\" : [ { $java : class org.springframework.data.mongodb.core.SpecialDoc } ] }, Fields: { }, Sort: { }"));
+				"Query: { \"name\" : \"foo\", \"_$RESTRICTED_TYPES\" : [ { \"$java\" : class org.springframework.data.mongodb.core.SpecialDoc } ] }, Fields: { }, Sort: { }"));
 		assertThat(query.getRestrictedTypes(), is(notNullValue()));
 		assertThat(query.getRestrictedTypes().size(), is(1));
 		assertThat(query.getRestrictedTypes(), hasItems(Arrays.asList(SpecialDoc.class).toArray(new Class<?>[0])));
@@ -221,7 +221,7 @@ public class QueryTests {
 
 		exception.expect(InvalidMongoDbApiUsageException.class);
 		exception.expectMessage("second 'value' criteria");
-		exception.expectMessage("already contains '{ \"value\" : { $java : VAL_1 } }'");
+		exception.expectMessage("already contains '{ \"value\" : { \"$java\" : VAL_1 } }'");
 
 		Query query = new Query();
 		query.addCriteria(where("value").is(EnumType.VAL_1));
