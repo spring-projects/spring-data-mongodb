@@ -656,7 +656,7 @@ public class Update {
 
 		private Object[] values;
 
-		public Each(Object... values) {
+		Each(Object... values) {
 			this.values = extractValues(values);
 		}
 
@@ -702,7 +702,7 @@ public class Update {
 
 		private final int position;
 
-		public PositionModifier(int position) {
+		PositionModifier(int position) {
 			this.position = position;
 		}
 
@@ -727,7 +727,7 @@ public class Update {
 
 		private int count;
 
-		public Slice(int count) {
+		Slice(int count) {
 			this.count = count;
 		}
 
@@ -766,7 +766,7 @@ public class Update {
 		 *
 		 * @param direction must not be {@literal null}.
 		 */
-		public SortModifier(Direction direction) {
+		SortModifier(Direction direction) {
 
 			Assert.notNull(direction, "Direction must not be null!");
 			this.sort = direction.isAscending() ? 1 : -1;
@@ -777,7 +777,7 @@ public class Update {
 		 *
 		 * @param sort must not be {@literal null}.
 		 */
-		public SortModifier(Sort sort) {
+		SortModifier(Sort sort) {
 
 			Assert.notNull(sort, "Sort must not be null!");
 
