@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.bson.Document;
@@ -55,9 +56,9 @@ public class Update {
 	}
 
 	private boolean isolated = false;
-	private Set<String> keysToUpdate = new HashSet<String>();
-	private Map<String, Object> modifierOps = new LinkedHashMap<String, Object>();
-	private Map<String, PushOperatorBuilder> pushCommandBuilders = new LinkedHashMap<String, PushOperatorBuilder>(1);
+	private Set<String> keysToUpdate = new HashSet<>();
+	private Map<String, Object> modifierOps = new LinkedHashMap<>();
+	private Map<String, PushOperatorBuilder> pushCommandBuilders = new LinkedHashMap<>(1);
 
 	/**
 	 * Static factory method to create an Update using the provided key
@@ -122,7 +123,8 @@ public class Update {
 	 * @param key
 	 * @param value
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/setOnInsert/">MongoDB Update operator: $setOnInsert</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/setOnInsert/">MongoDB Update operator:
+	 *      $setOnInsert</a>
 	 */
 	public Update setOnInsert(String key, Object value) {
 		addMultiFieldOperation("$setOnInsert", key, value);
@@ -193,7 +195,8 @@ public class Update {
 	 * @param key
 	 * @param values
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pushAll/">MongoDB Update operator: $pushAll</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pushAll/">MongoDB Update operator:
+	 *      $pushAll</a>
 	 */
 	public Update pushAll(String key, Object[] values) {
 		addMultiFieldOperation("$pushAll", key, Arrays.asList(values));
@@ -218,7 +221,8 @@ public class Update {
 	 * @param key
 	 * @param value
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/addToSet/">MongoDB Update operator: $addToSet</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/addToSet/">MongoDB Update operator:
+	 *      $addToSet</a>
 	 */
 	public Update addToSet(String key, Object value) {
 		addMultiFieldOperation("$addToSet", key, value);
@@ -257,7 +261,8 @@ public class Update {
 	 * @param key
 	 * @param values
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pullAll/">MongoDB Update operator: $pullAll</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pullAll/">MongoDB Update operator:
+	 *      $pullAll</a>
 	 */
 	public Update pullAll(String key, Object[] values) {
 		addMultiFieldOperation("$pullAll", key, Arrays.asList(values));
@@ -270,7 +275,8 @@ public class Update {
 	 * @param oldName
 	 * @param newName
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/rename/">MongoDB Update operator: $rename</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/rename/">MongoDB Update operator:
+	 *      $rename</a>
 	 */
 	public Update rename(String oldName, String newName) {
 		addMultiFieldOperation("$rename", oldName, newName);
@@ -283,7 +289,8 @@ public class Update {
 	 * @param key
 	 * @return
 	 * @since 1.6
-	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator: $currentDate</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
+	 *      $currentDate</a>
 	 */
 	public Update currentDate(String key) {
 
@@ -297,7 +304,8 @@ public class Update {
 	 * @param key
 	 * @return
 	 * @since 1.6
-	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator: $currentDate</a>
+	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
+	 *      $currentDate</a>
 	 */
 	public Update currentTimestamp(String key) {
 
@@ -476,7 +484,7 @@ public class Update {
 		}
 
 		Update that = (Update) obj;
-		return this.getUpdateObject().equals(that.getUpdateObject());
+		return Objects.equals(this.getUpdateObject(), that.getUpdateObject());
 	}
 
 	/*
@@ -506,7 +514,7 @@ public class Update {
 		private Map<String, Modifier> modifiers;
 
 		public Modifiers() {
-			this.modifiers = new LinkedHashMap<String, Modifier>(1);
+			this.modifiers = new LinkedHashMap<>(1);
 		}
 
 		public Collection<Modifier> getModifiers() {
@@ -534,7 +542,8 @@ public class Update {
 			return nullSafeHashCode(modifiers);
 		}
 
-		/* (non-Javadoc)
+		/*
+		 * (non-Javadoc)
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
 		@Override
@@ -550,7 +559,7 @@ public class Update {
 
 			Modifiers that = (Modifiers) obj;
 
-			return this.modifiers.equals(that.modifiers);
+			return Objects.equals(this.modifiers, that.modifiers);
 		}
 
 		@Override
@@ -958,7 +967,7 @@ public class Update {
 
 			PushOperatorBuilder that = (PushOperatorBuilder) obj;
 
-			if (!getOuterType().equals(that.getOuterType())) {
+			if (!Objects.equals(getOuterType(), that.getOuterType())) {
 				return false;
 			}
 
