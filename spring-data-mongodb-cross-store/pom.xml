@@ -16,6 +16,7 @@
 	<properties>
 		<jpa>2.1.1</jpa>
 		<hibernate>5.2.1.Final</hibernate>
+		<java-module-name>spring.data.mongodb.cross.store</java-module-name>
 	</properties>
 
 	<dependencies>
