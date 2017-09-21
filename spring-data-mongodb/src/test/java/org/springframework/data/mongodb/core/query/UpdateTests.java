@@ -485,4 +485,44 @@ public class UpdateTests {
 		assertThat(new Update().set("key", "value").isolated().toString(),
 				is(equalTo("{ \"$set\" : { \"key\" : \"value\" }, \"$isolated\" : 1 }")));
 	}
+
+	@Test // DATAMONGO-1778
+	public void equalsShouldConsiderModifiers() {
+
+		Update update1 = new Update().inc("version", 1).push("someField").slice(-10).each("test");
+		Update update2 = new Update().inc("version", 1).push("someField").slice(-10).each("test");
+		Update update3 = new Update().inc("version", 1).push("someField").slice(10).each("test");
+
+		assertThat(update1, is(equalTo(update2)));
+		assertThat(update1, is(not(equalTo(update3))));
+	}
+
+	@Test // DATAMONGO-1778
+	public void equalsShouldConsiderIsolated() {
+
+		Update update1 = new Update().inc("version", 1).isolated();
+		Update update2 = new Update().inc("version", 1).isolated();
+
+		assertThat(update1, is(equalTo(update2)));
+	}
+
+	@Test // DATAMONGO-1778
+	public void hashCodeShouldConsiderModifiers() {
+
+		Update update1 = new Update().inc("version", 1).push("someField").slice(-10).each("test");
+		Update update2 = new Update().inc("version", 1).push("someField").slice(-10).each("test");
+		Update update3 = new Update().inc("version", 1).push("someField").slice(10).each("test");
+
+		assertThat(update1.hashCode(), is(equalTo(update2.hashCode())));
+		assertThat(update1.hashCode(), is(not(equalTo(update3.hashCode()))));
+	}
+
+	@Test // DATAMONGO-1778
+	public void hashCodeShouldConsiderIsolated() {
+
+		Update update1 = new Update().inc("version", 1).isolated();
+		Update update2 = new Update().inc("version", 1);
+
+		assertThat(update1.hashCode(), is(not(equalTo(update2.hashCode()))));
+	}
 }
