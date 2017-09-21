@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.util.ObjectUtils.*;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +32,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -465,7 +464,7 @@ public class Update {
 	 */
 	@Override
 	public int hashCode() {
-		return getUpdateObject().hashCode();
+		return Objects.hash(getUpdateObject(), isolated);
 	}
 
 	/*
@@ -484,6 +483,10 @@ public class Update {
 		}
 
 		Update that = (Update) obj;
+		if (this.isolated != that.isolated) {
+			return false;
+		}
+
 		return Objects.equals(this.getUpdateObject(), that.getUpdateObject());
 	}
 
@@ -539,7 +542,7 @@ public class Update {
 		 */
 		@Override
 		public int hashCode() {
-			return nullSafeHashCode(modifiers);
+			return Objects.hashCode(modifiers);
 		}
 
 		/*
@@ -558,7 +561,6 @@ public class Update {
 			}
 
 			Modifiers that = (Modifiers) obj;
-
 			return Objects.equals(this.modifiers, that.modifiers);
 		}
 
@@ -595,12 +597,62 @@ public class Update {
 	}
 
 	/**
+	 * Abstract {@link Modifier} implementation with defaults for {@link Object#equals(Object)}, {@link Object#hashCode()}
+	 * and {@link Object#toString()}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
+	private static abstract class AbstractModifier implements Modifier {
+
+		/*
+		 * (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+			return ObjectUtils.nullSafeHashCode(getKey()) + ObjectUtils.nullSafeHashCode(getValue());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		@Override
+		public boolean equals(Object that) {
+
+			if (this == that) {
+				return true;
+			}
+
+			if (that == null || getClass() != that.getClass()) {
+				return false;
+			}
+
+			if (!Objects.equals(getKey(), ((Modifier) that).getKey())) {
+				return false;
+			}
+
+			return Objects.deepEquals(getValue(), ((Modifier) that).getValue());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return toJsonString();
+		}
+	}
+
+	/**
 	 * Implementation of {@link Modifier} representing {@code $each}.
 	 *
 	 * @author Christoph Strobl
 	 * @author Thomas Darimont
 	 */
-	private static class Each implements Modifier {
+	private static class Each extends AbstractModifier {
 
 		private Object[] values;
 
@@ -638,38 +690,6 @@ public class Update {
 		public Object getValue() {
 			return this.values;
 		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
-		@Override
-		public int hashCode() {
-			return nullSafeHashCode(values);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
-		@Override
-		public boolean equals(Object that) {
-
-			if (this == that) {
-				return true;
-			}
-
-			if (that == null || getClass() != that.getClass()) {
-				return false;
-			}
-
-			return nullSafeEquals(values, ((Each) that).values);
-		}
-
-		@Override
-		public String toString() {
-			return toJsonString();
-		}
 	}
 
 	/**
@@ -678,7 +698,7 @@ public class Update {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	private static class PositionModifier implements Modifier {
+	private static class PositionModifier extends AbstractModifier {
 
 		private final int position;
 
@@ -695,11 +715,6 @@ public class Update {
 		public Object getValue() {
 			return position;
 		}
-
-		@Override
-		public String toString() {
-			return toJsonString();
-		}
 	}
 
 	/**
@@ -708,7 +723,7 @@ public class Update {
 	 * @author Mark Paluch
 	 * @since 1.10
 	 */
-	private static class Slice implements Modifier {
+	private static class Slice extends AbstractModifier {
 
 		private int count;
 
@@ -733,11 +748,6 @@ public class Update {
 		public Object getValue() {
 			return this.count;
 		}
-
-		@Override
-		public String toString() {
-			return toJsonString();
-		}
 	}
 
 	/**
@@ -747,7 +757,7 @@ public class Update {
 	 * @author Mark Paluch
 	 * @since 1.10
 	 */
-	private static class SortModifier implements Modifier {
+	private static class SortModifier extends AbstractModifier {
 
 		private final Object sort;
 
@@ -798,11 +808,6 @@ public class Update {
 		@Override
 		public Object getValue() {
 			return this.sort;
-		}
-
-		@Override
-		public String toString() {
-			return toJsonString();
 		}
 	}
 
@@ -940,14 +945,7 @@ public class Update {
 		 */
 		@Override
 		public int hashCode() {
-
-			int result = 17;
-
-			result += 31 * result + getOuterType().hashCode();
-			result += 31 * result + nullSafeHashCode(key);
-			result += 31 * result + nullSafeHashCode(modifiers);
-
-			return result;
+			return Objects.hash(getOuterType(), key, modifiers);
 		}
 
 		/*
@@ -971,7 +969,7 @@ public class Update {
 				return false;
 			}
 
-			return nullSafeEquals(this.key, that.key) && nullSafeEquals(this.modifiers, that.modifiers);
+			return Objects.equals(this.key, that.key) && Objects.equals(this.modifiers, that.modifiers);
 		}
 
 		private Update getOuterType() {
