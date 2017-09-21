@@ -485,7 +485,14 @@ public class Update {
 	 */
 	@Override
 	public String toString() {
-		return SerializationUtils.serializeToJsonSafely(getUpdateObject());
+
+		Document doc = getUpdateObject();
+
+		if (isIsolated()) {
+			doc.append("$isolated", 1);
+		}
+
+		return SerializationUtils.serializeToJsonSafely(doc);
 	}
 
 	/**
@@ -510,7 +517,16 @@ public class Update {
 			this.modifiers.put(modifier.getKey(), modifier);
 		}
 
-		/* (non-Javadoc)
+		/**
+		 * @return true if no modifiers present.
+		 * @since 2.0
+		 */
+		public boolean isEmpty() {
+			return modifiers.isEmpty();
+		}
+
+		/*
+		 * (non-Javadoc)
 		 * @see java.lang.Object#hashCode()
 		 */
 		@Override
@@ -536,6 +552,11 @@ public class Update {
 
 			return this.modifiers.equals(that.modifiers);
 		}
+
+		@Override
+		public String toString() {
+			return SerializationUtils.serializeToJsonSafely(this.modifiers);
+		}
 	}
 
 	/**
@@ -554,6 +575,14 @@ public class Update {
 		 * @return value to be sent with command
 		 */
 		Object getValue();
+
+		/**
+		 * @return a safely serialized JSON representation.
+		 * @since 2.0
+		 */
+		default String toJsonString() {
+			return SerializationUtils.serializeToJsonSafely(Collections.singletonMap(getKey(), getValue()));
+		}
 	}
 
 	/**
@@ -627,6 +656,11 @@ public class Update {
 
 			return nullSafeEquals(values, ((Each) that).values);
 		}
+
+		@Override
+		public String toString() {
+			return toJsonString();
+		}
 	}
 
 	/**
@@ -651,6 +685,11 @@ public class Update {
 		@Override
 		public Object getValue() {
 			return position;
+		}
+
+		@Override
+		public String toString() {
+			return toJsonString();
 		}
 	}
 
@@ -684,6 +723,11 @@ public class Update {
 		@Override
 		public Object getValue() {
 			return this.count;
+		}
+
+		@Override
+		public String toString() {
+			return toJsonString();
 		}
 	}
 
@@ -745,6 +789,11 @@ public class Update {
 		@Override
 		public Object getValue() {
 			return this.sort;
+		}
+
+		@Override
+		public String toString() {
+			return toJsonString();
 		}
 	}
 
@@ -867,7 +916,13 @@ public class Update {
 		 * @return never {@literal null}.
 		 */
 		public Update value(Object value) {
-			return Update.this.push(key, value);
+
+			if (this.modifiers.isEmpty()) {
+				return Update.this.push(key, value);
+			}
+
+			this.modifiers.addModifier(new Each(Collections.singletonList(value)));
+			return Update.this.push(key, this.modifiers);
 		}
 
 		/*

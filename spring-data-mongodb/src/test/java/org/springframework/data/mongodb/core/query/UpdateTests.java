@@ -26,6 +26,7 @@ import org.bson.Document;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.query.Update.Position;
 
 /**
  * Test cases for {@link Update}.
@@ -475,5 +476,19 @@ public class UpdateTests {
 
 		assertThat(update.getUpdateObject(),
 				equalTo(new Document("$min", new Document("key", date))));
+	}
+
+	@Test // DATAMONGO-1777
+	public void toStringShouldPrettyPrintModifiers() {
+
+		assertThat(new Update().push("key").atPosition(Position.FIRST).value("Arya").toString(), is(equalTo(
+				"{ \"$push\" : { \"key\" : { \"$java\" : { \"$position\" : { \"$java\" : { \"$position\" : 0} }, \"$each\" : { \"$java\" : { \"$each\" : [ \"Arya\"]} } } } } }")));
+	}
+
+	@Test // DATAMONGO-1777
+	public void toStringConsidersIsolated() {
+
+		assertThat(new Update().set("key", "value").isolated().toString(),
+				is(equalTo("{ \"$set\" : { \"key\" : \"value\" }, \"$isolated\" : 1 }")));
 	}
 }

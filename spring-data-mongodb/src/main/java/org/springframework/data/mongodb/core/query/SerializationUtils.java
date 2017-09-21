@@ -109,7 +109,7 @@ public abstract class SerializationUtils {
 	 * printing raw {@link Document}s containing complex values before actually converting them into Mongo native types.
 	 *
 	 * @param value
-	 * @return
+	 * @return the serialized value or {@literal null}.
 	 */
 	@Nullable
 	public static String serializeToJsonSafely(@Nullable Object value) {
@@ -119,14 +119,15 @@ public abstract class SerializationUtils {
 		}
 
 		try {
-			return JSON.serialize(value);
+			return value instanceof Document ? ((Document) value).toJson() : JSON.serialize(value);
 		} catch (Exception e) {
+
 			if (value instanceof Collection) {
 				return toString((Collection<?>) value);
 			} else if (value instanceof Map) {
 				return toString((Map<?, ?>) value);
 			} else {
-				return String.format("{ $java : %s }", value.toString());
+				return String.format("{ \"$java\" : %s }", value.toString());
 			}
 		}
 	}
