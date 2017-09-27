@@ -1933,7 +1933,7 @@ Have a look at an example in more context in <<mongo.aggregation.examples.exampl
 | { $not : [$a] }
 |===
 
-Next to the transformations shown in <<Supported SpEL transformations>> it is possible to use standard SpEL operations like `new` to eg. create arrays and reference expressions via their name followed by the arguments to use in brackets.
+Next to the transformations shown in Supported SpEL transformations it is possible to use standard SpEL operations like `new` to eg. create arrays and reference expressions via their name followed by the arguments to use in brackets.
 
 [source,java]
 ----
@@ -2477,7 +2477,7 @@ NOTE: Lifecycle events are only emitted for root level types. Complex types used
 
 The Spring framework provides exception translation for a wide variety of database and mapping technologies. This has traditionally been for JDBC and JPA. The Spring support for MongoDB extends this feature to the MongoDB Database by providing an implementation of the `org.springframework.dao.support.PersistenceExceptionTranslator` interface.
 
-The motivation behind mapping to Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html#dao-exceptions[consistent data access exception hierarchy] is that you are then able to write portable and descriptive exception handling code without resorting to coding against http://www.mongodb.org/about/contributors/error-codes/[MongoDB error codes]. All of Spring's data access exceptions are inherited from the root `DataAccessException` class so you can be sure that you will be able to catch all database related exception within a single try-catch block. Note, that not all exceptions thrown by the MongoDB driver inherit from the MongoException class. The inner exception and message are preserved so no information is lost.
+The motivation behind mapping to Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html#dao-exceptions[consistent data access exception hierarchy] is that you are then able to write portable and descriptive exception handling code without resorting to coding against MongoDB error codes. All of Spring's data access exceptions are inherited from the root `DataAccessException` class so you can be sure that you will be able to catch all database related exception within a single try-catch block. Note, that not all exceptions thrown by the MongoDB driver inherit from the MongoException class. The inner exception and message are preserved so no information is lost.
 
 Some of the mappings performed by the `MongoExceptionTranslator` are: com.mongodb.Network to DataAccessResourceFailureException and `MongoException` error codes 1003, 12001, 12010, 12011, 12012 to `InvalidDataAccessApiUsageException`. Look into the implementation for more details on the mapping.
 
