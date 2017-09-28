@@ -461,6 +461,75 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.findOne(new Query(), Sample.class)).expectNext(data).verifyComplete();
 	}
 
+	@Test // DATAMONGO-1774
+	public void testFindAllAndRemoveByCollectionReturnsAndRemovesDocuments() {
+
+		Sample spring = new Sample("100", "spring");
+		Sample data = new Sample("200", "data");
+		Sample mongodb = new Sample("300", "mongodb");
+
+		StepVerifier.create(template.insert(Arrays.asList(spring, data, mongodb), Sample.class)) //
+				.expectNextCount(3) //
+				.verifyComplete();
+
+		Query qry = query(where("field").in("spring", "mongodb"));
+
+		StepVerifier.create(template.findAllAndRemove(qry, "sample")).expectNextCount(2).verifyComplete();
+
+		StepVerifier.create(template.findOne(new Query(), Sample.class)).expectNext(data).verifyComplete();
+	}
+
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1774
+	public void removeWithNullShouldThrowError() {
+		template.remove((Object)null).subscribe();
+	}
+
+	@Test // DATAMONGO-1774
+	public void removeWithEmptyMonoShouldDoNothing() {
+
+		Sample spring = new Sample("100", "spring");
+		Sample data = new Sample("200", "data");
+		Sample mongodb = new Sample("300", "mongodb");
+
+		StepVerifier.create(template.insert(Arrays.asList(spring, data, mongodb), Sample.class)) //
+				.expectNextCount(3) //
+				.verifyComplete();
+
+		StepVerifier.create(template.remove(Mono.empty())).verifyComplete();
+		StepVerifier.create(template.count(new Query(), Sample.class)).expectNext(3L).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1774
+	public void removeWithMonoShouldDeleteElement() {
+
+		Sample spring = new Sample("100", "spring");
+		Sample data = new Sample("200", "data");
+		Sample mongodb = new Sample("300", "mongodb");
+
+		StepVerifier.create(template.insert(Arrays.asList(spring, data, mongodb), Sample.class)) //
+				.expectNextCount(3) //
+				.verifyComplete();
+
+		StepVerifier.create(template.remove(Mono.just(spring))).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.count(new Query(), Sample.class)).expectNext(2L).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1774
+	public void removeWithMonoAndCollectionShouldDeleteElement() {
+
+		Sample spring = new Sample("100", "spring");
+		Sample data = new Sample("200", "data");
+		Sample mongodb = new Sample("300", "mongodb");
+
+		StepVerifier.create(template.insert(Arrays.asList(spring, data, mongodb), Sample.class)) //
+				.expectNextCount(3) //
+				.verifyComplete();
+
+		StepVerifier.create(template.remove(Mono.just(spring), template.determineCollectionName(Sample.class)))
+				.expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.count(new Query(), Sample.class)).expectNext(2L).verifyComplete();
+	}
+
 	@Test // DATAMONGO-1444
 	public void optimisticLockingHandling() {
 

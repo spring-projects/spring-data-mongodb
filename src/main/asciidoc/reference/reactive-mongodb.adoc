@@ -155,7 +155,7 @@ public class AppConfig {
   /*
    * Use the Reactive Streams Mongo Client API to create a com.mongodb.reactivestreams.client.MongoClient instance.
    */
-   public @Bean MongoClient mongoClient()  {
+   public @Bean MongoClient reactiveMongoClient()  {
        return MongoClients.create("mongodb://localhost");
    }
 }
@@ -164,7 +164,7 @@ public class AppConfig {
 
 This approach allows you to use the standard `com.mongodb.reactivestreams.client.MongoClient` API that you may already be used to using.
 
-An alternative is to register an instance of `com.mongodb.reactivestreams.client.MongoClient` instance with the container using Spring's `ReactiveMongoClientFactoryBean`. As compared to instantiating a `com.mongodb.reactivestreams.client.MongoClient` instance directly, the FactoryBean approach has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html[Spring's DAO support features].
+An alternative is to register an instance of `com.mongodb.reactivestreams.client.MongoClient` instance with the container using Spring's `ReactiveMongoClientFactoryBean`. As compared to instantiating a `com.mongodb.reactivestreams.client.MongoClient` instance directly, the FactoryBean approach has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
 
 An example of a Java based bean metadata that supports exception translation on `@Repository` annotated classes is shown below:
 
@@ -192,7 +192,7 @@ public class AppConfig {
 To access the `com.mongodb.reactivestreams.client.MongoClient` object created by the `ReactiveMongoClientFactoryBean` in other `@Configuration` or your own classes, just obtain the `MongoClient` from the context.
 
 
-[[mongo.mongo-db-factory]]
+[[mongo.reactive.mongo-db-factory]]
 === The ReactiveMongoDatabaseFactory interface
 
 While `com.mongodb.reactivestreams.client.MongoClient` is the entry point to the reactive MongoDB driver API, connecting to a specific MongoDB database instance requires additional information such as the database name. With that information you can obtain a `com.mongodb.reactivestreams.client.MongoDatabase` object and access all the functionality of a specific MongoDB database instance. Spring provides the `org.springframework.data.mongodb.core.ReactiveMongoDatabaseFactory` interface shown below to bootstrap connectivity to the database.
@@ -252,7 +252,7 @@ public class MongoApp {
 
 The use of `SimpleMongoDbFactory` is the only difference between the listing shown in the <<mongodb-reactive-getting-started,getting started section>>.
 
-[[mongo.mongo-db-factory-java]]
+[[mongo.reactive.mongo-db-factory-java]]
 === Registering a ReactiveMongoDatabaseFactory instance using Java based metadata
 
 To register a `ReactiveMongoDatabaseFactory` instance with the container, you write code much like what was highlighted in the previous code listing. A simple example is shown below
@@ -262,7 +262,7 @@ To register a `ReactiveMongoDatabaseFactory` instance with the container, you wr
 @Configuration
 public class MongoConfiguration {
 
-  public @Bean ReactiveMongoDatabaseFactory mongoDatabaseFactory() {
+  public @Bean ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory() {
     return new SimpleReactiveMongoDatabaseFactory(MongoClients.create(), "database");
   }
 }
@@ -275,12 +275,12 @@ To define the username and password create MongoDB connection string and pass it
 @Configuration
 public class MongoConfiguration {
 
-  public @Bean ReactiveMongoDatabaseFactory mongoDatabaseFactory() {
-    return new SimpleMongoDbFactory(MongoClients.create("mongodb://joe:secret@localhost"), "database", userCredentials);
+  public @Bean ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory() {
+    return new SimpleReactiveMongoDatabaseFactory(MongoClients.create("mongodb://joe:secret@localhost"), "database");
   }
 
   public @Bean ReactiveMongoTemplate reactiveMongoTemplate() {
-    return new ReactiveMongoTemplate(mongoDatabaseFactory());
+    return new ReactiveMongoTemplate(reactiveMongoDatabaseFactory());
   }
 }
 ----
@@ -318,12 +318,12 @@ You can use Java to create and register an instance of `ReactiveMongoTemplate` a
 @Configuration
 public class AppConfig {
 
-  public @Bean MongoClient mongoClient() {
+  public @Bean MongoClient reactiveMongoClient() {
       return MongoClients.create("mongodb://localhost");
   }
 
   public @Bean ReactiveMongoTemplate reactiveMongoTemplate() {
-      return new ReactiveMongoTemplate(mongoClient(), "mydatabase");
+      return new ReactiveMongoTemplate(reactiveMongoClient(), "mydatabase");
   }
 }
 ----

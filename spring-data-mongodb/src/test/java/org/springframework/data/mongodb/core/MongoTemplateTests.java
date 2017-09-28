@@ -26,6 +26,37 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.result.UpdateResult;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assume.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.core.query.Update.*;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
@@ -3317,6 +3348,17 @@ public class MongoTemplateTests {
 		assertThat(result, hasSize(2));
 		assertThat(result, containsInAnyOrder(bran, rickon));
 		assertThat(template.count(new BasicQuery("{}"), template.determineCollectionName(Sample.class)), is(equalTo(1L)));
+	}
+
+	@Test // DATAMONGO-1779
+	public void appliesQueryLimitToEmptyQuery() {
+
+		Sample first = new Sample("1", "Dave Matthews");
+		Sample second = new Sample("2", "Carter Beauford");
+
+		template.insertAll(Arrays.asList(first, second));
+
+		assertThat(template.find(new Query().limit(1), Sample.class)).hasSize(1);
 	}
 
 	static class TypeWithNumbers {

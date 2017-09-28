@@ -38,6 +38,7 @@ import org.springframework.util.Assert;
  * @author Gustavo de Geus
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Sergey Shcherbakov
  * @since 1.3
  * @see <a href="https://docs.mongodb.org/manual/reference/aggregation/group/">MongoDB Aggregation Framework: $group</a>
  */
@@ -153,6 +154,21 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 */
 	public GroupOperationBuilder sum(String reference) {
 		return sum(reference, null);
+	}
+
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $sum}-expression for the given
+	 * {@link AggregationExpression}.
+	 *
+	 * @param expr must not be {@literal null}.
+	 * @return new instance of {@link GroupOperationBuilder}. Never {@literal null}.
+	 * @throws IllegalArgumentException when {@code expr} is {@literal null}.
+	 * @since 1.10.8
+	 */
+	public GroupOperationBuilder sum(AggregationExpression expr) {
+
+		Assert.notNull(expr, "Expr must not be null!");
+		return newBuilder(GroupOps.SUM, null, expr);
 	}
 
 	private GroupOperationBuilder sum(@Nullable String reference, @Nullable Object value) {

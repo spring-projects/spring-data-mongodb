@@ -34,14 +34,18 @@ import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguratio
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration
 public class ReactiveMongoTemplateCollationTests {
 
 	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_4_0 = MongoVersionRule.atLeast(Version.parse("3.4.0"));
@@ -51,7 +55,7 @@ public class ReactiveMongoTemplateCollationTests {
 	static class Config extends AbstractReactiveMongoConfiguration {
 
 		@Override
-		public com.mongodb.reactivestreams.client.MongoClient mongoClient() {
+		public MongoClient reactiveMongoClient() {
 			return MongoClients.create();
 		}
 

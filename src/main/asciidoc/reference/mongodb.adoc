@@ -168,7 +168,7 @@ There is an https://github.com/spring-projects/spring-data-examples[github repos
 
 One of the first tasks when using MongoDB and Spring is to create a `com.mongodb.MongoClient` object using the IoC container. There are two main ways to do this, either using Java based bean metadata or XML based bean metadata. These are discussed in the following sections.
 
-NOTE: For those not familiar with how to configure the Spring container using Java based bean metadata instead of XML based metadata see the high level introduction in the reference docs http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration[here ] as well as the detailed documentation http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/beans.html#beans-java-instantiating-container[ here].
+NOTE: For those not familiar with how to configure the Spring container using Java based bean metadata instead of XML based metadata see the high level introduction in the reference docs http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration[here ] as well as the detailed documentation http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#beans-java-instantiating-container[ here].
 
 [[mongo.mongo-java-config]]
 === Registering a Mongo instance using Java based metadata
@@ -192,7 +192,7 @@ public class AppConfig {
 ----
 ====
 
-This approach allows you to use the standard `com.mongodb.MongoClient` instance with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.MongoClient` instance directly, the FactoryBean has the added advantage of also providing the container with an ExceptionTranslator implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html[Spring's DAO support features].
+This approach allows you to use the standard `com.mongodb.MongoClient` instance with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.MongoClient` instance directly, the FactoryBean has the added advantage of also providing the container with an ExceptionTranslator implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
 
 An example of a Java based bean metadata that supports exception translation on `@Repository` annotated classes is shown below:
 
@@ -1483,7 +1483,7 @@ include::query-by-example.adoc[leveloffset=+1]
 
 You can query MongoDB using Map-Reduce which is useful for batch processing, data aggregation, and for when the query language doesn't fulfill your needs.
 
-Spring provides integration with MongoDB's map reduce by providing methods on MongoOperations to simplify the creation and execution of Map-Reduce operations. It can convert the results of a Map-Reduce operation to a POJO also integrates with Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/resources.html[Resource abstraction] abstraction. This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing JavaScript code in files is often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
+Spring provides integration with MongoDB's map reduce by providing methods on MongoOperations to simplify the creation and execution of Map-Reduce operations. It can convert the results of a Map-Reduce operation to a POJO also integrates with Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction] abstraction. This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing JavaScript code in files is often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
 
 [[mongo.mapreduce.example]]
 === Example Usage
@@ -1633,7 +1633,7 @@ scriptOps.call("echo", "execute script via name");            <3>
 
 As an alternative to using Map-Reduce to perform data aggregation, you can use the http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Group[`group` operation] which feels similar to using SQL's group by query style, so it may feel more approachable vs. using Map-Reduce. Using the group operations does have some limitations, for example it is not supported in a shared environment and it returns the full result set in a single BSON object, so the result should be small, less than 10,000 keys.
 
-Spring provides integration with MongoDB's group operation by providing methods on MongoOperations to simplify the creation and execution of group operations. It can convert the results of the group operation to a POJO and also integrates with Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/resources.html[Resource abstraction] abstraction. This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing JavaScript code in files if often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
+Spring provides integration with MongoDB's group operation by providing methods on MongoOperations to simplify the creation and execution of group operations. It can convert the results of the group operation to a POJO and also integrates with Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction] abstraction. This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing JavaScript code in files if often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
 
 [[mongo.group.example]]
 === Example Usage
@@ -1933,7 +1933,7 @@ Have a look at an example in more context in <<mongo.aggregation.examples.exampl
 | { $not : [$a] }
 |===
 
-Next to the transformations shown in <<Supported SpEL transformations>> it is possible to use standard SpEL operations like `new` to eg. create arrays and reference expressions via their name followed by the arguments to use in brackets.
+Next to the transformations shown in Supported SpEL transformations it is possible to use standard SpEL operations like `new` to eg. create arrays and reference expressions via their name followed by the arguments to use in brackets.
 
 [source,java]
 ----
@@ -2235,7 +2235,7 @@ In order to have more fine-grained control over the mapping process you can regi
 
 The `MappingMongoConverter` checks to see if there are any Spring converters that can handle a specific class before attempting to map the object itself. To 'hijack' the normal mapping strategies of the `MappingMongoConverter`, perhaps for increased performance or other custom mapping needs, you first need to create an implementation of the Spring `Converter` interface and then register it with the MappingConverter.
 
-NOTE: For more information on the Spring type conversion service see the reference docs http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/validation.html#core-convert[here].
+NOTE: For more information on the Spring type conversion service see the reference docs http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#validation[here].
 
 [[mongo.custom-converters.writer]]
 === Saving using a registered Spring Converter
@@ -2477,7 +2477,7 @@ NOTE: Lifecycle events are only emitted for root level types. Complex types used
 
 The Spring framework provides exception translation for a wide variety of database and mapping technologies. This has traditionally been for JDBC and JPA. The Spring support for MongoDB extends this feature to the MongoDB Database by providing an implementation of the `org.springframework.dao.support.PersistenceExceptionTranslator` interface.
 
-The motivation behind mapping to Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/dao.html#dao-exceptions[consistent data access exception hierarchy] is that you are then able to write portable and descriptive exception handling code without resorting to coding against http://www.mongodb.org/about/contributors/error-codes/[MongoDB error codes]. All of Spring's data access exceptions are inherited from the root `DataAccessException` class so you can be sure that you will be able to catch all database related exception within a single try-catch block. Note, that not all exceptions thrown by the MongoDB driver inherit from the MongoException class. The inner exception and message are preserved so no information is lost.
+The motivation behind mapping to Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html#dao-exceptions[consistent data access exception hierarchy] is that you are then able to write portable and descriptive exception handling code without resorting to coding against MongoDB error codes. All of Spring's data access exceptions are inherited from the root `DataAccessException` class so you can be sure that you will be able to catch all database related exception within a single try-catch block. Note, that not all exceptions thrown by the MongoDB driver inherit from the MongoException class. The inner exception and message are preserved so no information is lost.
 
 Some of the mappings performed by the `MongoExceptionTranslator` are: com.mongodb.Network to DataAccessResourceFailureException and `MongoException` error codes 1003, 12001, 12010, 12011, 12012 to `InvalidDataAccessApiUsageException`. Look into the implementation for more details on the mapping.
 

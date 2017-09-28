@@ -601,7 +601,7 @@ When storing and querying your objects it is convenient to have a `MongoConverte
 
 To selectively handle the conversion yourself, register one or more one or more `org.springframework.core.convert.converter.Converter` instances with the MongoConverter.
 
-NOTE: Spring 3.0 introduced a core.convert package that provides a general type conversion system. This is described in detail in the Spring reference documentation section entitled http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/validation.html#core-convert[Spring Type Conversion].
+NOTE: Spring 3.0 introduced a core.convert package that provides a general type conversion system. This is described in detail in the Spring reference documentation section entitled http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#validation[Spring Type Conversion].
 
 The method `customConversions` in `AbstractMongoConfiguration` can be used to configure Converters. The examples <<mapping-configuration,here>> at the beginning of this chapter show how to perform the configuration using Java and XML.
 

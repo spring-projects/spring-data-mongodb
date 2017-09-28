@@ -35,6 +35,7 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
+import org.springframework.lang.Nullable;
 
 /**
  * Sample repository managing {@link Person} entities.
@@ -87,7 +88,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @param firstname
 	 * @return
 	 */
-	List<Person> findByFirstnameLike(String firstname);
+	List<Person> findByFirstnameLike(@Nullable String firstname);
 
 	List<Person> findByFirstnameNotContains(String firstname);
 
@@ -232,7 +233,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	boolean someExistQuery(String lastname);
 
 	// DATAMONGO-770
-	List<Person> findByFirstnameIgnoreCase(String firstName);
+	List<Person> findByFirstnameIgnoreCase(@Nullable String firstName);
 
 	// DATAMONGO-770
 	List<Person> findByFirstnameNotIgnoreCase(String firstName);

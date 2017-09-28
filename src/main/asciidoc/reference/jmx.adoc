@@ -1,7 +1,7 @@
 [[mongo.jmx]]
 = JMX support
 
-The JMX support for MongoDB exposes the results of executing the 'serverStatus' command on the admin database for a single MongoDB server instance. It also exposes an administrative MBean, MongoAdmin which will let you perform administrative operations such as drop or create a database. The JMX features build upon the JMX feature set available in the Spring Framework. See http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/jmx.html[here ] for more details.
+The JMX support for MongoDB exposes the results of executing the 'serverStatus' command on the admin database for a single MongoDB server instance. It also exposes an administrative MBean, MongoAdmin which will let you perform administrative operations such as drop or create a database. The JMX features build upon the JMX feature set available in the Spring Framework. See http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/integration.html#jmx[here ] for more details.
 
 [[mongodb:jmx-configuration]]
 == MongoDB JMX Configuration

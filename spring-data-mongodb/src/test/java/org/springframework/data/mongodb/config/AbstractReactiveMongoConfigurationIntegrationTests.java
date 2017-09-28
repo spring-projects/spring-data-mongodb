@@ -35,9 +35,10 @@ import com.mongodb.reactivestreams.client.MongoClients;
  * Integration tests for {@link AbstractReactiveMongoConfiguration}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = AbstractReactiveMongoConfigurationIntegrationTests.ReactiveConfiguration.class)
+@ContextConfiguration
 public class AbstractReactiveMongoConfigurationIntegrationTests {
 
 	@Autowired ApplicationContext context;
@@ -54,7 +55,7 @@ public class AbstractReactiveMongoConfigurationIntegrationTests {
 	static class ReactiveConfiguration extends AbstractReactiveMongoConfiguration {
 
 		@Override
-		public MongoClient mongoClient() {
+		public MongoClient reactiveMongoClient() {
 			return MongoClients.create();
 		}
 

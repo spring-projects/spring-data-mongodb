@@ -41,7 +41,7 @@ public class SerializationUtilsUnitTests {
 	public void writesSimpleDocument() {
 
 		Document document = new Document("foo", "bar");
-		assertThat(serializeToJsonSafely(document), is("{ \"foo\" : \"bar\"}"));
+		assertThat(serializeToJsonSafely(document), is("{ \"foo\" : \"bar\" }"));
 	}
 
 	@Test
@@ -49,7 +49,7 @@ public class SerializationUtilsUnitTests {
 
 		Document document = new Document("foo", new Complex());
 		assertThat(serializeToJsonSafely(document),
-				startsWith("{ \"foo\" : { $java : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"));
+				startsWith("{ \"foo\" : { \"$java\" : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"));
 	}
 
 	@Test
@@ -58,7 +58,7 @@ public class SerializationUtilsUnitTests {
 		Document document = new Document("foo", Arrays.asList("bar", new Complex()));
 		Matcher<String> expectedOutput = allOf(
 				startsWith(
-						"{ \"foo\" : [ \"bar\", { $java : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"),
+						"{ \"foo\" : [ \"bar\", { \"$java\" : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"),
 				endsWith(" } ] }"));
 		assertThat(serializeToJsonSafely(document), is(expectedOutput));
 	}

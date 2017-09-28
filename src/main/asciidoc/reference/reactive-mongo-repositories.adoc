@@ -17,8 +17,8 @@ Spring Data's Repository abstraction is a dynamic API, mostly defined by you and
 
 * `ReactiveCrudRepository`
 * `ReactiveSortingRepository`
-* `RxJava1CrudRepository`
-* `RxJava1SortingRepository`
+* `RxJava2CrudRepository`
+* `RxJava2SortingRepository`
 
 Spring Data converts reactive wrapper types behind the scenes so that you can stick to your favorite composition library.
 
@@ -81,7 +81,7 @@ class ApplicationConfig extends AbstractReactiveMongoConfiguration {
   }
 
   @Override
-  public MongoClient mongoClient() {
+  public MongoClient reactiveMongoClient() {
     return MongoClients.create();
   }
 

@@ -26,6 +26,7 @@ import org.bson.Document;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.query.Update.Position;
 
 /**
  * Test cases for {@link Update}.
@@ -424,8 +425,7 @@ public class UpdateTests {
 
 		Update update = new Update().max("key", 10);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$max", new Document("key", 10))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$max", new Document("key", 10))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -433,8 +433,7 @@ public class UpdateTests {
 
 		Update update = new Update().min("key", 10);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$min", new Document("key", 10))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$min", new Document("key", 10))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -443,8 +442,7 @@ public class UpdateTests {
 		Update update = new Update().max("key", 10);
 		update.max("key", 99);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$max", new Document("key", 99))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$max", new Document("key", 99))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -453,8 +451,7 @@ public class UpdateTests {
 		Update update = new Update().min("key", 10);
 		update.min("key", 99);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$min", new Document("key", 99))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$min", new Document("key", 99))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -463,8 +460,7 @@ public class UpdateTests {
 		Date date = new Date();
 		Update update = new Update().max("key", date);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$max", new Document("key", date))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$max", new Document("key", date))));
 	}
 
 	@Test // DATAMONGO-1404
@@ -473,7 +469,20 @@ public class UpdateTests {
 		Date date = new Date();
 		Update update = new Update().min("key", date);
 
-		assertThat(update.getUpdateObject(),
-				equalTo(new Document("$min", new Document("key", date))));
+		assertThat(update.getUpdateObject(), equalTo(new Document("$min", new Document("key", date))));
+	}
+
+	@Test // DATAMONGO-1777
+	public void toStringShouldPrettyPrintModifiers() {
+
+		assertThat(new Update().push("key").atPosition(Position.FIRST).value("Arya").toString(), is(equalTo(
+				"{ \"$push\" : { \"key\" : { \"$java\" : { \"$position\" : { \"$java\" : { \"$position\" : 0} }, \"$each\" : { \"$java\" : { \"$each\" : [ \"Arya\"]} } } } } }")));
+	}
+
+	@Test // DATAMONGO-1777
+	public void toStringConsidersIsolated() {
+
+		assertThat(new Update().set("key", "value").isolated().toString(),
+				is(equalTo("{ \"$set\" : { \"key\" : \"value\" }, \"$isolated\" : 1 }")));
 	}
 }

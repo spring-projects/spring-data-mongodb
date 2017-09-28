@@ -42,6 +42,30 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSONParseException;
 
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
@@ -774,15 +798,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.MongoOperations#findOne(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
 	@Override
-	public <T> List<T> find(final Query query, Class<T> entityClass, String collectionName) {
+	public <T> List<T> find(Query query, Class<T> entityClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 		Assert.notNull(entityClass, "EntityClass must not be null!");
-
-		if (query.getQueryObject().isEmpty() && query.getSortObject().isEmpty()) {
-			return findAll(entityClass, collectionName);
-		}
 
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
 				new QueryCursorPreparer(query, entityClass));
@@ -1512,12 +1532,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public DeleteResult remove(Object object, String collection) {
+	public DeleteResult remove(Object object, String collectionName) {
 
 		Assert.notNull(object, "Object must not be null!");
-		Assert.hasText(collection, "Collection name must not be null or empty!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		return doRemove(collection, getIdQueryFor(object), object.getClass());
+		return doRemove(collectionName, getIdQueryFor(object), object.getClass());
 	}
 
 	/**

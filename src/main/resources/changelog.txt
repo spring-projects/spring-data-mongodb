@@ -1,6 +1,32 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.0.RC3 (2017-09-11)
+-----------------------------------------
+* DATAMONGO-1774 - ReactiveMongoOperations#remove(Mono, java.lang.String) ends up in an infinite loop.
+* DATAMONGO-1772 - Type hint not added when updating nested list elements with inheritance.
+* DATAMONGO-1771 - Fix MongoDB setup for travis-ci.
+* DATAMONGO-1770 - Upgrade to mongo-java-driver 3.5.0 and mongodb-driver-reactivestreams 1.6.0.
+* DATAMONGO-1768 - QueryByExample FindOne : probe type.
+* DATAMONGO-1765 - Duplicate elements in DBRefs list not correctly mapped.
+* DATAMONGO-1762 - Introduce nullable annotations for API validation.
+* DATAMONGO-1758 - Remove non existing spring-data-mongodb-log4j from benchmarks profile.
+* DATAMONGO-1757 - Improve exception message if type to read doesn't match declared type on Map value.
+* DATAMONGO-1756 - Aggregation project and arithmetic operation not working with nested fields.
+* DATAMONGO-1754 - Release 2.0 RC3 (Kay).
+* DATAMONGO-1706 - Adapt to deprecated RxJava 1 CRUD repositories.
+* DATAMONGO-1631 - AbstractReactiveMongoConfiguration.mongoDbFactory conflicts with blocking MongoDbFactory.
+
+
+Changes in version 1.10.7.RELEASE (2017-09-11)
+----------------------------------------------
+* DATAMONGO-1772 - Type hint not added when updating nested list elements with inheritance.
+* DATAMONGO-1768 - QueryByExample FindOne : probe type.
+* DATAMONGO-1765 - Duplicate elements in DBRefs list not correctly mapped.
+* DATAMONGO-1756 - Aggregation project and arithmetic operation not working with nested fields.
+* DATAMONGO-1755 - Release 1.10.7 (Ingalls SR7).
+
+
 Changes in version 1.10.6.RELEASE (2017-07-26)
 ----------------------------------------------
 * DATAMONGO-1750 - Release 1.10.6 (Ingalls SR6).
