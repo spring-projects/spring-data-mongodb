@@ -96,9 +96,6 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 */
 	@Override
 	public Optional<T> findOne(Predicate predicate) {
-
-		Assert.notNull(predicate, "Predicate must not be null!");
-
 		try {
 			return Optional.ofNullable(createQueryFor(predicate).fetchOne());
 		} catch (NonUniqueResultException ex) {
@@ -112,9 +109,6 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate) {
-
-		Assert.notNull(predicate, "Predicate must not be null!");
-
 		return createQueryFor(predicate).fetchResults().getResults();
 	}
 
@@ -125,7 +119,6 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	@Override
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
 		Assert.notNull(orders, "Order specifiers must not be null!");
 
 		return createQueryFor(predicate).orderBy(orders).fetchResults().getResults();
@@ -138,7 +131,6 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	@Override
 	public List<T> findAll(Predicate predicate, Sort sort) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
 		Assert.notNull(sort, "Sort must not be null!");
 
 		return applySorting(createQueryFor(predicate), sort).fetchResults().getResults();
@@ -163,7 +155,6 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	@Override
 	public Page<T> findAll(Predicate predicate, Pageable pageable) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
 		Assert.notNull(pageable, "Pageable must not be null!");
 
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQueryFor(predicate);
@@ -178,9 +169,6 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 */
 	@Override
 	public long count(Predicate predicate) {
-
-		Assert.notNull(predicate, "Predicate must not be null!");
-
 		return createQueryFor(predicate).fetchCount();
 	}
 
@@ -190,9 +178,6 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 */
 	@Override
 	public boolean exists(Predicate predicate) {
-
-		Assert.notNull(predicate, "Predicate must not be null!");
-
 		return createQueryFor(predicate).fetchCount() > 0;
 	}
 
