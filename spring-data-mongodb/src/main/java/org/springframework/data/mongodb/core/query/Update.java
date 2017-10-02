@@ -575,7 +575,7 @@ public class Update {
 	 *
 	 * @author Christoph Strobl
 	 */
-	public static interface Modifier {
+	public interface Modifier {
 
 		/**
 		 * @return the command to send eg. {@code $push}
@@ -926,7 +926,7 @@ public class Update {
 		/**
 		 * Propagates {@link #value(Object)} to {@code $push}
 		 *
-		 * @param values
+		 * @param value
 		 * @return never {@literal null}.
 		 */
 		public Update value(Object value) {
