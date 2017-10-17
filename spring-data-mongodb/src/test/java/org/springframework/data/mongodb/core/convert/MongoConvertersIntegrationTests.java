@@ -41,6 +41,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -83,7 +84,7 @@ public class MongoConvertersIntegrationTests {
 	public void shouldConvertEmptyBinaryDataOnRead() {
 
 		WithBinaryDataInArray wbd = new WithBinaryDataInArray();
-		wbd.data = new byte[] {};
+		wbd.data = new byte[0];
 
 		template.save(wbd);
 
