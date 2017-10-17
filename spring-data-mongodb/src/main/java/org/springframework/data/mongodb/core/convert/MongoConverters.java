@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import reactor.core.publisher.Flux;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
@@ -29,9 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.bson.Document;
+import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
-import org.reactivestreams.Publisher;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -41,6 +39,7 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
@@ -68,7 +67,7 @@ abstract class MongoConverters {
 	 */
 	public static Collection<Object> getConvertersToRegister() {
 
-		List<Object> converters = new ArrayList<Object>();
+		List<Object> converters = new ArrayList<>();
 
 		converters.add(BigDecimalToStringConverter.INSTANCE);
 		converters.add(StringToBigDecimalConverter.INSTANCE);
@@ -86,6 +85,7 @@ abstract class MongoConverters {
 		converters.add(AtomicLongToLongConverter.INSTANCE);
 		converters.add(LongToAtomicLongConverter.INSTANCE);
 		converters.add(IntegerToAtomicIntegerConverter.INSTANCE);
+		converters.add(BinaryToByteArrayConverter.INSTANCE);
 
 		return converters;
 	}
@@ -445,6 +445,24 @@ abstract class MongoConverters {
 		@Override
 		public AtomicInteger convert(Integer source) {
 			return source != null ? new AtomicInteger(source) : null;
+		}
+	}
+
+	/**
+	 * {@link Converter} implementation capable of converting {@link Binary} to {@code byte[]}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.0.1
+	 */
+	@ReadingConverter
+	public static enum BinaryToByteArrayConverter implements Converter<Binary, byte[]> {
+
+		INSTANCE;
+
+		@Nullable
+		@Override
+		public byte[] convert(Binary source) {
+			return source.getData();
 		}
 	}
 }
