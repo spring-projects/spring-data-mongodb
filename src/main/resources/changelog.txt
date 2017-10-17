@@ -1,6 +1,28 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.8.RELEASE (2017-10-11)
+----------------------------------------------
+* DATAMONGO-1784 - Add support for AggregationExpression in GroupOperation.sum.
+* DATAMONGO-1782 - CyclicPropertyReferenceException on index resolution.
+* DATAMONGO-1775 - Release 1.10.8 (Ingalls SR8).
+
+
+Changes in version 2.0.0.RELEASE (2017-10-02)
+---------------------------------------------
+* DATAMONGO-1791 - Adapt to changed Spring Framework 5 documentation structure.
+* DATAMONGO-1787 - Add explicit automatic module name for Java 9.
+* DATAMONGO-1786 - Adapt tests to nullability enforcement in repository query methods.
+* DATAMONGO-1785 - Upgrade to OpenWebBeans 2.0.1.
+* DATAMONGO-1784 - Add support for AggregationExpression in GroupOperation.sum.
+* DATAMONGO-1782 - CyclicPropertyReferenceException on index resolution.
+* DATAMONGO-1781 - Update what's new in reference documentation.
+* DATAMONGO-1779 - Query.limit(N) on empty query is not applied.
+* DATAMONGO-1778 - Update.equals(…) fails to recognize an equal Update object.
+* DATAMONGO-1777 - Update.toString(…) does not pretty-print modifiers.
+* DATAMONGO-1776 - Release 2.0 GA (Kay).
+
+
 Changes in version 2.0.0.RC3 (2017-09-11)
 -----------------------------------------
 * DATAMONGO-1774 - ReactiveMongoOperations#remove(Mono, java.lang.String) ends up in an infinite loop.
