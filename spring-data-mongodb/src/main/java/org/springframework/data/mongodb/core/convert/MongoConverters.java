@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ abstract class MongoConverters {
 	 * @return
 	 * @since 1.9
 	 */
-	public static Collection<Object> getConvertersToRegister() {
+	static Collection<Object> getConvertersToRegister() {
 
 		List<Object> converters = new ArrayList<>();
 
@@ -95,7 +95,7 @@ abstract class MongoConverters {
 	 *
 	 * @author Oliver Gierke
 	 */
-	public static enum ObjectIdToStringConverter implements Converter<ObjectId, String> {
+	enum ObjectIdToStringConverter implements Converter<ObjectId, String> {
 		INSTANCE;
 
 		public String convert(ObjectId id) {
@@ -108,7 +108,7 @@ abstract class MongoConverters {
 	 *
 	 * @author Oliver Gierke
 	 */
-	public static enum StringToObjectIdConverter implements Converter<String, ObjectId> {
+	enum StringToObjectIdConverter implements Converter<String, ObjectId> {
 		INSTANCE;
 
 		public ObjectId convert(String source) {
@@ -121,7 +121,7 @@ abstract class MongoConverters {
 	 *
 	 * @author Oliver Gierke
 	 */
-	public static enum ObjectIdToBigIntegerConverter implements Converter<ObjectId, BigInteger> {
+	enum ObjectIdToBigIntegerConverter implements Converter<ObjectId, BigInteger> {
 		INSTANCE;
 
 		public BigInteger convert(ObjectId source) {
@@ -134,7 +134,7 @@ abstract class MongoConverters {
 	 *
 	 * @author Oliver Gierke
 	 */
-	public static enum BigIntegerToObjectIdConverter implements Converter<BigInteger, ObjectId> {
+	enum BigIntegerToObjectIdConverter implements Converter<BigInteger, ObjectId> {
 		INSTANCE;
 
 		public ObjectId convert(BigInteger source) {
@@ -142,7 +142,7 @@ abstract class MongoConverters {
 		}
 	}
 
-	public static enum BigDecimalToStringConverter implements Converter<BigDecimal, String> {
+	enum BigDecimalToStringConverter implements Converter<BigDecimal, String> {
 		INSTANCE;
 
 		public String convert(BigDecimal source) {
@@ -150,7 +150,7 @@ abstract class MongoConverters {
 		}
 	}
 
-	public static enum StringToBigDecimalConverter implements Converter<String, BigDecimal> {
+	enum StringToBigDecimalConverter implements Converter<String, BigDecimal> {
 		INSTANCE;
 
 		public BigDecimal convert(String source) {
@@ -158,7 +158,7 @@ abstract class MongoConverters {
 		}
 	}
 
-	public static enum BigIntegerToStringConverter implements Converter<BigInteger, String> {
+	enum BigIntegerToStringConverter implements Converter<BigInteger, String> {
 		INSTANCE;
 
 		public String convert(BigInteger source) {
@@ -166,7 +166,7 @@ abstract class MongoConverters {
 		}
 	}
 
-	public static enum StringToBigIntegerConverter implements Converter<String, BigInteger> {
+	enum StringToBigIntegerConverter implements Converter<String, BigInteger> {
 		INSTANCE;
 
 		public BigInteger convert(String source) {
@@ -174,7 +174,7 @@ abstract class MongoConverters {
 		}
 	}
 
-	public static enum URLToStringConverter implements Converter<URL, String> {
+	enum URLToStringConverter implements Converter<URL, String> {
 		INSTANCE;
 
 		public String convert(URL source) {
@@ -182,7 +182,7 @@ abstract class MongoConverters {
 		}
 	}
 
-	public static enum StringToURLConverter implements Converter<String, URL> {
+	enum StringToURLConverter implements Converter<String, URL> {
 		INSTANCE;
 
 		private static final TypeDescriptor SOURCE = TypeDescriptor.valueOf(String.class);
@@ -199,7 +199,7 @@ abstract class MongoConverters {
 	}
 
 	@ReadingConverter
-	public static enum DocumentToStringConverter implements Converter<Document, String> {
+	enum DocumentToStringConverter implements Converter<Document, String> {
 
 		INSTANCE;
 
@@ -219,7 +219,7 @@ abstract class MongoConverters {
 	 * @since 1.6
 	 */
 	@WritingConverter
-	public static enum TermToStringConverter implements Converter<Term, String> {
+	enum TermToStringConverter implements Converter<Term, String> {
 
 		INSTANCE;
 
@@ -233,7 +233,7 @@ abstract class MongoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	public static enum DocumentToNamedMongoScriptConverter implements Converter<Document, NamedMongoScript> {
+	enum DocumentToNamedMongoScriptConverter implements Converter<Document, NamedMongoScript> {
 
 		INSTANCE;
 
@@ -255,7 +255,7 @@ abstract class MongoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	public static enum NamedMongoScriptToDocumentConverter implements Converter<NamedMongoScript, Document> {
+	enum NamedMongoScriptToDocumentConverter implements Converter<NamedMongoScript, Document> {
 
 		INSTANCE;
 
@@ -282,7 +282,7 @@ abstract class MongoConverters {
 	 * @since 1.9
 	 */
 	@WritingConverter
-	public static enum CurrencyToStringConverter implements Converter<Currency, String> {
+	enum CurrencyToStringConverter implements Converter<Currency, String> {
 
 		INSTANCE;
 
@@ -303,7 +303,7 @@ abstract class MongoConverters {
 	 * @since 1.9
 	 */
 	@ReadingConverter
-	public static enum StringToCurrencyConverter implements Converter<String, Currency> {
+	enum StringToCurrencyConverter implements Converter<String, Currency> {
 
 		INSTANCE;
 
@@ -326,7 +326,7 @@ abstract class MongoConverters {
 	 * @since 1.9
 	 */
 	@WritingConverter
-	public static enum NumberToNumberConverterFactory implements ConverterFactory<Number, Number>, ConditionalConverter {
+	enum NumberToNumberConverterFactory implements ConverterFactory<Number, Number>, ConditionalConverter {
 
 		INSTANCE;
 
@@ -391,7 +391,7 @@ abstract class MongoConverters {
 	 * @since 1.10
 	 */
 	@WritingConverter
-	public static enum AtomicLongToLongConverter implements Converter<AtomicLong, Long> {
+	enum AtomicLongToLongConverter implements Converter<AtomicLong, Long> {
 		INSTANCE;
 
 		@Override
@@ -407,7 +407,7 @@ abstract class MongoConverters {
 	 * @since 1.10
 	 */
 	@WritingConverter
-	public static enum AtomicIntegerToIntegerConverter implements Converter<AtomicInteger, Integer> {
+	enum AtomicIntegerToIntegerConverter implements Converter<AtomicInteger, Integer> {
 		INSTANCE;
 
 		@Override
@@ -423,7 +423,7 @@ abstract class MongoConverters {
 	 * @since 1.10
 	 */
 	@ReadingConverter
-	public static enum LongToAtomicLongConverter implements Converter<Long, AtomicLong> {
+	enum LongToAtomicLongConverter implements Converter<Long, AtomicLong> {
 		INSTANCE;
 
 		@Override
@@ -439,7 +439,7 @@ abstract class MongoConverters {
 	 * @since 1.10
 	 */
 	@ReadingConverter
-	public static enum IntegerToAtomicIntegerConverter implements Converter<Integer, AtomicInteger> {
+	enum IntegerToAtomicIntegerConverter implements Converter<Integer, AtomicInteger> {
 		INSTANCE;
 
 		@Override
@@ -449,13 +449,13 @@ abstract class MongoConverters {
 	}
 
 	/**
-	 * {@link Converter} implementation capable of converting {@link Binary} to {@code byte[]}.
+	 * {@link Converter} implementation converting {@link Binary} into {@code byte[]}.
 	 *
 	 * @author Christoph Strobl
 	 * @since 2.0.1
 	 */
 	@ReadingConverter
-	public static enum BinaryToByteArrayConverter implements Converter<Binary, byte[]> {
+	enum BinaryToByteArrayConverter implements Converter<Binary, byte[]> {
 
 		INSTANCE;
 
