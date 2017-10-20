@@ -26,10 +26,11 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.gridfs.GridFSDBFile;
 
 /**
- * {@link GridFSDBFile} based {@link Resource} implementation.
+ * {@link GridFSFile} based {@link Resource} implementation.
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Hartmut Lang
  */
 public class GridFsResource extends InputStreamResource {
 
@@ -38,7 +39,7 @@ public class GridFsResource extends InputStreamResource {
 	private final GridFSFile file;
 
 	/**
-	 * Creates a new {@link GridFsResource} from the given {@link GridFSDBFile}.
+	 * Creates a new {@link GridFsResource} from the given {@link GridFSFile}.
 	 * 
 	 * @param file must not be {@literal null}.
 	 */
@@ -47,7 +48,7 @@ public class GridFsResource extends InputStreamResource {
 	}
 
 	/**
-	 * Creates a new {@link GridFsResource} from the given {@link GridFSDBFile} and {@link InputStream}.
+	 * Creates a new {@link GridFsResource} from the given {@link GridFSFile} and {@link InputStream}.
 	 * 
 	 * @param file must not be {@literal null}.
 	 * @param inputStream must not be {@literal null}.
