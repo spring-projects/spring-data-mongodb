@@ -19,6 +19,8 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import java.util.Arrays;
+
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.geo.Point;
@@ -212,5 +214,47 @@ public class CriteriaTests {
 		Document document = new Criteria("foo").intersects(lineString).getCriteriaObject();
 
 		assertThat(document, isBsonObject().containing("foo.$geoIntersects.$geometry", lineString));
+	}
+
+	@Test // DATAMONGO-1808
+	public void testBitsAllClear() {
+		Criteria numericBitmaskCriteria = new Criteria("field").bitsAllClear(0b101);
+		assertEquals(Document.parse("{ \"field\" : { \"$bitsAllClear\" : 5} }"),
+				numericBitmaskCriteria.getCriteriaObject());
+
+		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bitsAllClear(Arrays.asList(0, 2));
+		assertEquals(Document.parse("{ \"field\" : { \"$bitsAllClear\" : [ 0, 2 ]} }"),
+				bitPositionsBitmaskCriteria.getCriteriaObject());
+	}
+
+	@Test // DATAMONGO-1808
+	public void testBitsAllSet() {
+		Criteria numericBitmaskCriteria = new Criteria("field").bitsAllSet(0b101);
+		assertEquals(Document.parse("{ \"field\" : { \"$bitsAllSet\" : 5} }"), numericBitmaskCriteria.getCriteriaObject());
+
+		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bitsAllSet(Arrays.asList(0, 2));
+		assertEquals(Document.parse("{ \"field\" : { \"$bitsAllSet\" : [ 0, 2 ]} }"),
+				bitPositionsBitmaskCriteria.getCriteriaObject());
+	}
+
+	@Test // DATAMONGO-1808
+	public void testBitsAnyClear() {
+		Criteria numericBitmaskCriteria = new Criteria("field").bitsAnyClear(0b101);
+		assertEquals(Document.parse("{ \"field\" : { \"$bitsAnyClear\" : 5} }"),
+				numericBitmaskCriteria.getCriteriaObject());
+
+		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bitsAnyClear(Arrays.asList(0, 2));
+		assertEquals(Document.parse("{ \"field\" : { \"$bitsAnyClear\" : [ 0, 2 ]} }"),
+				bitPositionsBitmaskCriteria.getCriteriaObject());
+	}
+
+	@Test // DATAMONGO-1808
+	public void testBitsAnySet() {
+		Criteria numericBitmaskCriteria = new Criteria("field").bitsAnySet(0b101);
+		assertEquals(Document.parse("{ \"field\" : { \"$bitsAnySet\" : 5} }"), numericBitmaskCriteria.getCriteriaObject());
+
+		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bitsAnySet(Arrays.asList(0, 2));
+		assertEquals(Document.parse("{ \"field\" : { \"$bitsAnySet\" : [ 0, 2 ]} }"),
+				bitPositionsBitmaskCriteria.getCriteriaObject());
 	}
 }

@@ -3282,6 +3282,61 @@ public class MongoTemplateTests {
 		assertThat(template.find(new Query().limit(1), Sample.class)).hasSize(1);
 	}
 
+	@Test // DATAMONGO-1808
+	public void testFindByBitmasks() {
+		DocumentWithBitmask document = new DocumentWithBitmask(0b101);
+		template.insert(document);
+
+		assertThat(template.find(Query.query(Criteria.where("intValue").bitsAllClear(0b010)), DocumentWithBitmask.class))
+				.hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("intValue").bitsAllClear(Arrays.asList(1))),
+				DocumentWithBitmask.class)).hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("binaryValue").bitsAllClear(0b010)), DocumentWithBitmask.class))
+				.hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("binaryValue").bitsAllClear(Arrays.asList(1))),
+				DocumentWithBitmask.class)).hasSize(1);
+
+		assertThat(template.find(Query.query(Criteria.where("intValue").bitsAllSet(0b101)), DocumentWithBitmask.class))
+				.hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("intValue").bitsAllSet(Arrays.asList(0, 2))),
+				DocumentWithBitmask.class)).hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("binaryValue").bitsAllSet(0b101)), DocumentWithBitmask.class))
+				.hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("binaryValue").bitsAllSet(Arrays.asList(0, 2))),
+				DocumentWithBitmask.class)).hasSize(1);
+
+		assertThat(template.find(Query.query(Criteria.where("intValue").bitsAnyClear(0b111)), DocumentWithBitmask.class))
+				.hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("intValue").bitsAnyClear(Arrays.asList(0, 1, 2))),
+				DocumentWithBitmask.class)).hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("binaryValue").bitsAnyClear(0b111)), DocumentWithBitmask.class))
+				.hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("binaryValue").bitsAnyClear(Arrays.asList(0, 1, 2))),
+				DocumentWithBitmask.class)).hasSize(1);
+
+		assertThat(template.find(Query.query(Criteria.where("intValue").bitsAnySet(0b111)), DocumentWithBitmask.class))
+				.hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("intValue").bitsAnySet(Arrays.asList(0, 1, 2))),
+				DocumentWithBitmask.class)).hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("binaryValue").bitsAnySet(0b111)), DocumentWithBitmask.class))
+				.hasSize(1);
+		assertThat(template.find(Query.query(Criteria.where("binaryValue").bitsAnySet(Arrays.asList(0, 1, 2))),
+				DocumentWithBitmask.class)).hasSize(1);
+	}
+
+	@NoArgsConstructor
+	static class DocumentWithBitmask {
+		@Id String id;
+		int intValue;
+		byte[] binaryValue;
+
+		public DocumentWithBitmask(int value) {
+			this.intValue = value;
+			this.binaryValue = new byte[] { (byte) value };
+		}
+
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;
