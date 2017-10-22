@@ -149,6 +149,9 @@ import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ValidationAction;
+import com.mongodb.client.model.ValidationLevel;
+import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSONParseException;
@@ -173,6 +176,7 @@ import com.mongodb.util.JSONParseException;
  * @author Laszlo Csontos
  * @author Maninder Singh
  * @author Borislav Rangelov
+ * @author Andreas Zink
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
@@ -2160,6 +2164,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					co.collation(IndexConverters.fromDocument(collectionOptions.get("collation", Document.class)));
 				}
 
+				if (collectionOptions.containsKey("validator")) {
+					ValidationOptions validationOptions = new ValidationOptions();
+					validationOptions.validator(collectionOptions.get("validator", Document.class));
+
+					if (collectionOptions.containsKey("validationLevel")) {
+						validationOptions
+								.validationLevel(ValidationLevel.fromString(collectionOptions.get("validationLevel", String.class)));
+					}
+					if (collectionOptions.containsKey("validationAction")) {
+						validationOptions
+								.validationAction(ValidationAction.fromString(collectionOptions.get("validationAction", String.class)));
+					}
+					co.validationOptions(validationOptions);
+				}
+
 				db.createCollection(collectionName, co);
 
 				MongoCollection<Document> coll = db.getCollection(collectionName, Document.class);
@@ -2281,6 +2300,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			collectionOptions.getSize().ifPresent(val -> document.put("size", val));
 			collectionOptions.getMaxDocuments().ifPresent(val -> document.put("max", val));
 			collectionOptions.getCollation().ifPresent(val -> document.append("collation", val.toDocument()));
+			collectionOptions.getValidation().ifPresent(val -> {
+				document.append("validator", val.getValidator().toDocument());
+				val.getValidationLevel().ifPresent(level -> document.append("validationLevel", level.getValue()));
+				val.getValidationAction().ifPresent(action -> document.append("validationAction", action.getValue()));
+			});
 		}
 		return document;
 	}
