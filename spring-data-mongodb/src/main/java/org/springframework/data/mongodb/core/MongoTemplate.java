@@ -140,6 +140,9 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.*;
+import com.mongodb.client.model.ValidationAction;
+import com.mongodb.client.model.ValidationLevel;
+import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSONParseException;
@@ -165,6 +168,7 @@ import com.mongodb.util.JSONParseException;
  * @author Maninder Singh
  * @author Borislav Rangelov
  * @author duozhilin
+ * @author Andreas Zink
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
@@ -2374,6 +2378,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document doc = convertToDocument(collectionOptions);
 
 		if (collectionOptions != null && collectionOptions.getValidator().isPresent()) {
+
 			Validator v = collectionOptions.getValidator().get();
 			v.getSchema().ifPresent(val -> doc.put("validator", schemaMapper.mapSchema(val.toDocument(), targetType)));
 		}
@@ -2398,10 +2403,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			if (collectionOptions.getValidator().isPresent()) {
 				Validator v = collectionOptions.getValidator().get();
-				v.getValidationLevel().ifPresent(val -> document.append("validationLevel", val));
-				v.getValidationAction().ifPresent(val -> document.append("validationAction", val));
+				v.getValidationLevel().ifPresent(val -> document.append("validationLevel", val.getValue()));
+				v.getValidationAction().ifPresent(val -> document.append("validationAction", val.getValue()));
 				v.getSchema().ifPresent(val -> document.append("validator",
 						new MongoJsonSchemaMapper(getConverter()).mapSchema(val.toDocument(), Object.class)));
+				v.getValidatorDefinition().ifPresent(val -> document.put("validator", val.toDocument()));
 			}
 		}
 		return document;

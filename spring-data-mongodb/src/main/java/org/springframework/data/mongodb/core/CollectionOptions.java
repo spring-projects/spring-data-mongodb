@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.data.mongodb.core.validation.ValidatorDefinition;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -34,6 +35,7 @@ import com.mongodb.client.model.ValidationLevel;
  * @author Thomas Risberg
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Andreas Zink
  */
 public class CollectionOptions {
 
@@ -144,7 +146,11 @@ public class CollectionOptions {
 	 * @since 2.1
 	 */
 	public CollectionOptions schema(@Nullable MongoJsonSchema schema) {
-		return validation(new Validator(schema, validator.validationLevel, validator.validationAction));
+		return validation(new Validator(schema, null, validator.validationLevel, validator.validationAction));
+	}
+
+	public CollectionOptions validatorDefinition(@Nullable ValidatorDefinition definition) {
+		return validation(new Validator(null, definition, validator.validationLevel, validator.validationAction));
 	}
 
 	/**
@@ -213,7 +219,7 @@ public class CollectionOptions {
 	public CollectionOptions schemaValidationLevel(ValidationLevel validationLevel) {
 
 		Assert.notNull(validationLevel, "ValidationLevel must not be null!");
-		return validation(new Validator(validator.schema, validationLevel, validator.validationAction));
+		return validation(new Validator(validator.schema, validator.validatorDefinition, validationLevel, validator.validationAction));
 	}
 
 	/**
@@ -227,7 +233,7 @@ public class CollectionOptions {
 	public CollectionOptions schemaValidationAction(ValidationAction validationAction) {
 
 		Assert.notNull(validationAction, "ValidationAction must not be null!");
-		return validation(new Validator(validator.schema, validator.validationLevel, validationAction));
+		return validation(new Validator(validator.schema, validator.validatorDefinition, validator.validationLevel, validationAction));
 	}
 
 	/**
@@ -295,14 +301,16 @@ public class CollectionOptions {
 	 * Encapsulation of Validator options.
 	 *
 	 * @author Christoph Strobl
+	 * @author Andreas Zink
 	 * @since 2.1
 	 */
 	@RequiredArgsConstructor
 	public static class Validator {
 
-		private static final Validator NONE = new Validator(null, null, null);
+		private static final Validator NONE = new Validator(null, null, null, null);
 
 		private final @Nullable MongoJsonSchema schema;
+		private final @Nullable ValidatorDefinition validatorDefinition;
 		private final @Nullable ValidationLevel validationLevel;
 		private final @Nullable ValidationAction validationAction;
 
@@ -322,6 +330,10 @@ public class CollectionOptions {
 		 */
 		public Optional<MongoJsonSchema> getSchema() {
 			return Optional.ofNullable(schema);
+		}
+
+		public Optional<ValidatorDefinition> getValidatorDefinition() {
+			return Optional.ofNullable(validatorDefinition);
 		}
 
 		/**
@@ -346,7 +358,7 @@ public class CollectionOptions {
 		 * @return {@literal true} if no arguments set.
 		 */
 		boolean isEmpty() {
-			return !Optionals.isAnyPresent(getSchema(), getValidationAction(), getValidationLevel());
+			return !Optionals.isAnyPresent(getSchema(), getValidatorDefinition(), getValidationAction(), getValidationLevel());
 		}
 	}
 }
