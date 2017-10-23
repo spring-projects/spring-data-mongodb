@@ -21,6 +21,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -685,6 +688,23 @@ public class UpdateMapperUnitTests {
 				.containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class", ModelImpl.class.getName()));
 	}
 
+	@Test // DATAMONGO-1809
+	public void pathShouldIdentifyPositionalParameterWithMoreThanOneDigit() {
+
+		BasicDBObject at2digitPosition = (BasicDBObject) mapper.getMappedObject(new Update()
+				.addToSet("concreteInnerList.10.concreteTypeList", new SomeInterfaceImpl("szeth")).getUpdateObject(),
+				context.getPersistentEntity(Outer.class));
+
+		BasicDBObject at3digitPosition = (BasicDBObject) mapper.getMappedObject(new Update()
+				.addToSet("concreteInnerList.123.concreteTypeList", new SomeInterfaceImpl("lopen")).getUpdateObject(),
+				context.getPersistentEntity(Outer.class));
+
+		assertThat(at2digitPosition, is(equalTo(new BasicDBObject("$addToSet",
+				new BasicDBObject("concreteInnerList.10.concreteTypeList", new BasicDBObject("value", "szeth"))))));
+		assertThat(at3digitPosition, is(equalTo(new BasicDBObject("$addToSet",
+				new BasicDBObject("concreteInnerList.123.concreteTypeList", new BasicDBObject("value", "lopen"))))));
+	}
+
 	@Test // DATAMONGO-1236
 	public void mappingShouldRetainTypeInformationForObjectValues() {
 
@@ -1223,6 +1243,7 @@ public class UpdateMapperUnitTests {
 	static class ConcreteInner {
 		List<SomeInterfaceType> interfaceTypeList;
 		List<SomeAbstractType> abstractTypeList;
+		List<SomeInterfaceImpl> concreteTypeList;
 	}
 
 	interface SomeInterfaceType {
@@ -1233,8 +1254,11 @@ public class UpdateMapperUnitTests {
 
 	}
 
+	@AllArgsConstructor
+	@NoArgsConstructor
 	static class SomeInterfaceImpl extends SomeAbstractType implements SomeInterfaceType {
 
+		String value;
 	}
 
 }
