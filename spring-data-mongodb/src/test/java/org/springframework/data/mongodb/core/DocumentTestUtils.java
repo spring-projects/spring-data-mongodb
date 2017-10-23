@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Iterator;
 import java.util.List;
@@ -66,9 +65,9 @@ public abstract class DocumentTestUtils {
 	 */
 	public static Document getAsDocument(List<?> source, int index) {
 
-		assertThat(source.size(), greaterThanOrEqualTo(index + 1));
+		assertThat(source.size()).isGreaterThanOrEqualTo(index + 1);
 		Object value = source.get(index);
-		assertThat(value, is(instanceOf(Document.class)));
+		assertThat(value).isInstanceOf(Document.class);
 		return (Document) value;
 	}
 
@@ -76,8 +75,8 @@ public abstract class DocumentTestUtils {
 	public static <T> T getTypedValue(Document source, String key, Class<T> type) {
 
 		Object value = source.get(key);
-		assertThat(value, is(notNullValue()));
-		assertThat(value, is(instanceOf(type)));
+		assertThat(value).isNotNull();
+		assertThat(value).isInstanceOf(type);
 
 		return (T) value;
 	}
@@ -92,8 +91,8 @@ public abstract class DocumentTestUtils {
 		while (keyIterator.hasNext()) {
 			String key = keyIterator.next();
 			if (key.equals("_class")) {
-				assertThat((String) document.get(key), is(equalTo(expectedTypeString)));
-				assertThat(keyIterator.hasNext(), is(false));
+				assertThat(document.get(key)).isEqualTo(expectedTypeString);
+				assertThat(keyIterator.hasNext()).isFalse();
 				return;
 			}
 		}
