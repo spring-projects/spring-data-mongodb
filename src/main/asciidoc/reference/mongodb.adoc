@@ -2602,7 +2602,7 @@ class GridFsClient {
 
   @Test
   public void findFilesInGridFs() {
-    List<GridFSDBFile> result = operations.find(query(whereFilename().is("filename.txt")))
+    GridFSFindIterable result = operations.find(query(whereFilename().is("filename.txt")))
   }
 }
 ----
