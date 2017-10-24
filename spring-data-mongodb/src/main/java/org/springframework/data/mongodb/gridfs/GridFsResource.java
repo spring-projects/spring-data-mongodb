@@ -23,11 +23,10 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.gridfs.GridFSDBFile;
 
 /**
  * {@link GridFSFile} based {@link Resource} implementation.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Hartmut Lang
@@ -40,7 +39,7 @@ public class GridFsResource extends InputStreamResource {
 
 	/**
 	 * Creates a new {@link GridFsResource} from the given {@link GridFSFile}.
-	 * 
+	 *
 	 * @param file must not be {@literal null}.
 	 */
 	public GridFsResource(GridFSFile file) {
@@ -49,7 +48,7 @@ public class GridFsResource extends InputStreamResource {
 
 	/**
 	 * Creates a new {@link GridFsResource} from the given {@link GridFSFile} and {@link InputStream}.
-	 * 
+	 *
 	 * @param file must not be {@literal null}.
 	 * @param inputStream must not be {@literal null}.
 	 */
@@ -88,8 +87,8 @@ public class GridFsResource extends InputStreamResource {
 
 	/**
 	 * Returns the {@link Resource}'s id.
-	 * 
-	 * @return
+	 *
+	 * @return never {@literal null}.
 	 */
 	public Object getId() {
 		return file.getId();
@@ -97,8 +96,10 @@ public class GridFsResource extends InputStreamResource {
 
 	/**
 	 * Returns the {@link Resource}'s content type.
-	 * 
-	 * @return
+	 *
+	 * @return never {@literal null}.
+	 * @throws com.mongodb.MongoGridFSException in case no content type declared on {@link GridFSFile#getMetadata()} nor
+	 *           provided via {@link GridFSFile#getContentType()}.
 	 */
 	@SuppressWarnings("deprecation")
 	public String getContentType() {
