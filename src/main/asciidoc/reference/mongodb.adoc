@@ -2419,13 +2419,14 @@ NOTE: Collection creation allows customization via `CollectionOptions` and suppo
 [[mongo-template.commands]]
 == Executing Commands
 
-You can also get at the MongoDB driver's `DB.command( )` method using the `executeCommand(…)` methods on `MongoTemplate`. These will also perform exception translation into Spring's `DataAccessException` hierarchy.
+You can also get at the MongoDB driver's `MongoDatabase.runCommand( )` method using the `executeCommand(…)` methods on `MongoTemplate`. These will also perform exception translation into Spring's `DataAccessException` hierarchy.
 
 [[mongo-template.commands.execution]]
 === Methods for executing commands
 
-* `CommandResult` *executeCommand* `(Document command)` Execute a MongoDB command.
-* `CommandResult` *executeCommand* `(String jsonCommand)` Execute the a MongoDB command expressed as a JSON string.
+* `Document` *executeCommand* `(Document command)` Execute a MongoDB command.
+* `Document` *executeCommand* `(Document command, ReadPreference readPreference)` Execute a MongoDB command using the given nullable MongoDB `ReadPreference`.
+* `Document` *executeCommand* `(String jsonCommand)` Execute the a MongoDB command expressed as a JSON string.
 
 [[mongodb.mapping-usage.events]]
 == Lifecycle Events
