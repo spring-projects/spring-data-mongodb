@@ -15,11 +15,9 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
-import static org.springframework.data.mongodb.test.util.Conditions.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -32,8 +30,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -191,8 +187,7 @@ public class UpdateMapperUnitTests {
 		assertThat(document.get("aliased.$.value")).isEqualTo("foo");
 
 		Document someObject = getAsDocument(document, "aliased.$.someObject");
-		assertThat(someObject).isNotNull();
-		assertThat(someObject.get("value")).isEqualTo("bubu");
+		assertThat(someObject).isNotNull().containsEntry("value", "bubu");
 		assertTypeHint(someObject, ConcreteChildClass.class);
 	}
 
@@ -263,8 +258,8 @@ public class UpdateMapperUnitTests {
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
 
 		Document push = getAsDocument(mappedObject, "$push");
-		assertThat(getAsDocument(push, "category").containsKey("$each")).isTrue();
-		assertThat(getAsDocument(push, "type").containsKey("$each")).isTrue();
+		assertThat(getAsDocument(push, "category")).containsKey("$each");
+		assertThat(getAsDocument(push, "type")).containsKey("$each");
 	}
 
 	@Test // DATAMONGO-943
@@ -279,7 +274,7 @@ public class UpdateMapperUnitTests {
 
 		assertThat(key.containsKey("$position")).isTrue();
 		assertThat(key.get("$position")).isEqualTo(2);
-		assertThat(getAsDocument(push, "key").containsKey("$each")).isTrue();
+		assertThat(getAsDocument(push, "key")).containsKey("$each");
 	}
 
 	@Test // DATAMONGO-943
@@ -294,7 +289,7 @@ public class UpdateMapperUnitTests {
 
 		assertThat(key.containsKey("$position")).isTrue();
 		assertThat(key.get("$position")).isEqualTo(0);
-		assertThat(getAsDocument(push, "key").containsKey("$each")).isTrue();
+		assertThat(getAsDocument(push, "key")).containsKey("$each");
 	}
 
 	@Test // DATAMONGO-943
@@ -307,8 +302,8 @@ public class UpdateMapperUnitTests {
 		Document push = getAsDocument(mappedObject, "$push");
 		Document key = getAsDocument(push, "key");
 
-		assertThat(key.containsKey("$position")).isFalse();
-		assertThat(getAsDocument(push, "key").containsKey("$each")).isTrue();
+		assertThat(key).doesNotContainKey("$position");
+		assertThat(getAsDocument(push, "key")).containsKey("$each");
 	}
 
 	@Test // DATAMONGO-943
@@ -321,8 +316,8 @@ public class UpdateMapperUnitTests {
 		Document push = getAsDocument(mappedObject, "$push");
 		Document key = getAsDocument(push, "key");
 
-		assertThat(key.containsKey("$position")).isFalse();
-		assertThat(getAsDocument(push, "key").containsKey("$each")).isTrue();
+		assertThat(key).doesNotContainKey("$position");
+		assertThat(getAsDocument(push, "key")).containsKey("$each");
 	}
 
 	@Test // DATAMONGO-832
@@ -335,9 +330,8 @@ public class UpdateMapperUnitTests {
 		Document push = getAsDocument(mappedObject, "$push");
 		Document key = getAsDocument(push, "key");
 
-		assertThat(key.containsKey("$slice")).isTrue();
-		assertThat(key.get("$slice")).isEqualTo(5);
-		assertThat(key.containsKey("$each")).isTrue();
+		assertThat(key).containsKey("$slice").containsEntry("$slice", 5);
+		assertThat(key).containsKey("$each");
 	}
 
 	@Test // DATAMONGO-832
@@ -351,15 +345,13 @@ public class UpdateMapperUnitTests {
 		Document push = getAsDocument(mappedObject, "$push");
 		Document key = getAsDocument(push, "key");
 
-		assertThat(key.containsKey("$slice")).isTrue();
-		assertThat(key.get("$slice")).isEqualTo(5);
+		assertThat(key).containsKey("$slice").containsEntry("$slice", 5);
 		assertThat(key.containsKey("$each")).isTrue();
 
 		Document key2 = getAsDocument(push, "key-2");
 
-		assertThat(key2.containsKey("$slice")).isTrue();
-		assertThat(key2.get("$slice")).isEqualTo(-2);
-		assertThat(key2.containsKey("$each")).isTrue();
+		assertThat(key2).containsKey("$slice").containsEntry("$slice", -2);
+		assertThat(key2).containsKey("$each");
 	}
 
 	@Test // DATAMONGO-1141
@@ -373,9 +365,9 @@ public class UpdateMapperUnitTests {
 		Document push = getAsDocument(mappedObject, "$push");
 		Document key = getAsDocument(push, "scores");
 
-		assertThat(key.containsKey("$sort")).isTrue();
-		assertThat(key.get("$sort")).isEqualTo(-1);
-		assertThat(key.containsKey("$each")).isTrue();
+		assertThat(key).containsKey("$sort");
+		assertThat(key).containsEntry("$sort", -1);
+		assertThat(key).containsKey("$each");
 	}
 
 	@Test // DATAMONGO-1141
@@ -391,9 +383,9 @@ public class UpdateMapperUnitTests {
 		Document push = getAsDocument(mappedObject, "$push");
 		Document key = getAsDocument(push, "list");
 
-		assertThat(key.containsKey("$sort")).isTrue();
+		assertThat(key).containsKey("$sort");
 		assertThat(key.get("$sort")).isEqualTo(new Document("renamed-value", 1).append("field", 1));
-		assertThat(key.containsKey("$each")).isTrue();
+		assertThat(key).containsKey("$each");
 	}
 
 	@Test // DATAMONGO-1141
@@ -407,13 +399,13 @@ public class UpdateMapperUnitTests {
 		Document push = getAsDocument(mappedObject, "$push");
 		Document key1 = getAsDocument(push, "authors");
 
-		assertThat(key1.containsKey("$sort")).isTrue();
-		assertThat(key1.get("$sort")).isEqualTo(1);
-		assertThat(key1.containsKey("$each")).isTrue();
+		assertThat(key1).containsKey("$sort");
+		assertThat(key1).containsEntry("$sort", 1);
+		assertThat(key1).containsKey("$each");
 
 		Document key2 = getAsDocument(push, "chapters");
 
-		assertThat(key2.containsKey("$sort")).isTrue();
+		assertThat(key2).containsKey("$sort");
 		assertThat(key2.get("$sort")).isEqualTo(new Document("order", 1));
 		assertThat(key2.containsKey("$each")).isTrue();
 	}
@@ -615,10 +607,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(DocumentWithNestedCollection.class));
 
-		assertThat((Bson) mappedUpdate)
-				.is(matchedBy(isBsonObject().notContaining("$addToSet.nestedDocs.$each.[0]._class")));
-		assertThat((Bson) mappedUpdate)
-				.is(matchedBy(isBsonObject().notContaining("$addToSet.nestedDocs.$each.[1]._class")));
+		assertThat(mappedUpdate).doesNotContainKey("$addToSet.nestedDocs.$each.[0]._class")
+				.doesNotContainKey("$addToSet.nestedDocs.$each.[1]._class");
 	}
 
 	@Test // DATAMONGO-1210
@@ -629,10 +619,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(ListModelWrapper.class));
 
-		assertThat((Bson) mappedUpdate)
-				.is(matchedBy(isBsonObject().containing("$addToSet.models.$each.[0]._class", ModelImpl.class.getName())));
-		assertThat((Bson) mappedUpdate)
-				.is(matchedBy(isBsonObject().containing("$addToSet.models.$each.[1]._class", ModelImpl.class.getName())));
+		assertThat(mappedUpdate).containsEntry("$addToSet.models.$each.[0]._class", ModelImpl.class.getName());
+		assertThat(mappedUpdate).containsEntry("$addToSet.models.$each.[1]._class", ModelImpl.class.getName());
 	}
 
 	@Test // DATAMONGO-1210
@@ -644,10 +632,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(ParentClass.class));
 
-		assertThat((Bson) mappedUpdate).is(
-				matchedBy(isBsonObject().containing("$addToSet.aliased.$each.[0]._class", ConcreteChildClass.class.getName())));
-		assertThat((Bson) mappedUpdate).is(
-				matchedBy(isBsonObject().containing("$addToSet.aliased.$each.[1]._class", ConcreteChildClass.class.getName())));
+		assertThat(mappedUpdate).containsEntry("$addToSet.aliased.$each.[0]._class", ConcreteChildClass.class.getName());
+		assertThat(mappedUpdate).containsEntry("$addToSet.aliased.$each.[1]._class", ConcreteChildClass.class.getName());
 	}
 
 	@Test // DATAMONGO-1210
@@ -660,11 +646,11 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(DomainTypeWithListOfConcreteTypesHavingSingleInterfaceTypeAttribute.class));
 
-		assertThat((Bson) mappedUpdate).is(matchedBy(
-				isBsonObject().notContaining("$addToSet.listHoldingConcretyTypeWithInterfaceTypeAttribute.$each.[0]._class")));
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject().containing(
+		assertThat(mappedUpdate)
+				.doesNotContainKey("$addToSet.listHoldingConcretyTypeWithInterfaceTypeAttribute.$each.[0]._class");
+		assertThat(mappedUpdate).containsEntry(
 				"$addToSet.listHoldingConcretyTypeWithInterfaceTypeAttribute.$each.[0].interfaceType._class",
-				ModelImpl.class.getName())));
+				ModelImpl.class.getName());
 	}
 
 	@Test // DATAMONGO-1210
@@ -677,10 +663,9 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes.class));
 
-		assertThat((Bson) mappedUpdate)
-				.is(matchedBy(isBsonObject().notContaining("$set.concreteTypeWithListAttributeOfInterfaceType._class")));
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject()
-				.containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class", ModelImpl.class.getName())));
+		assertThat(mappedUpdate).doesNotContainKey("$set.concreteTypeWithListAttributeOfInterfaceType._class");
+		assertThat(mappedUpdate).containsEntry("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class",
+				ModelImpl.class.getName());
 	}
 
 	@Test // DATAMONGO-1809
@@ -707,8 +692,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithObject.class));
 
-		Assert.assertThat(mappedUpdate, isBsonObject().containing("$set.value.name", "kaladin"));
-		Assert.assertThat(mappedUpdate, isBsonObject().containing("$set.value._class", NestedDocument.class.getName()));
+		assertThat(mappedUpdate).containsEntry("$set.value.name", "kaladin");
+		assertThat(mappedUpdate).containsEntry("$set.value._class", NestedDocument.class.getName());
 	}
 
 	@Test // DATAMONGO-1236
@@ -718,8 +703,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithObject.class));
 
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject().containing("$set.concreteValue.name", "shallan")));
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject().notContaining("$set.concreteValue._class")));
+		assertThat(mappedUpdate).containsEntry("$set.concreteValue.name", "shallan");
+		assertThat(mappedUpdate).doesNotContainKey("$set.concreteValue._class");
 	}
 
 	@Test // DATAMONGO-1236
@@ -729,9 +714,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithAliasedObject.class));
 
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject().containing("$set.renamed-value.name", "adolin")));
-		assertThat((Bson) mappedUpdate)
-				.is(matchedBy(isBsonObject().containing("$set.renamed-value._class", NestedDocument.class.getName())));
+		assertThat(mappedUpdate).containsEntry("$set.renamed-value.name", "adolin");
+		assertThat(mappedUpdate).containsEntry("$set.renamed-value._class", NestedDocument.class.getName());
 	}
 
 	@Test // DATAMONGO-1236
@@ -743,9 +727,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithObjectMap.class));
 
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject().containing("$set.map.szeth.name", "son-son-vallano")));
-		assertThat((Bson) mappedUpdate)
-				.is(matchedBy(isBsonObject().containing("$set.map.szeth._class", NestedDocument.class.getName())));
+		assertThat(mappedUpdate).containsEntry("$set.map.szeth.name", "son-son-vallano");
+		assertThat(mappedUpdate).containsEntry("$set.map.szeth._class", NestedDocument.class.getName());
 	}
 
 	@Test // DATAMONGO-1236
@@ -757,8 +740,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithObjectMap.class));
 
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject().containing("$set.concreteMap.jasnah.name", "kholin")));
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject().notContaining("$set.concreteMap.jasnah._class")));
+		assertThat(mappedUpdate).containsEntry("$set.concreteMap.jasnah.name", "kholin");
+		assertThat(mappedUpdate).doesNotContainKey("$set.concreteMap.jasnah._class");
 	}
 
 	@Test // DATAMONGO-1250
@@ -782,8 +765,7 @@ public class UpdateMapperUnitTests {
 		Document result = mapper.getMappedObject(update.getUpdateObject(),
 				mappingContext.getPersistentEntity(ClassWithEnum.class));
 
-		assertThat((Bson) result)
-				.is(matchedBy(isBsonObject().containing("$set.allocation", ClassWithEnum.Allocation.AVAILABLE.code)));
+		assertThat(result).containsEntry("$set.allocation", ClassWithEnum.Allocation.AVAILABLE.code);
 	}
 
 	@Test // DATAMONGO-1251
@@ -795,8 +777,7 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(ConcreteChildClass.class));
 
 		Document $set = DocumentTestUtils.getAsDocument(mappedUpdate, "$set");
-		assertThat($set.containsKey("value")).isTrue();
-		assertThat($set.get("value")).isNull();
+		assertThat($set).containsKey("value").containsEntry("value", null);
 	}
 
 	@Test // DATAMONGO-1251
@@ -808,8 +789,7 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(ClassWithJava8Date.class));
 
 		Document $set = DocumentTestUtils.getAsDocument(mappedUpdate, "$set");
-		assertThat($set.containsKey("date")).isTrue();
-		assertThat($set.get("value")).isNull();
+		assertThat($set).containsKey("date").doesNotContainKey("value");
 	}
 
 	@Test // DATAMONGO-1251
@@ -821,8 +801,7 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(ListModel.class));
 
 		Document $set = DocumentTestUtils.getAsDocument(mappedUpdate, "$set");
-		assertThat($set.containsKey("values")).isTrue();
-		assertThat($set.get("value")).isNull();
+		assertThat($set).containsKey("values").doesNotContainKey("value");
 	}
 
 	@Test // DATAMONGO-1251
@@ -834,8 +813,8 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(EntityWithObject.class));
 
 		Document $set = DocumentTestUtils.getAsDocument(mappedUpdate, "$set");
-		assertThat($set.containsKey("concreteValue.name")).isTrue();
-		assertThat($set.get("concreteValue.name")).isNull();
+		assertThat($set).containsKey("concreteValue.name");
+		assertThat($set).containsEntry("concreteValue.name", null);
 	}
 
 	@Test // DATAMONGO-1288
@@ -867,7 +846,7 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(SimpleValueHolder.class));
 
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject().containing("$min", new Document("minfield", 10))));
+		assertThat(mappedUpdate).containsEntry("$min", new Document("minfield", 10));
 	}
 
 	@Test // DATAMONGO-1404
@@ -877,7 +856,7 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(SimpleValueHolder.class));
 
-		assertThat((Bson) mappedUpdate).is(matchedBy(isBsonObject().containing("$max", new Document("maxfield", 999))));
+		assertThat(mappedUpdate).containsEntry("$max", new Document("maxfield", 999));
 	}
 
 	@Test // DATAMONGO-1423
@@ -926,10 +905,10 @@ public class UpdateMapperUnitTests {
 
 		Document mappedObject = mapper.getMappedObject(document, context.getPersistentEntity(SimpleValueHolder.class));
 
-		assertThat(mappedObject.get("key")).isEqualTo("value");
-		assertThat(mappedObject.get("a")).isEqualTo("b");
-		assertThat(mappedObject.get("x")).isEqualTo("y");
-		assertThat(mappedObject.size()).isEqualTo(3);
+		assertThat(mappedObject).containsEntry("key", "value");
+		assertThat(mappedObject).containsEntry("a", "b");
+		assertThat(mappedObject).containsEntry("x", "y");
+		assertThat(mappedObject).hasSize(3);
 	}
 
 	@Test // DATAMONGO-1176
@@ -939,8 +918,8 @@ public class UpdateMapperUnitTests {
 
 		Document mappedObject = mapper.getMappedObject(document, context.getPersistentEntity(SimpleValueHolder.class));
 
-		assertThat(mappedObject.get("$push")).isEqualTo(new Document("x", "y"));
-		assertThat(mappedObject.get("$set")).isEqualTo(new Document("a", "b"));
+		assertThat(mappedObject).containsEntry("$push", new Document("x", "y"));
+		assertThat(mappedObject).containsEntry("$set", new Document("a", "b"));
 		assertThat(mappedObject).hasSize(2);
 	}
 
@@ -968,9 +947,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(new Update().set("concreteInnerList", list).getUpdateObject(),
 				context.getPersistentEntity(Outer.class));
 
-		assertThat((Bson) mappedUpdate)
-				.is(matchedBy(isBsonObject().containing("$set.concreteInnerList.[0].interfaceTypeList.[0]._class")
-						.notContaining("$set.concreteInnerList.[0]._class")));
+		assertThat(mappedUpdate).containsKey("$set.concreteInnerList.[0].interfaceTypeList.[0]._class")
+				.doesNotContainKey("$set.concreteInnerList.[0]._class");
 	}
 
 	@Test // DATAMONGO-1772
@@ -983,9 +961,8 @@ public class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(new Update().set("concreteInnerList", list).getUpdateObject(),
 				context.getPersistentEntity(Outer.class));
 
-		assertThat((Bson) mappedUpdate)
-				.is(matchedBy(isBsonObject().containing("$set.concreteInnerList.[0].abstractTypeList.[0]._class")
-						.notContaining("$set.concreteInnerList.[0]._class")));
+		assertThat(mappedUpdate).containsKey("$set.concreteInnerList.[0].abstractTypeList.[0]._class")
+				.doesNotContainKey("$set.concreteInnerList.[0]._class");
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
