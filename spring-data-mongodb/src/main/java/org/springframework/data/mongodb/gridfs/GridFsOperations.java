@@ -34,6 +34,7 @@ import com.mongodb.client.gridfs.GridFSFindIterable;
  * @author Thomas Darimont
  * @author Martin Baumgartner
  * @author Christoph Strobl
+ * @author Hartmut Lang
  */
 public interface GridFsOperations extends ResourcePatternResolver {
 
@@ -156,6 +157,13 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @see ResourcePatternResolver#getResource(String)
 	 */
 	GridFsResource getResource(String filename);
+
+	/**
+	 * Returns the {@link GridFsResource} for a {@link com.mongodb.client.gridfs.model.GridFSFile}.
+	 * @param file must not be {@literal null}.
+	 * @return the resource for the file.
+	 */
+	GridFsResource getResource(com.mongodb.client.gridfs.model.GridFSFile file);
 
 	/**
 	 * Returns all {@link GridFsResource}s matching the given file name pattern.

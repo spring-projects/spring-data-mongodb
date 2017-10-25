@@ -51,6 +51,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  * @author Martin Baumgartner
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Hartmut Lang
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -228,13 +229,22 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	public GridFsResource getResource(String location) {
 
 		GridFSFile file = findOne(query(whereFilename().is(location)));
-		return file != null ? new GridFsResource(file, getGridFs().openDownloadStream(location)) : null;
+		return file != null ? getResource(file) : null;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.core.io.support.ResourcePatternResolver#getResources(java.lang.String)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#getResource(com.mongodb.client.gridfs.model.GridFSFile)
 	 */
+	public GridFsResource getResource(GridFSFile file) {
+
+		return new GridFsResource(file, getGridFs().openDownloadStream(file.getFilename()));
+	}
+
+	/*
+     * (non-Javadoc)
+     * @see org.springframework.core.io.support.ResourcePatternResolver#getResources(java.lang.String)
+     */
 	public GridFsResource[] getResources(String locationPattern) {
 
 		if (!StringUtils.hasText(locationPattern)) {
