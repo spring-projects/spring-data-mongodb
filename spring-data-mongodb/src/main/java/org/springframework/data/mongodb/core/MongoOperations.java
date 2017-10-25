@@ -72,11 +72,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	String getCollectionName(Class<?> entityClass);
 
 	/**
-	 * Execute the a MongoDB command expressed as a JSON string. This will call the method JSON.parse that is part of the
-	 * MongoDB driver to convert the JSON string to a Document. Any errors that result from executing this command will be
+	 * Execute the a MongoDB command expressed as a JSON string. Parsing is delegated to {@link Document#parse(String)} to
+	 * obtain the {@link Document} holding the actual command. Any errors that result from executing this command will be
 	 * converted into Spring's DAO exception hierarchy.
 	 *
-	 * @param jsonCommand a MongoDB command expressed as a JSON string.
+	 * @param jsonCommand a MongoDB command expressed as a JSON string. Must not be {@literal null}.
 	 * @return a result object returned by the action.
 	 */
 	Document executeCommand(String jsonCommand);
@@ -851,8 +851,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -908,8 +908,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 */
@@ -925,8 +925,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
-	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's
-	 * Type Conversion"</a> for more details.
+	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
