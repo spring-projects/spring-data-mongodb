@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -38,6 +39,7 @@ import com.mongodb.util.JSON;
 import com.querydsl.core.types.Constant;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Operation;
+import com.querydsl.core.types.Ops;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.PathMetadata;
 import com.querydsl.core.types.PathType;
@@ -177,7 +179,12 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 		MongoPersistentProperty property = getPropertyFor(path);
 
-		return property.isIdProperty() ? key.replaceAll("." + ID_KEY + "$", "") : key;
+		if (!property.isIdProperty()) {
+			return key;
+		}
+
+		String replacementString = ObjectUtils.nullSafeEquals(expr.getOperator(), Ops.EQ) ? "" : "\\.\\$id";
+		return key.replaceAll("." + ID_KEY + "$", replacementString);
 	}
 
 	/*
