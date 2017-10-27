@@ -1,6 +1,20 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.1.RELEASE (2017-10-27)
+---------------------------------------------
+* DATAMONGO-1815 - Adapt API changes in Property in test cases.
+* DATAMONGO-1814 - Missing documentation on Faceted classification.
+* DATAMONGO-1811 - Reference Documentation doesn't match with API Documentation 2.X vesrion.
+* DATAMONGO-1809 - Type hint usage broken when using positional parameters with more than one digit.
+* DATAMONGO-1806 - GridFsResource wrong type in javaDoc.
+* DATAMONGO-1805 - Documentation for operations.find uses wrong result type.
+* DATAMONGO-1802 - No converter found capable of converting from type org.bson.types.Binary to type byte[].
+* DATAMONGO-1795 - Remove obsolete Kotlin build configuration.
+* DATAMONGO-1793 - Release 2.0.1 (Kay SR1).
+* DATAMONGO-1696 - Reference documentation uses JPA Annotations.
+
+
 Changes in version 1.10.8.RELEASE (2017-10-11)
 ----------------------------------------------
 * DATAMONGO-1784 - Add support for AggregationExpression in GroupOperation.sum.
