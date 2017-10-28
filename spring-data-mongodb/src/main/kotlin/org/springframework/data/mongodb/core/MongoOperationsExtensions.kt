@@ -59,7 +59,7 @@ inline fun <reified T : Any> MongoOperations.getCollectionName(): String =
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.execute(action: CollectionCallback<T>): T =
+inline fun <reified T : Any> MongoOperations.execute(action: CollectionCallback<T>): T? =
 		execute(T::class.java, action)
 
 /**
@@ -278,7 +278,7 @@ inline fun <reified T : Any> MongoOperations.geoNear(near: NearQuery, collection
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findOne(query: Query, collectionName: String? = null): T =
+inline fun <reified T : Any> MongoOperations.findOne(query: Query, collectionName: String? = null): T? =
 		if (collectionName != null) findOne(query, T::class.java, collectionName) else findOne(query, T::class.java)
 
 /**
@@ -318,7 +318,7 @@ inline fun <reified T : Any> MongoOperations.find(query: Query, collectionName: 
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: String? = null): T =
+inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: String? = null): T? =
 		if (collectionName != null) findById(id, T::class.java, collectionName)
 		else findById(id, T::class.java)
 
@@ -328,7 +328,7 @@ inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: S
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update: Update, options: FindAndModifyOptions, collectionName: String? = null): T =
+inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update: Update, options: FindAndModifyOptions, collectionName: String? = null): T? =
 		if (collectionName != null) findAndModify(query, update, options, T::class.java, collectionName)
 		else findAndModify(query, update, options, T::class.java)
 
@@ -338,7 +338,7 @@ inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update:
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findAndRemove(query: Query, collectionName: String? = null): T =
+inline fun <reified T : Any> MongoOperations.findAndRemove(query: Query, collectionName: String? = null): T? =
 		if (collectionName != null) findAndRemove(query, T::class.java, collectionName)
 		else findAndRemove(query, T::class.java)
 
