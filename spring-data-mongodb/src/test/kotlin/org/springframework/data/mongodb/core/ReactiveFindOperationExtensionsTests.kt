@@ -35,6 +35,9 @@ class ReactiveFindOperationExtensionsTests {
 	@Mock(answer = Answers.RETURNS_MOCKS)
 	lateinit var operationWithProjection: ReactiveFindOperation.FindWithProjection<First>
 
+	@Mock(answer = Answers.RETURNS_MOCKS)
+	lateinit var distinctWithProjection: ReactiveFindOperation.DistinctWithProjection
+
 	@Test // DATAMONGO-1719
 	fun `ReactiveFind#query(KClass) extension should call its Java counterpart`() {
 
@@ -61,5 +64,12 @@ class ReactiveFindOperationExtensionsTests {
 
 		operationWithProjection.asType()
 		verify(operationWithProjection).`as`(First::class.java)
+	}
+
+	@Test // DATAMONGO-1761
+	fun `ReactiveFind#DistinctWithProjection#asType(KClass) extension should call its Java counterpart`() {
+
+		distinctWithProjection.asType(First::class)
+		verify(distinctWithProjection).`as`(First::class.java)
 	}
 }

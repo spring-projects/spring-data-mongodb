@@ -36,6 +36,9 @@ class ExecutableFindOperationExtensionsTests {
     @Mock(answer = Answers.RETURNS_MOCKS)
     lateinit var operationWithProjection: ExecutableFindOperation.FindWithProjection<First>
 
+    @Mock(answer = Answers.RETURNS_MOCKS)
+    lateinit var distinctWithProjection: ExecutableFindOperation.DistinctWithProjection
+
     @Test // DATAMONGO-1689
     fun `ExecutableFindOperation#query(KClass) extension should call its Java counterpart`() {
 
@@ -64,4 +67,10 @@ class ExecutableFindOperationExtensionsTests {
         verify(operationWithProjection).`as`(First::class.java)
     }
 
+    @Test // DATAMONGO-1761
+    fun `ExecutableFindOperation#DistinctWithProjection#asType(KClass) extension should call its Java counterpart`() {
+
+        distinctWithProjection.asType(First::class)
+        verify(distinctWithProjection).`as`(First::class.java)
+    }
 }

@@ -727,8 +727,9 @@ public class MongoTemplateTests {
 		assertThat(notFound, nullValue());
 	}
 
-	@Test
+	@Test // DATAMONGO-1761
 	public void testDistinct() {
+
 		Address address1 = new Address();
 		address1.state = "PA";
 		address1.city = "Philadelphia";
@@ -748,16 +749,51 @@ public class MongoTemplateTests {
 		template.save(person1);
 		template.save(person2);
 
-		List<String> nameList = template.distinct("name", MyPerson.class, String.class);
-		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
+		assertThat(template.findDistinct("name", MyPerson.class, String.class)).containsExactlyInAnyOrder(person1.getName(),
+				person2.getName());
+		assertThat(template.findDistinct(new BasicQuery("{'address.state' : 'PA'}"), "name", MyPerson.class, String.class))
+				.containsExactlyInAnyOrder(person1.getName(), person2.getName());
+		assertThat(template.findDistinct(new BasicQuery("{'address.state' : 'PA'}"), "name",
+				template.determineCollectionName(MyPerson.class), MyPerson.class, String.class))
+						.containsExactlyInAnyOrder(person1.getName(), person2.getName());
+	}
 
-		Query query = new BasicQuery("{'address.state' : 'PA'}");
-		nameList = template.distinct(query, "name", MyPerson.class, String.class);
-		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
+	@Test // DATAMONGO-1761
+	public void testDistinctCovertsResultToPropertyTargetTypeCorrectly() {
 
-		String collectionName = template.determineCollectionName(MyPerson.class);
-		nameList = template.distinct(query, "name", collectionName, String.class);
-		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
+		template.insert(new Person("garvin"));
+
+		assertThat(template.findDistinct("firstName", Person.class, Object.class))
+				.allSatisfy(val -> instanceOf(String.class));
+	}
+
+	@Test // DATAMONGO-1761
+	public void testDistinctResolvesDbRefsCorrectly() {
+
+		SomeContent content1 = new SomeContent();
+		content1.text = "content-1";
+
+		SomeContent content2 = new SomeContent();
+		content2.text = "content-2";
+
+		template.save(content1);
+		template.save(content2);
+
+		SomeTemplate t1 = new SomeTemplate();
+		t1.content = content1;
+
+		SomeTemplate t2 = new SomeTemplate();
+		t2.content = content2;
+
+		SomeTemplate t3 = new SomeTemplate();
+		t3.content = content2;
+
+		template.insert(t1);
+		template.insert(t2);
+		template.insert(t3);
+
+		assertThat(template.findDistinct("content", SomeTemplate.class, SomeContent.class))
+				.containsExactlyInAnyOrder(content1, content2);
 	}
 
 	@Test
@@ -3609,6 +3645,7 @@ public class MongoTemplateTests {
 		}
 	}
 
+	@EqualsAndHashCode
 	public static class SomeContent {
 
 		String id;

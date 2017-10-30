@@ -21,12 +21,20 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import reactor.test.StepVerifier;
 
+import java.util.Date;
+import java.util.function.Consumer;
+
+import org.bson.BsonString;
+import org.bson.BsonValue;
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -61,10 +69,12 @@ public class ReactiveFindOperationSupportTests {
 
 		han = new Person();
 		han.firstname = "han";
+		han.lastname = "solo";
 		han.id = "id-1";
 
 		luke = new Person();
 		luke.firstname = "luke";
+		luke.lastname = "skywalker";
 		luke.id = "id-2";
 
 		blocking.save(han);
@@ -310,13 +320,177 @@ public class ReactiveFindOperationSupportTests {
 				.expectNext(false).verifyComplete();
 	}
 
+	@Test // DATAMONGO-1761
+	public void distinctReturnsEmptyListIfNoMatchFound() {
+
+		StepVerifier.create(template.query(Person.class).distinct("actually-not-property-in-use").as(String.class).all())
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingReturnTypeSpecifiedThatCanBeConvertedDirectlyByACodec() {
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.lastname = luke.lastname;
+
+		blocking.save(anakin);
+
+		StepVerifier.create(template.query(Person.class).distinct("lastname").as(String.class).all())
+				.assertNext(in("solo", "skywalker")).assertNext(in("solo", "skywalker")).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingNoReturnTypeSpecified() {
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.ability = "dark-lord";
+
+		Person padme = new Person();
+		padme.firstname = "padme";
+		padme.ability = 42L;
+
+		Person jaja = new Person();
+		jaja.firstname = "jaja";
+		jaja.ability = new Date();
+
+		blocking.save(anakin);
+		blocking.save(padme);
+		blocking.save(jaja);
+
+		Consumer<Object> containedInAbilities = in(anakin.ability, padme.ability, jaja.ability);
+
+		StepVerifier.create(template.query(Person.class).distinct("ability").all()).assertNext(containedInAbilities)
+				.assertNext(containedInAbilities).assertNext(containedInAbilities).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsComplexValuesCorrectlyForCollectionHavingNoReturnTypeSpecified() {
+
+		Sith sith = new Sith();
+		sith.rank = "lord";
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.ability = sith;
+
+		blocking.save(anakin);
+
+		StepVerifier.create(template.query(Person.class).distinct("ability").all()).expectNext(anakin.ability)
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsComplexValuesCorrectlyForCollectionHavingReturnTypeSpecified() {
+
+		Sith sith = new Sith();
+		sith.rank = "lord";
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.ability = sith;
+
+		blocking.save(anakin);
+
+		StepVerifier.create(template.query(Person.class).distinct("ability").as(Sith.class).all()).expectNext(sith)
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsComplexValuesCorrectlyForCollectionHavingReturnTypeDocumentSpecified() {
+
+		Sith sith = new Sith();
+		sith.rank = "lord";
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.ability = sith;
+
+		blocking.save(anakin);
+
+		StepVerifier.create(template.query(Person.class).distinct("ability").as(Document.class).all())
+				.expectNext(new Document("rank", "lord").append("_class", Sith.class.getName())).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctMapsFieldNameCorrectly() {
+
+		StepVerifier.create(template.query(Jedi.class).inCollection(STAR_WARS).distinct("name").as(String.class).all())
+				.assertNext(in("han", "luke")).assertNext(in("han", "luke")).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsRawValuesIfReturnTypeIsBsonValue() {
+
+		Consumer<BsonValue> inValues = in(new BsonString("solo"), new BsonString("skywalker"));
+		StepVerifier.create(template.query(Person.class).distinct("lastname").as(BsonValue.class).all())
+				.assertNext(inValues).assertNext(inValues).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsValuesMappedToTheirJavaTypeEvenWhenNotExplicitlyDefinedByTheDomainType() {
+
+		blocking.save(new Document("darth", "vader"), STAR_WARS);
+
+		StepVerifier.create(template.query(Person.class).distinct("darth").all()).expectNext("vader").verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsMappedDomainTypeForProjections() {
+
+		luke.father = new Person();
+		luke.father.firstname = "anakin";
+
+		blocking.save(luke);
+
+		StepVerifier.create(template.query(Person.class).distinct("father").as(Jedi.class).all())
+				.expectNext(new Jedi("anakin")).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctAlllowsQueryUsingObjectSourceType() {
+
+		luke.father = new Person();
+		luke.father.firstname = "anakin";
+
+		blocking.save(luke);
+
+		StepVerifier.create(template.query(Object.class).inCollection(STAR_WARS).distinct("father").as(Jedi.class).all())
+				.expectNext(new Jedi("anakin")).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsMappedDomainTypeExtractedFromPropertyWhenNoExplicitTypePresent() {
+
+		luke.father = new Person();
+		luke.father.firstname = "anakin";
+
+		blocking.save(luke);
+
+		Person expected = new Person();
+		expected.firstname = luke.father.firstname;
+
+		StepVerifier.create(template.query(Person.class).distinct("father").all()).expectNext(expected).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctThrowsExceptionWhenExplicitMappingTypeCannotBeApplied() {
+		StepVerifier.create(template.query(Person.class).distinct("firstname").as(Long.class).all())
+				.expectError(InvalidDataAccessApiUsageException.class).verify();
+	}
+
 	interface Contact {}
 
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person implements Contact {
+
 		@Id String id;
 		String firstname;
+		String lastname;
+		Object ability;
+		Person father;
 	}
 
 	interface PersonProjection {
@@ -335,9 +509,17 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
 	static class Jedi {
 
 		@Field("firstname") String name;
+	}
+
+	@Data
+	static class Sith {
+
+		String rank;
 	}
 
 	@Data
@@ -357,5 +539,11 @@ public class ReactiveFindOperationSupportTests {
 
 		@Value("#{target.name}")
 		String getId();
+	}
+
+	static <T> Consumer<T> in(T... values) {
+		return (val) -> {
+			assertThat(values).contains(val);
+		};
 	}
 }

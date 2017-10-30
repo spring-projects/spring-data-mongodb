@@ -678,4 +678,38 @@ class MongoOperationsExtensionsTests {
 		operations.findAllAndRemove<First>(query)
 		verify(operations).findAllAndRemove(query, First::class.java)
 	}
+
+	@Test // DATAMONGO-1761
+	fun `findDistinct(String, KClass) should call java counterpart`() {
+
+		operations.findDistinct<String>("field", First::class)
+		verify(operations).findDistinct("field", First::class.java, String::class.java)
+	}
+
+	@Test // DATAMONGO-1761
+	fun `findDistinct(Query, String, KClass) should call java counterpart`() {
+
+		val query = mock<Query>()
+
+		operations.findDistinct<String>(query, "field", First::class)
+		verify(operations).findDistinct(query, "field", First::class.java, String::class.java)
+	}
+
+	@Test // DATAMONGO-1761
+	fun `findDistinct(Query, String, String, KClass) should call java counterpart`() {
+
+		val query = mock<Query>()
+
+		operations.findDistinct<String>(query, "field", "collection", First::class)
+		verify(operations).findDistinct(query, "field", "collection", First::class.java, String::class.java)
+	}
+
+	@Test // DATAMONGO-1761
+	fun `findDistinct(Query, String, String) should call java counterpart`() {
+
+		val query = mock<Query>()
+
+		operations.findDistinct<String>(query, "field", "collection")
+		verify(operations).findDistinct(query, "field", "collection", String::class.java)
+	}
 }

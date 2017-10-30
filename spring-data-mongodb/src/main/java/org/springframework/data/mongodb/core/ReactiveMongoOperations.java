@@ -378,6 +378,66 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Mono<T> findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link List}.
+	 *
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param entityClass the domain type used for determining the actual {@link MongoCollection}. Must not be
+	 *          {@literal null}.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	default <T> Flux<T> findDistinct(String field, Class<?> entityClass, Class<T> resultClass) {
+		return findDistinct(new Query(), field, entityClass, resultClass);
+	}
+
+	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link List}.
+	 *
+	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param entityClass the domain type used for determining the actual {@link MongoCollection} and mapping the
+	 *          {@link Query} to the domain type fields. Must not be {@literal null}.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	<T> Flux<T> findDistinct(Query query, String field, Class<?> entityClass, Class<T> resultClass);
+
+	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link List}.
+	 *
+	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param collectionName the explicit name of the actual {@link MongoCollection}. Must not be {@literal null}.
+	 * @param entityClass the domain type used for mapping the {@link Query} to the domain type fields.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	<T> Flux<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
+			Class<T> resultClass);
+
+	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link List}.
+	 *
+	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param collection the explicit name of the actual {@link MongoCollection}. Must not be {@literal null}.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @param <T>
+	 * @return
+	 * @since 2.1
+	 */
+	default <T> Flux<T> findDistinct(Query query, String field, String collection, Class<T> resultClass) {
+		return findDistinct(query, field, collection, Object.class, resultClass);
+	}
+
+	/**
 	 * Execute an aggregation operation.
 	 * <p>
 	 * The raw results will be mapped to the given entity class.
@@ -613,8 +673,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -673,8 +733,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -721,8 +781,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
@@ -739,8 +799,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
-	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's
-	 * Type Conversion"</a> for more details.
+	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
@@ -758,8 +818,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
@@ -776,8 +836,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
-	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's
-	 * Type Conversion"</a> for more details.
+	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.

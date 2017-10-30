@@ -21,13 +21,19 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.util.Date;
 import java.util.stream.Stream;
 
+import org.bson.BsonString;
+import org.bson.BsonValue;
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
@@ -347,13 +353,170 @@ public class ExecutableFindOperationSupportTests {
 		assertThat(template.query(Person.class).as(Contact.class).all()).allMatch(it -> it instanceof Person);
 	}
 
+	@Test // DATAMONGO-1761
+	public void distinctReturnsEmptyListIfNoMatchFound() {
+		assertThat(template.query(Person.class).distinct("actually-not-property-in-use").as(String.class).all()).isEmpty();
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingReturnTypeSpecifiedThatCanBeConvertedDirectlyByACodec() {
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.lastname = luke.lastname;
+
+		template.save(anakin);
+
+		assertThat(template.query(Person.class).distinct("lastname").as(String.class).all())
+				.containsExactlyInAnyOrder("solo", "skywalker");
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingNoReturnTypeSpecified() {
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.ability = "dark-lord";
+
+		Person padme = new Person();
+		padme.firstname = "padme";
+		padme.ability = 42L;
+
+		Person jaja = new Person();
+		jaja.firstname = "jaja";
+		jaja.ability = new Date();
+
+		template.save(anakin);
+		template.save(padme);
+		template.save(jaja);
+
+		assertThat(template.query(Person.class).distinct("ability").all()).containsExactlyInAnyOrder(anakin.ability,
+				padme.ability, jaja.ability);
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsComplexValuesCorrectlyForCollectionHavingNoReturnTypeSpecified() {
+
+		Sith sith = new Sith();
+		sith.rank = "lord";
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.ability = sith;
+
+		template.save(anakin);
+
+		assertThat(template.query(Person.class).distinct("ability").all()).containsExactlyInAnyOrder(anakin.ability);
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsComplexValuesCorrectlyForCollectionHavingReturnTypeSpecified() {
+
+		Sith sith = new Sith();
+		sith.rank = "lord";
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.ability = sith;
+
+		template.save(anakin);
+
+		assertThat(template.query(Person.class).distinct("ability").as(Sith.class).all())
+				.containsExactlyInAnyOrder((Sith) anakin.ability);
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsComplexValuesCorrectlyForCollectionHavingReturnTypeDocumentSpecified() {
+
+		Sith sith = new Sith();
+		sith.rank = "lord";
+
+		Person anakin = new Person();
+		anakin.firstname = "anakin";
+		anakin.ability = sith;
+
+		template.save(anakin);
+
+		assertThat(template.query(Person.class).distinct("ability").as(Document.class).all())
+				.containsExactlyInAnyOrder(new Document("rank", "lord").append("_class", Sith.class.getName()));
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctMapsFieldNameCorrectly() {
+
+		assertThat(template.query(Jedi.class).inCollection(STAR_WARS).distinct("name").as(String.class).all())
+				.containsExactlyInAnyOrder("han", "luke");
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsRawValuesIfReturnTypeIsBsonValue() {
+
+		assertThat(template.query(Person.class).distinct("lastname").as(BsonValue.class).all())
+				.containsExactlyInAnyOrder(new BsonString("solo"), new BsonString("skywalker"));
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsValuesMappedToTheirJavaTypeEvenWhenNotExplicitlyDefinedByTheDomainType() {
+
+		template.save(new Document("darth", "vader"), STAR_WARS);
+
+		assertThat(template.query(Person.class).distinct("darth").all()).containsExactlyInAnyOrder("vader");
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsMappedDomainTypeForProjections() {
+
+		luke.father = new Person();
+		luke.father.firstname = "anakin";
+
+		template.save(luke);
+
+		assertThat(template.query(Person.class).distinct("father").as(Jedi.class).all())
+				.containsExactlyInAnyOrder(new Jedi("anakin"));
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctAlllowsQueryUsingObjectSourceType() {
+
+		luke.father = new Person();
+		luke.father.firstname = "anakin";
+
+		template.save(luke);
+
+		assertThat(template.query(Object.class).inCollection(STAR_WARS).distinct("father").as(Jedi.class).all())
+				.containsExactlyInAnyOrder(new Jedi("anakin"));
+	}
+
+	@Test // DATAMONGO-1761
+	public void distinctReturnsMappedDomainTypeExtractedFromPropertyWhenNoExplicitTypePresent() {
+
+		luke.father = new Person();
+		luke.father.firstname = "anakin";
+
+		template.save(luke);
+
+		Person expected = new Person();
+		expected.firstname = luke.father.firstname;
+
+		assertThat(template.query(Person.class).distinct("father").all()).containsExactlyInAnyOrder(expected);
+	}
+
+	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1761
+	public void distinctThrowsExceptionWhenExplicitMappingTypeCannotBeApplied() {
+		template.query(Person.class).distinct("firstname").as(Long.class).all();
+	}
+
 	interface Contact {}
 
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person implements Contact {
+
 		@Id String id;
 		String firstname;
+		String lastname;
+		Object ability;
+		Person father;
 	}
 
 	interface PersonProjection {
@@ -372,9 +535,17 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
 	static class Jedi {
 
 		@Field("firstname") String name;
+	}
+
+	@Data
+	static class Sith {
+
+		String rank;
 	}
 
 	@Data
@@ -400,10 +571,12 @@ public class ExecutableFindOperationSupportTests {
 
 		han = new Person();
 		han.firstname = "han";
+		han.lastname = "solo";
 		han.id = "id-1";
 
 		luke = new Person();
 		luke.firstname = "luke";
+		luke.lastname = "skywalker";
 		luke.id = "id-2";
 
 		template.save(han);
