@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
@@ -28,7 +29,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Mark Pollack
  * @author Thomas Darimont
  */
-public interface MongoDbFactory {
+public interface MongoDbFactory extends CodecRegistryProvider {
 
 	/**
 	 * Creates a default {@link DB} instance.
@@ -55,4 +56,9 @@ public interface MongoDbFactory {
 	PersistenceExceptionTranslator getExceptionTranslator();
 
 	DB getLegacyDb();
+
+	@Override
+	default CodecRegistry getCodecRegistry() {
+		return getDb().getCodecRegistry();
+	}
 }

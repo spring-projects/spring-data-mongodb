@@ -924,6 +924,21 @@ public class ReactiveMongoTemplateTests {
 		assertThat(documents.poll(1, TimeUnit.SECONDS), is(nullValue()));
 	}
 
+	@Test // DATAMONGO-1761
+	public void testDistinct() {
+
+		Person person1 = new Person("Christoph", 38);
+		Person person2 = new Person("Christine", 39);
+		Person person3 = new Person("Christoph", 37);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
+
+		StepVerifier.create(template.findDistinct("firstName", Person.class, String.class)).expectNextCount(2)
+				.verifyComplete();
+	}
+
 	private PersonWithAList createPersonWithAList(String firstname, int age) {
 
 		PersonWithAList p = new PersonWithAList();

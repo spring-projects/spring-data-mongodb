@@ -19,7 +19,6 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,6 +27,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -196,6 +196,18 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			return template.exists(query, domainType, getCollectionName());
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.FindDistinct#distinct(java.lang.String)
+		 */
+		@Override
+		public TerminatingDistinct<Object> distinct(String field) {
+
+			Assert.notNull(field, "Field must not be null!");
+
+			return new DistinctOperationSupport<>(this, field);
+		}
+
 		private Flux<T> doFind(@Nullable FindPublisherPreparer preparer) {
 
 			Document queryObject = query.getQueryObject();
@@ -203,6 +215,12 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 			return template.doFind(getCollectionName(), queryObject, fieldsObject, domainType, returnType,
 					preparer != null ? preparer : getCursorPreparer(query));
+		}
+
+		private Flux<T> doFindDistinct(String field) {
+
+			return template.findDistinct(query, field, getCollectionName(), domainType,
+					returnType == domainType ? (Class<T>) Object.class : returnType);
 		}
 
 		private FindPublisherPreparer getCursorPreparer(Query query) {
@@ -215,6 +233,55 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 		private String asString() {
 			return SerializationUtils.serializeToJsonSafely(query);
+		}
+
+		/**
+		 * @author Christoph Strobl
+		 * @since 2.1
+		 */
+		static class DistinctOperationSupport<T> implements TerminatingDistinct<T> {
+
+			private final String field;
+			private final ReactiveFindSupport delegate;
+
+			public DistinctOperationSupport(ReactiveFindSupport delegate, String field) {
+
+				this.delegate = delegate;
+				this.field = field;
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.DistinctWithProjection#as(java.lang.Class)
+			 */
+			@Override
+			public <R> TerminatingDistinct<R> as(Class<R> resultType) {
+
+				Assert.notNull(resultType, "ResultType must not be null!");
+
+				return new DistinctOperationSupport((ReactiveFindSupport) delegate.as(resultType), field);
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.DistinctWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
+			 */
+			@Override
+			public TerminatingDistinct<T> matching(Query query) {
+
+				Assert.notNull(query, "Query must not be null!");
+
+				return new DistinctOperationSupport((ReactiveFindSupport) delegate.matching(query), field);
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core..ReactiveFindOperation.TerminatingDistinct#all()
+			 */
+			@Override
+			public Flux<T> all() {
+				return delegate.doFindDistinct(field);
+			}
 		}
 	}
 }
