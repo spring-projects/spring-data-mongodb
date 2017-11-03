@@ -31,7 +31,6 @@ import org.bson.types.ObjectId;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -43,9 +42,10 @@ import com.mongodb.client.MongoDatabase;
 
 /**
  * Default implementation of {@link ScriptOperations} capable of saving and executing {@link ServerSideJavaScript}.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 1.7
  */
 class DefaultScriptOperations implements ScriptOperations {
@@ -141,7 +141,7 @@ class DefaultScriptOperations implements ScriptOperations {
 
 		Assert.hasText(scriptName, "ScriptName must not be null or empty!");
 
-		return mongoOperations.exists(query(where("name").is(scriptName)), NamedMongoScript.class, SCRIPT_COLLECTION_NAME);
+		return mongoOperations.exists(query(where("_id").is(scriptName)), NamedMongoScript.class, SCRIPT_COLLECTION_NAME);
 	}
 
 	/*
@@ -190,7 +190,7 @@ class DefaultScriptOperations implements ScriptOperations {
 	 * Generate a valid name for the {@literal JavaScript}. MongoDB requires an id of type String for scripts. Calling
 	 * scripts having {@link ObjectId} as id fails. Therefore we create a random UUID without {@code -} (as this won't
 	 * work) an prefix the result with {@link #SCRIPT_NAME_PREFIX}.
-	 * 
+	 *
 	 * @return
 	 */
 	private static String generateScriptName() {
