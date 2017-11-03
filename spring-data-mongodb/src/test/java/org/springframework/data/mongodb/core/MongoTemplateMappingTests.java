@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -55,7 +54,7 @@ public class MongoTemplateMappingTests {
 	}
 
 	@Test
-	public void insertsEntityCorrectly1() throws Exception {
+	public void insertsEntityCorrectly1() {
 
 		addAndRetrievePerson(template1);
 		checkPersonPersisted(template1);
@@ -63,7 +62,7 @@ public class MongoTemplateMappingTests {
 	}
 
 	@Test
-	public void insertsEntityCorrectly2() throws Exception {
+	public void insertsEntityCorrectly2() {
 
 		addAndRetrievePerson(template2);
 		checkPersonPersisted(template2);
@@ -76,15 +75,15 @@ public class MongoTemplateMappingTests {
 		template.insert(person);
 
 		Person result = template.findById(person.getId(), Person.class);
-		assertThat(result.getFirstName(), is("Oliver"));
-		assertThat(result.getAge(), is(25));
+		assertThat(result.getFirstName()).isEqualTo("Oliver");
+		assertThat(result.getAge()).isEqualTo(25);
 	}
 
 	private void checkPersonPersisted(MongoTemplate template) {
 		template.execute(Person.class, new CollectionCallback<Object>() {
 			public Object doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 				Document document = collection.find(new Document()).first();
-				assertThat((String) document.get("name"), is("Oliver"));
+				assertThat((String) document.get("name")).isEqualTo("Oliver");
 				return null;
 			}
 		});
