@@ -50,7 +50,7 @@ public interface CodecRegistryProvider {
 	/**
 	 * Get the {@link Codec} registered for the given {@literal type} or an {@link Optional#empty() empty Optional}
 	 * instead.
-	 * 
+	 *
 	 * @param type must not be {@literal null}.
 	 * @param <T>
 	 * @return never {@literal null}.

@@ -761,7 +761,6 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
 	 * @param collection the explicit name of the actual {@link MongoCollection}. Must not be {@literal null}.
 	 * @param resultClass the result type. Must not be {@literal null}.
-	 * @param <T>
 	 * @return never {@literal null}.
 	 * @since 2.1
 	 */

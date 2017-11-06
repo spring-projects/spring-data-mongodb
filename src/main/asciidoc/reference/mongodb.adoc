@@ -1106,7 +1106,7 @@ template.query(Person.class)  <1>
 <3> Retrieve all distinct values as `List` of `Object` due to no explicit result type specification.
 ====
 
-Retrieving distinct values into a `Collection` of `Object.class` is the most flexible way as it will try to determine the property value of the domain type converting results to the desired type or mapping `Document` structures.
+Retrieving distinct values into a `Collection` of `Object` is the most flexible way as it will try to determine the property value of the domain type converting results to the desired type or mapping `Document` structures.
 
 Sometimes, when all values of the desired field are fixed to a certain type, it is more convenient to directly obtain a correctly typed `Collection`
 
