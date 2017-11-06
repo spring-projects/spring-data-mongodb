@@ -1090,8 +1090,9 @@ The query methods need to specify the target type T that will be returned and th
 [[mongo-template.query.distinct]]
 === Query distinct values
 
-MongoDB allows obtaining distinct field values for a single field. The stored values do not have to have the same data type to be considered, nor is the feature limited to simple types.
-However when retrieving distinct values the actual result type does matter for the sake of conversion.
+MongoDB provides an operation to obtain distinct values for a single field using a query from the resulting documents.
+Resulting values are not required to have the same data type, nor is the feature limited to simple types.
+For retriaval the actual result type does matter for the sake of conversion and typing.
 
 .Retrieving distinct values
 ====
@@ -1100,13 +1101,13 @@ However when retrieving distinct values the actual result type does matter for t
 template.query(Person.class)  <1>
   .distinct("lastname")       <2>
   .all();                     <3>
----
+----
 <1> Query the collection of `Person`.
 <2> Select _distinct_  values of the `lastname` field. The fieldname will be mapped according to the domain types property declaration, taking potential `@Field` annotations into account.
 <3> Retrieve all distinct values as `List` of `Object` due to no explicit result type specification.
 ====
 
-Retrieving distinct values into a `Collection` of `Object.class` is the most flexible way as it will try to determine the property value of the domain type converting results to the desired type or mapping `Document` structures.
+Retrieving distinct values into a `Collection` of `Object` is the most flexible way as it will try to determine the property value of the domain type converting results to the desired type or mapping `Document` structures.
 
 Sometimes, when all values of the desired field are fixed to a certain type, it is more convenient to directly obtain a correctly typed `Collection`
 
@@ -1118,12 +1119,12 @@ template.query(Person.class)  <1>
   .distinct("lastname")       <2>
   .as(String.class)           <3>
   .all();                     <4>
----
+----
 <1> Query the collection of `Person`.
 <2> Select _distinct_  values of the `lastname` field. The fieldname will be mapped according to the domain types property declaration, taking potential `@Field` annotations into account.
 <3> Retrieved values will be converted into the desired target type. In this case `String`. It would also be possible to map the values to a more complex type if the stored field contains a document.
 <4> Retrieve all distinct values as a `List` of `String`. Throws a `DataAccessException` if the type cannot be converted into the desired target type.
-===
+====
 
 [[mongo.geospatial]]
 === GeoSpatial Queries

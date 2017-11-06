@@ -109,7 +109,6 @@ fun <T : Any> ReactiveMongoOperations.dropCollection(entityClass: KClass<T>): Mo
 inline fun <reified T : Any> ReactiveMongoOperations.dropCollection(): Mono<Void> =
 		dropCollection(T::class.java)
 
-
 /**
  * Extension for [ReactiveMongoOperations.findAll] leveraging reified type parameters.
  *
@@ -166,7 +165,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findById(id: Any, collectio
 		if (collectionName != null) findById(id, T::class.java, collectionName) else findById(id, T::class.java)
 
 /**
- * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ * Extension for [ReactiveMongoOperations.findDistinct] leveraging reified type parameters.
  *
  * @author Christoph Strobl
  * @since 2.1
@@ -175,31 +174,33 @@ inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(field: String,
 		findDistinct(field, entityClass.java, T::class.java);
 
 /**
- * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ * Extension for [ReactiveMongoOperations.findDistinct] leveraging reified type parameters.
  *
  * @author Christoph Strobl
  * @since 2.1
  */
 inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(query: Query, field: String, entityClass: KClass<*>): Flux<T> =
-		findDistinct(query, field, entityClass.java, T::class.java);
+		findDistinct(query, field, entityClass.java, T::class.java)
 
 /**
- * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ * Extension for [ReactiveMongoOperations.findDistinct] leveraging reified type parameters.
  *
  * @author Christoph Strobl
  * @since 2.1
  */
-inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(query: Query, field: String, collectionName: String?, entityClass: KClass<*>): Flux<T> =
-		findDistinct(query, field, collectionName, entityClass.java, T::class.java);
+inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(query: Query, field: String, collectionName: String, entityClass: KClass<*>): Flux<T> =
+		findDistinct(query, field, collectionName, entityClass.java, T::class.java)
 
 /**
- * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ * Extension for [ReactiveMongoOperations.findDistinct] leveraging reified type parameters.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
-inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(query: Query, field: String, collectionName: String?): Flux<T> =
-		findDistinct(query, field, collectionName, T::class.java);
+inline fun <reified T : Any, reified E : Any> ReactiveMongoOperations.findDistinct(query: Query, field: String, collectionName: String? = null): Flux<T> =
+		if (collectionName != null) findDistinct(query, field, collectionName, E::class.java, T::class.java)
+		else findDistinct(query, field, E::class.java, T::class.java)
 
 /**
  * Extension for [ReactiveMongoOperations.geoNear] leveraging reified type parameters.

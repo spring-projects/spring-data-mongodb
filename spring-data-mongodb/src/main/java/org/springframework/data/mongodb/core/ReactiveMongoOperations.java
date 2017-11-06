@@ -379,7 +379,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
-	 * returns the results in a {@link List}.
+	 * returns the results in a {@link Flux}.
 	 *
 	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
 	 * @param entityClass the domain type used for determining the actual {@link MongoCollection}. Must not be
@@ -394,7 +394,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
-	 * returns the results in a {@link List}.
+	 * returns the results in a {@link Flux}.
 	 *
 	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
 	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
@@ -408,7 +408,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
-	 * returns the results in a {@link List}.
+	 * returns the results in a {@link Flux}.
 	 *
 	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
 	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
@@ -423,14 +423,13 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
-	 * returns the results in a {@link List}.
+	 * returns the results in a {@link Flux}.
 	 *
 	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
 	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
 	 * @param collection the explicit name of the actual {@link MongoCollection}. Must not be {@literal null}.
 	 * @param resultClass the result type. Must not be {@literal null}.
-	 * @param <T>
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.1
 	 */
 	default <T> Flux<T> findDistinct(Query query, String field, String collection, Class<T> resultClass) {

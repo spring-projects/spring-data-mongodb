@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -209,12 +209,13 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.FindDistinct#distinct(java.lang.String)
 		 */
+		@SuppressWarnings("unchecked")
 		@Override
 		public TerminatingDistinct<Object> distinct(String field) {
 
 			Assert.notNull(field, "Field must not be null!");
 
-			return new DistinctOperationSupport<>(this, field);
+			return new DistinctOperationSupport(this, field);
 		}
 
 		private List<T> doFind(@Nullable CursorPreparer preparer) {
@@ -287,9 +288,9 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	static class DistinctOperationSupport<T> implements TerminatingDistinct<T> {
 
 		private final String field;
-		private final ExecutableFindSupport delegate;
+		private final ExecutableFindSupport<T> delegate;
 
-		public DistinctOperationSupport(ExecutableFindSupport delegate, String field) {
+		public DistinctOperationSupport(ExecutableFindSupport<T> delegate, String field) {
 
 			this.delegate = delegate;
 			this.field = field;
@@ -300,11 +301,12 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.DistinctWithProjection#as(java.lang.Class)
 		 */
 		@Override
+		@SuppressWarnings("unchecked")
 		public <R> TerminatingDistinct<R> as(Class<R> resultType) {
 
 			Assert.notNull(resultType, "ResultType must not be null!");
 
-			return new DistinctOperationSupport((ExecutableFindSupport) delegate.as(resultType), field);
+			return new DistinctOperationSupport<>((ExecutableFindSupport) delegate.as(resultType), field);
 		}
 
 		/*
@@ -316,7 +318,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 			Assert.notNull(query, "Query must not be null!");
 
-			return new DistinctOperationSupport((ExecutableFindSupport) delegate.matching(query), field);
+			return new DistinctOperationSupport<>((ExecutableFindSupport<T>) delegate.matching(query), field);
 		}
 
 		/*

@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.query.Update
 /**
  * @author Sebastien Deleuze
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner::class)
 class MongoOperationsExtensionsTests {
@@ -705,11 +706,29 @@ class MongoOperationsExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1761
+	fun `findDistinctImplicit(Query, String) should call java counterpart`() {
+
+		val query = mock<Query>()
+
+		operations.findDistinct<String, First>(query, "field")
+		verify(operations).findDistinct(query, "field", First::class.java, String::class.java)
+	}
+
+	@Test // DATAMONGO-1761
 	fun `findDistinct(Query, String, String) should call java counterpart`() {
 
 		val query = mock<Query>()
 
-		operations.findDistinct<String>(query, "field", "collection")
-		verify(operations).findDistinct(query, "field", "collection", String::class.java)
+		operations.findDistinct<String, First>(query, "field", "collection")
+		verify(operations).findDistinct(query, "field", "collection", First::class.java, String::class.java)
+	}
+	
+	@Test // DATAMONGO-1761
+	fun `findDistinct(Query, String,  KClass) should call java counterpart`() {
+
+		val query = mock<Query>()
+
+		operations.findDistinct<String>(query, "field", First::class)
+		verify(operations).findDistinct(query, "field", First::class.java, String::class.java)
 	}
 }
