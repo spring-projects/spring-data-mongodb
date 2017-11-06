@@ -31,6 +31,8 @@ cache:
   directories:
     - $HOME/.m2
 
-install: true
+install:
+  - |-
+    mongo admin --eval  "db.adminCommand({setFeatureCompatibilityVersion: '3.4'});"
 
 script: "mvn clean dependency:list test -P${PROFILE} -Dsort"
