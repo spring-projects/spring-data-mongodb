@@ -414,7 +414,6 @@ inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: U
 		if (collectionName != null) updateFirst(query, update, T::class.java, collectionName)
 		else updateFirst(query, update, T::class.java)
 
-
 /**
  * Extension for [MongoOperations.updateMulti] providing a [KClass] based variant.
  *
