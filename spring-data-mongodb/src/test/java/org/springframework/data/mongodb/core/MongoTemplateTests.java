@@ -15,6 +15,17 @@
  */
 package org.springframework.data.mongodb.core;
 
+import com.mongodb.DBRef;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.result.UpdateResult;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.Matchers.*;
@@ -99,16 +110,50 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.DBRef;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.ListIndexesIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.result.UpdateResult;
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeThat;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.core.query.Update.update;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -122,6 +167,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Laszlo Csontos
+ * @author duozhilin
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -747,6 +793,39 @@ public class MongoTemplateTests {
 		assertThat(found1, notNullValue());
 		assertThat(found2, notNullValue());
 		assertThat(notFound, nullValue());
+	}
+
+	@Test
+	public void testDistinct() {
+		Address address1 = new Address();
+		address1.state = "PA";
+		address1.city = "Philadelphia";
+
+		Address address2 = new Address();
+		address2.state = "PA";
+		address2.city = " New York";
+
+		MyPerson person1 = new MyPerson();
+		person1.name = "Ben";
+		person1.address = address1;
+
+		MyPerson person2 = new MyPerson();
+		person2.name = "Eric";
+		person2.address = address2;
+
+		template.save(person1);
+		template.save(person2);
+
+		List<String> nameList = template.distinct("name", MyPerson.class, String.class);
+		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
+
+		Query query = new BasicQuery("{'address.state' : 'PA'}");
+		nameList = template.distinct(query, "name", MyPerson.class, String.class);
+		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
+
+		String collectionName = template.determineCollectionName(MyPerson.class);
+		nameList = template.distinct(query, "name", collectionName, String.class);
+		assertTrue(nameList.containsAll(Arrays.asList(person1.getName(), person2.getName())));
 	}
 
 	@Test
