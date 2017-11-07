@@ -129,7 +129,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(db.runCommand(Mockito.any(), Mockito.any(Class.class))).thenReturn(commandResultDocument);
 		when(collection.find(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 		when(collection.mapReduce(Mockito.any(), Mockito.any())).thenReturn(mapReduceIterable);
-		when(collection.count(any(), any())).thenReturn(1L);
+		when(collection.count(any(Bson.class), any(CountOptions.class))).thenReturn(1L);
 		when(findIterable.projection(Mockito.any())).thenReturn(findIterable);
 		when(findIterable.sort(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.modifiers(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
