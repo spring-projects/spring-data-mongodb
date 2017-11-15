@@ -126,6 +126,7 @@ public class AggregationTests {
 	}
 
 	private void cleanDb() {
+
 		mongoTemplate.dropCollection(INPUT_COLLECTION);
 		mongoTemplate.dropCollection(Product.class);
 		mongoTemplate.dropCollection(UserWithLikes.class);
@@ -143,6 +144,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(Sales2.class);
 		mongoTemplate.dropCollection(Employee.class);
 		mongoTemplate.dropCollection(Art.class);
+		mongoTemplate.dropCollection("personQueryTemp");
 	}
 
 	/**
@@ -1357,6 +1359,7 @@ public class AggregationTests {
 		Document rawResult = result.getRawResults();
 
 		assertThat(rawResult, is(notNullValue()));
+
 		assertThat(rawResult.containsKey("stages"), is(true));
 	}
 
@@ -1565,7 +1568,7 @@ public class AggregationTests {
 		assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
 	}
 
-	@Test // DATAMONGO-1418
+	@Test // DATAMONGO-1418, DATAMONGO-1824
 	public void shouldCreateOutputCollection() {
 
 		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
@@ -1579,7 +1582,8 @@ public class AggregationTests {
 				out(tempOutCollection));
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, Document.class);
-		assertThat(results.getMappedResults(), is(empty()));
+
+		assertThat(results.getMappedResults(), hasSize(2));
 
 		List<Document> list = mongoTemplate.findAll(Document.class, tempOutCollection);
 

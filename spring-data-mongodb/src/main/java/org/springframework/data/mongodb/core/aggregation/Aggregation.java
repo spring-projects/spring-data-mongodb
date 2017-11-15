@@ -178,6 +178,16 @@ public class Aggregation {
 	}
 
 	/**
+	 * Get the {@link AggregationOptions}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.0.2
+	 */
+	public AggregationOptions getOptions() {
+		return options;
+	}
+
+	/**
 	 * A pointer to the previous {@link AggregationOperation}.
 	 *
 	 * @return

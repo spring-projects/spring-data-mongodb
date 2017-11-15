@@ -15,9 +15,11 @@
  */
 package org.springframework.data.mongodb.test.util;
 
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.junit.AssumptionViolatedException;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.internal.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -39,72 +41,147 @@ import com.mongodb.MongoClient;
  */
 public class MongoVersionRule implements TestRule {
 
-	private String host = "localhost";
-	private int port = 27017;
+	private static final Version ANY = new Version(9999, 9999, 9999);
+	private static final Version DEFAULT_HIGH = ANY;
+	private static final Version DEFAULT_LOW = new Version(0, 0, 0);
 
+	private final AtomicReference<Version> currentVersion = new AtomicReference<>(null);
 	private final Version minVersion;
 	private final Version maxVersion;
 
-	private Version currentVersion;
+	private String host = "localhost";
+	private int port = 27017;
 
 	public MongoVersionRule(Version min, Version max) {
+
 		this.minVersion = min;
 		this.maxVersion = max;
 	}
 
 	public static MongoVersionRule any() {
-		return new MongoVersionRule(new Version(0, 0, 0), new Version(9999, 9999, 9999));
+		return new MongoVersionRule(ANY, ANY);
 	}
 
 	public static MongoVersionRule atLeast(Version minVersion) {
-		return new MongoVersionRule(minVersion, new Version(9999, 9999, 9999));
+		return new MongoVersionRule(minVersion, DEFAULT_HIGH);
 	}
 
 	public static MongoVersionRule atMost(Version maxVersion) {
-		return new MongoVersionRule(new Version(0, 0, 0), maxVersion);
+		return new MongoVersionRule(DEFAULT_LOW, maxVersion);
 	}
 
 	public MongoVersionRule withServerRunningAt(String host, int port) {
+
 		this.host = host;
 		this.port = port;
 
 		return this;
 	}
 
+	/**
+	 * @see Version#isGreaterThan(Version)
+	 */
+	public boolean isGreaterThan(Version version) {
+		return getCurrentVersion().isGreaterThan(version);
+	}
+
+	/**
+	 * @see Version#isGreaterThanOrEqualTo(Version)
+	 */
+	public boolean isGreaterThanOrEqualTo(Version version) {
+		return getCurrentVersion().isGreaterThanOrEqualTo(version);
+	}
+
+	/**
+	 * @see Version#is(Version)
+	 */
+	public boolean is(Version version) {
+		return getCurrentVersion().equals(version);
+	}
+
+	/**
+	 * @see Version#isLessThan(Version)
+	 */
+	public boolean isLessThan(Version version) {
+		return getCurrentVersion().isLessThan(version);
+	}
+
+	/**
+	 * @see Version#isLessThanOrEqualTo(Version)
+	 */
+	public boolean isLessThanOrEqualTo(Version version) {
+		return getCurrentVersion().isGreaterThanOrEqualTo(version);
+	}
+
 	@Override
 	public Statement apply(final Statement base, Description description) {
 
-		initCurrentVersion();
 		return new Statement() {
 
 			@Override
 			public void evaluate() throws Throwable {
-				if (currentVersion != null) {
-					if (currentVersion.isLessThan(minVersion) || currentVersion.isGreaterThan(maxVersion)) {
-						throw new AssumptionViolatedException(
-								String.format("Expected mongodb server to be in range %s to %s but found %s", minVersion, maxVersion,
-										currentVersion));
+
+				if (!getCurrentVersion().equals(ANY)) {
+
+					Version minVersion = MongoVersionRule.this.minVersion.equals(ANY) ? DEFAULT_LOW
+							: MongoVersionRule.this.minVersion;
+					Version maxVersion = MongoVersionRule.this.maxVersion.equals(ANY) ? DEFAULT_HIGH
+							: MongoVersionRule.this.maxVersion;
+
+					if (MongoVersionRule.this.minVersion.equals(ANY) && MongoVersionRule.this.maxVersion.equals(ANY)) {
+
+						MongoVersion version = description.getAnnotation(MongoVersion.class);
+						if (version != null) {
+							minVersion = Version.parse(version.asOf());
+							maxVersion = Version.parse(version.until());
+						}
 					}
+
+					validateVersion(minVersion, maxVersion);
 				}
+
 				base.evaluate();
 			}
 		};
 	}
 
-	private void initCurrentVersion() {
+	private void validateVersion(Version min, Version max) {
 
-		if (currentVersion == null) {
-			try {
-				MongoClient client;
-				client = new MongoClient(host, port);
-				DB db = client.getDB("test");
-				CommandResult result = db.command(new BasicDBObject().append("buildInfo", 1));
-				this.currentVersion = Version.parse(result.get("version").toString());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		if (getCurrentVersion().isLessThan(min) || getCurrentVersion().isGreaterThanOrEqualTo(max)) {
+
+			throw new AssumptionViolatedException(
+					String.format("Expected MongoDB server to be in range (%s, %s] but found %s", min, max, currentVersion));
 		}
 
 	}
 
+	private Version getCurrentVersion() {
+
+		if (currentVersion.get() == null) {
+			currentVersion.compareAndSet(null, fetchCurrentVersion());
+		}
+
+		return currentVersion.get();
+	}
+
+	private Version fetchCurrentVersion() {
+
+		try {
+
+			MongoClient client;
+			client = new MongoClient(host, port);
+			DB db = client.getDB("test");
+			CommandResult result = db.command(new BasicDBObject().append("buildInfo", 1));
+			client.close();
+
+			return Version.parse(result.get("version").toString());
+		} catch (Exception e) {
+			return ANY;
+		}
+	}
+
+	@Override
+	public String toString() {
+		return getCurrentVersion().toString();
+	}
 }
