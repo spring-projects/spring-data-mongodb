@@ -24,20 +24,10 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -141,6 +131,7 @@ import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
@@ -579,7 +570,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#getCollection(java.lang.String)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#getCollection(java.lang.String)
 	 */
 	public MongoCollection<Document> getCollection(final String collectionName) {
 
@@ -1934,42 +1925,45 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(outputType, "Output type must not be null!");
 
 		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-		Document command = aggregation.toDocument(collectionName, rootContext);
+
+		return doAggregate(aggregation, collectionName, outputType, rootContext);
+	}
+
+	protected <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
+			AggregationOperationContext context) {
+
+		Document command = aggregation.toDocument(collectionName, context);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
 		}
 
-		Document commandResult = executeCommand(command, this.readPreference);
+		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 
-		return new AggregationResults<O>(returnPotentiallyMappedResults(outputType, commandResult, collectionName),
-				commandResult);
-	}
+		if (aggregation.getOptions().isExplain()) {
 
-	/**
-	 * Returns the potentially mapped results of the given {@code commandResult}.
-	 *
-	 * @param outputType
-	 * @param commandResult
-	 * @return
-	 */
-	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, Document commandResult,
-			String collectionName) {
-
-		@SuppressWarnings("unchecked")
-		Iterable<Document> resultSet = (Iterable<Document>) commandResult.get("result");
-		if (resultSet == null) {
-			return Collections.emptyList();
+			Document commandResult = executeCommand(command);
+			return new AggregationResults<>(commandResult.get("results", new ArrayList<Document>(0)).stream()
+					.map(callback::doWith).collect(Collectors.toList()), commandResult);
 		}
 
-		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<O>(mongoConverter, outputType, collectionName);
+		return execute(collectionName, collection -> {
 
-		List<O> mappedResults = new ArrayList<O>();
-		for (Document document : resultSet) {
-			mappedResults.add(callback.doWith(document));
-		}
+			List<Document> rawResult = new ArrayList<>();
 
-		return mappedResults;
+			MongoIterable<O> iterable = collection //
+					.aggregate(command.get("pipeline", new ArrayList<Document>(0)), Document.class) //
+					.collation(aggregation.getOptions().getCollation().map(Collation::toMongoCollation).orElse(null)).map(val -> {
+
+						rawResult.add(val);
+						return callback.doWith(val);
+					});
+
+			return new AggregationResults<>(iterable.into(new ArrayList<>()),
+					new Document("results", rawResult).append("ok", 1.0D));
+
+		});
+
 	}
 
 	protected <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName,

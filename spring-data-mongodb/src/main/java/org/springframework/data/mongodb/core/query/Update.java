@@ -188,7 +188,8 @@ public class Update {
 
 	/**
 	 * Update using the {@code $pushAll} update modifier. <br>
-	 * <b>Note</b>: In mongodb 2.4 the usage of {@code $pushAll} has been deprecated in favor of {@code $push $each}.
+	 * <b>Note</b>: In MongoDB 2.4 the usage of {@code $pushAll} has been deprecated in favor of {@code $push $each}.
+	 * <b>Important:</b> As of MongoDB 3.6 {@code $pushAll} is not longer supported. Use {@code $push $each} instead.
 	 * {@link #push(String)}) returns a builder that can be used to populate the {@code $each} object.
 	 *
 	 * @param key
@@ -196,7 +197,9 @@ public class Update {
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pushAll/">MongoDB Update operator:
 	 *      $pushAll</a>
+	 * @deprecated as of MongoDB 2.4. Removed in MongoDB 3.6. Use {@link #push(String) $push $each} instead.
 	 */
+	@Deprecated
 	public Update pushAll(String key, Object[] values) {
 		addMultiFieldOperation("$pushAll", key, Arrays.asList(values));
 		return this;
