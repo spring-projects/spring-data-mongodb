@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -35,9 +34,10 @@ import com.mongodb.client.MongoCollection;
 
 /**
  * Integration test for {@link MongoTemplate}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Risberg
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:template-mapping.xml")
@@ -55,19 +55,17 @@ public class MongoTemplateMappingTests {
 	}
 
 	@Test
-	public void insertsEntityCorrectly1() throws Exception {
+	public void insertsEntityCorrectly1() {
 
 		addAndRetrievePerson(template1);
 		checkPersonPersisted(template1);
-
 	}
 
 	@Test
-	public void insertsEntityCorrectly2() throws Exception {
+	public void insertsEntityCorrectly2() {
 
 		addAndRetrievePerson(template2);
 		checkPersonPersisted(template2);
-
 	}
 
 	private void addAndRetrievePerson(MongoTemplate template) {
@@ -76,15 +74,15 @@ public class MongoTemplateMappingTests {
 		template.insert(person);
 
 		Person result = template.findById(person.getId(), Person.class);
-		assertThat(result.getFirstName(), is("Oliver"));
-		assertThat(result.getAge(), is(25));
+		assertThat(result.getFirstName()).isEqualTo("Oliver");
+		assertThat(result.getAge()).isEqualTo(25);
 	}
 
 	private void checkPersonPersisted(MongoTemplate template) {
 		template.execute(Person.class, new CollectionCallback<Object>() {
 			public Object doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 				Document document = collection.find(new Document()).first();
-				assertThat((String) document.get("name"), is("Oliver"));
+				assertThat((String) document.get("name")).isEqualTo("Oliver");
 				return null;
 			}
 		});
