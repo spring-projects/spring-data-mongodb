@@ -1410,7 +1410,7 @@ List<Person> results = template.find(query, Person.class);
 ----
 Collation collation = Collation.of("de");
 
-AggregationOptions options = new AggregationOptions.Builder().collation(collation).build();
+AggregationOptions options = AggregationOptions.builder().collation(collation).build();
 
 Aggregation aggregation = newAggregation(
   project("tags"),

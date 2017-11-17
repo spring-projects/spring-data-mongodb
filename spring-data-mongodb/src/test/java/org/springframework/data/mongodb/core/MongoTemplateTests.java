@@ -33,18 +33,7 @@ import lombok.NoArgsConstructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
@@ -90,6 +79,8 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.MongoVersion;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
@@ -127,19 +118,14 @@ import com.mongodb.client.result.UpdateResult;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
 
-	private static final org.springframework.data.util.Version TWO_DOT_FOUR = org.springframework.data.util.Version
-			.parse("2.4");
-	private static final org.springframework.data.util.Version THREE_DOT_FOUR = org.springframework.data.util.Version
-			.parse("3.4");
-
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
 
 	ConfigurableApplicationContext context;
 	MongoTemplate mappingTemplate;
-	org.springframework.data.util.Version mongoVersion;
 
 	@Rule public ExpectedException thrown = ExpectedException.none();
+	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
 
 	@Autowired
 	public void setApplicationContext(ConfigurableApplicationContext context) {
@@ -177,7 +163,6 @@ public class MongoTemplateTests {
 	public void setUp() {
 
 		cleanDb();
-		queryMongoVersionIfNecessary();
 
 		this.mappingTemplate.setApplicationContext(context);
 	}
@@ -185,14 +170,6 @@ public class MongoTemplateTests {
 	@After
 	public void cleanUp() {
 		cleanDb();
-	}
-
-	private void queryMongoVersionIfNecessary() {
-
-		if (mongoVersion == null) {
-			org.bson.Document result = template.executeCommand("{ buildInfo: 1 }");
-			mongoVersion = org.springframework.data.util.Version.parse(result.get("version").toString());
-		}
 	}
 
 	protected void cleanDb() {
@@ -2349,9 +2326,8 @@ public class MongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-812
+	@MongoVersion(asOf = "2.4")
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithComplexTypes() {
-
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
 
 		DocumentWithCollection document = new DocumentWithCollection(Collections.<Model> emptyList());
 		template.save(document);
@@ -2365,9 +2341,8 @@ public class MongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-812
+	@MongoVersion(asOf = "2.4")
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithSimpleTypes() {
-
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
 
 		DocumentWithCollectionOfSimpleType document = new DocumentWithCollectionOfSimpleType();
 		document.values = Arrays.asList("spring");
@@ -2391,7 +2366,9 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(q, VersionedPerson.class), nullValue());
 	}
 
-	@Test // DATAMONGO-354
+	@Test // DATAMONGO-354, DATAMONGO-1824
+	@MongoVersion(until = "3.6")
+	@SuppressWarnings("deprecation")
 	public void testUpdateShouldAllowMultiplePushAll() {
 
 		DocumentWithMultipleCollections doc = new DocumentWithMultipleCollections();
@@ -3230,14 +3207,11 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query, DocumentWithCollection.class), is(equalTo(dwc)));
 	}
 
-	/**
-	 * @see DATAMONGO-1517
-	 */
-	@Test
+	@Test // DATAMONGO-1517
+	@MongoVersion(asOf = "3.4")
 	public void decimal128TypeShouldBeSavedAndLoadedCorrectly()
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR), is(true));
 		assumeThat(MongoClientVersion.isMongo34Driver(), is(true));
 
 		Class<?> decimal128Type = ClassUtils.resolveClassName("org.bson.types.Decimal128", null);

@@ -178,6 +178,16 @@ public class Aggregation {
 	}
 
 	/**
+	 * Get the {@link AggregationOptions}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	public AggregationOptions getOptions() {
+		return options;
+	}
+
+	/**
 	 * A pointer to the previous {@link AggregationOperation}.
 	 *
 	 * @return
@@ -575,21 +585,31 @@ public class Aggregation {
 	}
 
 	/**
-	 * Converts this {@link Aggregation} specification to a {@link Document}.
+	 * Renders this {@link Aggregation} specification to an aggregation pipeline returning a {@link List} of
+	 * {@link Document}.
 	 *
-	 * @param inputCollectionName the name of the input collection
-	 * @return the {@code Document} representing this aggregation
+	 * @return the aggregation pipeline representing this aggregation.
+	 * @since 2.1
+	 */
+	public List<Document> toPipeline(AggregationOperationContext rootContext) {
+		return AggregationOperationRenderer.toDocument(operations, rootContext);
+	}
+
+	/**
+	 * Converts this {@link Aggregation} specification to a {@link Document}.
+	 * <p/>
+	 * MongoDB requires as of 3.6 cursor-based aggregation. Use {@link #toPipeline(AggregationOperationContext)} to render
+	 * an aggregation pipeline.
+	 *
+	 * @param inputCollectionName the name of the input collection.
+	 * @return the {@code Document} representing this aggregation.
 	 */
 	public Document toDocument(String inputCollectionName, AggregationOperationContext rootContext) {
 
-		List<Document> operationDocuments = AggregationOperationRenderer.toDocument(operations, rootContext);
-
 		Document command = new Document("aggregate", inputCollectionName);
-		command.put("pipeline", operationDocuments);
+		command.put("pipeline", toPipeline(rootContext));
 
-		command = options.applyAndReturnPotentiallyChangedCommand(command);
-
-		return command;
+		return options.applyAndReturnPotentiallyChangedCommand(command);
 	}
 
 	/*
