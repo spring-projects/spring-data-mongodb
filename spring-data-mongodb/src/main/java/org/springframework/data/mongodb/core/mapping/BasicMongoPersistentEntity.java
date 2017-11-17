@@ -150,7 +150,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	public void verify() {
 
 		super.verify();
-
 		verifyFieldUniqueness();
 		verifyFieldTypes();
 	}
