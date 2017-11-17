@@ -58,7 +58,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -71,6 +70,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -81,6 +81,7 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
@@ -111,6 +112,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Mock MongoCollection<Document> collection;
 	@Mock MongoCursor<Document> cursor;
 	@Mock FindIterable<Document> findIterable;
+	@Mock AggregateIterable aggregateIterable;
 	@Mock MapReduceIterable mapReduceIterable;
 
 	Document commandResultDocument = new Document();
@@ -130,6 +132,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.find(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 		when(collection.mapReduce(Mockito.any(), Mockito.any())).thenReturn(mapReduceIterable);
 		when(collection.count(any(Bson.class), any(CountOptions.class))).thenReturn(1L);
+		when(collection.aggregate(any(), any())).thenReturn(aggregateIterable);
+		when(collection.withReadPreference(any())).thenReturn(collection);
 		when(findIterable.projection(Mockito.any())).thenReturn(findIterable);
 		when(findIterable.sort(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.modifiers(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
@@ -139,6 +143,11 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(mapReduceIterable.sort(Mockito.any())).thenReturn(mapReduceIterable);
 		when(mapReduceIterable.iterator()).thenReturn(cursor);
 		when(mapReduceIterable.filter(any())).thenReturn(mapReduceIterable);
+		when(aggregateIterable.collation(any())).thenReturn(aggregateIterable);
+		when(aggregateIterable.allowDiskUse(any())).thenReturn(aggregateIterable);
+		when(aggregateIterable.batchSize(anyInt())).thenReturn(aggregateIterable);
+		when(aggregateIterable.map(any())).thenReturn(aggregateIterable);
+		when(aggregateIterable.into(any())).thenReturn(Collections.emptyList());
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
@@ -361,28 +370,22 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(captor.getValue(), equalTo(new org.bson.Document("foo", 1)));
 	}
 
-	@Test // DATAMONGO-1166
+	@Test // DATAMONGO-1166, DATAMONGO-1824
 	public void aggregateShouldHonorReadPreferenceWhenSet() {
 
-		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class), eq(Document.class)))
-				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
 
 		template.aggregate(newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
 
-		verify(this.db, times(1)).runCommand(Mockito.any(org.bson.Document.class), eq(ReadPreference.secondary()),
-				eq(Document.class));
+		verify(collection).withReadPreference(eq(ReadPreference.secondary()));
 	}
 
-	@Test // DATAMONGO-1166
+	@Test // DATAMONGO-1166, DATAMONGO-1824
 	public void aggregateShouldIgnoreReadPreferenceWhenNotSet() {
-
-		when(db.runCommand(Mockito.any(org.bson.Document.class), eq(org.bson.Document.class)))
-				.thenReturn(mock(Document.class));
 
 		template.aggregate(newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
 
-		verify(this.db, times(1)).runCommand(Mockito.any(org.bson.Document.class), eq(org.bson.Document.class));
+		verify(collection, never()).withReadPreference(any());
 	}
 
 	@Test // DATAMONGO-1166
@@ -483,7 +486,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(output.filter(any())).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
-
 
 		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
 
@@ -754,17 +756,24 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
 
-	@Test // DATAMONGO-1518
+	@Test // DATAMONGO-1518, DATAMONGO-1824
 	public void aggregateShouldUseCollationWhenPresent() {
 
 		Aggregation aggregation = newAggregation(project("id"))
 				.withOptions(newAggregationOptions().collation(Collation.of("fr")).build());
 		template.aggregate(aggregation, AutogenerateableId.class, Document.class);
 
-		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
+		verify(aggregateIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
 
-		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
+	@Test // DATAMONGO-1824
+	public void aggregateShouldUseBatchSizeWhenPresent() {
+
+		Aggregation aggregation = newAggregation(project("id"))
+				.withOptions(newAggregationOptions().collation(Collation.of("fr")).cursorBatchSize(100).build());
+		template.aggregate(aggregation, AutogenerateableId.class, Document.class);
+
+		verify(aggregateIterable).batchSize(100);
 	}
 
 	@Test // DATAMONGO-1518
