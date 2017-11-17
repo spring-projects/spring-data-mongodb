@@ -1337,7 +1337,6 @@ public class AggregationTests {
 		Document rawResult = result.getRawResults();
 
 		assertThat(rawResult, is(notNullValue()));
-
 		assertThat(rawResult.containsKey("stages"), is(true));
 	}
 
@@ -1357,7 +1356,7 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Person.class, Document.class);
 
 		assertThat(result.getMappedResults(), hasSize(3));
-		Document o = (Document) result.getMappedResults().get(2);
+		Document o = result.getMappedResults().get(2);
 
 		assertThat(o.get("_id"), is((Object) 25));
 		assertThat((List<?>) o.get("users"), hasSize(2));

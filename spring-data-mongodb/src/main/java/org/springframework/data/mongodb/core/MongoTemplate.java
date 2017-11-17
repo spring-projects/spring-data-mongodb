@@ -1929,86 +1929,89 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doAggregate(aggregation, collectionName, outputType, rootContext);
 	}
 
+	@SuppressWarnings("ConstantConditions")
 	protected <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
 			AggregationOperationContext context) {
 
-		Document command = aggregation.toDocument(collectionName, context);
-
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
-		}
-
 		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 
-		if (aggregation.getOptions().isExplain()) {
+		AggregationOptions options = aggregation.getOptions();
+		if (options.isExplain()) {
+
+			Document command = aggregation.toDocument(collectionName, context);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
+			}
 
 			Document commandResult = executeCommand(command);
 			return new AggregationResults<>(commandResult.get("results", new ArrayList<Document>(0)).stream()
 					.map(callback::doWith).collect(Collectors.toList()), commandResult);
 		}
 
+		List<Document> pipeline = aggregation.toPipeline(context);
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Executing aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
+		}
+
 		return execute(collectionName, collection -> {
 
 			List<Document> rawResult = new ArrayList<>();
 
-			MongoIterable<O> iterable = collection //
-					.aggregate(command.get("pipeline", new ArrayList<Document>(0)), Document.class) //
-					.collation(aggregation.getOptions().getCollation().map(Collation::toMongoCollation).orElse(null)).map(val -> {
+			AggregateIterable<Document> aggregateIterable = collection.aggregate(pipeline, Document.class) //
+					.collation(options.getCollation().map(Collation::toMongoCollation).orElse(null)) //
+					.allowDiskUse(options.isAllowDiskUse());
 
-						rawResult.add(val);
-						return callback.doWith(val);
-					});
+			if (options.getCursorBatchSize() != null) {
+				aggregateIterable = aggregateIterable.batchSize(options.getCursorBatchSize());
+			}
+
+			MongoIterable<O> iterable = aggregateIterable.map(val -> {
+
+				rawResult.add(val);
+				return callback.doWith(val);
+			});
 
 			return new AggregationResults<>(iterable.into(new ArrayList<>()),
 					new Document("results", rawResult).append("ok", 1.0D));
-
 		});
-
 	}
 
+	@SuppressWarnings("ConstantConditions")
 	protected <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName,
 			Class<O> outputType, @Nullable AggregationOperationContext context) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
+		Assert.isTrue(!aggregation.getOptions().isExplain(), "Can't use explain option with streaming!");
 
 		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-
-		Document command = aggregation.toDocument(collectionName, rootContext);
-
-		assertNotExplain(command);
+		AggregationOptions options = aggregation.getOptions();
+		List<Document> pipeline = aggregation.toPipeline(rootContext);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Streaming aggregation: {}", serializeToJsonSafely(command));
+			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
 		}
 
-		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<O>(mongoConverter, outputType, collectionName);
+		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 
-		return execute(collectionName, new CollectionCallback<CloseableIterator<O>>() {
+		return execute(collectionName, (CollectionCallback<CloseableIterator<O>>) collection -> {
 
-			@Override
-			public CloseableIterator<O> doInCollection(MongoCollection<Document> collection)
-					throws MongoException, DataAccessException {
+			AggregateIterable<Document> cursor = collection.aggregate(pipeline) //
+					.allowDiskUse(options.isAllowDiskUse()) //
+					.useCursor(true);
 
-				List<Document> pipeline = (List<Document>) command.get("pipeline");
-
-				AggregationOptions options = AggregationOptions.fromDocument(command);
-
-				AggregateIterable<Document> cursor = collection.aggregate(pipeline).allowDiskUse(options.isAllowDiskUse())
-						.useCursor(true);
-
-				Integer cursorBatchSize = options.getCursorBatchSize();
-				if (cursorBatchSize != null) {
-					cursor = cursor.batchSize(cursorBatchSize);
-				}
-
-				if (options.getCollation().isPresent()) {
-					cursor = cursor.collation(options.getCollation().map(Collation::toMongoCollation).get());
-				}
-
-				return new CloseableIterableCursorAdapter<O>(cursor.iterator(), exceptionTranslator, readCallback);
+			if (options.getCursorBatchSize() != null) {
+				cursor = cursor.batchSize(options.getCursorBatchSize());
 			}
+
+			if (options.getCollation().isPresent()) {
+				cursor = cursor.collation(options.getCollation().map(Collation::toMongoCollation).get());
+			}
+
+			return new CloseableIterableCursorAdapter<>(cursor.iterator(), exceptionTranslator, readCallback);
 		});
 	}
 
@@ -2055,20 +2058,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <T> ExecutableInsert<T> insert(Class<T> domainType) {
 		return new ExecutableInsertOperationSupport(this).insert(domainType);
-	}
-
-	/**
-	 * Assert that the {@link Document} does not enable Aggregation explain mode.
-	 *
-	 * @param command the command {@link Document}.
-	 */
-	private void assertNotExplain(Document command) {
-
-		Boolean explain = command.get("explain", Boolean.class);
-
-		if (explain != null && explain) {
-			throw new IllegalArgumentException("Can't use explain option with streaming!");
-		}
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {

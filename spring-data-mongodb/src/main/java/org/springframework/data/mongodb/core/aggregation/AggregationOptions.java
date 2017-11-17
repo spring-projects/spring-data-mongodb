@@ -147,6 +147,7 @@ public class AggregationOptions {
 	 * @return the batch size or {@literal null}.
 	 * @since 2.0
 	 */
+	@Nullable
 	public Integer getCursorBatchSize() {
 
 		if (cursor.filter(val -> val.containsKey(BATCH_SIZE)).isPresent()) {
