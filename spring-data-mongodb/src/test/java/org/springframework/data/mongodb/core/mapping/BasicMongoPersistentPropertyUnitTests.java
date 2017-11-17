@@ -15,14 +15,17 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import org.junit.Before;
@@ -186,6 +189,19 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.getFieldName(), is("myField"));
 	}
 
+	@Test // DATAMONGO-1737
+	public void honorsFieldOrderWhenIteratingOverProperties() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		BasicMongoPersistentEntity<?> entity = context.getPersistentEntity(Sample.class);
+
+		List<String> properties = new ArrayList<>();
+
+		entity.doWithProperties((MongoPersistentProperty property) -> properties.add(property.getName()));
+
+		assertThat(properties).containsExactly("first", "second", "third");
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
@@ -211,6 +227,13 @@ public class BasicMongoPersistentPropertyUnitTests {
 		String lastname;
 
 		@org.springframework.data.mongodb.core.mapping.Field(order = -20) String ssn;
+	}
+
+	class Sample {
+
+		@org.springframework.data.mongodb.core.mapping.Field(order = 2) String second;
+		@org.springframework.data.mongodb.core.mapping.Field(order = 3) String third;
+		@org.springframework.data.mongodb.core.mapping.Field(order = 1) String first;
 	}
 
 	enum UppercaseFieldNamingStrategy implements FieldNamingStrategy {
