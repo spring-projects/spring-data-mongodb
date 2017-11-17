@@ -733,19 +733,19 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(outputType, "Output type must not be null!");
 
 		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-		Document command = aggregation.toDocument(collectionName, rootContext);
-		AggregationOptions options = AggregationOptions.fromDocument(command);
+		AggregationOptions options = aggregation.getOptions();
+		List<Document> pipeline = aggregation.toPipeline(rootContext);
 
 		Assert.isTrue(!options.isExplain(), "Cannot use explain option with streaming!");
 		Assert.isNull(options.getCursorBatchSize(), "Cannot use batchSize cursor option with streaming!");
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Streaming aggregation: {}", serializeToJsonSafely(command));
+			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 		return execute(collectionName,
-				collection -> aggregateAndMap(collection, (List<Document>) command.get("pipeline"), options, readCallback));
+				collection -> aggregateAndMap(collection, pipeline, options, readCallback));
 	}
 
 	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline,

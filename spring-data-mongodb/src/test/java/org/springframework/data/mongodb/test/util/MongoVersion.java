@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * be used along with {@link MongoVersionRule}.
  *
  * @author Christoph Strobl
- * @since 2.0.2
+ * @since 2.1
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.test.util;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.bson.Document;
 import org.junit.AssumptionViolatedException;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -26,17 +27,16 @@ import org.junit.runners.model.Statement;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * {@link TestRule} verifying server tests are executed against match a given version. This one can be used as
  * {@link ClassRule} eg. in context depending tests run with {@link SpringJUnit4ClassRunner} when the context would fail
  * to start in case of invalid version, or as simple {@link Rule} on specific tests.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.6
  */
 public class MongoVersionRule implements TestRule {
@@ -170,11 +170,11 @@ public class MongoVersionRule implements TestRule {
 
 			MongoClient client;
 			client = new MongoClient(host, port);
-			DB db = client.getDB("test");
-			CommandResult result = db.command(new BasicDBObject().append("buildInfo", 1));
+			MongoDatabase database = client.getDatabase("test");
+			Document result = database.runCommand(new Document("buildInfo", 1));
 			client.close();
 
-			return Version.parse(result.get("version").toString());
+			return Version.parse(result.get("version", String.class));
 		} catch (Exception e) {
 			return ANY;
 		}
