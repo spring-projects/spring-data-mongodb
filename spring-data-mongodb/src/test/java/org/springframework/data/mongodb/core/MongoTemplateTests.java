@@ -118,11 +118,6 @@ import com.mongodb.client.result.UpdateResult;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
 
-	private static final org.springframework.data.util.Version TWO_DOT_FOUR = org.springframework.data.util.Version
-			.parse("2.4");
-	private static final org.springframework.data.util.Version THREE_DOT_FOUR = org.springframework.data.util.Version
-			.parse("3.4");
-
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
 
@@ -2331,9 +2326,8 @@ public class MongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-812
+	@MongoVersion(asOf = "2.4")
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithComplexTypes() {
-
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
 
 		DocumentWithCollection document = new DocumentWithCollection(Collections.<Model> emptyList());
 		template.save(document);
@@ -2347,9 +2341,8 @@ public class MongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-812
+	@MongoVersion(asOf = "2.4")
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithSimpleTypes() {
-
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
 
 		DocumentWithCollectionOfSimpleType document = new DocumentWithCollectionOfSimpleType();
 		document.values = Arrays.asList("spring");
@@ -3214,14 +3207,11 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query, DocumentWithCollection.class), is(equalTo(dwc)));
 	}
 
-	/**
-	 * @see DATAMONGO-1517
-	 */
-	@Test
+	@Test // DATAMONGO-1517
+	@MongoVersion(asOf = "3.4")
 	public void decimal128TypeShouldBeSavedAndLoadedCorrectly()
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR), is(true));
 		assumeThat(MongoClientVersion.isMongo34Driver(), is(true));
 
 		Class<?> decimal128Type = ClassUtils.resolveClassName("org.bson.types.Decimal128", null);
