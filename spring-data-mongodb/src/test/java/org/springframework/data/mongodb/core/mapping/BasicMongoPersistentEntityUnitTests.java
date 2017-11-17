@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -23,6 +23,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +32,8 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.util.ClassTypeInformation;
 
@@ -223,6 +227,25 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection(), is("custom-collection"));
 	}
 
+	@Test // DATAMONGO-1737
+	public void honorsFieldOrderWhenIteratingOverProperties() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		BasicMongoPersistentEntity<?> entity = context.getPersistentEntity(Sample.class);
+
+		final List<String> properties = new ArrayList<String>();
+
+		entity.doWithProperties(new SimplePropertyHandler() {
+
+			@Override
+			public void doWithPersistentProperty(PersistentProperty<?> property) {
+				properties.add(property.getName());
+			}
+		});
+
+		assertThat(properties, contains("first", "second", "third"));
+	}
+
 	@Document(collection = "contacts")
 	class Contact {}
 
@@ -252,6 +275,13 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	@ComposedDocumentAnnotation
 	static class DocumentWithComposedAnnotation {}
+
+	class Sample {
+
+		@org.springframework.data.mongodb.core.mapping.Field(order = 2) String second;
+		@org.springframework.data.mongodb.core.mapping.Field(order = 3) String third;
+		@org.springframework.data.mongodb.core.mapping.Field(order = 1) String first;
+	}
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.TYPE })
