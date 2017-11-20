@@ -19,9 +19,11 @@ import static org.hamcrest.collection.IsCollectionWithSize.*;
 import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsEqual.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.DocumentTestUtils.assertTypeHint;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+
+import lombok.Data;
 
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -45,8 +47,6 @@ import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
-
-import lombok.Data;
 
 /**
  * Integration test for Mapping Events.
@@ -388,6 +388,24 @@ public class ApplicationContextEventTests {
 				is(equalTo(RELATED_COLLECTION_NAME)));
 		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(2).getCollectionName(),
 				is(equalTo(RELATED_COLLECTION_NAME)));
+	}
+
+	@Test // DATAMONGO-1823
+	public void publishesAfterConvertEventForFindQueriesUsingProjections() {
+
+		PersonPojoStringId entity = new PersonPojoStringId("1", "Text");
+		template.insert(entity);
+
+		template.query(PersonPojoStringId.class).matching(query(where("id").is(entity.getId()))).all();
+
+		assertThat(simpleMappingEventListener.onAfterLoadEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+
+		assertThat(simpleMappingEventListener.onBeforeConvertEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onBeforeConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+
+		assertThat(simpleMappingEventListener.onAfterConvertEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
 	}
 
 	private void comparePersonAndDocument(PersonPojoStringId p, PersonPojoStringId p2, org.bson.Document document) {
