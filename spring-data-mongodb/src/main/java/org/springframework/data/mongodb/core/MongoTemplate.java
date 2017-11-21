@@ -2813,10 +2813,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			Class<?> typeToRead = targetType.isInterface() || targetType.isAssignableFrom(entityType) ? entityType
 					: targetType;
+
+			if (null != object) {
+				maybeEmitEvent(new AfterLoadEvent<T>(object, targetType, collectionName));
+			}
+
 			Object source = reader.read(typeToRead, object);
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
 
-			if (result == null) {
+			if (result != null) {
 				maybeEmitEvent(new AfterConvertEvent<>(object, result, collectionName));
 			}
 
