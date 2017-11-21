@@ -190,12 +190,30 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 [[mongo.reactive.repositories.infinite-streams]]
 == Infinite Streams with Tailable Cursors
 
-By default, MongoDB will automatically close a cursor when the client exhausts all results supplied by the cursor. Closing a cursor on exhaustion turns a stream into a finite stream. For capped collections, you may use a https://docs.mongodb.com/manual/core/tailable-cursors/[Tailable Cursor] that remains open after the client consumes all initially returned data. Using tailable cursors with a reactive data types allows construction of infinite streams. A tailable cursor remains open until it's closed externally. It emits data as new documents arrive in a capped collection.
+By default, MongoDB will automatically close a cursor when the client exhausts all results supplied by the cursor. Closing a cursor on exhaustion turns a stream into a finite stream. For https://docs.mongodb.com/manual/core/capped-collections/[capped collections] you may use a https://docs.mongodb.com/manual/core/tailable-cursors/[Tailable Cursor] that remains open after the client consumes all initially returned data. Using tailable cursors with a reactive data types allows construction of infinite streams. A tailable cursor remains open until it is closed externally. It emits data as new documents arrive in a capped collection.
 
 Tailable cursors may become dead, or invalid, if either the query returns no match or the cursor returns the document at the "end" of the collection and then the application deletes that document.
 
-Spring Data MongoDB Reactive repositories support infinite streams by annotating a query method with `@Tailable`. This works for methods returning `Flux` or other reactive types capable of emitting multiple elements.
 
+.Infinite Stream queries with ReactiveMongoOperations
+====
+[source,java]
+----
+Flux<Person> stream = template.tail(query(where("name").is("Joe")), Person.class);
+
+Disposable subscription = stream.doOnNext(person -> System.out.println(person)).subscribe();
+
+// …
+
+// Later: Dispose the subscription to close the stream
+subscription.dispose();
+----
+====
+
+Spring Data MongoDB Reactive repositories support infinite streams by annotating a query method with `@Tailable`. This works for methods returning `Flux` and other reactive types capable of emitting multiple elements.
+
+.Infinite Stream queries with ReactiveMongoRepository
+====
 [source,java]
 ----
 
@@ -215,3 +233,6 @@ Disposable subscription = stream.doOnNext(System.out::println).subscribe();
 // Later: Dispose the subscription to close the stream
 subscription.dispose();
 ----
+====
+
+TIP: Capped collections can be created via `MongoOperations.createCollection`. Just provide the required `CollectionOptions.empty().capped()...`
