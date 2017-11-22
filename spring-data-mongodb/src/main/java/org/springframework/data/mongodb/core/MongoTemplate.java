@@ -2754,31 +2754,26 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @author Oliver Gierke
 	 * @author Christoph Strobl
 	 */
+	@RequiredArgsConstructor
 	private class ReadDocumentCallback<T> implements DocumentCallback<T> {
 
-		private final EntityReader<? super T, Bson> reader;
-		private final Class<T> type;
+		private final @NonNull EntityReader<? super T, Bson> reader;
+		private final @NonNull Class<T> type;
 		private final String collectionName;
 
-		public ReadDocumentCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
-
-			Assert.notNull(reader, "EntityReader must not be null!");
-			Assert.notNull(type, "Entity type must not be null!");
-
-			this.reader = reader;
-			this.type = type;
-			this.collectionName = collectionName;
-		}
-
 		@Nullable
-		public T doWith(Document object) {
+		public T doWith(@Nullable Document object) {
+
 			if (null != object) {
 				maybeEmitEvent(new AfterLoadEvent<T>(object, type, collectionName));
 			}
+
 			T source = reader.read(type, object);
+
 			if (null != source) {
 				maybeEmitEvent(new AfterConvertEvent<T>(object, source, collectionName));
 			}
+
 			return source;
 		}
 	}
@@ -2821,7 +2816,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Object source = reader.read(typeToRead, object);
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
 
-			if (result != null) {
+			if (null != result) {
 				maybeEmitEvent(new AfterConvertEvent<>(object, result, collectionName));
 			}
 
@@ -2974,7 +2969,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			T doWith = delegate.doWith(content);
 
-			return new GeoResult<T>(doWith, new Distance(distance, metric));
+			return new GeoResult<>(doWith, new Distance(distance, metric));
 		}
 	}
 
