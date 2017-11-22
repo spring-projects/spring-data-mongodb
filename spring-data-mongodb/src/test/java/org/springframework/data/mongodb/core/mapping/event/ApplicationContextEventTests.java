@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011-2017 by the original author(s).
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,25 +15,23 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.hamcrest.collection.IsCollectionWithSize.*;
-import static org.hamcrest.core.Is.*;
-import static org.hamcrest.core.IsEqual.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
 
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -43,17 +41,17 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 
-import com.mongodb.DB;
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Integration test for Mapping Events.
- * 
+ *
  * @author Mark Pollack
  * @author Christoph Strobl
  * @author Jordi Llach
+ * @author Mark Paluch
  */
 public class ApplicationContextEventTests {
 
@@ -64,28 +62,40 @@ public class ApplicationContextEventTests {
 	private final String[] collectionsToDrop = new String[] { COLLECTION_NAME, ROOT_COLLECTION_NAME,
 			RELATED_COLLECTION_NAME };
 
+	private static MongoClient mongo;
 	private ApplicationContext applicationContext;
 	private MongoTemplate template;
-	private SimpleMappingEventListener simpleMappingEventListener;
+	private SimpleMappingEventListener listener;
+
+	@BeforeClass
+	public static void beforeClass() {
+		mongo = new MongoClient();
+	}
+
+	@AfterClass
+	public static void afterClass() {
+		mongo.close();
+	}
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
+
 		cleanDb();
+
 		applicationContext = new AnnotationConfigApplicationContext(ApplicationContextEventTestsAppConfig.class);
 		template = applicationContext.getBean(MongoTemplate.class);
 		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
-		simpleMappingEventListener = applicationContext.getBean(SimpleMappingEventListener.class);
+		listener = applicationContext.getBean(SimpleMappingEventListener.class);
 	}
 
 	@After
-	public void cleanUp() throws Exception {
+	public void cleanUp() {
 		cleanDb();
 	}
 
-	private void cleanDb() throws UnknownHostException {
+	private void cleanDb() {
 
-		Mongo mongo = new MongoClient();
-		DB db = mongo.getDB("database");
+		MongoDatabase db = mongo.getDatabase("database");
 		for (String coll : collectionsToDrop) {
 			db.getCollection(coll).drop();
 		}
@@ -98,23 +108,23 @@ public class ApplicationContextEventTests {
 		PersonBeforeSaveListener personBeforeSaveListener = applicationContext.getBean(PersonBeforeSaveListener.class);
 		AfterSaveListener afterSaveListener = applicationContext.getBean(AfterSaveListener.class);
 
-		assertEquals(0, personBeforeSaveListener.seenEvents.size());
-		assertEquals(0, afterSaveListener.seenEvents.size());
+		assertThat(personBeforeSaveListener.seenEvents).isEmpty();
+		assertThat(afterSaveListener.seenEvents).isEmpty();
 
-		assertEquals(0, simpleMappingEventListener.onBeforeSaveEvents.size());
-		assertEquals(0, simpleMappingEventListener.onAfterSaveEvents.size());
+		assertThat(listener.onBeforeSaveEvents).isEmpty();
+		assertThat(listener.onAfterSaveEvents).isEmpty();
 
 		PersonPojoStringId p = new PersonPojoStringId("1", "Text");
 		template.insert(p);
 
-		assertEquals(1, personBeforeSaveListener.seenEvents.size());
-		assertEquals(1, afterSaveListener.seenEvents.size());
+		assertThat(personBeforeSaveListener.seenEvents).hasSize(1);
+		assertThat(afterSaveListener.seenEvents).hasSize(1);
 
-		assertEquals(1, simpleMappingEventListener.onBeforeSaveEvents.size());
-		assertEquals(1, simpleMappingEventListener.onAfterSaveEvents.size());
+		assertThat(listener.onBeforeSaveEvents).hasSize(1);
+		assertThat(listener.onAfterSaveEvents).hasSize(1);
 
-		assertEquals(COLLECTION_NAME, simpleMappingEventListener.onBeforeSaveEvents.get(0).getCollectionName());
-		assertEquals(COLLECTION_NAME, simpleMappingEventListener.onAfterSaveEvents.get(0).getCollectionName());
+		assertThat(listener.onBeforeSaveEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
+		assertThat(listener.onAfterSaveEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
 		Assert.assertTrue(personBeforeSaveListener.seenEvents.get(0) instanceof BeforeSaveEvent<?>);
 		Assert.assertTrue(afterSaveListener.seenEvents.get(0) instanceof AfterSaveEvent<?>);
@@ -142,14 +152,14 @@ public class ApplicationContextEventTests {
 
 		template.findOne(query(where("id").is(entity.getId())), PersonPojoStringId.class);
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onAfterLoadEvents).hasSize(1);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onBeforeConvertEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onBeforeConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onBeforeConvertEvents).hasSize(1);
+		assertThat(listener.onBeforeConvertEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onAfterConvertEvents).hasSize(1);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1256
@@ -160,14 +170,14 @@ public class ApplicationContextEventTests {
 		template.aggregate(Aggregation.newAggregation(Aggregation.project("text")), PersonPojoStringId.class,
 				PersonPojoStringId.class);
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onAfterLoadEvents).hasSize(1);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onBeforeConvertEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onBeforeConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onBeforeConvertEvents).hasSize(1);
+		assertThat(listener.onBeforeConvertEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onAfterConvertEvents).hasSize(1);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1256
@@ -178,15 +188,15 @@ public class ApplicationContextEventTests {
 
 		template.remove(entity);
 
-		assertThat(simpleMappingEventListener.onBeforeDeleteEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onBeforeDeleteEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onBeforeDeleteEvents).hasSize(1);
+		assertThat(listener.onBeforeDeleteEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterDeleteEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onAfterDeleteEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onAfterDeleteEvents).hasSize(1);
+		assertThat(listener.onAfterDeleteEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1271
-	public void publishesAfterLoadAndAfterConvertEventsForDBRef() throws Exception {
+	public void publishesAfterLoadAndAfterConvertEventsForDBRef() {
 
 		Related ref1 = new Related(2L, "related desc1");
 
@@ -200,21 +210,17 @@ public class ApplicationContextEventTests {
 
 		template.findOne(query(where("id").is(source.getId())), Root.class);
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents, hasSize(2));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
+		assertThat(listener.onAfterLoadEvents).hasSize(2);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
+		assertThat(listener.onAfterLoadEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents, hasSize(2));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(1).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
+		assertThat(listener.onAfterConvertEvents).hasSize(2);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterConvertEvents.get(1).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1271
-	public void publishesAfterLoadAndAfterConvertEventsForLazyLoadingDBRef() throws Exception {
+	public void publishesAfterLoadAndAfterConvertEventsForLazyLoadingDBRef() {
 
 		Related ref1 = new Related(2L, "related desc1");
 
@@ -228,27 +234,23 @@ public class ApplicationContextEventTests {
 
 		Root target = template.findOne(query(where("id").is(source.getId())), Root.class);
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents, hasSize(1));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
+		assertThat(listener.onAfterLoadEvents).hasSize(1);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents, hasSize(1));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
+		assertThat(listener.onAfterConvertEvents).hasSize(1);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
 
 		target.getLazyReference().getDescription();
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents, hasSize(2));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
+		assertThat(listener.onAfterLoadEvents).hasSize(2);
+		assertThat(listener.onAfterLoadEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents, hasSize(2));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
+		assertThat(listener.onAfterConvertEvents).hasSize(2);
+		assertThat(listener.onAfterConvertEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1271
-	public void publishesAfterLoadAndAfterConvertEventsForListOfDBRef() throws Exception {
+	public void publishesAfterLoadAndAfterConvertEventsForListOfDBRef() {
 
 		List<Related> references = Arrays.asList(new Related(20L, "ref 1"), new Related(30L, "ref 2"));
 
@@ -262,25 +264,19 @@ public class ApplicationContextEventTests {
 
 		template.findOne(query(where("id").is(source.getId())), Root.class);
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents, hasSize(3));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(2).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
+		assertThat(listener.onAfterLoadEvents).hasSize(3);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
+		assertThat(listener.onAfterLoadEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterLoadEvents.get(2).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents, hasSize(3));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(2).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
+		assertThat(listener.onAfterConvertEvents).hasSize(3);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterConvertEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterConvertEvents.get(2).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1271
-	public void publishesAfterLoadAndAfterConvertEventsForLazyLoadingListOfDBRef() throws Exception {
+	public void publishesAfterLoadAndAfterConvertEventsForLazyLoadingListOfDBRef() {
 
 		List<Related> references = Arrays.asList(new Related(20L, "ref 1"), new Related(30L, "ref 2"));
 
@@ -294,30 +290,24 @@ public class ApplicationContextEventTests {
 
 		Root target = template.findOne(query(where("id").is(source.getId())), Root.class);
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents, hasSize(1));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents, hasSize(1));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
+		assertThat(listener.onAfterLoadEvents).hasSize(1);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
+		assertThat(listener.onAfterConvertEvents).hasSize(1);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
 
 		target.getLazyListOfReferences().size();
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents, hasSize(3));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents, hasSize(3));
+		assertThat(listener.onAfterLoadEvents).hasSize(3);
+		assertThat(listener.onAfterConvertEvents).hasSize(3);
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(2).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(2).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
+		assertThat(listener.onAfterLoadEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterLoadEvents.get(2).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterConvertEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterConvertEvents.get(2).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1271
-	public void publishesAfterLoadAndAfterConvertEventsForMapOfDBRef() throws Exception {
+	public void publishesAfterLoadAndAfterConvertEventsForMapOfDBRef() {
 
 		Map<String, Related> references = new LinkedHashMap<String, Related>();
 		references.put("ref-1", new Related(20L, "ref 1"));
@@ -333,25 +323,19 @@ public class ApplicationContextEventTests {
 
 		template.findOne(query(where("id").is(source.getId())), Root.class);
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents, hasSize(3));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(2).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
+		assertThat(listener.onAfterLoadEvents).hasSize(3);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
+		assertThat(listener.onAfterLoadEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterLoadEvents.get(2).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents, hasSize(3));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(2).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
+		assertThat(listener.onAfterConvertEvents).hasSize(3);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterConvertEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterConvertEvents.get(2).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1271
-	public void publishesAfterLoadAndAfterConvertEventsForLazyLoadingMapOfDBRef() throws Exception {
+	public void publishesAfterLoadAndAfterConvertEventsForLazyLoadingMapOfDBRef() {
 
 		Map<String, Related> references = new LinkedHashMap<String, Related>();
 		references.put("ref-1", new Related(20L, "ref 1"));
@@ -367,27 +351,21 @@ public class ApplicationContextEventTests {
 
 		Root target = template.findOne(query(where("id").is(source.getId())), Root.class);
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents, hasSize(1));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
+		assertThat(listener.onAfterLoadEvents).hasSize(1);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents, hasSize(1));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(),
-				is(equalTo(ROOT_COLLECTION_NAME)));
+		assertThat(listener.onAfterConvertEvents).hasSize(1);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(ROOT_COLLECTION_NAME);
 
 		target.getLazyMapOfReferences().size();
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents, hasSize(3));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(2).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
+		assertThat(listener.onAfterLoadEvents).hasSize(3);
+		assertThat(listener.onAfterLoadEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterLoadEvents.get(2).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents, hasSize(3));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(1).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(2).getCollectionName(),
-				is(equalTo(RELATED_COLLECTION_NAME)));
+		assertThat(listener.onAfterConvertEvents).hasSize(3);
+		assertThat(listener.onAfterConvertEvents.get(1).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
+		assertThat(listener.onAfterConvertEvents.get(2).getCollectionName()).isEqualTo(RELATED_COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1823
@@ -398,23 +376,23 @@ public class ApplicationContextEventTests {
 
 		template.query(PersonPojoStringId.class).matching(query(where("id").is(entity.getId()))).all();
 
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onAfterLoadEvents).hasSize(1);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onBeforeConvertEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onBeforeConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onBeforeConvertEvents).hasSize(1);
+		assertThat(listener.onBeforeConvertEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.size(), is(1));
-		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+		assertThat(listener.onAfterConvertEvents).hasSize(1);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 	}
 
 	private void comparePersonAndDocument(PersonPojoStringId p, PersonPojoStringId p2, org.bson.Document document) {
 
-		assertEquals(p.getId(), p2.getId());
-		assertEquals(p.getText(), p2.getText());
+		assertThat(p2.getId()).isEqualTo(p.getId());
+		assertThat(p2.getText()).isEqualTo(p.getText());
 
-		assertEquals("1", document.get("_id"));
-		assertEquals("Text", document.get("text"));
+		assertThat(document.get("_id")).isEqualTo("1");
+		assertThat(document.get("text")).isEqualTo("Text");
 		assertTypeHint(document, PersonPojoStringId.class);
 	}
 
