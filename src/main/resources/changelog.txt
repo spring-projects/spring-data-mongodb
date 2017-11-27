@@ -1,6 +1,16 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.2.RELEASE (2017-11-27)
+---------------------------------------------
+* DATAMONGO-1823 - AfterConvertEvent is not published when using custom methods in repository interface.
+* DATAMONGO-1821 - Fix method ambiguity in tests when compiling against MongoDB 3.6.
+* DATAMONGO-1820 - Investigate failing TravisCI build.
+* DATAMONGO-1818 - Reference documentation mentions @TailableCursor instead of @Tailable.
+* DATAMONGO-1817 - Kotlin extensions should return nullable types.
+* DATAMONGO-1816 - Release 2.0.2 (Kay SR2).
+
+
 Changes in version 1.10.9.RELEASE (2017-11-27)
 ----------------------------------------------
 * DATAMONGO-1809 - Type hint usage broken when using positional parameters with more than one digit.
