@@ -481,6 +481,26 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link SortByCountOperation} given {@literal groupByField}
+	 *
+	 * @param groupByField must not be {@literal null} or empty.
+	 * @return
+	 */
+	public static SortByCountOperation sortByCount(String groupByField) {
+		return new SortByCountOperation(field(groupByField));
+	}
+
+	/**
+	 * Creates a new {@link SortByCountOperation} given {@link AggregationExpression group-by expression}.
+	 *
+	 * @param groupByExpression must not be {@literal null}.
+	 * @return
+	 */
+	public static SortByCountOperation sortByCount(AggregationExpression groupByExpression) {
+		return new SortByCountOperation(groupByExpression);
+	}
+
+	/**
 	 * Creates a new {@link FacetOperation}.
 	 *
 	 * @return

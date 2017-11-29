@@ -101,4 +101,17 @@ public class FacetOperationUnitTests {
 						+ "{ $bucketAuto: {  buckets: 5, groupBy: \"$price\", "
 						+ "output: { titles: { $push: \"$name\" } } } } ] } }")));
 	}
+
+	@Test // DATAMONGO-1553
+	public void shouldRenderSortByCountCorrectly() {
+
+		FacetOperation facetOperation = new FacetOperation()
+				.and(sortByCount("country"))
+				.as("categorizedByCountry");
+
+		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $facet: { categorizedByCountry: [{ $sortByCount: \"$country\" } ] } }")));
+	}
 }
