@@ -47,6 +47,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Nikolay Bogdanov
  * @author Gustavo de Geus
+ * @author Jérôme Guyon
  * @since 1.3
  */
 public class Aggregation {
@@ -478,6 +479,26 @@ public class Aggregation {
 	 */
 	public static BucketAutoOperation bucketAuto(AggregationExpression groupByExpression, int buckets) {
 		return new BucketAutoOperation(groupByExpression, buckets);
+	}
+
+	/**
+	 * Creates a new {@link SortByCountOperation} given {@literal groupByField}
+	 *
+	 * @param groupByField must not be {@literal null} or empty.
+	 * @return
+	 */
+	public static SortByCountOperation sortByCount(String groupByField) {
+		return new SortByCountOperation(field(groupByField));
+	}
+
+	/**
+	 * Creates a new {@link SortByCountOperation} given {@link AggregationExpression group-by expression}.
+	 *
+	 * @param groupByExpression must not be {@literal null}.
+	 * @return
+	 */
+	public static SortByCountOperation sortByCount(AggregationExpression groupByExpression) {
+		return new SortByCountOperation(groupByExpression);
 	}
 
 	/**
