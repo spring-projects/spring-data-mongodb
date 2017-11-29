@@ -47,6 +47,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Nikolay Bogdanov
  * @author Gustavo de Geus
+ * @author Jérôme Guyon
  * @since 1.3
  */
 public class Aggregation {

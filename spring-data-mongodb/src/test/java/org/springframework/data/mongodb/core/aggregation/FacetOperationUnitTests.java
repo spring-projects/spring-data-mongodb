@@ -28,6 +28,7 @@ import org.bson.Document;
  * Unit tests for {@link FacetOperation}.
  *
  * @author Mark Paluch
+ * @author Jérôme Guyon
  * @soundtrack Stanley Foort - You Make Me Believe In Magic (Extended Mix)
  */
 public class FacetOperationUnitTests {
