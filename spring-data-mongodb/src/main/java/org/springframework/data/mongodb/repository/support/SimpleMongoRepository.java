@@ -283,6 +283,26 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return PageableExecutionUtils.getPage(list, pageable,
 				() -> mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName()));
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(
+org.springframework.data.mongodb.core.query.Query, org.springframework.data.domain.Example, org.springframework.data.domain.Pageable)
+	 */
+	@Override
+	public <S extends T> Page<S> findAll(Query q1, final Example<S> example, Pageable pageable) {
+
+		Assert.notNull(q1, "Query must not be null!");
+		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(pageable, "Pageable must not be null!");
+
+		final Query q = q1.addCriteria((new Criteria().alike(example))).with(pageable);
+		
+		List<S> list = mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName());
+
+		return PageableExecutionUtils.getPage(list, pageable,
+				() -> mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName()));
+	}
 
 	/*
 	 * (non-Javadoc)
