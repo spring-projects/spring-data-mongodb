@@ -21,6 +21,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
+import lombok.RequiredArgsConstructor;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
@@ -97,7 +99,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link MappingMongoConverter}.
- * 
+ *
  * @author Oliver Gierke
  * @author Patrik Wasik
  * @author Christoph Strobl
@@ -1797,6 +1799,22 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(ClassWithEnumProperty.class, source).enumSet, is(EnumSet.noneOf(SampleEnum.class)));
 	}
 
+	@Test // DATAMONGO-1831
+	public void shouldConvertArrayInConstructorCorrectly() {
+
+		DBObject source = new BasicDBObject("array", Collections.emptyList());
+
+		assertThat(converter.read(WithArrayInConstructor.class, source).array, is(emptyArray()));
+	}
+
+	@Test // DATAMONGO-1831
+	public void shouldConvertNullForArrayInConstructorCorrectly() {
+
+		DBObject source = new BasicDBObject();
+
+		assertThat(converter.read(WithArrayInConstructor.class, source).array, is(nullValue()));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2146,5 +2164,12 @@ public class MappingMongoConverterUnitTests {
 
 	static class TypeWithPropertyInNestedField {
 		@Field("nested.sample") String sample;
+	}
+
+	@RequiredArgsConstructor
+	static class WithArrayInConstructor {
+
+		final String[] array;
+
 	}
 }
