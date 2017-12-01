@@ -21,6 +21,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
+import lombok.RequiredArgsConstructor;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
@@ -1803,6 +1805,22 @@ public class MappingMongoConverterUnitTests {
 		converter.read(TypeWithMapOfLongValues.class, source);
 	}
 
+	@Test // DATAMONGO-1831
+	public void shouldConvertArrayInConstructorCorrectly() {
+
+		org.bson.Document source = new org.bson.Document("array", Collections.emptyList());
+
+		assertThat(converter.read(WithArrayInConstructor.class, source).array, is(emptyArray()));
+	}
+
+	@Test // DATAMONGO-1831
+	public void shouldConvertNullForArrayInConstructorCorrectly() {
+
+		org.bson.Document source = new org.bson.Document();
+
+		assertThat(converter.read(WithArrayInConstructor.class, source).array, is(nullValue()));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2156,5 +2174,12 @@ public class MappingMongoConverterUnitTests {
 
 	static class TypeWithMapOfLongValues {
 		Map<String, Long> map;
+	}
+
+	@RequiredArgsConstructor
+	static class WithArrayInConstructor {
+
+		final String[] array;
+
 	}
 }

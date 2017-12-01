@@ -954,7 +954,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				: CollectionFactory.createCollection(collectionType, rawComponentType, sourceValue.size());
 
 		if (sourceValue.isEmpty()) {
-			return getPotentiallyConvertedSimpleRead(items, collectionType);
+			return getPotentiallyConvertedSimpleRead(items, targetType.getType());
 		}
 
 		if (!DBRef.class.equals(rawComponentType) && isCollectionOfDbRefWhereBulkFetchIsPossible(sourceValue)) {
