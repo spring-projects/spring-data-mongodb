@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>2.1.0.BUILD-SNAPSHOT</version>
+		<version>2.1.0.DATAMONGO-1831-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -49,7 +49,7 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-mongodb</artifactId>
-			<version>2.1.0.BUILD-SNAPSHOT</version>
+			<version>2.1.0.DATAMONGO-1831-SNAPSHOT</version>
 		</dependency>
 
 		<!-- reactive -->
