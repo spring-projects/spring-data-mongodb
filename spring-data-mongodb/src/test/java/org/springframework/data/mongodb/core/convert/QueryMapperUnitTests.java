@@ -23,8 +23,11 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +59,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
+import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -82,7 +86,10 @@ public class QueryMapperUnitTests {
 	@Before
 	public void setUp() {
 
+		MongoCustomConversions conversions = new MongoCustomConversions();
 		this.context = new MongoMappingContext();
+		this.context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		this.context.afterPropertiesSet();
 
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
 		this.converter.afterPropertiesSet();
@@ -430,6 +437,21 @@ public class QueryMapperUnitTests {
 
 		assertThat(result.keySet(), hasSize(1));
 		assertThat(result.get("myvalue"), is((Object) "$334"));
+	}
+
+	@Test // DATAMONGO-1819
+	public void mapsConvertedSimpleTypesCorrectly() {
+
+		Query query = query(where("instant").is(Instant.now()));
+		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(EntityWithInstant.class));
+
+		assertThat(result.get("instant"), is(instanceOf(Date.class)));
+		Collection<TypeInformation<?>> managedTypes = context.getManagedTypes();
+
+		for (TypeInformation<?> managedType : managedTypes) {
+			assertThat(managedType.getType(), is(not(Instant.class)));
+		}
 	}
 
 	@Test // DATAMONGO-752
@@ -891,5 +913,10 @@ public class QueryMapperUnitTests {
 
 	static class EntityWithComplexValueTypeList {
 		List<SimpeEntityWithoutId> list;
+	}
+
+	static class EntityWithInstant {
+
+		Instant instant;
 	}
 }

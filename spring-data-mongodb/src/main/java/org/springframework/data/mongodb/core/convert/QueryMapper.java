@@ -862,8 +862,9 @@ public class QueryMapper {
 		 */
 		@Override
 		public MongoPersistentEntity<?> getPropertyEntity() {
+
 			MongoPersistentProperty property = getProperty();
-			return property == null ? null : mappingContext.getPersistentEntity(property);
+			return property != null && property.isEntity() ? mappingContext.getPersistentEntity(property) : null;
 		}
 
 		/*
