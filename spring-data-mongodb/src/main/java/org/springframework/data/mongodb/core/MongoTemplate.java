@@ -1566,15 +1566,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-		DBObject command = aggregation.toDbObject(collectionName, rootContext);
+		DBObject command = AggregationCommandPreparer.INSTANCE.prepareAggregationCommand(collectionName, aggregation,
+				context);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
 		}
 
-		CommandResult commandResult = executeCommand(command, this.readPreference);
-		handleCommandError(commandResult, command);
+		DBObject commandResult = AggregationResultPostProcessor.INSTANCE.process(command,
+				executeCommand(command, this.readPreference));
 
 		return new AggregationResults<O>(returnPotentiallyMappedResults(outputType, commandResult, collectionName),
 				commandResult);
@@ -1587,7 +1587,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param commandResult
 	 * @return
 	 */
-	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult,
+	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, DBObject commandResult,
 			String collectionName) {
 
 		@SuppressWarnings("unchecked")
@@ -2094,7 +2094,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param result must not be {@literal null}.
 	 * @param source must not be {@literal null}.
 	 */
-	private void handleCommandError(CommandResult result, DBObject source) {
+	private static void handleCommandError(CommandResult result, DBObject source) {
 
 		try {
 			result.throwOnError();
@@ -2551,6 +2551,59 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				exceptionTranslator = null;
 				objectReadCallback = null;
 			}
+		}
+	}
+
+	/**
+	 * Helper to pre process the aggregation command sent to the server by adding {@code cursor} options to match
+	 * execution on different server versions.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	private static enum AggregationCommandPreparer {
+
+		INSTANCE;
+
+		private static final DBObject BATCH_SIZE = new BasicDBObject("batchSize", Integer.MAX_VALUE); // cursor max is 2^31
+
+		DBObject prepareAggregationCommand(String collectionName, Aggregation aggregation,
+				AggregationOperationContext context) {
+
+			AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+			DBObject command = aggregation.toDbObject(collectionName, rootContext);
+
+			if (!aggregation.getOptions().isExplain()) {
+				command.put("cursor", BATCH_SIZE);
+			}
+
+			return command;
+		}
+	}
+
+	/**
+	 * Helper to post process aggregation command result by copying over required attributes.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	private static enum AggregationResultPostProcessor {
+
+		INSTANCE;
+
+		DBObject process(DBObject command, CommandResult commandResult) {
+
+			handleCommandError(commandResult, command);
+
+			if (!commandResult.containsKey("cursor")) {
+				return commandResult;
+			}
+
+			DBObject resultObject = new BasicDBObject("serverUsed", commandResult.get("serverUsed"));
+			resultObject.put("ok", commandResult.get("ok"));
+			resultObject.put("result", ((DBObject) commandResult.get("cursor")).get("firstBatch"));
+
+			return resultObject;
 		}
 	}
 }
