@@ -132,6 +132,8 @@ public class MongoTemplateTests {
 			.parse("2.8");
 	private static final org.springframework.data.util.Version THREE_DOT_FOUR = org.springframework.data.util.Version
 			.parse("3.4");
+	private static final org.springframework.data.util.Version THREE_DOT_SIX = org.springframework.data.util.Version
+			.parse("3.6");
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
@@ -2376,6 +2378,8 @@ public class MongoTemplateTests {
 
 	@Test // DATAMONGO-354
 	public void testUpdateShouldAllowMultiplePushAll() {
+
+		assumeThat(mongoVersion.isLessThan(THREE_DOT_SIX), is(true));
 
 		DocumentWithMultipleCollections doc = new DocumentWithMultipleCollections();
 		doc.id = "1234";
