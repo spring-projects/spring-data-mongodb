@@ -1566,15 +1566,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		DBObject command = AggregationCommandPreparer.INSTANCE.prepareAggregationCommand(collectionName, aggregation,
-				context);
-
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
-		}
-
-		DBObject commandResult = AggregationResultPostProcessor.INSTANCE.process(command,
-				executeCommand(command, this.readPreference));
+		DBObject commandResult = new BatchAggregationLoader(this, readPreference, Integer.MAX_VALUE)
+				.aggregate(collectionName, aggregation, context);
 
 		return new AggregationResults<O>(returnPotentiallyMappedResults(outputType, commandResult, collectionName),
 				commandResult);
@@ -2555,55 +2548,160 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Helper to pre process the aggregation command sent to the server by adding {@code cursor} options to match
-	 * execution on different server versions.
+	 * {@link BatchAggregationLoader} is a little helper that can process cursor results returned by an aggregation
+	 * command execution. On presence of a {@literal nextBatch} indicated by presence of an {@code id} field in the
+	 * {@code cursor} another {@code getMore} command gets executed reading the next batch of documents until everything
+	 * has been loaded.
 	 *
 	 * @author Christoph Strobl
 	 * @since 1.10
 	 */
-	private static enum AggregationCommandPreparer {
+	static class BatchAggregationLoader {
 
-		INSTANCE;
+		private static final String CURSOR_FIELD = "cursor";
+		private static final String RESULT_FIELD = "result";
+		private static final String BATCH_SIZE_FIELD = "batchSize";
 
-		private static final DBObject BATCH_SIZE = new BasicDBObject("batchSize", Integer.MAX_VALUE); // cursor max is 2^31
+		private final MongoTemplate template;
+		private final ReadPreference readPreference;
+		private final int batchSize;
 
-		DBObject prepareAggregationCommand(String collectionName, Aggregation aggregation,
-				AggregationOperationContext context) {
+		BatchAggregationLoader(MongoTemplate template, ReadPreference readPreference, int batchSize) {
 
-			AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-			DBObject command = aggregation.toDbObject(collectionName, rootContext);
+			this.template = template;
+			this.readPreference = readPreference;
+			this.batchSize = batchSize;
+		}
 
-			if (!aggregation.getOptions().isExplain()) {
-				command.put("cursor", BATCH_SIZE);
+		DBObject aggregate(String collectionName, Aggregation aggregation, AggregationOperationContext context) {
+
+			DBObject command = AggregationCommandPreparer.INSTANCE.prepareAggregationCommand(collectionName, aggregation,
+					context, batchSize);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
 			}
 
-			return command;
+			List<DBObject> results = aggregateBatched(collectionName, batchSize, command);
+			return mergeArregationCommandResults(results);
+		}
+
+		private DBObject mergeArregationCommandResults(List<DBObject> results) {
+
+			DBObject commandResult = new BasicDBObject();
+			if (results.size() == 1) {
+				commandResult = results.iterator().next();
+			} else {
+
+				List<Object> allResults = new ArrayList();
+
+				for (DBObject result : results) {
+					Collection foo = (Collection<?>) result.get(RESULT_FIELD);
+					if (!CollectionUtils.isEmpty(foo)) {
+						allResults.addAll(foo);
+					}
+				}
+
+				// take general info from first batch
+				commandResult.put("serverUsed", results.iterator().next().get("serverUsed"));
+				commandResult.put("ok", results.iterator().next().get("ok"));
+
+				// and append the merged results
+				commandResult.put(RESULT_FIELD, allResults);
+			}
+			return commandResult;
+		}
+
+		private List<DBObject> aggregateBatched(String collectionName, int batchSize, DBObject command) {
+
+			List<DBObject> results = new ArrayList<DBObject>();
+
+			CommandResult tmp = template.executeCommand(command, readPreference);
+			results.add(AggregationResultPostProcessor.INSTANCE.process(command, tmp));
+
+			while (hasNext(tmp)) {
+
+				DBObject getMore = new BasicDBObject("getMore", getNextBatchId(tmp)) //
+						.append("collection", collectionName) //
+						.append(BATCH_SIZE_FIELD, batchSize); //
+
+				tmp = template.executeCommand(getMore, this.readPreference);
+				results.add(AggregationResultPostProcessor.INSTANCE.process(command, tmp));
+			}
+
+			return results;
+		}
+
+		private boolean hasNext(DBObject commandResult) {
+
+			if (!commandResult.containsField(CURSOR_FIELD)) {
+				return false;
+			}
+
+			Object next = getNextBatchId(commandResult);
+			return (next == null || ((Number) next).longValue() == 0L) ? false : true;
+		}
+
+		private Object getNextBatchId(DBObject commandResult) {
+			return ((DBObject) commandResult.get(CURSOR_FIELD)).get("id");
+		}
+
+		/**
+		 * Helper to pre process the aggregation command sent to the server by adding {@code cursor} options to match
+		 * execution on different server versions.
+		 *
+		 * @author Christoph Strobl
+		 * @since 1.10
+		 */
+		private static enum AggregationCommandPreparer {
+
+			INSTANCE;
+
+			DBObject prepareAggregationCommand(String collectionName, Aggregation aggregation,
+					AggregationOperationContext context, int batchSize) {
+
+				AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+				DBObject command = aggregation.toDbObject(collectionName, rootContext);
+
+				if (!aggregation.getOptions().isExplain()) {
+					command.put(CURSOR_FIELD, new BasicDBObject(BATCH_SIZE_FIELD, batchSize));
+				}
+
+				return command;
+			}
+		}
+
+		/**
+		 * Helper to post process aggregation command result by copying over required attributes.
+		 *
+		 * @author Christoph Strobl
+		 * @since 1.10
+		 */
+		private static enum AggregationResultPostProcessor {
+
+			INSTANCE;
+
+			DBObject process(DBObject command, CommandResult commandResult) {
+
+				handleCommandError(commandResult, command);
+
+				if (!commandResult.containsField(CURSOR_FIELD)) {
+					return commandResult;
+				}
+
+				DBObject resultObject = new BasicDBObject("serverUsed", commandResult.get("serverUsed"));
+				resultObject.put("ok", commandResult.get("ok"));
+
+				DBObject cursor = (DBObject) commandResult.get(CURSOR_FIELD);
+				if (cursor.containsField("firstBatch")) {
+					resultObject.put(RESULT_FIELD, cursor.get("firstBatch"));
+				} else {
+					resultObject.put(RESULT_FIELD, cursor.get("nextBatch"));
+				}
+
+				return resultObject;
+			}
 		}
 	}
 
-	/**
-	 * Helper to post process aggregation command result by copying over required attributes.
-	 *
-	 * @author Christoph Strobl
-	 * @since 1.10
-	 */
-	private static enum AggregationResultPostProcessor {
-
-		INSTANCE;
-
-		DBObject process(DBObject command, CommandResult commandResult) {
-
-			handleCommandError(commandResult, command);
-
-			if (!commandResult.containsKey("cursor")) {
-				return commandResult;
-			}
-
-			DBObject resultObject = new BasicDBObject("serverUsed", commandResult.get("serverUsed"));
-			resultObject.put("ok", commandResult.get("ok"));
-			resultObject.put("result", ((DBObject) commandResult.get("cursor")).get("firstBatch"));
-
-			return resultObject;
-		}
-	}
 }
