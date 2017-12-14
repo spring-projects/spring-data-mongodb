@@ -19,12 +19,15 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import java.util.Collections;
+
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 
 /**
  * @author Oliver Gierke
@@ -212,5 +215,25 @@ public class CriteriaTests {
 		Document document = new Criteria("foo").intersects(lineString).getCriteriaObject();
 
 		assertThat(document, isBsonObject().containing("foo.$geoIntersects.$geometry", lineString));
+	}
+
+	@Test // DATAMONGO-1835
+	public void extractsJsonSchemaInChainCorrectly() {
+
+		MongoJsonSchema schema = MongoJsonSchema.builder().required("name").build();
+		Criteria critera = Criteria.where("foo").is("bar").andDocumentStructureMatches(schema);
+
+		assertThat(critera.getCriteriaObject(), is(equalTo(new Document("foo", "bar").append("$jsonSchema",
+				new Document("type", "object").append("required", Collections.singletonList("name"))))));
+	}
+
+	@Test // DATAMONGO-1835
+	public void extractsJsonSchemaFromFactoryMethodCorrectly() {
+
+		MongoJsonSchema schema = MongoJsonSchema.builder().required("name").build();
+		Criteria critera = Criteria.matchingDocumentStructure(schema);
+
+		assertThat(critera.getCriteriaObject(), is(equalTo(new Document("$jsonSchema",
+				new Document("type", "object").append("required", Collections.singletonList("name"))))));
 	}
 }
