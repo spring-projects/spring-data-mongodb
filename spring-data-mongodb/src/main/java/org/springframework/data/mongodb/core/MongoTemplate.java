@@ -1566,15 +1566,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-		DBObject command = aggregation.toDbObject(collectionName, rootContext);
-
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
-		}
-
-		CommandResult commandResult = executeCommand(command, this.readPreference);
-		handleCommandError(commandResult, command);
+		DBObject commandResult = new BatchAggregationLoader(this, readPreference, Integer.MAX_VALUE)
+				.aggregate(collectionName, aggregation, context);
 
 		return new AggregationResults<O>(returnPotentiallyMappedResults(outputType, commandResult, collectionName),
 				commandResult);
@@ -1587,7 +1580,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param commandResult
 	 * @return
 	 */
-	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult,
+	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, DBObject commandResult,
 			String collectionName) {
 
 		@SuppressWarnings("unchecked")
@@ -2094,7 +2087,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param result must not be {@literal null}.
 	 * @param source must not be {@literal null}.
 	 */
-	private void handleCommandError(CommandResult result, DBObject source) {
+	private static void handleCommandError(CommandResult result, DBObject source) {
 
 		try {
 			result.throwOnError();
@@ -2551,6 +2544,151 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				exceptionTranslator = null;
 				objectReadCallback = null;
 			}
+		}
+	}
+
+	/**
+	 * {@link BatchAggregationLoader} is a little helper that can process cursor results returned by an aggregation
+	 * command execution. On presence of a {@literal nextBatch} indicated by presence of an {@code id} field in the
+	 * {@code cursor} another {@code getMore} command gets executed reading the next batch of documents until all results
+	 * are been loaded.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	static class BatchAggregationLoader {
+
+		private static final String CURSOR_FIELD = "cursor";
+		private static final String RESULT_FIELD = "result";
+		private static final String BATCH_SIZE_FIELD = "batchSize";
+		private static final String FIRST_BATCH = "firstBatch";
+		private static final String NEXT_BATCH = "nextBatch";
+		private static final String SERVER_USED = "serverUsed";
+		private static final String OK = "ok";
+
+		private final MongoTemplate template;
+		private final ReadPreference readPreference;
+		private final int batchSize;
+
+		BatchAggregationLoader(MongoTemplate template, ReadPreference readPreference, int batchSize) {
+
+			this.template = template;
+			this.readPreference = readPreference;
+			this.batchSize = batchSize;
+		}
+
+		/**
+		 * Run aggregation command and fetch all results.
+		 */
+		DBObject aggregate(String collectionName, Aggregation aggregation, AggregationOperationContext context) {
+
+			DBObject command = prepareAggregationCommand(collectionName, aggregation,
+					context, batchSize);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
+			}
+
+			return mergeAggregationResults(aggregateBatched(command, collectionName, batchSize));
+		}
+
+		/**
+		 * Pre process the aggregation command sent to the server by adding {@code cursor} options to match execution on
+		 * different server versions.
+		 */
+		private static DBObject prepareAggregationCommand(String collectionName, Aggregation aggregation,
+				AggregationOperationContext context, int batchSize) {
+
+			AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+			DBObject command = aggregation.toDbObject(collectionName, rootContext);
+
+			if (!aggregation.getOptions().isExplain()) {
+				command.put(CURSOR_FIELD, new BasicDBObject(BATCH_SIZE_FIELD, batchSize));
+			}
+
+			return command;
+		}
+
+		private List<DBObject> aggregateBatched(DBObject command, String collectionName, int batchSize) {
+
+			List<DBObject> results = new ArrayList<DBObject>();
+
+			CommandResult commandResult = template.executeCommand(command, readPreference);
+			results.add(postProcessResult(command, commandResult));
+
+			while (hasNext(commandResult)) {
+
+				DBObject getMore = new BasicDBObject("getMore", getNextBatchId(commandResult)) //
+						.append("collection", collectionName) //
+						.append(BATCH_SIZE_FIELD, batchSize);
+
+				commandResult = template.executeCommand(getMore, this.readPreference);
+				results.add(postProcessResult(command, commandResult));
+			}
+
+			return results;
+		}
+
+		private static DBObject postProcessResult(DBObject command, CommandResult commandResult) {
+
+			handleCommandError(commandResult, command);
+
+			if (!commandResult.containsField(CURSOR_FIELD)) {
+				return commandResult;
+			}
+
+			DBObject resultObject = new BasicDBObject(SERVER_USED, commandResult.get(SERVER_USED));
+			resultObject.put(OK, commandResult.get(OK));
+
+			DBObject cursor = (DBObject) commandResult.get(CURSOR_FIELD);
+			if (cursor.containsField(FIRST_BATCH)) {
+				resultObject.put(RESULT_FIELD, cursor.get(FIRST_BATCH));
+			} else {
+				resultObject.put(RESULT_FIELD, cursor.get(NEXT_BATCH));
+			}
+
+			return resultObject;
+		}
+
+		private static DBObject mergeAggregationResults(List<DBObject> batchResults) {
+
+			if (batchResults.size() == 1) {
+				return batchResults.iterator().next();
+			}
+
+			DBObject commandResult = new BasicDBObject(3);
+			List<Object> allResults = new ArrayList<Object>();
+
+			for (DBObject batchResult : batchResults) {
+
+				Collection documents = (Collection<?>) batchResult.get(RESULT_FIELD);
+				if (!CollectionUtils.isEmpty(documents)) {
+					allResults.addAll(documents);
+				}
+			}
+
+			// take general info from first batch
+			commandResult.put(SERVER_USED, batchResults.iterator().next().get(SERVER_USED));
+			commandResult.put(OK, batchResults.iterator().next().get(OK));
+
+			// and append the merged batchResults
+			commandResult.put(RESULT_FIELD, allResults);
+
+			return commandResult;
+		}
+
+		private static boolean hasNext(DBObject commandResult) {
+
+			if (!commandResult.containsField(CURSOR_FIELD)) {
+				return false;
+			}
+
+			Object next = getNextBatchId(commandResult);
+			return next != null && ((Number) next).longValue() != 0L;
+		}
+
+		private static Object getNextBatchId(DBObject commandResult) {
+			return ((DBObject) commandResult.get(CURSOR_FIELD)).get("id");
 		}
 	}
 }

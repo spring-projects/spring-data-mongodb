@@ -597,6 +597,16 @@ public class Aggregation {
 	}
 
 	/**
+	 * Get {@link AggregationOptions} to apply.
+	 *
+	 * @return never {@literal null}.
+	 * @since 1.1.10
+	 */
+	public AggregationOptions getOptions() {
+		return options;
+	}
+
+	/**
 	 * Describes the system variables available in MongoDB aggregation framework pipeline expressions.
 	 *
 	 * @author Thomas Darimont
