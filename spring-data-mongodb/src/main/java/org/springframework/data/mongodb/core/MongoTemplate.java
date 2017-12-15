@@ -3065,8 +3065,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	/**
 	 * {@link BatchAggregationLoader} is a little helper that can process cursor results returned by an aggregation
 	 * command execution. On presence of a {@literal nextBatch} indicated by presence of an {@code id} field in the
-	 * {@code cursor} another {@code getMore} command gets executed reading the next batch of documents until everything
-	 * has been loaded.
+	 * {@code cursor} another {@code getMore} command gets executed reading the next batch of documents until all results
+	 * are loaded.
 	 *
 	 * @author Christoph Strobl
 	 * @since 1.10
@@ -3076,6 +3076,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private static final String CURSOR_FIELD = "cursor";
 		private static final String RESULT_FIELD = "result";
 		private static final String BATCH_SIZE_FIELD = "batchSize";
+		private static final String FIRST_BATCH = "firstBatch";
+		private static final String NEXT_BATCH = "nextBatch";
+		private static final String SERVER_USED = "serverUsed";
+		private static final String OK = "ok";
 
 		private final MongoTemplate template;
 		private final ReadPreference readPreference;
@@ -3088,133 +3092,117 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.batchSize = batchSize;
 		}
 
+		/**
+		 * Run aggregation command and fetch all results.
+		 */
 		Document aggregate(String collectionName, Aggregation aggregation, AggregationOperationContext context) {
 
-			Document command = AggregationCommandPreparer.INSTANCE.prepareAggregationCommand(collectionName, aggregation,
+			Document command = prepareAggregationCommand(collectionName, aggregation,
 					context, batchSize);
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
 			}
 
-			List<Document> results = aggregateBatched(collectionName, batchSize, command);
-			return mergeArregationCommandResults(results);
+			return mergeAggregationResults(aggregateBatched(command, collectionName, batchSize));
 		}
 
-		private Document mergeArregationCommandResults(List<Document> results) {
+		/**
+		 * Pre process the aggregation command sent to the server by adding {@code cursor} options to match execution on
+		 * different server versions.
+		 */
+		private static Document prepareAggregationCommand(String collectionName, Aggregation aggregation,
+				@Nullable AggregationOperationContext context, int batchSize) {
 
-			Document commandResult = new Document();
-			if (results.size() == 1) {
-				commandResult = results.iterator().next();
-			} else {
+			AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+			Document command = aggregation.toDocument(collectionName, rootContext);
 
-				List<Object> allResults = new ArrayList();
-
-				for (Document result : results) {
-					Collection foo = (Collection<?>) result.get(RESULT_FIELD);
-					if (!CollectionUtils.isEmpty(foo)) {
-						allResults.addAll(foo);
-					}
-				}
-
-				// take general info from first batch
-				commandResult.put("serverUsed", results.iterator().next().get("serverUsed"));
-				commandResult.put("ok", results.iterator().next().get("ok"));
-
-				// and append the merged results
-				commandResult.put(RESULT_FIELD, allResults);
+			if (!aggregation.getOptions().isExplain()) {
+				command.put(CURSOR_FIELD, new Document(BATCH_SIZE_FIELD, batchSize));
 			}
-			return commandResult;
+
+			return command;
 		}
 
-		private List<Document> aggregateBatched(String collectionName, int batchSize, Document command) {
+		private List<Document> aggregateBatched(Document command, String collectionName, int batchSize) {
 
 			List<Document> results = new ArrayList<>();
 
-			Document tmp = template.executeCommand(command, readPreference);
-			results.add(AggregationResultPostProcessor.INSTANCE.process(command, tmp));
+			Document commandResult = template.executeCommand(command, readPreference);
+			results.add(postProcessResult(commandResult));
 
-			while (hasNext(tmp)) {
+			while (hasNext(commandResult)) {
 
-				Document getMore = new Document("getMore", getNextBatchId(tmp)) //
+				Document getMore = new Document("getMore", getNextBatchId(commandResult)) //
 						.append("collection", collectionName) //
-						.append(BATCH_SIZE_FIELD, batchSize); //
+						.append(BATCH_SIZE_FIELD, batchSize);
 
-				tmp = template.executeCommand(getMore, this.readPreference);
-				results.add(AggregationResultPostProcessor.INSTANCE.process(command, tmp));
+				commandResult = template.executeCommand(getMore, this.readPreference);
+				results.add(postProcessResult(commandResult));
 			}
 
 			return results;
 		}
 
-		private boolean hasNext(Document commandResult) {
+		private static Document postProcessResult(Document commandResult) {
+
+			if (!commandResult.containsKey(CURSOR_FIELD)) {
+				return commandResult;
+			}
+
+			Document resultObject = new Document(SERVER_USED, commandResult.get(SERVER_USED));
+			resultObject.put(OK, commandResult.get(OK));
+
+			Document cursor = (Document) commandResult.get(CURSOR_FIELD);
+			if (cursor.containsKey(FIRST_BATCH)) {
+				resultObject.put(RESULT_FIELD, cursor.get(FIRST_BATCH));
+			} else {
+				resultObject.put(RESULT_FIELD, cursor.get(NEXT_BATCH));
+			}
+
+			return resultObject;
+		}
+
+		private static Document mergeAggregationResults(List<Document> batchResults) {
+
+			if (batchResults.size() == 1) {
+				return batchResults.iterator().next();
+			}
+
+			Document commandResult = new Document();
+			List<Object> allResults = new ArrayList<>();
+
+			for (Document batchResult : batchResults) {
+
+				Collection documents = (Collection<?>) batchResult.get(RESULT_FIELD);
+				if (!CollectionUtils.isEmpty(documents)) {
+					allResults.addAll(documents);
+				}
+			}
+
+			// take general info from first batch
+			commandResult.put(SERVER_USED, batchResults.iterator().next().get(SERVER_USED));
+			commandResult.put(OK, batchResults.iterator().next().get(OK));
+
+			// and append the merged batchResults
+			commandResult.put(RESULT_FIELD, allResults);
+
+			return commandResult;
+		}
+
+		private static boolean hasNext(Document commandResult) {
 
 			if (!commandResult.containsKey(CURSOR_FIELD)) {
 				return false;
 			}
 
 			Object next = getNextBatchId(commandResult);
-			return (next == null || ((Number) next).longValue() == 0L) ? false : true;
+			return next != null && ((Number) next).longValue() != 0L;
 		}
 
-		private Object getNextBatchId(Document commandResult) {
+		@Nullable
+		private static Object getNextBatchId(Document commandResult) {
 			return ((Document) commandResult.get(CURSOR_FIELD)).get("id");
 		}
-
-		/**
-		 * Helper to pre process the aggregation command sent to the server by adding {@code cursor} options to match
-		 * execution on different server versions.
-		 *
-		 * @author Christoph Strobl
-		 * @since 1.10
-		 */
-		private static enum AggregationCommandPreparer {
-
-			INSTANCE;
-
-			Document prepareAggregationCommand(String collectionName, Aggregation aggregation,
-					AggregationOperationContext context, int batchSize) {
-
-				AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-				Document command = aggregation.toDocument(collectionName, rootContext);
-
-				if (!aggregation.getOptions().isExplain()) {
-					command.put(CURSOR_FIELD, new Document(BATCH_SIZE_FIELD, batchSize));
-				}
-
-				return command;
-			}
-		}
-
-		/**
-		 * Helper to post process aggregation command result by copying over required attributes.
-		 *
-		 * @author Christoph Strobl
-		 * @since 1.10
-		 */
-		private static enum AggregationResultPostProcessor {
-
-			INSTANCE;
-
-			Document process(Document command, Document commandResult) {
-
-				if (!commandResult.containsKey(CURSOR_FIELD)) {
-					return commandResult;
-				}
-
-				Document resultObject = new Document("serverUsed", commandResult.get("serverUsed"));
-				resultObject.put("ok", commandResult.get("ok"));
-
-				Document cursor = (Document) commandResult.get(CURSOR_FIELD);
-				if (cursor.containsKey("firstBatch")) {
-					resultObject.put(RESULT_FIELD, cursor.get("firstBatch"));
-				} else {
-					resultObject.put(RESULT_FIELD, cursor.get("nextBatch"));
-				}
-
-				return resultObject;
-			}
-		}
 	}
-
 }

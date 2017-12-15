@@ -604,8 +604,8 @@ public class Aggregation {
 	/**
 	 * Get {@link AggregationOptions} to apply.
 	 *
-	 * @return never {@literal null}
-	 * @since 1.10
+	 * @return never {@literal null}.
+	 * @since 2.0.3
 	 */
 	public AggregationOptions getOptions() {
 		return options;

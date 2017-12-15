@@ -16,14 +16,13 @@
 package org.springframework.data.mongodb.core;
 
 import static java.util.Collections.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import java.util.List;
 
 import org.bson.Document;
-import org.hamcrest.core.IsCollectionContaining;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +35,10 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import com.mongodb.ReadPreference;
 
 /**
+ * Unit tests for {@link BatchAggregationLoader}.
+ * 
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class BatchAggregationLoaderUnitTests {
@@ -50,9 +52,11 @@ public class BatchAggregationLoaderUnitTests {
 
 	BatchAggregationLoader loader;
 
-	Document cursorWithoutMore = new Document("firstBatch", singletonList(new Document("name", "luke")));
-	Document cursorWithMore = new Document("id", 123).append("firstBatch", singletonList(new Document("name", "luke")));
-	Document cursorWithNoMore = new Document("id", 0).append("nextBatch", singletonList(new Document("name", "han")));
+	Document luke = new Document("name", "luke");
+	Document han = new Document("name", "han");
+	Document cursorWithoutMore = new Document("firstBatch", singletonList(luke));
+	Document cursorWithMore = new Document("id", 123).append("firstBatch", singletonList(luke));
+	Document cursorWithNoMore = new Document("id", 0).append("nextBatch", singletonList(han));
 
 	@Before
 	public void setUp() {
@@ -60,7 +64,20 @@ public class BatchAggregationLoaderUnitTests {
 	}
 
 	@Test // DATAMONGO-1824
-	public void shouldLoadJustOneBatchWhenAlreayDoneWithFirst() {
+	public void shouldLoadWithoutCursor() {
+
+		when(template.executeCommand(any(Document.class), any(ReadPreference.class))).thenReturn(aggregationResult);
+		when(aggregationResult.get("result")).thenReturn(singletonList(luke));
+
+		Document result = loader.aggregate("person", AGGREGATION, Aggregation.DEFAULT_CONTEXT);
+		assertThat((List) result.get("result")).contains(luke);
+
+		verify(template).executeCommand(any(Document.class), any(ReadPreference.class));
+		verifyNoMoreInteractions(template);
+	}
+
+	@Test // DATAMONGO-1824
+	public void shouldLoadJustOneBatchWhenAlreadyDoneWithFirst() {
 
 		when(template.executeCommand(any(Document.class), any(ReadPreference.class))).thenReturn(aggregationResult);
 		when(aggregationResult.containsKey("cursor")).thenReturn(true);
@@ -68,8 +85,7 @@ public class BatchAggregationLoaderUnitTests {
 
 		Document result = loader.aggregate("person", AGGREGATION, Aggregation.DEFAULT_CONTEXT);
 		
-		assertThat((List<Object>) result.get("result"),
-				IsCollectionContaining.<Object> hasItem(new Document("name", "luke")));
+		assertThat((List) result.get("result")).contains(luke);
 
 		verify(template).executeCommand(any(Document.class), any(ReadPreference.class));
 		verifyNoMoreInteractions(template);
@@ -86,8 +102,7 @@ public class BatchAggregationLoaderUnitTests {
 		when(getMoreResult.get("cursor")).thenReturn(cursorWithNoMore);
 
 		Document result = loader.aggregate("person", AGGREGATION, Aggregation.DEFAULT_CONTEXT);
-		assertThat((List<Object>) result.get("result"),
-				IsCollectionContaining.<Object> hasItems(new Document("name", "luke"), new Document("name", "han")));
+		assertThat((List) result.get("result")).containsSequence(luke, han);
 
 		verify(template, times(2)).executeCommand(any(Document.class), any(ReadPreference.class));
 		verifyNoMoreInteractions(template);
