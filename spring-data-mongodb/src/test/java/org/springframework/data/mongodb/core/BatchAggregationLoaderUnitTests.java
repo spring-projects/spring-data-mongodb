@@ -38,7 +38,10 @@ import com.mongodb.DBObject;
 import com.mongodb.ReadPreference;
 
 /**
+ * Unit tests for {@link BatchAggregationLoader}.
+ * 
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class BatchAggregationLoaderUnitTests {
@@ -52,11 +55,13 @@ public class BatchAggregationLoaderUnitTests {
 
 	BatchAggregationLoader loader;
 
-	DBObject cursorWithoutMore = new BasicDBObject("firstBatch", singletonList(new BasicDBObject("name", "luke")));
+	BasicDBObject luke = new BasicDBObject("name", "luke");
+	BasicDBObject han = new BasicDBObject("name", "han");
+	DBObject cursorWithoutMore = new BasicDBObject("firstBatch", singletonList(luke));
 	DBObject cursorWithMore = new BasicDBObject("id", 123).append("firstBatch",
-			singletonList(new BasicDBObject("name", "luke")));
+			singletonList(luke));
 	DBObject cursorWithNoMore = new BasicDBObject("id", 0).append("nextBatch",
-			singletonList(new BasicDBObject("name", "han")));
+			singletonList(han));
 
 	@Before
 	public void setUp() {
@@ -64,7 +69,20 @@ public class BatchAggregationLoaderUnitTests {
 	}
 
 	@Test // DATAMONGO-1824
-	public void shouldLoadJustOneBatchWhenAlreayDoneWithFirst() {
+	public void shouldLoadWithoutCursor() {
+
+		when(template.executeCommand(any(DBObject.class), any(ReadPreference.class))).thenReturn(aggregationResult);
+		when(aggregationResult.get("result")).thenReturn(singletonList(luke));
+
+		DBObject result = loader.aggregate("person", AGGREGATION, Aggregation.DEFAULT_CONTEXT);
+		assertThat((List<Object>) result.get("result"), IsCollectionContaining.<Object> hasItem(luke));
+
+		verify(template).executeCommand(any(DBObject.class), any(ReadPreference.class));
+		verifyNoMoreInteractions(template);
+	}
+
+	@Test // DATAMONGO-1824
+	public void shouldLoadJustOneBatchWhenAlreadyDoneWithFirst() {
 
 		when(template.executeCommand(any(DBObject.class), any(ReadPreference.class))).thenReturn(aggregationResult);
 		when(aggregationResult.containsField("cursor")).thenReturn(true);
@@ -72,7 +90,7 @@ public class BatchAggregationLoaderUnitTests {
 
 		DBObject result = loader.aggregate("person", AGGREGATION, Aggregation.DEFAULT_CONTEXT);
 		assertThat((List<Object>) result.get("result"),
-				IsCollectionContaining.<Object> hasItem(new BasicDBObject("name", "luke")));
+				IsCollectionContaining.<Object> hasItem(luke));
 
 		verify(template).executeCommand(any(DBObject.class), any(ReadPreference.class));
 		verifyNoMoreInteractions(template);
@@ -90,7 +108,7 @@ public class BatchAggregationLoaderUnitTests {
 
 		DBObject result = loader.aggregate("person", AGGREGATION, Aggregation.DEFAULT_CONTEXT);
 		assertThat((List<Object>) result.get("result"),
-				IsCollectionContaining.<Object> hasItems(new BasicDBObject("name", "luke"), new BasicDBObject("name", "han")));
+				IsCollectionContaining.<Object> hasItems(luke, han));
 
 		verify(template, times(2)).executeCommand(any(DBObject.class), any(ReadPreference.class));
 		verifyNoMoreInteractions(template);
