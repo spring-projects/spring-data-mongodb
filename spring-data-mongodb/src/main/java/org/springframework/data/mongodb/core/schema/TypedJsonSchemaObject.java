@@ -183,8 +183,8 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 
 	private Optional<String> getOrCreateDescription() {
 
-		if (StringUtils.hasText(description)) {
-			return Optional.of(description);
+		if (description != null) {
+			return description.isEmpty() ? Optional.empty() : Optional.of(description);
 		}
 
 		return Optional.ofNullable(generateDescription());
@@ -572,6 +572,31 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 					.map(JsonSchemaProperty::toDocument) //
 					.collect(Document::new, (target, propertyDocument) -> target.putAll(propertyDocument),
 							(target, propertyDocument) -> {});
+		}
+
+		@Nullable
+		@Override
+		protected String generateDescription() {
+
+			String errorMsg = "Must be an object";
+
+			if (nrProperties != null) {
+				errorMsg += " with " + nrProperties + " properties";
+			}
+
+			if (!CollectionUtils.isEmpty(requiredProperties)) {
+
+				if (requiredProperties.size() == 1) {
+					errorMsg += " where " + requiredProperties.iterator().next() + "is mandatory";
+				} else {
+					errorMsg += " where " + StringUtils.collectionToDelimitedString(requiredProperties, ", ") + " are mandatory";
+				}
+			}
+			if (additionalProperties instanceof Boolean) {
+				errorMsg += (((Boolean) additionalProperties) ? " " : " not ") + "allowing additional properties";
+			}
+
+			return errorMsg + ".";
 		}
 	}
 
@@ -988,6 +1013,22 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 			newInstance.length = this.length;
 			newInstance.pattern = this.pattern;
 			return newInstance;
+		}
+
+		@Nullable
+		@Override
+		protected String generateDescription() {
+
+			String errorMsg = "Must be a string";
+
+			if (length != null) {
+				errorMsg += " with length " + length;
+			}
+			if (pattern != null) {
+				errorMsg += " matching " + pattern;
+			}
+
+			return errorMsg + ".";
 		}
 	}
 

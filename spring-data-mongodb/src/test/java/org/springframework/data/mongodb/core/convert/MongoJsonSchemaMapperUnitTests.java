@@ -178,7 +178,7 @@ public class MongoJsonSchemaMapperUnitTests {
 	public void constructReferenceSchemaCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder() //
-				.required("name", "year", "major", "gradePointAverage") //
+				.required("name", "year", "major", "gradePointAverage").description("") //
 				.properties(string("name").description("must be a string and is required"), //
 						string("gender").description("must be a string and is not required"), //
 						int32("year").description("must be an integer in [ 2017, 3017 ] and is required").gte(2017).lt(3017), //

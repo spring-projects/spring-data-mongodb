@@ -136,6 +136,11 @@ public class MongoJsonSchema {
 			return this;
 		}
 
+		public MongoJsonSchemaBuilder description(String description) {
+			root = root.description(description);
+			return this;
+		}
+
 		public MongoJsonSchema build() {
 			return MongoJsonSchema.of(root);
 		}
