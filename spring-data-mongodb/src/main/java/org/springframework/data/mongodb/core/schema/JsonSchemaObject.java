@@ -17,664 +17,108 @@ package org.springframework.data.mongodb.core.schema;
 
 import lombok.RequiredArgsConstructor;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.bson.Document;
-import org.springframework.data.domain.Range;
-import org.springframework.data.domain.Range.Bound;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NullJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.StringJsonSchemaObject;
 
 /**
  * @author Christoph Strobl
- * @since 2017/12
+ * @since 2.1
  */
 public interface JsonSchemaObject {
 
-	@Nullable
+	/**
+	 * Get the set of types defined for this schema element.<br />
+	 * The {@link Set} is likely to contain only one element in most cases.
+	 *
+	 * @return never {@literal null}.
+	 */
 	Set<Type> getTypes();
 
+	/**
+	 * Get the MongoDB specific representation.<br />
+	 * The Document may contain fields (eg. like {@literal bsonType}) not contained in the JsonSchema specification. It
+	 * may also contain types not directly processable by the MongoDB java driver. Make sure to run the produced
+	 * {@link Document} through the mapping infrastructure.
+	 *
+	 * @return never {@literal null}.
+	 */
 	Document toDocument();
 
-	class ObjectJsonSchemaObject extends AbstractJsonSchemaObject {
-
-		private @Nullable Range<Integer> nrProperties;
-		private @Nullable Object additionalProperties;
-		private List<String> requiredProperties = Collections.emptyList();
-		private List<JsonSchemaProperty> properties = Collections.emptyList();
-		private List<JsonSchemaProperty> patternProperties = Collections.emptyList();
-
-		public ObjectJsonSchemaObject() {
-			this(null, null);
-		}
-
-		public ObjectJsonSchemaObject(@Nullable String description, @Nullable Restrictions restrictions) {
-			super(Type.objectType(), description, restrictions);
-		}
-
-		/*
-		 * minProperties	objects	integer	Indicates the field’s minimum number of properties
-		 * maxProperties	strings	integer	Indicates the field’s maximum number of properties
-		 */
-		public ObjectJsonSchemaObject nrProperties(@Nullable Range<Integer> range) {
-
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.nrProperties = range;
-			return newInstance;
-		}
-
-		/*
-		 * inProperties	objects	integer	Indicates the field’s minimum number of properties
-		 */
-		public ObjectJsonSchemaObject minNrProperties(int nrProperties) {
-
-			Bound upper = this.nrProperties != null ? this.nrProperties.getUpperBound() : Bound.unbounded();
-			return nrProperties(Range.of(Bound.inclusive(nrProperties), upper));
-		}
-
-		/*
-		 * maxProperties	strings	integer	Indicates the field’s maximum number of properties
-		 */
-		public ObjectJsonSchemaObject maxNrProperties(int nrProperties) {
-
-			Bound lower = this.nrProperties != null ? this.nrProperties.getLowerBound() : Bound.unbounded();
-			return nrProperties(Range.of(lower, Bound.inclusive(nrProperties)));
-		}
-
-		/*
-		 * required	objects	array of unique strings	Object’s property set must contain all the specified elements in the array
-		 */
-		public ObjectJsonSchemaObject required(String... properties) {
-
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.requiredProperties = new ArrayList<>(this.requiredProperties.size() + properties.length);
-			newInstance.requiredProperties.addAll(this.requiredProperties);
-			newInstance.requiredProperties.addAll(Arrays.asList(properties));
-			return newInstance;
-		}
-
-		/*
-		 * required	objects	array of unique strings	Object’s property set must contain all the specified elements in the array
-		 */
-		public ObjectJsonSchemaObject additionalProperties(boolean additionalPropertiesAllowed) {
-
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.additionalProperties = additionalPropertiesAllowed;
-			return newInstance;
-		}
-
-		public ObjectJsonSchemaObject additionalProperties(ObjectJsonSchemaObject schema) {
-
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.additionalProperties = schema;
-			return newInstance;
-		}
-
-		public ObjectJsonSchemaObject properties(JsonSchemaProperty... properties) {
-
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.properties = new ArrayList<>(this.properties.size() + properties.length);
-			newInstance.properties.addAll(this.properties);
-			newInstance.properties.addAll(Arrays.asList(properties));
-			return newInstance;
-		}
-
-		public ObjectJsonSchemaObject patternProperties(JsonSchemaProperty... properties) {
-
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.patternProperties = new ArrayList<>(this.patternProperties.size() + properties.length);
-			newInstance.patternProperties.addAll(this.patternProperties);
-			newInstance.patternProperties.addAll(Arrays.asList(properties));
-			return newInstance;
-		}
-
-		public ObjectJsonSchemaObject property(JsonSchemaProperty property) {
-			return properties(property);
-		}
-
-		/*
-		 * minProperties	objects	integer	Indicates the field’s minimum number of properties
-		 * required	objects	array of unique strings	Object’s property set must contain all the specified elements in the array
-		 * additionalProperties	objects	boolean or object If true, additional fields are allowed. If false, they are not. If a valid JSON Schema object is specified, additional fields must validate against the schema. Defaults to true.
-		
-		 * properties	objects	object	A valid JSON Schema where each value is also a valid JSON Schema object
-		 * patternProperties	objects	object	In addition to properties requirements, each property name of this object must be a valid regular expression
-		 * dependencies	objects	object
-		 */
-
-		@Override
-		public ObjectJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return newInstance(description, restrictions.possibleValues(possibleValues));
-		}
-
-		@Override
-		public ObjectJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return newInstance(description, restrictions.allOf(allOf));
-		}
-
-		@Override
-		public ObjectJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return newInstance(description, restrictions.anyOf(anyOf));
-		}
-
-		@Override
-		public ObjectJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return newInstance(description, restrictions.oneOf(oneOf));
-		}
-
-		@Override
-		public ObjectJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return newInstance(description, restrictions.notMatch(notMatch));
-		}
-
-		@Override
-		public ObjectJsonSchemaObject description(String description) {
-			return newInstance(description, restrictions);
-		}
-
-		@Override
-		public Document toDocument() {
-
-			Document doc = new Document(super.toDocument());
-			if (!CollectionUtils.isEmpty(requiredProperties)) {
-				doc.append("required", requiredProperties);
-			}
-
-			if (nrProperties != null) {
-
-				if (nrProperties.getLowerBound().isBounded()) {
-					doc.append("minProperties", nrProperties.getLowerBound().getValue().get());
-
-				}
-
-				if (nrProperties.getUpperBound().isBounded()) {
-					doc.append("maxProperties", nrProperties.getUpperBound().getValue().get());
-				}
-			}
-			if (!CollectionUtils.isEmpty(properties)) {
-				doc.append("properties", reduceToDocument(properties));
-			}
-
-			if (!CollectionUtils.isEmpty(patternProperties)) {
-				doc.append("patternProperties", reduceToDocument(patternProperties));
-			}
-
-			if (additionalProperties != null) {
-
-				doc.append("additionalProperties", additionalProperties instanceof JsonSchemaObject
-						? ((JsonSchemaObject) additionalProperties).toDocument() : additionalProperties);
-			}
-			return doc;
-		}
-
-		private ObjectJsonSchemaObject newInstance(String description, Restrictions restrictions) {
-
-			ObjectJsonSchemaObject newInstance = new ObjectJsonSchemaObject(description, restrictions);
-			newInstance.properties = this.properties;
-			newInstance.requiredProperties = this.requiredProperties;
-			newInstance.additionalProperties = this.additionalProperties;
-			newInstance.nrProperties = this.nrProperties;
-			newInstance.patternProperties = this.patternProperties;
-			return newInstance;
-		}
-
-		private Document reduceToDocument(Collection<JsonSchemaProperty> source) {
-
-			return source.stream() //
-					.map(JsonSchemaProperty::toDocument) //
-					.collect(Document::new, (target, propertyDocument) -> target.putAll(propertyDocument),
-							(target, propertyDocument) -> {});
-		}
+	/**
+	 * Create a new {@link JsonSchemaObject} of {@code type : 'object'}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static ObjectJsonSchemaObject object() {
+		return new ObjectJsonSchemaObject();
 	}
 
-	static class NumericJsonSchemaObject extends AbstractJsonSchemaObject {
-
-		private static final Set<Type> NUMERIC_TYPES = new HashSet<>(
-				Arrays.asList(Type.doubleType(), Type.intType(), Type.longType(), Type.numberType(), Type.bigintType()));
-
-		@Nullable Number multipleOf;
-		@Nullable Range<? extends Number> range;
-
-		public NumericJsonSchemaObject() {
-			this(null);
-		}
-
-		public NumericJsonSchemaObject(@Nullable String description) {
-			this(Type.numberType(), description);
-		}
-
-		public NumericJsonSchemaObject(Type type, @Nullable String description) {
-			this(Collections.singleton(type), description, null);
-		}
-
-		public NumericJsonSchemaObject(Set<Type> types, @Nullable String description, @Nullable Restrictions restrictions) {
-			super(validateTypes(types), description, restrictions);
-		}
-
-		private static Set<Type> validateTypes(Set<Type> types) {
-
-			types.forEach(type -> {
-				Assert.isTrue(NUMERIC_TYPES.contains(type),
-						() -> String.format("%s is not a valid numeric type. Expected one of %s.", type, NUMERIC_TYPES));
-			});
-
-			return types;
-		}
-
-		/* multipleOf	numbers	number	Field must be a multiple of this value */
-		NumericJsonSchemaObject multipleOf(Number value) {
-
-			NumericJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.multipleOf = value;
-			return newInstance;
-		}
-
-		/*
-		
-		maximum				numbers	number	Indicates the maximum value of the field
-		exclusiveMaximum	numbers	boolean	If true and field is a number, maximum is an exclusive maximum. Otherwise, it is an inclusive maximum.
-		minimum				numbers	number	Indicates the minimum value of the field
-		exclusiveMinimum	numbers	boolean	If true, minimum is an exclusive minimum. Otherwise, it is an inclusive minimum.
-		 */
-		NumericJsonSchemaObject within(Range<? extends Number> range) {
-
-			NumericJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.range = range;
-			return newInstance;
-		}
-
-		NumericJsonSchemaObject gt(Number min) {
-
-			Bound upper = this.range != null ? this.range.getUpperBound() : Bound.unbounded();
-
-			if (min instanceof Long) {
-				return within(Range.of(Bound.exclusive((Long) min), upper));
-			}
-			if (min instanceof Double) {
-				return within(Range.of(Bound.exclusive((Double) min), upper));
-			}
-			if (min instanceof Float) {
-				return within(Range.of(Bound.exclusive((Float) min), upper));
-			}
-			if (min instanceof Integer) {
-				return within(Range.of(Bound.exclusive((Integer) min), upper));
-			}
-			if (min instanceof BigDecimal) {
-				return within(Range.of(Bound.exclusive((BigDecimal) min), upper));
-			}
-
-			throw new IllegalArgumentException("Unsupported numeric value.");
-		}
-
-		NumericJsonSchemaObject gte(Number min) {
-
-			Bound upper = this.range != null ? this.range.getUpperBound() : Bound.unbounded();
-
-			if (min instanceof Long) {
-				return within(Range.of(Bound.inclusive((Long) min), upper));
-			}
-			if (min instanceof Double) {
-				return within(Range.of(Bound.inclusive((Double) min), upper));
-			}
-			if (min instanceof Float) {
-				return within(Range.of(Bound.inclusive((Float) min), upper));
-			}
-			if (min instanceof Integer) {
-				return within(Range.of(Bound.inclusive((Integer) min), upper));
-			}
-			if (min instanceof BigDecimal) {
-				return within(Range.of(Bound.inclusive((BigDecimal) min), upper));
-			}
-
-			throw new IllegalArgumentException("Unsupported numeric value.");
-		}
-
-		NumericJsonSchemaObject lt(Number max) {
-
-			Bound lower = this.range != null ? this.range.getLowerBound() : Bound.unbounded();
-
-			if (max instanceof Long) {
-				return within(Range.of(lower, Bound.exclusive((Long) max)));
-			}
-			if (max instanceof Double) {
-				return within(Range.of(lower, Bound.exclusive((Double) max)));
-			}
-			if (max instanceof Float) {
-				return within(Range.of(lower, Bound.exclusive((Float) max)));
-			}
-			if (max instanceof Integer) {
-				return within(Range.of(lower, Bound.exclusive((Integer) max)));
-			}
-			if (max instanceof BigDecimal) {
-				return within(Range.of(lower, Bound.exclusive((BigDecimal) max)));
-			}
-
-			throw new IllegalArgumentException("Unsupported numeric value.");
-		}
-
-		NumericJsonSchemaObject lte(Number max) {
-
-			Bound lower = this.range != null ? this.range.getLowerBound() : Bound.unbounded();
-
-			if (max instanceof Long) {
-				return within(Range.of(lower, Bound.inclusive((Long) max)));
-			}
-			if (max instanceof Double) {
-				return within(Range.of(lower, Bound.inclusive((Double) max)));
-			}
-			if (max instanceof Float) {
-				return within(Range.of(lower, Bound.inclusive((Float) max)));
-			}
-			if (max instanceof Integer) {
-				return within(Range.of(lower, Bound.inclusive((Integer) max)));
-			}
-			if (max instanceof BigDecimal) {
-				return within(Range.of(lower, Bound.inclusive((BigDecimal) max)));
-			}
-
-			throw new IllegalArgumentException("Unsupported numeric value.");
-		}
-
-		@Override
-		public NumericJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return newInstance(description, restrictions.possibleValues(possibleValues));
-		}
-
-		@Override
-		public NumericJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return newInstance(description, restrictions.allOf(allOf));
-		}
-
-		@Override
-		public NumericJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return newInstance(description, restrictions.anyOf(anyOf));
-		}
-
-		@Override
-		public NumericJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return newInstance(description, restrictions.oneOf(oneOf));
-		}
-
-		@Override
-		public NumericJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return newInstance(description, restrictions.notMatch(notMatch));
-		}
-
-		@Override
-		public NumericJsonSchemaObject description(String description) {
-			return newInstance(description, restrictions);
-		}
-
-		@Override
-		public Document toDocument() {
-
-			Document doc = new Document(super.toDocument());
-
-			if (multipleOf != null) {
-				doc.append("multipleOf", multipleOf);
-			}
-
-			if (range != null) {
-
-				if (range.getLowerBound().isBounded()) {
-					doc.append("minimum", range.getLowerBound().getValue().get());
-					if (!range.getLowerBound().isInclusive()) {
-						doc.append("exclusiveMinimum", true);
-					}
-				}
-
-				if (range.getUpperBound().isBounded()) {
-					doc.append("maximum", range.getUpperBound().getValue().get());
-					if (!range.getUpperBound().isInclusive()) {
-						doc.append("exclusiveMaximum", true);
-					}
-				}
-			}
-
-			return doc;
-		}
-
-		private NumericJsonSchemaObject newInstance(String description, Restrictions restrictions) {
-
-			NumericJsonSchemaObject newInstance = new NumericJsonSchemaObject(types, description, restrictions);
-
-			newInstance.multipleOf = this.multipleOf;
-			newInstance.range = this.range;
-			return newInstance;
-
-		}
+	/**
+	 * Create a new {@link JsonSchemaObject} of {@code type : 'string'}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static StringJsonSchemaObject string() {
+		return new StringJsonSchemaObject();
 	}
 
-	static class StringJsonSchemaObject extends AbstractJsonSchemaObject {
-
-		@Nullable Range<Integer> length;
-		@Nullable String pattern;
-
-		StringJsonSchemaObject() {
-			this(null, null);
-		}
-
-		public StringJsonSchemaObject(@Nullable String description, @Nullable Restrictions restrictions) {
-			super(Type.stringType(), description, restrictions);
-		}
-
-		/*
-		maxLength	strings	integer	Indicates the maximum length of the field
-		minLength	strings	integer	Indicates the minimum length of the field
-		pattern	strings	string containing a regex	Field must match the regular expression
-		 */
-
-		/*
-		 * maxLength	strings	integer	Indicates the maximum length of the field
-		 * minLength	strings	integer	Indicates the minimum length of the field
-		 */
-		StringJsonSchemaObject length(Range<Integer> range) {
-
-			StringJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.length = range;
-			return newInstance;
-		}
-
-		/*
-		 * minLength	strings	integer	Indicates the minimum length of the field
-		 */
-		StringJsonSchemaObject minLength(int length) {
-
-			Bound upper = this.length != null ? this.length.getUpperBound() : Bound.unbounded();
-			return length(Range.of(Bound.inclusive(length), upper));
-		}
-
-		/*
-		 * maxLength	strings	integer	Indicates the maximum length of the field
-		 */
-		StringJsonSchemaObject maxLength(int length) {
-
-			Bound lower = this.length != null ? this.length.getLowerBound() : Bound.unbounded();
-			return length(Range.of(lower, Bound.inclusive(length)));
-		}
-
-		/*
-		 * pattern	strings	string containing a regex	Field must match the regular expression
-		 */
-		StringJsonSchemaObject matching(String pattern) {
-
-			StringJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.pattern = pattern;
-			return newInstance;
-		}
-
-		@Override
-		public Document toDocument() {
-
-			Document doc = new Document(super.toDocument());
-
-			if (length != null) {
-
-				if (length.getLowerBound().isBounded()) {
-					doc.append("minLength", length.getLowerBound().getValue().get());
-				}
-
-				if (length.getUpperBound().isBounded()) {
-					doc.append("maxLength", length.getUpperBound().getValue().get());
-				}
-			}
-
-			if (!StringUtils.isEmpty(pattern)) {
-				doc.append("pattern", pattern);
-			}
-
-			return doc;
-		}
-
-		@Override
-		public StringJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return newInstance(description, restrictions.possibleValues(possibleValues));
-		}
-
-		@Override
-		public StringJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return newInstance(description, restrictions.allOf(allOf));
-		}
-
-		@Override
-		public StringJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return newInstance(description, restrictions.anyOf(anyOf));
-		}
-
-		@Override
-		public StringJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return newInstance(description, restrictions.oneOf(oneOf));
-		}
-
-		@Override
-		public StringJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return newInstance(description, restrictions.notMatch(notMatch));
-		}
-
-		@Override
-		public StringJsonSchemaObject description(String description) {
-			return newInstance(description, restrictions);
-		}
-
-		private StringJsonSchemaObject newInstance(String description, Restrictions restrictions) {
-
-			StringJsonSchemaObject newInstance = new StringJsonSchemaObject(description, restrictions);
-
-			newInstance.length = this.length;
-			newInstance.pattern = this.pattern;
-			return newInstance;
-		}
+	/**
+	 * Create a new {@link JsonSchemaObject} of {@code type : 'number'}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static NumericJsonSchemaObject number() {
+		return new NumericJsonSchemaObject();
 	}
 
-	static class ArrayJsonSchemaObject extends AbstractJsonSchemaObject {
-
-		private @Nullable Boolean uniqueItems;
-		private @Nullable Range<Integer> range;
-		private Collection<JsonSchemaObject> items;
-
-		public ArrayJsonSchemaObject(@Nullable String description, @Nullable Restrictions restrictions) {
-			super(Collections.singleton(Type.arrayType()), description, restrictions);
-		}
-
-		ArrayJsonSchemaObject uniqueItems(boolean uniqueItems) {
-
-			ArrayJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.uniqueItems = uniqueItems;
-			return newInstance;
-		}
-
-		ArrayJsonSchemaObject range(Range<Integer> range) {
-
-			ArrayJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.range = range;
-			return newInstance;
-		}
-
-		ArrayJsonSchemaObject items(Collection<JsonSchemaObject> items) {
-
-			ArrayJsonSchemaObject newInstance = newInstance(description, restrictions);
-			newInstance.items = new ArrayList<>(items);
-			return newInstance;
-		}
-
-		@Override
-		public ArrayJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return newInstance(description, restrictions.possibleValues(possibleValues));
-		}
-
-		@Override
-		public ArrayJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return newInstance(description, restrictions.allOf(allOf));
-		}
-
-		@Override
-		public ArrayJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return newInstance(description, restrictions.anyOf(anyOf));
-		}
-
-		@Override
-		public ArrayJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return newInstance(description, restrictions.oneOf(oneOf));
-		}
-
-		@Override
-		public ArrayJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return newInstance(description, restrictions.notMatch(notMatch));
-		}
-
-		@Override
-		public ArrayJsonSchemaObject description(String description) {
-			return newInstance(description, restrictions);
-		}
-
-		@Override
-		public Document toDocument() {
-			Document doc = new Document(super.toDocument());
-
-			if (!CollectionUtils.isEmpty(items)) {
-				doc.append("items", items.size() == 1 ? items.iterator().next()
-						: items.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList()));
-			}
-
-			if (range != null) {
-
-				if (range.getLowerBound().isBounded()) {
-					doc.append("minItems", range.getLowerBound().getValue().get());
-				}
-
-				if (range.getUpperBound().isBounded()) {
-					doc.append("maxItems", range.getUpperBound().getValue().get());
-				}
-			}
-
-			if (ObjectUtils.nullSafeEquals(uniqueItems, Boolean.TRUE)) {
-				doc.append("uniqueItems", true);
-			}
-
-			return doc;
-		}
-
-		private ArrayJsonSchemaObject newInstance(String description, Restrictions restrictions) {
-
-			ArrayJsonSchemaObject newInstance = new ArrayJsonSchemaObject(description, restrictions);
-			newInstance.uniqueItems = this.uniqueItems;
-			newInstance.range = this.range;
-			newInstance.items = this.items;
-			return newInstance;
-		}
+	/**
+	 * Create a new {@link JsonSchemaObject} of {@code type : 'array'}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static ArrayJsonSchemaObject array() {
+		return new ArrayJsonSchemaObject();
 	}
 
+	/**
+	 * Create a new {@link JsonSchemaObject} of {@code type : 'boolean'}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static BooleanJsonSchemaObject bool() {
+		return new BooleanJsonSchemaObject();
+	}
+
+	/**
+	 * Create a new {@link JsonSchemaObject} of {@code type : 'null'}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static NullJsonSchemaObject nil() {
+		return new NullJsonSchemaObject();
+	}
+
+	/**
+	 * Create a new {@link JsonSchemaObject} of given {@link Type}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static TypedJsonSchemaObject of(Type type) {
+		return TypedJsonSchemaObject.of(type);
+	}
+
+	/**
+	 * Type represents either a json schema {@literal type} or a MongoDB specific {@literal bsonType}.
+	 */
 	interface Type {
 
 		// BSON TYPES
@@ -702,78 +146,128 @@ public interface JsonSchemaObject {
 
 		final Set<Type> JSON_TYPES = new HashSet<>(Arrays.asList(OBJECT, ARRAY, NUMBER, BOOLEAN, STRING, NULL));
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'objectId' }.
+		 */
 		static Type objectIdType() {
 			return OBJECT_ID;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'regex' }.
+		 */
 		static Type regexType() {
 			return REGULAR_EXPRESSION;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'double' }.
+		 */
 		static Type doubleType() {
 			return DOUBLE;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'binData' }.
+		 */
 		static Type binaryType() {
 			return BINARY_DATA;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'date' }.
+		 */
 		static Type dateType() {
 			return DATE;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'javascript' }.
+		 */
 		static Type javascriptType() {
 			return JAVA_SCRIPT;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'int' }.
+		 */
 		static Type intType() {
 			return INT_32;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'long' }.
+		 */
 		static Type longType() {
 			return INT_64;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'decimal128' }.
+		 */
 		static Type bigintType() {
 			return DECIMAL_128;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code bsonType : 'timestamp' }.
+		 */
 		static Type timestampType() {
 			return TIMESTAMP;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code type : 'object' }.
+		 */
 		static Type objectType() {
 			return OBJECT;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code type : 'array' }.
+		 */
 		static Type arrayType() {
 			return ARRAY;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code type : 'number' }.
+		 */
 		static Type numberType() {
 			return NUMBER;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code type : 'boolean' }.
+		 */
 		static Type booleanType() {
 			return BOOLEAN;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code type : 'string' }.
+		 */
 		static Type stringType() {
 			return STRING;
 		}
 
+		/**
+		 * @return a constant {@link Type} representing {@code type : 'null' }.
+		 */
 		static Type nullType() {
 			return NULL;
 		}
 
-		static Type enumOf(Object... values) {
-			return new EnumType(values);
-		}
-
+		/**
+		 * @return new {@link Type} representing the given {@code bsonType}.
+		 */
 		static Type bsonTypeOf(String name) {
 			return new BsonType(name);
 		}
 
+		/**
+		 * @return new {@link Type} representing the given {@code type}.
+		 */
 		static Type jsonTypeOf(String name) {
 			return new JsonType(name);
 		}
@@ -786,12 +280,22 @@ public interface JsonSchemaObject {
 			return BSON_TYPES;
 		}
 
+		/**
+		 * Get the {@link Type} representation. Either {@code type} or {@code bsonType}.
+		 *
+		 * @return never {@literal null}.
+		 */
 		String representation();
 
+		/**
+		 * Get the {@link Type} value. Like {@literal string}, {@literal number},...
+		 *
+		 * @return never {@literal null}.
+		 */
 		Object value();
 
 		@RequiredArgsConstructor
-		class JsonType implements Type {
+		static class JsonType implements Type {
 
 			private final String name;
 
@@ -807,7 +311,7 @@ public interface JsonSchemaObject {
 		}
 
 		@RequiredArgsConstructor
-		class BsonType implements Type {
+		static class BsonType implements Type {
 
 			private final String name;
 
@@ -821,25 +325,5 @@ public interface JsonSchemaObject {
 				return name;
 			}
 		}
-
-		class EnumType implements Type {
-
-			private final Object[] values;
-
-			private EnumType(Object[] values) {
-				this.values = values;
-			}
-
-			@Override
-			public String representation() {
-				return "enum";
-			}
-
-			@Override
-			public Object[] value() {
-				return values;
-			}
-		}
-
 	}
 }

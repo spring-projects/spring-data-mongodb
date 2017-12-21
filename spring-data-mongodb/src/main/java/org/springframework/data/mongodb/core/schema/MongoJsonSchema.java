@@ -34,7 +34,7 @@ package org.springframework.data.mongodb.core.schema;
 import java.util.Set;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.schema.JsonSchemaObject.ObjectJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.util.Assert;
 
 /**
@@ -51,7 +51,7 @@ public class MongoJsonSchema {
 		this.root = root;
 	}
 
-	public Document toDocument() {  // TODO: consider rename to getSchemaObject() aligning to Query#getQueryObject()
+	public Document toDocument() { // TODO: consider rename to getSchemaObject() aligning to Query#getQueryObject()
 		return new Document("$jsonSchema", root.toDocument());
 	}
 
