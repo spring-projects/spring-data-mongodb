@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2017 the original author or authors.
+ * Copyright 2010-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.springframework.util.Assert;
 
 /**
  * {@link org.springframework.beans.factory.FactoryBean} to create {@link MongoRepository} instances.
- * 
+ *
  * @author Oliver Gierke
  */
 public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
@@ -40,7 +40,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 	/**
 	 * Creates a new {@link MongoRepositoryFactoryBean} for the given repository interface.
-	 * 
+	 *
 	 * @param repositoryInterface must not be {@literal null}.
 	 */
 	public MongoRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
@@ -49,7 +49,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 	/**
 	 * Configures the {@link MongoOperations} to be used.
-	 * 
+	 *
 	 * @param operations the operations to set
 	 */
 	public void setMongoOperations(MongoOperations operations) {
@@ -58,14 +58,14 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 	/**
 	 * Configures whether to automatically create indexes for the properties referenced in a query method.
-	 * 
+	 *
 	 * @param createIndexesForQueryMethods the createIndexesForQueryMethods to set
 	 */
 	public void setCreateIndexesForQueryMethods(boolean createIndexesForQueryMethods) {
 		this.createIndexesForQueryMethods = createIndexesForQueryMethods;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#setMappingContext(org.springframework.data.mapping.context.MappingContext)
 	 */
@@ -78,7 +78,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
 	 * #createRepositoryFactory()
@@ -98,7 +98,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 	/**
 	 * Creates and initializes a {@link RepositoryFactorySupport} instance.
-	 * 
+	 *
 	 * @param operations
 	 * @return
 	 */
@@ -108,7 +108,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
 	 * #afterPropertiesSet()

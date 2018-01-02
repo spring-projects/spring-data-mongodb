@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.springframework.util.Assert;
  * <p>
  * We recommend to use the static factory method {@link Aggregation#geoNear(NearQuery, String)} instead of creating
  * instances of this class directly.
- * 
+ *
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @since 1.3
@@ -37,7 +37,7 @@ public class GeoNearOperation implements AggregationOperation {
 	/**
 	 * Creates a new {@link GeoNearOperation} from the given {@link NearQuery} and the given distance field. The
 	 * {@code distanceField} defines output field that contains the calculated distance.
-	 * 
+	 *
 	 * @param query must not be {@literal null}.
 	 * @param distanceField must not be {@literal null}.
 	 */
@@ -50,7 +50,7 @@ public class GeoNearOperation implements AggregationOperation {
 		this.distanceField = distanceField;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */

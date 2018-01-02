@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ import com.mongodb.MongoClient;
  * <strong>after</strong> the base {@link Statement}. <br />
  * Use as {@link org.junit.ClassRule} to wipe data after finishing all tests within a class or as {@link org.junit.Rule}
  * to do so after each {@link org.junit.Test}.
- * 
+ *
  * @author Christoph Strobl
  * @since 1.6
  */
@@ -77,7 +77,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Create new instance using an internal {@link MongoClient} connecting to specified instance running at host:port.
-	 * 
+	 *
 	 * @param host
 	 * @param port
 	 * @throws UnknownHostException
@@ -88,7 +88,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Create new instance using the given client.
-	 * 
+	 *
 	 * @param client
 	 */
 	public CleanMongoDB(MongoClient client) {
@@ -97,7 +97,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Removes everything by dropping every single {@link DB}.
-	 * 
+	 *
 	 * @return
 	 */
 	public static CleanMongoDB everything() {
@@ -109,7 +109,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Removes everything from the databases with given name by dropping the according {@link DB}.
-	 * 
+	 *
 	 * @param dbNames
 	 * @return
 	 */
@@ -123,7 +123,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Drops the {@link DBCollection} with given names from every single {@link DB} containing them.
-	 * 
+	 *
 	 * @param collectionNames
 	 * @return
 	 */
@@ -133,7 +133,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Drops the {@link DBCollection} with given names from the named {@link DB}.
-	 * 
+	 *
 	 * @param dbName
 	 * @param collectionNames
 	 * @return
@@ -148,7 +148,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Drops all index structures from every single {@link DBCollection}.
-	 * 
+	 *
 	 * @return
 	 */
 	public static CleanMongoDB indexes() {
@@ -157,7 +157,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Drops all index structures from every single {@link DBCollection}.
-	 * 
+	 *
 	 * @param collectionNames
 	 * @return
 	 */
@@ -171,7 +171,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Define {@link Struct} to be cleaned.
-	 * 
+	 *
 	 * @param types
 	 * @return
 	 */
@@ -189,7 +189,7 @@ public class CleanMongoDB implements TestRule {
 	 * <li>{@link Struct#COLLECTION}: Forces drop of collections within named databases.</li>
 	 * <li>{@link Struct#INDEX}: Removes index within collections of named databases.</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param dbNames
 	 * @return
 	 */
@@ -201,7 +201,7 @@ public class CleanMongoDB implements TestRule {
 
 	/**
 	 * Excludes the given {@link DB}s from being processed.
-	 * 
+	 *
 	 * @param dbNames
 	 * @return
 	 */
@@ -217,7 +217,7 @@ public class CleanMongoDB implements TestRule {
 	 * <li>{@link Struct#COLLECTION}: Forces drop of named collections.</li>
 	 * <li>{@link Struct#INDEX}: Removes index within named collections.</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param collectionNames
 	 * @return
 	 */
@@ -236,7 +236,7 @@ public class CleanMongoDB implements TestRule {
 	 * <li>{@link Struct#COLLECTION}: Forces drop of named collections in given db.</li>
 	 * <li>{@link Struct#INDEX}: Removes index within named collections in given db.</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param collectionNames
 	 * @return
 	 */

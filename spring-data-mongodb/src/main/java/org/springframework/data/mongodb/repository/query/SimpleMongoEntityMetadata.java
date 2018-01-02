@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.springframework.util.Assert;
 
 /**
  * Bean based implementation of {@link MongoEntityMetadata}.
- * 
+ *
  * @author Oliver Gierke
  */
 class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
@@ -31,7 +31,7 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 	/**
 	 * Creates a new {@link SimpleMongoEntityMetadata} using the given type and {@link MongoPersistentEntity} to use for
 	 * collection lookups.
-	 * 
+	 *
 	 * @param type must not be {@literal null}.
 	 * @param collectionEntity must not be {@literal null} or empty.
 	 */
@@ -44,7 +44,7 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 		this.collectionEntity = collectionEntity;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.EntityMetadata#getJavaType()
 	 */
@@ -52,7 +52,7 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 		return type;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoEntityMetadata#getCollectionName()
 	 */

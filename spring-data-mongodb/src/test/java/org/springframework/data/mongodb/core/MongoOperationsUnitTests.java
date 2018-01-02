@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ import com.mongodb.DBRef;
 /**
  * Abstract base class for unit tests to specify behaviour we expect from {@link MongoOperations}. Subclasses return
  * instances of their implementation and thus can see if it correctly implements the {@link MongoOperations} interface.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -364,14 +364,14 @@ public abstract class MongoOperationsUnitTests {
 	/**
 	 * Expects an {@link MongoOperations} instance that will be used to check that invoking methods on it will only cause
 	 * {@link DataAccessException}s.
-	 * 
+	 *
 	 * @return
 	 */
 	protected abstract MongoOperations getOperationsForExceptionHandling();
 
 	/**
 	 * Returns a plain {@link MongoOperations}.
-	 * 
+	 *
 	 * @return
 	 */
 	protected abstract MongoOperations getOperations();

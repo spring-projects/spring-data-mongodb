@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.springframework.data.geo.Point;
 
 /**
  * {@link GeoJson} representation of {@link Point}.
- * 
+ *
  * @author Christoph Strobl
  * @since 1.7
  * @see <a href="http://geojson.org/geojson-spec.html#point">http://geojson.org/geojson-spec.html#point</a>
@@ -35,7 +35,7 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 
 	/**
 	 * Creates {@link GeoJsonPoint} for given coordinates.
-	 * 
+	 *
 	 * @param x
 	 * @param y
 	 */
@@ -45,7 +45,7 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 
 	/**
 	 * Creates {@link GeoJsonPoint} for given {@link Point}.
-	 * 
+	 *
 	 * @param point must not be {@literal null}.
 	 */
 	public GeoJsonPoint(Point point) {

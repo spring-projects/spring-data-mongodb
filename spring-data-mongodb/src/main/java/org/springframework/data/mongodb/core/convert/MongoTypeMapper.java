@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.springframework.data.convert.TypeMapper;
 
 /**
  * Mongo-specific {@link TypeMapper} exposing that {@link Document}s might contain a type key.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @since 1.0
@@ -32,7 +32,7 @@ public interface MongoTypeMapper extends TypeMapper<Bson> {
 
 	/**
 	 * Returns whether the given key is the type key.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean isTypeKey(String key);
@@ -41,7 +41,7 @@ public interface MongoTypeMapper extends TypeMapper<Bson> {
 	 * Writes type restrictions to the given {@link Document}. This usually results in an {@code $in}-clause to be
 	 * generated that restricts the type-key (e.g. {@code _class}) to be in the set of type aliases for the given
 	 * {@code restrictedTypes}.
-	 * 
+	 *
 	 * @param result must not be {@literal null}
 	 * @param restrictedTypes must not be {@literal null}
 	 */

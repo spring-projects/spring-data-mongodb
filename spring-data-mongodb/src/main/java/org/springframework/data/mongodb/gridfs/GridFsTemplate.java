@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 /**
  * {@link GridFsOperations} implementation to store content into MongoDB GridFS.
- * 
+ *
  * @author Oliver Gierke
  * @author Philipp Schneider
  * @author Thomas Darimont
@@ -62,7 +62,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 	/**
 	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
-	 * 
+	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 */
@@ -72,7 +72,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 	/**
 	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
-	 * 
+	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 * @param bucket

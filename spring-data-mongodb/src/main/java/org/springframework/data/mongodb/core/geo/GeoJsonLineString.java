@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.springframework.data.geo.Point;
 
 /**
  * {@link GeoJsonLineString} is defined as list of at least 2 {@link Point}s.
- * 
+ *
  * @author Christoph Strobl
  * @since 1.7
  * @see <a href="http://geojson.org/geojson-spec.html#linestring">http://geojson.org/geojson-spec.html#linestring</a>
@@ -32,7 +32,7 @@ public class GeoJsonLineString extends GeoJsonMultiPoint {
 
 	/**
 	 * Creates a new {@link GeoJsonLineString} for the given {@link Point}s.
-	 * 
+	 *
 	 * @param points must not be {@literal null} and have at least 2 entries.
 	 */
 	public GeoJsonLineString(List<Point> points) {
@@ -41,7 +41,7 @@ public class GeoJsonLineString extends GeoJsonMultiPoint {
 
 	/**
 	 * Creates a new {@link GeoJsonLineString} for the given {@link Point}s.
-	 * 
+	 *
 	 * @param first must not be {@literal null}
 	 * @param second must not be {@literal null}
 	 * @param others can be {@literal null}

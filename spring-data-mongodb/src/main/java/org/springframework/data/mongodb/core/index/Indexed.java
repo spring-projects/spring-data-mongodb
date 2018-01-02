@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 
 /**
  * Mark a field to be indexed using MongoDB's indexing feature.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Philipp Schneider
@@ -37,7 +37,7 @@ public @interface Indexed {
 
 	/**
 	 * If set to true reject all documents that contain a duplicate value for the indexed field.
-	 * 
+	 *
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
@@ -47,7 +47,7 @@ public @interface Indexed {
 
 	/**
 	 * If set to true index will skip over any document that is missing the indexed field.
-	 * 
+	 *
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
@@ -66,7 +66,7 @@ public @interface Indexed {
 	 * provided name will be prefixed with the path leading to the entity. <br />
 	 * <br />
 	 * The structure below
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * &#64;Document
@@ -74,20 +74,20 @@ public @interface Indexed {
 	 *   Hybrid hybrid;
 	 *   Nested nested;
 	 * }
-	 * 
+	 *
 	 * &#64;Document
 	 * class Hybrid {
 	 *   &#64;Indexed(name="index") String h1;
 	 * }
-	 * 
+	 *
 	 * class Nested {
 	 *   &#64;Indexed(name="index") String n1;
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * resolves in the following index structures
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * db.root.createIndex( { hybrid.h1: 1 } , { name: "hybrid.index" } )
@@ -95,7 +95,7 @@ public @interface Indexed {
 	 * db.hybrid.createIndex( { h1: 1} , { name: "index" } )
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @return
 	 */
 	String name() default "";
@@ -103,7 +103,7 @@ public @interface Indexed {
 	/**
 	 * If set to {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults
 	 * to {@literal false}.
-	 * 
+	 *
 	 * @return
 	 * @since 1.5
 	 */
@@ -111,7 +111,7 @@ public @interface Indexed {
 
 	/**
 	 * If {@literal true} the index will be created in the background.
-	 * 
+	 *
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
 	 */
@@ -119,7 +119,7 @@ public @interface Indexed {
 
 	/**
 	 * Configures the number of seconds after which the collection should expire. Defaults to -1 for no expiry.
-	 * 
+	 *
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
 	 */

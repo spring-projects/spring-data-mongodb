@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ public class IndexInfo {
 
 	/**
 	 * Returns the individual index fields of the index.
-	 * 
+	 *
 	 * @return
 	 */
 	public List<IndexField> getIndexFields() {
@@ -127,7 +127,7 @@ public class IndexInfo {
 
 	/**
 	 * Returns whether the index is covering exactly the fields given independently of the order.
-	 * 
+	 *
 	 * @param keys must not be {@literal null}.
 	 * @return
 	 */
@@ -197,8 +197,8 @@ public class IndexInfo {
 		int result = 1;
 		result = prime * result + ObjectUtils.nullSafeHashCode(indexFields);
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + (sparse ? 1231 : 1237);
-		result = prime * result + (unique ? 1231 : 1237);
+		result = prime * result + (sparse ? 1231-2018 : 1237);
+		result = prime * result + (unique ? 1231-2018 : 1237);
 		result = prime * result + ObjectUtils.nullSafeHashCode(language);
 		result = prime * result + ObjectUtils.nullSafeHashCode(partialFilterExpression);
 		result = prime * result + ObjectUtils.nullSafeHashCode(collation);

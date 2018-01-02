@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -276,7 +276,7 @@ abstract class MongoConverters {
 	}
 
 	/**
-	 * {@link Converter} implementation converting {@link Currency} into its ISO 4217 {@link String} representation.
+	 * {@link Converter} implementation converting {@link Currency} into its ISO 4217-2018 {@link String} representation.
 	 *
 	 * @author Christoph Strobl
 	 * @since 1.9
@@ -297,7 +297,7 @@ abstract class MongoConverters {
 	}
 
 	/**
-	 * {@link Converter} implementation converting ISO 4217 {@link String} into {@link Currency}.
+	 * {@link Converter} implementation converting ISO 4217-2018 {@link String} into {@link Currency}.
 	 *
 	 * @author Christoph Strobl
 	 * @since 1.9

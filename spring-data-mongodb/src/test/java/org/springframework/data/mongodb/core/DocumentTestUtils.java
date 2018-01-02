@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import com.mongodb.BasicDBList;
 
 /**
  * Helper classes to ease assertions on {@link Document}s.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  */
@@ -36,7 +36,7 @@ public abstract class DocumentTestUtils {
 
 	/**
 	 * Expects the field with the given key to be not {@literal null} and a {@link Document} in turn and returns it.
-	 * 
+	 *
 	 * @param source the {@link Document} to lookup the nested one
 	 * @param key the key of the field to lokup the nested {@link Document}
 	 * @return
@@ -47,7 +47,7 @@ public abstract class DocumentTestUtils {
 
 	/**
 	 * Expects the field with the given key to be not {@literal null} and a {@link BasicDBList}.
-	 * 
+	 *
 	 * @param source the {@link Document} to lookup the {@link List} in
 	 * @param key the key of the field to find the {@link List} in
 	 * @return
@@ -58,7 +58,7 @@ public abstract class DocumentTestUtils {
 
 	/**
 	 * Expects the list element with the given index to be a non-{@literal null} {@link Document} and returns it.
-	 * 
+	 *
 	 * @param source the {@link List} to look up the {@link Document} element in
 	 * @param index the index of the element expected to contain a {@link Document}
 	 * @return

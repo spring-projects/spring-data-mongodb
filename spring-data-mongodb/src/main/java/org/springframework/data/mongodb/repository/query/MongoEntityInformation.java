@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,21 +19,21 @@ import org.springframework.data.repository.core.EntityInformation;
 
 /**
  * Mongo specific {@link EntityInformation}.
- * 
+ *
  * @author Oliver Gierke
  */
 public interface MongoEntityInformation<T, ID> extends EntityInformation<T, ID> {
 
 	/**
 	 * Returns the name of the collection the entity shall be persisted to.
-	 * 
+	 *
 	 * @return
 	 */
 	String getCollectionName();
 
 	/**
 	 * Returns the attribute that the id will be persisted to.
-	 * 
+	 *
 	 * @return
 	 */
 	String getIdAttribute();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 /**
  * Abstraction for a field.
- * 
+ *
  * @author Oliver Gierke
  * @since 1.3
  */
@@ -25,21 +25,21 @@ public interface Field {
 
 	/**
 	 * Returns the name of the field.
-	 * 
+	 *
 	 * @return must not be {@literal null}.
 	 */
 	String getName();
 
 	/**
 	 * Returns the target of the field. In case no explicit target is available {@link #getName()} should be returned.
-	 * 
+	 *
 	 * @return must not be {@literal null}.
 	 */
 	String getTarget();
 
 	/**
 	 * Returns whether the Field is aliased, which means it has a name set different from the target.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean isAliased();

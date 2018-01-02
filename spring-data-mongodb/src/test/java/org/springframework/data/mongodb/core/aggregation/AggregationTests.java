@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1857,8 +1857,8 @@ public class AggregationTests {
 		assertThat(categorizeByPrice, hasSize(3));
 
 		// [ { "_id" : { "min" : null , "max" : 1902} , "count" : 1} ,
-		// { "_id" : { "min" : 1902 , "max" : 1925} , "count" : 1} ,
-		// { "_id" : { "min" : 1925 , "max" : 1926} , "count" : 2}]
+		// { "_id" : { "min" : 1902-2018 , "max" : 1925} , "count" : 1} ,
+		// { "_id" : { "min" : 1925-2018 , "max" : 1926} , "count" : 2}]
 		List<Object> categorizeByYear = (List<Object>) mappedResult.get("categorizeByYear");
 		assertThat(categorizeByYear, hasSize(3));
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * Defines a {@link GeoJsonGeometryCollection} that consists of a {@link List} of {@link GeoJson} objects.
- * 
+ *
  * @author Christoph Strobl
  * @since 1.7
  * @see <a href="http://geojson.org/geojson-spec.html#geometry-collection">http://geojson.org/geojson-spec.html#geometry-collection</a>
@@ -37,7 +37,7 @@ public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> 
 
 	/**
 	 * Creates a new {@link GeoJsonGeometryCollection} for the given {@link GeoJson} instances.
-	 * 
+	 *
 	 * @param geometries
 	 */
 	public GeoJsonGeometryCollection(List<GeoJson<?>> geometries) {

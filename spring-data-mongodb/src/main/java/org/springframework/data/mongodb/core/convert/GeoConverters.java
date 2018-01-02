@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ import com.mongodb.BasicDBList;
 
 /**
  * Wrapper class to contain useful geo structure converters for the usage with Mongo.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -65,7 +65,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Returns the geo converters to be registered.
-	 * 
+	 *
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -96,7 +96,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link List} of {@link Double}s into a {@link Point}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -128,7 +128,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Point} into a {@link List} of {@link Double}s.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -148,7 +148,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Box} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -177,7 +177,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link BasicDBList} into a {@link Box}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -206,7 +206,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Circle} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -235,7 +235,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Document} into a {@link Circle}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -277,7 +277,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Sphere} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -306,7 +306,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link BasicDBList} into a {@link Sphere}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -348,7 +348,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Polygon} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -382,7 +382,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link BasicDBList} into a {@link Polygon}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -418,7 +418,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Sphere} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -819,7 +819,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPoint}s.
-	 * 
+	 *
 	 * @param listOfCoordinatePairs
 	 * @return
 	 * @since 1.7
@@ -843,7 +843,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPolygon}.
-	 * 
+	 *
 	 * @param dbList
 	 * @return
 	 * @since 1.7

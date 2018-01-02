@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import com.mongodb.BulkWriteResult;
 
 /**
  * Is thrown when errors occur during bulk operations.
- * 
+ *
  * @author Tobias Trelle
  * @author Oliver Gierke
  * @since 1.9
@@ -39,7 +39,7 @@ public class BulkOperationException extends DataAccessException {
 
 	/**
 	 * Creates a new {@link BulkOperationException} with the given message and source {@link BulkWriteException}.
-	 * 
+	 *
 	 * @param message must not be {@literal null}.
 	 * @param source must not be {@literal null}.
 	 */

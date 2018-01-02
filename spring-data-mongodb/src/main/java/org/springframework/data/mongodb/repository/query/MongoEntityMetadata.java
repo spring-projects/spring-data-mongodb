@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ import org.springframework.data.repository.core.EntityMetadata;
 
 /**
  * Extension of {@link EntityMetadata} to additionally expose the collection name an entity shall be persisted to.
- * 
+ *
  * @author Oliver Gierke
  */
 public interface MongoEntityMetadata<T> extends EntityMetadata<T> {
 
 	/**
 	 * Returns the name of the collection the entity shall be persisted to.
-	 * 
+	 *
 	 * @return
 	 */
 	String getCollectionName();

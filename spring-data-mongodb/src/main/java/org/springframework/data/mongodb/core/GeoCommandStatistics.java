@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.springframework.util.Assert;
 
 /**
  * Value object to mitigate different representations of geo command execution results in MongoDB.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @soundtrack Fruitcake - Jeff Coffin (The Inside of the Outside)
@@ -34,7 +34,7 @@ class GeoCommandStatistics {
 
 	/**
 	 * Creates a new {@link GeoCommandStatistics} instance with the given source document.
-	 * 
+	 *
 	 * @param source must not be {@literal null}.
 	 */
 	private GeoCommandStatistics(Document source) {
@@ -45,7 +45,7 @@ class GeoCommandStatistics {
 
 	/**
 	 * Creates a new {@link GeoCommandStatistics} from the given command result extracting the statistics.
-	 * 
+	 *
 	 * @param commandResult must not be {@literal null}.
 	 * @return
 	 */
@@ -60,7 +60,7 @@ class GeoCommandStatistics {
 	/**
 	 * Returns the average distance reported by the command result. Mitigating a removal of the field in case the command
 	 * didn't return any result introduced in MongoDB 3.2 RC1.
-	 * 
+	 *
 	 * @return
 	 * @see <a href="https://jira.mongodb.org/browse/SERVER-21024">MongoDB Jira SERVER-21024</a>
 	 */

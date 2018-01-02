@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
 
 /**
  * Simple {@link ParameterAccessor} that returns the given parameters unfiltered.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoh Strobl
  * @author Thomas Darimont
@@ -43,7 +43,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
 	 * given parameters converted but unfiltered.
-	 * 
+	 *
 	 * @param converter
 	 * @param parameters
 	 * @return
@@ -82,7 +82,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 		return values[index];
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#hasBindableNullValue()
 	 */
@@ -98,7 +98,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 		return Sort.unsorted();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getDistanceRange()
 	 */
@@ -115,7 +115,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 		return Arrays.asList(values).iterator();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
 	 */
@@ -140,7 +140,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 		return this.values;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#getDynamicProjection()
 	 */

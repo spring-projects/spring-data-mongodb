@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,12 +33,12 @@ import org.w3c.dom.Element;
 /**
  * {@link BeanDefinitionParser} to register a {@link AuditingEventListener} to transparently set auditing information on
  * an entity.
- * 
+ *
  * @author Oliver Gierke
  */
 public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser#getBeanClass(org.w3c.dom.Element)
 	 */
@@ -47,7 +47,7 @@ public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinit
 		return AuditingEventListener.class;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#shouldGenerateId()
 	 */
@@ -56,7 +56,7 @@ public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinit
 		return true;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser#doParse(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext, org.springframework.beans.factory.support.BeanDefinitionBuilder)
 	 */

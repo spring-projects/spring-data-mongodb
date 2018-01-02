@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.springframework.util.Assert;
  * creator when MongoTemplate is used 'stand-alone', that is not declared inside a Spring {@link ApplicationContext}.
  * Declare {@link MongoTemplate} inside an {@link ApplicationContext} to enable the publishing of all persistence events
  * such as {@link AfterLoadEvent}, {@link AfterSaveEvent}, etc.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Mark Paluch
@@ -42,7 +42,7 @@ public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 
 	/**
 	 * Creates a new {@link MongoMappingEventPublisher} for the given {@link MongoPersistentEntityIndexCreator}.
-	 * 
+	 *
 	 * @param indexCreator must not be {@literal null}.
 	 */
 	public MongoMappingEventPublisher(MongoPersistentEntityIndexCreator indexCreator) {

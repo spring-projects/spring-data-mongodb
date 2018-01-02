@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
 
 /**
  * A {@code TypedAggregation} is a special {@link Aggregation} that holds information of the input aggregation type.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
  */
@@ -31,7 +31,7 @@ public class TypedAggregation<I> extends Aggregation {
 
 	/**
 	 * Creates a new {@link TypedAggregation} from the given {@link AggregationOperation}s.
-	 * 
+	 *
 	 * @param inputType must not be {@literal null}.
 	 * @param operations must not be {@literal null} or empty.
 	 */
@@ -41,7 +41,7 @@ public class TypedAggregation<I> extends Aggregation {
 
 	/**
 	 * Creates a new {@link TypedAggregation} from the given {@link AggregationOperation}s.
-	 * 
+	 *
 	 * @param inputType must not be {@literal null}.
 	 * @param operations must not be {@literal null} or empty.
 	 */
@@ -52,7 +52,7 @@ public class TypedAggregation<I> extends Aggregation {
 	/**
 	 * Creates a new {@link TypedAggregation} from the given {@link AggregationOperation}s and the given
 	 * {@link AggregationOptions}.
-	 * 
+	 *
 	 * @param inputType must not be {@literal null}.
 	 * @param operations must not be {@literal null} or empty.
 	 * @param options must not be {@literal null}.
@@ -67,7 +67,7 @@ public class TypedAggregation<I> extends Aggregation {
 
 	/**
 	 * Returns the input type for the {@link Aggregation}.
-	 * 
+	 *
 	 * @return the inputType will never be {@literal null}.
 	 */
 	public Class<I> getInputType() {

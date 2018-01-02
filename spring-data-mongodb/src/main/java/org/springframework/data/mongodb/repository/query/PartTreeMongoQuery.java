@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import com.mongodb.util.JSONParseException;
 
 /**
  * {@link RepositoryQuery} implementation for Mongo.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
@@ -52,7 +52,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 	/**
 	 * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
-	 * 
+	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 */
@@ -68,7 +68,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 	/**
 	 * Return the {@link PartTree} backing the query.
-	 * 
+	 *
 	 * @return the tree
 	 */
 	public PartTree getTree() {
@@ -125,7 +125,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 		}
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
 	 */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
 
 /**
  * {@link NamespaceHandler} to register repository configuration.
- * 
+ *
  * @author Oliver Gierke
  */
 public class MongoRepositoryConfigNamespaceHandler extends MongoNamespaceHandler {
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.config.MongoNamespaceHandler#init()
 	 */

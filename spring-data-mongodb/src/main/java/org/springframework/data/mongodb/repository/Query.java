@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.springframework.data.annotation.QueryAnnotation;
 /**
  * Annotation to declare finder queries directly on repository methods. Both attributes allow using a placeholder
  * notation of {@code ?0}, {@code ?1} and so on.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -41,7 +41,7 @@ public @interface Query {
 	/**
 	 * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precedence over the
 	 * method name then.
-	 * 
+	 *
 	 * @return
 	 */
 	String value() default "";
@@ -49,14 +49,14 @@ public @interface Query {
 	/**
 	 * Defines the fields that should be returned for the given query. Note that only these fields will make it into the
 	 * domain object returned.
-	 * 
+	 *
 	 * @return
 	 */
 	String fields() default "";
 
 	/**
 	 * Returns whether the query defined should be executed as count projection.
-	 * 
+	 *
 	 * @since 1.3
 	 * @return
 	 */
@@ -72,7 +72,7 @@ public @interface Query {
 
 	/**
 	 * Returns whether the query should delete matching documents.
-	 * 
+	 *
 	 * @since 1.5
 	 * @return
 	 */

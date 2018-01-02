@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 /**
  * Mark a class to use compound indexes.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Philipp Schneider
@@ -39,7 +39,7 @@ public @interface CompoundIndex {
 	 * The actual index definition in JSON format. The keys of the JSON document are the fields to be indexed, the values
 	 * define the index direction (1 for ascending, -1 for descending). <br />
 	 * If left empty on nested document, the whole document will be indexed.
-	 * 
+	 *
 	 * @return
 	 */
 	String def() default "";
@@ -47,7 +47,7 @@ public @interface CompoundIndex {
 	/**
 	 * It does not actually make sense to use that attribute as the direction has to be defined in the {@link #def()}
 	 * attribute actually.
-	 * 
+	 *
 	 * @return
 	 */
 	@Deprecated
@@ -61,7 +61,7 @@ public @interface CompoundIndex {
 
 	/**
 	 * If set to true index will skip over any document that is missing the indexed field.
-	 * 
+	 *
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
@@ -80,7 +80,7 @@ public @interface CompoundIndex {
 	 * provided name will be prefixed with the path leading to the entity. <br />
 	 * <br />
 	 * The structure below
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * &#64;Document
@@ -88,22 +88,22 @@ public @interface CompoundIndex {
 	 *   Hybrid hybrid;
 	 *   Nested nested;
 	 * }
-	 * 
+	 *
 	 * &#64;Document
 	 * &#64;CompoundIndex(name = "compound_index", def = "{'h1': 1, 'h2': 1}")
 	 * class Hybrid {
 	 *   String h1, h2;
 	 * }
-	 * 
+	 *
 	 * &#64;CompoundIndex(name = "compound_index", def = "{'n1': 1, 'n2': 1}")
 	 * class Nested {
 	 *   String n1, n2;
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * resolves in the following index structures
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * db.root.createIndex( { hybrid.h1: 1, hybrid.h2: 1 } , { name: "hybrid.compound_index" } )
@@ -111,7 +111,7 @@ public @interface CompoundIndex {
 	 * db.hybrid.createIndex( { h1: 1, h2: 1 } , { name: "compound_index" } )
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @return
 	 */
 	String name() default "";
@@ -119,7 +119,7 @@ public @interface CompoundIndex {
 	/**
 	 * If set to {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults
 	 * to {@literal false}.
-	 * 
+	 *
 	 * @return
 	 * @since 1.5
 	 */
@@ -127,7 +127,7 @@ public @interface CompoundIndex {
 
 	/**
 	 * If {@literal true} the index will be created in the background.
-	 * 
+	 *
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
 	 */

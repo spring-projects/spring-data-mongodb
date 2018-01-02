@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.springframework.util.Assert;
 /**
  * javax.validation dependant entities validator. When it is registered as Spring component its automatically invoked
  * before entities are saved in database.
- * 
+ *
  * @author Maciej Walkowiak
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -40,7 +40,7 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 
 	/**
 	 * Creates a new {@link ValidatingMongoEventListener} using the given {@link Validator}.
-	 * 
+	 *
 	 * @param validator must not be {@literal null}.
 	 */
 	public ValidatingMongoEventListener(Validator validator) {
@@ -49,7 +49,7 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 		this.validator = validator;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent)
 	 */

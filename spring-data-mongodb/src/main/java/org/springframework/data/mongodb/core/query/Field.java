@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2017 the original author or authors.
+ * Copyright 2010-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ public class Field {
 	/**
 	 * The array field must appear in the query. Only one positional {@code $} operator can appear in the projection and
 	 * only one array field can appear in the query.
-	 * 
+	 *
 	 * @param field query array field, must not be {@literal null} or empty.
 	 * @param value
 	 * @return

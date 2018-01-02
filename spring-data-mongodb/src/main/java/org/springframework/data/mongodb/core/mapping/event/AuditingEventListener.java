@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.springframework.util.Assert;
 
 /**
  * Event listener to populate auditing related fields on an entity about to be saved.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
@@ -38,7 +38,7 @@ public class AuditingEventListener implements ApplicationListener<BeforeConvertE
 	/**
 	 * Creates a new {@link AuditingEventListener} using the given {@link MappingContext} and {@link AuditingHandler}
 	 * provided by the given {@link ObjectFactory}.
-	 * 
+	 *
 	 * @param auditingHandlerFactory must not be {@literal null}.
 	 */
 	public AuditingEventListener(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
@@ -47,7 +47,7 @@ public class AuditingEventListener implements ApplicationListener<BeforeConvertE
 		this.auditingHandlerFactory = auditingHandlerFactory;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
@@ -58,7 +58,7 @@ public class AuditingEventListener implements ApplicationListener<BeforeConvertE
 				.ifPresent(it -> auditingHandlerFactory.getObject().markAudited(it));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.core.Ordered#getOrder()
 	 */

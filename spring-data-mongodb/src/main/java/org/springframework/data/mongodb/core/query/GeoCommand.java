@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.springframework.util.Assert;
 
 /**
  * Wrapper around a {@link Shape} to allow appropriate query rendering.
- * 
+ *
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @since 1.5
@@ -38,7 +38,7 @@ public final class GeoCommand {
 
 	/**
 	 * Creates a new {@link GeoCommand}.
-	 * 
+	 *
 	 * @param shape must not be {@literal null}.
 	 */
 	public GeoCommand(Shape shape) {
@@ -65,7 +65,7 @@ public final class GeoCommand {
 
 	/**
 	 * Returns the MongoDB command for the given {@link Shape}.
-	 * 
+	 *
 	 * @param shape must not be {@literal null}.
 	 * @return
 	 */
