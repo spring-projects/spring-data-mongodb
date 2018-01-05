@@ -27,7 +27,7 @@ public class PersonWithVersionPropertyOfTypeLong {
 
 	@Override
 	public String toString() {
-		return "PersonWithVersionPropertyOfTypeInteger [id=" + id + ", firstName=" + firstName + ", age=" + age
+		return "PersonWithVersionPropertyOfTypeLong [id=" + id + ", firstName=" + firstName + ", age=" + age
 				+ ", version=" + version + "]";
 	}
 }
