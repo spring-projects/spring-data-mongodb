@@ -1914,6 +1914,19 @@ More examples for project operations can be found in the `AggregationTests` clas
 
 MongoDB supports as of Version 3.4 faceted classification using the Aggregation Framework. A faceted classification uses semantic categories, either general or subject-specific, that are combined to create the full classification entry. Documents flowing through the aggregation pipeline are classificated into buckets. A multi-faceted classification enables various aggregations on the same set of input documents, without needing to retrieve the input documents multiple times.
 
+==== SortByCount
+
+SortByCount operations groups incoming documents based on the value of a specified expression, then computes the count of documents in each distinct group. SortVyCount operations require a grouping field or grouping expression. They can be defined via the `sortByCount()` methods of the `Aggregate` class.
+
+.SortByCount operation example
+====
+[source,java]
+----
+// will generate { $sortByCount: "$country" }
+sortByCount("country");
+----
+====
+
 ==== Buckets
 
 Bucket operations categorize incoming documents into groups, called buckets, based on a specified expression and bucket boundaries. Bucket operations require a grouping field or grouping expression. They can be defined via the `bucket()`/`bucketAuto()` methods of the `Aggregate` class. `BucketOperation` and `BucketAutoOperation` can expose accumulations based on aggregation expressions for input documents. The bucket operation can be extended with additional parameters through a fluent API via the `with…()` methods, the `andOutput(String)` method and aliased via the `as(String)` method. Each bucket is represented as a document in the output.
@@ -1974,6 +1987,9 @@ Sub-pipelines can project and filter input documents prior grouping. Common case
 ----
 // will generate {$facet: {categorizedByPrice: [ { $match: { price: {$exists : true}}}, { $bucketAuto: {groupBy: $price, buckets: 5}}]}}
 facet(match(Criteria.where("price").exists(true)), bucketAuto("price", 5)).as("categorizedByPrice"))
+
+// will generate {$facet: {categorizedByCountry: [ { $match: { country: {$exists : true}}}, { $sortByCount: "$country"}]}}
+facet(match(Criteria.where("country").exists(true)), sortByCount("country")).as("categorizedByCountry"))
 
 // will generate {$facet: {categorizedByYear: [
 //                            { $project: { title: 1, publicationYear: { $year: "publicationDate"}}},

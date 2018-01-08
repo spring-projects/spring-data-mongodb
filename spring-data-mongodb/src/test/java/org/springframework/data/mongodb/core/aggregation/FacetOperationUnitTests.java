@@ -28,6 +28,7 @@ import org.bson.Document;
  * Unit tests for {@link FacetOperation}.
  *
  * @author Mark Paluch
+ * @author Jérôme Guyon
  * @soundtrack Stanley Foort - You Make Me Believe In Magic (Extended Mix)
  */
 public class FacetOperationUnitTests {
@@ -100,5 +101,18 @@ public class FacetOperationUnitTests {
 				is(Document.parse("{ $facet: { categorizedByPrice: [" + "{ $project: { price: 1, name: \"$title\" } }, "
 						+ "{ $bucketAuto: {  buckets: 5, groupBy: \"$price\", "
 						+ "output: { titles: { $push: \"$name\" } } } } ] } }")));
+	}
+
+	@Test // DATAMONGO-1553
+	public void shouldRenderSortByCountCorrectly() {
+
+		FacetOperation facetOperation = new FacetOperation()
+				.and(sortByCount("country"))
+				.as("categorizedByCountry");
+
+		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(Document.parse("{ $facet: { categorizedByCountry: [{ $sortByCount: \"$country\" } ] } }")));
 	}
 }
