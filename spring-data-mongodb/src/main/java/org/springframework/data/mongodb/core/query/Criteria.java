@@ -52,6 +52,7 @@ import com.mongodb.BasicDBList;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Andreas Zink
  */
 public class Criteria implements CriteriaDefinition {
 
@@ -603,6 +604,118 @@ public class Criteria implements CriteriaDefinition {
 	public Criteria andOperator(Criteria... criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
+	}
+	
+	/**
+	 * Creates a criterion using the {@literal $bitsAllClear} operator.
+	 *
+	 * @param numericBitmask non-negative numeric bitmask
+	 * @return
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllClear/">MongoDB Query operator:
+	 *      $bitsAllClear</a>
+	 * @since 2.1
+	 */
+	public Criteria bitsAllClear(int numericBitmask) {
+		criteria.put("$bitsAllClear", Integer.valueOf(numericBitmask));
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $bitsAllClear} operator.
+	 *
+	 * @param bitPositions positions of set bits
+	 * @return
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllClear/">MongoDB Query operator:
+	 *      $bitsAllClear</a>
+	 * @since 2.1
+	 */
+	public Criteria bitsAllClear(Collection<Integer> bitPositions) {
+		criteria.put("$bitsAllClear", bitPositions);
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $bitsAllSet} operator.
+	 *
+	 * @param numericBitmask non-negative numeric bitmask
+	 * @return
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllSet/">MongoDB Query operator:
+	 *      $bitsAllSet</a>
+	 * @since 2.1
+	 */
+	public Criteria bitsAllSet(int numericBitmask) {
+		criteria.put("$bitsAllSet", Integer.valueOf(numericBitmask));
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $bitsAllSet} operator.
+	 *
+	 * @param bitPositions positions of set bits
+	 * @return
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllSet/">MongoDB Query operator:
+	 *      $bitsAllSet</a>
+	 * @since 2.1
+	 */
+	public Criteria bitsAllSet(Collection<Integer> bitPositions) {
+		criteria.put("$bitsAllSet", bitPositions);
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $bitsAnyClear} operator.
+	 *
+	 * @param numericBitmask non-negative numeric bitmask
+	 * @return
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnyClear/">MongoDB Query operator:
+	 *      $bitsAnyClear</a>
+	 * @since 2.1
+	 */
+	public Criteria bitsAnyClear(int numericBitmask) {
+		criteria.put("$bitsAnyClear", Integer.valueOf(numericBitmask));
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $bitsAnyClear} operator.
+	 *
+	 * @param bitPositions positions of set bits
+	 * @return
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnyClear/">MongoDB Query operator:
+	 *      $bitsAnyClear</a>
+	 * @since 2.1
+	 */
+	public Criteria bitsAnyClear(Collection<Integer> bitPositions) {
+		criteria.put("$bitsAnyClear", bitPositions);
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $bitsAnySet} operator.
+	 *
+	 * @param numericBitmask non-negative numeric bitmask
+	 * @return
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnySet/">MongoDB Query operator:
+	 *      $bitsAnySet</a>
+	 * @since 2.1
+	 */
+	public Criteria bitsAnySet(int numericBitmask) {
+		criteria.put("$bitsAnySet", Integer.valueOf(numericBitmask));
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $bitsAnySet} operator.
+	 *
+	 * @param bitPositions positions of set bits
+	 * @return
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnySet/">MongoDB Query operator:
+	 *      $bitsAnySet</a>
+	 * @since 2.1
+	 */
+	public Criteria bitsAnySet(Collection<Integer> bitPositions) {
+		criteria.put("$bitsAnySet", bitPositions);
+		return this;
 	}
 
 	private Criteria registerCriteriaChainElement(Criteria criteria) {
