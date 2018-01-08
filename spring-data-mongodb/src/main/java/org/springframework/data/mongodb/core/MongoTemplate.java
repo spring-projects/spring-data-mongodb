@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2017 the original author or authors.
+ * Copyright 2010-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,7 +121,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.Function;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
@@ -803,7 +802,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/*
-	 * (non-Javadoc) 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#findDistinct(org.springframework.data.mongodb.core.query.Query, java.lang.String, java.lang.Class, java.lang.Class)
 	 */
 	@Override
@@ -816,6 +815,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.MongoOperations#findDistinct(org.springframework.data.mongodb.core.query.Query, java.lang.String, java.lang.String, java.lang.Class, java.lang.Class)
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> List<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
 			Class<T> resultClass) {
 
@@ -830,20 +830,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entity);
 		String mappedFieldName = queryMapper.getMappedFields(new Document(field, 1), entity).keySet().iterator().next();
 
-		Class<?> mongoDriverCompatibleType = getMongoDbFactory().getCodecFor(resultClass).map(Codec::getEncoderClass)
+		Class<T> mongoDriverCompatibleType = getMongoDbFactory().getCodecFor(resultClass).map(Codec::getEncoderClass)
 				.orElse((Class) BsonValue.class);
 
 		MongoIterable<?> result = execute((db) -> {
 
-			DistinctIterable<?> iterable = db.getCollection(collectionName).distinct(mappedFieldName, mappedQuery,
+			DistinctIterable<T> iterable = db.getCollection(collectionName).distinct(mappedFieldName, mappedQuery,
 					mongoDriverCompatibleType);
 
-			return query.getCollation().isPresent()
-					? iterable.collation(query.getCollation().map(Collation::toMongoCollation).get()) : iterable;
+			return query.getCollation().map(Collation::toMongoCollation).map(iterable::collation).orElse(iterable);
 		});
 
 		if (resultClass == Object.class || mongoDriverCompatibleType != resultClass) {
-			result = result.map(mapDistinctResult(getMostSpecificConversionTargetType(resultClass, entityClass, field)));
+
+			MongoConverter converter = getConverter();
+			DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory);
+
+			result = result.map((source) -> converter.mapValueToTargetType(source,
+					getMostSpecificConversionTargetType(resultClass, entityClass, field), dbRefResolver));
 		}
 
 		try {
@@ -860,7 +864,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return the most specific conversion target type depending on user preference and domain type property.
 	 * @since 2.1
 	 */
-	private Class<?> getMostSpecificConversionTargetType(Class<?> userType, Class<?> domainType, String field) {
+	private static Class<?> getMostSpecificConversionTargetType(Class<?> userType, Class<?> domainType, String field) {
 
 		Class<?> conversionTargetType = userType;
 		try {
@@ -877,16 +881,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return conversionTargetType;
-	}
-
-	/**
-	 * @param targetType the desired conversion target type.
-	 * @return new {@link Function} converting {@link BsonValue} into desired target type.
-	 * @since 2.1
-	 */
-	private <S, T> Function<S, T> mapDistinctResult(Class<T> targetType) {
-		return (source) -> getConverter().mapValueToTargetType(targetType, new DefaultDbRefResolver(mongoDbFactory))
-				.apply(source);
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -258,7 +258,7 @@ public interface ExecutableFindOperation {
 		 * to obtain the domain type. <br />
 		 * Using {@link Object} also works for non strictly typed fields. Eg. a mixture different types like fields using
 		 * {@link String} in one {@link org.bson.Document} while {@link Long} in another.</dd>
-		 * <dt>Any Simple type like {@link String}, {@link Long}, ...</dt>
+		 * <dt>Any Simple type like {@link String} or {@link Long}.</dt>
 		 * <dd>The result is mapped directly by the MongoDB Java driver and the {@link org.bson.codecs.CodeCodec Codecs} in
 		 * place. This works only for results where all documents considered for the operation use the very same type for
 		 * the field.</dd>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,13 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.util.Assert;
 
 /**
+ * Provider interface to obtain {@link CodecRegistry} from the underlying MongoDB Java driver.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
+@FunctionalInterface
 public interface CodecRegistryProvider {
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -217,6 +217,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 					preparer != null ? preparer : getCursorPreparer(query));
 		}
 
+		@SuppressWarnings("unchecked")
 		private Flux<T> doFindDistinct(String field) {
 
 			return template.findDistinct(query, field, getCollectionName(), domainType,
@@ -259,7 +260,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 				Assert.notNull(resultType, "ResultType must not be null!");
 
-				return new DistinctOperationSupport((ReactiveFindSupport) delegate.as(resultType), field);
+				return new DistinctOperationSupport<>((ReactiveFindSupport) delegate.as(resultType), field);
 			}
 
 			/*
@@ -267,11 +268,12 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.DistinctWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
 			 */
 			@Override
+			@SuppressWarnings("unchecked")
 			public TerminatingDistinct<T> matching(Query query) {
 
 				Assert.notNull(query, "Query must not be null!");
 
-				return new DistinctOperationSupport((ReactiveFindSupport) delegate.matching(query), field);
+				return new DistinctOperationSupport<>((ReactiveFindSupport<T>) delegate.matching(query), field);
 			}
 
 			/*

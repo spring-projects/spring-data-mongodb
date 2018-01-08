@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -372,7 +372,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingNoReturnTypeSpecified() {
+	public void distinctReturnsSimpleFieldValuesCorrectly() {
 
 		Person anakin = new Person();
 		anakin.firstname = "anakin";
@@ -395,7 +395,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsComplexValuesCorrectlyForCollectionHavingNoReturnTypeSpecified() {
+	public void distinctReturnsComplexValuesCorrectly() {
 
 		Sith sith = new Sith();
 		sith.rank = "lord";
@@ -410,7 +410,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsComplexValuesCorrectlyForCollectionHavingReturnTypeSpecified() {
+	public void distinctReturnsComplexValuesCorrectlyHavingReturnTypeSpecified() {
 
 		Sith sith = new Sith();
 		sith.rank = "lord";
@@ -426,7 +426,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsComplexValuesCorrectlyForCollectionHavingReturnTypeDocumentSpecified() {
+	public void distinctReturnsComplexValuesCorrectlyHavingReturnTypeDocumentSpecified() {
 
 		Sith sith = new Sith();
 		sith.rank = "lord";

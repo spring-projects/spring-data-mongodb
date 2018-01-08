@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,16 @@ import com.mongodb.client.MongoDatabase;
 
 /**
  * Interface for factories creating {@link DB} instances.
- * 
+ *
  * @author Mark Pollack
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public interface MongoDbFactory extends CodecRegistryProvider {
 
 	/**
 	 * Creates a default {@link DB} instance.
-	 * 
+	 *
 	 * @return
 	 * @throws DataAccessException
 	 */
@@ -41,7 +42,7 @@ public interface MongoDbFactory extends CodecRegistryProvider {
 
 	/**
 	 * Creates a {@link DB} instance to access the database with the given name.
-	 * 
+	 *
 	 * @param dbName must not be {@literal null} or empty.
 	 * @return
 	 * @throws DataAccessException
@@ -50,13 +51,18 @@ public interface MongoDbFactory extends CodecRegistryProvider {
 
 	/**
 	 * Exposes a shared {@link MongoExceptionTranslator}.
-	 * 
+	 *
 	 * @return will never be {@literal null}.
 	 */
 	PersistenceExceptionTranslator getExceptionTranslator();
 
 	DB getLegacyDb();
 
+	/**
+	 * Get the underlying {@link CodecRegistry} used by the MongoDB Java driver.
+	 *
+	 * @return never {@literal null}.
+	 */
 	@Override
 	default CodecRegistry getCodecRegistry() {
 		return getDb().getCodecRegistry();

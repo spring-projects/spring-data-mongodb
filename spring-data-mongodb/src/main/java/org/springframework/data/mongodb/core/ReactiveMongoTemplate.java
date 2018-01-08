@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,17 +24,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -707,23 +698,25 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entity);
 		String mappedFieldName = queryMapper.getMappedFields(new Document(field, 1), entity).keySet().iterator().next();
 
-		Class<?> mongoDriverCompatibleType = mongoDatabaseFactory.getCodecFor(resultClass).map(Codec::getEncoderClass)
+		Class<T> mongoDriverCompatibleType = mongoDatabaseFactory.getCodecFor(resultClass).map(Codec::getEncoderClass)
 				.orElse((Class) BsonValue.class);
 
-		Flux result = execute(collectionName, collection -> {
+		Flux<?> result = execute(collectionName, collection -> {
 
-			DistinctPublisher publisher = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
+			DistinctPublisher<T> publisher = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
 
-			return query.getCollation().isPresent()
-					? publisher.collation(query.getCollation().map(Collation::toMongoCollation).get()) : publisher;
+			return query.getCollation().map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
 		});
 
 		if (resultClass == Object.class || mongoDriverCompatibleType != resultClass) {
-			result = result.map(
-					getConverter().mapValueToTargetType(getMostSpecificConversionTargetType(resultClass, entityClass, field), NO_OP_REF_RESOLVER));
+
+			Class<?> targetType = getMostSpecificConversionTargetType(resultClass, entityClass, field);
+			MongoConverter converter = getConverter();
+
+			result = result.map(it -> converter.mapValueToTargetType(it, targetType, NO_OP_REF_RESOLVER));
 		}
 
-		return result;
+		return (Flux<T>) result;
 	}
 
 	/**
@@ -733,7 +726,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @return the most specific conversion target type depending on user preference and domain type property.
 	 * @since 2.1
 	 */
-	private Class<?> getMostSpecificConversionTargetType(Class<?> userType, Class<?> domainType, String field) {
+	private static Class<?> getMostSpecificConversionTargetType(Class<?> userType, Class<?> domainType, String field) {
 
 		Class<?> conversionTargetType = userType;
 		try {

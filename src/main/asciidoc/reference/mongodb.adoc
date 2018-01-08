@@ -1090,8 +1090,9 @@ The query methods need to specify the target type T that will be returned and th
 [[mongo-template.query.distinct]]
 === Query distinct values
 
-MongoDB allows obtaining distinct field values for a single field. The stored values do not have to have the same data type to be considered, nor is the feature limited to simple types.
-However when retrieving distinct values the actual result type does matter for the sake of conversion.
+MongoDB provides a find operation to obtain distinct field values for a single field across the resulting documents.
+Resulting values are not required to have the same data type, nor is the feature limited to simple types.
+For retriaval the actual result type does matter for the sake of conversion and typing.
 
 .Retrieving distinct values
 ====
