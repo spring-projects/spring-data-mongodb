@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,8 +41,10 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 	private static final String $JSON_SCHEMA = "$jsonSchema";
 	private static final String REQUIRED_FIELD = "required";
 	private static final String PROPERTIES_FIELD = "properties";
+	private static final String ENUM_FIELD = "enum";
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final MongoConverter converter;
 
 	/**
 	 * Create a new {@link MongoJsonSchemaMapper} facilitating the given {@link MongoConverter}.
@@ -49,6 +52,10 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 	 * @param converter must not be {@literal null}.
 	 */
 	public MongoJsonSchemaMapper(MongoConverter converter) {
+
+		Assert.notNull(converter, "Converter must not be null!");
+
+		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
 	}
 
@@ -82,6 +89,9 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 		if (source.containsKey(PROPERTIES_FIELD)) {
 			sink.replace(PROPERTIES_FIELD, mapProperties(entity, source.get(PROPERTIES_FIELD, Document.class)));
 		}
+
+		mapEnumValuesIfNecessary(sink);
+
 		return sink;
 	}
 
@@ -119,7 +129,25 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 			}
 		}
 
+		return mapEnumValuesIfNecessary(sink);
+	}
+
+	private Document mapEnumValuesIfNecessary(Document source) {
+
+		Document sink = new Document(source);
+		if (source.containsKey(ENUM_FIELD)) {
+			sink.replace(ENUM_FIELD, mapEnumValues(source.get(ENUM_FIELD, Iterable.class)));
+		}
 		return sink;
+	}
+
+	private List<Object> mapEnumValues(Iterable<?> values) {
+
+		List<Object> converted = new ArrayList<>();
+		for (Object val : values) {
+			converted.add(converter.convertToMongoType(val));
+		}
+		return converted;
 	}
 
 	private String getFieldName(@Nullable PersistentEntity<?, MongoPersistentProperty> entity, String sourceField) {

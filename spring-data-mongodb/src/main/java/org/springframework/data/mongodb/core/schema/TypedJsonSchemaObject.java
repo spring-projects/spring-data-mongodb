@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,25 +37,24 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
- * Common base for {@link JsonSchemaObject} with shared types and {@link JsonSchemaObject#toDocument()} implementation.
+ * A {@link JsonSchemaObject} of a given {@link org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type}.
  *
  * @author Christoph Strobl
  * @since 2.1
  */
-public class TypedJsonSchemaObject implements JsonSchemaObject {
+public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 
 	protected final Set<Type> types;
-	protected final @Nullable String description;
-	protected final Restrictions restrictions;
 
 	/**
 	 * @param type can be {@literal null}.
 	 * @param description can be {@literal null}.
 	 * @param restrictions can be {@literal null}.
 	 */
-	protected TypedJsonSchemaObject(@Nullable Type type, @Nullable String description,
+	protected TypedJsonSchemaObject(@Nullable Type type, @Nullable String description, boolean generateDescription,
 			@Nullable Restrictions restrictions) {
-		this(type != null ? Collections.singleton(type) : Collections.emptySet(), description, restrictions);
+		this(type != null ? Collections.singleton(type) : Collections.emptySet(), description, generateDescription,
+				restrictions);
 	}
 
 	/**
@@ -63,13 +62,13 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param description can be {@literal null}.
 	 * @param restrictions can be {@literal null}. Defaults to {@link Restrictions#empty()}.
 	 */
-	protected TypedJsonSchemaObject(Set<Type> types, @Nullable String description, @Nullable Restrictions restrictions) {
+	protected TypedJsonSchemaObject(Set<Type> types, @Nullable String description, boolean generateDescription,
+			@Nullable Restrictions restrictions) {
 
+		super(restrictions, description, generateDescription);
 		Assert.notNull(types, "Types must not be null! Please consider using 'Collections.emptySet()'.");
 
 		this.types = types;
-		this.description = description;
-		this.restrictions = restrictions != null ? restrictions : Restrictions.empty();
 	}
 
 	/**
@@ -81,7 +80,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	public static TypedJsonSchemaObject of(Type... types) {
 
 		Assert.noNullElements(types, "Types must not contain null!");
-		return new TypedJsonSchemaObject(new LinkedHashSet<>(Arrays.asList(types)), null, Restrictions.empty());
+		return new TypedJsonSchemaObject(new LinkedHashSet<>(Arrays.asList(types)), null, false, Restrictions.empty());
 	}
 
 	/**
@@ -90,8 +89,20 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param description must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Override
 	public TypedJsonSchemaObject description(String description) {
-		return new TypedJsonSchemaObject(types, description, restrictions);
+		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions);
+	}
+
+	/**
+	 * Auto generate the {@literal description} if not explicitly set.
+	 *
+	 * @param description must not be {@literal null}.
+	 * @return new instance of {@link TypedJsonSchemaObject}.
+	 */
+	@Override
+	public TypedJsonSchemaObject generatedDescription() {
+		return new TypedJsonSchemaObject(types, description, true, restrictions);
 	}
 
 	/**
@@ -100,8 +111,10 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param possibleValues must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Override
 	public TypedJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-		return new TypedJsonSchemaObject(types, description, restrictions.possibleValues(possibleValues));
+		return new TypedJsonSchemaObject(types, description, generateDescription,
+				restrictions.possibleValues(possibleValues));
 	}
 
 	/**
@@ -110,8 +123,9 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param allOf must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Override
 	public TypedJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-		return new TypedJsonSchemaObject(types, description, restrictions.allOf(allOf));
+		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions.allOf(allOf));
 	}
 
 	/**
@@ -120,8 +134,9 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param anyOf must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Override
 	public TypedJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-		return new TypedJsonSchemaObject(types, description, restrictions.anyOf(anyOf));
+		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions.anyOf(anyOf));
 	}
 
 	/**
@@ -130,8 +145,9 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param oneOf must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Override
 	public TypedJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-		return new TypedJsonSchemaObject(types, description, restrictions.oneOf(oneOf));
+		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions.oneOf(oneOf));
 	}
 
 	/**
@@ -140,8 +156,9 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param oneOf must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Override
 	public TypedJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-		return new TypedJsonSchemaObject(types, description, restrictions.notMatch(notMatch));
+		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions.notMatch(notMatch));
 	}
 
 	/*
@@ -187,7 +204,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 			return description.isEmpty() ? Optional.empty() : Optional.of(description);
 		}
 
-		return Optional.ofNullable(generateDescription());
+		return generateDescription ? Optional.ofNullable(generateDescription()) : Optional.empty();
 	}
 
 	/**
@@ -199,119 +216,6 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	@Nullable
 	protected String generateDescription() {
 		return null;
-	}
-
-	/**
-	 * {@link Restrictions} encapsulate common json schema restrictions like {@literal enum}, {@literal allOf}, ...
-	 * 
-	 * @author Christoph Strobl
-	 * @since 2.1
-	 */
-	static class Restrictions {
-
-		private final Collection<Object> possibleValues;
-		private final Collection<JsonSchemaObject> allOf;
-		private final Collection<JsonSchemaObject> anyOf;
-		private final Collection<JsonSchemaObject> oneOf;
-		private final @Nullable JsonSchemaObject notMatch;
-
-		Restrictions(Collection<Object> possibleValues, Collection<JsonSchemaObject> allOf,
-				Collection<JsonSchemaObject> anyOf, Collection<JsonSchemaObject> oneOf, JsonSchemaObject notMatch) {
-
-			this.possibleValues = possibleValues;
-			this.allOf = allOf;
-			this.anyOf = anyOf;
-			this.oneOf = oneOf;
-			this.notMatch = notMatch;
-		}
-
-		/**
-		 * @return new empty {@link Restrictions}.
-		 */
-		static Restrictions empty() {
-
-			return new Restrictions(Collections.emptySet(), Collections.emptySet(), Collections.emptySet(),
-					Collections.emptySet(), null);
-		}
-
-		/**
-		 * @param possibleValues must not be {@literal null}.
-		 * @return
-		 */
-		Restrictions possibleValues(Collection<Object> possibleValues) {
-
-			Assert.notNull(possibleValues, "PossibleValues must not be null!");
-			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
-		}
-
-		/**
-		 * @param allOf must not be {@literal null}.
-		 * @return
-		 */
-		Restrictions allOf(Collection<JsonSchemaObject> allOf) {
-
-			Assert.notNull(allOf, "AllOf must not be null!");
-			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
-		}
-
-		/**
-		 * @param anyOf must not be {@literal null}.
-		 * @return
-		 */
-		Restrictions anyOf(Collection<JsonSchemaObject> anyOf) {
-
-			Assert.notNull(anyOf, "AnyOf must not be null!");
-			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
-		}
-
-		/**
-		 * @param oneOf must not be {@literal null}.
-		 * @return
-		 */
-		Restrictions oneOf(Collection<JsonSchemaObject> oneOf) {
-
-			Assert.notNull(oneOf, "OneOf must not be null!");
-			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
-		}
-
-		/**
-		 * @param notMatch must not be {@literal null}.
-		 * @return
-		 */
-		Restrictions notMatch(JsonSchemaObject notMatch) {
-
-			Assert.notNull(notMatch, "NotMatch must not be null!");
-			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
-		}
-
-		/**
-		 * Create the json schema complying {@link Document} representation. This includes {@literal enum},
-		 * {@literal allOf}, {@literal anyOf}, {@literal oneOf}, {@literal notMatch} if set.
-		 *
-		 * @return never {@literal null}
-		 */
-		Document toDocument() {
-
-			Document document = new Document();
-
-			if (!CollectionUtils.isEmpty(possibleValues)) {
-				document.append("enum", possibleValues);
-			}
-			if (!CollectionUtils.isEmpty(allOf)) {
-				document.append("allOf", allOf.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList()));
-			}
-			if (!CollectionUtils.isEmpty(anyOf)) {
-				document.append("anyOf", anyOf.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList()));
-			}
-			if (!CollectionUtils.isEmpty(oneOf)) {
-				document.append("oneOf", oneOf.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList()));
-			}
-			if (notMatch != null) {
-				document.append("notMatch", notMatch.toDocument());
-			}
-
-			return document;
-		}
 	}
 
 	/**
@@ -331,15 +235,16 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		private List<JsonSchemaProperty> patternProperties = Collections.emptyList();
 
 		public ObjectJsonSchemaObject() {
-			this(null, null);
+			this(null, false, null);
 		}
 
 		/**
 		 * @param description can be {@literal null}.
 		 * @param restrictions can be {@literal null};
 		 */
-		ObjectJsonSchemaObject(@Nullable String description, @Nullable Restrictions restrictions) {
-			super(Type.objectType(), description, restrictions);
+		ObjectJsonSchemaObject(@Nullable String description, boolean generateDescription,
+				@Nullable Restrictions restrictions) {
+			super(Type.objectType(), description, generateDescription, restrictions);
 		}
 
 		/**
@@ -351,7 +256,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		public ObjectJsonSchemaObject nrProperties(Range<Integer> range) {
 
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
+			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.nrProperties = range;
 			return newInstance;
 		}
@@ -388,7 +293,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		public ObjectJsonSchemaObject required(String... properties) {
 
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
+			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.requiredProperties = new ArrayList<>(this.requiredProperties.size() + properties.length);
 			newInstance.requiredProperties.addAll(this.requiredProperties);
 			newInstance.requiredProperties.addAll(Arrays.asList(properties));
@@ -403,7 +308,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		public ObjectJsonSchemaObject additionalProperties(boolean additionalPropertiesAllowed) {
 
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
+			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.additionalProperties = additionalPropertiesAllowed;
 			return newInstance;
 		}
@@ -416,7 +321,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		public ObjectJsonSchemaObject additionalProperties(ObjectJsonSchemaObject schema) {
 
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
+			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.additionalProperties = schema;
 			return newInstance;
 		}
@@ -429,7 +334,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		public ObjectJsonSchemaObject properties(JsonSchemaProperty... properties) {
 
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
+			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.properties = new ArrayList<>(this.properties.size() + properties.length);
 			newInstance.properties.addAll(this.properties);
 			newInstance.properties.addAll(Arrays.asList(properties));
@@ -445,7 +350,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		public ObjectJsonSchemaObject patternProperties(JsonSchemaProperty... regularExpressions) {
 
-			ObjectJsonSchemaObject newInstance = newInstance(description, restrictions);
+			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.patternProperties = new ArrayList<>(this.patternProperties.size() + regularExpressions.length);
 			newInstance.patternProperties.addAll(this.patternProperties);
 			newInstance.patternProperties.addAll(Arrays.asList(regularExpressions));
@@ -464,56 +369,65 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
+		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#possibleValues(java.util.Collection)
 		 */
 		@Override
 		public ObjectJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return newInstance(description, restrictions.possibleValues(possibleValues));
+			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
+		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#allOf(java.util.Collection)
 		 */
 		@Override
 		public ObjectJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return newInstance(description, restrictions.allOf(allOf));
+			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
+		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#anyOf(java.util.Collection)
 		 */
 		@Override
 		public ObjectJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return newInstance(description, restrictions.anyOf(anyOf));
+			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
+		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#oneOf(java.util.Collection)
 		 */
 		@Override
 		public ObjectJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return newInstance(description, restrictions.oneOf(oneOf));
+			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
+		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
 		 */
 		@Override
 		public ObjectJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return newInstance(description, restrictions.notMatch(notMatch));
+			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
+		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#description(java.lang.String)
 		 */
 		@Override
 		public ObjectJsonSchemaObject description(String description) {
-			return newInstance(description, restrictions);
+			return newInstance(description, generateDescription, restrictions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#generatedDescription()
+		 */
+		@Override
+		public ObjectJsonSchemaObject generatedDescription() {
+			return newInstance(description, true, restrictions);
 		}
 
 		/*
@@ -555,9 +469,10 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 			return doc;
 		}
 
-		private ObjectJsonSchemaObject newInstance(String description, Restrictions restrictions) {
+		private ObjectJsonSchemaObject newInstance(String description, boolean generateDescription,
+				Restrictions restrictions) {
 
-			ObjectJsonSchemaObject newInstance = new ObjectJsonSchemaObject(description, restrictions);
+			ObjectJsonSchemaObject newInstance = new ObjectJsonSchemaObject(description, generateDescription, restrictions);
 			newInstance.properties = this.properties;
 			newInstance.requiredProperties = this.requiredProperties;
 			newInstance.additionalProperties = this.additionalProperties;
@@ -596,6 +511,16 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 				errorMsg += (((Boolean) additionalProperties) ? " " : " not ") + "allowing additional properties";
 			}
 
+			if (!CollectionUtils.isEmpty(properties)) {
+				errorMsg += " defining restrictions for " + StringUtils.collectionToDelimitedString(
+						properties.stream().map(val -> val.getIdentifier()).collect(Collectors.toList()), ", ");
+			}
+
+			if (!CollectionUtils.isEmpty(patternProperties)) {
+				errorMsg += " defining restrictions for patterns " + StringUtils.collectionToDelimitedString(
+						patternProperties.stream().map(val -> val.getIdentifier()).collect(Collectors.toList()), ", ");
+			}
+
 			return errorMsg + ".";
 		}
 	}
@@ -612,7 +537,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	static class NumericJsonSchemaObject extends TypedJsonSchemaObject {
 
 		private static final Set<Type> NUMERIC_TYPES = new HashSet<>(
-				Arrays.asList(Type.doubleType(), Type.intType(), Type.longType(), Type.numberType(), Type.bigintType()));
+				Arrays.asList(Type.doubleType(), Type.intType(), Type.longType(), Type.numberType(), Type.bigDecimalType()));
 
 		@Nullable Number multipleOf;
 		@Nullable Range<? extends Number> range;
@@ -622,17 +547,17 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		}
 
 		public NumericJsonSchemaObject(Type type) {
-			this(type, null);
+			this(type, null, false);
 		}
 
-		private NumericJsonSchemaObject(Type type, @Nullable String description) {
-			this(Collections.singleton(type), description, null);
+		private NumericJsonSchemaObject(Type type, @Nullable String description, boolean generateDescription) {
+			this(Collections.singleton(type), description, generateDescription, null);
 		}
 
-		private NumericJsonSchemaObject(Set<Type> types, @Nullable String description,
+		private NumericJsonSchemaObject(Set<Type> types, @Nullable String description, boolean generateDescription,
 				@Nullable Restrictions restrictions) {
 
-			super(validateTypes(types), description, restrictions);
+			super(validateTypes(types), description, generateDescription, restrictions);
 		}
 
 		/**
@@ -644,7 +569,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		NumericJsonSchemaObject multipleOf(Number value) {
 
 			Assert.notNull(value, "Value must not be null!");
-			NumericJsonSchemaObject newInstance = newInstance(description, restrictions);
+			NumericJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.multipleOf = value;
 			return newInstance;
 		}
@@ -660,7 +585,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 
 			Assert.notNull(range, "Range must not be null!");
 
-			NumericJsonSchemaObject newInstance = newInstance(description, restrictions);
+			NumericJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.range = range;
 			return newInstance;
 		}
@@ -727,7 +652,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NumericJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return newInstance(description, restrictions.possibleValues(possibleValues));
+			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		/*
@@ -736,7 +661,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NumericJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return newInstance(description, restrictions.allOf(allOf));
+			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		/*
@@ -745,7 +670,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NumericJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return newInstance(description, restrictions.anyOf(anyOf));
+			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		/*
@@ -754,7 +679,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NumericJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return newInstance(description, restrictions.oneOf(oneOf));
+			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		/*
@@ -763,7 +688,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NumericJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return newInstance(description, restrictions.notMatch(notMatch));
+			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		/*
@@ -772,7 +697,17 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NumericJsonSchemaObject description(String description) {
-			return newInstance(description, restrictions);
+			return newInstance(description, generateDescription, restrictions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
+		 */
+		@Override
+		public NumericJsonSchemaObject generatedDescription() {
+
+			return newInstance(description, true, restrictions);
 		}
 
 		/*
@@ -808,9 +743,11 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 			return doc;
 		}
 
-		private NumericJsonSchemaObject newInstance(String description, Restrictions restrictions) {
+		private NumericJsonSchemaObject newInstance(String description, boolean generateDescription,
+				Restrictions restrictions) {
 
-			NumericJsonSchemaObject newInstance = new NumericJsonSchemaObject(types, description, restrictions);
+			NumericJsonSchemaObject newInstance = new NumericJsonSchemaObject(types, description, generateDescription,
+					restrictions);
 
 			newInstance.multipleOf = this.multipleOf;
 			newInstance.range = this.range;
@@ -848,6 +785,22 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 
 			return types;
 		}
+
+		@Nullable
+		@Override
+		protected String generateDescription() {
+
+			String errorMsg = "Must be a numeric value";
+
+			if (multipleOf != null) {
+				errorMsg += " multiple of " + multipleOf;
+			}
+			if (range != null) {
+				errorMsg += " within range " + range;
+			}
+
+			return errorMsg + ".";
+		}
 	}
 
 	/**
@@ -864,11 +817,12 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		@Nullable String pattern;
 
 		public StringJsonSchemaObject() {
-			this(null, null);
+			this(null, false, null);
 		}
 
-		private StringJsonSchemaObject(@Nullable String description, @Nullable Restrictions restrictions) {
-			super(Type.stringType(), description, restrictions);
+		private StringJsonSchemaObject(@Nullable String description, boolean generateDescription,
+				@Nullable Restrictions restrictions) {
+			super(Type.stringType(), description, generateDescription, restrictions);
 		}
 
 		/**
@@ -881,7 +835,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 
 			Assert.notNull(range, "Range must not be null!");
 
-			StringJsonSchemaObject newInstance = newInstance(description, restrictions);
+			StringJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.length = range;
 			return newInstance;
 		}
@@ -920,7 +874,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 
 			Assert.notNull(pattern, "Pattern must not be null!");
 
-			StringJsonSchemaObject newInstance = newInstance(description, restrictions);
+			StringJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.pattern = pattern;
 			return newInstance;
 		}
@@ -931,7 +885,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public StringJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return newInstance(description, restrictions.possibleValues(possibleValues));
+			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		/*
@@ -940,7 +894,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public StringJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return newInstance(description, restrictions.allOf(allOf));
+			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		/*
@@ -949,7 +903,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public StringJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return newInstance(description, restrictions.anyOf(anyOf));
+			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		/*
@@ -958,7 +912,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public StringJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return newInstance(description, restrictions.oneOf(oneOf));
+			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		/*
@@ -967,7 +921,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public StringJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return newInstance(description, restrictions.notMatch(notMatch));
+			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		/*
@@ -976,7 +930,16 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public StringJsonSchemaObject description(String description) {
-			return newInstance(description, restrictions);
+			return newInstance(description, generateDescription, restrictions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
+		 */
+		@Override
+		public StringJsonSchemaObject generatedDescription() {
+			return newInstance(description, true, restrictions);
 		}
 
 		/*
@@ -1006,9 +969,10 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 			return doc;
 		}
 
-		private StringJsonSchemaObject newInstance(String description, Restrictions restrictions) {
+		private StringJsonSchemaObject newInstance(String description, boolean generateDescription,
+				Restrictions restrictions) {
 
-			StringJsonSchemaObject newInstance = new StringJsonSchemaObject(description, restrictions);
+			StringJsonSchemaObject newInstance = new StringJsonSchemaObject(description, generateDescription, restrictions);
 
 			newInstance.length = this.length;
 			newInstance.pattern = this.pattern;
@@ -1036,65 +1000,87 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 
 		private @Nullable Boolean uniqueItems;
 		private @Nullable Range<Integer> range;
-		private Collection<JsonSchemaObject> items;
+		private Collection<JsonSchemaObject> items = Collections.emptyList();
 
 		public ArrayJsonSchemaObject() {
-			this(null, null);
+			this(null, false, null);
 		}
 
-		private ArrayJsonSchemaObject(@Nullable String description, @Nullable Restrictions restrictions) {
-			super(Collections.singleton(Type.arrayType()), description, restrictions);
+		private ArrayJsonSchemaObject(@Nullable String description, boolean generateDescription,
+				@Nullable Restrictions restrictions) {
+			super(Collections.singleton(Type.arrayType()), description, generateDescription, restrictions);
 		}
 
-		ArrayJsonSchemaObject uniqueItems(boolean uniqueItems) {
+		public ArrayJsonSchemaObject uniqueItems(boolean uniqueItems) {
 
-			ArrayJsonSchemaObject newInstance = newInstance(description, restrictions);
+			ArrayJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.uniqueItems = uniqueItems;
 			return newInstance;
 		}
 
-		ArrayJsonSchemaObject range(Range<Integer> range) {
+		public ArrayJsonSchemaObject range(Range<Integer> range) {
 
-			ArrayJsonSchemaObject newInstance = newInstance(description, restrictions);
+			ArrayJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.range = range;
 			return newInstance;
 		}
 
-		ArrayJsonSchemaObject items(Collection<JsonSchemaObject> items) {
+		public ArrayJsonSchemaObject maxItems(int nrItems) {
 
-			ArrayJsonSchemaObject newInstance = newInstance(description, restrictions);
+			Bound lower = this.range != null ? this.range.getLowerBound() : Bound.unbounded();
+			return range(Range.of(lower, Bound.inclusive(nrItems)));
+		}
+
+		public ArrayJsonSchemaObject minItems(int nrItems) {
+
+			Bound upper = this.range != null ? this.range.getUpperBound() : Bound.unbounded();
+			return range(Range.of(Bound.inclusive(nrItems), upper));
+		}
+
+		public ArrayJsonSchemaObject items(Collection<JsonSchemaObject> items) {
+
+			ArrayJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.items = new ArrayList<>(items);
 			return newInstance;
 		}
 
 		@Override
 		public ArrayJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return newInstance(description, restrictions.possibleValues(possibleValues));
+			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		@Override
 		public ArrayJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return newInstance(description, restrictions.allOf(allOf));
+			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		@Override
 		public ArrayJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return newInstance(description, restrictions.anyOf(anyOf));
+			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		@Override
 		public ArrayJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return newInstance(description, restrictions.oneOf(oneOf));
+			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		@Override
 		public ArrayJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return newInstance(description, restrictions.notMatch(notMatch));
+			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		@Override
 		public ArrayJsonSchemaObject description(String description) {
-			return newInstance(description, restrictions);
+			return newInstance(description, generateDescription, restrictions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
+		 */
+		@Override
+		public ArrayJsonSchemaObject generatedDescription() {
+			return newInstance(description, true, restrictions);
 		}
 
 		@Override
@@ -1124,24 +1110,49 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 			return doc;
 		}
 
-		private ArrayJsonSchemaObject newInstance(String description, Restrictions restrictions) {
+		private ArrayJsonSchemaObject newInstance(String description, boolean generateDescription,
+				Restrictions restrictions) {
 
-			ArrayJsonSchemaObject newInstance = new ArrayJsonSchemaObject(description, restrictions);
+			ArrayJsonSchemaObject newInstance = new ArrayJsonSchemaObject(description, generateDescription, restrictions);
 			newInstance.uniqueItems = this.uniqueItems;
 			newInstance.range = this.range;
 			newInstance.items = this.items;
 			return newInstance;
+		}
+
+		@Nullable
+		@Override
+		protected String generateDescription() {
+
+			String errorMsg = "Must be an array";
+
+			if (ObjectUtils.nullSafeEquals(uniqueItems, Boolean.TRUE)) {
+				errorMsg += " of unique values";
+			}
+
+			if (range != null) {
+				errorMsg += " having size " + range;
+			}
+
+			if (!ObjectUtils.isEmpty(items)) {
+				errorMsg += " with items " + StringUtils.collectionToDelimitedString(
+						items.stream().map(val -> val.toDocument()).collect(Collectors.toList()), ", ");
+			}
+
+			return errorMsg + ".";
+
 		}
 	}
 
 	static class BooleanJsonSchemaObject extends TypedJsonSchemaObject {
 
 		public BooleanJsonSchemaObject() {
-			this(null, null);
+			this(null, false, null);
 		}
 
-		private BooleanJsonSchemaObject(@Nullable String description, @Nullable Restrictions restrictions) {
-			super(Type.booleanType(), description, restrictions);
+		private BooleanJsonSchemaObject(@Nullable String description, boolean generateDescription,
+				@Nullable Restrictions restrictions) {
+			super(Type.booleanType(), description, generateDescription, restrictions);
 		}
 
 		/*
@@ -1150,7 +1161,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public BooleanJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return new BooleanJsonSchemaObject(description, restrictions.possibleValues(possibleValues));
+			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		/*
@@ -1159,7 +1170,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public BooleanJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return new BooleanJsonSchemaObject(description, restrictions.allOf(allOf));
+			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		/*
@@ -1168,7 +1179,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public BooleanJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return new BooleanJsonSchemaObject(description, restrictions.anyOf(anyOf));
+			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		/*
@@ -1177,7 +1188,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public BooleanJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return new BooleanJsonSchemaObject(description, restrictions.oneOf(oneOf));
+			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		/*
@@ -1186,7 +1197,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public BooleanJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return new BooleanJsonSchemaObject(description, restrictions.notMatch(notMatch));
+			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		/*
@@ -1195,7 +1206,16 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public BooleanJsonSchemaObject description(String description) {
-			return new BooleanJsonSchemaObject(description, restrictions);
+			return new BooleanJsonSchemaObject(description, generateDescription, restrictions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
+		 */
+		@Override
+		public BooleanJsonSchemaObject generatedDescription() {
+			return new BooleanJsonSchemaObject(description, true, restrictions);
 		}
 
 	}
@@ -1203,11 +1223,12 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 	static class NullJsonSchemaObject extends TypedJsonSchemaObject {
 
 		public NullJsonSchemaObject() {
-			this(null, null);
+			this(null, false, null);
 		}
 
-		private NullJsonSchemaObject(@Nullable String description, @Nullable Restrictions restrictions) {
-			super(Type.nullType(), description, restrictions);
+		private NullJsonSchemaObject(@Nullable String description, boolean generateDescription,
+				@Nullable Restrictions restrictions) {
+			super(Type.nullType(), description, generateDescription, restrictions);
 		}
 
 		/*
@@ -1216,7 +1237,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NullJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
-			return new NullJsonSchemaObject(description, restrictions.possibleValues(possibleValues));
+			return new NullJsonSchemaObject(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		/*
@@ -1225,7 +1246,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NullJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
-			return new NullJsonSchemaObject(description, restrictions.allOf(allOf));
+			return new NullJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		/*
@@ -1234,7 +1255,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NullJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
-			return new NullJsonSchemaObject(description, restrictions.anyOf(anyOf));
+			return new NullJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		/*
@@ -1243,7 +1264,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NullJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
-			return new NullJsonSchemaObject(description, restrictions.oneOf(oneOf));
+			return new NullJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		/*
@@ -1252,7 +1273,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NullJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
-			return new NullJsonSchemaObject(description, restrictions.notMatch(notMatch));
+			return new NullJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		/*
@@ -1261,7 +1282,7 @@ public class TypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		@Override
 		public NullJsonSchemaObject description(String description) {
-			return new NullJsonSchemaObject(description, restrictions);
+			return new NullJsonSchemaObject(description, generateDescription, restrictions);
 		}
 	}
 }

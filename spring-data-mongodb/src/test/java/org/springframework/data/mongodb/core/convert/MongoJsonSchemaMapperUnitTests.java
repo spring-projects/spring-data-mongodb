@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -189,8 +189,6 @@ public class MongoJsonSchemaMapperUnitTests {
 
 		assertThat(mapper.mapSchema(schema.toDocument(), Student.class)).isEqualTo(Document.parse(complexSchemaJsonString));
 	}
-
-	// TODO: make sure to run enum fields through the converter so that values get mapped correctly !!!
 
 	static class Student {
 

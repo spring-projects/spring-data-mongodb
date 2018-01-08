@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,23 @@ package org.springframework.data.mongodb.core.schema;
 
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NullJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.StringJsonSchemaObject;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
  * @author Christoph Strobl
@@ -117,7 +123,91 @@ public interface JsonSchemaObject {
 	}
 
 	/**
+	 * Create a new {@link UntypedJsonSchemaObject}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static UntypedJsonSchemaObject untyped() {
+		return new UntypedJsonSchemaObject(null, null, false);
+	}
+
+	/**
+	 * Create a new {@link JsonSchemaObject} matching the given {@code type}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static TypedJsonSchemaObject of(@Nullable Class<?> type) {
+
+		if (type == null) {
+			return of(Type.nullType());
+		}
+
+		if (type.isArray()) {
+
+			if (type.equals(byte[].class)) {
+				return of(Type.binaryType());
+			}
+
+			return of(Type.arrayType());
+		}
+
+		if (type.equals(Object.class)) {
+			return of(Type.objectType());
+		}
+
+		if (type.equals(ObjectId.class)) {
+			return of(Type.objectIdType());
+		}
+
+		if (ClassUtils.isAssignable(String.class, type)) {
+			return of(Type.stringType());
+		}
+
+		if (ClassUtils.isAssignable(Date.class, type)) {
+			return of(Type.dateType());
+		}
+
+		if (ClassUtils.isAssignable(Pattern.class, type)) {
+			return of(Type.regexType());
+		}
+
+		if (ClassUtils.isAssignable(Boolean.class, type)) {
+			return of(Type.booleanType());
+		}
+
+		if (ClassUtils.isAssignable(Number.class, type)) {
+
+			if (type.equals(Long.class)) {
+				return of(Type.longType());
+			}
+
+			if (type.equals(Float.class)) {
+				return of(Type.doubleType());
+			}
+
+			if (type.equals(Double.class)) {
+				return of(Type.doubleType());
+			}
+
+			if (type.equals(Integer.class)) {
+				return of(Type.intType());
+			}
+
+			if (type.equals(BigDecimal.class)) {
+				return of(Type.bigDecimalType());
+			}
+
+			return of(Type.numberType());
+		}
+
+		throw new IllegalArgumentException(String.format("No json schema type found for %s.", type));
+	}
+
+	/**
 	 * Type represents either a json schema {@literal type} or a MongoDB specific {@literal bsonType}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
 	 */
 	interface Type {
 
@@ -205,7 +295,7 @@ public interface JsonSchemaObject {
 		/**
 		 * @return a constant {@link Type} representing {@code bsonType : 'decimal128' }.
 		 */
-		static Type bigintType() {
+		static Type bigDecimalType() {
 			return DECIMAL_128;
 		}
 
@@ -294,6 +384,10 @@ public interface JsonSchemaObject {
 		 */
 		Object value();
 
+		/**
+		 * @author Christpoh Strobl
+		 * @since 2.1
+		 */
 		@RequiredArgsConstructor
 		static class JsonType implements Type {
 
@@ -310,6 +404,10 @@ public interface JsonSchemaObject {
 			}
 		}
 
+		/**
+		 * @author Christpoh Strobl
+		 * @since 2.1
+		 */
 		@RequiredArgsConstructor
 		static class BsonType implements Type {
 

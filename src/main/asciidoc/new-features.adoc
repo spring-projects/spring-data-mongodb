@@ -5,6 +5,8 @@
 == What's new in Spring Data MongoDB 2.1
 * Cursor-based aggregation execution.
 * <<mongo-template.query.distinct,Distinct queries>> for imperative and reactive Template API.
+* `validator` support for collections.
+* `$jsonSchema` support for queries.
 
 [[new-features.2-0-0]]
 == What's new in Spring Data MongoDB 2.0

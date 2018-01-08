@@ -1464,6 +1464,33 @@ AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", T
 
 WARNING: Indexes are only used if the collation used for the operation and the index collation matches.
 
+[[mongo.jsonSchema]]
+=== JSON Schema
+
+As of version 3.6 MongoDB supports collections that validate ``Document``s against a provided JSON Schema. The schema itself and both validation action and level can be defined when creating the collection.
+
+`CollectionOptions` provides the entry point to schema support for collections.
+
+.Create collection with `$jsonSchema`
+====
+[source,java]
+----
+// TODO: add sample here!
+----
+====
+
+Additionally it is also possible to query any collection for documents that match a given structure defined by a JSON Schema.
+
+.Query collation for Documents matching a `$jsonSchema`
+====
+[source,java]
+----
+// TODO: add sample here!
+----
+====
+
+NOTE: `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
+
 [[mongo.query.fluent-template-api]]
 === Fluent Template API
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.String
 import org.springframework.util.Assert;
 
 /**
- * {@link JsonSchemaProperty} implementation
+ * {@link JsonSchemaProperty} implementation.
  * 
  * @author Christoph Strobl
  * @since 2.1
@@ -75,6 +75,117 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 	@Override
 	public Set<Type> getTypes() {
 		return jsonSchemaObjectDelegate.getTypes();
+	}
+
+	/**
+	 * Convenience {@link JsonSchemaProperty} implementation without a {@code type} property.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	public static class UntypedJsonSchemaProperty extends IdentifiableJsonSchemaProperty<UntypedJsonSchemaObject> {
+
+		public UntypedJsonSchemaProperty(String identifier, UntypedJsonSchemaObject jsonSchemaObject) {
+			super(identifier, jsonSchemaObject);
+		}
+
+		/**
+		 * @param possibleValues must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#possibleValues(Collection)
+		 */
+		public UntypedJsonSchemaProperty possibleValues(Object... possibleValues) {
+			return possibleValues(Arrays.asList(possibleValues));
+		}
+
+		/**
+		 * @param allOf must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#allOf(Collection)
+		 */
+		public UntypedJsonSchemaProperty allOf(JsonSchemaObject... allOf) {
+			return allOf(new LinkedHashSet<>(Arrays.asList(allOf)));
+		}
+
+		/**
+		 * @param anyOf must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#anyOf(Collection)
+		 */
+		public UntypedJsonSchemaProperty anyOf(JsonSchemaObject... anyOf) {
+			return anyOf(new LinkedHashSet<>(Arrays.asList(anyOf)));
+		}
+
+		/**
+		 * @param oneOf must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#oneOf(Collection)
+		 */
+		public UntypedJsonSchemaProperty oneOf(JsonSchemaObject... oneOf) {
+			return oneOf(new LinkedHashSet<>(Arrays.asList(oneOf)));
+		}
+
+		/**
+		 * @param possibleValues must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#possibleValues(Collection)
+		 */
+		public UntypedJsonSchemaProperty possibleValues(Collection<Object> possibleValues) {
+			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.possibleValues(possibleValues));
+		}
+
+		/**
+		 * @param allOf must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#allOf(Collection)
+		 */
+		public UntypedJsonSchemaProperty allOf(Collection<JsonSchemaObject> allOf) {
+			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.allOf(allOf));
+		}
+
+		/**
+		 * @param anyOf must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#anyOf(Collection)
+		 */
+		public UntypedJsonSchemaProperty anyOf(Collection<JsonSchemaObject> anyOf) {
+			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.anyOf(anyOf));
+		}
+
+		/**
+		 * @param oneOf must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#oneOf(Collection)
+		 */
+		public UntypedJsonSchemaProperty oneOf(Collection<JsonSchemaObject> oneOf) {
+			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.oneOf(oneOf));
+		}
+
+		/**
+		 * @param notMatch must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#notMatch(JsonSchemaObject)
+		 */
+		public UntypedJsonSchemaProperty notMatch(JsonSchemaObject notMatch) {
+			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.notMatch(notMatch));
+		}
+
+		/**
+		 * @param description must not be {@literal null}.
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#description(String)
+		 */
+		public UntypedJsonSchemaProperty description(String description) {
+			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
+		}
+
+		/**
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#generateDescription()
+		 */
+		public UntypedJsonSchemaProperty generatedDescription() {
+			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
+		}
 	}
 
 	/**
@@ -210,6 +321,14 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 */
 		public StringJsonSchemaProperty description(String description) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
+		}
+
+		/**
+		 * @return new instance of {@link StringJsonSchemaProperty}.
+		 * @see StringJsonSchemaObject#generateDescription()
+		 */
+		public StringJsonSchemaProperty generatedDescription() {
+			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
 	}
 
@@ -384,6 +503,14 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		public ObjectJsonSchemaProperty description(String description) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
+
+		/**
+		 * @return new instance of {@link ObjectJsonSchemaProperty}.
+		 * @see ObjectJsonSchemaObject#generateDescription()
+		 */
+		public ObjectJsonSchemaProperty generatedDescription() {
+			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
+		}
 	}
 
 	/**
@@ -547,6 +674,14 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		public NumericJsonSchemaProperty description(String description) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
+
+		/**
+		 * @return new instance of {@link NumericJsonSchemaProperty}.
+		 * @see NumericJsonSchemaObject#generateDescription()
+		 */
+		public NumericJsonSchemaProperty generatedDescription() {
+			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
+		}
 	}
 
 	/**
@@ -682,6 +817,14 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		public ArrayJsonSchemaProperty description(String description) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
+
+		/**
+		 * @return new instance of {@link ArrayJsonSchemaProperty}.
+		 * @see ArrayJsonSchemaObject#generateDescription()
+		 */
+		public ArrayJsonSchemaProperty generatedDescription() {
+			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
+		}
 	}
 
 	/**
@@ -703,6 +846,14 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 */
 		public BooleanJsonSchemaProperty description(String description) {
 			return new BooleanJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
+		}
+
+		/**
+		 * @return new instance of {@link BooleanJsonSchemaProperty}.
+		 * @see BooleanJsonSchemaObject#generateDescription()
+		 */
+		public BooleanJsonSchemaProperty generatedDescription() {
+			return new BooleanJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
 	}
 

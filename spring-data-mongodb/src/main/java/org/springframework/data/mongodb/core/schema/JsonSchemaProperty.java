@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProper
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NumericJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.StringJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.UntypedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 
@@ -39,6 +40,17 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 * @return never {@literal null}.
 	 */
 	String getIdentifier();
+
+	/**
+	 * Creates a new {@link UntypedJsonSchemaProperty} with given {@literal identifier} without {@code type}.
+	 *
+	 * @param identifier the {@literal property} name or {@literal patternProperty} regex. Must not be {@literal null} nor
+	 *          {@literal empty}.
+	 * @return new instance of {@link UntypedJsonSchemaProperty}.
+	 */
+	static UntypedJsonSchemaProperty untyped(String identifier) {
+		return new UntypedJsonSchemaProperty(identifier, JsonSchemaObject.untyped());
+	}
 
 	/**
 	 * Creates a new {@link StringJsonSchemaProperty} with given {@literal identifier} of {@code type : 'string'}.
@@ -115,7 +127,7 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 * @return new instance of {@link NumericJsonSchemaProperty}.
 	 */
 	static NumericJsonSchemaProperty decimal128(String identifier) {
-		return new NumericJsonSchemaProperty(identifier, new NumericJsonSchemaObject(Type.bigintType()));
+		return new NumericJsonSchemaProperty(identifier, new NumericJsonSchemaObject(Type.bigDecimalType()));
 	}
 
 	/**
@@ -175,6 +187,10 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 
 		public IdentifiableJsonSchemaProperty<TypedJsonSchemaObject> with(TypedJsonSchemaObject schemaObject) {
 			return new IdentifiableJsonSchemaProperty(identifier, schemaObject);
+		}
+
+		public IdentifiableJsonSchemaProperty<UntypedJsonSchemaObject> withoutType() {
+			return new IdentifiableJsonSchemaProperty(identifier, UntypedJsonSchemaObject.newInstance());
 		}
 	}
 
