@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,23 +24,16 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
@@ -65,6 +58,8 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -133,6 +128,7 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
+import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
@@ -673,6 +669,80 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		String idKey = idProperty == null ? ID_FIELD : idProperty.getName();
 
 		return doFindOne(collectionName, new Document(idKey, id), null, entityClass, null);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findDistinct(org.springframework.data.mongodb.core.query.Query, java.lang.String, java.lang.Class, java.lang.Class)
+	 */
+	public <T> Flux<T> findDistinct(Query query, String field, Class<?> entityClass, Class<T> resultClass) {
+		return findDistinct(query, field, determineCollectionName(entityClass), entityClass, resultClass);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findDistinct(org.springframework.data.mongodb.core.query.Query, java.lang.String, java.lang.String, java.lang.Class, java.lang.Class)
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> Flux<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
+			Class<T> resultClass) {
+
+		Assert.notNull(query, "Query must not be null!");
+		Assert.notNull(field, "Field must not be null!");
+		Assert.notNull(collectionName, "CollectionName must not be null!");
+		Assert.notNull(entityClass, "EntityClass must not be null!");
+		Assert.notNull(resultClass, "ResultClass must not be null!");
+
+		MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
+
+		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entity);
+		String mappedFieldName = queryMapper.getMappedFields(new Document(field, 1), entity).keySet().iterator().next();
+
+		Class<T> mongoDriverCompatibleType = mongoDatabaseFactory.getCodecFor(resultClass).map(Codec::getEncoderClass)
+				.orElse((Class) BsonValue.class);
+
+		Flux<?> result = execute(collectionName, collection -> {
+
+			DistinctPublisher<T> publisher = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
+
+			return query.getCollation().map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
+		});
+
+		if (resultClass == Object.class || mongoDriverCompatibleType != resultClass) {
+
+			Class<?> targetType = getMostSpecificConversionTargetType(resultClass, entityClass, field);
+			MongoConverter converter = getConverter();
+
+			result = result.map(it -> converter.mapValueToTargetType(it, targetType, NO_OP_REF_RESOLVER));
+		}
+
+		return (Flux<T>) result;
+	}
+
+	/**
+	 * @param userType must not be {@literal null}.
+	 * @param domainType must not be {@literal null}.
+	 * @param field must not be {@literal null}.
+	 * @return the most specific conversion target type depending on user preference and domain type property.
+	 * @since 2.1
+	 */
+	private static Class<?> getMostSpecificConversionTargetType(Class<?> userType, Class<?> domainType, String field) {
+
+		Class<?> conversionTargetType = userType;
+		try {
+
+			Class<?> propertyType = PropertyPath.from(field, domainType).getLeafProperty().getLeafType();
+
+			// use the more specific type but favor UserType over property one
+			if (ClassUtils.isAssignable(userType, propertyType)) {
+				conversionTargetType = propertyType;
+			}
+
+		} catch (PropertyReferenceException e) {
+			// just don't care about it as we default to Object.class anyway.
+		}
+
+		return conversionTargetType;
 	}
 
 	/*

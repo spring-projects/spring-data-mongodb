@@ -15,14 +15,17 @@
  */
 package org.springframework.data.mongodb.util;
 
+import java.util.Date;
 import java.util.Map;
 
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 
 /**
  * @author Christoph Strobl
@@ -58,5 +61,47 @@ public class BsonUtils {
 			return;
 		}
 		throw new IllegalArgumentException("o_O what's that? Cannot add value to " + bson.getClass());
+	}
+
+	/**
+	 * Extract the corresponding plain value from {@link BsonValue}. Eg. plain {@link String} from
+	 * {@link org.bson.BsonString}.
+	 *
+	 * @param value must not be {@literal null}.
+	 * @return
+	 * @since 2.1
+	 */
+	public static Object toJavaType(BsonValue value) {
+
+		switch (value.getBsonType()) {
+			case INT32:
+				return value.asInt32().getValue();
+			case INT64:
+				return value.asInt64().getValue();
+			case STRING:
+				return value.asString().getValue();
+			case DECIMAL128:
+				return value.asDecimal128().doubleValue();
+			case DOUBLE:
+				return value.asDouble().getValue();
+			case BOOLEAN:
+				return value.asBoolean().getValue();
+			case OBJECT_ID:
+				return value.asObjectId().getValue();
+			case DB_POINTER:
+				return new DBRef(value.asDBPointer().getNamespace(), value.asDBPointer().getId());
+			case BINARY:
+				return value.asBinary().getData();
+			case DATE_TIME:
+				return new Date(value.asDateTime().getValue());
+			case SYMBOL:
+				return value.asSymbol().getSymbol();
+			case ARRAY:
+				return value.asArray().toArray();
+			case DOCUMENT:
+				return Document.parse(value.asDocument().toJson());
+			default:
+				return value;
+		}
 	}
 }

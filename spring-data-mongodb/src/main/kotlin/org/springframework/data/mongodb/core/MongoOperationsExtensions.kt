@@ -323,6 +323,44 @@ inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: S
 		else findById(id, T::class.java)
 
 /**
+ * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+inline fun <reified T : Any> MongoOperations.findDistinct(field: String, entityClass: KClass<*>): List<T> =
+		findDistinct(field, entityClass.java, T::class.java);
+
+/**
+ * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+inline fun <reified T : Any> MongoOperations.findDistinct(query: Query, field: String, entityClass: KClass<*>): List<T> =
+		findDistinct(query, field, entityClass.java, T::class.java)
+
+/**
+ * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+inline fun <reified T : Any> MongoOperations.findDistinct(query: Query, field: String, collectionName: String, entityClass: KClass<*>): List<T> =
+		findDistinct(query, field, collectionName, entityClass.java, T::class.java)
+
+/**
+ * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @author Mark Paluch
+ * @since 2.1
+ */
+inline fun <reified T : Any, reified E : Any> MongoOperations.findDistinct(query: Query, field: String, collectionName: String? = null): List<T> =
+		if (collectionName != null) findDistinct(query, field, collectionName, E::class.java, T::class.java)
+		else findDistinct(query, field, E::class.java, T::class.java)
+
+/**
  * Extension for [MongoOperations.findAndModify] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
