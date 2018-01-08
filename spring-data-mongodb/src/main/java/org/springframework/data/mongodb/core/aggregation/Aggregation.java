@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -359,6 +359,28 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link SortByCountOperation} given {@literal groupByField}.
+	 *
+	 * @param field must not be {@literal null} or empty.
+	 * @return
+	 * @since 2.1
+	 */
+	public static SortByCountOperation sortByCount(String field) {
+		return new SortByCountOperation(field(field));
+	}
+
+	/**
+	 * Creates a new {@link SortByCountOperation} given {@link AggregationExpression group and sort expression}.
+	 *
+	 * @param groupAndSortExpression must not be {@literal null}.
+	 * @return
+	 * @since 2.1
+	 */
+	public static SortByCountOperation sortByCount(AggregationExpression groupAndSortExpression) {
+		return new SortByCountOperation(groupAndSortExpression);
+	}
+
+	/**
 	 * Creates a new {@link SkipOperation} skipping the given number of elements.
 	 *
 	 * @param elementsToSkip must not be less than zero.
@@ -479,26 +501,6 @@ public class Aggregation {
 	 */
 	public static BucketAutoOperation bucketAuto(AggregationExpression groupByExpression, int buckets) {
 		return new BucketAutoOperation(groupByExpression, buckets);
-	}
-
-	/**
-	 * Creates a new {@link SortByCountOperation} given {@literal groupByField}
-	 *
-	 * @param groupByField must not be {@literal null} or empty.
-	 * @return
-	 */
-	public static SortByCountOperation sortByCount(String groupByField) {
-		return new SortByCountOperation(field(groupByField));
-	}
-
-	/**
-	 * Creates a new {@link SortByCountOperation} given {@link AggregationExpression group-by expression}.
-	 *
-	 * @param groupByExpression must not be {@literal null}.
-	 * @return
-	 */
-	public static SortByCountOperation sortByCount(AggregationExpression groupByExpression) {
-		return new SortByCountOperation(groupByExpression);
 	}
 
 	/**

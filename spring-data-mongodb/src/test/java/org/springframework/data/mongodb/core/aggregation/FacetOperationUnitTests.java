@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-
-import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Criteria;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import org.bson.Document;
+import org.junit.Test;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
  * Unit tests for {@link FacetOperation}.
@@ -34,29 +34,28 @@ import org.bson.Document;
 public class FacetOperationUnitTests {
 
 	@Test // DATAMONGO-1552
-	public void shouldRenderCorrectly() throws Exception {
+	public void shouldRenderCorrectly() {
 
-		FacetOperation facetOperation = new FacetOperation()
-				.and(match(Criteria.where("price").exists(true)), //
-						bucket("price") //
-								.withBoundaries(0, 150, 200, 300, 400) //
-								.withDefaultBucket("Other") //
-								.andOutputCount().as("count") //
-								.andOutput("title").push().as("titles")) //
+		FacetOperation facetOperation = new FacetOperation().and(match(Criteria.where("price").exists(true)), //
+				bucket("price") //
+						.withBoundaries(0, 150, 200, 300, 400) //
+						.withDefaultBucket("Other") //
+						.andOutputCount().as("count") //
+						.andOutput("title").push().as("titles")) //
 				.as("categorizedByPrice") //
 				.and(bucketAuto("year", 5)).as("categorizedByYears");
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $facet: { categorizedByPrice: [" + "{ $match: { price: { $exists: true } } }, "
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $facet: { categorizedByPrice: [" + "{ $match: { price: { $exists: true } } }, "
 						+ "{ $bucket: { boundaries: [  0, 150, 200, 300, 400 ], groupBy: \"$price\", default: \"Other\", "
 						+ "output: { count: { $sum: 1 }, titles: { $push: \"$title\" } } } } ],"
-						+ "categorizedByYears: [ { $bucketAuto: { buckets: 5, groupBy: \"$year\" } } ] } }")));
+						+ "categorizedByYears: [ { $bucketAuto: { buckets: 5, groupBy: \"$year\" } } ] } }"));
 	}
 
 	@Test // DATAMONGO-1552
-	public void shouldRenderEmpty() throws Exception {
+	public void shouldRenderEmpty() {
 
 		FacetOperation facetOperation = facet();
 
@@ -66,7 +65,7 @@ public class FacetOperationUnitTests {
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
-	public void shouldRejectNonExistingFields() throws Exception {
+	public void shouldRejectNonExistingFields() {
 
 		FacetOperation facetOperation = new FacetOperation()
 				.and(project("price"), //
@@ -79,11 +78,11 @@ public class FacetOperationUnitTests {
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $facet: { categorizedByPrice: [" + "{ $match: { price: { $exists: true } } }, "
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $facet: { categorizedByPrice: [" + "{ $match: { price: { $exists: true } } }, "
 						+ "{ $bucket: {boundaries: [  0, 150, 200, 300, 400 ], groupBy: \"$price\", default: \"Other\", "
 						+ "output: { count: { $sum: 1 }, titles: { $push: \"$title\" } } } } ],"
-						+ "categorizedByYears: [ { $bucketAuto: { buckets: 5, groupBy: \"$year\" } } ] } }")));
+						+ "categorizedByYears: [ { $bucketAuto: { buckets: 5, groupBy: \"$year\" } } ] } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -97,22 +96,21 @@ public class FacetOperationUnitTests {
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $facet: { categorizedByPrice: [" + "{ $project: { price: 1, name: \"$title\" } }, "
+		assertThat(agg).isEqualTo(Document.parse("{ $facet: { categorizedByPrice: ["
+				+ "{ $project: { price: 1, name: \"$title\" } }, "
 						+ "{ $bucketAuto: {  buckets: 5, groupBy: \"$price\", "
-						+ "output: { titles: { $push: \"$name\" } } } } ] } }")));
+						+ "output: { titles: { $push: \"$name\" } } } } ] } }"));
 	}
 
 	@Test // DATAMONGO-1553
 	public void shouldRenderSortByCountCorrectly() {
 
-		FacetOperation facetOperation = new FacetOperation()
-				.and(sortByCount("country"))
+		FacetOperation facetOperation = new FacetOperation() //
+				.and(sortByCount("country")) //
 				.as("categorizedByCountry");
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $facet: { categorizedByCountry: [{ $sortByCount: \"$country\" } ] } }")));
+		assertThat(agg).containsEntry("$facet.categorizedByCountry.[0].$sortByCount", "$country");
 	}
 }
