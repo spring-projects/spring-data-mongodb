@@ -27,7 +27,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Object
  *
  * <pre class="code">
  * MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname")
- * 		.properties(string("firstname").possibleValues("luke", "han").maxLength(10),
+ * 		.properties(string("firstname").possibleValues("luke", "han"),
  * 				object("address").properties(string("postCode").minLength(4).maxLength(5))
  *
  * 		).build();
@@ -41,7 +41,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Object
   "required": [ "firstname", "lastname" ],
   "properties": {
     "firstname": {
-      "type": "string", "enum": [ "luke", "han" ], "maxLength": 10
+      "type": "string", "enum": [ "luke", "han" ],
     },
     "address": {
       "type": "object",
