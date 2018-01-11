@@ -25,7 +25,10 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 /**
+ * Unit tests for {@link MongoJsonSchema}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoJsonSchemaUnitTests {
@@ -41,8 +44,26 @@ public class MongoJsonSchemaUnitTests {
 				new Document("type", "object").append("required", Arrays.asList("firstname", "lastname"))));
 	}
 
+	@Test // DATAMONGO-1835
+	public void rendersDocumentBasedSchemaCorrectly() {
+
+		Document document = MongoJsonSchema.builder() //
+				.required("firstname", "lastname") //
+				.build().toDocument();
+
+		MongoJsonSchema jsonSchema = MongoJsonSchema.of(document.get("$jsonSchema", Document.class));
+
+		assertThat(jsonSchema.toDocument()).isEqualTo(new Document("$jsonSchema",
+				new Document("type", "object").append("required", Arrays.asList("firstname", "lastname"))));
+	}
+
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1835
 	public void throwsExceptionOnNullRoot() {
-		MongoJsonSchema.of(null);
+		MongoJsonSchema.of((JsonSchemaObject) null);
+	}
+
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1835
+	public void throwsExceptionOnNullDocument() {
+		MongoJsonSchema.of((Document) null);
 	}
 }

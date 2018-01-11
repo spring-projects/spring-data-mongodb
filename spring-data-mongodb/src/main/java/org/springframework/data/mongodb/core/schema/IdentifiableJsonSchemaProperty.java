@@ -32,16 +32,23 @@ import org.springframework.util.Assert;
 
 /**
  * {@link JsonSchemaProperty} implementation.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implements JsonSchemaProperty {
 
-	protected String identifier;
-	protected T jsonSchemaObjectDelegate;
+	protected final String identifier;
+	protected final T jsonSchemaObjectDelegate;
 
-	public IdentifiableJsonSchemaProperty(String identifier, T jsonSchemaObject) {
+	/**
+	 * Creates a new {@link IdentifiableJsonSchemaProperty} for {@code identifier} and {@code jsonSchemaObject}.
+	 *
+	 * @param identifier must not be {@literal null}.
+	 * @param jsonSchemaObject must not be {@literal null}.
+	 */
+	IdentifiableJsonSchemaProperty(String identifier, T jsonSchemaObject) {
 
 		Assert.notNull(identifier, "Identifier must not be null!");
 		Assert.notNull(jsonSchemaObject, "JsonSchemaObject must not be null!");
@@ -85,7 +92,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 	 */
 	public static class UntypedJsonSchemaProperty extends IdentifiableJsonSchemaProperty<UntypedJsonSchemaObject> {
 
-		public UntypedJsonSchemaProperty(String identifier, UntypedJsonSchemaObject jsonSchemaObject) {
+		UntypedJsonSchemaProperty(String identifier, UntypedJsonSchemaObject jsonSchemaObject) {
 			super(identifier, jsonSchemaObject);
 		}
 
@@ -201,7 +208,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 *          {@literal null} nor {@literal empty}.
 		 * @param schemaObject must not be {@literal null}.
 		 */
-		public StringJsonSchemaProperty(String identifier, StringJsonSchemaObject schemaObject) {
+		StringJsonSchemaProperty(String identifier, StringJsonSchemaObject schemaObject) {
 			super(identifier, schemaObject);
 		}
 
@@ -274,8 +281,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @see StringJsonSchemaObject#possibleValues(Collection)
 		 */
 		public StringJsonSchemaProperty possibleValues(Collection<String> possibleValues) {
-			return new StringJsonSchemaProperty(identifier,
-					jsonSchemaObjectDelegate.possibleValues((Collection) possibleValues));
+			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.possibleValues(possibleValues));
 		}
 
 		/**
@@ -345,35 +351,35 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 *          {@literal null} nor {@literal empty}.
 		 * @param schemaObject must not be {@literal null}.
 		 */
-		public ObjectJsonSchemaProperty(String identifier, ObjectJsonSchemaObject schemaObject) {
+		ObjectJsonSchemaProperty(String identifier, ObjectJsonSchemaObject schemaObject) {
 			super(identifier, schemaObject);
 		}
 
 		/**
 		 * @param range must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
-		 * @see ObjectJsonSchemaObject#nrProperties
+		 * @see ObjectJsonSchemaObject#propertiesCount
 		 */
-		public ObjectJsonSchemaProperty nrProperties(Range<Integer> range) {
-			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.nrProperties(range));
+		public ObjectJsonSchemaProperty propertiesCount(Range<Integer> range) {
+			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.propertiesCount(range));
 		}
 
 		/**
-		 * @param nrProperties must not be {@literal null}.
+		 * @param count must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
-		 * @see ObjectJsonSchemaObject#minNrProperties(int)
+		 * @see ObjectJsonSchemaObject#minProperties(int)
 		 */
-		public ObjectJsonSchemaProperty minNrProperties(int nrProperties) {
-			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.minNrProperties(nrProperties));
+		public ObjectJsonSchemaProperty minProperties(int count) {
+			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.minProperties(count));
 		}
 
 		/**
-		 * @param nrProperties must not be {@literal null}.
+		 * @param count must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
-		 * @see ObjectJsonSchemaObject#maxNrProperties(int)
+		 * @see ObjectJsonSchemaObject#maxProperties(int)
 		 */
-		public ObjectJsonSchemaProperty maxNrProperties(int nrProperties) {
-			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.maxNrProperties(nrProperties));
+		public ObjectJsonSchemaProperty maxProperties(int count) {
+			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.maxProperties(count));
 		}
 
 		/**
@@ -626,8 +632,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @see NumericJsonSchemaObject#possibleValues(Collection)
 		 */
 		public NumericJsonSchemaProperty possibleValues(Collection<Number> possibleValues) {
-			return new NumericJsonSchemaProperty(identifier,
-					jsonSchemaObjectDelegate.possibleValues((Collection) possibleValues));
+			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.possibleValues(possibleValues));
 		}
 
 		/**
@@ -720,12 +725,48 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		}
 
 		/**
+		 * @param count
+		 * @return new instance of {@link ArrayJsonSchemaProperty}.
+		 * @see ArrayJsonSchemaObject#minItems(int)
+		 */
+		public ArrayJsonSchemaProperty minItems(int count) {
+			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.minItems(count));
+		}
+
+		/**
+		 * @param count
+		 * @return new instance of {@link ArrayJsonSchemaProperty}.
+		 * @see ArrayJsonSchemaObject#maxItems(int)
+		 */
+		public ArrayJsonSchemaProperty maxItems(int count) {
+			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.maxItems(count));
+		}
+
+		/**
+		 * @param items must not be {@literal null}.
+		 * @return new instance of {@link ArrayJsonSchemaProperty}.
+		 * @see ArrayJsonSchemaObject#items(Collection)
+		 */
+		public ArrayJsonSchemaProperty items(JsonSchemaObject... items) {
+			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.items(Arrays.asList(items)));
+		}
+
+		/**
 		 * @param items must not be {@literal null}.
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#items(Collection)
 		 */
 		public ArrayJsonSchemaProperty items(Collection<JsonSchemaObject> items) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.items(items));
+		}
+
+		/**
+		 * @param additionalItemsAllowed
+		 * @return new instance of {@link ArrayJsonSchemaProperty}.
+		 * @see ArrayJsonSchemaObject#additionalItems(boolean)
+		 */
+		public ArrayJsonSchemaProperty additionalItems(boolean additionalItemsAllowed) {
+			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.additionalItems(additionalItemsAllowed));
 		}
 
 		/**
@@ -812,7 +853,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		/**
 		 * @param description must not be {@literal null}.
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
-		 * @see ArrayJsonSchemaObjecty#description(String)
+		 * @see ArrayJsonSchemaObject#description(String)
 		 */
 		public ArrayJsonSchemaProperty description(String description) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
@@ -835,7 +876,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 	 */
 	public static class BooleanJsonSchemaProperty extends IdentifiableJsonSchemaProperty<BooleanJsonSchemaObject> {
 
-		public BooleanJsonSchemaProperty(String identifier, BooleanJsonSchemaObject schemaObject) {
+		BooleanJsonSchemaProperty(String identifier, BooleanJsonSchemaObject schemaObject) {
 			super(identifier, schemaObject);
 		}
 
@@ -865,18 +906,25 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 	 */
 	public static class NullJsonSchemaProperty extends IdentifiableJsonSchemaProperty<NullJsonSchemaObject> {
 
-		public NullJsonSchemaProperty(String identifier, NullJsonSchemaObject schemaObject) {
+		NullJsonSchemaProperty(String identifier, NullJsonSchemaObject schemaObject) {
 			super(identifier, schemaObject);
 		}
 
 		/**
 		 * @param description must not be {@literal null}.
-		 * @return new instance of {@link NumericJsonSchemaProperty}.
+		 * @return new instance of {@link NullJsonSchemaProperty}.
 		 * @see NullJsonSchemaObject#description(String)
 		 */
 		public NullJsonSchemaProperty description(String description) {
 			return new NullJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
-	}
 
+		/**
+		 * @return new instance of {@link NullJsonSchemaProperty}.
+		 * @see NullJsonSchemaObject#generateDescription()
+		 */
+		public NullJsonSchemaProperty generatedDescription() {
+			return new NullJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
+		}
+	}
 }

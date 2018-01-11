@@ -18,7 +18,9 @@ package org.springframework.data.mongodb.core.schema;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
+import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.bson.Document;
@@ -29,9 +31,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
@@ -39,30 +41,26 @@ import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.ValidationAction;
-import com.mongodb.client.model.ValidationLevel;
-import com.mongodb.client.model.ValidationOptions;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
- * Integration tests for {@link MongoJsonSchema}.
+ * Integration tests for {@link MongoJsonSchema} using reactive infrastructure.
  *
- * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-public class MongoJsonSchemaTests {
+public class ReactiveMongoJsonSchemaTests {
 
 	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 
 	@Configuration
-	static class Config extends AbstractMongoConfiguration {
+	static class Config extends AbstractReactiveMongoConfiguration {
 
 		@Override
-		public MongoClient mongoClient() {
-			return new MongoClient();
+		public MongoClient reactiveMongoClient() {
+			return MongoClients.create();
 		}
 
 		@Override
@@ -71,12 +69,11 @@ public class MongoJsonSchemaTests {
 		}
 	}
 
-	@Autowired MongoTemplate template;
+	@Autowired ReactiveMongoTemplate template;
 
 	@Before
 	public void setUp() {
-
-		template.dropCollection(Person.class);
+		StepVerifier.create(template.dropCollection(Person.class)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1835
@@ -91,59 +88,11 @@ public class MongoJsonSchemaTests {
 
 				).build();
 
-		template.createCollection(Person.class, CollectionOptions.empty().schema(schema));
+		StepVerifier.create(template.createCollection(Person.class, CollectionOptions.empty().schema(schema)))
+				.expectNextCount(1).verifyComplete();
 
 		Document $jsonSchema = new MongoJsonSchemaMapper(template.getConverter()).mapSchema(schema.toDocument(),
 				Person.class);
-
-		Document fromDb = readSchemaFromDatabase("persons");
-		assertThat(fromDb).isEqualTo($jsonSchema);
-	}
-
-	@Test // DATAMONGO-1835
-	public void nonMappedSchema() {
-
-		MongoJsonSchema schema = MongoJsonSchema.builder() //
-				.required("firstname", "lastname") //
-				.properties( //
-						JsonSchemaProperty.string("firstname").possibleValues("luke", "han").maxLength(10), //
-						JsonSchemaProperty.object("address") //
-								.properties(JsonSchemaProperty.string("postCode").minLength(4).maxLength(5))
-
-				).build();
-
-		template.createCollection("persons", CollectionOptions.empty().schema(schema));
-
-		Document fromDb = readSchemaFromDatabase("persons");
-		assertThat(fromDb)
-				.isNotEqualTo(new MongoJsonSchemaMapper(template.getConverter()).mapSchema(schema.toDocument(), Person.class));
-	}
-
-	@Test // DATAMONGO-1835
-	public void writeSchemaManually() {
-
-		MongoJsonSchema schema = MongoJsonSchema.builder() //
-				.required("firstname", "lastname") //
-				.properties( //
-						JsonSchemaProperty.string("firstname").possibleValues("luke", "han").maxLength(10), //
-						JsonSchemaProperty.object("address") //
-								.properties(JsonSchemaProperty.string("postCode").minLength(4).maxLength(5))
-
-				).build();
-
-		Document $jsonSchema = new MongoJsonSchemaMapper(template.getConverter()).mapSchema(schema.toDocument(),
-				Person.class);
-
-		ValidationOptions options = new ValidationOptions();
-		options.validationLevel(ValidationLevel.MODERATE);
-		options.validationAction(ValidationAction.ERROR);
-		options.validator($jsonSchema);
-
-		CreateCollectionOptions cco = new CreateCollectionOptions();
-		cco.validationOptions(options);
-
-		MongoDatabase db = template.getDb();
-		db.createCollection("persons", cco);
 
 		Document fromDb = readSchemaFromDatabase("persons");
 		assertThat(fromDb).isEqualTo($jsonSchema);
@@ -152,7 +101,12 @@ public class MongoJsonSchemaTests {
 	Document readSchemaFromDatabase(String collectionName) {
 
 		Document collectionInfo = template
-				.executeCommand(new Document("listCollections", 1).append("filter", new Document("name", collectionName)));
+				.executeCommand(new Document("listCollections", 1).append("filter", new Document("name", collectionName)))
+				.block(Duration.ofSeconds(5));
+
+		if (collectionInfo == null) {
+			throw new DataRetrievalFailureException(String.format("Collection %s was not found.", collectionName));
+		}
 
 		if (collectionInfo.containsKey("cursor")) {
 			collectionInfo = (Document) collectionInfo.get("cursor", Document.class).get("firstBatch", List.class).iterator()

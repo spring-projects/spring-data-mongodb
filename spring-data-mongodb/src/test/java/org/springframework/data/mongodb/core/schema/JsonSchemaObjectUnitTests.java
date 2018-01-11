@@ -32,6 +32,7 @@ import org.springframework.data.domain.Range.*;
  * Tests verifying {@link org.bson.Document} representation of {@link JsonSchemaObject}s.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class JsonSchemaObjectUnitTests {
 
@@ -49,7 +50,7 @@ public class JsonSchemaObjectUnitTests {
 	@Test // DATAMONGO-1835
 	public void objectObjectShouldRenderNrPropertiesCorrectly() {
 
-		assertThat(object().nrProperties(from(inclusive(10)).to(inclusive(20))).generatedDescription().toDocument())
+		assertThat(object().propertiesCount(from(inclusive(10)).to(inclusive(20))).generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "object").append("description", "Must be an object with [10-20] properties.")
 						.append("minProperties", 10).append("maxProperties", 20));
 	}
@@ -99,6 +100,7 @@ public class JsonSchemaObjectUnitTests {
 						new Document("type", "object").append("description", "Must be an object defining restrictions for city.")
 								.append("properties", new Document("city", new Document("type", "string")
 										.append("description", "Must be a string with length [3-unbounded.").append("minLength", 3)))));
+
 
 		assertThat(object()
 				.properties(JsonSchemaProperty.object("address")
@@ -226,6 +228,39 @@ public class JsonSchemaObjectUnitTests {
 
 		assertThat(array().uniqueItems(true).generatedDescription().toDocument()).isEqualTo(new Document("type", "array")
 				.append("description", "Must be an array of unique values.").append("uniqueItems", true));
+	}
+
+	@Test // DATAMONGO-1835
+	public void arrayObjectShouldRenderAdditionalItemsItemsCorrectly() {
+
+		assertThat(array().additionalItems(true).generatedDescription().toDocument())
+				.isEqualTo(new Document("type", "array").append("description", "Must be an array with additional items.")
+						.append("additionalItems", true));
+		assertThat(array().additionalItems(false).generatedDescription().toDocument())
+				.isEqualTo(new Document("type", "array").append("description", "Must be an array with no additional items.")
+						.append("additionalItems", false));
+	}
+
+	// -----------------
+	// type : 'boolean'
+	// -----------------
+
+	@Test // DATAMONGO-1835
+	public void booleanShouldRenderCorrectly() {
+
+		assertThat(bool().generatedDescription().toDocument())
+				.isEqualTo(new Document("type", "boolean").append("description", "Must be a boolean."));
+	}
+
+	// -----------------
+	// type : 'null'
+	// -----------------
+
+	@Test // DATAMONGO-1835
+	public void nullShouldRenderCorrectly() {
+
+		assertThat(nil().generatedDescription().toDocument())
+				.isEqualTo(new Document("type", "null").append("description", "Must be null."));
 	}
 
 	// -----------------

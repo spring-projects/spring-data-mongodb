@@ -124,6 +124,9 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
@@ -2370,7 +2373,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Document doc = convertToDocument(collectionOptions);
 
-		if (collectionOptions.getValidator().isPresent()) {
+		if (collectionOptions != null && collectionOptions.getValidator().isPresent()) {
 			Validator v = collectionOptions.getValidator().get();
 			v.getSchema().ifPresent(val -> doc.put("validator", schemaMapper.mapSchema(val.toDocument(), targetType)));
 		}

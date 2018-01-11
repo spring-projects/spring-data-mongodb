@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.BooleanJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NullJsonSchemaProperty;
@@ -29,6 +32,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Object
  * A {@literal property} or {@literal patternProperty} within a {@link JsonSchemaObject} of {@code type : 'object'}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public interface JsonSchemaProperty extends JsonSchemaObject {
@@ -165,7 +169,7 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 
 	/**
 	 * Obtain a builder to create a {@link JsonSchemaProperty}.
-	 * 
+	 *
 	 * @param identifier
 	 * @return
 	 */
@@ -173,24 +177,39 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 		return new JsonSchemaPropertyBuilder(identifier);
 	}
 
+	/**
+	 * Builder for {@link IdentifiableJsonSchemaProperty}.
+	 */
+	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	class JsonSchemaPropertyBuilder {
 
-		private String identifier;
+		private final String identifier;
 
-		public JsonSchemaPropertyBuilder(String identifier) {
-			this.identifier = identifier;
-		}
-
+		/**
+		 * Configure a {@link Type} for the property.
+		 *
+		 * @param type must not be {@literal null}.
+		 * @return
+		 */
 		public IdentifiableJsonSchemaProperty<TypedJsonSchemaObject> ofType(Type type) {
-			return new IdentifiableJsonSchemaProperty(identifier, TypedJsonSchemaObject.of(type));
+			return new IdentifiableJsonSchemaProperty<>(identifier, TypedJsonSchemaObject.of(type));
 		}
 
+		/**
+		 * Configure a {@link TypedJsonSchemaObject} for the property.
+		 *
+		 * @param schemaObject must not be {@literal null}.
+		 * @return
+		 */
 		public IdentifiableJsonSchemaProperty<TypedJsonSchemaObject> with(TypedJsonSchemaObject schemaObject) {
-			return new IdentifiableJsonSchemaProperty(identifier, schemaObject);
+			return new IdentifiableJsonSchemaProperty<>(identifier, schemaObject);
 		}
 
+		/**
+		 * @return an untyped {@link IdentifiableJsonSchemaProperty}.
+		 */
 		public IdentifiableJsonSchemaProperty<UntypedJsonSchemaObject> withoutType() {
-			return new IdentifiableJsonSchemaProperty(identifier, UntypedJsonSchemaObject.newInstance());
+			return new IdentifiableJsonSchemaProperty<>(identifier, UntypedJsonSchemaObject.newInstance());
 		}
 	}
 
