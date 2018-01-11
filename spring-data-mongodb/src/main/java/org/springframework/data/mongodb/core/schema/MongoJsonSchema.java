@@ -23,6 +23,37 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Object
 import org.springframework.util.Assert;
 
 /**
+ * Interface defining MongoDB-specific JSON schema object. New objects can be built with {@link #builder()}, for
+ * example:
+ *
+ * <pre class="code">
+ * MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname")
+ * 		.properties(string("firstname").possibleValues("luke", "han"),
+ * 				object("address").properties(string("postCode").minLength(4).maxLength(5))
+ *
+ * 		).build();
+ * </pre>
+ *
+ * resulting in the following schema:
+ *
+ * <pre>
+ *  {
+  "type": "object",
+  "required": [ "firstname", "lastname" ],
+  "properties": {
+    "firstname": {
+      "type": "string", "enum": [ "luke", "han" ],
+    },
+    "address": {
+      "type": "object",
+      "properties": {
+        "postCode": { "type": "string", "minLength": 4, "maxLength": 5 }
+      }
+    }
+  }
+}
+ * </pre>
+ *
  * @author Christoph Strobl
  * @since 2.1
  **/
