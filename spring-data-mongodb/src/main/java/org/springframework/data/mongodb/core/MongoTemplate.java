@@ -63,6 +63,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.data.mongodb.core.CollectionOptions.Validator;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
@@ -73,9 +74,11 @@ import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOpe
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
@@ -121,6 +124,9 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
@@ -133,14 +139,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSONParseException;
@@ -191,6 +190,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
+	private final JsonSchemaMapper schemaMapper;
 	private final SpelAwareProxyProjectionFactory projectionFactory;
 
 	private @Nullable WriteConcern writeConcern;
@@ -235,6 +235,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter(mongoDbFactory) : mongoConverter;
 		this.queryMapper = new QueryMapper(this.mongoConverter);
 		this.updateMapper = new UpdateMapper(this.mongoConverter);
+		this.schemaMapper = new MongoJsonSchemaMapper(this.mongoConverter);
 		this.projectionFactory = new SpelAwareProxyProjectionFactory();
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
@@ -545,7 +546,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass,
 			@Nullable CollectionOptions collectionOptions) {
-		return createCollection(determineCollectionName(entityClass), collectionOptions);
+
+		Assert.notNull(entityClass, "EntityClass must not be null!");
+		return doCreateCollection(determineCollectionName(entityClass), convertToDocument(collectionOptions, entityClass));
 	}
 
 	/*
@@ -2227,6 +2230,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					co.collation(IndexConverters.fromDocument(collectionOptions.get("collation", Document.class)));
 				}
 
+				if (collectionOptions.containsKey("validator")) {
+
+					ValidationOptions options = new ValidationOptions();
+
+					if (collectionOptions.containsKey("validationLevel")) {
+						options.validationLevel(ValidationLevel.fromString(collectionOptions.getString("validationLevel")));
+					}
+					if (collectionOptions.containsKey("validationAction")) {
+						options.validationAction(ValidationAction.fromString(collectionOptions.getString("validationAction")));
+					}
+
+					options.validator(collectionOptions.get("validator", Document.class));
+					co.validationOptions(options);
+				}
+
 				db.createCollection(collectionName, co);
 
 				MongoCollection<Document> coll = db.getCollection(collectionName, Document.class);
@@ -2339,6 +2357,35 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				new ProjectingReadCallback<>(mongoConverter, sourceClass, targetClass, collectionName), collectionName);
 	}
 
+	/**
+	 * Convert given {@link CollectionOptions} to a document and take the domain type information into account when
+	 * creating a mapped schema for validation. <br />
+	 * This method calls {@link #convertToDocument(CollectionOptions)} for backwards compatibility and potentially
+	 * overwrites the validator with the mapped validator document. In the long run
+	 * {@link #convertToDocument(CollectionOptions)} will be removed so that this one becomes the only source of truth.
+	 *
+	 * @param collectionOptions can be {@literal null}.
+	 * @param targetType must not be {@literal null}. Use {@link Object} type instead.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	protected Document convertToDocument(@Nullable CollectionOptions collectionOptions, Class<?> targetType) {
+
+		Document doc = convertToDocument(collectionOptions);
+
+		if (collectionOptions != null && collectionOptions.getValidator().isPresent()) {
+			Validator v = collectionOptions.getValidator().get();
+			v.getSchema().ifPresent(val -> doc.put("validator", schemaMapper.mapSchema(val.toDocument(), targetType)));
+		}
+		return doc;
+	}
+
+	/**
+	 * @param collectionOptions can be {@literal null}.
+	 * @return never {@literal null}.
+	 * @deprecated since 2.1 in favor of {@link #convertToDocument(CollectionOptions, Class)}.
+	 */
+	@Deprecated
 	protected Document convertToDocument(@Nullable CollectionOptions collectionOptions) {
 
 		Document document = new Document();
@@ -2348,6 +2395,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			collectionOptions.getSize().ifPresent(val -> document.put("size", val));
 			collectionOptions.getMaxDocuments().ifPresent(val -> document.put("max", val));
 			collectionOptions.getCollation().ifPresent(val -> document.append("collation", val.toDocument()));
+
+			if (collectionOptions.getValidator().isPresent()) {
+				Validator v = collectionOptions.getValidator().get();
+				v.getValidationLevel().ifPresent(val -> document.append("validationLevel", val));
+				v.getValidationAction().ifPresent(val -> document.append("validationAction", val));
+				v.getSchema().ifPresent(val -> document.append("validator",
+						new MongoJsonSchemaMapper(getConverter()).mapSchema(val.toDocument(), Object.class)));
+			}
 		}
 		return document;
 	}

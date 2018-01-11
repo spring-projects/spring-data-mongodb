@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.bson.BSON;
 import org.bson.BsonRegularExpression;
@@ -35,6 +36,9 @@ import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
+import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
+import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -113,6 +117,20 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public static Criteria byExample(Example<?> example) {
 		return new Criteria().alike(example);
+	}
+
+	/**
+	 * Static factory method to create a {@link Criteria} matching documents against a given structure defined by the
+	 * {@link MongoJsonSchema} using ({@code $jsonSchema}) operator.
+	 *
+	 * @param schema must not be {@literal null}.
+	 * @return this
+	 * @since 2.1
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/">MongoDB Query operator:
+	 *      $jsonSchema</a>
+	 */
+	public static Criteria matchingDocumentStructure(MongoJsonSchema schema) {
+		return new Criteria().andDocumentStructureMatches(schema);
 	}
 
 	/**
@@ -332,6 +350,23 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria type(int t) {
 		criteria.put("$type", t);
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $type} operator.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @return this
+	 * @since 2.1
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/type/">MongoDB Query operator: $type</a>
+	 */
+	public Criteria type(Type... types) {
+
+		Assert.notNull(types, "Types must not be null!");
+		Assert.noNullElements(types, "Types must not contain null.");
+
+		criteria.put("$type", Arrays.asList(types).stream().map(Type::value).collect(Collectors.toList()));
 		return this;
 	}
 
@@ -561,6 +596,30 @@ public class Criteria implements CriteriaDefinition {
 		criteria.put("$example", sample);
 		this.criteriaChain.add(this);
 		return this;
+	}
+
+	/**
+	 * Creates a criterion ({@code $jsonSchema}) matching documents against a given structure defined by the
+	 * {@link MongoJsonSchema}. <br />
+	 * <strong>NOTE:</strong> {@code $jsonSchema} cannot be used on field/property level but defines the whole document
+	 * structure. Please use
+	 * {@link org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder#properties(JsonSchemaProperty...)}
+	 * to specify nested fields or query them using the {@link #type(Type...) $type} operator.
+	 *
+	 * @param schema must not be {@literal null}.
+	 * @return this
+	 * @since 2.1
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/">MongoDB Query operator:
+	 *      $jsonSchema</a>
+	 */
+	public Criteria andDocumentStructureMatches(MongoJsonSchema schema) {
+
+		Assert.notNull(schema, "Schema must not be null!");
+
+		Criteria schemaCriteria = new Criteria();
+		schemaCriteria.criteria.putAll(schema.toDocument());
+
+		return registerCriteriaChainElement(schemaCriteria);
 	}
 
 	/**

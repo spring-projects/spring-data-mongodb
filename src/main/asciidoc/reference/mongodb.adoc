@@ -1054,6 +1054,8 @@ As you can see most methods return the `Criteria` object to provide a fluent sty
 * `Criteria` *regex* `(String re)` Creates a criterion using a `$regex`
 * `Criteria` *size* `(int s)` Creates a criterion using the `$size` operator
 * `Criteria` *type* `(int t)` Creates a criterion using the `$type` operator
+* `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for <<mongo.jsonSchema,JSON schema criteria>>. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
+
 
 There are also methods on the Criteria class for geospatial queries. Here is a listing but look at the section on <<mongo.geospatial,GeoSpatial Queries>> to see them in action.
 
@@ -1463,6 +1465,170 @@ AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", T
 ====
 
 WARNING: Indexes are only used if the collation used for the operation and the index collation matches.
+
+[[mongo.jsonSchema]]
+=== JSON Schema
+
+As of version 3.6 MongoDB supports collections that validate ``Document``s against a provided JSON Schema.
+The schema itself and both validation action and level can be defined when creating the collection.
+
+.Sample JSON schema
+====
+[source,json]
+----
+{
+  "type": "object",                                                        <1>
+
+  "required": [ "firstname", "lastname" ],                                 <2>
+
+  "properties": {                                                          <3>
+
+    "firstname": {                                                         <4>
+      "type": "string",
+      "enum": [ "luke", "han" ]
+    },
+    "address": {                                                           <5>
+      "type": "object",
+      "properties": {
+        "postCode": { "type": "string", "minLength": 4, "maxLength": 5 }
+      }
+    }
+  }
+}
+----
+<1> JSON schema documents always describe a whole document from its root. A schema is a schema object itself that can contain
+embedded schema objects describing properties and subdocuments.
+<2> `required` is a property describing which properties are required in a document. It can be specified optionally along of other
+schema constraints. See MongoDB's documentation on https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#available-keywords[available keywords].
+<3> `properties` is related to a schema object describing an `object` type. It contains property-specific schema constraints.
+<4> `firstname` specifies constrains for the `firsname` field inside the document. Here it's a string-based properties declaring
+ possible field values.
+<5> `address` is a subdocument defining a schema for values in its `postCode` field.
+====
+
+You can provide a schema either by specifying a schema document (i.e. using the `Document` API by parsing or building a document object) or by building it with Spring Data's JSON schema utilities in `org.springframework.data.mongodb.core.schema`. `MongoJsonSchema` is the entry point for all JSON schema-related operations.
+
+.Creating a JSON schema
+====
+[source,java]
+----
+MongoJsonSchema.builder()                                                  <1>
+    .required("firstname", "lastname")                                     <2>
+
+    .properties(
+                string("firstname").possibleValues("luke", "han"),         <3>
+
+                object("address")
+                     .properties(string("postCode").minLength(4).maxLength(5)))
+
+    .build();                                                              <4>
+----
+<1> Obtain a schema builder to configure the schema with a fluent API.
+<2> Configure required properties.
+<3> Configure the String-typed `firstname` field allowing only `luke` and `han` values. Properties can be typed or untyped. Use a static import of  `JsonSchemaProperty` to make the syntax slightly more compact and to get entrypoints like `string(…)`.
+<4> Build the schema object. Use the schema to either create a collection or <<mongodb-template-query.criteria,query documents>>.
+====
+
+`CollectionOptions` provides the entry point to schema support for collections.
+
+.Create collection with `$jsonSchema`
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
+
+template.createCollection(Person.class, CollectionOptions.empty().schema(schema));
+----
+====
+
+You can use a schema to query any collection for documents that match a given structure defined by a JSON schema.
+
+.Query for Documents matching a `$jsonSchema`
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
+
+template.find(query(matchingDocumentStructure(schema)), Person.class);
+----
+====
+
+[cols="3,1,6", options="header"]
+.Supported JSON schema types
+|===
+| Schema Type
+| Java Type
+| Schema Properties
+
+| `untyped`
+| -
+| `description`, generated `description`, `enum`, `allOf`, `anyOf`, `oneOf`, `not`
+
+| `object`
+| `Object`
+| `required`, `additionalProperties`, `properties`, `minProperties`, `maxProperties`, `patternProperties`
+
+| `array`
+| any array except `byte[]`
+| `uniqueItems`, `additionalItems`, `items`, `minItems`, `maxItems`
+
+| `string`
+| `String`
+| `minLength`, `maxLentgth`, `pattern`
+
+| `int`
+| `int`, `Integer`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `long`
+| `long`, `Long`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `double`
+| `float`, `Float`, `double`, `Double`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `decimal`
+| `BigDecimal`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `number`
+| `Number`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `binData`
+| `byte[]`
+|
+
+| `boolean`
+| `boolean`, `Boolean`
+|
+
+| `null`
+| `null`
+|
+
+| `objectId`
+| `ObjectId`
+|
+
+| `date`
+| `java.util.Date`
+|
+
+| `timestamp`
+| `BsonTimestamp`
+|
+
+| `regex`
+| `java.util.regex.Pattern`
+|
+
+|===
+
+NOTE: `untyped` is a generic type that is inherited by all typed schema types providing all `untyped` schema properties to typed schema types.
+
+For more information, see https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#op._S_jsonSchema[$jsonSchema].
 
 [[mongo.query.fluent-template-api]]
 === Fluent Template API

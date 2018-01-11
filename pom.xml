@@ -5,7 +5,7 @@
 
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-mongodb-parent</artifactId>
-	<version>2.1.0.BUILD-SNAPSHOT</version>
+	<version>2.1.0.DATAMONGO-1835-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Spring Data MongoDB</name>
@@ -28,7 +28,7 @@
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>2.1.0.BUILD-SNAPSHOT</springdata.commons>
-		<mongo>3.5.0</mongo>
+		<mongo>3.6.0</mongo>
 		<mongo.reactivestreams>1.6.0</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
 	</properties>
