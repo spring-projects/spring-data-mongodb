@@ -146,14 +146,14 @@ public interface JsonSchemaObject {
 	/**
 	 * Create a new {@link JsonSchemaObject} matching the given {@code type}.
 	 *
-	 * @param type Java class to create a {@link JsonSchemaObject} for. May be {@literal null} to create
-	 *          {@link Type#nullType() null} type.
+	 * @param type Java class to create a {@link JsonSchemaObject} for. May be {@literal null} or {@link Void#getClass()}
+	 *          to create {@link Type#nullType() null} type.
 	 * @return never {@literal null}.
 	 * @throws IllegalArgumentException if {@code type} is not supported.
 	 */
 	static TypedJsonSchemaObject of(@Nullable Class<?> type) {
 
-		if (type == null) {
+		if (type == null || type.equals(Void.class)) {
 			return of(Type.nullType());
 		}
 
