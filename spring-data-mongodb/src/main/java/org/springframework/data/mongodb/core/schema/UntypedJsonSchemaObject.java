@@ -15,8 +15,12 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,27 +32,39 @@ import org.springframework.util.CollectionUtils;
 
 /**
  * Common base for {@link JsonSchemaObject} with shared types and {@link JsonSchemaObject#toDocument()} implementation.
+ * Schema objects are immutable. Calling methods to configure properties creates a new object instance.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public class UntypedJsonSchemaObject implements JsonSchemaObject {
 
-	protected final @Nullable String description;
 	protected final Restrictions restrictions;
+	protected final @Nullable String description;
 	protected final boolean generateDescription;
 
-	protected UntypedJsonSchemaObject(Restrictions restrictions, @Nullable String description, boolean generateDescription) {
+	UntypedJsonSchemaObject(@Nullable Restrictions restrictions, @Nullable String description,
+			boolean generateDescription) {
 
 		this.description = description;
 		this.restrictions = restrictions != null ? restrictions : Restrictions.empty();
 		this.generateDescription = generateDescription;
 	}
 
+	/**
+	 * Create a new instance of {@link UntypedJsonSchemaObject}.
+	 *
+	 * @return the new {@link UntypedJsonSchemaObject}.
+	 */
 	public static UntypedJsonSchemaObject newInstance() {
 		return new UntypedJsonSchemaObject(null, null, false);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#getTypes()
+	 */
 	@Override
 	public Set<Type> getTypes() {
 		return Collections.emptySet();
@@ -67,7 +83,6 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	/**
 	 * Auto generate the {@literal description} if not explicitly set.
 	 *
-	 * @param description must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	public UntypedJsonSchemaObject generatedDescription() {
@@ -80,7 +95,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param possibleValues must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
-	public UntypedJsonSchemaObject possibleValues(Collection<Object> possibleValues) {
+	public UntypedJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 		return new UntypedJsonSchemaObject(restrictions.possibleValues(possibleValues), description, generateDescription);
 	}
 
@@ -125,7 +140,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	}
 
 	/**
-	 * Create the json schema complying {@link Document} representation. This includes {@literal type},
+	 * Create the JSON schema complying {@link Document} representation. This includes {@literal type},
 	 * {@literal description} and the fields of {@link Restrictions#toDocument()} if set.
 	 */
 	@Override
@@ -135,9 +150,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 
 		getOrCreateDescription().ifPresent(val -> document.append("description", val));
 
-		if (restrictions != null) {
-			document.putAll(restrictions.toDocument());
-		}
+		document.putAll(restrictions.toDocument());
 
 		return document;
 	}
@@ -163,28 +176,20 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	}
 
 	/**
-	 * {@link Restrictions} encapsulate common json schema restrictions like {@literal enum}, {@literal allOf}, ...
+	 * {@link Restrictions} encapsulates common JSON schema restrictions like {@literal enum}, {@literal allOf}, … that
+	 * are not tied to a specific type.
 	 *
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
+	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	static class Restrictions {
 
-		private final Collection<Object> possibleValues;
+		private final Collection<? extends Object> possibleValues;
 		private final Collection<JsonSchemaObject> allOf;
 		private final Collection<JsonSchemaObject> anyOf;
 		private final Collection<JsonSchemaObject> oneOf;
 		private final @Nullable JsonSchemaObject notMatch;
-
-		Restrictions(Collection<Object> possibleValues, Collection<JsonSchemaObject> allOf,
-				Collection<JsonSchemaObject> anyOf, Collection<JsonSchemaObject> oneOf, @Nullable JsonSchemaObject notMatch) {
-
-			this.possibleValues = possibleValues;
-			this.allOf = allOf;
-			this.anyOf = anyOf;
-			this.oneOf = oneOf;
-			this.notMatch = notMatch;
-		}
 
 		/**
 		 * @return new empty {@link Restrictions}.
@@ -199,7 +204,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 * @param possibleValues must not be {@literal null}.
 		 * @return
 		 */
-		Restrictions possibleValues(Collection<Object> possibleValues) {
+		Restrictions possibleValues(Collection<? extends Object> possibleValues) {
 
 			Assert.notNull(possibleValues, "PossibleValues must not be null!");
 			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
@@ -246,7 +251,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		}
 
 		/**
-		 * Create the json schema complying {@link Document} representation. This includes {@literal enum},
+		 * Create the JSON schema complying {@link Document} representation. This includes {@literal enum},
 		 * {@literal allOf}, {@literal anyOf}, {@literal oneOf}, {@literal notMatch} if set.
 		 *
 		 * @return never {@literal null}
@@ -258,20 +263,28 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 			if (!CollectionUtils.isEmpty(possibleValues)) {
 				document.append("enum", possibleValues);
 			}
+
 			if (!CollectionUtils.isEmpty(allOf)) {
-				document.append("allOf", allOf.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList()));
+				document.append("allOf", render(allOf));
 			}
+
 			if (!CollectionUtils.isEmpty(anyOf)) {
-				document.append("anyOf", anyOf.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList()));
+				document.append("anyOf", render(anyOf));
 			}
+
 			if (!CollectionUtils.isEmpty(oneOf)) {
-				document.append("oneOf", oneOf.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList()));
+				document.append("oneOf", render(oneOf));
 			}
+
 			if (notMatch != null) {
 				document.append("not", notMatch.toDocument());
 			}
 
 			return document;
+		}
+
+		private static List<Document> render(Collection<JsonSchemaObject> objects) {
+			return objects.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList());
 		}
 	}
 }

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Collation;
@@ -146,7 +148,8 @@ public class CollectionOptions {
 	}
 
 	/**
-	 * Create new {@link CollectionOptions} with already given settings and {@code validationLevel} set to {@code off}.
+	 * Create new {@link CollectionOptions} with already given settings and {@code validationLevel} set to
+	 * {@link ValidationLevel#OFF}.
 	 *
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.1
@@ -156,7 +159,8 @@ public class CollectionOptions {
 	}
 
 	/**
-	 * Create new {@link CollectionOptions} with already given settings and {@code validationLevel} set to {@code strict}.
+	 * Create new {@link CollectionOptions} with already given settings and {@code validationLevel} set to
+	 * {@link ValidationLevel#STRICT}.
 	 *
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.1
@@ -167,7 +171,7 @@ public class CollectionOptions {
 
 	/**
 	 * Create new {@link CollectionOptions} with already given settings and {@code validationLevel} set to
-	 * {@code moderate}.
+	 * {@link ValidationLevel#MODERATE}.
 	 *
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.1
@@ -177,7 +181,8 @@ public class CollectionOptions {
 	}
 
 	/**
-	 * Create new {@link CollectionOptions} with already given settings and {@code validationAction} set to {@code warn}.
+	 * Create new {@link CollectionOptions} with already given settings and {@code validationAction} set to
+	 * {@link ValidationAction#WARN}.
 	 *
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.1
@@ -187,7 +192,8 @@ public class CollectionOptions {
 	}
 
 	/**
-	 * Create new {@link CollectionOptions} with already given settings and {@code validationAction} set to {@code error}.
+	 * Create new {@link CollectionOptions} with already given settings and {@code validationAction} set to
+	 * {@link ValidationAction#ERROR}.
 	 *
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.1
@@ -291,25 +297,18 @@ public class CollectionOptions {
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
+	@RequiredArgsConstructor
 	public static class Validator {
 
 		private static final Validator NONE = new Validator(null, null, null);
 
-		private @Nullable MongoJsonSchema schema;
-		private @Nullable ValidationLevel validationLevel;
-		private @Nullable ValidationAction validationAction;
-
-		private Validator(@Nullable MongoJsonSchema schema, @Nullable ValidationLevel validationLevel,
-				@Nullable ValidationAction validationAction) {
-
-			this.schema = schema;
-			this.validationLevel = validationLevel;
-			this.validationAction = validationAction;
-		}
+		private final @Nullable MongoJsonSchema schema;
+		private final @Nullable ValidationLevel validationLevel;
+		private final @Nullable ValidationAction validationAction;
 
 		/**
 		 * Create an empty {@link Validator}.
-		 * 
+		 *
 		 * @return never {@literal null}.
 		 */
 		public static Validator none() {
@@ -321,7 +320,6 @@ public class CollectionOptions {
 		 *
 		 * @return {@link Optional#empty()} if not set.
 		 */
-		@Nullable
 		public Optional<MongoJsonSchema> getSchema() {
 			return Optional.ofNullable(schema);
 		}
@@ -331,7 +329,6 @@ public class CollectionOptions {
 		 *
 		 * @return {@link Optional#empty()} if not set.
 		 */
-		@Nullable
 		public Optional<ValidationLevel> getValidationLevel() {
 			return Optional.ofNullable(validationLevel);
 		}
@@ -341,7 +338,6 @@ public class CollectionOptions {
 		 *
 		 * @return @return {@link Optional#empty()} if not set.
 		 */
-		@Nullable
 		public Optional<ValidationAction> getValidationAction() {
 			return Optional.ofNullable(validationAction);
 		}

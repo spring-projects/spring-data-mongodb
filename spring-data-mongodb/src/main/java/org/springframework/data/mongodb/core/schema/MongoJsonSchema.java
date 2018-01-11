@@ -20,32 +20,55 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
-import org.springframework.util.Assert;
 
 /**
+ * Interface defining MongoDB-specific JSON schema object. New objects can be built with {@link #builder()}, for
+ * example:
+ *
+ * <pre class="code">
+ * MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname")
+ * 		.properties(string("firstname").possibleValues("luke", "han").maxLength(10),
+ * 				object("address").properties(string("postCode").minLength(4).maxLength(5))
+ *
+ * 		).build();
+ * </pre>
+ *
+ * resulting in the following schema:
+ *
+ * <pre>
+ *  {
+  "type": "object",
+  "required": [ "firstname", "lastname" ],
+  "properties": {
+    "firstname": {
+      "type": "string", "enum": [ "luke", "han" ], "maxLength": 10
+    },
+    "address": {
+      "type": "object",
+      "properties": {
+        "postCode": { "type": "string", "minLength": 4, "maxLength": 5 }
+      }
+    }
+  }
+}
+ * </pre>
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
- **/
-public class MongoJsonSchema {
-
-	private final JsonSchemaObject root;
-
-	private MongoJsonSchema(JsonSchemaObject root) {
-
-		Assert.notNull(root, "Root must not be null!");
-		this.root = root;
-	}
+ * @see UntypedJsonSchemaObject
+ * @see TypedJsonSchemaObject
+ */
+public interface MongoJsonSchema {
 
 	/**
 	 * Create the {@link Document} containing the specified {@code $jsonSchema}. <br />
-	 * Property and field names still need to be mapped to the domain type ones by running the {@link Document} through a
-	 * {@link org.springframework.data.mongodb.core.convert.JsonSchemaMapper}.
+	 * Property and field names need to be mapped to the domain type ones by running the {@link Document} through a
+	 * {@link org.springframework.data.mongodb.core.convert.JsonSchemaMapper} to apply field name customization.
 	 *
 	 * @return never {@literal null}.
 	 */
-	public Document toDocument() {
-		return new Document("$jsonSchema", root.toDocument());
-	}
+	Document toDocument();
 
 	/**
 	 * Create a new {@link MongoJsonSchema} for a given root object.
@@ -53,8 +76,18 @@ public class MongoJsonSchema {
 	 * @param root must not be {@literal null}.
 	 * @return
 	 */
-	public static MongoJsonSchema of(JsonSchemaObject root) {
-		return new MongoJsonSchema(root);
+	static MongoJsonSchema of(JsonSchemaObject root) {
+		return new DefaultMongoJsonSchema(root);
+	}
+
+	/**
+	 * Create a new {@link MongoJsonSchema} for a given root {@link Document} containing the schema definition.
+	 *
+	 * @param document must not be {@literal null}.
+	 * @return
+	 */
+	static MongoJsonSchema of(Document document) {
+		return new DocumentJsonSchema(document);
 	}
 
 	/**
@@ -62,16 +95,16 @@ public class MongoJsonSchema {
 	 *
 	 * @return new instance of {@link MongoJsonSchemaBuilder}.
 	 */
-	public static MongoJsonSchemaBuilder builder() {
+	static MongoJsonSchemaBuilder builder() {
 		return new MongoJsonSchemaBuilder();
 	}
 
 	/**
 	 * {@link MongoJsonSchemaBuilder} provides a fluent API for defining a {@link MongoJsonSchema}.
 	 *
-	 * @since 2.1
+	 * @author Christoph Strobl
 	 */
-	public static class MongoJsonSchemaBuilder {
+	class MongoJsonSchemaBuilder {
 
 		private ObjectJsonSchemaObject root;
 
@@ -80,141 +113,155 @@ public class MongoJsonSchema {
 		}
 
 		/**
-		 * @param nrProperties
-		 * @return this
-		 * @see ObjectJsonSchemaObject#minNrProperties(int)
+		 * @param count
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
+		 * @see ObjectJsonSchemaObject#minProperties(int)
 		 */
-		public MongoJsonSchemaBuilder minNrProperties(int nrProperties) {
-			root = root.minNrProperties(nrProperties);
+		public MongoJsonSchemaBuilder minProperties(int count) {
+
+			root = root.minProperties(count);
 			return this;
 		}
 
 		/**
-		 * @param nrProperties
-		 * @return this
-		 * @see ObjectJsonSchemaObject#maxNrProperties(int)
+		 * @param count
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
+		 * @see ObjectJsonSchemaObject#maxProperties(int)
 		 */
-		public MongoJsonSchemaBuilder maxNrProperties(int nrProperties) {
-			root = root.maxNrProperties(nrProperties);
+		public MongoJsonSchemaBuilder maxProperties(int count) {
+
+			root = root.maxProperties(count);
 			return this;
 		}
 
 		/**
 		 * @param properties
-		 * @return
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#required(String...)
 		 */
 		public MongoJsonSchemaBuilder required(String... properties) {
+
 			root = root.required(properties);
 			return this;
 		}
 
 		/**
 		 * @param additionalPropertiesAllowed
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#additionalProperties(boolean)
 		 */
 		public MongoJsonSchemaBuilder additionalProperties(boolean additionalPropertiesAllowed) {
+
 			root = root.additionalProperties(additionalPropertiesAllowed);
 			return this;
 		}
 
 		/**
 		 * @param schema
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#additionalProperties(ObjectJsonSchemaObject)
 		 */
 		public MongoJsonSchemaBuilder additionalProperties(ObjectJsonSchemaObject schema) {
+
 			root = root.additionalProperties(schema);
 			return this;
 		}
 
 		/**
 		 * @param properties
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#properties(JsonSchemaProperty...)
 		 */
 		public MongoJsonSchemaBuilder properties(JsonSchemaProperty... properties) {
+
 			root = root.properties(properties);
 			return this;
 		}
 
 		/**
 		 * @param properties
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#patternProperties(JsonSchemaProperty...)
 		 */
 		public MongoJsonSchemaBuilder patternProperties(JsonSchemaProperty... properties) {
+
 			root = root.patternProperties(properties);
 			return this;
 		}
 
 		/**
 		 * @param property
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#property(JsonSchemaProperty)
 		 */
 		public MongoJsonSchemaBuilder property(JsonSchemaProperty property) {
+
 			root = root.property(property);
 			return this;
 		}
 
 		/**
 		 * @param possibleValues
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#possibleValues(Collection)
 		 */
 		public MongoJsonSchemaBuilder possibleValues(Set<Object> possibleValues) {
+
 			root = root.possibleValues(possibleValues);
 			return this;
 		}
 
 		/**
 		 * @param allOf
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#allOf(Collection)
 		 */
 		public MongoJsonSchemaBuilder allOf(Set<JsonSchemaObject> allOf) {
+
 			root = root.allOf(allOf);
 			return this;
 		}
 
 		/**
 		 * @param anyOf
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#anyOf(Collection)
 		 */
 		public MongoJsonSchemaBuilder anyOf(Set<JsonSchemaObject> anyOf) {
+
 			root = root.anyOf(anyOf);
 			return this;
 		}
 
 		/**
 		 * @param oneOf
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#oneOf(Collection)
 		 */
 		public MongoJsonSchemaBuilder oneOf(Set<JsonSchemaObject> oneOf) {
+
 			root = root.oneOf(oneOf);
 			return this;
 		}
 
 		/**
 		 * @param notMatch
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#notMatch(JsonSchemaObject)
 		 */
 		public MongoJsonSchemaBuilder notMatch(JsonSchemaObject notMatch) {
+
 			root = root.notMatch(notMatch);
 			return this;
 		}
 
 		/**
 		 * @param description
-		 * @return this
+		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#description(String)
 		 */
 		public MongoJsonSchemaBuilder description(String description) {
+
 			root = root.description(description);
 			return this;
 		}
@@ -228,5 +275,4 @@ public class MongoJsonSchema {
 			return MongoJsonSchema.of(root);
 		}
 	}
-
 }

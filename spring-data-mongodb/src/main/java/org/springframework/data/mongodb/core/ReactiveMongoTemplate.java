@@ -69,15 +69,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOperationCon
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.DbRefProxyHandler;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DbRefResolverCallback;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
@@ -125,6 +117,7 @@ import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
@@ -176,6 +169,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
+	private final JsonSchemaMapper schemaMapper;
 	private final SpelAwareProxyProjectionFactory projectionFactory;
 
 	private @Nullable WriteConcern writeConcern;
@@ -220,6 +214,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter() : mongoConverter;
 		this.queryMapper = new QueryMapper(this.mongoConverter);
 		this.updateMapper = new UpdateMapper(this.mongoConverter);
+		this.schemaMapper = new MongoJsonSchemaMapper(this.mongoConverter);
 		this.projectionFactory = new SpelAwareProxyProjectionFactory();
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
@@ -486,14 +481,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Mono<MongoCollection<Document>> createCollection(Class<T> entityClass,
 			@Nullable CollectionOptions collectionOptions) {
-		return createCollection(determineCollectionName(entityClass), collectionOptions);
+		return doCreateCollection(determineCollectionName(entityClass),
+				convertToCreateCollectionOptions(collectionOptions, entityClass));
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#createCollection(java.lang.String)
 	 */
-	public Mono<MongoCollection<Document>> createCollection(final String collectionName) {
+	public Mono<MongoCollection<Document>> createCollection(String collectionName) {
 		return doCreateCollection(collectionName, new CreateCollectionOptions());
 	}
 
@@ -501,8 +497,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#createCollection(java.lang.String, org.springframework.data.mongodb.core.CollectionOptions)
 	 */
-	public Mono<MongoCollection<Document>> createCollection(final String collectionName,
-			final CollectionOptions collectionOptions) {
+	public Mono<MongoCollection<Document>> createCollection(String collectionName,
+			@Nullable CollectionOptions collectionOptions) {
 		return doCreateCollection(collectionName, convertToCreateCollectionOptions(collectionOptions));
 	}
 
@@ -814,8 +810,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
-		return execute(collectionName,
-				collection -> aggregateAndMap(collection, pipeline, options, readCallback));
+		return execute(collectionName, collection -> aggregateAndMap(collection, pipeline, options, readCallback));
 	}
 
 	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline,
@@ -1995,16 +1990,35 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	protected CreateCollectionOptions convertToCreateCollectionOptions(@Nullable CollectionOptions collectionOptions) {
+		return convertToCreateCollectionOptions(collectionOptions, Object.class);
+	}
+
+	protected CreateCollectionOptions convertToCreateCollectionOptions(@Nullable CollectionOptions collectionOptions,
+			Class<?> entityType) {
 
 		CreateCollectionOptions result = new CreateCollectionOptions();
 
-		if (collectionOptions != null) {
-
-			collectionOptions.getCapped().ifPresent(result::capped);
-			collectionOptions.getSize().ifPresent(result::sizeInBytes);
-			collectionOptions.getMaxDocuments().ifPresent(result::maxDocuments);
-			collectionOptions.getCollation().map(Collation::toMongoCollation).ifPresent(result::collation);
+		if (collectionOptions == null) {
+			return result;
 		}
+
+		collectionOptions.getCapped().ifPresent(result::capped);
+		collectionOptions.getSize().ifPresent(result::sizeInBytes);
+		collectionOptions.getMaxDocuments().ifPresent(result::maxDocuments);
+		collectionOptions.getCollation().map(Collation::toMongoCollation).ifPresent(result::collation);
+
+		collectionOptions.getValidator().ifPresent(it -> {
+
+			ValidationOptions validationOptions = new ValidationOptions();
+
+			it.getValidationAction().ifPresent(validationOptions::validationAction);
+			it.getValidationLevel().ifPresent(validationOptions::validationLevel);
+
+			it.getSchema()
+					.ifPresent(val -> validationOptions.validator(schemaMapper.mapSchema(val.toDocument(), entityType)));
+
+			result.validationOptions(validationOptions);
+		});
 
 		return result;
 	}

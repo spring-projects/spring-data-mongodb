@@ -34,6 +34,7 @@ import org.springframework.util.Assert;
  * provided domain type.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public class MongoJsonSchemaMapper implements JsonSchemaMapper {
@@ -60,7 +61,7 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 	}
 
 	/*
-	 * (non-Javadoc) 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.JsonSchemaMapper#mapSchema(org.springframework.data.mongodb.core.schema.MongoJsonSchema, java.lang.Class)
 	 */
 	public Document mapSchema(Document jsonSchema, Class<?> type) {
@@ -78,7 +79,8 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 				mapSchemaObject(mappingContext.getPersistentEntity(type), jsonSchema.get($JSON_SCHEMA, Document.class)));
 	}
 
-	private Document mapSchemaObject(@Nullable PersistentEntity entity, Document source) {
+	@SuppressWarnings("unchecked")
+	private Document mapSchemaObject(@Nullable PersistentEntity<?, MongoPersistentProperty> entity, Document source) {
 
 		Document sink = new Document(source);
 

@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
@@ -36,7 +37,18 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
+ * Interface that can be implemented by objects that know how to serialize themselves to JSON schema using
+ * {@link #toDocument()}.
+ * <p/>
+ * This class also declares factory methods for type-specific {@link JsonSchemaObject schema objects} such as
+ * {@link #string()} or {@link #object()}. For example:
+ *
+ * <pre class="code">
+ * JsonSchemaProperty.object("address").properties(JsonSchemaProperty.string("city").minLength(3));
+ * </pre>
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public interface JsonSchemaObject {
@@ -134,7 +146,10 @@ public interface JsonSchemaObject {
 	/**
 	 * Create a new {@link JsonSchemaObject} matching the given {@code type}.
 	 *
+	 * @param type Java class to create a {@link JsonSchemaObject} for. May be {@literal null} to create
+	 *          {@link Type#nullType() null} type.
 	 * @return never {@literal null}.
+	 * @throws IllegalArgumentException if {@code type} is not supported.
 	 */
 	static TypedJsonSchemaObject of(@Nullable Class<?> type) {
 
@@ -165,6 +180,10 @@ public interface JsonSchemaObject {
 
 		if (ClassUtils.isAssignable(Date.class, type)) {
 			return of(Type.dateType());
+		}
+
+		if (ClassUtils.isAssignable(BsonTimestamp.class, type)) {
+			return of(Type.timestampType());
 		}
 
 		if (ClassUtils.isAssignable(Pattern.class, type)) {
@@ -200,11 +219,11 @@ public interface JsonSchemaObject {
 			return of(Type.numberType());
 		}
 
-		throw new IllegalArgumentException(String.format("No json schema type found for %s.", type));
+		throw new IllegalArgumentException(String.format("No JSON schema type found for %s.", type));
 	}
 
 	/**
-	 * Type represents either a json schema {@literal type} or a MongoDB specific {@literal bsonType}.
+	 * Type represents either a JSON schema {@literal type} or a MongoDB specific {@literal bsonType}.
 	 *
 	 * @author Christoph Strobl
 	 * @since 2.1
@@ -212,29 +231,29 @@ public interface JsonSchemaObject {
 	interface Type {
 
 		// BSON TYPES
-		final Type OBJECT_ID = bsonTypeOf("objectId");
-		final Type REGULAR_EXPRESSION = bsonTypeOf("regex");
-		final Type DOUBLE = bsonTypeOf("double");
-		final Type BINARY_DATA = bsonTypeOf("binData");
-		final Type DATE = bsonTypeOf("date");
-		final Type JAVA_SCRIPT = bsonTypeOf("javascript");
-		final Type INT_32 = bsonTypeOf("int");
-		final Type INT_64 = bsonTypeOf("long");
-		final Type DECIMAL_128 = bsonTypeOf("decimal");
-		final Type TIMESTAMP = bsonTypeOf("timestamp");
+		Type OBJECT_ID = bsonTypeOf("objectId");
+		Type REGULAR_EXPRESSION = bsonTypeOf("regex");
+		Type DOUBLE = bsonTypeOf("double");
+		Type BINARY_DATA = bsonTypeOf("binData");
+		Type DATE = bsonTypeOf("date");
+		Type JAVA_SCRIPT = bsonTypeOf("javascript");
+		Type INT_32 = bsonTypeOf("int");
+		Type INT_64 = bsonTypeOf("long");
+		Type DECIMAL_128 = bsonTypeOf("decimal");
+		Type TIMESTAMP = bsonTypeOf("timestamp");
 
-		final Set<Type> BSON_TYPES = new HashSet<>(Arrays.asList(OBJECT_ID, REGULAR_EXPRESSION, DOUBLE, BINARY_DATA, DATE,
+		Set<Type> BSON_TYPES = new HashSet<>(Arrays.asList(OBJECT_ID, REGULAR_EXPRESSION, DOUBLE, BINARY_DATA, DATE,
 				JAVA_SCRIPT, INT_32, INT_64, DECIMAL_128, TIMESTAMP));
 
 		// JSON SCHEMA TYPES
-		final Type OBJECT = jsonTypeOf("object");
-		final Type ARRAY = jsonTypeOf("array");
-		final Type NUMBER = jsonTypeOf("number");
-		final Type BOOLEAN = jsonTypeOf("boolean");
-		final Type STRING = jsonTypeOf("string");
-		final Type NULL = jsonTypeOf("null");
+		Type OBJECT = jsonTypeOf("object");
+		Type ARRAY = jsonTypeOf("array");
+		Type NUMBER = jsonTypeOf("number");
+		Type BOOLEAN = jsonTypeOf("boolean");
+		Type STRING = jsonTypeOf("string");
+		Type NULL = jsonTypeOf("null");
 
-		final Set<Type> JSON_TYPES = new HashSet<>(Arrays.asList(OBJECT, ARRAY, NUMBER, BOOLEAN, STRING, NULL));
+		Set<Type> JSON_TYPES = new HashSet<>(Arrays.asList(OBJECT, ARRAY, NUMBER, BOOLEAN, STRING, NULL));
 
 		/**
 		 * @return a constant {@link Type} representing {@code bsonType : 'objectId' }.
@@ -362,10 +381,16 @@ public interface JsonSchemaObject {
 			return new JsonType(name);
 		}
 
+		/**
+		 * @return all known JSON types.
+		 */
 		static Set<Type> jsonTypes() {
 			return JSON_TYPES;
 		}
 
+		/**
+		 * @return all known BSON types.
+		 */
 		static Set<Type> bsonTypes() {
 			return BSON_TYPES;
 		}
@@ -389,15 +414,23 @@ public interface JsonSchemaObject {
 		 * @since 2.1
 		 */
 		@RequiredArgsConstructor
-		static class JsonType implements Type {
+		class JsonType implements Type {
 
 			private final String name;
 
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type#representation()
+			 */
 			@Override
 			public String representation() {
 				return "type";
 			}
 
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type#value()
+			 */
 			@Override
 			public String value() {
 				return name;
@@ -409,15 +442,23 @@ public interface JsonSchemaObject {
 		 * @since 2.1
 		 */
 		@RequiredArgsConstructor
-		static class BsonType implements Type {
+		class BsonType implements Type {
 
 			private final String name;
 
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type#representation()
+			 */
 			@Override
 			public String representation() {
 				return "bsonType";
 			}
 
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type#value()
+			 */
 			@Override
 			public String value() {
 				return name;
