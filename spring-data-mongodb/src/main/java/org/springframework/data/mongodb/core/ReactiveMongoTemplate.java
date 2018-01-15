@@ -24,8 +24,17 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -91,6 +100,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.validation.JsonSchemaValidator;
+import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.projection.ProjectionInformation;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -2007,20 +2018,30 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		collectionOptions.getMaxDocuments().ifPresent(result::maxDocuments);
 		collectionOptions.getCollation().map(Collation::toMongoCollation).ifPresent(result::collation);
 
-		collectionOptions.getValidator().ifPresent(it -> {
+		collectionOptions.getValidationOptions().ifPresent(it -> {
 
 			ValidationOptions validationOptions = new ValidationOptions();
 
 			it.getValidationAction().ifPresent(validationOptions::validationAction);
 			it.getValidationLevel().ifPresent(validationOptions::validationLevel);
 
-			it.getSchema()
-					.ifPresent(val -> validationOptions.validator(schemaMapper.mapSchema(val.toDocument(), entityType)));
+			it.getValidator().ifPresent(val -> validationOptions.validator(getMappedValidator(val, entityType)));
 
 			result.validationOptions(validationOptions);
 		});
 
 		return result;
+	}
+
+	Document getMappedValidator(Validator validator, Class<?> domainType) {
+
+		Document validationRules = validator.toDocument();
+
+		if (validator instanceof JsonSchemaValidator || validationRules.containsKey("$jsonSchema")) {
+			return schemaMapper.mapSchema(validationRules, domainType);
+		}
+
+		return queryMapper.getMappedObject(validationRules, mappingContext.getPersistentEntity(domainType));
 	}
 
 	/**
