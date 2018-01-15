@@ -270,7 +270,7 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 
 | `Exists`
 | `findByLocationExists(boolean exists)`
-| `{"location" : {"$exists" : exists }}`
+| `{"location" : {"$exists" : true }}`
 |===
 
 NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
