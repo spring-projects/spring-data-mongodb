@@ -22,14 +22,18 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
+ * Unit tests for {@link CriteriaValidator}.
+ * 
  * @author Andreas Zink
+ * @author Christoph Strobl
  */
-public class CriteriaValidatorTest {
+public class CriteriaValidatorUnitTests {
 
 	@Test // DATAMONGO-1322
 	public void testSimpleCriteria() {
+
 		Criteria criteria = Criteria.where("nonNullString").ne(null).type(2).and("rangedInteger").type(16).gte(0).lte(122);
-		Document validator = CriteriaValidator.fromCriteria(criteria).toDocument();
+		Document validator = CriteriaValidator.of(criteria).toDocument();
 
 		assertThat(validator.get("nonNullString")).isEqualTo(new Document("$ne", null).append("$type", 2));
 		assertThat(validator.get("rangedInteger"))
@@ -38,6 +42,6 @@ public class CriteriaValidatorTest {
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1322
 	public void testFailOnNull() {
-		CriteriaValidator.fromCriteria(null);
+		CriteriaValidator.of(null);
 	}
 }

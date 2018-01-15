@@ -21,7 +21,7 @@ import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.data.mongodb.core.validation.ValidatorDefinition;
+import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -43,7 +43,7 @@ public class CollectionOptions {
 	private @Nullable Long size;
 	private @Nullable Boolean capped;
 	private @Nullable Collation collation;
-	private Validator validator;
+	private ValidationOptions validationOptions;
 
 	/**
 	 * Constructs a new <code>CollectionOptions</code> instance.
@@ -56,17 +56,17 @@ public class CollectionOptions {
 	 */
 	@Deprecated
 	public CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped) {
-		this(size, maxDocuments, capped, null, Validator.none());
+		this(size, maxDocuments, capped, null, ValidationOptions.none());
 	}
 
 	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
-			@Nullable Collation collation, Validator validator) {
+			@Nullable Collation collation, ValidationOptions validationOptions) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
 		this.capped = capped;
 		this.collation = collation;
-		this.validator = validator;
+		this.validationOptions = validationOptions;
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class CollectionOptions {
 
 		Assert.notNull(collation, "Collation must not be null!");
 
-		return new CollectionOptions(null, null, null, collation, Validator.none());
+		return new CollectionOptions(null, null, null, collation, ValidationOptions.none());
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public static CollectionOptions empty() {
-		return new CollectionOptions(null, null, null, null, Validator.none());
+		return new CollectionOptions(null, null, null, null, ValidationOptions.none());
 	}
 
 	/**
@@ -101,7 +101,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions capped() {
-		return new CollectionOptions(size, maxDocuments, true, collation, validator);
+		return new CollectionOptions(size, maxDocuments, true, collation, validationOptions);
 	}
 
 	/**
@@ -112,7 +112,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions maxDocuments(long maxDocuments) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validator);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions);
 	}
 
 	/**
@@ -123,7 +123,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions size(long size) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validator);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions);
 	}
 
 	/**
@@ -134,11 +134,11 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions collation(@Nullable Collation collation) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validator);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions);
 	}
 
 	/**
-	 * Create new {@link CollectionOptions} with already given settings and {@code validator} set to given
+	 * Create new {@link CollectionOptions} with already given settings and {@code validationOptions} set to given
 	 * {@link MongoJsonSchema}.
 	 *
 	 * @param schema can be {@literal null}.
@@ -146,11 +146,19 @@ public class CollectionOptions {
 	 * @since 2.1
 	 */
 	public CollectionOptions schema(@Nullable MongoJsonSchema schema) {
-		return validation(new Validator(schema, null, validator.validationLevel, validator.validationAction));
+		return validator(Validator.schema(schema));
 	}
 
-	public CollectionOptions validatorDefinition(@Nullable ValidatorDefinition definition) {
-		return validation(new Validator(null, definition, validator.validationLevel, validator.validationAction));
+	/**
+	 * /** Create new {@link CollectionOptions} with already given settings and {@code validationOptions} set to given
+	 * {@link Validator}.
+	 *
+	 * @param validator can be {@literal null}.
+	 * @return new {@link CollectionOptions}.
+	 * @since 2.1
+	 */
+	public CollectionOptions validator(@Nullable Validator validator) {
+		return validation(validationOptions.validator(validator));
 	}
 
 	/**
@@ -219,7 +227,7 @@ public class CollectionOptions {
 	public CollectionOptions schemaValidationLevel(ValidationLevel validationLevel) {
 
 		Assert.notNull(validationLevel, "ValidationLevel must not be null!");
-		return validation(new Validator(validator.schema, validator.validatorDefinition, validationLevel, validator.validationAction));
+		return validation(validationOptions.validationLevel(validationLevel));
 	}
 
 	/**
@@ -233,20 +241,20 @@ public class CollectionOptions {
 	public CollectionOptions schemaValidationAction(ValidationAction validationAction) {
 
 		Assert.notNull(validationAction, "ValidationAction must not be null!");
-		return validation(new Validator(validator.schema, validator.validatorDefinition, validator.validationLevel, validationAction));
+		return validation(validationOptions.validationAction(validationAction));
 	}
 
 	/**
-	 * Create new {@link CollectionOptions} with the given {@link Validator}.
+	 * Create new {@link CollectionOptions} with the given {@link ValidationOptions}.
 	 *
-	 * @param validator must not be {@literal null}. Use {@link Validator#none()} to remove validation.
+	 * @param validationOptions must not be {@literal null}. Use {@link ValidationOptions#none()} to remove validation.
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.1
 	 */
-	public CollectionOptions validation(Validator validator) {
+	public CollectionOptions validation(ValidationOptions validationOptions) {
 
-		Assert.notNull(validator, "Validator must not be null!");
-		return new CollectionOptions(size, maxDocuments, capped, collation, validator);
+		Assert.notNull(validationOptions, "ValidationOptions must not be null!");
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions);
 	}
 
 	/**
@@ -293,47 +301,72 @@ public class CollectionOptions {
 	 * @return {@link Optional#empty()} if not set.
 	 * @since 2.1
 	 */
-	public Optional<Validator> getValidator() {
-		return validator.isEmpty() ? Optional.empty() : Optional.of(validator);
+	public Optional<ValidationOptions> getValidationOptions() {
+		return validationOptions.isEmpty() ? Optional.empty() : Optional.of(validationOptions);
 	}
 
 	/**
-	 * Encapsulation of Validator options.
+	 * Encapsulation of ValidationOptions options.
 	 *
 	 * @author Christoph Strobl
 	 * @author Andreas Zink
 	 * @since 2.1
 	 */
 	@RequiredArgsConstructor
-	public static class Validator {
+	public static class ValidationOptions {
 
-		private static final Validator NONE = new Validator(null, null, null, null);
+		private static final ValidationOptions NONE = new ValidationOptions(null, null, null);
 
-		private final @Nullable MongoJsonSchema schema;
-		private final @Nullable ValidatorDefinition validatorDefinition;
+		private final @Nullable Validator validator;
 		private final @Nullable ValidationLevel validationLevel;
 		private final @Nullable ValidationAction validationAction;
 
 		/**
-		 * Create an empty {@link Validator}.
+		 * Create an empty {@link ValidationOptions}.
 		 *
 		 * @return never {@literal null}.
 		 */
-		public static Validator none() {
+		public static ValidationOptions none() {
 			return NONE;
 		}
 
 		/**
-		 * Get the {@code $jsonSchema} used for validation.
+		 * Define the {@link Validator} to be used for document validation.
 		 *
-		 * @return {@link Optional#empty()} if not set.
+		 * @param validator can be {@literal null}.
+		 * @return new instance of {@link ValidationOptions}.
 		 */
-		public Optional<MongoJsonSchema> getSchema() {
-			return Optional.ofNullable(schema);
+		public ValidationOptions validator(@Nullable Validator validator) {
+			return new ValidationOptions(validator, validationLevel, validationAction);
 		}
 
-		public Optional<ValidatorDefinition> getValidatorDefinition() {
-			return Optional.ofNullable(validatorDefinition);
+		/**
+		 * Define the validation level to apply.
+		 *
+		 * @param validationLevel can be {@literal null}.
+		 * @return new instance of {@link ValidationOptions}.
+		 */
+		public ValidationOptions validationLevel(ValidationLevel validationLevel) {
+			return new ValidationOptions(validator, validationLevel, validationAction);
+		}
+
+		/**
+		 * Define the validation action to take.
+		 *
+		 * @param validationAction can be {@literal null}.
+		 * @return new instance of {@link ValidationOptions}.
+		 */
+		public ValidationOptions validationAction(ValidationAction validationAction) {
+			return new ValidationOptions(validator, validationLevel, validationAction);
+		}
+
+		/**
+		 * Get the {@link Validator} to use.
+		 *
+		 * @return never {@literal null}.
+		 */
+		public Optional<Validator> getValidator() {
+			return Optional.ofNullable(validator);
 		}
 
 		/**
@@ -358,7 +391,7 @@ public class CollectionOptions {
 		 * @return {@literal true} if no arguments set.
 		 */
 		boolean isEmpty() {
-			return !Optionals.isAnyPresent(getSchema(), getValidatorDefinition(), getValidationAction(), getValidationLevel());
+			return !Optionals.isAnyPresent(getValidator(), getValidationAction(), getValidationLevel());
 		}
 	}
 }
