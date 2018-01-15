@@ -19,6 +19,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
@@ -33,6 +34,7 @@ import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
@@ -97,6 +99,20 @@ public class MongoJsonSchemaTests {
 
 		Document fromDb = readSchemaFromDatabase("persons");
 		assertThat(fromDb).isEqualTo($jsonSchema);
+	}
+
+	@Test // DATAMONGO-1835
+	public void writeSchemaInDocumentValidatorCorrectly() {
+
+		Document unmappedSchema = new Document("$jsonSchema",
+				new Document("type", "object").append("required", Collections.singletonList("firstname")));
+
+		Document mappedSchema = new Document("$jsonSchema",
+				new Document("type", "object").append("required", Collections.singletonList("first_name")));
+
+		template.createCollection(Person.class, CollectionOptions.empty().validator(Validator.document(unmappedSchema)));
+
+		assertThat(readSchemaFromDatabase("persons")).isEqualTo(mappedSchema);
 	}
 
 	@Test // DATAMONGO-1835

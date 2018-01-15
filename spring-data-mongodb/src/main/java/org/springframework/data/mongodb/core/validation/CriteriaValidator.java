@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,51 +15,61 @@
  */
 package org.springframework.data.mongodb.core.validation;
 
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-import org.springframework.lang.NonNull;
+import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
 
 /**
- * Utility to build a MongoDB {@code validator} based on a {@link CriteriaDefinition}.
- * 
+ * {@link Validator} implementation based on {@link CriteriaDefinition query expressions}.
+ *
  * @author Andreas Zink
+ * @author Christoph Strobl
  * @since 2.1
  * @see Criteria
+ * @see <a href="https://docs.mongodb.com/manual/core/schema-validation/#query-expressions">Schema Validation</a>
  */
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
-public class CriteriaValidator implements ValidatorDefinition {
+public class CriteriaValidator implements Validator {
 
-	private final Document document;
-
-	private CriteriaValidator(Document document) {
-		Assert.notNull(document, "Document must not be null!");
-		this.document = document;
-	}
+	private final CriteriaDefinition criteria;
 
 	/**
-	 * Builds a {@code validator} object, which is basically setup of query operators, based on a
+	 * Creates a new {@link Validator} object, which is basically setup of query operators, based on a
 	 * {@link CriteriaDefinition} instance.
-	 * 
-	 * @param criteria the criteria to build the {@code validator} from
-	 * @return
+	 *
+	 * @param criteria the criteria to build the {@code validator} from. Must not be {@literal null}.
+	 * @return new instance of {@link CriteriaValidator}.
+	 * @throws IllegalArgumentException when criteria is {@literal null}.
 	 */
-	public static CriteriaValidator fromCriteria(@NonNull CriteriaDefinition criteria) {
+	public static CriteriaValidator of(CriteriaDefinition criteria) {
+
 		Assert.notNull(criteria, "Criteria must not be null!");
-		return new CriteriaValidator(criteria.getCriteriaObject());
+		return new CriteriaValidator(criteria);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.validation.Validator#toDocument()
+	 */
 	@Override
 	public Document toDocument() {
-		return this.document;
+		return criteria.getCriteriaObject();
 	}
 
+	/*
+	 * (non-Javadoc) 
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
-		return document.toString();
+		return SerializationUtils.serializeToJsonSafely(toDocument());
 	}
 
 }
