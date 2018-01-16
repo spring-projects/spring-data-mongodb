@@ -99,7 +99,7 @@ Spring Data MongoDB supports MongoDB's specific JSON schema implementation to de
 [[mongo.mongo-3.validation.query-expression]]
 ==== Query Expression Validation
 
-Next to the <<mongo.mongo-3.validation.json-schema>> as of version 3.2 MongoDB supports validating documents against a given query structure. The structure can be built using `Criteria` objects just the same way as they are used for defining queries.
+Next to the <<mongo.mongo-3.validation.json-schema>>, MongoDB supports  as of version 3.2 validating documents against a given structure described by a query. The structure can be built using `Criteria` objects just the same way as they are used for defining queries.
 
 [source,java]
 ----

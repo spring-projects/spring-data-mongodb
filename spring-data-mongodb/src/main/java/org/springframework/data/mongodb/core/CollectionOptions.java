@@ -150,7 +150,7 @@ public class CollectionOptions {
 	}
 
 	/**
-	 * /** Create new {@link CollectionOptions} with already given settings and {@code validationOptions} set to given
+	 * Create new {@link CollectionOptions} with already given settings and {@code validationOptions} set to given
 	 * {@link Validator}.
 	 *
 	 * @param validator can be {@literal null}.

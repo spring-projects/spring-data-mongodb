@@ -63,7 +63,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
-import org.springframework.data.mongodb.core.CollectionOptions.ValidationOptions;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
@@ -108,7 +107,6 @@ import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.core.validation.JsonSchemaValidator;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.projection.ProjectionInformation;
@@ -141,16 +139,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.ValidationAction;
-import com.mongodb.client.model.ValidationLevel;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSONParseException;
@@ -2385,11 +2374,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Document doc = convertToDocument(collectionOptions);
 
-		if (collectionOptions != null && collectionOptions.getValidationOptions().isPresent()) {
+		if (collectionOptions != null) {
 
-			ValidationOptions v = collectionOptions.getValidationOptions().get();
-			v.getValidator().ifPresent(val -> doc.put("validator", getMappedValidator(val, targetType)));
+			collectionOptions.getValidationOptions().ifPresent(it -> it.getValidator() //
+					.ifPresent(val -> doc.put("validator", getMappedValidator(val, targetType))));
 		}
+
 		return doc;
 	}
 
@@ -2402,6 +2392,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected Document convertToDocument(@Nullable CollectionOptions collectionOptions) {
 
 		Document document = new Document();
+
 		if (collectionOptions != null) {
 
 			collectionOptions.getCapped().ifPresent(val -> document.put("capped", val));
@@ -2409,14 +2400,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			collectionOptions.getMaxDocuments().ifPresent(val -> document.put("max", val));
 			collectionOptions.getCollation().ifPresent(val -> document.append("collation", val.toDocument()));
 
-			if (collectionOptions.getValidationOptions().isPresent()) {
+			collectionOptions.getValidationOptions().ifPresent(it -> {
 
-				CollectionOptions.ValidationOptions v = collectionOptions.getValidationOptions().get();
-				v.getValidationLevel().ifPresent(val -> document.append("validationLevel", val.getValue()));
-				v.getValidationAction().ifPresent(val -> document.append("validationAction", val.getValue()));
-				v.getValidator().ifPresent(val -> document.append("validator", getMappedValidator(val, Object.class)));
-			}
+				it.getValidationLevel().ifPresent(val -> document.append("validationLevel", val.getValue()));
+				it.getValidationAction().ifPresent(val -> document.append("validationAction", val.getValue()));
+				it.getValidator().ifPresent(val -> document.append("validator", getMappedValidator(val, Object.class)));
+			});
 		}
+
 		return document;
 	}
 
@@ -2424,7 +2415,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Document validationRules = validator.toDocument();
 
-		if (validator instanceof JsonSchemaValidator || validationRules.containsKey("$jsonSchema")) {
+		if (validationRules.containsKey("$jsonSchema")) {
 			return schemaMapper.mapSchema(validationRules, domainType);
 		}
 

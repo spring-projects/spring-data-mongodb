@@ -36,7 +36,7 @@ import org.springframework.util.Assert;
  */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
-public class CriteriaValidator implements Validator {
+class CriteriaValidator implements Validator {
 
 	private final CriteriaDefinition criteria;
 
@@ -48,9 +48,10 @@ public class CriteriaValidator implements Validator {
 	 * @return new instance of {@link CriteriaValidator}.
 	 * @throws IllegalArgumentException when criteria is {@literal null}.
 	 */
-	public static CriteriaValidator of(CriteriaDefinition criteria) {
+	static CriteriaValidator of(CriteriaDefinition criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null!");
+
 		return new CriteriaValidator(criteria);
 	}
 
@@ -64,12 +65,11 @@ public class CriteriaValidator implements Validator {
 	}
 
 	/*
-	 * (non-Javadoc) 
+	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(toDocument());
 	}
-
 }

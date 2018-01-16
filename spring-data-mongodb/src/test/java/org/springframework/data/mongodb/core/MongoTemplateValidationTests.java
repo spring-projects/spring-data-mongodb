@@ -36,7 +36,6 @@ import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions.ValidationOptions;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.validation.DocumentValidator;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.lang.Nullable;
@@ -48,7 +47,8 @@ import com.mongodb.client.model.ValidationLevel;
 
 /**
  * Integration tests for {@link CollectionOptions#validation(ValidationOptions)} using
- * {@link org.springframework.data.mongodb.core.validation.CriteriaValidator} and {@link DocumentValidator}.
+ * {@link org.springframework.data.mongodb.core.validation.CriteriaValidator} and
+ * {@link org.springframework.data.mongodb.core.validation.DocumentValidator}.
  *
  * @author Andreas Zink
  * @author Christoph Strobl
@@ -212,5 +212,4 @@ public class MongoTemplateValidationTests {
 		private @Nullable Integer rangedInteger;
 		private @Field("customName") Object customFieldName;
 	}
-
 }

@@ -100,7 +100,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.core.validation.JsonSchemaValidator;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.projection.ProjectionInformation;
@@ -2033,11 +2032,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return result;
 	}
 
-	Document getMappedValidator(Validator validator, Class<?> domainType) {
+	private Document getMappedValidator(Validator validator, Class<?> domainType) {
 
 		Document validationRules = validator.toDocument();
 
-		if (validator instanceof JsonSchemaValidator || validationRules.containsKey("$jsonSchema")) {
+		if (validationRules.containsKey("$jsonSchema")) {
 			return schemaMapper.mapSchema(validationRules, domainType);
 		}
 

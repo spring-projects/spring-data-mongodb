@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.validation;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -23,7 +23,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
  * Unit tests for {@link CriteriaValidator}.
- * 
+ *
  * @author Andreas Zink
  * @author Christoph Strobl
  */

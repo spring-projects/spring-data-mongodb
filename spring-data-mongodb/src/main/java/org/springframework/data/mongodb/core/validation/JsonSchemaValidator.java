@@ -28,23 +28,27 @@ import org.springframework.util.Assert;
  * {@link Validator} implementation based on {@link MongoJsonSchema JSON Schema}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  * @see <a href="https://docs.mongodb.com/manual/core/schema-validation/#json-schema">Schema Validation</a>
  */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
-public class JsonSchemaValidator implements Validator {
+class JsonSchemaValidator implements Validator {
 
 	private final MongoJsonSchema schema;
 
-	public static JsonSchemaValidator of(MongoJsonSchema schema) {
+	/**
+	 * Create new {@link JsonSchemaValidator} defining validation rules via {@link MongoJsonSchema}.
+	 *
+	 * @param schema must not be {@literal null}.
+	 * @throws IllegalArgumentException if schema is {@literal null}.
+	 */
+	static JsonSchemaValidator of(MongoJsonSchema schema) {
 
 		Assert.notNull(schema, "Schema must not be null!");
-		return new JsonSchemaValidator(schema);
-	}
 
-	public MongoJsonSchema getSchema() {
-		return schema;
+		return new JsonSchemaValidator(schema);
 	}
 
 	/*
@@ -57,7 +61,7 @@ public class JsonSchemaValidator implements Validator {
 	}
 
 	/*
-	 * (non-Javadoc) 
+	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

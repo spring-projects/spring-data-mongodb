@@ -28,25 +28,26 @@ import org.springframework.util.Assert;
  * which can be either a {@code $jsonSchema} or query expression.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  * @see <a href="https://docs.mongodb.com/manual/core/schema-validation/">Schema Validation</a>
  */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
-public class DocumentValidator implements Validator {
+class DocumentValidator implements Validator {
 
 	private final Document validatorObject;
 
 	/**
-	 * Create new {@link org.springframework.data.mongodb.core.validation.DocumentValidator} defining validation rules via
-	 * a plain {@link Document}.
+	 * Create new {@link DocumentValidator} defining validation rules via a plain {@link Document}.
 	 *
 	 * @param validatorObject must not be {@literal null}.
 	 * @throws IllegalArgumentException if validatorObject is {@literal null}.
 	 */
-	public static DocumentValidator of(Document validatorObject) {
+	static DocumentValidator of(Document validatorObject) {
 
 		Assert.notNull(validatorObject, "ValidatorObject must not be null!");
+
 		return new DocumentValidator(new Document(validatorObject));
 	}
 
@@ -60,7 +61,7 @@ public class DocumentValidator implements Validator {
 	}
 
 	/*
-	 * (non-Javadoc) 
+	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
