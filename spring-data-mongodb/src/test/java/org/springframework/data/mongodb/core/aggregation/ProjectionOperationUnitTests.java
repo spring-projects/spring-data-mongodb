@@ -32,10 +32,13 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.Variable;
+import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Slice;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
+import org.springframework.data.mongodb.core.aggregation.StringOperators.Concat;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 
 /**
@@ -1571,6 +1574,27 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(agg, Matchers.is(Document.parse(
 				"{ $project : { \"results\": { $reduce: { input: \"$probabilityArr\", initialValue:  { \"sum\" : 5 , \"product\" : 2} , in: { \"sum\": { $add : [\"$$value.sum\", \"$$this\"] }, \"product\": { $multiply: [ \"$$value.product\", \"$$this\" ] } } } } } }")));
+	}
+
+	@Test // DATAMONGO-1843
+	public void shouldRenderReduceWithInputAndInExpressionsCorrectly() {
+
+		Document exprected = Document.parse(
+				"{ \"$project\" : { \"results\" : { \"$reduce\" : { \"input\" : { \"$slice\" : [\"$array\", 5] }, \"initialValue\" : \"\", \"in\" : { \"$concat\" : [\"$$value\", \"/\", \"$$this\"] } } } } }");
+
+		Reduce reduceEntryPoint = Reduce.arrayOf(Slice.sliceArrayOf("array").itemCount(5)) //
+				.withInitialValue("") //
+				.reduce(Concat.valueOf("$$value").concat("/").concatValueOf("$$this"));
+
+		Reduce arrayEntryPoint = ArrayOperators.arrayOf(Slice.sliceArrayOf("array").itemCount(5)) //
+				.reduce(Concat.valueOf("$$value").concat("/").concatValueOf("$$this")) //
+				.startingWith("");
+
+		assertThat(project().and(reduceEntryPoint).as("results").toDocument(Aggregation.DEFAULT_CONTEXT),
+				Matchers.is(exprected));
+
+		assertThat(project().and(arrayEntryPoint).as("results").toDocument(Aggregation.DEFAULT_CONTEXT),
+				Matchers.is(exprected));
 	}
 
 	@Test // DATAMONGO-1548
