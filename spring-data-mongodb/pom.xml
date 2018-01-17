@@ -19,6 +19,7 @@
 		<objenesis>1.3</objenesis>
 		<equalsverifier>1.7.8</equalsverifier>
 		<java-module-name>spring.data.mongodb</java-module-name>
+		<multithreadedtc>1.01</multithreadedtc>
 	</properties>
 
 	<dependencies>
@@ -242,6 +243,13 @@
 			<groupId>de.schauderhaft.degraph</groupId>
 			<artifactId>degraph-check</artifactId>
 			<version>0.1.4</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>edu.umd.cs.mtc</groupId>
+			<artifactId>multithreadedtc</artifactId>
+			<version>${multithreadedtc}</version>
 			<scope>test</scope>
 		</dependency>
 

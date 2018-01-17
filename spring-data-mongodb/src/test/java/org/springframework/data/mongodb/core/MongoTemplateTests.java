@@ -3721,4 +3721,57 @@ public class MongoTemplateTests {
 			person.setId(UUID.randomUUID());
 		}
 	}
+
+	public static class Message {
+
+		private ObjectId id;
+
+		private String text;
+
+		private Date timestamp;
+
+		public Message() {}
+
+		public Message(String text) {
+			super();
+			this.text = text;
+			this.timestamp = new Date();
+		}
+
+		public Message(String text, Date timestamp) {
+			super();
+			this.text = text;
+			this.timestamp = timestamp;
+		}
+
+		public ObjectId getId() {
+			return id;
+		}
+
+		public void setId(ObjectId id) {
+			this.id = id;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+
+		public Date getTimestamp() {
+			return timestamp;
+		}
+
+		public void setTimestamp(Date timestamp) {
+			this.timestamp = timestamp;
+		}
+
+		@Override
+		public String toString() {
+			return "Message [id=" + id + ", text=" + text + ", timestamp=" + timestamp + "]";
+		}
+
+	}
 }
