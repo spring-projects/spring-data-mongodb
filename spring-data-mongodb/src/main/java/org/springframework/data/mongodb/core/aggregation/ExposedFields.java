@@ -355,7 +355,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 * @author Christoph Strobl
 	 * @since 1.10
 	 */
-	interface FieldReference {
+	public interface FieldReference {
 
 		/**
 		 * Returns the raw, unqualified reference, i.e. the field reference without a {@literal $} prefix.

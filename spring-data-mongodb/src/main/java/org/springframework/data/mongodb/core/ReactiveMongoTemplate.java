@@ -24,17 +24,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -76,6 +67,7 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.*;
@@ -128,9 +120,11 @@ import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.ValidationOptions;
+import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
+import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
 import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
@@ -1788,6 +1782,53 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.Class, org.springframework.data.mongodb.core.ChangeStreamOptions, java.lang.String)
+	 */
+	@Override
+	public <T> Flux<ChangeStreamEvent<T>> changeStream(@Nullable Aggregation filter, Class<T> resultType,
+			ChangeStreamOptions options, String collectionName) {
+
+		if (filter == null) {
+			return changeStream(Collections.emptyList(), resultType, options, collectionName);
+		}
+
+		AggregationOperationContext context = filter instanceof TypedAggregation ? new TypeBasedAggregationOperationContext(
+				((TypedAggregation) filter).getInputType(), mappingContext, queryMapper) : Aggregation.DEFAULT_CONTEXT;
+
+		return changeStream(
+				filter.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
+						Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns"))),
+				resultType, options, collectionName);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(java.util.List, java.lang.Class, org.springframework.data.mongodb.core.ChangeStreamOptions, java.lang.String)
+	 */
+	@Override
+	public <T> Flux<ChangeStreamEvent<T>> changeStream(List<Document> filter, Class<T> resultType,
+			ChangeStreamOptions options, String collectionName) {
+
+		ChangeStreamPublisher<Document> publisher = filter.isEmpty() ? getCollection(collectionName).watch()
+				: getCollection(collectionName).watch(filter);
+
+		if (options.getResumeToken().isPresent()) {
+			publisher = publisher.resumeAfter(options.getResumeToken().get().asDocument());
+		}
+
+		if (options.getFullDocumentLookup().isPresent() || resultType != Document.class) {
+			publisher = publisher.fullDocument(options.getFullDocumentLookup().isPresent()
+					? options.getFullDocumentLookup().get() : FullDocument.UPDATE_LOOKUP);
+		}
+
+		if (options.getCollation().isPresent()) {
+			publisher = publisher.collation(options.getCollation().map(Collation::toMongoCollation).get());
+		}
+		return Flux.from(publisher).map(document -> new ChangeStreamEvent(document, resultType, getConverter()));
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveFindOperation#query(java.lang.Class)
 	 */
 	@Override
@@ -2605,7 +2646,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *
 	 * @author Mark Paluch
 	 */
-
 	interface ReactiveCollectionQueryCallback<T> extends ReactiveCollectionCallback<T> {
 
 		FindPublisher<T> doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException;

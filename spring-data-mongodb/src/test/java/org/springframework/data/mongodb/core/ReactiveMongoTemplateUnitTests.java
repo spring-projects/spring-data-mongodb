@@ -25,6 +25,7 @@ import lombok.Data;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -144,7 +145,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void findAndModfiyShoudUseCollationWhenPresent() {
 
-		when(collection.findOneAndUpdate(any(), any(), any())).thenReturn(Mono.empty());
+		when(collection.findOneAndUpdate(any(Bson.class), any(), any())).thenReturn(Mono.empty());
 
 		template.findAndModify(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class)
 				.subscribe();
@@ -158,7 +159,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void findAndRemoveShouldUseCollationWhenPresent() {
 
-		when(collection.findOneAndDelete(any(), any())).thenReturn(Mono.empty());
+		when(collection.findOneAndDelete(any(Bson.class), any())).thenReturn(Mono.empty());
 
 		template.findAndRemove(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class).subscribe();
 
@@ -185,7 +186,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void updateOneShouldUseCollationWhenPresent() {
 
-		when(collection.updateOne(any(), any(), any())).thenReturn(Mono.empty());
+		when(collection.updateOne(any(Bson.class), any(), any())).thenReturn(Mono.empty());
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
 				AutogenerateableId.class).subscribe();
@@ -199,7 +200,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void updateManyShouldUseCollationWhenPresent() {
 
-		when(collection.updateMany(any(), any(), any())).thenReturn(Mono.empty());
+		when(collection.updateMany(any(Bson.class), any(), any())).thenReturn(Mono.empty());
 
 		template.updateMulti(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
 				AutogenerateableId.class).subscribe();
@@ -214,13 +215,13 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void replaceOneShouldUseCollationWhenPresent() {
 
-		when(collection.replaceOne(any(), any(), any())).thenReturn(Mono.empty());
+		when(collection.replaceOne(any(Bson.class), any(), any())).thenReturn(Mono.empty());
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class)
 				.subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).replaceOne(Mockito.any(), Mockito.any(), options.capture());
+		verify(collection).replaceOne(Mockito.any(Bson.class), Mockito.any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
