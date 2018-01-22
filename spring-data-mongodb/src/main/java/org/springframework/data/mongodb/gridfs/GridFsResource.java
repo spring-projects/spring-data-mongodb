@@ -108,7 +108,6 @@ public class GridFsResource extends InputStreamResource {
 	@SuppressWarnings("deprecation")
 	public String getContentType() {
 
-
 		return Optionals
 				.firstNonEmpty(
 						() -> Optional.ofNullable(file.getMetadata()).map(it -> it.get(CONTENT_TYPE_FIELD, String.class)),

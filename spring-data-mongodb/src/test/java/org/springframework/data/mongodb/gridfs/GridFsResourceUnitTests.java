@@ -30,6 +30,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * Unit tests for {@link GridFsResource}.
  *
  * @author Mark Paluch
+ * @auhtor Christoph Strobl
  */
 public class GridFsResourceUnitTests {
 
@@ -47,6 +48,15 @@ public class GridFsResourceUnitTests {
 	public void shouldThrowExceptionOnEmptyContentType() {
 
 		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), "foo", null);
+		GridFsResource resource = new GridFsResource(file);
+
+		assertThatThrownBy(resource::getContentType).isInstanceOf(MongoGridFSException.class);
+	}
+
+	@Test // DATAMONGO-1850
+	public void shouldThrowExceptionOnEmptyContentTypeInMetadata() {
+
+		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), "foo", new Document());
 		GridFsResource resource = new GridFsResource(file);
 
 		assertThatThrownBy(resource::getContentType).isInstanceOf(MongoGridFSException.class);
