@@ -18,10 +18,13 @@ package org.springframework.data.mongodb.gridfs;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.util.Optionals;
 
+import com.mongodb.MongoGridFSException;
 import com.mongodb.client.gridfs.model.GridFSFile;
 
 /**
@@ -30,6 +33,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Hartmut Lang
+ * @author Mark Paluch
  */
 public class GridFsResource extends InputStreamResource {
 
@@ -104,8 +108,11 @@ public class GridFsResource extends InputStreamResource {
 	@SuppressWarnings("deprecation")
 	public String getContentType() {
 
-		String contentType = file.getMetadata().get(CONTENT_TYPE_FIELD, String.class);
 
-		return contentType != null ? contentType : file.getContentType();
+		return Optionals
+				.firstNonEmpty(
+						() -> Optional.ofNullable(file.getMetadata()).map(it -> it.get(CONTENT_TYPE_FIELD, String.class)),
+						() -> Optional.ofNullable(file.getContentType()))
+				.orElseThrow(() -> new MongoGridFSException("No contentType data for this GridFS file"));
 	}
 }
