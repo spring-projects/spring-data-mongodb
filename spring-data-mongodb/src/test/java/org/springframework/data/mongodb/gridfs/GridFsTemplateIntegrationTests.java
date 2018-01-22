@@ -15,11 +15,8 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertThat;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
@@ -27,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -42,6 +40,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.MongoGridFSException;
 import com.mongodb.client.gridfs.GridFSFindIterable;
 
 /**
@@ -73,8 +72,8 @@ public class GridFsTemplateIntegrationTests {
 		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
 		GridFSFindIterable result = operations.find(query(where("_id").is(reference)));
 		result.into(files);
-		assertThat(files.size(), is(1));
-		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), reference);
+		assertThat(files.size()).isEqualTo(1);
+		assertThat(((BsonObjectId) files.get(0).getId()).getValue()).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-6
@@ -87,8 +86,8 @@ public class GridFsTemplateIntegrationTests {
 		GridFSFindIterable result = operations.find(query(whereMetaData("key").is("value")));
 		result.into(files);
 
-		assertThat(files.size(), is(1));
-		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), reference);
+		assertThat(files.size()).isEqualTo(1);
+		assertThat(((BsonObjectId) files.get(0).getId()).getValue()).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-6
@@ -103,8 +102,8 @@ public class GridFsTemplateIntegrationTests {
 		GridFSFindIterable result = operations.find(query(whereFilename().is("foo.xml")));
 		result.into(files);
 
-		assertThat(files.size(), is(1));
-		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), reference);
+		assertThat(files.size()).isEqualTo(1);
+		assertThat(((BsonObjectId) files.get(0).getId()).getValue()).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-6
@@ -114,10 +113,9 @@ public class GridFsTemplateIntegrationTests {
 
 		GridFsResource[] resources = operations.getResources("*.xml");
 
-		assertThat(resources.length, is(1));
-		assertThat(((BsonObjectId) resources[0].getId()).getValue(), is(reference));
-		assertThat(resources[0].contentLength(), is(resource.contentLength()));
-		// assertThat(resources[0].getContentType(), is(resource.()));
+		assertThat(resources.length).isEqualTo(1);
+		assertThat(((BsonObjectId) resources[0].getId()).getValue()).isEqualTo(reference);
+		assertThat(resources[0].contentLength()).isEqualTo(resource.contentLength());
 	}
 
 	@Test // DATAMONGO-6
@@ -126,10 +124,9 @@ public class GridFsTemplateIntegrationTests {
 		ObjectId reference = operations.store(resource.getInputStream(), "foo.xml");
 
 		GridFsResource[] resources = operations.getResources("foo.xml");
-		assertThat(resources.length, is(1));
-		assertThat(((BsonObjectId) resources[0].getId()).getValue(), is(reference));
-		assertThat(resources[0].contentLength(), is(resource.contentLength()));
-		// assertThat(resources[0].getContentType(), is(reference.getContentType()));
+		assertThat(resources.length).isEqualTo(1);
+		assertThat(((BsonObjectId) resources[0].getId()).getValue()).isEqualTo(reference);
+		assertThat(resources[0].contentLength()).isEqualTo(resource.contentLength());
 	}
 
 	@Test // DATAMONGO-503
@@ -141,8 +138,8 @@ public class GridFsTemplateIntegrationTests {
 		GridFSFindIterable result = operations.find(query(whereContentType().is("application/xml")));
 		result.into(files);
 
-		assertThat(files.size(), is(1));
-		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), reference);
+		assertThat(files.size()).isEqualTo(1);
+		assertThat(((BsonObjectId) files.get(0).getId()).getValue()).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-534
@@ -158,10 +155,8 @@ public class GridFsTemplateIntegrationTests {
 		GridFSFindIterable result = operations.find(query);
 		result.into(files);
 
-		assertThat(files, hasSize(3));
-		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), first);
-		assertEquals(((BsonObjectId) files.get(1).getId()).getValue(), second);
-		assertEquals(((BsonObjectId) files.get(2).getId()).getValue(), third);
+		assertThat(files).hasSize(3).extracting(it -> ((BsonObjectId) it.getId()).getValue()).containsExactly(first, second,
+				third);
 	}
 
 	@Test // DATAMONGO-534, DATAMONGO-1762
@@ -169,12 +164,11 @@ public class GridFsTemplateIntegrationTests {
 
 		ObjectId reference = operations.store(resource.getInputStream(), "foo.xml");
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<>();
 		GridFSFindIterable result = operations.find(new Query());
 		result.into(files);
 
-		assertThat(files, hasSize(1));
-		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), reference);
+		assertThat(files).hasSize(1).extracting(it -> ((BsonObjectId) it.getId()).getValue()).containsExactly(reference);
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1762
@@ -184,7 +178,7 @@ public class GridFsTemplateIntegrationTests {
 
 	@Test // DATAMONGO-813
 	public void getResourceShouldReturnNullForNonExistingResource() {
-		assertThat(operations.getResource("doesnotexist"), is(nullValue()));
+		assertThat(operations.getResource("doesnotexist")).isNull();
 	}
 
 	@Test // DATAMONGO-809
@@ -197,8 +191,7 @@ public class GridFsTemplateIntegrationTests {
 		GridFSFindIterable result = operations.find(query(whereMetaData("key").is("value")));
 		result.into(files);
 
-		assertThat(files, hasSize(1));
-		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), reference);
+		assertThat(files).hasSize(1).extracting(it -> ((BsonObjectId) it.getId()).getValue()).containsExactly(reference);
 	}
 
 	@Test // DATAMONGO-809
@@ -212,8 +205,7 @@ public class GridFsTemplateIntegrationTests {
 		GridFSFindIterable result = operations.find(query(whereMetaData("version").is("1.0")));
 		result.into(files);
 
-		assertThat(files, hasSize(1));
-		assertEquals(((BsonObjectId) files.get(0).getId()).getValue(), reference);
+		assertThat(files).hasSize(1).extracting(it -> ((BsonObjectId) it.getId()).getValue()).containsExactly(reference);
 	}
 
 	@Test // DATAMONGO-1695
@@ -222,6 +214,15 @@ public class GridFsTemplateIntegrationTests {
 		operations.store(resource.getInputStream(), "someName", "contentType");
 
 		assertThat(operations.getResource("someName").getContentType()).isEqualTo("contentType");
+	}
+
+	@Test // DATAMONGO-1850
+	public void failsOnNonExistingContentTypeRetrieval() throws IOException {
+
+		operations.store(resource.getInputStream(), "no-content-type", (String) null);
+		GridFsResource result = operations.getResource("no-content-type");
+
+		assertThatThrownBy(() -> result.getContentType()).isInstanceOf(MongoGridFSException.class);
 	}
 
 	class Metadata {
