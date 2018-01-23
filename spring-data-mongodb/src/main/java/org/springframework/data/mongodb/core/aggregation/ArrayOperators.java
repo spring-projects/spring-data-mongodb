@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * Gateway to {@literal array} aggregation operations.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.0
  */
 public class ArrayOperators {
@@ -224,15 +225,10 @@ public class ArrayOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
-		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(final AggregationExpression expression) {
-			return new ArrayOperatorFactory.ReduceInitialValueBuilder() {
+		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(AggregationExpression expression) {
 
-				@Override
-				public Reduce startingWith(Object initialValue) {
-					return (usesFieldRef() ? Reduce.arrayOf(fieldReference)
-							: Reduce.arrayOf(ArrayOperatorFactory.this.expression)).withInitialValue(initialValue).reduce(expression);
-				}
-			};
+			return initialValue -> (usesFieldRef() ? Reduce.arrayOf(fieldReference)
+					: Reduce.arrayOf(ArrayOperatorFactory.this.expression)).withInitialValue(initialValue).reduce(expression);
 		}
 
 		/**
@@ -242,16 +238,10 @@ public class ArrayOperators {
 		 * @param expressions
 		 * @return
 		 */
-		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(final PropertyExpression... expressions) {
+		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(PropertyExpression... expressions) {
 
-			return new ArrayOperatorFactory.ReduceInitialValueBuilder() {
-
-				@Override
-				public Reduce startingWith(Object initialValue) {
-					return (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
-							.withInitialValue(initialValue).reduce(expressions);
-				}
-			};
+			return initialValue -> (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
+					.withInitialValue(initialValue).reduce(expressions);
 		}
 
 		/**
