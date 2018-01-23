@@ -15,20 +15,16 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -71,7 +67,7 @@ public class ProjectionOperationUnitTests {
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		assertThat(projectClause.get("prop"), is((Object) Fields.UNDERSCORE_ID_REF));
+		assertThat(projectClause.get("prop")).isEqualTo((Object) Fields.UNDERSCORE_ID_REF);
 	}
 
 	@Test // DATAMONGO-586
@@ -82,8 +78,8 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		assertThat(projectClause.get("foo"), is((Object) 1));
-		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
+		assertThat(projectClause.get("foo")).isEqualTo((Object) 1);
+		assertThat(projectClause.get("bar")).isEqualTo((Object) "$foobar");
 	}
 
 	@Test // DATAMONGO-586
@@ -94,7 +90,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.and("foo").as("bar").toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		assertThat(projectClause.get("bar"), is((Object) "$foo"));
+		assertThat(projectClause.get("bar")).isEqualTo((Object) "$foo");
 	}
 
 	@Test // DATAMONGO-586
@@ -107,13 +103,13 @@ public class ProjectionOperationUnitTests {
 		Document barClause = DocumentTestUtils.getAsDocument(projectClause, "bar");
 		List<Object> addClause = (List<Object>) barClause.get("$add");
 
-		assertThat(addClause, hasSize(2));
-		assertThat(addClause.get(0), is((Object) "$foo"));
-		assertThat(addClause.get(1), is((Object) 41));
+		assertThat(addClause).hasSize(2);
+		assertThat(addClause.get(0)).isEqualTo((Object) "$foo");
+		assertThat(addClause.get(1)).isEqualTo((Object) 41);
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationWithoutAlias() {
+	public void arithmeticProjectionOperationWithoutAlias() {
 
 		String fieldName = "a";
 		ProjectionOperationBuilder operation = new ProjectionOperation().and(fieldName).plus(1);
@@ -121,12 +117,12 @@ public class ProjectionOperationUnitTests {
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldName, projectClause);
 
-		assertThat(oper.containsKey(ADD), is(true));
-		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
+		assertThat(oper.containsKey(ADD)).isTrue();
+		assertThat(oper.get(ADD)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationPlus() {
+	public void arithmeticProjectionOperationPlus() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -135,12 +131,12 @@ public class ProjectionOperationUnitTests {
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
 		Document oper = exctractOperation(fieldAlias, projectClause);
-		assertThat(oper.containsKey(ADD), is(true));
-		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
+		assertThat(oper.containsKey(ADD)).isTrue();
+		assertThat(oper.get(ADD)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationMinus() {
+	public void arithmeticProjectionOperationMinus() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -149,12 +145,12 @@ public class ProjectionOperationUnitTests {
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
-		assertThat(oper.containsKey(SUBTRACT), is(true));
-		assertThat(oper.get(SUBTRACT), is((Object) Arrays.<Object> asList("$a", 1)));
+		assertThat(oper.containsKey(SUBTRACT)).isTrue();
+		assertThat(oper.get(SUBTRACT)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationMultiply() {
+	public void arithmeticProjectionOperationMultiply() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -163,12 +159,12 @@ public class ProjectionOperationUnitTests {
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
-		assertThat(oper.containsKey(MULTIPLY), is(true));
-		assertThat(oper.get(MULTIPLY), is((Object) Arrays.<Object> asList("$a", 1)));
+		assertThat(oper.containsKey(MULTIPLY)).isTrue();
+		assertThat(oper.get(MULTIPLY)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationDivide() {
+	public void arithmeticProjectionOperationDivide() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -177,18 +173,18 @@ public class ProjectionOperationUnitTests {
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
-		assertThat(oper.containsKey(DIVIDE), is(true));
-		assertThat(oper.get(DIVIDE), is((Object) Arrays.<Object> asList("$a", 1)));
+		assertThat(oper.containsKey(DIVIDE)).isTrue();
+		assertThat(oper.get(DIVIDE)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
-	public void arithmenticProjectionOperationDivideByZeroException() {
+	public void arithmeticProjectionOperationDivideByZeroException() {
 
 		new ProjectionOperation().and("a").divide(0);
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationMod() {
+	public void arithmeticProjectionOperationMod() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -197,8 +193,8 @@ public class ProjectionOperationUnitTests {
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
-		assertThat(oper.containsKey(MOD), is(true));
-		assertThat(oper.get(MOD), is((Object) Arrays.<Object> asList("$a", 3)));
+		assertThat(oper.containsKey(MOD)).isTrue();
+		assertThat(oper.get(MOD)).isEqualTo((Object) Arrays.<Object> asList("$a", 3));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-758
@@ -213,7 +209,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation projectionOp = new ProjectionOperation().andExclude(Fields.UNDERSCORE_ID);
 		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		assertThat((Integer) projectClause.get(Fields.UNDERSCORE_ID), is(0));
+		assertThat((Integer) projectClause.get(Fields.UNDERSCORE_ID)).isEqualTo(0);
 	}
 
 	@Test // DATAMONGO-757
@@ -225,15 +221,15 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		assertThat(projectClause.get("foo"), is((Object) 1)); // implicit
-		assertThat(projectClause.get("bar"), is((Object) "$foobar")); // explicit
-		assertThat(projectClause.get("inc1"), is((Object) 1)); // include shortcut
-		assertThat(projectClause.get("inc2"), is((Object) 1));
-		assertThat(projectClause.get("_id"), is((Object) 0));
+		assertThat(projectClause.get("foo")).isEqualTo((Object) 1); // implicit
+		assertThat(projectClause.get("bar")).isEqualTo((Object) "$foobar"); // explicit
+		assertThat(projectClause.get("inc1")).isEqualTo((Object) 1); // include shortcut
+		assertThat(projectClause.get("inc2")).isEqualTo((Object) 1);
+		assertThat(projectClause.get("_id")).isEqualTo((Object) 0);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void arithmenticProjectionOperationModByZeroException() {
+	public void arithmeticProjectionOperationModByZeroException() {
 
 		new ProjectionOperation().and("a").mod(0);
 	}
@@ -251,16 +247,16 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		assertThat((Document) projectClause.get("fooPlusBar"), //
-				is(new Document("$add", Arrays.asList("$foo", "$bar"))));
-		assertThat((Document) projectClause.get("fooMinusBar"), //
-				is(new Document("$subtract", Arrays.asList("$foo", "$bar"))));
-		assertThat((Document) projectClause.get("fooMultiplyBar"), //
-				is(new Document("$multiply", Arrays.asList("$foo", "$bar"))));
-		assertThat((Document) projectClause.get("fooDivideBar"), //
-				is(new Document("$divide", Arrays.asList("$foo", "$bar"))));
-		assertThat((Document) projectClause.get("fooModBar"), //
-				is(new Document("$mod", Arrays.asList("$foo", "$bar"))));
+		assertThat(projectClause.get("fooPlusBar")). //
+				isEqualTo(new Document("$add", Arrays.asList("$foo", "$bar")));
+		assertThat(projectClause.get("fooMinusBar")). //
+				isEqualTo(new Document("$subtract", Arrays.asList("$foo", "$bar")));
+		assertThat(projectClause.get("fooMultiplyBar")). //
+				isEqualTo(new Document("$multiply", Arrays.asList("$foo", "$bar")));
+		assertThat(projectClause.get("fooDivideBar")). //
+				isEqualTo(new Document("$divide", Arrays.asList("$foo", "$bar")));
+		assertThat(projectClause.get("fooModBar")). //
+				isEqualTo(new Document("$mod", Arrays.asList("$foo", "$bar")));
 	}
 
 	@Test // DATAMONGO-774
@@ -271,8 +267,8 @@ public class ProjectionOperationUnitTests {
 				.and("foo").as("bar"); //
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(document, is(Document.parse(
-				"{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}")));
+		assertThat(document).isEqualTo(Document.parse(
+				"{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}"));
 	}
 
 	@Test // DATAMONGO-975
@@ -292,20 +288,20 @@ public class ProjectionOperationUnitTests {
 		;
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(document, is(notNullValue()));
+		assertThat(document).isNotNull();
 
 		Document projected = exctractOperation("$project", document);
 
-		assertThat(projected.get("hour"), is((Object) new Document("$hour", Arrays.asList("$date"))));
-		assertThat(projected.get("min"), is((Object) new Document("$minute", Arrays.asList("$date"))));
-		assertThat(projected.get("second"), is((Object) new Document("$second", Arrays.asList("$date"))));
-		assertThat(projected.get("millis"), is((Object) new Document("$millisecond", Arrays.asList("$date"))));
-		assertThat(projected.get("year"), is((Object) new Document("$year", Arrays.asList("$date"))));
-		assertThat(projected.get("month"), is((Object) new Document("$month", Arrays.asList("$date"))));
-		assertThat(projected.get("week"), is((Object) new Document("$week", Arrays.asList("$date"))));
-		assertThat(projected.get("dayOfYear"), is((Object) new Document("$dayOfYear", Arrays.asList("$date"))));
-		assertThat(projected.get("dayOfMonth"), is((Object) new Document("$dayOfMonth", Arrays.asList("$date"))));
-		assertThat(projected.get("dayOfWeek"), is((Object) new Document("$dayOfWeek", Arrays.asList("$date"))));
+		assertThat(projected.get("hour")).isEqualTo((Object) new Document("$hour", Arrays.asList("$date")));
+		assertThat(projected.get("min")).isEqualTo((Object) new Document("$minute", Arrays.asList("$date")));
+		assertThat(projected.get("second")).isEqualTo((Object) new Document("$second", Arrays.asList("$date")));
+		assertThat(projected.get("millis")).isEqualTo((Object) new Document("$millisecond", Arrays.asList("$date")));
+		assertThat(projected.get("year")).isEqualTo((Object) new Document("$year", Arrays.asList("$date")));
+		assertThat(projected.get("month")).isEqualTo((Object) new Document("$month", Arrays.asList("$date")));
+		assertThat(projected.get("week")).isEqualTo((Object) new Document("$week", Arrays.asList("$date")));
+		assertThat(projected.get("dayOfYear")).isEqualTo((Object) new Document("$dayOfYear", Arrays.asList("$date")));
+		assertThat(projected.get("dayOfMonth")).isEqualTo((Object) new Document("$dayOfMonth", Arrays.asList("$date")));
+		assertThat(projected.get("dayOfWeek")).isEqualTo((Object) new Document("$dayOfWeek", Arrays.asList("$date")));
 	}
 
 	@Test // DATAMONGO-975
@@ -318,11 +314,11 @@ public class ProjectionOperationUnitTests {
 		;
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(document, is(notNullValue()));
+		assertThat(document).isNotNull();
 
 		Document projected = exctractOperation("$project", document);
-		assertThat(projected.get("dayOfYearPlus1Day"), is((Object) new Document("$dayOfYear",
-				Arrays.asList(new Document("$add", Arrays.<Object> asList("$date", 86400000))))));
+		assertThat(projected.get("dayOfYearPlus1Day")).isEqualTo(
+				new Document("$dayOfYear", Arrays.asList(new Document("$add", Arrays.<Object> asList("$date", 86400000)))));
 	}
 
 	@Test // DATAMONGO-979
@@ -337,7 +333,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document projected = exctractOperation("$project", document);
-		assertThat(projected.get("tags_count"), is((Object) new Document("$size", Arrays.asList("$tags"))));
+		assertThat(projected.get("tags_count")).isEqualTo((Object) new Document("$size", Arrays.asList("$tags")));
 	}
 
 	@Test // DATAMONGO-979
@@ -351,7 +347,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document projected = exctractOperation("$project", document);
-		assertThat(projected.get("tags_count"), is((Object) new Document("$size", Arrays.asList("$tags"))));
+		assertThat(projected.get("tags_count")).isEqualTo((Object) new Document("$size", Arrays.asList("$tags")));
 	}
 
 	@Test // DATAMONGO-1457
@@ -362,7 +358,8 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projected = exctractOperation("$project", document);
 
-		assertThat(projected.get("renamed"), is((Object) new Document("$slice", Arrays.<Object> asList("$field", 10))));
+		assertThat(projected.get("renamed"))
+				.isEqualTo((Object) new Document("$slice", Arrays.<Object> asList("$field", 10)));
 	}
 
 	@Test // DATAMONGO-1457
@@ -373,7 +370,8 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projected = exctractOperation("$project", document);
 
-		assertThat(projected.get("renamed"), is((Object) new Document("$slice", Arrays.<Object> asList("$field", 5, 10))));
+		assertThat(projected.get("renamed"))
+				.isEqualTo((Object) new Document("$slice", Arrays.<Object> asList("$field", 5, 10)));
 	}
 
 	@Test // DATAMONGO-784
@@ -381,8 +379,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation.project().and("field").cmp(10).as("cmp10");
 
-		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
-				isBsonObject().containing("$project.cmp10.$cmp.[0]", "$field").containing("$project.cmp10.$cmp.[1]", 10));
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).containsEntry("$project.cmp10.$cmp.[0]", "$field")
+				.containsEntry("$project.cmp10.$cmp.[1]", 10);
 	}
 
 	@Test // DATAMONGO-784
@@ -390,8 +388,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation.project().and("field").eq(10).as("eq10");
 
-		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
-				isBsonObject().containing("$project.eq10.$eq.[0]", "$field").containing("$project.eq10.$eq.[1]", 10));
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).containsEntry("$project.eq10.$eq.[0]", "$field")
+				.containsEntry("$project.eq10.$eq.[1]", 10);
 	}
 
 	@Test // DATAMONGO-784
@@ -399,8 +397,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation.project().and("field").gt(10).as("gt10");
 
-		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
-				isBsonObject().containing("$project.gt10.$gt.[0]", "$field").containing("$project.gt10.$gt.[1]", 10));
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).containsEntry("$project.gt10.$gt.[0]", "$field")
+				.containsEntry("$project.gt10.$gt.[1]", 10);
 	}
 
 	@Test // DATAMONGO-784
@@ -408,8 +406,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation.project().and("field").gte(10).as("gte10");
 
-		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
-				isBsonObject().containing("$project.gte10.$gte.[0]", "$field").containing("$project.gte10.$gte.[1]", 10));
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).containsEntry("$project.gte10.$gte.[0]", "$field")
+				.containsEntry("$project.gte10.$gte.[1]", 10);
 	}
 
 	@Test // DATAMONGO-784
@@ -417,8 +415,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation.project().and("field").lt(10).as("lt10");
 
-		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
-				isBsonObject().containing("$project.lt10.$lt.[0]", "$field").containing("$project.lt10.$lt.[1]", 10));
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).containsEntry("$project.lt10.$lt.[0]", "$field")
+				.containsEntry("$project.lt10.$lt.[1]", 10);
 	}
 
 	@Test // DATAMONGO-784
@@ -426,8 +424,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation.project().and("field").lte(10).as("lte10");
 
-		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
-				isBsonObject().containing("$project.lte10.$lte.[0]", "$field").containing("$project.lte10.$lte.[1]", 10));
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).containsEntry("$project.lte10.$lte.[0]", "$field")
+				.containsEntry("$project.lte10.$lte.[1]", 10);
 	}
 
 	@Test // DATAMONGO-784
@@ -435,8 +433,8 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation.project().and("field").ne(10).as("ne10");
 
-		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT),
-				isBsonObject().containing("$project.ne10.$ne.[0]", "$field").containing("$project.ne10.$ne.[1]", 10));
+		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).containsEntry("$project.ne10.$ne.[0]", "$field")
+				.containsEntry("$project.ne10.$ne.[1]", 10);
 	}
 
 	@Test // DATAMONGO-1536
@@ -445,7 +443,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and("A").equalsArrays("B").as("sameElements")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, sameElements: { $setEquals: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { A: 1, B: 1, sameElements: { $setEquals: [ \"$A\", \"$B\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -454,7 +453,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").isEqualTo("B")).as("sameElements")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, sameElements: { $setEquals: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { A: 1, B: 1, sameElements: { $setEquals: [ \"$A\", \"$B\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -463,8 +463,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and("A").intersectsArrays("B").as("commonToBoth")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { A: 1, B: 1, commonToBoth: { $setIntersection: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { A: 1, B: 1, commonToBoth: { $setIntersection: [ \"$A\", \"$B\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -473,8 +473,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").intersects("B")).as("commonToBoth")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { A: 1, B: 1, commonToBoth: { $setIntersection: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { A: 1, B: 1, commonToBoth: { $setIntersection: [ \"$A\", \"$B\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -482,7 +482,8 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project("A", "B").and("A").unionArrays("B").as("allValues").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, allValues: { $setUnion: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { A: 1, B: 1, allValues: { $setUnion: [ \"$A\", \"$B\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -491,7 +492,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").union("B")).as("allValues")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, allValues: { $setUnion: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { A: 1, B: 1, allValues: { $setUnion: [ \"$A\", \"$B\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -500,7 +502,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and("B").differenceToArray("A").as("inBOnly")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, inBOnly: { $setDifference: [ \"$B\", \"$A\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { A: 1, B: 1, inBOnly: { $setDifference: [ \"$B\", \"$A\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -509,7 +512,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("B").differenceTo("A")).as("inBOnly")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { A: 1, B: 1, inBOnly: { $setDifference: [ \"$B\", \"$A\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { A: 1, B: 1, inBOnly: { $setDifference: [ \"$B\", \"$A\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -518,8 +522,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and("A").subsetOfArray("B").as("aIsSubsetOfB")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -528,8 +532,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").isSubsetOf("B")).as("aIsSubsetOfB")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { A: 1, B: 1, aIsSubsetOfB: { $setIsSubset: [ \"$A\", \"$B\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -538,8 +542,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("responses").and("responses").anyElementInArrayTrue().as("isAnyTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -548,8 +552,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("responses").and(SetOperators.arrayAsSet("responses").anyElementTrue()).as("isAnyTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { responses: 1, isAnyTrue: { $anyElementTrue: [ \"$responses\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -558,8 +562,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("responses").and("responses").allElementsInArrayTrue().as("isAllTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { responses: 1, isAllTrue: { $allElementsTrue: [ \"$responses\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { responses: 1, isAllTrue: { $allElementsTrue: [ \"$responses\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -568,8 +572,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project("responses").and(SetOperators.arrayAsSet("responses").allElementsTrue()).as("isAllTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { responses: 1, isAllTrue: { $allElementsTrue: [ \"$responses\" ] }}}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { responses: 1, isAllTrue: { $allElementsTrue: [ \"$responses\" ] }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -578,7 +582,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and("anyNumber").absoluteValue().as("absoluteValue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { absoluteValue : { $abs:  \"$anyNumber\" }}}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { absoluteValue : { $abs:  \"$anyNumber\" }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -589,7 +593,8 @@ public class ProjectionOperationUnitTests {
 						ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).abs())
 				.as("delta").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { delta: { $abs: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { delta: { $abs: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -598,7 +603,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("price").add("fee")).as("total")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse(" { $project: { total: { $add: [ \"$price\", \"$fee\" ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse(" { $project: { total: { $add: [ \"$price\", \"$fee\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -606,7 +611,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("anyNumber").ceil().as("ceilValue").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { ceilValue : { $ceil:  \"$anyNumber\" }}}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { ceilValue : { $ceil:  \"$anyNumber\" }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -616,7 +621,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ceil())
 				.as("delta").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { delta: { $ceil: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { delta: { $ceil: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -626,8 +632,8 @@ public class ProjectionOperationUnitTests {
 				.divide(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document
-				.parse("{ $project: { result: { $divide: [ \"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { result: { $divide: [ \"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -638,8 +644,8 @@ public class ProjectionOperationUnitTests {
 						.divideBy(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document
-				.parse("{ $project: { result: { $divide: [ \"$anyNumber\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project: { result: { $divide: [ \"$anyNumber\", { $subtract: [ \"$start\", \"$end\" ] }] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -647,7 +653,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("value").exp().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $exp: \"$value\" } }}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { result: { $exp: \"$value\" } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -658,7 +664,8 @@ public class ProjectionOperationUnitTests {
 						ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).exp())
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $exp: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $exp: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -666,7 +673,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("value").floor().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $floor: \"$value\" } }}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { result: { $floor: \"$value\" } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -676,7 +683,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).floor())
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $floor: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $floor: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -684,7 +692,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("value").ln().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $ln: \"$value\"} }}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { result: { $ln: \"$value\"} }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -694,7 +702,8 @@ public class ProjectionOperationUnitTests {
 				.and(ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ln())
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $ln: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $ln: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -702,7 +711,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("value").log(2).as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $log: [ \"$value\", 2] } }}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { result: { $log: [ \"$value\", 2] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -712,8 +721,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log(2))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { result: { $log: [ { $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $log: [ { $subtract: [ \"$start\", \"$end\" ] }, 2] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -721,7 +730,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("value").log10().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $log10: \"$value\" } }}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { result: { $log10: \"$value\" } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -731,7 +740,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log10())
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $log10: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $log10: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -740,8 +750,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and("value").mod(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { result: { $mod: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { result: { $mod: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -751,8 +761,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).mod(2))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { result: { $mod: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $mod: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -762,8 +772,8 @@ public class ProjectionOperationUnitTests {
 				.multiply(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document
-				.parse("{ $project: { result: { $multiply: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}")));
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project: { result: { $multiply: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -774,8 +784,8 @@ public class ProjectionOperationUnitTests {
 						.multiplyBy(2).multiplyBy("refToAnotherNumber"))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse(
-				"{ $project: { result: { $multiply: [{ $subtract: [ \"$start\", \"$end\" ] }, 2, \"$refToAnotherNumber\"] } }}")));
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { result: { $multiply: [{ $subtract: [ \"$start\", \"$end\" ] }, 2, \"$refToAnotherNumber\"] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -783,7 +793,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("value").pow(2).as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $pow: [\"$value\", 2] } }}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { result: { $pow: [\"$value\", 2] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -793,8 +803,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).pow(2))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { result: { $pow: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $pow: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -802,7 +812,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("value").sqrt().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $sqrt: \"$value\" } }}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { result: { $sqrt: \"$value\" } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -812,7 +822,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).sqrt())
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $sqrt: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $sqrt: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -821,8 +832,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and("numericField").minus(AggregationFunctionExpressions.SIZE.of(field("someArray")))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(
-				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -833,8 +844,8 @@ public class ProjectionOperationUnitTests {
 						.subtract(AggregationFunctionExpressions.SIZE.of(field("someArray"))))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(
-				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -842,7 +853,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("value").trunc().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result : { $trunc: \"$value\" }}}")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { result : { $trunc: \"$value\" }}}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -852,7 +863,8 @@ public class ProjectionOperationUnitTests {
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).trunc())
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $trunc: { $subtract: [ \"$start\", \"$end\" ] } } }}")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $trunc: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -861,8 +873,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and("item").concat(" - ", field("description")).as("itemDescription")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }"));
 
 	}
 
@@ -872,8 +884,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("item").concat(" - ").concatValueOf("description"))
 				.as("itemDescription").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { itemDescription: { $concat: [ \"$item\", \" - \", \"$description\" ] } } }"));
 
 	}
 
@@ -882,7 +894,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("quarter").substring(0, 2).as("yearSubstring").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -891,7 +903,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("quarter").substring(0, 2)).as("yearSubstring")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { yearSubstring: { $substr: [ \"$quarter\", 0, 2 ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -899,7 +911,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("item").toLower().as("item").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { item: { $toLower: \"$item\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { item: { $toLower: \"$item\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -908,7 +920,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("item").toLower()).as("item")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { item: { $toLower: \"$item\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { item: { $toLower: \"$item\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -916,7 +928,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("item").toUpper().as("item").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { item: { $toUpper: \"$item\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { item: { $toUpper: \"$item\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -925,7 +937,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("item").toUpper()).as("item")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { item: { $toUpper: \"$item\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { item: { $toUpper: \"$item\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -934,8 +946,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and("quarter").strCaseCmp("13q4").as("comparisonResult")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -944,8 +956,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("quarter").strCaseCmp("13q4")).as("comparisonResult")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { comparisonResult: { $strcasecmp: [ \"$quarter\", \"13q4\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -953,7 +965,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("favorites").arrayElementAt(0).as("first").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { first: { $arrayElemAt: [ \"$favorites\", 0 ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { first: { $arrayElemAt: [ \"$favorites\", 0 ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -962,7 +974,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("favorites").elementAt(0)).as("first")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { first: { $arrayElemAt: [ \"$favorites\", 0 ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { first: { $arrayElemAt: [ \"$favorites\", 0 ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -970,7 +982,8 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("instock").concatArrays("ordered").as("items").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { items: { $concatArrays: [ \"$instock\", \"$ordered\" ] } } }")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { items: { $concatArrays: [ \"$instock\", \"$ordered\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -979,7 +992,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("instock").concat("ordered")).as("items")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { items: { $concatArrays: [ \"$instock\", \"$ordered\" ] } } }")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { items: { $concatArrays: [ \"$instock\", \"$ordered\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -987,7 +1001,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("instock").isArray().as("isAnArray").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { isAnArray: { $isArray: \"$instock\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { isAnArray: { $isArray: \"$instock\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -996,7 +1010,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("instock").isArray()).as("isAnArray")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { isAnArray: { $isArray: \"$instock\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { isAnArray: { $isArray: \"$instock\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1005,7 +1019,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("instock").length()).as("arraySize")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { arraySize: { $size: \"$instock\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { arraySize: { $size: \"$instock\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1014,7 +1028,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("favorites").slice().itemCount(3)).as("threeFavorites")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 3 ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 3 ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1023,7 +1037,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("favorites").slice().offset(2).itemCount(3))
 				.as("threeFavorites").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 2, 3 ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 2, 3 ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1031,7 +1045,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and("$1").asLiteral().as("literalOnly").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { literalOnly: { $literal:  \"$1\"} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { literalOnly: { $literal:  \"$1\"} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1040,7 +1054,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(LiteralOperators.valueOf("$1").asLiteral()).as("literalOnly")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { literalOnly: { $literal:  \"$1\"} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { literalOnly: { $literal:  \"$1\"} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1049,7 +1063,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").dayOfYear()).as("dayOfYear")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { dayOfYear: { $dayOfYear: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { dayOfYear: { $dayOfYear: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1058,7 +1072,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").dayOfMonth()).as("day")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { day: { $dayOfMonth: \"$date\" }} }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { day: { $dayOfMonth: \"$date\" }} }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1067,7 +1081,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").dayOfWeek()).as("dayOfWeek")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { dayOfWeek: { $dayOfWeek: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { dayOfWeek: { $dayOfWeek: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1076,7 +1090,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").year()).as("year")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { year: { $year: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { year: { $year: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1085,7 +1099,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").month()).as("month")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { month: { $month: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { month: { $month: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1094,7 +1108,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").week()).as("week")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { week: { $week: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { week: { $week: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1103,7 +1117,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").hour()).as("hour")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { hour: { $hour: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { hour: { $hour: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1112,7 +1126,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").minute()).as("minute")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { minute: { $minute: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { minute: { $minute: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1121,7 +1135,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").second()).as("second")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { second: { $second: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { second: { $second: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1130,7 +1144,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").millisecond()).as("msec")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { msec: { $millisecond: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { msec: { $millisecond: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1139,8 +1153,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and("date").dateAsFormattedString("%H:%M:%S:%L").as("time")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1149,8 +1163,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").toString("%H:%M:%S:%L")).as("time")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1159,7 +1173,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").sum()).as("quizTotal")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { quizTotal: { $sum: \"$quizzes\"} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { quizTotal: { $sum: \"$quizzes\"} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1168,7 +1182,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("final").sum().and("midterm")).as("examTotal")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: {  examTotal: { $sum: [ \"$final\", \"$midterm\" ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: {  examTotal: { $sum: [ \"$final\", \"$midterm\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1177,7 +1191,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").avg()).as("quizAvg")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { quizAvg: { $avg: \"$quizzes\"} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { quizAvg: { $avg: \"$quizzes\"} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1186,7 +1200,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("final").avg().and("midterm")).as("examAvg")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: {  examAvg: { $avg: [ \"$final\", \"$midterm\" ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: {  examAvg: { $avg: [ \"$final\", \"$midterm\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1195,7 +1209,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").max()).as("quizMax")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { quizMax: { $max: \"$quizzes\"} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { quizMax: { $max: \"$quizzes\"} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1204,7 +1218,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("final").max().and("midterm")).as("examMax")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: {  examMax: { $max: [ \"$final\", \"$midterm\" ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: {  examMax: { $max: [ \"$final\", \"$midterm\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1213,7 +1227,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").min()).as("quizMin")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { quizMin: { $min: \"$quizzes\"} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { quizMin: { $min: \"$quizzes\"} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1222,7 +1236,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("final").min().and("midterm")).as("examMin")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: {  examMin: { $min: [ \"$final\", \"$midterm\" ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: {  examMin: { $min: [ \"$final\", \"$midterm\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1231,7 +1245,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("scores").stdDevPop()).as("stdDev")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { stdDev: { $stdDevPop: \"$scores\"} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { stdDev: { $stdDevPop: \"$scores\"} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1240,7 +1254,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArithmeticOperators.valueOf("scores").stdDevSamp()).as("stdDev")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { stdDev: { $stdDevSamp: \"$scores\"} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { stdDev: { $stdDevSamp: \"$scores\"} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1249,7 +1263,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ComparisonOperators.valueOf("qty").compareToValue(250)).as("cmp250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { cmp250: { $cmp: [\"$qty\", 250]} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { cmp250: { $cmp: [\"$qty\", 250]} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1258,7 +1272,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ComparisonOperators.valueOf("qty").equalToValue(250)).as("eq250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { eq250: { $eq: [\"$qty\", 250]} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { eq250: { $eq: [\"$qty\", 250]} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1267,7 +1281,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ComparisonOperators.valueOf("qty").greaterThanValue(250)).as("gt250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { gt250: { $gt: [\"$qty\", 250]} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { gt250: { $gt: [\"$qty\", 250]} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1276,7 +1290,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ComparisonOperators.valueOf("qty").greaterThanEqualToValue(250)).as("gte250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { gte250: { $gte: [\"$qty\", 250]} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { gte250: { $gte: [\"$qty\", 250]} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1285,7 +1299,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ComparisonOperators.valueOf("qty").lessThanValue(250)).as("lt250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { lt250: { $lt: [\"$qty\", 250]} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { lt250: { $lt: [\"$qty\", 250]} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1294,7 +1308,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ComparisonOperators.valueOf("qty").lessThanEqualToValue(250)).as("lte250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { lte250: { $lte: [\"$qty\", 250]} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { lte250: { $lte: [\"$qty\", 250]} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1303,7 +1317,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ComparisonOperators.valueOf("qty").notEqualToValue(250)).as("ne250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { ne250: { $ne: [\"$qty\", 250]} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { ne250: { $ne: [\"$qty\", 250]} } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1314,8 +1328,8 @@ public class ProjectionOperationUnitTests {
 						.and(ComparisonOperators.valueOf("qty").lessThanValue(250)))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document
-				.parse("{ $project: { result: { $and: [ { $gt: [ \"$qty\", 100 ] }, { $lt: [ \"$qty\", 250 ] } ] } } }")));
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project: { result: { $and: [ { $gt: [ \"$qty\", 100 ] }, { $lt: [ \"$qty\", 250 ] } ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1326,8 +1340,8 @@ public class ProjectionOperationUnitTests {
 						.or(ComparisonOperators.valueOf("qty").lessThanValue(200)))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document
-				.parse("{ $project: { result: { $or: [ { $gt: [ \"$qty\", 250 ] }, { $lt: [ \"$qty\", 200 ] } ] } } }")));
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project: { result: { $or: [ { $gt: [ \"$qty\", 250 ] }, { $lt: [ \"$qty\", 200 ] } ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1336,7 +1350,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(BooleanOperators.not(ComparisonOperators.valueOf("qty").greaterThanValue(250)))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $not: [ { $gt: [ \"$qty\", 250 ] } ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { result: { $not: [ { $gt: [ \"$qty\", 250 ] } ] } } }"));
 	}
 
 	@Test // DATAMONGO-1540
@@ -1347,8 +1361,8 @@ public class ProjectionOperationUnitTests {
 						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
 				.as("adjustedGrades").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse(
-				"{ $project:{ adjustedGrades:{ $map: { input: \"$quizzes\", as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}")));
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project:{ adjustedGrades:{ $map: { input: \"$quizzes\", as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}"));
 	}
 
 	@Test // DATAMONGO-1540
@@ -1359,8 +1373,8 @@ public class ProjectionOperationUnitTests {
 						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
 				.as("adjustedGrades").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse(
-				"{ $project:{ adjustedGrades:{ $map: { input: { $size : [\"foo\"]}, as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}")));
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project:{ adjustedGrades:{ $map: { input: { $size : [\"foo\"]}, as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}"));
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
@@ -1370,8 +1384,8 @@ public class ProjectionOperationUnitTests {
 				ConditionalOperators.ifNull(ArrayOperators.arrayOf("array").elementAt(1)).then("a more sophisticated value"))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse(
-				"{ $project: { result: { $ifNull: [ { $arrayElemAt: [\"$array\", 1] }, \"a more sophisticated value\" ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { result: { $ifNull: [ { $arrayElemAt: [\"$array\", 1] }, \"a more sophisticated value\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1542
@@ -1381,8 +1395,8 @@ public class ProjectionOperationUnitTests {
 				.and(ConditionalOperators.ifNull("field").then(ArrayOperators.arrayOf("array").elementAt(1))).as("result")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project: { result: { $ifNull: [ \"$field\", { $arrayElemAt: [\"$array\", 1] } ] } } }")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project: { result: { $ifNull: [ \"$field\", { $arrayElemAt: [\"$array\", 1] } ] } } }"));
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
@@ -1391,7 +1405,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ConditionalOperators.ifNull("optional").thenValueOf("$never-null")).as("result")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $project: { result: { $ifNull: [ \"$optional\", \"$never-null\" ] } } }")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { result: { $ifNull: [ \"$optional\", \"$never-null\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1538
@@ -1407,14 +1422,13 @@ public class ProjectionOperationUnitTests {
 						.andApply(AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))) //
 				.as("finalTotal").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project:{  \"finalTotal\" : { \"$let\": {" + //
+		assertThat(agg).isEqualTo(Document.parse("{ $project:{  \"finalTotal\" : { \"$let\": {" + //
 						"\"vars\": {" + //
 						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
 						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
 						"}," + //
 						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
-						"}}}}")));
+				"}}}}"));
 	}
 
 	@Test // DATAMONGO-1538
@@ -1431,14 +1445,13 @@ public class ProjectionOperationUnitTests {
 						AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))
 				.as("finalTotal").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $project:{ \"finalTotal\" : { \"$let\": {" + //
+		assertThat(agg).isEqualTo(Document.parse("{ $project:{ \"finalTotal\" : { \"$let\": {" + //
 						"\"vars\": {" + //
 						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
 						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
 						"}," + //
 						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
-						"}}}}")));
+				"}}}}"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1447,8 +1460,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("item").indexOf("foo")).as("byteLocation")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				Matchers.is(Document.parse("{ $project: { byteLocation: { $indexOfBytes: [ \"$item\", \"foo\" ] } } }")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project: { byteLocation: { $indexOfBytes: [ \"$item\", \"foo\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1457,8 +1470,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("item").indexOf("foo").within(new Range<Long>(5L, 9L)))
 				.as("byteLocation").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, isBsonObject().containing("$project.byteLocation.$indexOfBytes.[2]", 5L)
-				.containing("$project.byteLocation.$indexOfBytes.[3]", 9L));
+		assertThat(agg).containsEntry("$project.byteLocation.$indexOfBytes.[2]", 5L)
+				.containsEntry("$project.byteLocation.$indexOfBytes.[3]", 9L);
 	}
 
 	@Test // DATAMONGO-1548
@@ -1467,8 +1480,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("item").indexOfCP("foo")).as("cpLocation")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				Matchers.is(Document.parse("{ $project: { cpLocation: { $indexOfCP: [ \"$item\", \"foo\" ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { cpLocation: { $indexOfCP: [ \"$item\", \"foo\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1477,8 +1489,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("item").indexOfCP("foo").within(new Range<Long>(5L, 9L)))
 				.as("cpLocation").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, isBsonObject().containing("$project.cpLocation.$indexOfCP.[2]", 5L)
-				.containing("$project.cpLocation.$indexOfCP.[3]", 9L));
+		assertThat(agg).containsEntry("$project.cpLocation.$indexOfCP.[2]", 5L)
+				.containsEntry("$project.cpLocation.$indexOfCP.[3]", 9L);
 	}
 
 	@Test // DATAMONGO-1548
@@ -1487,7 +1499,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("city").split(", ")).as("city_state")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { city_state : { $split: [\"$city\", \", \"] }} }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { city_state : { $split: [\"$city\", \", \"] }} }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1496,7 +1508,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("name").length()).as("length")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { \"length\": { $strLenBytes: \"$name\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { \"length\": { $strLenBytes: \"$name\" } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1505,7 +1517,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("name").lengthCP()).as("length")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { \"length\": { $strLenCP: \"$name\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { \"length\": { $strLenCP: \"$name\" } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1514,8 +1526,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("quarter").substringCP(0, 2)).as("yearSubstring")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				Matchers.is(Document.parse("{ $project : { yearSubstring: { $substrCP: [ \"$quarter\", 0, 2 ] } } }")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project : { yearSubstring: { $substrCP: [ \"$quarter\", 0, 2 ] } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1524,7 +1536,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("items").indexOf(2)).as("index")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { index: { $indexOfArray: [ \"$items\", 2 ] } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { index: { $indexOfArray: [ \"$items\", 2 ] } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1533,8 +1545,9 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.RangeOperator.rangeStartingAt(0L).to("distance").withStepSize(25L))
 				.as("rest_stops").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, isBsonObject().containing("$project.rest_stops.$range.[0]", 0L)
-				.containing("$project.rest_stops.$range.[1]", "$distance").containing("$project.rest_stops.$range.[2]", 25L));
+		assertThat(agg).containsEntry("$project.rest_stops.$range.[0]", 0L)
+				.containsEntry("$project.rest_stops.$range.[1]", "$distance")
+				.containsEntry("$project.rest_stops.$range.[2]", 25L);
 	}
 
 	@Test // DATAMONGO-1548
@@ -1543,8 +1556,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("favorites").reverse()).as("reverseFavorites")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				Matchers.is(Document.parse("{ $project : { reverseFavorites: { $reverseArray: \"$favorites\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { reverseFavorites: { $reverseArray: \"$favorites\" } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1555,8 +1567,8 @@ public class ProjectionOperationUnitTests {
 						.reduce(ArithmeticOperators.valueOf("$$value").multiplyBy("$$this")).startingWith(1))
 				.as("results").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse(
-				"{ $project : { \"results\": { $reduce: { input: \"$probabilityArr\", initialValue: 1, in: { $multiply: [ \"$$value\", \"$$this\" ] } } } } }")));
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : { \"results\": { $reduce: { input: \"$probabilityArr\", initialValue: 1, in: { $multiply: [ \"$$value\", \"$$this\" ] } } } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1572,14 +1584,14 @@ public class ProjectionOperationUnitTests {
 						.startingWith(new Document().append("sum", 5).append("product", 2)))
 				.as("results").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse(
-				"{ $project : { \"results\": { $reduce: { input: \"$probabilityArr\", initialValue:  { \"sum\" : 5 , \"product\" : 2} , in: { \"sum\": { $add : [\"$$value.sum\", \"$$this\"] }, \"product\": { $multiply: [ \"$$value.product\", \"$$this\" ] } } } } } }")));
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : { \"results\": { $reduce: { input: \"$probabilityArr\", initialValue:  { \"sum\" : 5 , \"product\" : 2} , in: { \"sum\": { $add : [\"$$value.sum\", \"$$this\"] }, \"product\": { $multiply: [ \"$$value.product\", \"$$this\" ] } } } } } }"));
 	}
 
 	@Test // DATAMONGO-1843
 	public void shouldRenderReduceWithInputAndInExpressionsCorrectly() {
 
-		Document exprected = Document.parse(
+		Document expected = Document.parse(
 				"{ \"$project\" : { \"results\" : { \"$reduce\" : { \"input\" : { \"$slice\" : [\"$array\", 5] }, \"initialValue\" : \"\", \"in\" : { \"$concat\" : [\"$$value\", \"/\", \"$$this\"] } } } } }");
 
 		Reduce reduceEntryPoint = Reduce.arrayOf(Slice.sliceArrayOf("array").itemCount(5)) //
@@ -1590,11 +1602,11 @@ public class ProjectionOperationUnitTests {
 				.reduce(Concat.valueOf("$$value").concat("/").concatValueOf("$$this")) //
 				.startingWith("");
 
-		assertThat(project().and(reduceEntryPoint).as("results").toDocument(Aggregation.DEFAULT_CONTEXT),
-				Matchers.is(exprected));
+		assertThat(project().and(reduceEntryPoint).as("results").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(expected);
 
-		assertThat(project().and(arrayEntryPoint).as("results").toDocument(Aggregation.DEFAULT_CONTEXT),
-				Matchers.is(exprected));
+		assertThat(project().and(arrayEntryPoint).as("results").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(expected);
 	}
 
 	@Test // DATAMONGO-1548
@@ -1608,8 +1620,8 @@ public class ProjectionOperationUnitTests {
 				ArrayOperators.arrayOf(elemAt0).zipWith(elemAt1, elemAt2).useLongestLength().defaultTo(new Object[] { 1, 2 }))
 				.as("transposed").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse(
-				"{ $project : {  transposed: { $zip: { inputs: [ { $arrayElemAt: [ \"$matrix\", 0 ] }, { $arrayElemAt: [ \"$matrix\", 1 ] }, { $arrayElemAt: [ \"$matrix\", 2 ] } ], useLongestLength : true, defaults: [1,2] } } } }")));
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : {  transposed: { $zip: { inputs: [ { $arrayElemAt: [ \"$matrix\", 0 ] }, { $arrayElemAt: [ \"$matrix\", 1 ] }, { $arrayElemAt: [ \"$matrix\", 2 ] } ], useLongestLength : true, defaults: [1,2] } } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1618,8 +1630,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ArrayOperators.arrayOf("in_stock").containsValue("bananas")).as("has_bananas")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				Matchers.is(Document.parse("{ $project : { has_bananas : { $in : [\"bananas\", \"$in_stock\" ] } } }")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project : { has_bananas : { $in : [\"bananas\", \"$in_stock\" ] } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1628,7 +1640,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("birthday").isoDayOfWeek()).as("dayOfWeek")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { dayOfWeek: { $isoDayOfWeek: \"$birthday\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { dayOfWeek: { $isoDayOfWeek: \"$birthday\" } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1637,7 +1649,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").isoWeek()).as("weekNumber")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { weekNumber: { $isoWeek: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { weekNumber: { $isoWeek: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1646,7 +1658,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DateOperators.dateOf("date").isoWeekYear()).as("yearNumber")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { yearNumber: { $isoWeekYear: \"$date\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { yearNumber: { $isoWeekYear: \"$date\" } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1688,7 +1700,7 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(ConditionalOperators.switchCases(cond1, cond2, cond3).defaultTo("No scores found."))
 				.as("summary").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { summary: {" + expected + "} } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { summary: {" + expected + "} } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1696,7 +1708,7 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = project().and(DataTypeOperators.Type.typeOf("a")).as("a").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, Matchers.is(Document.parse("{ $project : { a: { $type: \"$a\" } } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { a: { $type: \"$a\" } } }"));
 	}
 
 	private static Document exctractOperation(String field, Document fromProjectClause) {
