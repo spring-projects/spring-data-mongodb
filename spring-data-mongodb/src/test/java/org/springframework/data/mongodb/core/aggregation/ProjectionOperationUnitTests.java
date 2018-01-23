@@ -118,7 +118,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationWithoutAlias() {
+	public void arithmeticProjectionOperationWithoutAlias() {
 
 		String fieldName = "a";
 		ProjectionOperationBuilder operation = new ProjectionOperation().and(fieldName).plus(1);
@@ -131,7 +131,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationPlus() {
+	public void arithmeticProjectionOperationPlus() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -145,7 +145,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationMinus() {
+	public void arithmeticProjectionOperationMinus() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -159,7 +159,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationMultiply() {
+	public void arithmeticProjectionOperationMultiply() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -173,7 +173,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationDivide() {
+	public void arithmeticProjectionOperationDivide() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -187,13 +187,13 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
-	public void arithmenticProjectionOperationDivideByZeroException() {
+	public void arithmeticProjectionOperationDivideByZeroException() {
 
 		new ProjectionOperation().and("a").divide(0);
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticProjectionOperationMod() {
+	public void arithmeticProjectionOperationMod() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -238,7 +238,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void arithmenticProjectionOperationModByZeroException() {
+	public void arithmeticProjectionOperationModByZeroException() {
 
 		new ProjectionOperation().and("a").mod(0);
 	}
@@ -1574,7 +1574,7 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1843
 	public void shouldRenderReduceWithInputAndInExpressionsCorrectly() {
 
-		DBObject exprected = (DBObject) JSON.parse(
+		DBObject expected = (DBObject) JSON.parse(
 				"{ \"$project\" : { \"results\" : { \"$reduce\" : { \"input\" : { \"$slice\" : [\"$array\", 5] }, \"initialValue\" : \"\", \"in\" : { \"$concat\" : [\"$$value\", \"/\", \"$$this\"] } } } } }");
 
 		Reduce reduceEntryPoint = Reduce.arrayOf(Slice.sliceArrayOf("array").itemCount(5)) //
@@ -1586,10 +1586,10 @@ public class ProjectionOperationUnitTests {
 				.startingWith("");
 
 		assertThat(project().and(reduceEntryPoint).as("results").toDBObject(Aggregation.DEFAULT_CONTEXT),
-				Matchers.is(exprected));
+				is(expected));
 
 		assertThat(project().and(arrayEntryPoint).as("results").toDBObject(Aggregation.DEFAULT_CONTEXT),
-				Matchers.is(exprected));
+				is(expected));
 	}
 
 	@Test // DATAMONGO-1548

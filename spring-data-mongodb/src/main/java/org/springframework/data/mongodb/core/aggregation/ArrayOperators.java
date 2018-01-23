@@ -33,6 +33,7 @@ import com.mongodb.DBObject;
  * Gateway to {@literal array} aggregation operations.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.0
  */
 public class ArrayOperators {
@@ -249,7 +250,8 @@ public class ArrayOperators {
 
 				@Override
 				public Reduce startingWith(Object initialValue) {
-					return (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
+					return (usesFieldRef() ? Reduce.arrayOf(fieldReference)
+							: Reduce.arrayOf(expression))
 							.withInitialValue(initialValue).reduce(expressions);
 				}
 			};
@@ -577,7 +579,7 @@ public class ArrayOperators {
 
 			/**
 			 * Creates new {@link InputBuilder}.
-			 * 
+			 *
 			 * @return
 			 */
 			public static InputBuilder newBuilder() {
