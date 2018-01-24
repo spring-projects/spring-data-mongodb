@@ -1,6 +1,16 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.3.RELEASE (2018-01-24)
+---------------------------------------------
+* DATAMONGO-1858 - Fix line endings.
+* DATAMONGO-1850 - GridFsResource.getContentType() throws NullPointerException on absent metadata.
+* DATAMONGO-1843 - Aggregation operator $reduce with ArrayOperators.Reduce produce a wrong Document.
+* DATAMONGO-1831 - Failure to read Scala collection types in MappingMongoConverter.
+* DATAMONGO-1830 - Release 2.0.3 (Kay SR3).
+* DATAMONGO-1824 - Assert compatibility with MongoDB Server 3.6.
+
+
 Changes in version 1.10.10.RELEASE (2018-01-24)
 -----------------------------------------------
 * DATAMONGO-1843 - Aggregation operator $reduce with ArrayOperators.Reduce produce a wrong Document.
