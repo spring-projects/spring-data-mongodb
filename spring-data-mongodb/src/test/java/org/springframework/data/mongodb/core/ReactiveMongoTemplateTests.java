@@ -1044,6 +1044,42 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
+	public void mapsReservedWordsCorrectly() throws InterruptedException {
+
+		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
+		Disposable disposable = template
+				.changeStream(newAggregation(Person.class, match(where("operationType").is("replace"))), Person.class,
+						ChangeStreamOptions.empty(), "person")
+				.doOnNext(documents::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link to the collection.
+
+		Person person1 = new Person("Spring", 38);
+		Person person2 = new Person("Data", 37);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+
+		Person replacement = new Person(person2.getId(), "BDognoM");
+		replacement.setAge(person2.getAge());
+
+		StepVerifier.create(template.save(replacement)).expectNextCount(1).verifyComplete();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		try {
+			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+					.containsExactly(replacement);
+		} finally {
+			disposable.dispose();
+		}
+	}
+
+	@Test // DATAMONGO-1803
 	public void changeStreamEventsShouldBeResumedCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();

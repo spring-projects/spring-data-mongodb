@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 import static edu.umd.cs.mtc.TestFramework.*;
 import static org.assertj.core.api.Assertions.*;
@@ -26,12 +26,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.mongodb.core.DefaultMessageListenerContainer;
-import org.springframework.data.mongodb.core.MessageListener;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.Subscription;
-import org.springframework.data.mongodb.core.SubscriptionRequest;
-import org.springframework.data.mongodb.core.Task;
 import org.springframework.util.ErrorHandler;
 
 /**

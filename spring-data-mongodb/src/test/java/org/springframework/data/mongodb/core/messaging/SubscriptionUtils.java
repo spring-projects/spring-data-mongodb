@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import org.springframework.data.mongodb.core.Message;
-import org.springframework.data.mongodb.core.MessageListener;
-import org.springframework.data.mongodb.core.Subscription;
 
 /**
  * Utilities for testing long running asnyc message retrieval.
@@ -85,14 +81,7 @@ class SubscriptionUtils {
 	 * @throws InterruptedException
 	 */
 	static void awaitSubscription(Subscription subscription, Duration timeout) throws InterruptedException {
-
-		long passedMs = 0;
-		long maxMs = timeout.toMillis();
-
-		while (!subscription.isActive() && passedMs < maxMs) {
-			Thread.sleep(10);
-			passedMs += 10;
-		}
+		subscription.await(timeout);
 	}
 
 	/**
@@ -143,12 +132,12 @@ class SubscriptionUtils {
 	 *
 	 * @param <M>
 	 */
-	static class CollectingMessageListener<M extends Message> implements MessageListener<M> {
+	static class CollectingMessageListener<S, T> implements MessageListener<S, T> {
 
-		private volatile List<M> messages = new ArrayList<>();
+		private volatile List<Message<S, T>> messages = new ArrayList<>();
 
 		@Override
-		public void onMessage(M message) {
+		public void onMessage(Message<S, T> message) {
 			messages.add(message);
 		}
 
@@ -156,19 +145,19 @@ class SubscriptionUtils {
 			return messages.size();
 		}
 
-		public List<M> getMessages() {
+		public List<Message<S, T>> getMessages() {
 			return messages;
 		}
 
-		public M getMessage(int nr) {
+		public Message<S, T> getMessage(int nr) {
 			return messages.get(nr);
 		}
 
-		public M getFirstMessage() {
+		public Message<S, T> getFirstMessage() {
 			return messages.get(0);
 		}
 
-		public M getLastMessage() {
+		public Message<S, T> getLastMessage() {
 			return messages.get(messages.size() - 1);
 		}
 	}

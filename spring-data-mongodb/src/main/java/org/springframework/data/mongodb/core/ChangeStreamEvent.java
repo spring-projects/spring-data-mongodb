@@ -21,6 +21,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.messaging.Message;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -33,44 +35,44 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
  * @since 2.1
  */
 @EqualsAndHashCode
-public class ChangeStreamEvent<T> implements Message<ChangeStreamDocument<Document>, T> {
+public class ChangeStreamEvent<T> {
 
-	private final ChangeStreamDocument<Document> raw;
-	private final MessageProperties messageProperties;
+	@Nullable private final ChangeStreamDocument<Document> raw;
 
 	private final Class<T> targetType;
 	private final MongoConverter converter;
 	private final AtomicReference<T> converted = new AtomicReference<>();
 
 	/**
-	 * @param raw must not be {@literal null}.
+	 * @param raw can be {@literal null}.
 	 * @param messageProperties must not be {@literal null}.
 	 * @param targetType must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 */
-	ChangeStreamEvent(ChangeStreamDocument<Document> raw, MessageProperties messageProperties, Class<T> targetType,
-			MongoConverter converter) {
+	public ChangeStreamEvent(ChangeStreamDocument<Document> raw, Class<T> targetType, MongoConverter converter) {
 
 		this.raw = raw;
-		this.messageProperties = messageProperties;
 		this.targetType = targetType;
 		this.converter = converter;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.Message#getRaw()
+	/**
+	 * Get the raw {@link ChangeStreamDocument} as emitted by the driver.
+	 *
+	 * @return can be {@literal null}.
 	 */
-	@Override
+	@Nullable
 	public ChangeStreamDocument<Document> getRaw() {
 		return raw;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.Message#getBody()
+	/**
+	 * Get the potentially converted {@link ChangeStreamDocument#getFullDocument()}.
+	 *
+	 * @return {@literal null} when {@link #getRaw()} or {@link ChangeStreamDocument#getFullDocument()} is
+	 *         {@literal null}.
 	 */
-	@Override
+	@Nullable
 	public T getBody() {
 
 		if (raw == null) {
@@ -82,15 +84,6 @@ public class ChangeStreamEvent<T> implements Message<ChangeStreamDocument<Docume
 		}
 
 		return getConverted();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.Message#getMessageProperties()
-	 */
-	@Override
-	public MessageProperties getProperties() {
-		return messageProperties;
 	}
 
 	private T getConverted() {
@@ -118,7 +111,6 @@ public class ChangeStreamEvent<T> implements Message<ChangeStreamDocument<Docume
 
 	@Override
 	public String toString() {
-		return "ChangeStreamEvent {" + "raw=" + raw + ", targetType=" + targetType + ", messageProperties="
-				+ messageProperties + '}';
+		return "ChangeStreamEvent {" + "raw=" + raw + ", targetType=" + targetType + '}';
 	}
 }

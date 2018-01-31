@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
+
+import org.springframework.dao.DataAccessResourceFailureException;
 
 /**
- * Listener interface to receive delivery of {@link Message Messages}.
+ * Cancelable allows stopping long running tasks and freeing underlying resources.
  *
  * @author Christoph Strobl
  * @since 2.1
  */
-@FunctionalInterface
-interface MessageListener<M extends Message> {
+public interface Cancelable {
 
 	/**
-	 * Callback invoked on receiving {@link Message}.
+	 * Abort and free resources.
 	 *
-	 * @param message never {@literal null}.
+	 * @throws DataAccessResourceFailureException
 	 */
-	void onMessage(M message);
+	void cancel() throws DataAccessResourceFailureException;
 }

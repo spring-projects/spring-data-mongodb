@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 import java.util.Optional;
 
 import org.springframework.context.SmartLifecycle;
-import org.springframework.data.mongodb.core.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.util.ErrorHandler;
 
 /**
@@ -39,7 +39,7 @@ interface MessageListenerContainer extends SmartLifecycle {
 	 * <code>
 	 *     MessageListenerContainer container = ...
 	 *
-	 *     MessageListener<Message<ChangeStreamDocument<Document>, Object>> messageListener = (message) -> message....
+	 *     MessageListener<ChangeStreamDocument<Document>, Object> messageListener = (message) -> message....
 	 *     ChangeStreamRequest<Object> request = new ChangeStreamRequest<>(messageListener, () -> "collection-name");
 	 *
 	 *     Subscription subscription = container.register(request);
@@ -51,8 +51,7 @@ interface MessageListenerContainer extends SmartLifecycle {
 	 * @param request must not be {@literal null}.
 	 * @return never {@literal null}.
 	 */
-	default <M extends Message<?, Object>> Subscription register(
-			SubscriptionRequest<M, ? extends RequestOptions> request) {
+	default <T> Subscription register(SubscriptionRequest<T, Object, ? extends RequestOptions> request) {
 		return register(request, Object.class);
 	}
 
@@ -65,7 +64,7 @@ interface MessageListenerContainer extends SmartLifecycle {
 	 * <code>
 	 *     MessageListenerContainer container = ...
 	 *     
-	 *     MessageListener<Message<ChangeStreamDocument<Document>, Document>> messageListener = (message) -> message.getBody().toJson();
+	 *     MessageListener<ChangeStreamDocument<Document>, Document> messageListener = (message) -> message.getBody().toJson();
 	 *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener, () -> "collection-name");
 	 *     
 	 *     Subscription subscription = container.register(request, Document.class);
@@ -87,8 +86,7 @@ interface MessageListenerContainer extends SmartLifecycle {
 	 * @param type the exact target or a more concrete type of the {@link Message#getBody()}.
 	 * @return never {@literal null}.
 	 */
-	<T, M extends Message<?, ? super T>> Subscription register(SubscriptionRequest<M, ? extends RequestOptions> request,
-			Class<T> bodyType);
+	<S, T> Subscription register(SubscriptionRequest<S, ? super T, ? extends RequestOptions> request, Class<T> bodyType);
 
 	/**
 	 * Register a new {@link SubscriptionRequest} in the container. If the {@link MessageListenerContainer#isRunning() is
@@ -99,7 +97,7 @@ interface MessageListenerContainer extends SmartLifecycle {
 	 * <code>
 	 *     MessageListenerContainer container = ...
 	 *
-	 *     MessageListener<Message<ChangeStreamDocument<Document>, Document>> messageListener = (message) -> message.getBody().toJson();
+	 *     MessageListener<ChangeStreamDocument<Document>, Document> messageListener = (message) -> message.getBody().toJson();
 	 *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener, () -> "collection-name");
 	 *
 	 *     Subscription subscription = container.register(request, Document.class);
@@ -123,8 +121,8 @@ interface MessageListenerContainer extends SmartLifecycle {
 	 *          reason.
 	 * @return never {@literal null}.
 	 */
-	<T, M extends Message<?, ? super T>> Subscription register(SubscriptionRequest<M, ? extends RequestOptions> request,
-			Class<T> bodyType, ErrorHandler errorHandler);
+	<S, T> Subscription register(SubscriptionRequest<S, ? super T, ? extends RequestOptions> request, Class<T> bodyType,
+			ErrorHandler errorHandler);
 
 	/**
 	 * Unregister a given {@link Subscription} from the container. This prevents the {@link Subscription} to be restarted
@@ -143,5 +141,5 @@ interface MessageListenerContainer extends SmartLifecycle {
 	 * @param request must not be {@literal null}.
 	 * @return {@link Optional#empty()} if not set.
 	 */
-	Optional<Subscription> lookup(SubscriptionRequest<?, ?> request);
+	Optional<Subscription> lookup(SubscriptionRequest<?, ?, ?> request);
 }

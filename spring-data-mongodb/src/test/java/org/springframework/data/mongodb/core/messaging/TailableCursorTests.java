@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
+import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.core.SubscriptionUtils.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
@@ -27,9 +27,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.CollectionOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.Message.MessageProperties;
-import org.springframework.data.mongodb.core.TailableCursorRequest.TailableCursorRequestOptions;
+import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
+import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions;
 
 import com.mongodb.MongoClient;
 
@@ -85,7 +87,7 @@ public class TailableCursorTests {
 	@Test // DATAMONGO-1803
 	public void readsDocumentMessageCorrectly() throws InterruptedException {
 
-		CollectingMessageListener<Message<Document, Document>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<Document, Document> messageListener = new CollectingMessageListener<>();
 
 		awaitSubscription(
 				container.register(new TailableCursorRequest<>(messageListener, () -> COLLECTION_NAME), Document.class));
@@ -106,7 +108,7 @@ public class TailableCursorTests {
 	@Test // DATAMONGO-1803
 	public void convertsMessageCorrectly() throws InterruptedException {
 
-		CollectingMessageListener<Message<Document, User>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<Document, User> messageListener = new CollectingMessageListener<>();
 
 		awaitSubscription(
 				container.register(new TailableCursorRequest<>(messageListener, () -> COLLECTION_NAME), User.class));
@@ -127,7 +129,7 @@ public class TailableCursorTests {
 	@Test // DATAMONGO-1803
 	public void filtersMessagesCorrectly() throws InterruptedException {
 
-		CollectingMessageListener<Message<Document, User>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<Document, User> messageListener = new CollectingMessageListener<>();
 
 		awaitSubscription(container.register(new TailableCursorRequest<>(messageListener,
 				TailableCursorRequestOptions.builder().collection(COLLECTION_NAME).filter(query(where("age").is(7))).build()),
@@ -145,7 +147,7 @@ public class TailableCursorTests {
 	@Test // DATAMONGO-1803
 	public void mapsFilterToDomainType() throws InterruptedException {
 
-		CollectingMessageListener<Message<Document, User>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<Document, User> messageListener = new CollectingMessageListener<>();
 
 		awaitSubscription(
 				container
@@ -169,7 +171,7 @@ public class TailableCursorTests {
 		template.save(jellyBelly);
 		template.save(huffyFluffy);
 
-		CollectingMessageListener<Message<Document, User>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<Document, User> messageListener = new CollectingMessageListener<>();
 
 		awaitSubscription(
 				container.register(new TailableCursorRequest<>(messageListener, () -> COLLECTION_NAME), User.class));

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -46,7 +46,7 @@ public interface Message<S, T> {
 	S getRaw();
 
 	/**
-	 * The converted message body if applicable.
+	 * The converted message body if available.
 	 *
 	 * @return can be {@literal null}.
 	 */

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
-import org.springframework.data.mongodb.core.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 
 /**
  * The actual {@link SubscriptionRequest} sent to the {@link MessageListenerContainer}. This wrapper type allows passing
@@ -26,14 +26,14 @@ import org.springframework.data.mongodb.core.SubscriptionRequest.RequestOptions;
  * @author Christoph Strobl
  * @since 2.1
  */
-interface SubscriptionRequest<M extends Message, O extends RequestOptions> {
+interface SubscriptionRequest<S, T, O extends RequestOptions> {
 
 	/**
 	 * Obtain the {@link MessageListener} to publish {@link Message messages} to.
 	 *
 	 * @return never {@literal null}.
 	 */
-	MessageListener<M> getMessageListener();
+	MessageListener<S, T> getMessageListener();
 
 	/**
 	 * Get the {@link RequestOptions} specifying the requests behaviour.

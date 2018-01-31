@@ -24,17 +24,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -73,7 +64,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
-import org.springframework.data.mongodb.core.Message.MessageProperties;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -1805,7 +1795,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		AggregationOperationContext context = filter instanceof TypedAggregation ? new TypeBasedAggregationOperationContext(
 				((TypedAggregation) filter).getInputType(), mappingContext, queryMapper) : Aggregation.DEFAULT_CONTEXT;
 
-		return changeStream(filter.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument")),
+		return changeStream(
+				filter.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
+						Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns"))),
 				resultType, options, collectionName);
 	}
 
@@ -1832,8 +1824,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		if (options.getCollation().isPresent()) {
 			publisher = publisher.collation(options.getCollation().map(Collation::toMongoCollation).get());
 		}
-		return Flux.from(publisher).map(document -> new ChangeStreamEvent(document,
-				MessageProperties.builder().collectionName(collectionName).build(), resultType, getConverter()));
+		return Flux.from(publisher).map(document -> new ChangeStreamEvent(document, resultType, getConverter()));
 	}
 
 	/*

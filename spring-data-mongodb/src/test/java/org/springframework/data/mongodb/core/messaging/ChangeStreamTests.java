@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.SubscriptionUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -34,10 +34,12 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.ChangeStreamRequest.ChangeStreamRequestOptions;
-import org.springframework.data.mongodb.core.Message.MessageProperties;
-import org.springframework.data.mongodb.core.SubscriptionUtils.*;
+import org.springframework.data.mongodb.core.ChangeStreamOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
+import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
+import org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
@@ -96,7 +98,7 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void readsPlainDocumentMessageCorrectly() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, Document>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener, () -> "user");
 
 		Subscription subscription = container.register(request, Document.class);
@@ -118,9 +120,12 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void useSimpleAggregationToFilterMessages() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, User>> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener, new ChangeStreamRequestOptions(
-				"user", ChangeStreamOptions.builder().filter(newAggregation(match(where("age").is(7)))).build()));
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+				.collection("user") //
+				.publishTo(messageListener) //
+				.filter(newAggregation(match(where("age").is(7)))) //
+				.build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -140,12 +145,13 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void useAggregationToFilterMessages() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, User>> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener,
-				new ChangeStreamRequestOptions("user",
-						ChangeStreamOptions.builder().filter(newAggregation(match(
-								new Criteria().orOperator(where("user_name").is("huffyFluffy"), where("user_name").is("jellyBelly")))))
-								.build()));
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+				.collection("user") //
+				.publishTo(messageListener) //
+				.filter(newAggregation(match(
+						new Criteria().orOperator(where("user_name").is("huffyFluffy"), where("user_name").is("jellyBelly"))))) //
+				.build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -165,12 +171,13 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void mapsTypedAggregationToFilterMessages() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, User>> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener,
-				new ChangeStreamRequestOptions("user",
-						ChangeStreamOptions.builder().filter(newAggregation(User.class, match(
-								new Criteria().orOperator(where("userName").is("huffyFluffy"), where("userName").is("jellyBelly")))))
-								.build()));
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+				.collection("user") //
+				.publishTo(messageListener) //
+				.filter(newAggregation(User.class,
+						match(new Criteria().orOperator(where("userName").is("huffyFluffy"), where("userName").is("jellyBelly"))))) //
+				.build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -188,12 +195,45 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
+	public void mapsReservedWordsCorrectly() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+				.collection("user") //
+				.publishTo(messageListener) //
+				.filter(newAggregation(User.class, match(where("operationType").is("replace")))) //
+				.build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.save(jellyBelly);
+		template.save(sugarSplashy);
+
+		User replacement = new User();
+		replacement.id = jellyBelly.id;
+		replacement.userName = new StringBuilder(jellyBelly.userName).reverse().toString();
+		replacement.age = jellyBelly.age;
+
+		template.save(replacement);
+
+		awaitMessages(messageListener);
+
+		List<User> messageBodies = messageListener.getMessages().stream().map(Message::getBody)
+				.collect(Collectors.toList());
+
+		assertThat(messageBodies).hasSize(1).containsExactly(replacement);
+	}
+
+	@Test // DATAMONGO-1803
 	public void plainAggregationPipelineToFilterMessages() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, User>> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener,
-				new ChangeStreamRequestOptions("user", ChangeStreamOptions.builder()
-						.filter(new Document("$match", new Document("fullDocument.user_name", "sugarSplashy"))).build()));
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+				.collection("user") //
+				.publishTo(messageListener) //
+				.filter(new Document("$match", new Document("fullDocument.user_name", "sugarSplashy"))) //
+				.build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -213,7 +253,7 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void resumesCorrectly() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, User>> messageListener1 = new CollectingMessageListener<>();
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener1 = new CollectingMessageListener<>();
 		Subscription subscription1 = container.register(new ChangeStreamRequest<>(messageListener1, () -> "user"),
 				User.class);
 
@@ -227,9 +267,9 @@ public class ChangeStreamTests {
 
 		BsonDocument resumeToken = messageListener1.getFirstMessage().getRaw().getResumeToken();
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, User>> messageListener2 = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> subSequentRequest = new ChangeStreamRequest<>(messageListener2,
-				new ChangeStreamRequestOptions("user", ChangeStreamOptions.builder().resumeToken(resumeToken).build()));
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener2 = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> subSequentRequest = ChangeStreamRequest.builder().collection("user")
+				.publishTo(messageListener2).resumeToken(resumeToken).build();
 
 		Subscription subscription2 = container.register(subSequentRequest, User.class);
 		awaitSubscription(subscription2);
@@ -245,7 +285,7 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void readsAndConvertsMessageBodyCorrectly() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, User>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener, () -> "user");
 
 		Subscription subscription = container.register(request, User.class);
@@ -266,7 +306,7 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void readsAndConvertsUpdateMessageBodyCorrectly() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, User>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener, () -> "user");
 
 		Subscription subscription = container.register(request, User.class);
@@ -285,7 +325,7 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void readsOnlyDiffForUpdateWhenNotMappedToDomainType() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, Document>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener, () -> "user");
 
 		Subscription subscription = container.register(request, Document.class);
@@ -305,7 +345,7 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void readsOnlyDiffForUpdateWhenOptionsDeclareDefaultExplicitly() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, User>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener, new ChangeStreamRequestOptions(
 				"user", ChangeStreamOptions.builder().fullDocumentLookup(FullDocument.DEFAULT).build()));
 
@@ -325,7 +365,7 @@ public class ChangeStreamTests {
 	@Test // DATAMONGO-1803
 	public void readsFullDocumentForUpdateWhenNotMappedToDomainTypeButLookupSpecified() throws InterruptedException {
 
-		CollectingMessageListener<Message<ChangeStreamDocument<Document>, Document>> messageListener = new CollectingMessageListener<>();
+		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener,
 				new ChangeStreamRequestOptions("user", ChangeStreamOptions.builder().returnFullDocumentOnUpdate().build()));
 

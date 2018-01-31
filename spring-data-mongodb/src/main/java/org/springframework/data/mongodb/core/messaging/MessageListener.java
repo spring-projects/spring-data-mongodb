@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 /**
+ * Listener interface to receive delivery of {@link Message Messages}.
+ *
  * @author Christoph Strobl
  * @since 2.1
  */
-interface Subscription extends Cancelable {
+@FunctionalInterface
+public interface MessageListener<S, T> {
 
 	/**
-	 * @return {@literal true} if the subscription is currently executed.
+	 * Callback invoked on receiving {@link Message}.
+	 *
+	 * @param message never {@literal null}.
 	 */
-	boolean isActive();
-
-	// TODO: think about default void await() blocking until the subscription becomes active
+	void onMessage(Message<S, T> message);
 }

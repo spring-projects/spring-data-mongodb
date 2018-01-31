@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.mongodb.core.ChangeStreamRequest.ChangeStreamRequestOptions;
-import org.springframework.data.mongodb.core.Message.MessageProperties;
-import org.springframework.data.mongodb.core.SubscriptionRequest.RequestOptions;
-import org.springframework.data.mongodb.core.TailableCursorRequest.TailableCursorRequestOptions;
+import org.springframework.data.mongodb.core.ChangeStreamEvent;
+import org.springframework.data.mongodb.core.ChangeStreamOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
@@ -33,6 +35,10 @@ import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOpe
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
+import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
+import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -64,6 +70,7 @@ class TaskFactory {
 	TaskFactory(MongoTemplate template) {
 
 		Assert.notNull(template, "Template must not be null!");
+
 		this.tempate = template;
 	}
 
@@ -76,7 +83,7 @@ class TaskFactory {
 	 * @return must not be {@literal null}. Consider {@code Object.class}.
 	 * @throws IllegalArgumentException in case the {@link SubscriptionRequest} is unknown.
 	 */
-	Task forRequest(SubscriptionRequest<?, ?> request, Class<?> targetType, ErrorHandler errorHandler) {
+	Task forRequest(SubscriptionRequest<?, ?, ?> request, Class<?> targetType, ErrorHandler errorHandler) {
 
 		Assert.notNull(request, "Request must not be null!");
 		Assert.notNull(targetType, "TargetType must not be null!");
@@ -141,6 +148,9 @@ class TaskFactory {
 						Thread.sleep(10);
 					}
 				} catch (InterruptedException e) {
+					synchronized (lifecycleMonitor) {
+						state = State.CANCELLED;
+					}
 					Thread.interrupted();
 				} catch (Exception e) {
 
@@ -194,9 +204,14 @@ class TaskFactory {
 				}
 
 				if (!valid) {
+
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
+
+						synchronized (lifecycleMonitor) {
+							state = State.CANCELLED;
+						}
 						Thread.interrupted();
 					}
 				}
@@ -280,6 +295,9 @@ class TaskFactory {
 	 */
 	static class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>> {
 
+		private final Set<String> blacklist = new HashSet<>(
+				Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns"));
+
 		private final QueryMapper queryMapper;
 		private final MongoConverter mongoConverter;
 
@@ -354,7 +372,7 @@ class TaskFactory {
 								template.getConverter().getMappingContext(), queryMapper)
 						: Aggregation.DEFAULT_CONTEXT;
 
-				return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument"));
+				return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", blacklist));
 			} else if (filter instanceof List) {
 				return (List<Document>) filter;
 			} else {
@@ -370,8 +388,42 @@ class TaskFactory {
 			MongoNamespace namespace = Optional.ofNullable(source.getNamespace())
 					.orElse(new MongoNamespace("unknown", options.getCollectionName()));
 
-			return new ChangeStreamEvent(source, MessageProperties.builder().databaseName(namespace.getDatabaseName())
-					.collectionName(namespace.getCollectionName()).build(), targetType, mongoConverter);
+			return new ChangeStreamEventMessage(new ChangeStreamEvent(source, targetType, mongoConverter), MessageProperties
+					.builder().databaseName(namespace.getDatabaseName()).collectionName(namespace.getCollectionName()).build());
+		}
+
+		/**
+		 * {@link Message} implementation for ChangeStreams
+		 *
+		 * @since 2.1
+		 */
+		static class ChangeStreamEventMessage<T> implements Message<ChangeStreamDocument<Document>, T> {
+
+			private final ChangeStreamEvent<T> delegate;
+			private final MessageProperties messageProperties;
+
+			public ChangeStreamEventMessage(ChangeStreamEvent<T> event, MessageProperties messageProperties) {
+
+				this.delegate = event;
+				this.messageProperties = messageProperties;
+			}
+
+			@Nullable
+			@Override
+			public ChangeStreamDocument<Document> getRaw() {
+				return delegate.getRaw();
+			}
+
+			@Nullable
+			@Override
+			public T getBody() {
+				return delegate.getBody();
+			}
+
+			@Override
+			public MessageProperties getProperties() {
+				return this.messageProperties;
+			}
 		}
 	}
 

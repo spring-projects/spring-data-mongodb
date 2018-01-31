@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -28,18 +28,21 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.mongodb.core.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
 
 /**
- * Simple {@link Executor} based {@link MessageListenerContainer} implementation.
+ * Simple {@link Executor} based {@link MessageListenerContainer} implementation for running {@link Task tasks} like
+ * listening to MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a> and tailable
+ * cursors.
  *
  * @author Christoph Strobl
  * @since 2.1
  */
-class DefaultMessageListenerContainer implements MessageListenerContainer {
+public class DefaultMessageListenerContainer implements MessageListenerContainer {
 
 	private final Executor taskExecutor;
 
@@ -52,21 +55,37 @@ class DefaultMessageListenerContainer implements MessageListenerContainer {
 	private final TaskFactory taskFactory;
 	private final Optional<ErrorHandler> errorHandler;
 
-	DefaultMessageListenerContainer(MongoTemplate template) {
+	/**
+	 * Create a new {@link DefaultMessageListenerContainer}.
+	 *
+	 * @param template must not be {@literal null}.
+	 */
+	public DefaultMessageListenerContainer(MongoTemplate template) {
 		this(template, new SimpleAsyncTaskExecutor());
 	}
 
-	DefaultMessageListenerContainer(MongoTemplate template, Executor taskExecutor) {
+	/**
+	 * Create a new {@link DefaultMessageListenerContainer} running {@link Task tasks} via the given
+	 * {@literal taskExecutor}.
+	 *
+	 * @param template must not be {@literal null}.
+	 * @param taskExecutor must not be {@literal null}.
+	 */
+	public DefaultMessageListenerContainer(MongoTemplate template, Executor taskExecutor) {
 		this(template, taskExecutor, null);
 	}
 
 	/**
+	 * Create a new {@link DefaultMessageListenerContainer} running {@link Task tasks} via the given
+	 * {@literal taskExecutor} delegating {@link Exception errors} to the given {@link ErrorHandler}.
+	 *
 	 * @param template must not be {@literal null}. Used by the {@link TaskFactory}.
 	 * @param taskExecutor must not be {@literal null}.
 	 * @param errorHandler the default {@link ErrorHandler} to be used by tasks inside the container. Can be
 	 *          {@literal null}.
 	 */
-	DefaultMessageListenerContainer(MongoTemplate template, Executor taskExecutor, @Nullable ErrorHandler errorHandler) {
+	public DefaultMessageListenerContainer(MongoTemplate template, Executor taskExecutor,
+			@Nullable ErrorHandler errorHandler) {
 
 		Assert.notNull(template, "Template must not be null!");
 		Assert.notNull(taskExecutor, "TaskExecutor must not be null!");
@@ -164,8 +183,8 @@ class DefaultMessageListenerContainer implements MessageListenerContainer {
 	 * @see org.springframework.data.mongodb.monitor.MessageListenerContainer#register(org.springframework.data.mongodb.monitor.SubscriptionRequest, java.lang.Class)
 	 */
 	@Override
-	public <T, M extends Message<?, ? super T>> Subscription register(
-			SubscriptionRequest<M, ? extends RequestOptions> request, Class<T> bodyType) {
+	public <S, T> Subscription register(SubscriptionRequest<S, ? super T, ? extends RequestOptions> request,
+			Class<T> bodyType) {
 
 		return register(request, bodyType, errorHandler.orElseGet(
 				() -> new DecoratingLoggingErrorHandler((exception) -> lookup(request).ifPresent(Subscription::cancel))));
@@ -176,8 +195,8 @@ class DefaultMessageListenerContainer implements MessageListenerContainer {
 	 * @see org.springframework.data.mongodb.monitor.MessageListenerContainer#register(org.springframework.data.mongodb.monitor.SubscriptionRequest, java.lang.Class, org.springframework.util.ErrorHandler)
 	 */
 	@Override
-	public <T, M extends Message<?, ? super T>> Subscription register(
-			SubscriptionRequest<M, ? extends RequestOptions> request, Class<T> bodyType, ErrorHandler errorHandler) {
+	public <S, T> Subscription register(SubscriptionRequest<S, ? super T, ? extends RequestOptions> request,
+			Class<T> bodyType, ErrorHandler errorHandler) {
 
 		return register(request, taskFactory.forRequest(request, bodyType, errorHandler));
 	}
@@ -187,7 +206,7 @@ class DefaultMessageListenerContainer implements MessageListenerContainer {
 	 * @see org.springframework.data.mongodb.monitor.MessageListenerContainer#lookup(org.springframework.data.mongodb.monitor.SubscriptionRequest)
 	 */
 	@Override
-	public Optional<Subscription> lookup(SubscriptionRequest<?, ?> request) {
+	public Optional<Subscription> lookup(SubscriptionRequest<?, ?, ?> request) {
 		synchronized (lifecycleMonitor) {
 			return Optional.ofNullable(subscriptions.get(request));
 		}
@@ -282,5 +301,4 @@ class DefaultMessageListenerContainer implements MessageListenerContainer {
 			delegate.handleError(t);
 		}
 	}
-
 }

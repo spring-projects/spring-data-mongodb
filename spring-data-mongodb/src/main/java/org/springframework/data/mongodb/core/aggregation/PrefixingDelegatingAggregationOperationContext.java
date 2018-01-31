@@ -17,15 +17,20 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 
 /**
- * {@link AggregationOperationContext} implementation prefixing non command keys with the given prefix. Useful when
- * mapping fields to domain specific types while having to prefix keys for query purpose.
+ * {@link AggregationOperationContext} implementation prefixing non command keys on root level with the given prefix.
+ * Useful when mapping fields to domain specific types while having to prefix keys for query purpose.
+ * <p />
+ * Fields to be excluded from prefixing my be added to a {@literal blacklist}.
  *
  * @author Christoph Strobl
  * @since 2.1
@@ -34,11 +39,18 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 
 	private final AggregationOperationContext delegate;
 	private final String prefix;
+	private final Set<String> blacklist;
 
 	public PrefixingDelegatingAggregationOperationContext(AggregationOperationContext delegate, String prefix) {
+		this(delegate, prefix, Collections.emptySet());
+	}
+
+	public PrefixingDelegatingAggregationOperationContext(AggregationOperationContext delegate, String prefix,
+			Collection<String> blacklist) {
 
 		this.delegate = delegate;
 		this.prefix = prefix;
+		this.blacklist = new HashSet<>(blacklist);
 	}
 
 	/*
@@ -73,7 +85,8 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 		Document result = new Document();
 		for (Map.Entry<String, Object> entry : source.entrySet()) {
 
-			String key = entry.getKey().startsWith("$") ? entry.getKey() : (prefix + "." + entry.getKey());
+			String key = (entry.getKey().startsWith("$") || blacklist.contains(entry.getKey())) ? entry.getKey()
+					: (prefix + "." + entry.getKey());
 			Object value = entry.getValue();
 
 			if (entry.getValue() instanceof Collection) {
@@ -87,7 +100,7 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 				}
 				value = tmp;
 			} else if (entry.getValue() instanceof Document) {
-				value = prefix((Document) entry.getValue());
+				value = entry.getValue();
 			}
 
 			result.append(key, value);

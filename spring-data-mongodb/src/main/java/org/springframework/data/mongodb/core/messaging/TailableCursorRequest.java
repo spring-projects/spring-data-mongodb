@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 import java.util.Optional;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -40,9 +40,9 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @since 2.1
  */
-public class TailableCursorRequest<T> implements SubscriptionRequest<Message<Document, T>, RequestOptions> {
+public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T, RequestOptions> {
 
-	private final MessageListener<Message<Document, T>> messageListener;
+	private final MessageListener<Document, T> messageListener;
 	private final TailableCursorRequestOptions options;
 
 	/**
@@ -52,7 +52,11 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Message<Doc
 	 * @param messageListener must not be {@literal null}.
 	 * @param options must not be {@literal null}.
 	 */
-	public TailableCursorRequest(MessageListener<Message<Document, T>> messageListener, RequestOptions options) {
+	public TailableCursorRequest(MessageListener<Document, T> messageListener, RequestOptions options) {
+
+		Assert.notNull(messageListener, "MessageListener must not be null!");
+		Assert.notNull(options, "Options must not be null!");
+
 		this.messageListener = messageListener;
 		this.options = options instanceof TailableCursorRequestOptions ? (TailableCursorRequestOptions) options
 				: TailableCursorRequestOptions.of(options);
@@ -63,7 +67,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Message<Doc
 	 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest#getMessageListener()
 	 */
 	@Override
-	public MessageListener<Message<Document, T>> getMessageListener() {
+	public MessageListener<Document, T> getMessageListener() {
 		return messageListener;
 	}
 
@@ -84,10 +88,10 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Message<Doc
 	 */
 	public static class TailableCursorRequestOptions implements SubscriptionRequest.RequestOptions {
 
-		private String collectionName;
+		private @Nullable String collectionName;
 		private @Nullable Query query;
 
-		public TailableCursorRequestOptions() {}
+		TailableCursorRequestOptions() {}
 
 		static TailableCursorRequestOptions of(RequestOptions options) {
 			return builder().collection(options.getCollectionName()).build();

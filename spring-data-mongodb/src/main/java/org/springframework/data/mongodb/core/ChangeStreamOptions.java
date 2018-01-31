@@ -27,12 +27,13 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 
 /**
  * Options applicable to MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a>. Intended
- * to be used along with {@link org.springframework.data.mongodb.core.ChangeStreamRequest.ChangeStreamRequestOptions} in
- * a sync world as well {@link ReactiveMongoOperations} if you prefer it that way.
+ * to be used along with {@link org.springframework.data.mongodb.core.messaging.ChangeStreamRequest} in a sync world as
+ * well {@link ReactiveMongoOperations} if you prefer it that way.
  *
  * @author Christoph Strobl
  * @since 2.1
@@ -116,6 +117,12 @@ public class ChangeStreamOptions {
 
 		/**
 		 * Set the filter to apply.
+		 * <p/>
+		 * Fields on aggregation expression root level are prefixed to map to fields contained in
+		 * {@link ChangeStreamDocument#getFullDocument() fullDocument}. However {@literal operationType}, {@literal ns},
+		 * {@literal documentKey} and {@literal fullDocument} are reserved words that will be omitted, and therefore taken
+		 * as given, during the mapping procedure. You may want to have a look at the
+		 * <a href="https://docs.mongodb.com/manual/reference/change-events/">structure of Change Events</a>.
 		 * <p/>
 		 * Use {@link org.springframework.data.mongodb.core.aggregation.TypedAggregation} to ensure filter expressions are
 		 * mapped to domain type fields.

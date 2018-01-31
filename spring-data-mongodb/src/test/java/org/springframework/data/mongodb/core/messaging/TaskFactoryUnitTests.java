@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -24,11 +24,12 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.mongodb.core.ChangeStreamRequest.ChangeStreamRequestOptions;
-import org.springframework.data.mongodb.core.SubscriptionRequest.RequestOptions;
-import org.springframework.data.mongodb.core.TaskFactory.ChangeStreamTask;
-import org.springframework.data.mongodb.core.TaskFactory.TailableCursorTask;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
+import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.core.messaging.TaskFactory.ChangeStreamTask;
+import org.springframework.data.mongodb.core.messaging.TaskFactory.TailableCursorTask;
 import org.springframework.util.ErrorHandler;
 
 /**
@@ -41,7 +42,7 @@ public class TaskFactoryUnitTests {
 
 	@Mock MongoConverter converter;
 	@Mock MongoTemplate template;
-	@Mock MessageListener<Message> messageListener;
+	@Mock MessageListener<Object, Object> messageListener;
 	@Mock ErrorHandler errorHandler;
 
 	TaskFactory factory;

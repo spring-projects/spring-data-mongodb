@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.messaging;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.SubscriptionUtils.*;
+import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 
 import lombok.Data;
 
@@ -34,6 +34,8 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.ErrorHandler;
@@ -55,7 +57,7 @@ public class DefaultMessageListenerContainerTests {
 	MongoDbFactory dbFactory;
 
 	MongoCollection<Document> collection;
-	private CollectingMessageListener<Message> messageListener;
+	private CollectingMessageListener<Object, Object> messageListener;
 	private MongoTemplate template;
 
 	public @Rule TestRule replSet = ReplicaSet.none();
@@ -284,11 +286,11 @@ public class DefaultMessageListenerContainerTests {
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
 		container.start();
 
-		CollectingMessageListener<Message> tailableListener = new CollectingMessageListener<>();
+		CollectingMessageListener<Document, Document> tailableListener = new CollectingMessageListener<>();
 		Subscription tailableSubscription = container
 				.register(new TailableCursorRequest(tailableListener, () -> COLLECTION_NAME), Document.class);
 
-		CollectingMessageListener<Message> changeStreamListener = new CollectingMessageListener<>();
+		CollectingMessageListener<ChangeStreamDocument<Document>, Document> changeStreamListener = new CollectingMessageListener<>();
 		Subscription changeStreamSubscription = container
 				.register(new ChangeStreamRequest(changeStreamListener, () -> COLLECTION_NAME), Document.class);
 
