@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * using the mapping infrastructure.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @see MessageProperties
  * @since 2.1
  */
@@ -66,7 +67,7 @@ public interface Message<S, T> {
 	 */
 	@ToString
 	@EqualsAndHashCode
-	static class MessageProperties {
+	class MessageProperties {
 
 		private static final MessageProperties EMPTY = new MessageProperties();
 
@@ -118,7 +119,8 @@ public interface Message<S, T> {
 		 */
 		public static class MessagePropertiesBuilder {
 
-			private MessageProperties properties = new MessageProperties();
+			private @Nullable String databaseName;
+			private @Nullable String collectionName;
 
 			/**
 			 * @param dbName must not be {@literal null}.
@@ -126,9 +128,9 @@ public interface Message<S, T> {
 			 */
 			public MessagePropertiesBuilder databaseName(String dbName) {
 
-				Assert.notNull(dbName, "DbName must not be null!");
+				Assert.notNull(dbName, "Database name must not be null!");
 
-				properties.databaseName = dbName;
+				this.databaseName = dbName;
 				return this;
 			}
 
@@ -138,16 +140,22 @@ public interface Message<S, T> {
 			 */
 			public MessagePropertiesBuilder collectionName(String collectionName) {
 
-				Assert.notNull(collectionName, "CollectionName must not be null!");
+				Assert.notNull(collectionName, "Collection name must not be null!");
 
-				properties.collectionName = collectionName;
+				this.collectionName = collectionName;
 				return this;
 			}
 
+			/**
+			 * @return the built {@link MessageProperties}.
+			 */
 			public MessageProperties build() {
 
-				MessageProperties properties = this.properties;
-				this.properties = new MessageProperties();
+				MessageProperties properties = new MessageProperties();
+
+				properties.collectionName = collectionName;
+				properties.databaseName = databaseName;
+
 				return properties;
 			}
 		}

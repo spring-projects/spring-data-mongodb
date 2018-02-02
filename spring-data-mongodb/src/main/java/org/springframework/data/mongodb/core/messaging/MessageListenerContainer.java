@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.messaging;
 import java.util.Optional;
 
 import org.springframework.context.SmartLifecycle;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.util.ErrorHandler;
 
@@ -28,7 +29,17 @@ import org.springframework.util.ErrorHandler;
  * @author Christoph Strobl
  * @since 2.1
  */
-interface MessageListenerContainer extends SmartLifecycle {
+public interface MessageListenerContainer extends SmartLifecycle {
+
+	/**
+	 * Create a new {@link MessageListenerContainer} given {@link MongoTemplate}.
+	 *
+	 * @param template must not be {@literal null}.
+	 * @return a new {@link MessageListenerContainer} using {@link MongoTemplate}.
+	 */
+	static MessageListenerContainer create(MongoTemplate template) {
+		return new DefaultMessageListenerContainer(template);
+	}
 
 	/**
 	 * Register a new {@link SubscriptionRequest} in the container. If the {@link MessageListenerContainer#isRunning() is
@@ -63,10 +74,10 @@ interface MessageListenerContainer extends SmartLifecycle {
 	 * <pre>
 	 * <code>
 	 *     MessageListenerContainer container = ...
-	 *     
+	 *
 	 *     MessageListener<ChangeStreamDocument<Document>, Document> messageListener = (message) -> message.getBody().toJson();
 	 *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener, () -> "collection-name");
-	 *     
+	 *
 	 *     Subscription subscription = container.register(request, Document.class);
 	 * </code>
 	 * </pre>

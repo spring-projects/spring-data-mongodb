@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
+import java.time.Duration;
+
 import org.springframework.scheduling.SchedulingAwareRunnable;
 
 /**
@@ -38,6 +40,15 @@ public interface Task extends SchedulingAwareRunnable, Cancelable {
 	 * @return never {@literal null}.
 	 */
 	State getState();
+
+	/**
+	 * Synchronous, <strong>blocking</strong> call that awaits until this {@link Task} becomes active.
+	 *
+	 * @param timeout must not be {@literal null}.
+	 * @return {@code true} if the task was started. {@code false} if the waiting time elapsed before task was started.
+	 * @throws InterruptedException if the current thread is interrupted while waiting.
+	 */
+	boolean awaitStart(Duration timeout) throws InterruptedException;
 
 	/**
 	 * The {@link Task.State} defining the lifecycle phase the actual {@link Task}.

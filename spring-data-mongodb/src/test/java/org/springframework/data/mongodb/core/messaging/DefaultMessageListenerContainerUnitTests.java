@@ -20,6 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 
 import edu.umd.cs.mtc.MultithreadedTestCase;
 
+import java.time.Duration;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -268,6 +270,15 @@ public class DefaultMessageListenerContainerUnitTests {
 			this.error = error;
 		}
 
+		@Override
+		public boolean awaitStart(Duration timeout) throws InterruptedException {
+
+			while (getState() == State.STARTING) {
+				Thread.sleep(10);
+			}
+
+			return true;
+		}
 	}
 
 	static class MockSubscriptionRequest implements SubscriptionRequest {

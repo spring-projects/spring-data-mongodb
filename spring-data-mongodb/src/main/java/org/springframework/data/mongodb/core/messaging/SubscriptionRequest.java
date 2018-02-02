@@ -21,19 +21,19 @@ import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.Reque
  * The actual {@link SubscriptionRequest} sent to the {@link MessageListenerContainer}. This wrapper type allows passing
  * in {@link RequestOptions additional information} to the Container which can be used for creating the actual
  * {@link Task} running. <br />
- * The {@link MessageListener} provides the callback interface when pushing {@link Message massages}.
+ * The {@link MessageListener} provides the callback interface when pushing {@link Message messages}.
  *
  * @author Christoph Strobl
  * @since 2.1
  */
-interface SubscriptionRequest<S, T, O extends RequestOptions> {
+public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 
 	/**
 	 * Obtain the {@link MessageListener} to publish {@link Message messages} to.
 	 *
 	 * @return never {@literal null}.
 	 */
-	MessageListener<S, T> getMessageListener();
+	MessageListener<S, ? super T> getMessageListener();
 
 	/**
 	 * Get the {@link RequestOptions} specifying the requests behaviour.
@@ -48,12 +48,11 @@ interface SubscriptionRequest<S, T, O extends RequestOptions> {
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	static interface RequestOptions {
+	interface RequestOptions {
 
 		/**
 		 * @return the name of the collection to subscribe to. Never {@literal null}.
 		 */
 		String getCollectionName();
-
 	}
 }

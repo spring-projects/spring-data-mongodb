@@ -28,8 +28,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
-import org.springframework.data.mongodb.core.messaging.TaskFactory.ChangeStreamTask;
-import org.springframework.data.mongodb.core.messaging.TaskFactory.TailableCursorTask;
 import org.springframework.util.ErrorHandler;
 
 /**

@@ -71,7 +71,7 @@ public class DefaultMessageListenerContainerTests {
 		template.dropCollection(COLLECTION_NAME);
 		collection = template.getCollection(COLLECTION_NAME);
 
-		messageListener = new CollectingMessageListener();
+		messageListener = new CollectingMessageListener<>();
 	}
 
 	@Test // DATAMONGO-1803

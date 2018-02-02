@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions.TailableCursorRequestOptionsBuilder;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -37,12 +38,25 @@ import org.springframework.util.Assert;
  * </code>
  * </pre>
  *
+ * {@link TailableCursorRequestBuilder} offers a fluent API for creating {@link TailableCursorRequest} with
+ * {@link TailableCursorRequestOptions} in one go.
+ *
+ * <pre>
+ *   <code>
+ *       TailableCursorRequest<Document> request = TailableCursorRequest.builder()
+ *           .collection("collection-name")
+ *           .publishTo(System.out::println)
+ *           .build();
+ *   </code>
+ * </pre>
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T, RequestOptions> {
 
-	private final MessageListener<Document, T> messageListener;
+	private final MessageListener<Document, ? super T> messageListener;
 	private final TailableCursorRequestOptions options;
 
 	/**
@@ -52,7 +66,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 	 * @param messageListener must not be {@literal null}.
 	 * @param options must not be {@literal null}.
 	 */
-	public TailableCursorRequest(MessageListener<Document, T> messageListener, RequestOptions options) {
+	public TailableCursorRequest(MessageListener<Document, ? super T> messageListener, RequestOptions options) {
 
 		Assert.notNull(messageListener, "MessageListener must not be null!");
 		Assert.notNull(options, "Options must not be null!");
@@ -67,7 +81,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 	 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest#getMessageListener()
 	 */
 	@Override
-	public MessageListener<Document, T> getMessageListener() {
+	public MessageListener<Document, ? super T> getMessageListener() {
 		return messageListener;
 	}
 
@@ -78,6 +92,28 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 	@Override
 	public TailableCursorRequestOptions getRequestOptions() {
 		return options;
+	}
+
+	/**
+	 * Obtain a shiny new {@link TailableCursorRequestBuilder} and start defining options in this fancy fluent way. Just
+	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when your're done.
+	 *
+	 * @return new instance of {@link TailableCursorRequestBuilder}.
+	 */
+	public static TailableCursorRequestBuilder builder() {
+		return new TailableCursorRequestBuilder();
+	}
+
+	/**
+	 * Obtain a shiny new {@link TailableCursorRequestBuilder} and start defining options in this fancy fluent way. Just
+	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when your're done.
+	 *
+	 * @return new instance of {@link TailableCursorRequestBuilder}.
+	 */
+	public static <T> TailableCursorRequestBuilder<T> builder(MessageListener<Document, ? super T> listener) {
+
+		TailableCursorRequestBuilder<T> builder = new TailableCursorRequestBuilder<>();
+		return builder.publishTo(listener);
 	}
 
 	/**
@@ -93,7 +129,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 		TailableCursorRequestOptions() {}
 
-		static TailableCursorRequestOptions of(RequestOptions options) {
+		public static TailableCursorRequestOptions of(RequestOptions options) {
 			return builder().collection(options.getCollectionName()).build();
 		}
 
@@ -101,7 +137,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		 * Obtain a shiny new {@link TailableCursorRequestOptionsBuilder} and start defining options in this fancy fluent
 		 * way. Just don't forget to call {@link TailableCursorRequestOptionsBuilder#build() build()} when your're done.
 		 *
-		 * @return new instance of {@link ChangeStreamRequestOptionsBuilder}.
+		 * @return new instance of {@link TailableCursorRequestOptionsBuilder}.
 		 */
 		public static TailableCursorRequestOptionsBuilder builder() {
 			return new TailableCursorRequestOptionsBuilder();
@@ -124,10 +160,13 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		 */
 		public static class TailableCursorRequestOptionsBuilder {
 
-			TailableCursorRequestOptions options = new TailableCursorRequestOptions();
+			private @Nullable String collectionName;
+			private @Nullable Query query;
+
+			private TailableCursorRequestOptionsBuilder() {}
 
 			/**
-			 * Set the collection name to listen to.
+			 * Set the collection name to tail.
 			 *
 			 * @param collection must not be {@literal null} nor {@literal empty}.
 			 * @return this.
@@ -136,7 +175,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 				Assert.hasText(collection, "Collection must not be null nor empty!");
 
-				options.collectionName = collection;
+				this.collectionName = collection;
 				return this;
 			}
 
@@ -150,17 +189,89 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 				Assert.notNull(filter, "Filter must not be null!");
 
-				options.query = filter;
+				this.query = filter;
 				return this;
 			}
 
+			/**
+			 * @return the built {@link TailableCursorRequestOptions}.
+			 */
 			public TailableCursorRequestOptions build() {
 
-				TailableCursorRequestOptions tmp = options;
-				options = new TailableCursorRequestOptions();
-				return tmp;
-			}
+				TailableCursorRequestOptions options = new TailableCursorRequestOptions();
 
+				options.collectionName = collectionName;
+				options.query = query;
+
+				return options;
+			}
+		}
+	}
+
+	/**
+	 * Builder for creating {@link TailableCursorRequest}.
+	 *
+	 * @author Mark Paluch
+	 * @since 2.1
+	 * @see TailableCursorRequestOptions
+	 */
+	public static class TailableCursorRequestBuilder<T> {
+
+		private @Nullable MessageListener<Document, ? super T> listener;
+		private TailableCursorRequestOptionsBuilder delegate = TailableCursorRequestOptions.builder();
+
+		private TailableCursorRequestBuilder() {}
+
+		/**
+		 * Set the name of the {@link com.mongodb.client.MongoCollection} to listen to.
+		 *
+		 * @param collectionName must not be {@literal null} nor empty.
+		 * @return this.
+		 */
+		public TailableCursorRequestBuilder<T> collection(String collectionName) {
+
+			Assert.hasText(collectionName, "CollectionName must not be null!");
+
+			delegate.collection(collectionName);
+			return this;
+		}
+
+		/**
+		 * Set the {@link MessageListener} event {@link Message messages} will be published to.
+		 *
+		 * @param messageListener must not be {@literal null}.
+		 * @return this.
+		 */
+		public TailableCursorRequestBuilder<T> publishTo(MessageListener<Document, ? super T> messageListener) {
+
+			Assert.notNull(messageListener, "MessageListener must not be null!");
+
+			this.listener = messageListener;
+			return this;
+		}
+
+		/**
+		 * Set the filter to apply.
+		 *
+		 * @param filter the {@link Query } to apply for filtering events. Must not be {@literal null}.
+		 * @return this.
+		 */
+		public TailableCursorRequestBuilder<T> filter(Query filter) {
+
+			Assert.notNull(filter, "Filter must not be null!");
+
+			delegate.filter(filter);
+			return this;
+		}
+
+		/**
+		 * @return the build {@link ChangeStreamRequest}.
+		 */
+		public TailableCursorRequest<T> build() {
+
+			Assert.notNull(listener, "MessageListener must not be null!");
+
+			return new TailableCursorRequest<>(listener, delegate.build());
 		}
 	}
 }

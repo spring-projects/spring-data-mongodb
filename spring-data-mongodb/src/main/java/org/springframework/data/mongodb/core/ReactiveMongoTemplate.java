@@ -1788,6 +1788,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Flux<ChangeStreamEvent<T>> changeStream(@Nullable Aggregation filter, Class<T> resultType,
 			ChangeStreamOptions options, String collectionName) {
 
+		Assert.notNull(resultType, "Result type must not be null!");
+		Assert.notNull(options, "ChangeStreamOptions must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+
 		if (filter == null) {
 			return changeStream(Collections.emptyList(), resultType, options, collectionName);
 		}
@@ -1809,22 +1813,23 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Flux<ChangeStreamEvent<T>> changeStream(List<Document> filter, Class<T> resultType,
 			ChangeStreamOptions options, String collectionName) {
 
+		Assert.notNull(filter, "Filter must not be null!");
+		Assert.notNull(resultType, "Result type must not be null!");
+		Assert.notNull(options, "ChangeStreamOptions must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+
 		ChangeStreamPublisher<Document> publisher = filter.isEmpty() ? getCollection(collectionName).watch()
 				: getCollection(collectionName).watch(filter);
 
-		if (options.getResumeToken().isPresent()) {
-			publisher = publisher.resumeAfter(options.getResumeToken().get().asDocument());
-		}
+		publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
+		publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
 
 		if (options.getFullDocumentLookup().isPresent() || resultType != Document.class) {
 			publisher = publisher.fullDocument(options.getFullDocumentLookup().isPresent()
 					? options.getFullDocumentLookup().get() : FullDocument.UPDATE_LOOKUP);
 		}
 
-		if (options.getCollation().isPresent()) {
-			publisher = publisher.collation(options.getCollation().map(Collation::toMongoCollation).get());
-		}
-		return Flux.from(publisher).map(document -> new ChangeStreamEvent(document, resultType, getConverter()));
+		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, resultType, getConverter()));
 	}
 
 	/*

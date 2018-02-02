@@ -1142,7 +1142,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Use {@link ChangeStreamOptions} to set arguments like {@link ChangeStreamOptions#getResumeToken() the resumeToken}
 	 * for resuming change streams.
 	 *
-	 * @param filter can be {@literal null}.
+	 * @param filter can be empty, must not be {@literal null}.
 	 * @param resultType must not be {@literal null}.
 	 * @param options must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} nor empty.
