@@ -32,7 +32,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.core.messaging.Task.State;
-import org.springframework.data.mongodb.core.messaging.TaskFactory.CursorReadingTask;
 import org.springframework.util.ErrorHandler;
 
 import com.mongodb.ServerAddress;
@@ -198,7 +197,7 @@ public class CursorReadingTaskUnitTests {
 	static class ValueCapturingTaskStub extends CursorReadingTask {
 
 		final MongoCursor cursor;
-		final List<Object> values = new CopyOnWriteArrayList();
+		final List<Object> values = new CopyOnWriteArrayList<>();
 
 		public ValueCapturingTaskStub(MongoTemplate template, SubscriptionRequest request, Class<?> targetType,
 				MongoCursor cursor, ErrorHandler errorHandler) {
@@ -223,5 +222,4 @@ public class CursorReadingTaskUnitTests {
 			return values;
 		}
 	}
-
 }

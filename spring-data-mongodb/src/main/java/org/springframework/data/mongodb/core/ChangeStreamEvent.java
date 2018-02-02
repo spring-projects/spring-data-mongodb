@@ -32,12 +32,13 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
  * Streams</a>.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 @EqualsAndHashCode
 public class ChangeStreamEvent<T> {
 
-	@Nullable private final ChangeStreamDocument<Document> raw;
+	private final @Nullable ChangeStreamDocument<Document> raw;
 
 	private final Class<T> targetType;
 	private final MongoConverter converter;
@@ -45,11 +46,11 @@ public class ChangeStreamEvent<T> {
 
 	/**
 	 * @param raw can be {@literal null}.
-	 * @param messageProperties must not be {@literal null}.
 	 * @param targetType must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 */
-	public ChangeStreamEvent(ChangeStreamDocument<Document> raw, Class<T> targetType, MongoConverter converter) {
+	public ChangeStreamEvent(@Nullable ChangeStreamDocument<Document> raw, Class<T> targetType,
+			MongoConverter converter) {
 
 		this.raw = raw;
 		this.targetType = targetType;
@@ -76,7 +77,7 @@ public class ChangeStreamEvent<T> {
 	public T getBody() {
 
 		if (raw == null) {
-			return targetType.cast(raw);
+			return null;
 		}
 
 		if (raw.getFullDocument() == null) {

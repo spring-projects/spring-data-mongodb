@@ -27,12 +27,13 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 
 /**
- * {@link AggregationOperationContext} implementation prefixing non command keys on root level with the given prefix.
+ * {@link AggregationOperationContext} implementation prefixing non-command keys on root level with the given prefix.
  * Useful when mapping fields to domain specific types while having to prefix keys for query purpose.
  * <p />
  * Fields to be excluded from prefixing my be added to a {@literal blacklist}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public class PrefixingDelegatingAggregationOperationContext implements AggregationOperationContext {
@@ -59,7 +60,7 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 	 */
 	@Override
 	public Document getMappedObject(Document document) {
-		return prefix(delegate.getMappedObject(document));
+		return doPrefix(delegate.getMappedObject(document));
 	}
 
 	/*
@@ -80,31 +81,42 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 		return delegate.getReference(name);
 	}
 
-	private Document prefix(Document source) {
+	@SuppressWarnings("unchecked")
+	private Document doPrefix(Document source) {
 
 		Document result = new Document();
 		for (Map.Entry<String, Object> entry : source.entrySet()) {
 
-			String key = (entry.getKey().startsWith("$") || blacklist.contains(entry.getKey())) ? entry.getKey()
-					: (prefix + "." + entry.getKey());
+			String key = prefixKey(entry.getKey());
 			Object value = entry.getValue();
 
 			if (entry.getValue() instanceof Collection) {
-				List tmp = new ArrayList();
-				for (Object o : (Collection) entry.getValue()) {
-					if (o instanceof Document) {
-						tmp.add(prefix((Document) o));
-					} else {
-						tmp.add(o);
-					}
-				}
-				value = tmp;
-			} else if (entry.getValue() instanceof Document) {
-				value = entry.getValue();
+
+				Collection<Object> sourceCollection = (Collection<Object>) entry.getValue();
+				value = prefixCollection(sourceCollection);
 			}
 
 			result.append(key, value);
 		}
 		return result;
+	}
+
+	private String prefixKey(String key) {
+		return (key.startsWith("$") || blacklist.contains(key)) ? key : (prefix + "." + key);
+	}
+
+	private Object prefixCollection(Collection<Object> sourceCollection) {
+
+		List<Object> prefixed = new ArrayList<>(sourceCollection.size());
+
+		for (Object o : sourceCollection) {
+			if (o instanceof Document) {
+				prefixed.add(doPrefix((Document) o));
+			} else {
+				prefixed.add(o);
+			}
+		}
+
+		return prefixed;
 	}
 }

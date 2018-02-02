@@ -19,6 +19,8 @@ package org.springframework.data.mongodb.core.messaging;
  * Listener interface to receive delivery of {@link Message Messages}.
  *
  * @author Christoph Strobl
+ * @param <S> source message type.
+ * @param <T> target message type.
  * @since 2.1
  */
 @FunctionalInterface

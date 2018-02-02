@@ -13,22 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/*
- * Copyright 2018 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.springframework.data.mongodb.core.messaging;
 
 import org.bson.BsonValue;
@@ -63,10 +47,10 @@ import com.mongodb.client.model.changestream.FullDocument;
  * <pre>
  * <code>
  *     ChangeStreamOptions options = ChangeStreamOptions.builder()
- *     		.filter(newAggregation(match(where("age").is(7))))
- *     		.returnFullDocumentOnUpdate()
- *     		.build();
- *     	
+ *         .filter(newAggregation(match(where("age").is(7))))
+ *         .returnFullDocumentOnUpdate()
+ *         .build();
+ *
  *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(System.out::println, new ChangeStreamRequestOptions("collection-name", options));
  * </code>
  * </pre>
@@ -77,11 +61,11 @@ import com.mongodb.client.model.changestream.FullDocument;
  * <pre>
  * <code>
  *     ChangeStreamRequest<Document> request = ChangeStreamRequest.builder()
- *     		.collectionName("collection-name")
- *     		.publishTo(System.out::println)	
- *     		.filter(newAggregation(match(where("age").is(7))))
- *     		.fullDocumentLookup(UPDATE_LOOKUP)
- *     		.build();
+ *         .collection("collection-name")
+ *         .publishTo(System.out::println)
+ *         .filter(newAggregation(match(where("age").is(7))))
+ *         .fullDocumentLookup(UPDATE_LOOKUP)
+ *         .build();
  * </code>
  * </pre>
  *
@@ -93,12 +77,13 @@ import com.mongodb.client.model.changestream.FullDocument;
  * {@link FullDocument#UPDATE_LOOKUP}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public class ChangeStreamRequest<T>
 		implements SubscriptionRequest<ChangeStreamDocument<Document>, T, ChangeStreamRequestOptions> {
 
-	private final MessageListener<ChangeStreamDocument<Document>, T> messageListener;
+	private final MessageListener<ChangeStreamDocument<Document>, ? super T> messageListener;
 	private final ChangeStreamRequestOptions options;
 
 	/**
@@ -108,7 +93,7 @@ public class ChangeStreamRequest<T>
 	 * @param messageListener must not be {@literal null}.
 	 * @param options must not be {@literal null}.
 	 */
-	public ChangeStreamRequest(MessageListener<ChangeStreamDocument<Document>, T> messageListener,
+	public ChangeStreamRequest(MessageListener<ChangeStreamDocument<Document>, ? super T> messageListener,
 			RequestOptions options) {
 
 		Assert.notNull(messageListener, "MessageListener must not be null!");
@@ -125,7 +110,7 @@ public class ChangeStreamRequest<T>
 	 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest#getMessageListener()
 	 */
 	@Override
-	public MessageListener<ChangeStreamDocument<Document>, T> getMessageListener() {
+	public MessageListener<ChangeStreamDocument<Document>, ? super T> getMessageListener() {
 		return messageListener;
 	}
 
@@ -146,6 +131,19 @@ public class ChangeStreamRequest<T>
 	 */
 	public static ChangeStreamRequestBuilder builder() {
 		return new ChangeStreamRequestBuilder();
+	}
+
+	/**
+	 * Obtain a shiny new {@link ChangeStreamRequestBuilder} and start defining your {@link ChangeStreamRequest} in this
+	 * fancy fluent way. Just don't forget to call {@link ChangeStreamRequestBuilder#build() build()} when your're done.
+	 *
+	 * @return new instance of {@link ChangeStreamRequest}.
+	 */
+	public static <T> ChangeStreamRequestBuilder<T> builder(
+			MessageListener<ChangeStreamDocument<Document>, ? super T> listener) {
+
+		ChangeStreamRequestBuilder<T> builder = new ChangeStreamRequestBuilder<>();
+		return builder.publishTo(listener);
 	}
 
 	/**
@@ -174,7 +172,7 @@ public class ChangeStreamRequest<T>
 			this.options = options;
 		}
 
-		static ChangeStreamRequestOptions of(RequestOptions options) {
+		public static ChangeStreamRequestOptions of(RequestOptions options) {
 
 			Assert.notNull(options, "Options must not be null!");
 
@@ -210,8 +208,10 @@ public class ChangeStreamRequest<T>
 	public static class ChangeStreamRequestBuilder<T> {
 
 		private @Nullable String collectionName;
-		private @Nullable MessageListener<ChangeStreamDocument<Document>, T> listener;
+		private @Nullable MessageListener<ChangeStreamDocument<Document>, ? super T> listener;
 		private ChangeStreamOptionsBuilder delegate = ChangeStreamOptions.builder();
+
+		private ChangeStreamRequestBuilder() {}
 
 		/**
 		 * Set the name of the {@link com.mongodb.client.MongoCollection} to listen to.
@@ -219,7 +219,7 @@ public class ChangeStreamRequest<T>
 		 * @param collectionName must not be {@literal null} nor empty.
 		 * @return this.
 		 */
-		public ChangeStreamRequestBuilder collection(String collectionName) {
+		public ChangeStreamRequestBuilder<T> collection(String collectionName) {
 
 			Assert.hasText(collectionName, "CollectionName must not be null!");
 
@@ -233,7 +233,8 @@ public class ChangeStreamRequest<T>
 		 * @param messageListener must not be {@literal null}.
 		 * @return this.
 		 */
-		public ChangeStreamRequestBuilder publishTo(MessageListener<ChangeStreamDocument<Document>, T> messageListener) {
+		public ChangeStreamRequestBuilder<T> publishTo(
+				MessageListener<ChangeStreamDocument<Document>, ? super T> messageListener) {
 
 			Assert.notNull(messageListener, "MessageListener must not be null!");
 
@@ -253,13 +254,15 @@ public class ChangeStreamRequest<T>
 		 * Use {@link org.springframework.data.mongodb.core.aggregation.TypedAggregation} to ensure filter expressions are
 		 * mapped to domain type fields.
 		 *
-		 * @param filter the {@link Aggregation Aggregation pipeline} to apply for filtering events. Must not be
+		 * @param aggregation the {@link Aggregation Aggregation pipeline} to apply for filtering events. Must not be
 		 *          {@literal null}.
 		 * @return this.
 		 * @see ChangeStreamOptions#getFilter()
 		 * @see ChangeStreamOptionsBuilder#filter(Aggregation)
 		 */
-		public ChangeStreamRequestBuilder filter(Aggregation aggregation) {
+		public ChangeStreamRequestBuilder<T> filter(Aggregation aggregation) {
+
+			Assert.notNull(aggregation, "Aggregation must not be null!");
 
 			this.delegate.filter(aggregation);
 			return this;
@@ -268,12 +271,14 @@ public class ChangeStreamRequest<T>
 		/**
 		 * Set the plain filter chain to apply.
 		 *
-		 * @param filter must not be {@literal null} nor contain {@literal null} values.
+		 * @param pipeline must not be {@literal null} nor contain {@literal null} values.
 		 * @return this.
 		 * @see ChangeStreamOptions#getFilter()
-		 * @see ChangeStreamOptionsBuilder#filter(java.util.List)
 		 */
-		public ChangeStreamRequestBuilder filter(Document... pipeline) {
+		public ChangeStreamRequestBuilder<T> filter(Document... pipeline) {
+
+			Assert.notNull(pipeline, "Aggregation pipeline must not be null!");
+			Assert.noNullElements(pipeline, "Aggregation pipeline must not contain null elements!");
 
 			this.delegate.filter(pipeline);
 			return this;
@@ -289,6 +294,8 @@ public class ChangeStreamRequest<T>
 		 */
 		public ChangeStreamRequestBuilder collation(Collation collation) {
 
+			Assert.notNull(collation, "Collation must not be null!");
+
 			this.delegate.collation(collation);
 			return this;
 		}
@@ -302,7 +309,9 @@ public class ChangeStreamRequest<T>
 		 * @see ChangeStreamOptions#getResumeToken()
 		 * @see ChangeStreamOptionsBuilder#resumeToken(org.bson.BsonValue)
 		 */
-		public ChangeStreamRequestBuilder resumeToken(BsonValue resumeToken) {
+		public ChangeStreamRequestBuilder<T> resumeToken(BsonValue resumeToken) {
+
+			Assert.notNull(resumeToken, "Resume token not be null!");
 
 			this.delegate.resumeToken(resumeToken);
 			return this;
@@ -316,14 +325,23 @@ public class ChangeStreamRequest<T>
 		 * @see ChangeStreamOptions#getFullDocumentLookup()
 		 * @see ChangeStreamOptionsBuilder#fullDocumentLookup(FullDocument)
 		 */
-		public ChangeStreamRequestBuilder fullDocumentLookup(FullDocument lookup) {
+		public ChangeStreamRequestBuilder<T> fullDocumentLookup(FullDocument lookup) {
+
+			Assert.notNull(lookup, "FullDocument not be null!");
 
 			this.delegate.fullDocumentLookup(lookup);
 			return this;
 		}
 
+		/**
+		 * @return the build {@link ChangeStreamRequest}.
+		 */
 		public ChangeStreamRequest<T> build() {
-			return new ChangeStreamRequest(listener, new ChangeStreamRequestOptions(collectionName, delegate.build()));
+
+			Assert.notNull(listener, "MessageListener must not be null!");
+			Assert.hasText(collectionName, "CollectionName must not be null!");
+
+			return new ChangeStreamRequest<>(listener, new ChangeStreamRequestOptions(collectionName, delegate.build()));
 		}
 	}
 }

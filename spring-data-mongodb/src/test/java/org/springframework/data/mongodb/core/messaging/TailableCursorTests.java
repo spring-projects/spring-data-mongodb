@@ -22,9 +22,15 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
 
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.bson.Document;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.CollectionOptions;
@@ -40,17 +46,24 @@ import com.mongodb.MongoClient;
  * {@link DefaultMessageListenerContainer} using {@link TailableCursorRequest}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class TailableCursorTests {
 
 	static final String COLLECTION_NAME = "user";
 
+	static ThreadPoolExecutor executor;
 	MongoTemplate template;
 	MessageListenerContainer container;
 
 	User jellyBelly;
 	User huffyFluffy;
 	User sugarSplashy;
+
+	@BeforeClass
+	public static void beforeClass() {
+		executor = new ThreadPoolExecutor(2, 2, 1, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+	}
 
 	@Before
 	public void setUp() {
@@ -60,7 +73,7 @@ public class TailableCursorTests {
 		template.dropCollection(User.class);
 		template.createCollection(User.class, CollectionOptions.empty().capped().maxDocuments(10000).size(10000));
 
-		container = new DefaultMessageListenerContainer(template);
+		container = new DefaultMessageListenerContainer(template, executor);
 		container.start();
 
 		jellyBelly = new User();
@@ -82,6 +95,11 @@ public class TailableCursorTests {
 	@After
 	public void tearDown() {
 		container.stop();
+	}
+
+	@AfterClass
+	public static void afterClass() {
+		executor.shutdown();
 	}
 
 	@Test // DATAMONGO-1803
@@ -191,5 +209,4 @@ public class TailableCursorTests {
 		@Field("user_name") String userName;
 		int age;
 	}
-
 }

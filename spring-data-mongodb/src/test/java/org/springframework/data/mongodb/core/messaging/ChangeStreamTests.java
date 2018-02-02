@@ -24,12 +24,17 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import lombok.Data;
 
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -53,11 +58,13 @@ import com.mongodb.client.model.changestream.FullDocument;
  * {@link DefaultMessageListenerContainer} using {@link ChangeStreamRequest}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class ChangeStreamTests {
 
 	public static @ClassRule TestRule replSet = ReplicaSet.required();
 
+	static ThreadPoolExecutor executor;
 	MongoTemplate template;
 	MessageListenerContainer container;
 
@@ -65,13 +72,18 @@ public class ChangeStreamTests {
 	User huffyFluffy;
 	User sugarSplashy;
 
+	@BeforeClass
+	public static void beforeClass() {
+		executor = new ThreadPoolExecutor(2, 2, 1, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+	}
+
 	@Before
 	public void setUp() {
 
 		template = new MongoTemplate(new MongoClient(), "change-stream-tests");
 		template.dropCollection(User.class);
 
-		container = new DefaultMessageListenerContainer(template);
+		container = new DefaultMessageListenerContainer(template, executor);
 		container.start();
 
 		jellyBelly = new User();
@@ -93,6 +105,11 @@ public class ChangeStreamTests {
 	@After
 	public void tearDown() {
 		container.stop();
+	}
+
+	@AfterClass
+	public static void afterClass() {
+		executor.shutdown();
 	}
 
 	@Test // DATAMONGO-1803
@@ -121,9 +138,8 @@ public class ChangeStreamTests {
 	public void useSimpleAggregationToFilterMessages() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
 				.collection("user") //
-				.publishTo(messageListener) //
 				.filter(newAggregation(match(where("age").is(7)))) //
 				.build();
 
@@ -146,9 +162,8 @@ public class ChangeStreamTests {
 	public void useAggregationToFilterMessages() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
 				.collection("user") //
-				.publishTo(messageListener) //
 				.filter(newAggregation(match(
 						new Criteria().orOperator(where("user_name").is("huffyFluffy"), where("user_name").is("jellyBelly"))))) //
 				.build();
@@ -391,5 +406,4 @@ public class ChangeStreamTests {
 		@Field("user_name") String userName;
 		int age;
 	}
-
 }

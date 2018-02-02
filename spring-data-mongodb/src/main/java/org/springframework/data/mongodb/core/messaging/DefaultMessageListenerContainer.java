@@ -19,6 +19,7 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -38,22 +39,23 @@ import org.springframework.util.ErrorHandler;
  * Simple {@link Executor} based {@link MessageListenerContainer} implementation for running {@link Task tasks} like
  * listening to MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a> and tailable
  * cursors.
+ * <p />
+ * This message container creates long-running tasks that are executed on {@link Executor}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public class DefaultMessageListenerContainer implements MessageListenerContainer {
 
 	private final Executor taskExecutor;
-
-	private final Object lifecycleMonitor = new Object();
-
-	private int phase = Integer.MAX_VALUE;
-	private boolean running = false;
-
-	private final Map<SubscriptionRequest, Subscription> subscriptions = new LinkedHashMap<>();
 	private final TaskFactory taskFactory;
 	private final Optional<ErrorHandler> errorHandler;
+
+	private final Object lifecycleMonitor = new Object();
+	private final Map<SubscriptionRequest, Subscription> subscriptions = new LinkedHashMap<>();
+
+	private boolean running = false;
 
 	/**
 	 * Create a new {@link DefaultMessageListenerContainer}.
@@ -124,18 +126,18 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 		synchronized (lifecycleMonitor) {
 
-			if (!this.running) {
-
-				for (Subscription subscription : subscriptions.values()) {
-
-					if (!subscription.isActive()) {
-						if (subscription instanceof TaskSubscription) {
-							taskExecutor.execute(((TaskSubscription) subscription).getTask());
-						}
-					}
-				}
-				running = true;
+			if (this.running) {
+				return;
 			}
+
+			subscriptions.values().stream() //
+					.filter(it -> !it.isActive()) //
+					.filter(it -> it instanceof TaskSubscription) //
+					.map(TaskSubscription.class::cast) //
+					.map(TaskSubscription::getTask) //
+					.forEach(taskExecutor::execute);
+
+			running = true;
 		}
 	}
 
@@ -149,9 +151,9 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		synchronized (lifecycleMonitor) {
 
 			if (this.running) {
-				for (Subscription subscription : subscriptions.values()) {
-					subscription.cancel();
-				}
+
+				subscriptions.values().forEach(Cancelable::cancel);
+
 				running = false;
 			}
 		}
@@ -175,7 +177,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	 */
 	@Override
 	public int getPhase() {
-		return this.phase;
+		return Integer.MAX_VALUE;
 	}
 
 	/*
@@ -207,6 +209,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	 */
 	@Override
 	public Optional<Subscription> lookup(SubscriptionRequest<?, ?, ?> request) {
+
 		synchronized (lifecycleMonitor) {
 			return Optional.ofNullable(subscriptions.get(request));
 		}
@@ -272,6 +275,11 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		@Override
 		public boolean isActive() {
 			return task.isActive();
+		}
+
+		@Override
+		public boolean await(Duration timeout) throws InterruptedException {
+			return task.awaitStart(timeout);
 		}
 
 		@Override

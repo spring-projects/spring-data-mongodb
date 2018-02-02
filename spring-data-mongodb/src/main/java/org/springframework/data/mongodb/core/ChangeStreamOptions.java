@@ -36,6 +36,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  * well {@link ReactiveMongoOperations} if you prefer it that way.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 @EqualsAndHashCode
@@ -45,6 +46,8 @@ public class ChangeStreamOptions {
 	private @Nullable BsonValue resumeToken;
 	private @Nullable FullDocument fullDocumentLookup;
 	private @Nullable Collation collation;
+
+	protected ChangeStreamOptions() {}
 
 	/**
 	 * @return {@link Optional#empty()} if not set.
@@ -82,10 +85,10 @@ public class ChangeStreamOptions {
 	}
 
 	/**
-	 * Obtain a shiny new {@link ChangeStreamRequestOptionsBuilder} and start defining options in this fancy fluent way.
-	 * Just don't forget to call {@link ChangeStreamRequestOptionsBuilder#build() build()} when your're done.
+	 * Obtain a shiny new {@link ChangeStreamOptionsBuilder} and start defining options in this fancy fluent way. Just
+	 * don't forget to call {@link ChangeStreamOptionsBuilder#build() build()} when your're done.
 	 *
-	 * @return new instance of {@link ChangeStreamRequestOptionsBuilder}.
+	 * @return new instance of {@link ChangeStreamOptionsBuilder}.
 	 */
 	public static ChangeStreamOptionsBuilder builder() {
 		return new ChangeStreamOptionsBuilder();
@@ -99,7 +102,12 @@ public class ChangeStreamOptions {
 	 */
 	public static class ChangeStreamOptionsBuilder {
 
-		private ChangeStreamOptions options = new ChangeStreamOptions();
+		private @Nullable Object filter;
+		private @Nullable BsonValue resumeToken;
+		private @Nullable FullDocument fullDocumentLookup;
+		private @Nullable Collation collation;
+
+		private ChangeStreamOptionsBuilder() {}
 
 		/**
 		 * Set the collation to use.
@@ -111,7 +119,7 @@ public class ChangeStreamOptions {
 
 			Assert.notNull(collation, "Collation must not be null nor empty!");
 
-			options.collation = collation;
+			this.collation = collation;
 			return this;
 		}
 
@@ -135,7 +143,7 @@ public class ChangeStreamOptions {
 
 			Assert.notNull(filter, "Filter must not be null!");
 
-			options.filter = filter;
+			this.filter = filter;
 			return this;
 		}
 
@@ -148,7 +156,8 @@ public class ChangeStreamOptions {
 		public ChangeStreamOptionsBuilder filter(Document... filter) {
 
 			Assert.noNullElements(filter, "Filter must not contain null values");
-			options.filter = Arrays.asList(filter);
+
+			this.filter = Arrays.asList(filter);
 			return this;
 		}
 
@@ -162,7 +171,8 @@ public class ChangeStreamOptions {
 		public ChangeStreamOptionsBuilder resumeToken(BsonValue resumeToken) {
 
 			Assert.notNull(resumeToken, "ResumeToken must not be null!");
-			options.resumeToken = resumeToken;
+
+			this.resumeToken = resumeToken;
 			return this;
 		}
 
@@ -185,15 +195,24 @@ public class ChangeStreamOptions {
 		public ChangeStreamOptionsBuilder fullDocumentLookup(FullDocument lookup) {
 
 			Assert.notNull(lookup, "Lookup must not be null!");
-			options.fullDocumentLookup = lookup;
+
+			this.fullDocumentLookup = lookup;
 			return this;
 		}
 
+		/**
+		 * @return the built {@link ChangeStreamOptions}
+		 */
 		public ChangeStreamOptions build() {
 
-			ChangeStreamOptions tmp = options;
-			options = new ChangeStreamOptions();
-			return tmp;
+			ChangeStreamOptions options = new ChangeStreamOptions();
+
+			options.filter = filter;
+			options.resumeToken = resumeToken;
+			options.fullDocumentLookup = fullDocumentLookup;
+			options.collation = collation;
+
+			return options;
 		}
 	}
 }
