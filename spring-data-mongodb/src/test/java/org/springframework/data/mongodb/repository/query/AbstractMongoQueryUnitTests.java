@@ -261,6 +261,18 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(query.execute(new Object[] { "lastname" }), is(reference));
 	}
 
+	@Test // DATAMONGO-1865
+	public void limitingSingleEntityQueryCallsFirst() {
+
+		Person reference = new Person();
+
+		doReturn(reference).when(withQueryMock).firstValue();
+
+		AbstractMongoQuery query = createQueryForMethod("findFirstByLastname", String.class).setLimitingQuery(true);
+
+		assertThat(query.execute(new Object[] { "lastname" }), is(reference));
+	}
+
 	@Test // DATAMONGO-1872
 	public void doesNotFixCollectionOnPreparation() {
 
@@ -294,6 +306,7 @@ public class AbstractMongoQueryUnitTests {
 	private static class MongoQueryFake extends AbstractMongoQuery {
 
 		private boolean isDeleteQuery;
+		private boolean isLimitingQuery;
 
 		public MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
 			super(method, operations);
@@ -319,8 +332,19 @@ public class AbstractMongoQueryUnitTests {
 			return isDeleteQuery;
 		}
 
+		@Override
+		protected boolean isLimiting() {
+			return isLimitingQuery;
+		}
+
 		public MongoQueryFake setDeleteQuery(boolean isDeleteQuery) {
 			this.isDeleteQuery = isDeleteQuery;
+			return this;
+		}
+
+		public MongoQueryFake setLimitingQuery(boolean limitingQuery) {
+
+			isLimitingQuery = limitingQuery;
 			return this;
 		}
 	}
@@ -344,6 +368,8 @@ public class AbstractMongoQueryUnitTests {
 		Slice<Person> findByLastname(String lastname, Pageable page);
 
 		Optional<Person> findByLastname(String lastname);
+
+		Person findFirstByLastname(String lastname);
 	}
 
 	// DATAMONGO-1872

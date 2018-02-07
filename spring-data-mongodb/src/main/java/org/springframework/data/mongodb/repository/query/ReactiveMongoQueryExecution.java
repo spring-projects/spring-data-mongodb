@@ -44,28 +44,12 @@ import com.mongodb.client.result.DeleteResult;
  * various flavors.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 interface ReactiveMongoQueryExecution {
 
 	Object execute(Query query, Class<?> type, String collection);
-
-	/**
-	 * {@link ReactiveMongoQueryExecution} for collection returning queries.
-	 *
-	 * @author Mark Paluch
-	 */
-	@RequiredArgsConstructor
-	final class CollectionExecution implements ReactiveMongoQueryExecution {
-
-		private final @NonNull ReactiveMongoOperations operations;
-		private final Pageable pageable;
-
-		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return operations.find(query.with(pageable), type, collection);
-		}
-	}
 
 	/**
 	 * {@link ReactiveMongoQueryExecution} for collection returning queries using tailable cursors.
@@ -81,23 +65,6 @@ interface ReactiveMongoQueryExecution {
 		@Override
 		public Object execute(Query query, Class<?> type, String collection) {
 			return operations.tail(query.with(pageable), type, collection);
-		}
-	}
-
-	/**
-	 * {@link ReactiveMongoQueryExecution} to return a single entity.
-	 *
-	 * @author Mark Paluch
-	 */
-	@RequiredArgsConstructor
-	final class SingleEntityExecution implements ReactiveMongoQueryExecution {
-
-		private final ReactiveMongoOperations operations;
-		private final boolean countProjection;
-
-		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return countProjection ? operations.count(query, type, collection) : operations.findOne(query, type, collection);
 		}
 	}
 

@@ -39,6 +39,7 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -300,6 +301,17 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 				.verifyComplete();
 	}
 
+	@Test // DATAMONGO-1865
+	public void shouldErrorOnFindOneWithNonUniqueResult() {
+		StepVerifier.create(repository.findOneByLastname(dave.getLastname()))
+				.expectError(IncorrectResultSizeDataAccessException.class).verify();
+	}
+
+	@Test // DATAMONGO-1865
+	public void shouldReturnFirstFindFirstWithMoreResults() {
+		StepVerifier.create(repository.findFirstByLastname(dave.getLastname())).expectNextCount(1).verifyComplete();
+	}
+
 	interface ReactivePersonRepository extends ReactiveMongoRepository<Person, String> {
 
 		Flux<Person> findByLastname(String lastname);
@@ -326,6 +338,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		Flux<GeoResult<Person>> findByLocationNear(Point point, Distance maxDistance, Pageable pageable);
 
 		Flux<Person> findPersonByLocationNear(Point point, Distance maxDistance);
+
+		Mono<Person> findFirstByLastname(String lastname);
 	}
 
 	interface ReactiveCappedCollectionRepository extends Repository<Capped, String> {

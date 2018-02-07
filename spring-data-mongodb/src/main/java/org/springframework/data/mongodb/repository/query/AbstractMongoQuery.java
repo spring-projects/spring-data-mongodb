@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
@@ -117,7 +118,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		} else if (isExistsQuery()) {
 			return q -> operation.matching(q).exists();
 		} else {
-			return q -> operation.matching(q).oneValue();
+			return q -> {
+
+				TerminatingFind<?> find = operation.matching(q);
+				return isLimiting() ? find.firstValue() : find.oneValue();
+			};
 		}
 	}
 
@@ -172,4 +177,12 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 1.5
 	 */
 	protected abstract boolean isDeleteQuery();
+
+	/**
+	 * Return weather the query has an explicit limit set.
+	 *
+	 * @return
+	 * @since 2.0.4
+	 */
+	protected abstract boolean isLimiting();
 }
