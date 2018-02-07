@@ -118,7 +118,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
 	 */
 	@Override
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
@@ -127,7 +127,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isCountQuery()
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isCountQuery()
 	 */
 	@Override
 	protected boolean isCountQuery() {
@@ -136,10 +136,19 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isDeleteQuery()
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isDeleteQuery()
 	 */
 	@Override
 	protected boolean isDeleteQuery() {
 		return tree.isDelete();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isLimiting()
+	 */
+	@Override
+	protected boolean isLimiting() {
+		return tree.isLimiting();
 	}
 }

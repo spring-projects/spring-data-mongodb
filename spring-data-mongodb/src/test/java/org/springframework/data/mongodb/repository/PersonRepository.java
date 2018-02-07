@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
@@ -285,6 +286,15 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	// DATAMONGO-950
 	Page<Person> findTop3ByLastnameStartingWith(String lastname, Pageable pageRequest);
+
+	// DATAMONGO-1865
+	Person findFirstBy(); // limits to 1 result if more, just return the first one
+
+	// DATAMONGO-1865
+	Person findPersonByLastnameLike(String firstname); // single person, error if more than one
+
+	// DATAMONGO-1865
+	Optional<Person> findOptionalPersonByLastnameLike(String firstname); // optional still, error when more than one
 
 	// DATAMONGO-1030
 	PersonSummaryDto findSummaryByLastname(String lastname);

@@ -160,4 +160,13 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	protected boolean isDeleteQuery() {
 		return tree.isDelete();
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isLimiting()
+	 */
+	@Override
+	protected boolean isLimiting() {
+		return tree.isLimiting();
+	}
 }
