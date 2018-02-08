@@ -115,7 +115,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 		Assert.notNull(predicate, "Predicate must not be null!");
 
-		return createQueryFor(predicate).fetchResults().getResults();
+		return createQueryFor(predicate).fetch();
 	}
 
 	/*
@@ -128,7 +128,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 		Assert.notNull(predicate, "Predicate must not be null!");
 		Assert.notNull(orders, "Order specifiers must not be null!");
 
-		return createQueryFor(predicate).orderBy(orders).fetchResults().getResults();
+		return createQueryFor(predicate).orderBy(orders).fetch();
 	}
 
 	/*
@@ -141,7 +141,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 		Assert.notNull(predicate, "Predicate must not be null!");
 		Assert.notNull(sort, "Sort must not be null!");
 
-		return applySorting(createQueryFor(predicate), sort).fetchResults().getResults();
+		return applySorting(createQueryFor(predicate), sort).fetch();
 	}
 
 	/*
@@ -153,7 +153,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 		Assert.notNull(orders, "Order specifiers must not be null!");
 
-		return createQuery().orderBy(orders).fetchResults().getResults();
+		return createQuery().orderBy(orders).fetch();
 	}
 
 	/*
@@ -168,8 +168,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQueryFor(predicate);
 
-		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable,
-				() -> createQueryFor(predicate).fetchCount());
+		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetch(), pageable, query::fetchCount);
 	}
 
 	/*
