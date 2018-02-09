@@ -22,18 +22,20 @@ import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithProjection;
+import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery;
+import org.springframework.data.mongodb.core.ReactiveFindOperation.TerminatingFind;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.CollectionExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.GeoNearExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingConverter;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingExecution;
-import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.SingleEntityExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.TailExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.util.Assert;
 
 /**
@@ -48,6 +50,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	private final ReactiveMongoQueryMethod method;
 	private final ReactiveMongoOperations operations;
 	private final EntityInstantiators instantiators;
+	private final FindWithProjection<?> findOperationWithProjection;
 
 	/**
 	 * Creates a new {@link AbstractReactiveMongoQuery} from the given {@link MongoQueryMethod} and
@@ -64,6 +67,12 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		this.method = method;
 		this.operations = operations;
 		this.instantiators = new EntityInstantiators();
+
+		ReturnedType returnedType = method.getResultProcessor().getReturnedType();
+
+		this.findOperationWithProjection = operations//
+				.query(returnedType.getDomainType())//
+				.inCollection(method.getEntityInformation().getCollectionName());
 	}
 
 	/*
@@ -103,10 +112,16 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		applyQueryMetaAttributesWhenPresent(query);
 
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(parameterAccessor);
+		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+
+		FindWithQuery<?> find = typeToRead == null //
+				? findOperationWithProjection //
+				: findOperationWithProjection.as(typeToRead);
+
 		String collection = method.getEntityInformation().getCollectionName();
 
 		ReactiveMongoQueryExecution execution = getExecution(query, parameterAccessor,
-				new ResultProcessingConverter(processor, operations, instantiators));
+				new ResultProcessingConverter(processor, operations, instantiators), find);
 
 		return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
 	}
@@ -120,11 +135,11 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @return
 	 */
 	private ReactiveMongoQueryExecution getExecution(Query query, MongoParameterAccessor accessor,
-			Converter<Object, Object> resultProcessing) {
-		return new ResultProcessingExecution(getExecutionToWrap(accessor), resultProcessing);
+			Converter<Object, Object> resultProcessing, FindWithQuery<?> operation) {
+		return new ResultProcessingExecution(getExecutionToWrap(accessor, operation), resultProcessing);
 	}
 
-	private ReactiveMongoQueryExecution getExecutionToWrap(MongoParameterAccessor accessor) {
+	private ReactiveMongoQueryExecution getExecutionToWrap(MongoParameterAccessor accessor, FindWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
 			return new DeleteExecution(operations, method);
@@ -133,9 +148,20 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		} else if (isTailable(method)) {
 			return new TailExecution(operations, accessor.getPageable());
 		} else if (method.isCollectionQuery()) {
-			return new CollectionExecution(operations, accessor.getPageable());
+			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).all();
+		} else if (isCountQuery()) {
+			return (q, t, c) -> operation.matching(q).count();
 		} else {
-			return new SingleEntityExecution(operations, isCountQuery());
+			return (q, t, c) -> {
+
+				TerminatingFind<?> find = operation.matching(q);
+
+				if (isCountQuery()) {
+					return find.count();
+				}
+
+				return isLimiting() ? find.first() : find.one();
+			};
 		}
 	}
 
@@ -186,4 +212,12 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @since 1.5
 	 */
 	protected abstract boolean isDeleteQuery();
+
+	/**
+	 * Return weather the query has an explicit limit set.
+	 *
+	 * @return
+	 * @since 2.0.4
+	 */
+	protected abstract boolean isLimiting();
 }

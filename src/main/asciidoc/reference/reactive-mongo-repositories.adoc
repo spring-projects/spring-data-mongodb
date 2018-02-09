@@ -52,15 +52,22 @@ We have a quite simple domain object here. Note that it has a property named `id
 ----
 public interface ReactivePersonRepository extends ReactiveSortingRepository<Person, Long> {
 
-  Flux<Person> findByFirstname(String firstname);
+  Flux<Person> findByFirstname(String firstname);                                   <1>
 
-  Flux<Person> findByFirstname(Publisher<String> firstname);
+  Flux<Person> findByFirstname(Publisher<String> firstname);                        <2>
 
-  Flux<Person> findByFirstnameOrderByLastname(String firstname, Pageable pageable);
+  Flux<Person> findByFirstnameOrderByLastname(String firstname, Pageable pageable); <3>
 
-  Mono<Person> findByFirstnameAndLastname(String firstname, String lastname);
+  Mono<Person> findByFirstnameAndLastname(String firstname, String lastname);       <4>
+
+  Mono<Person> findFirstByLastname(String lastname);                                <5>
 }
 ----
+<1> The method shows a query for all people with the given lastname. The query will be derived parsing the method name for constraints which can be concatenated with `And` and `Or`. Thus the method name will result in a query expression of `{"lastname" : lastname}`.
+<2> The method shows a query for all people with the given firstname once the firstname becomes available via the given `Publisher`.
+<3> Use `Pageable` to pass on offset and sorting parameters to the database.
+<4> Find a single entity for given criteria. Errors on non unique results.
+<5> Unless <4> the first entity is returned no matter what.
 ====
 
 For JavaConfig use the `@EnableReactiveMongoRepositories` annotation. The annotation carries the very same attributes like the namespace element. If no base package is configured the infrastructure will scan the package of the annotated configuration class.

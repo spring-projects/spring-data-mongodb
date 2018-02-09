@@ -104,7 +104,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
 	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
@@ -125,7 +125,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isCountQuery()
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isCountQuery()
 	 */
 	@Override
 	protected boolean isCountQuery() {
@@ -134,11 +134,20 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isDeleteQuery()
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isDeleteQuery()
 	 */
 	@Override
 	protected boolean isDeleteQuery() {
 		return this.isDeleteQuery;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isLimiting()
+	 */
+	@Override
+	protected boolean isLimiting() {
+		return false;
 	}
 
 }
