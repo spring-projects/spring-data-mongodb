@@ -94,11 +94,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
 		carter.setSkills(Arrays.asList("Drums", "percussion", "vocals"));
+
 		Thread.sleep(10);
+
 		boyd = new Person("Boyd", "Tinsley", 45);
 		boyd.setSkills(Arrays.asList("Violin", "Electric Violin", "Viola", "Mandolin", "Vocals", "Guitar"));
 		stefan = new Person("Stefan", "Lessard", 34);
 		leroi = new Person("Leroi", "Moore", 41);
+
+		Thread.sleep(10);
 
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
@@ -1165,5 +1169,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		repository.deleteByThePersonsFirstname("Dave");
 
 		assertThat(repository.countByThePersonsFirstname("Dave"), is(0L));
+	}
+
+	@Test // DATAMONGO-1867
+	public void findInDateRange() {
+
+		assertThat(repository.findByCreatedAtBetween(carter.createdAt, alicia.createdAt),
+				containsInAnyOrder(boyd, stefan, leroi));
+	}
+
+	@Test // DATAMONGO-1867
+	public void findInDateRangeWithAnnotatedQuery() {
+
+		assertThat(repository.findByCreatedAtBetweenManually(carter.createdAt, alicia.createdAt),
+				containsInAnyOrder(boyd, stefan, leroi));
 	}
 }

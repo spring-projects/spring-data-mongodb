@@ -208,6 +208,13 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	// DATAMONGO-427
 	List<Person> findByCreatedAtAfter(Date date);
 
+	// DATAMONGO-1867
+	List<Person> findByCreatedAtBetween(Date from, Date to);
+
+	// DATAMONGO-1867
+	@Query("{ 'createdAt' : { '$gt' : ?0, '$lt' : ?1 }}")
+	List<Person> findByCreatedAtBetweenManually(Date from, Date to);
+
 	// DATAMONGO-472
 	List<Person> findByLastnameNot(String lastname);
 
