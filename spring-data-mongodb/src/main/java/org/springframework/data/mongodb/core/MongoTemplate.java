@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2017 the original author or authors.
+ * Copyright 2010-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,26 +18,14 @@ package org.springframework.data.mongodb.core;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import com.mongodb.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
@@ -128,6 +116,14 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.Cursor;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
@@ -1587,13 +1583,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <T> DeleteResult doRemove(final String collectionName, final Query query,
 			@Nullable final Class<T> entityClass) {
 
+		Assert.notNull(query, "Query must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-		if (query == null) {
-			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null!");
-		}
 
-		final Document queryObject = query.getQueryObject();
 		final MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
+		final Document queryObject = queryMapper.getMappedObject(query.getQueryObject(), entity);
 
 		return execute(collectionName, new CollectionCallback<DeleteResult>() {
 
@@ -1602,7 +1596,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass, collectionName));
 
-				Document mappedQuery = queryMapper.getMappedObject(queryObject, entity);
+				Document removeQuery = queryObject;
 
 				DeleteOptions options = new DeleteOptions();
 				query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
@@ -1615,14 +1609,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				DeleteResult dr = null;
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Remove using query: {} in collection: {}.",
-							new Object[] { serializeToJsonSafely(mappedQuery), collectionName });
+							new Object[] { serializeToJsonSafely(removeQuery), collectionName });
+				}
+
+				if (query.getLimit() > 0 || query.getSkip() > 0) {
+
+					MongoCursor<Document> cursor = new QueryCursorPreparer(query, entityClass)
+							.prepare(collection.find(removeQuery).projection(new Document(ID_FIELD, 1))).iterator();
+
+					Set<Object> ids = new LinkedHashSet<>();
+					while (cursor.hasNext()) {
+						ids.add(cursor.next().get(ID_FIELD));
+					}
+
+					removeQuery = new Document(ID_FIELD, new Document("$in", ids));
 				}
 
 				if (writeConcernToUse == null) {
 
-					dr = collection.deleteMany(mappedQuery, options);
+					dr = collection.deleteMany(removeQuery, options);
 				} else {
-					dr = collection.withWriteConcern(writeConcernToUse).deleteMany(mappedQuery, options);
+					dr = collection.withWriteConcern(writeConcernToUse).deleteMany(removeQuery, options);
 				}
 
 				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass, collectionName));
@@ -3097,8 +3104,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 */
 		Document aggregate(String collectionName, Aggregation aggregation, AggregationOperationContext context) {
 
-			Document command = prepareAggregationCommand(collectionName, aggregation,
-					context, batchSize);
+			Document command = prepareAggregationCommand(collectionName, aggregation, context, batchSize);
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
