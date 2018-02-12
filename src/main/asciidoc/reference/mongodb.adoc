@@ -951,7 +951,25 @@ assertThat(p.getAge(), is(1));
 
 You can use several overloaded methods to remove an object from the database.
 
-* *remove* Remove the given document based on one of the following: a specific object instance, a query document criteria combined with a class or a query document criteria combined with a specific collection name.
+====
+[source,java]
+----
+template.remove(tywin, "GOT");                                              <1>
+
+template.remove(query(where("lastname").is("lannister")), "GOT");           <2>
+
+template.remove(new Query().limit(3), "GOT");                               <3>
+
+template.findAllAndRemove(query(where("lastname").is("lannister"), "GOT");  <4>
+
+template.findAllAndRemove(new Query().limit(3), "GOT");                     <5>
+----
+<1> Remove a single entity via its `id` from the associated collection.
+<2> Remove all documents matching the criteria of the query from the `GOT` collection.
+<3> Rewmove the first 3 documents in the `GOT` collection. Unlike <2> the documents to remove are identified via their `id` using the given query applying `sort`, `limit` and `skip` options and then removed all at once in a seperate step.
+<4> Remove all documents matching the criteria of the query from the `GOT` collection. Unlike <3> documents do not get deleted in a batch but one by one.
+<5> Remove the first 3 documents in the `GOT` collection. Unlike <3> documents do not get deleted in a batch but one by one.
+====
 
 [[mongo-template.optimistic-locking]]
 === Optimistic locking

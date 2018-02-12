@@ -37,6 +37,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Assumptions;
 import org.bson.BsonDocument;
 import org.bson.Document;
@@ -66,7 +67,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.test.util.Assertions;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -1124,6 +1124,35 @@ public class ReactiveMongoTemplateTests {
 
 	}
 
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderLimit() {
+
+		for (int i = 0; i < 100; i++) {
+			StepVerifier.create(template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"))).expectNextCount(1)
+					.verifyComplete();
+		}
+
+		StepVerifier.create(template.remove(query(where("field").is("lannister")).limit(25), Sample.class))
+				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(25L)).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderSkipAndSort() {
+
+		for (int i = 0; i < 100; i++) {
+			StepVerifier.create(template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"))).expectNextCount(1)
+					.verifyComplete();
+		}
+
+		StepVerifier.create(template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class))
+				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(75L)).verifyComplete();
+
+		StepVerifier.create(template.count(query(where("field").is("lannister")), Sample.class)).expectNext(25L)
+				.verifyComplete();
+		StepVerifier.create(template.count(query(where("field").is("stark")), Sample.class)).expectNext(0L)
+				.verifyComplete();
+	}
+
 	private PersonWithAList createPersonWithAList(String firstname, int age) {
 
 		PersonWithAList p = new PersonWithAList();
@@ -1146,5 +1175,4 @@ public class ReactiveMongoTemplateTests {
 			this.field = field;
 		}
 	}
-
 }

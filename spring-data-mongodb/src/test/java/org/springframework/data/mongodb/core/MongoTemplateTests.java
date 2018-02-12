@@ -99,6 +99,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
 /**
@@ -3324,6 +3325,34 @@ public class MongoTemplateTests {
 		template.insertAll(Arrays.asList(first, second));
 
 		assertThat(template.find(new Query().limit(1), Sample.class)).hasSize(1);
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderLimit() {
+
+		for (int i = 0; i < 100; i++) {
+			template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"));
+		}
+
+		DeleteResult wr = template.remove(query(where("field").is("lannister")).limit(25), Sample.class);
+
+		assertThat(wr.getDeletedCount()).isEqualTo(25L);
+		assertThat(template.count(new Query(), Sample.class)).isEqualTo(75L);
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderSkipAndSort() {
+
+		for (int i = 0; i < 100; i++) {
+			template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"));
+		}
+
+		DeleteResult wr = template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class);
+
+		assertThat(wr.getDeletedCount()).isEqualTo(75L);
+		assertThat(template.count(new Query(), Sample.class)).isEqualTo(25L);
+		assertThat(template.count(query(where("field").is("lannister")), Sample.class)).isEqualTo(25L);
+		assertThat(template.count(query(where("field").is("stark")), Sample.class)).isEqualTo(0L);
 	}
 
 	static class TypeWithNumbers {

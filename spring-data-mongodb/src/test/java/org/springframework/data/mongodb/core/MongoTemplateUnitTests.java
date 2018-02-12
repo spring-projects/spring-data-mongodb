@@ -164,7 +164,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		new MongoTemplate(null, "database");
 	}
 
-	@Test(expected = DataAccessException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1870
 	public void removeHandlesMongoExceptionProperly() throws Exception {
 
 		MongoTemplate template = mockOutGetDb();

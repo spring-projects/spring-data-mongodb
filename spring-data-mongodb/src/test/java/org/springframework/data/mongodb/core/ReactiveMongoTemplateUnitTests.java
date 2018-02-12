@@ -169,16 +169,16 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
 
-	@Ignore("see https://jira.mongodb.org/browse/JAVARS-27")
 	@Test // DATAMONGO-1518
 	public void findAndRemoveManyShouldUseCollationWhenPresent() {
+
+		when(collection.deleteMany(any(Bson.class), any())).thenReturn(Mono.empty());
 
 		template.doRemove("collection-1", new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class)
 				.subscribe();
 
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
-		// the current mongodb-driver-reactivestreams:1.4.0 driver does not offer deleteMany with options.
-		// verify(collection).deleteMany(Mockito.any(), options.capture());
+		verify(collection).deleteMany(Mockito.any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}

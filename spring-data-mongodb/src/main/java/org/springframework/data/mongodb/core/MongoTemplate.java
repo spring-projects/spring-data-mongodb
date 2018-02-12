@@ -24,19 +24,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -135,6 +124,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.Mongo;
@@ -1693,13 +1683,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <T> DeleteResult doRemove(final String collectionName, final Query query,
 			@Nullable final Class<T> entityClass) {
 
+		Assert.notNull(query, "Query must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-		if (query == null) {
-			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null!");
-		}
 
-		final Document queryObject = query.getQueryObject();
 		final MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
+		final Document queryObject = queryMapper.getMappedObject(query.getQueryObject(), entity);
 
 		return execute(collectionName, new CollectionCallback<DeleteResult>() {
 
@@ -1708,7 +1696,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass, collectionName));
 
-				Document mappedQuery = queryMapper.getMappedObject(queryObject, entity);
+				Document removeQuery = queryObject;
 
 				DeleteOptions options = new DeleteOptions();
 				query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
@@ -1721,13 +1709,26 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				DeleteResult dr = null;
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Remove using query: {} in collection: {}.",
-							new Object[] { serializeToJsonSafely(mappedQuery), collectionName });
+							new Object[] { serializeToJsonSafely(removeQuery), collectionName });
+				}
+
+				if (query.getLimit() > 0 || query.getSkip() > 0) {
+
+					MongoCursor<Document> cursor = new QueryCursorPreparer(query, entityClass)
+							.prepare(collection.find(removeQuery).projection(new Document(ID_FIELD, 1))).iterator();
+
+					Set<Object> ids = new LinkedHashSet<>();
+					while (cursor.hasNext()) {
+						ids.add(cursor.next().get(ID_FIELD));
+					}
+
+					removeQuery = new Document(ID_FIELD, new Document("$in", ids));
 				}
 
 				if (writeConcernToUse == null) {
-					dr = collection.deleteMany(mappedQuery, options);
+					dr = collection.deleteMany(removeQuery, options);
 				} else {
-					dr = collection.withWriteConcern(writeConcernToUse).deleteMany(mappedQuery, options);
+					dr = collection.withWriteConcern(writeConcernToUse).deleteMany(removeQuery, options);
 				}
 
 				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass, collectionName));
@@ -3229,5 +3230,148 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	public MongoDbFactory getMongoDbFactory() {
 		return mongoDbFactory;
+	}
+
+	/**
+	 * {@link BatchAggregationLoader} is a little helper that can process cursor results returned by an aggregation
+	 * command execution. On presence of a {@literal nextBatch} indicated by presence of an {@code id} field in the
+	 * {@code cursor} another {@code getMore} command gets executed reading the next batch of documents until all results
+	 * are loaded.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	static class BatchAggregationLoader {
+
+		private static final String CURSOR_FIELD = "cursor";
+		private static final String RESULT_FIELD = "result";
+		private static final String BATCH_SIZE_FIELD = "batchSize";
+		private static final String FIRST_BATCH = "firstBatch";
+		private static final String NEXT_BATCH = "nextBatch";
+		private static final String SERVER_USED = "serverUsed";
+		private static final String OK = "ok";
+
+		private final MongoTemplate template;
+		private final ReadPreference readPreference;
+		private final int batchSize;
+
+		BatchAggregationLoader(MongoTemplate template, ReadPreference readPreference, int batchSize) {
+
+			this.template = template;
+			this.readPreference = readPreference;
+			this.batchSize = batchSize;
+		}
+
+		/**
+		 * Run aggregation command and fetch all results.
+		 */
+		Document aggregate(String collectionName, Aggregation aggregation, AggregationOperationContext context) {
+
+			Document command = prepareAggregationCommand(collectionName, aggregation, context, batchSize);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
+			}
+
+			return mergeAggregationResults(aggregateBatched(command, collectionName, batchSize));
+		}
+
+		/**
+		 * Pre process the aggregation command sent to the server by adding {@code cursor} options to match execution on
+		 * different server versions.
+		 */
+		private static Document prepareAggregationCommand(String collectionName, Aggregation aggregation,
+				@Nullable AggregationOperationContext context, int batchSize) {
+
+			AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+			Document command = aggregation.toDocument(collectionName, rootContext);
+
+			if (!aggregation.getOptions().isExplain()) {
+				command.put(CURSOR_FIELD, new Document(BATCH_SIZE_FIELD, batchSize));
+			}
+
+			return command;
+		}
+
+		private List<Document> aggregateBatched(Document command, String collectionName, int batchSize) {
+
+			List<Document> results = new ArrayList<>();
+
+			Document commandResult = template.executeCommand(command, readPreference);
+			results.add(postProcessResult(commandResult));
+
+			while (hasNext(commandResult)) {
+
+				Document getMore = new Document("getMore", getNextBatchId(commandResult)) //
+						.append("collection", collectionName) //
+						.append(BATCH_SIZE_FIELD, batchSize);
+
+				commandResult = template.executeCommand(getMore, this.readPreference);
+				results.add(postProcessResult(commandResult));
+			}
+
+			return results;
+		}
+
+		private static Document postProcessResult(Document commandResult) {
+
+			if (!commandResult.containsKey(CURSOR_FIELD)) {
+				return commandResult;
+			}
+
+			Document resultObject = new Document(SERVER_USED, commandResult.get(SERVER_USED));
+			resultObject.put(OK, commandResult.get(OK));
+
+			Document cursor = (Document) commandResult.get(CURSOR_FIELD);
+			if (cursor.containsKey(FIRST_BATCH)) {
+				resultObject.put(RESULT_FIELD, cursor.get(FIRST_BATCH));
+			} else {
+				resultObject.put(RESULT_FIELD, cursor.get(NEXT_BATCH));
+			}
+
+			return resultObject;
+		}
+
+		private static Document mergeAggregationResults(List<Document> batchResults) {
+
+			if (batchResults.size() == 1) {
+				return batchResults.iterator().next();
+			}
+
+			Document commandResult = new Document();
+			List<Object> allResults = new ArrayList<>();
+
+			for (Document batchResult : batchResults) {
+
+				Collection documents = (Collection<?>) batchResult.get(RESULT_FIELD);
+				if (!CollectionUtils.isEmpty(documents)) {
+					allResults.addAll(documents);
+				}
+			}
+
+			// take general info from first batch
+			commandResult.put(SERVER_USED, batchResults.iterator().next().get(SERVER_USED));
+			commandResult.put(OK, batchResults.iterator().next().get(OK));
+
+			// and append the merged batchResults
+			commandResult.put(RESULT_FIELD, allResults);
+
+			return commandResult;
+		}
+
+		private static boolean hasNext(Document commandResult) {
+
+			if (!commandResult.containsKey(CURSOR_FIELD)) {
+				return false;
+			}
+
+			Object next = getNextBatchId(commandResult);
+			return next != null && ((Number) next).longValue() != 0L;
+		}
+
+		@Nullable
+		private static Object getNextBatchId(Document commandResult) {
+			return ((Document) commandResult.get(CURSOR_FIELD)).get("id");
+		}
 	}
 }
