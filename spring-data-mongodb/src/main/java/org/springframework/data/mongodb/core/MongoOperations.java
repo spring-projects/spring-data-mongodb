@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -710,8 +710,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
+	 * <a/>* to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -723,8 +723,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
+	 * <a/>* to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -737,8 +737,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
+	 * <a/>* to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -754,8 +754,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
+	 * <a/>* to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -1083,6 +1083,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param query the query document that specifies the criteria used to remove a record.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws IllegalArgumentException when {@literal query} or {@literal entityClass} is {@literal null}.
 	 */
 	DeleteResult remove(Query query, Class<?> entityClass);
 
@@ -1094,6 +1095,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Can be {@literal null}.
 	 * @param collectionName name of the collection where the objects will removed, must not be {@literal null} or empty.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws IllegalArgumentException when {@literal query}, {@literal entityClass} or {@literal collectionName} is
+	 *           {@literal null}.
 	 */
 	DeleteResult remove(Query query, Class<?> entityClass, String collectionName);
 
@@ -1106,6 +1109,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param query the query document that specifies the criteria used to remove a record.
 	 * @param collectionName name of the collection where the objects will removed, must not be {@literal null} or empty.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws IllegalArgumentException when {@literal query} or {@literal collectionName} is {@literal null}.
 	 */
 	DeleteResult remove(Query query, String collectionName);
 

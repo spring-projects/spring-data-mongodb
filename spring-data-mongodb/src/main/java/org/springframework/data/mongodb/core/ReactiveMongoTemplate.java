@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,6 +125,7 @@ import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -1611,27 +1612,34 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return execute(collectionName, collection -> {
 
-			maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass, collectionName));
+			Document removeQuey = queryMapper.getMappedObject(queryObject, entity);
 
-			Document dboq = queryMapper.getMappedObject(queryObject, entity);
+			maybeEmitEvent(new BeforeDeleteEvent<T>(removeQuey, entityClass, collectionName));
 
 			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName, entityClass,
-					null, queryObject);
+					null, removeQuey);
+
+			final DeleteOptions deleteOptions = new DeleteOptions();
+			query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
+
 			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 			MongoCollection<Document> collectionToUse = prepareCollection(collection, writeConcernToUse);
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Remove using query: {} in collection: {}.",
-						new Object[] { serializeToJsonSafely(dboq), collectionName });
+						new Object[] { serializeToJsonSafely(removeQuey), collectionName });
 			}
 
-			query.getCollation().ifPresent(val -> {
+			if (query.getLimit() > 0 || query.getSkip() > 0) {
 
-				// TODO: add collation support as soon as it's there! See https://jira.mongodb.org/browse/JAVARS-27
-				throw new IllegalArgumentException("DeleteMany does currently not accept collation settings.");
-			});
-
-			return collectionToUse.deleteMany(dboq);
+				FindPublisher<Document> cursor = new QueryFindPublisherPreparer(query, entityClass)
+						.prepare(collection.find(removeQuey)).projection(new Document(ID_FIELD, 1));
+				return Flux.from(cursor).map(doc -> doc.get(ID_FIELD)).collectList().flatMap(val -> {
+					return Mono.from(collectionToUse.deleteMany(new Document(ID_FIELD, new Document("$in", val)), deleteOptions));
+				});
+			} else {
+				return collectionToUse.deleteMany(removeQuey, deleteOptions);
+			}
 
 		}).doOnNext(deleteResult -> maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass, collectionName)))
 				.next();
