@@ -31,18 +31,7 @@ import lombok.NoArgsConstructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
@@ -97,17 +86,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.DBRef;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
+import com.mongodb.*;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -3231,6 +3210,34 @@ public class MongoTemplateTests {
 		assertThat(result, hasSize(2));
 		assertThat(result, containsInAnyOrder(bran, rickon));
 		assertThat(template.count(new BasicQuery("{}"), template.determineCollectionName(Sample.class)), is(equalTo(1L)));
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderLimit() {
+
+		for (int i = 0; i < 100; i++) {
+			template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"));
+		}
+
+		WriteResult wr = template.remove(query(where("field").is("lannister")).limit(25), Sample.class);
+
+		assertThat(wr.getN(), is(25));
+		assertThat(template.count(new Query(), Sample.class), is(75L));
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderSkipAndSort() {
+
+		for (int i = 0; i < 100; i++) {
+			template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"));
+		}
+
+		WriteResult wr = template.remove(new Query().skip(25).with(new Sort("field")), Sample.class);
+
+		assertThat(wr.getN(), is(75));
+		assertThat(template.count(new Query(), Sample.class), is(25L));
+		assertThat(template.count(query(where("field").is("lannister")), Sample.class), is(25L));
+		assertThat(template.count(query(where("field").is("stark")), Sample.class), is(0L));
 	}
 
 	static class TypeWithNumbers {
