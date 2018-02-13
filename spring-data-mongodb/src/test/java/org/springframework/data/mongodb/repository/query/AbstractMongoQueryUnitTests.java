@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,7 +41,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithProjection;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.Person;
@@ -55,6 +55,7 @@ import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 
 import com.mongodb.client.result.DeleteResult;
@@ -71,8 +72,7 @@ import com.mongodb.client.result.DeleteResult;
 public class AbstractMongoQueryUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
-	@Mock ExecutableFind<?> findOperationMock;
-	@Mock FindWithProjection<?> withProjectionMock;
+	@Mock ExecutableFind<?> executableFind;
 	@Mock FindWithQuery<?> withQueryMock;
 	@Mock BasicMongoPersistentEntity<?> persitentEntityMock;
 	@Mock MongoMappingContext mappingContextMock;
@@ -91,9 +91,8 @@ public class AbstractMongoQueryUnitTests {
 		converter.afterPropertiesSet();
 
 		doReturn(converter).when(mongoOperationsMock).getConverter();
-		doReturn(findOperationMock).when(mongoOperationsMock).query(any());
-		doReturn(withProjectionMock).when(findOperationMock).inCollection(any());
-		doReturn(withQueryMock).when(withProjectionMock).as(any());
+		doReturn(executableFind).when(mongoOperationsMock).query(any());
+		doReturn(withQueryMock).when(executableFind).as(any());
 		doReturn(withQueryMock).when(withQueryMock).matching(any());
 	}
 
@@ -144,9 +143,8 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(withProjectionMock).as(Person.class);
+		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
-		verify(findOperationMock).inCollection("persons");
 
 		assertThat(captor.getValue().getMeta().getComment(), nullValue());
 	}
@@ -159,9 +157,8 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(withProjectionMock).as(Person.class);
+		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
-		verify(findOperationMock).inCollection("persons");
 
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
@@ -174,9 +171,8 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(withProjectionMock).as(Person.class);
+		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
-		verify(findOperationMock).inCollection("persons");
 
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
@@ -189,9 +185,8 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(withProjectionMock).as(Person.class);
+		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
-		verify(findOperationMock).inCollection("persons");
 
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
@@ -208,9 +203,8 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(withProjectionMock, times(2)).as(Person.class);
+		verify(executableFind, times(2)).as(Person.class);
 		verify(withQueryMock, times(2)).matching(captor.capture());
-		verify(findOperationMock).inCollection("persons");
 
 		assertThat(captor.getAllValues().get(0).getSkip(), is(0L));
 		assertThat(captor.getAllValues().get(1).getSkip(), is(10L));
@@ -228,9 +222,8 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(withProjectionMock, times(2)).as(Person.class);
+		verify(executableFind, times(2)).as(Person.class);
 		verify(withQueryMock, times(2)).matching(captor.capture());
-		verify(findOperationMock).inCollection("persons");
 
 		assertThat(captor.getAllValues().get(0).getLimit(), is(11));
 		assertThat(captor.getAllValues().get(1).getLimit(), is(11));
@@ -248,9 +241,8 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(withProjectionMock, times(2)).as(Person.class);
+		verify(executableFind, times(2)).as(Person.class);
 		verify(withQueryMock, times(2)).matching(captor.capture());
-		verify(findOperationMock).inCollection("persons");
 
 		Document expectedSortObject = new Document().append("bar", -1);
 		assertThat(captor.getAllValues().get(0).getSortObject(), is(expectedSortObject));
@@ -269,17 +261,31 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(query.execute(new Object[] { "lastname" }), is(reference));
 	}
 
+	@Test // DATAMONGO-1872
+	public void doesNotFixCollectionOnPreparation() {
+
+		AbstractMongoQuery query = createQueryForMethod(DynamicallyMappedRepository.class, "findBy");
+
+		query.execute(new Object[0]);
+
+		verify(executableFind, never()).inCollection(anyString());
+		verify(executableFind).as(DynamicallyMapped.class);
+	}
+
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
+		return createQueryForMethod(Repo.class, methodName, paramTypes);
+	}
+
+	private MongoQueryFake createQueryForMethod(Class<?> repository, String methodName, Class<?>... paramTypes) {
 
 		try {
 
-			Method method = Repo.class.getMethod(methodName, paramTypes);
+			Method method = repository.getMethod(methodName, paramTypes);
 			ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(Repo.class), factory,
+			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(repository), factory,
 					mappingContextMock);
 
 			return new MongoQueryFake(queryMethod, mongoOperationsMock);
-
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		}
@@ -338,5 +344,14 @@ public class AbstractMongoQueryUnitTests {
 		Slice<Person> findByLastname(String lastname, Pageable page);
 
 		Optional<Person> findByLastname(String lastname);
+	}
+
+	// DATAMONGO-1872
+
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "#{T(java.lang.Math).random()}")
+	static class DynamicallyMapped {}
+
+	interface DynamicallyMappedRepository extends Repository<DynamicallyMapped, ObjectId> {
+		DynamicallyMapped findBy();
 	}
 }

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithProjection;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
@@ -27,7 +27,6 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Sli
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.util.Assert;
 
 /**
@@ -42,7 +41,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
-	private final FindWithProjection<?> findOperationWithProjection;
+	private final ExecutableFind<?> executableFind;
 
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
@@ -58,11 +57,10 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		this.method = method;
 		this.operations = operations;
 
-		ReturnedType returnedType = method.getResultProcessor().getReturnedType();
+		MongoEntityMetadata<?> metadata = method.getEntityInformation();
+		Class<?> type = metadata.getCollectionEntity().getType();
 
-		this.findOperationWithProjection = operations//
-				.query(returnedType.getDomainType())//
-				.inCollection(method.getEntityInformation().getCollectionName());
+		this.executableFind = operations.query(type);
 	}
 
 	/*
@@ -90,8 +88,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
 
 		FindWithQuery<?> find = typeToRead == null //
-				? findOperationWithProjection //
-				: findOperationWithProjection.as(typeToRead);
+				? executableFind //
+				: executableFind.as(typeToRead);
 
 		MongoQueryExecution execution = getExecution(accessor, find);
 
