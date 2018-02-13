@@ -36,7 +36,7 @@ public interface MongoEntityMetadata<T> extends EntityMetadata<T> {
 	 * Returns the {@link MongoPersistentEntity} that supposed to determine the collection to be queried.
 	 * 
 	 * @return
-	 * @since 2.0.5
+	 * @since 2.0.4
 	 */
 	MongoPersistentEntity<?> getCollectionEntity();
 }
