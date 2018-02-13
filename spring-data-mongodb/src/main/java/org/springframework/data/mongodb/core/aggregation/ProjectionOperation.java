@@ -455,7 +455,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			}
 
 			if (value instanceof AggregationExpression) {
-				return this.operation.and(new ExpressionProjection(Fields.field(alias), (AggregationExpression) value));
+				return this.operation.and(new ExpressionProjection(Fields.field(alias, alias), (AggregationExpression) value));
 			}
 
 			return this.operation.and(new FieldProjection(Fields.field(alias, name), null));

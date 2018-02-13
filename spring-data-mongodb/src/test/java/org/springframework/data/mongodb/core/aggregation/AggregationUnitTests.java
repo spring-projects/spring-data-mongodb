@@ -574,6 +574,23 @@ public class AggregationUnitTests {
 				new BasicDBObject("$add", new BasicDbListBuilder().add("$value1.value").add("$value2.value").get())))));
 	}
 
+	@Test // DATAMONGO-1871
+	public void providedAliasShouldAllowNestingExpressionWithAliasCorrectly() {
+
+		DBObject condition = new BasicDBObject("$and",
+				Arrays.asList(new BasicDBObject("$gte", new BasicDbListBuilder().add("$$est.dt").add("2015-12-29").get()), //
+						new BasicDBObject("$lte", new BasicDbListBuilder().add("$$est.dt").add("2017-12-29").get()) //
+				));
+
+		Aggregation agg = newAggregation(project("_id", "dId", "aId", "cty", "cat", "plts.plt")
+				.and(ArrayOperators.arrayOf("plts.ests").filter().as("est").by(condition)).as("plts.ests"));
+
+		DBObject $project = extractPipelineElement(agg.toDbObject("collection-1", Aggregation.DEFAULT_CONTEXT), 0,
+				"$project");
+
+		assertThat($project.containsField("plts.ests"), is(true));
+	}
+
 	private DBObject extractPipelineElement(DBObject agg, int index, String operation) {
 
 		List<DBObject> pipeline = (List<DBObject>) agg.get("pipeline");
