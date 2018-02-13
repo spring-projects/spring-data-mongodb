@@ -33,7 +33,6 @@ import org.junit.rules.ExpectedException;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 /**
  * Unit tests for {@link Aggregation}.
@@ -567,6 +566,23 @@ public class AggregationUnitTests {
 
 		assertThat(extractPipelineElement(agg, 0, "$project"),
 				is(equalTo(new Document("val", new Document("$add", Arrays.asList("$value1.value", "$value2.value"))))));
+	}
+
+	@Test // DATAMONGO-1871
+	public void providedAliasShouldAllowNestingExpressionWithAliasCorrectly() {
+
+		Document condition = new Document("$and",
+				Arrays.asList(new Document("$gte", Arrays.asList("$$est.dt", "2015-12-29")), //
+						new Document("$lte", Arrays.asList("$$est.dt", "2017-12-29")) //
+				));
+
+		Aggregation agg = newAggregation(project("_id", "dId", "aId", "cty", "cat", "plts.plt")
+				.and(ArrayOperators.arrayOf("plts.ests").filter().as("est").by(condition)).as("plts.ests"));
+
+		Document $project = extractPipelineElement(agg.toDocument("collection-1", Aggregation.DEFAULT_CONTEXT), 0,
+				"$project");
+
+		assertThat($project.containsKey("plts.ests"), is(true));
 	}
 
 	private Document extractPipelineElement(Document agg, int index, String operation) {
