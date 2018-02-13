@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.repository.core.EntityMetadata;
 
 /**
@@ -30,4 +31,12 @@ public interface MongoEntityMetadata<T> extends EntityMetadata<T> {
 	 * @return
 	 */
 	String getCollectionName();
+
+	/**
+	 * Returns the {@link MongoPersistentEntity} that supposed to determine the collection to be queried.
+	 * 
+	 * @return
+	 * @since 2.0.5
+	 */
+	MongoPersistentEntity<?> getCollectionEntity();
 }
