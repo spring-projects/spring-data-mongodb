@@ -23,7 +23,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Document(collection = "geolocation")
+@Document("geolocation")
 public class GeoLocation {
 
 	@Id

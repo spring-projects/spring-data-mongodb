@@ -206,7 +206,7 @@ public class QueryByExampleTests {
 		assertThat(result, hasItems(p1, p3));
 	}
 
-	@Document(collection = "dramatis-personae")
+	@Document("dramatis-personae")
 	@EqualsAndHashCode
 	@ToString
 	static class Person {

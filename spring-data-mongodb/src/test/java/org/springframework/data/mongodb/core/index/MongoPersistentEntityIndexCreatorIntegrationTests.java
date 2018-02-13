@@ -113,7 +113,7 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 				new Index().named("stormlight").on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
 	}
 
-	@Document(collection = RECURSIVE_TYPE_COLLECTION_NAME)
+	@Document(RECURSIVE_TYPE_COLLECTION_NAME)
 	static abstract class RecursiveGenericType<RGT extends RecursiveGenericType<RGT>> {
 
 		@Id Long id;

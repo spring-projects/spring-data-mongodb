@@ -20,7 +20,7 @@ import org.springframework.data.annotation.Id;
 /**
  * @author Jon Brisbin
  */
-@Document(collection = "person1")
+@Document("person1")
 public class PersonCustomCollection1 extends BasePerson {
 
 	@Id

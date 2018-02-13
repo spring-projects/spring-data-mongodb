@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Document(collection = "places")
+@Document("places")
 public class Location {
 
 	private ObjectId id;

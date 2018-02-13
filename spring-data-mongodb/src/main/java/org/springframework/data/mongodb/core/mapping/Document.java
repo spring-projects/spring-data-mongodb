@@ -21,13 +21,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Persistent;
 
 /**
  * Identifies a domain object to be persisted to MongoDB.
  *
- * @author Jon Brisbin <jbrisbin@vmware.com>
- * @author Oliver Gierke ogierke@vmware.com
+ * @author Jon Brisbin
+ * @author Oliver Gierke
  * @author Christoph Strobl
  */
 @Persistent
@@ -36,6 +37,24 @@ import org.springframework.data.annotation.Persistent;
 @Target({ ElementType.TYPE })
 public @interface Document {
 
+	/**
+	 * The collection the document representing the entity is supposed to be stored in. If not configured, a default
+	 * collection name will be derived from the type's name. The attribute supports SpEL expressions to dynamically
+	 * calculate the collection to based on a per operation basis.
+	 * 
+	 * @return the name of the collection to be used.
+	 */
+	@AliasFor("collection")
+	String value() default "";
+
+	/**
+	 * The collection the document representing the entity is supposed to be stored in. If not configured, a default
+	 * collection name will be derived from the type's name. The attribute supports SpEL expressions to dynamically
+	 * calculate the collection to based on a per operation basis.
+	 * 
+	 * @return the name of the collection to be used.
+	 */
+	@AliasFor("value")
 	String collection() default "";
 
 	/**

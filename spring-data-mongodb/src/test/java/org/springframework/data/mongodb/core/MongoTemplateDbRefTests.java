@@ -83,7 +83,7 @@ public class MongoTemplateDbRefTests {
 	}
 
 	@Data
-	@Document(collection = "cycle-with-different-type-root")
+	@Document("cycle-with-different-type-root")
 	static class RefCycleLoadingIntoDifferentTypeRoot {
 
 		@Id String id;
@@ -92,7 +92,7 @@ public class MongoTemplateDbRefTests {
 	}
 
 	@Data
-	@Document(collection = "cycle-with-different-type-intermediate")
+	@Document("cycle-with-different-type-intermediate")
 	static class RefCycleLoadingIntoDifferentTypeIntermediate {
 
 		@Id String id;
@@ -100,7 +100,7 @@ public class MongoTemplateDbRefTests {
 	}
 
 	@Data
-	@Document(collection = "cycle-with-different-type-root")
+	@Document("cycle-with-different-type-root")
 	static class RefCycleLoadingIntoDifferentTypeRootView {
 
 		@Id String id;

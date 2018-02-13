@@ -515,7 +515,7 @@ public class MongoExampleMapperUnitTests {
 		FlatDocument flatDoc;
 	}
 
-	@Document(collection = "refDoc")
+	@Document("refDoc")
 	static class ReferenceDocument {
 
 		@Id String id;

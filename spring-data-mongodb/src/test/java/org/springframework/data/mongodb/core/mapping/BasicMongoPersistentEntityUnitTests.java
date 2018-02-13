@@ -221,15 +221,15 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection(), is("custom-collection"));
 	}
 
-	@Document(collection = "contacts")
+	@Document("contacts")
 	class Contact {}
 
 	class Person extends Contact {}
 
-	@Document(collection = "#{35}")
+	@Document("#{35}")
 	class Company {}
 
-	@Document(collection = "#{myBean.collectionName}")
+	@Document("#{myBean.collectionName}")
 	class DynamicallyMapped {}
 
 	class CollectionProvider {
@@ -253,7 +253,7 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.TYPE })
-	@Document(collection = "collection-1")
+	@Document("collection-1")
 	static @interface CustomDocumentAnnotation {
 	}
 

@@ -81,7 +81,7 @@ public class ObjectPathUnitTests {
 		assertThat(path.getPathItem("id-1", "one", ValueInterface.class)).isNotNull();
 	}
 
-	@Document(collection = "one")
+	@Document("one")
 	static class EntityOne {
 
 	}
@@ -94,7 +94,7 @@ public class ObjectPathUnitTests {
 
 	}
 
-	@Document(collection = "three")
+	@Document("three")
 	static class EntityThree implements ValueInterface {
 
 	}

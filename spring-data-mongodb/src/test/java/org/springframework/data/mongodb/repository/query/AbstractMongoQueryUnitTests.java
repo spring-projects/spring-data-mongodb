@@ -348,7 +348,7 @@ public class AbstractMongoQueryUnitTests {
 
 	// DATAMONGO-1872
 
-	@org.springframework.data.mongodb.core.mapping.Document(collection = "#{T(java.lang.Math).random()}")
+	@org.springframework.data.mongodb.core.mapping.Document("#{T(java.lang.Math).random()}")
 	static class DynamicallyMapped {}
 
 	interface DynamicallyMappedRepository extends Repository<DynamicallyMapped, ObjectId> {

@@ -102,7 +102,7 @@ public class MongoConvertersIntegrationTests {
 		assertThat(template.findOne(query(where("id").is(wbd.id)), WithBinaryDataType.class)).isEqualTo(wbd);
 	}
 
-	@Document(collection = COLLECTION)
+	@Document(COLLECTION)
 	static class Wrapper {
 
 		String id;
@@ -110,7 +110,7 @@ public class MongoConvertersIntegrationTests {
 	}
 
 	@Data
-	@Document(collection = COLLECTION)
+	@Document(COLLECTION)
 	static class WithBinaryDataInArray {
 
 		@Id String id;
@@ -118,7 +118,7 @@ public class MongoConvertersIntegrationTests {
 	}
 
 	@Data
-	@Document(collection = COLLECTION)
+	@Document(COLLECTION)
 	static class WithBinaryDataType {
 
 		@Id String id;

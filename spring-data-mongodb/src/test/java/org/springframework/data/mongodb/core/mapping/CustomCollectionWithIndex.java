@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 /**
  * @author Jon Brisbin
  */
-@Document(collection = "foobar")
+@Document("foobar")
 public class CustomCollectionWithIndex {
 
 	@Id
