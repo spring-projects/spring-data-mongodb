@@ -35,6 +35,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.data.repository.support.PageableExecutionUtils.TotalSupplier;
 import org.springframework.util.Assert;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
@@ -104,7 +105,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate) {
-		return createQueryFor(predicate).fetchResults().getResults();
+		return createQueryFor(predicate).fetch();
 	}
 
 	/*
@@ -113,7 +114,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
-		return createQueryFor(predicate).orderBy(orders).fetchResults().getResults();
+		return createQueryFor(predicate).orderBy(orders).fetch();
 	}
 
 	/*
@@ -122,7 +123,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, Sort sort) {
-		return applySorting(createQueryFor(predicate), sort).fetchResults().getResults();
+		return applySorting(createQueryFor(predicate), sort).fetch();
 	}
 
 	/*
@@ -131,7 +132,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
-		return createQuery().orderBy(orders).fetchResults().getResults();
+		return createQuery().orderBy(orders).fetch();
 	}
 
 	/*
@@ -143,11 +144,13 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQueryFor(predicate);
 
-		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, new TotalSupplier() {
+		final QueryResults<T> results = applyPagination(query, pageable).fetchResults();
+
+		return PageableExecutionUtils.getPage(results.getResults(), pageable, new TotalSupplier() {
 
 			@Override
 			public long get() {
-				return createQueryFor(predicate).fetchCount();
+				return results.getTotal();
 			}
 		});
 	}
@@ -161,11 +164,13 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQuery();
 
-		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable, new TotalSupplier() {
+		final QueryResults<T> results = applyPagination(query, pageable).fetchResults();
+
+		return PageableExecutionUtils.getPage(results.getResults(), pageable, new TotalSupplier() {
 
 			@Override
 			public long get() {
-				return createQuery().fetchCount();
+				return results.getTotal();
 			}
 		});
 	}
@@ -176,7 +181,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Sort sort) {
-		return applySorting(createQuery(), sort).fetchResults().getResults();
+		return applySorting(createQuery(), sort).fetch();
 	}
 
 	/*
