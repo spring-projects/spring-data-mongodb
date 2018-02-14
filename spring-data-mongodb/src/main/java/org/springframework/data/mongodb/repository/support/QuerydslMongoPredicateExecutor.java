@@ -108,7 +108,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.querydsl.core.types.Predicate)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate)
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate) {
@@ -120,7 +120,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, com.querydsl.core.types.OrderSpecifier<?>[])
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, com.querydsl.core.types.OrderSpecifier<?>[])
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
@@ -133,7 +133,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Sort)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Sort)
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, Sort sort) {
@@ -146,7 +146,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.querydsl.core.types.OrderSpecifier[])
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.OrderSpecifier[])
 	 */
 	@Override
 	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
@@ -158,7 +158,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Pageable)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Pageable)
 	 */
 	@Override
 	public Page<T> findAll(Predicate predicate, Pageable pageable) {
@@ -173,7 +173,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#count(com.querydsl.core.types.Predicate)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#count(com.querydsl.core.types.Predicate)
 	 */
 	@Override
 	public long count(Predicate predicate) {
@@ -185,7 +185,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#exists(com.querydsl.core.types.Predicate)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#exists(com.querydsl.core.types.Predicate)
 	 */
 	@Override
 	public boolean exists(Predicate predicate) {
@@ -253,7 +253,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	}
 
 	/**
-	 * Transforms a plain {@link Order} into a QueryDsl specific {@link OrderSpecifier}.
+	 * Transforms a plain {@link Order} into a Querydsl specific {@link OrderSpecifier}.
 	 *
 	 * @param order
 	 * @return
