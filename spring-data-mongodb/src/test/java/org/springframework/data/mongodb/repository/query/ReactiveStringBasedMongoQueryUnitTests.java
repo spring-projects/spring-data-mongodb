@@ -75,7 +75,6 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 	public void setUp() {
 
 		when(operations.query(any())).thenReturn(reactiveFind);
-		when(reactiveFind.inCollection(anyString())).thenReturn(reactiveFind);
 
 		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
 	}

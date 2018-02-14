@@ -68,11 +68,10 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		this.operations = operations;
 		this.instantiators = new EntityInstantiators();
 
-		ReturnedType returnedType = method.getResultProcessor().getReturnedType();
+		MongoEntityMetadata<?> metadata = method.getEntityInformation();
+		Class<?> type = metadata.getCollectionEntity().getType();
 
-		this.findOperationWithProjection = operations//
-				.query(returnedType.getDomainType())//
-				.inCollection(method.getEntityInformation().getCollectionName());
+		this.findOperationWithProjection = operations.query(type);
 	}
 
 	/*
@@ -214,7 +213,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	protected abstract boolean isDeleteQuery();
 
 	/**
-	 * Return weather the query has an explicit limit set.
+	 * Return whether the query has an explicit limit set.
 	 *
 	 * @return
 	 * @since 2.0.4

@@ -1181,7 +1181,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Test // DATAMONGO-1865
 	public void findFirstEntityReturnsFirstResultEvenForNonUniqueMatches() {
-		repository.findFirstBy();
+		assertThat(repository.findFirstBy()).isNotNull();
 	}
 
 	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1865

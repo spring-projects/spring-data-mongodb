@@ -147,8 +147,8 @@ public interface PersonRepository extends PagingAndSortingRepository<Person, Str
 ----
 <1> The method shows a query for all people with the given lastname. The query will be derived parsing the method name for constraints which can be concatenated with `And` and `Or`. Thus the method name will result in a query expression of `{"lastname" : lastname}`.
 <2> Applies pagination to a query. Just equip your method signature with a `Pageable` parameter and let the method return a `Page` instance and we will automatically page the query accordingly.
-<3> Shows that you can query based on properties which are not a primitive type. Errors with `IncorrectResultSizeDataAccessException` if more than one match found.
-<4> Uses the `First` keyword to restrict the query to the very first result. Unlike <3> this method does not error if more than one match found.
+<3> Shows that you can query based on properties which are not a primitive type. Throws `IncorrectResultSizeDataAccessException` if more than one match found.
+<4> Uses the `First` keyword to restrict the query to the very first result. Unlike <3> this method does not throw an exception if more than one match was found.
 <5> Uses a Java 8 `Stream` which reads and converts individual elements while iterating the stream.
 ====
 
