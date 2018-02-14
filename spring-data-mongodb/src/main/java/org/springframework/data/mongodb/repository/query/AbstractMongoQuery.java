@@ -179,7 +179,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	protected abstract boolean isDeleteQuery();
 
 	/**
-	 * Return weather the query has an explicit limit set.
+	 * Return whether the query has an explicit limit set.
 	 *
 	 * @return
 	 * @since 2.0.4
