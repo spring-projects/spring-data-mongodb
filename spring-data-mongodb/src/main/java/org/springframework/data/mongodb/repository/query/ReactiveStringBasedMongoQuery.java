@@ -69,7 +69,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 	/**
 	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod},
-	 * {@link MongoOperations}, {@link SpelExpressionParser} and {@link EvaluationContextProvider}.
+	 * {@link MongoOperations}, {@link SpelExpressionParser} and {@link QueryMethodEvaluationContextProvider}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param method must not be {@literal null}.

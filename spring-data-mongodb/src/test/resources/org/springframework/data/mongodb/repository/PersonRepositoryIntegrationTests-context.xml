@@ -26,10 +26,7 @@
 				</constructor-arg>
 			</bean>
 		</property>
-		<property name="evaluationContextProvider" ref="extensionAwareEvaluationContextProvider"/>
 	</bean>
-
-	<bean id="extensionAwareEvaluationContextProvider" class="org.springframework.data.repository.query.ExtensionAwareQueryMethodEvaluationContextProvider" autowire="constructor" />
 
 	<bean class="org.springframework.data.mongodb.repository.SampleEvaluationContextExtension" />
 	

@@ -15,14 +15,18 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +35,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
+import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.util.ClassTypeInformation;
 
 /**
@@ -68,11 +74,10 @@ public class BasicMongoPersistentEntityUnitTests {
 		provider.collectionName = "reference";
 
 		when(context.getBean("myBean")).thenReturn(provider);
-		when(context.containsBean("myBean")).thenReturn(true);
 
 		BasicMongoPersistentEntity<DynamicallyMapped> entity = new BasicMongoPersistentEntity<DynamicallyMapped>(
 				ClassTypeInformation.from(DynamicallyMapped.class));
-		entity.setApplicationContext(context);
+		entity.setEvaluationContextProvider(new ExtensionAwareEvaluationContextProvider(context));
 
 		assertThat(entity.getCollection(), is("reference"));
 
@@ -221,6 +226,17 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection(), is("custom-collection"));
 	}
 
+	@Test // DATAMONGO-1874
+	public void usesEvaluationContextExtensionInDynamicDocumentName() {
+
+		BasicMongoPersistentEntity<MappedWithExtension> entity = new BasicMongoPersistentEntity<>(
+				ClassTypeInformation.from(MappedWithExtension.class));
+		entity.setEvaluationContextProvider(
+				new ExtensionAwareEvaluationContextProvider(Arrays.asList(new SampleExtension())));
+
+		assertThat(entity.getCollection()).isEqualTo("collectionName");
+	}
+
 	@Document("contacts")
 	class Contact {}
 
@@ -229,7 +245,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Document("#{35}")
 	class Company {}
 
-	@Document("#{myBean.collectionName}")
+	@Document("#{@myBean.collectionName}")
 	class DynamicallyMapped {}
 
 	class CollectionProvider {
@@ -264,5 +280,31 @@ public class BasicMongoPersistentEntityUnitTests {
 
 		@AliasFor(annotation = Document.class, attribute = "collection")
 		String name() default "custom-collection";
+	}
+
+	// DATAMONGO-1874
+
+	@Document("#{myProperty}")
+	class MappedWithExtension {}
+
+	static class SampleExtension implements EvaluationContextExtension {
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getExtensionId()
+		 */
+		@Override
+		public String getExtensionId() {
+			return "sampleExtension";
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getProperties()
+		 */
+		@Override
+		public Map<String, Object> getProperties() {
+			return Collections.singletonMap("myProperty", "collectionName");
+		}
 	}
 }
