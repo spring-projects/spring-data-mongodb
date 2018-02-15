@@ -27,7 +27,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>2.1.0.BUILD-SNAPSHOT</springdata.commons>
+		<springdata.commons>2.1.0.DATACMNS-1260-SNAPSHOT</springdata.commons>
 		<mongo>3.6.3</mongo>
 		<mongo.reactivestreams>1.7.1</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>

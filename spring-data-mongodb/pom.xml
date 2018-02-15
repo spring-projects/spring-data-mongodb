@@ -146,7 +146,7 @@
 			<version>1.0.1</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.interceptor</groupId>
 			<artifactId>javax.interceptor-api</artifactId>
@@ -296,7 +296,7 @@
 	</dependencies>
 
 	<build>
-	
+
 		<plugins>
 
 			<plugin>
@@ -348,8 +348,8 @@
 					</properties>
 				</configuration>
 			</plugin>
-			
+
 		</plugins>
-		
+
 	</build>
 </project>
