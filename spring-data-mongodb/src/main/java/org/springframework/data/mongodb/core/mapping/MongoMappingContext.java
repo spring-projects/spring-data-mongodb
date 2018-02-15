@@ -87,14 +87,7 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 */
 	@Override
 	protected <T> BasicMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
-
-		BasicMongoPersistentEntity<T> entity = new BasicMongoPersistentEntity<T>(typeInformation);
-
-		if (context != null) {
-			entity.setApplicationContext(context);
-		}
-
-		return entity;
+		return new BasicMongoPersistentEntity<T>(typeInformation);
 	}
 
 	/*
@@ -103,6 +96,9 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 */
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
+		super.setApplicationContext(applicationContext);
+
 		this.context = applicationContext;
 	}
 }

@@ -31,6 +31,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.util.ClassTypeInformation;
 
 /**
@@ -68,11 +69,10 @@ public class BasicMongoPersistentEntityUnitTests {
 		provider.collectionName = "reference";
 
 		when(context.getBean("myBean")).thenReturn(provider);
-		when(context.containsBean("myBean")).thenReturn(true);
 
 		BasicMongoPersistentEntity<DynamicallyMapped> entity = new BasicMongoPersistentEntity<DynamicallyMapped>(
 				ClassTypeInformation.from(DynamicallyMapped.class));
-		entity.setApplicationContext(context);
+		entity.setEvaluationContextProvider(new ExtensionAwareEvaluationContextProvider(context));
 
 		assertThat(entity.getCollection(), is("reference"));
 
@@ -229,7 +229,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Document("#{35}")
 	class Company {}
 
-	@Document("#{myBean.collectionName}")
+	@Document("#{@myBean.collectionName}")
 	class DynamicallyMapped {}
 
 	class CollectionProvider {

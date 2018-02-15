@@ -21,11 +21,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.expression.BeanFactoryAccessor;
-import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
@@ -38,7 +33,6 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -55,7 +49,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  */
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty>
-		implements MongoPersistentEntity<T>, ApplicationContextAware {
+		implements MongoPersistentEntity<T> {
 
 	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @Field annotation!";
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -63,7 +57,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	private final String collection;
 	private final String language;
 
-	private final StandardEvaluationContext context;
 	private final @Nullable Expression expression;
 
 	/**
@@ -78,8 +71,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		Class<?> rawType = typeInformation.getType();
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
-
-		this.context = new StandardEvaluationContext();
 
 		if (this.isAnnotationPresent(Document.class)) {
 			Document document = this.getRequiredAnnotation(Document.class);
@@ -97,21 +88,13 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
-	 */
-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-
-		context.addPropertyAccessor(new BeanFactoryAccessor());
-		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
-		context.setRootObject(applicationContext);
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getCollection()
 	 */
 	public String getCollection() {
-		return expression == null ? collection : expression.getValue(context, String.class);
+
+		return expression == null //
+				? collection //
+				: expression.getValue(getEvaluationContext(null), String.class);
 	}
 
 	/*
