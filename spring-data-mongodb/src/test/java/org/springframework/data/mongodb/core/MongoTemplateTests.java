@@ -34,6 +34,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
@@ -3279,9 +3281,11 @@ public class MongoTemplateTests {
 	@Test // DATAMONGO-1870
 	public void removeShouldConsiderLimit() {
 
-		for (int i = 0; i < 100; i++) {
-			template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"));
-		}
+		List<Sample> samples = IntStream.range(0, 100) //
+				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
+				.collect(Collectors.toList());
+
+		template.insertAll(samples);
 
 		DeleteResult wr = template.remove(query(where("field").is("lannister")).limit(25), Sample.class);
 
@@ -3292,9 +3296,11 @@ public class MongoTemplateTests {
 	@Test // DATAMONGO-1870
 	public void removeShouldConsiderSkipAndSort() {
 
-		for (int i = 0; i < 100; i++) {
-			template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"));
-		}
+		List<Sample> samples = IntStream.range(0, 100) //
+				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
+				.collect(Collectors.toList());
+
+		template.insertAll(samples);
 
 		DeleteResult wr = template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class);
 

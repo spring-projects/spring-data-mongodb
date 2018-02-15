@@ -1633,10 +1633,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (query.getLimit() > 0 || query.getSkip() > 0) {
 
 				FindPublisher<Document> cursor = new QueryFindPublisherPreparer(query, entityClass)
-						.prepare(collection.find(removeQuey)).projection(new Document(ID_FIELD, 1));
-				return Flux.from(cursor).map(doc -> doc.get(ID_FIELD)).collectList().flatMap(val -> {
-					return Mono.from(collectionToUse.deleteMany(new Document(ID_FIELD, new Document("$in", val)), deleteOptions));
-				});
+						.prepare(collection.find(removeQuey)) //
+						.projection(new Document(ID_FIELD, 1));
+
+				return Flux.from(cursor) //
+						.map(doc -> doc.get(ID_FIELD)) //
+						.collectList() //
+						.flatMapMany(val -> {
+							return collectionToUse.deleteMany(new Document(ID_FIELD, new Document("$in", val)), deleteOptions);
+						});
 			} else {
 				return collectionToUse.deleteMany(removeQuey, deleteOptions);
 			}

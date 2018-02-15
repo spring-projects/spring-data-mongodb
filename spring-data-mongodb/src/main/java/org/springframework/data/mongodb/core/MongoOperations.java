@@ -711,7 +711,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/>* to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -724,7 +724,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/>* to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -738,7 +738,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/>* to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -755,7 +755,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/>* to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional

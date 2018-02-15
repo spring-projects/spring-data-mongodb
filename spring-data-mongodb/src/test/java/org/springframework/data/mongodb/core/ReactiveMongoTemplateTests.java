@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.assertj.core.api.Assertions;
 import org.bson.Document;
@@ -931,10 +933,11 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1870
 	public void removeShouldConsiderLimit() {
 
-		for (int i = 0; i < 100; i++) {
-			StepVerifier.create(template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"))).expectNextCount(1)
-					.verifyComplete();
-		}
+		List<Sample> samples = IntStream.range(0, 100) //
+				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
+				.collect(Collectors.toList());
+
+		StepVerifier.create(template.insertAll(samples)).expectNextCount(100).verifyComplete();
 
 		StepVerifier.create(template.remove(query(where("field").is("lannister")).limit(25), Sample.class))
 				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(25L)).verifyComplete();
@@ -943,10 +946,11 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1870
 	public void removeShouldConsiderSkipAndSort() {
 
-		for (int i = 0; i < 100; i++) {
-			StepVerifier.create(template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"))).expectNextCount(1)
-					.verifyComplete();
-		}
+		List<Sample> samples = IntStream.range(0, 100) //
+				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
+				.collect(Collectors.toList());
+
+		StepVerifier.create(template.insertAll(samples)).expectNextCount(100).verifyComplete();
 
 		StepVerifier.create(template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class))
 				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(75L)).verifyComplete();

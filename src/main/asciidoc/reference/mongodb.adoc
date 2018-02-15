@@ -964,11 +964,11 @@ template.findAllAndRemove(query(where("lastname").is("lannister"), "GOT");  <4>
 
 template.findAllAndRemove(new Query().limit(3), "GOT");                     <5>
 ----
-<1> Remove a single entity via its `id` from the associated collection.
+<1> Remove a single entity via its `_id` from the associated collection.
 <2> Remove all documents matching the criteria of the query from the `GOT` collection.
-<3> Rewmove the first 3 documents in the `GOT` collection. Unlike <2> the documents to remove are identified via their `id` using the given query applying `sort`, `limit` and `skip` options and then removed all at once in a seperate step.
-<4> Remove all documents matching the criteria of the query from the `GOT` collection. Unlike <3> documents do not get deleted in a batch but one by one.
-<5> Remove the first 3 documents in the `GOT` collection. Unlike <3> documents do not get deleted in a batch but one by one.
+<3> Remove the first 3 documents in the `GOT` collection. Unlike <2>, the documents to remove are identified via their `_id` executing the given query applying `sort`, `limit` and `skip` options first and then remove all at once in a separate step.
+<4> Remove all documents matching the criteria of the query from the `GOT` collection. Unlike <3>, documents do not get deleted in a batch but one by one.
+<5> Remove the first 3 documents in the `GOT` collection. Unlike <3>, documents do not get deleted in a batch but one by one.
 ====
 
 [[mongo-template.optimistic-locking]]
