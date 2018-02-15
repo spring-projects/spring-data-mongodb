@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -168,16 +168,16 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
 
-	@Ignore("see https://jira.mongodb.org/browse/JAVARS-27")
 	@Test // DATAMONGO-1518
 	public void findAndRemoveManyShouldUseCollationWhenPresent() {
+
+		when(collection.deleteMany(any(), any())).thenReturn(Mono.empty());
 
 		template.doRemove("collection-1", new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class)
 				.subscribe();
 
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
-		// the current mongodb-driver-reactivestreams:1.4.0 driver does not offer deleteMany with options.
-		// verify(collection).deleteMany(Mockito.any(), options.capture());
+		verify(collection).deleteMany(Mockito.any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}

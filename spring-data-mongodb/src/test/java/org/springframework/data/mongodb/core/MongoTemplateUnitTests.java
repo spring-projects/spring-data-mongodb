@@ -58,7 +58,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -71,6 +70,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -155,7 +155,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		new MongoTemplate(null, "database");
 	}
 
-	@Test(expected = DataAccessException.class)
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1870
 	public void removeHandlesMongoExceptionProperly() throws Exception {
 
 		MongoTemplate template = mockOutGetDb();
@@ -483,7 +483,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(output.filter(any())).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
-
 
 		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
 

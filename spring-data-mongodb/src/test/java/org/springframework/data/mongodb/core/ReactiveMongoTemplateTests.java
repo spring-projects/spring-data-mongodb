@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.After;
@@ -298,9 +299,12 @@ public class ReactiveMongoTemplateTests {
 	public void updateFirstByEntityTypeShouldUpdateObject() {
 
 		Person person = new Person("Oliver2", 25);
-		StepVerifier.create(template.insert(person) //
-				.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), Person.class)) //
-				.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class))).consumeNextWith(actual -> {
+		StepVerifier
+				.create(template.insert(person) //
+						.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"),
+								Person.class)) //
+						.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class)))
+				.consumeNextWith(actual -> {
 
 					assertThat(actual.getFirstName(), is(equalTo("Sven")));
 				}).verifyComplete();
@@ -481,7 +485,7 @@ public class ReactiveMongoTemplateTests {
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1774
 	public void removeWithNullShouldThrowError() {
-		template.remove((Object)null).subscribe();
+		template.remove((Object) null).subscribe();
 	}
 
 	@Test // DATAMONGO-1774
@@ -922,6 +926,35 @@ public class ReactiveMongoTemplateTests {
 				.verifyComplete();
 
 		assertThat(documents.poll(1, TimeUnit.SECONDS), is(nullValue()));
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderLimit() {
+
+		for (int i = 0; i < 100; i++) {
+			StepVerifier.create(template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"))).expectNextCount(1)
+					.verifyComplete();
+		}
+
+		StepVerifier.create(template.remove(query(where("field").is("lannister")).limit(25), Sample.class))
+				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(25L)).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderSkipAndSort() {
+
+		for (int i = 0; i < 100; i++) {
+			StepVerifier.create(template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"))).expectNextCount(1)
+					.verifyComplete();
+		}
+
+		StepVerifier.create(template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class))
+				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(75L)).verifyComplete();
+
+		StepVerifier.create(template.count(query(where("field").is("lannister")), Sample.class)).expectNext(25L)
+				.verifyComplete();
+		StepVerifier.create(template.count(query(where("field").is("stark")), Sample.class)).expectNext(0L)
+				.verifyComplete();
 	}
 
 	private PersonWithAList createPersonWithAList(String firstname, int age) {

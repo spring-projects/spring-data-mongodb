@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,18 +33,7 @@ import lombok.NoArgsConstructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
@@ -108,6 +97,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
 /**
@@ -3284,6 +3274,34 @@ public class MongoTemplateTests {
 		template.insertAll(Arrays.asList(first, second));
 
 		assertThat(template.find(new Query().limit(1), Sample.class)).hasSize(1);
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderLimit() {
+
+		for (int i = 0; i < 100; i++) {
+			template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"));
+		}
+
+		DeleteResult wr = template.remove(query(where("field").is("lannister")).limit(25), Sample.class);
+
+		assertThat(wr.getDeletedCount()).isEqualTo(25L);
+		assertThat(template.count(new Query(), Sample.class)).isEqualTo(75L);
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderSkipAndSort() {
+
+		for (int i = 0; i < 100; i++) {
+			template.save(new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister"));
+		}
+
+		DeleteResult wr = template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class);
+
+		assertThat(wr.getDeletedCount()).isEqualTo(75L);
+		assertThat(template.count(new Query(), Sample.class)).isEqualTo(25L);
+		assertThat(template.count(query(where("field").is("lannister")), Sample.class)).isEqualTo(25L);
+		assertThat(template.count(query(where("field").is("stark")), Sample.class)).isEqualTo(0L);
 	}
 
 	static class TypeWithNumbers {
