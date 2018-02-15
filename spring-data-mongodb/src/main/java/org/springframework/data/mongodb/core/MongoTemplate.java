@@ -19,17 +19,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Scanner;
-import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -108,21 +99,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.Bytes;
-import com.mongodb.CommandResult;
-import com.mongodb.Cursor;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MapReduceCommand;
-import com.mongodb.MapReduceOutput;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
+import com.mongodb.*;
 import com.mongodb.util.JSON;
 import com.mongodb.util.JSONParseException;
 
@@ -1324,35 +1301,46 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	protected <T> WriteResult doRemove(final String collectionName, final Query query, final Class<T> entityClass) {
 
-		if (query == null) {
-			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null!");
-		}
-
+		Assert.notNull(query, "Query must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		final DBObject queryObject = query.getQueryObject();
 		final MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
+		final DBObject queryObject = queryMapper.getMappedObject(query.getQueryObject(), entity);
 
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 
 				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass, collectionName));
 
-				DBObject dboq = queryMapper.getMappedObject(queryObject, entity);
+				DBObject removeQuery = queryObject;
 
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName,
-						entityClass, null, queryObject);
+						entityClass, null, removeQuery);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Remove using query: {} in collection: {}.",
-							new Object[] { serializeToJsonSafely(dboq), collectionName });
+							new Object[] { serializeToJsonSafely(removeQuery), collectionName });
 				}
 
-				WriteResult wr = writeConcernToUse == null ? collection.remove(dboq)
-						: collection.remove(dboq, writeConcernToUse);
+				if (query.getLimit() > 0 || query.getSkip() > 0) {
 
-				handleAnyWriteResultErrors(wr, dboq, MongoActionOperation.REMOVE);
+					DBCursor cursor = new QueryCursorPreparer(query, entityClass)
+							.prepare(collection.find(removeQuery, new BasicDBObject(ID_FIELD, 1)));
+
+					Set<Object> ids = new LinkedHashSet<Object>();
+					Iterator<DBObject> it = cursor.iterator();
+					while (it.hasNext()) {
+						ids.add(it.next().get(ID_FIELD));
+					}
+
+					removeQuery = new BasicDBObject(ID_FIELD, new BasicDBObject("$in", ids));
+				}
+
+				WriteResult wr = writeConcernToUse == null ? collection.remove(removeQuery)
+						: collection.remove(removeQuery, writeConcernToUse);
+
+				handleAnyWriteResultErrors(wr, removeQuery, MongoActionOperation.REMOVE);
 
 				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass, collectionName));
 
@@ -2582,8 +2570,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		 */
 		DBObject aggregate(String collectionName, Aggregation aggregation, AggregationOperationContext context) {
 
-			DBObject command = prepareAggregationCommand(collectionName, aggregation,
-					context, batchSize);
+			DBObject command = prepareAggregationCommand(collectionName, aggregation, context, batchSize);
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));

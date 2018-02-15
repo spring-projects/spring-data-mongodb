@@ -649,8 +649,8 @@ public interface MongoOperations {
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.
@@ -661,8 +661,8 @@ public interface MongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.
@@ -674,8 +674,8 @@ public interface MongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -688,8 +688,8 @@ public interface MongoOperations {
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -994,8 +994,9 @@ public interface MongoOperations {
 	 * Remove all documents that match the provided query document criteria from the the collection used to store the
 	 * entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the query.
 	 *
-	 * @param query
-	 * @param entityClass
+	 * @param query must not be {@literal null}.
+	 * @param entityClass must not be {@literal null}.
+	 * @throws IllegalArgumentException when {@literal query} or {@literal entityClass} is {@literal null}.
 	 */
 	WriteResult remove(Query query, Class<?> entityClass);
 
@@ -1006,6 +1007,8 @@ public interface MongoOperations {
 	 * @param query
 	 * @param entityClass
 	 * @param collectionName
+	 * @throws IllegalArgumentException when {@literal query}, {@literal entityClass} or {@literal collectionName} is
+	 *           {@literal null}.
 	 */
 	WriteResult remove(Query query, Class<?> entityClass, String collectionName);
 
@@ -1017,6 +1020,7 @@ public interface MongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to remove a record
 	 * @param collectionName name of the collection where the objects will removed
+	 * @throws IllegalArgumentException when {@literal query} or {@literal collectionName} is {@literal null}.
 	 */
 	WriteResult remove(Query query, String collectionName);
 
