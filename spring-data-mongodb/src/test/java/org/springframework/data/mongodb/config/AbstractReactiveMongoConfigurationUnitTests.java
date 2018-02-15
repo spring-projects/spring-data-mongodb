@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import example.first.First;
+import example.second.Second;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,15 +40,13 @@ import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.data.spel.EvaluationContextProvider;
+import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.Mongo;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
-
-import example.first.First;
-import example.second.Second;
 
 /**
  * Unit tests for {@link AbstractReactiveMongoConfiguration}.
@@ -106,9 +107,10 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 		MongoMappingContext mappingContext = context.getBean(MongoMappingContext.class);
 		BasicMongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(Entity.class);
-		StandardEvaluationContext spElContext = (StandardEvaluationContext) ReflectionTestUtils.getField(entity, "context");
+		EvaluationContextProvider provider = (EvaluationContextProvider) ReflectionTestUtils.getField(entity,
+				"evaluationContextProvider");
 
-		assertThat(spElContext.getBeanResolver(), is(notNullValue()));
+		assertThat(provider, is(instanceOf(ExtensionAwareEvaluationContextProvider.class)));
 		context.close();
 	}
 

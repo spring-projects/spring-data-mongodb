@@ -31,7 +31,7 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.bson.BSON;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBinding;
-import org.springframework.data.repository.query.EvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -56,7 +56,7 @@ import com.mongodb.util.JSON;
 class ExpressionEvaluatingParameterBinder {
 
 	private final SpelExpressionParser expressionParser;
-	private final EvaluationContextProvider evaluationContextProvider;
+	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
 	 * Creates new {@link ExpressionEvaluatingParameterBinder}
@@ -65,7 +65,7 @@ class ExpressionEvaluatingParameterBinder {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public ExpressionEvaluatingParameterBinder(SpelExpressionParser expressionParser,
-			EvaluationContextProvider evaluationContextProvider) {
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(expressionParser, "ExpressionParser must not be null!");
 		Assert.notNull(evaluationContextProvider, "EvaluationContextProvider must not be null!");
