@@ -1,6 +1,16 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.4.RELEASE (2018-02-19)
+---------------------------------------------
+* DATAMONGO-1872 - SpEL Expressions in @Document annotations are not re-evaluated for repository query executions.
+* DATAMONGO-1871 - AggregationExpression rendering does not consider nested property aliasing.
+* DATAMONGO-1870 - Skip parameter not working in MongoTemplate#remove(Query, Class).
+* DATAMONGO-1865 - findFirst query method throws IncorrectResultSizeDataAccessException on non-unique result.
+* DATAMONGO-1860 - Mongo count operation called twice in QuerydslMongoPredicateExecutor.findAll(Predicate, Pageable).
+* DATAMONGO-1859 - Release 2.0.4 (Kay SR4).
+
+
 Changes in version 2.1.0.M1 (2018-02-06)
 ----------------------------------------
 * DATAMONGO-1864 - Upgrade to MongoDB Java Driver 3.6.2.
