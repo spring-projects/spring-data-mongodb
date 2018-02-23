@@ -137,14 +137,13 @@ public class MongoExceptionTranslatorUnitTests {
 
 	private void checkTranslatedMongoException(Class<? extends Exception> clazz, int code) {
 
-		try {
-			translator.translateExceptionIfPossible(new MongoException(code, ""));
-			fail("Expected exception of type " + clazz.getName() + "!");
-		} catch (NestedRuntimeException e) {
-			Throwable cause = e.getRootCause();
-			assertThat(cause, is(instanceOf(MongoException.class)));
-			assertThat(((MongoException) cause).getCode(), is(code));
-		}
+		DataAccessException translated = translator.translateExceptionIfPossible(new MongoException(code, ""));
+
+		assertThat("Expected exception of type " + clazz.getName() + "!", translated, is(not(nullValue())));
+
+		Throwable cause = translated.getRootCause();
+		assertThat(cause, is(instanceOf(MongoException.class)));
+		assertThat(((MongoException) cause).getCode(), is(code));
 	}
 
 	private static void expectExceptionWithCauseMessage(NestedRuntimeException e,

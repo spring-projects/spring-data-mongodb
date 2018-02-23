@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -34,6 +35,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -48,6 +50,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.DeleteManyModel;
 import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.UpdateOneModel;
@@ -62,8 +65,10 @@ import com.mongodb.client.model.WriteModel;
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultBulkOperationsUnitTests {
 
-	@Mock MongoTemplate template;
+	MongoTemplate template;
+	@Mock MongoDatabase database;
 	@Mock MongoCollection<Document> collection;
+	@Mock MongoDbFactory factory;
 	@Mock DbRefResolver dbRefResolver;
 	@Captor ArgumentCaptor<List<WriteModel<Document>>> captor;
 	MongoConverter converter;
@@ -79,7 +84,10 @@ public class DefaultBulkOperationsUnitTests {
 
 		converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 
-		when(template.getCollection(anyString())).thenReturn(collection);
+		template = new MongoTemplate(factory, converter);
+
+		when(factory.getDb()).thenReturn(database);
+		when(database.getCollection(anyString(), eq(Document.class))).thenReturn(collection);
 
 		ops = new DefaultBulkOperations(template, "collection-1",
 				new BulkOperationContext(BulkMode.ORDERED,

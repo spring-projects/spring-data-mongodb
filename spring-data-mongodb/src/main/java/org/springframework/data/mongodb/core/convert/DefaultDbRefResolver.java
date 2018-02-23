@@ -40,6 +40,7 @@ import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -51,7 +52,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
 /**
@@ -82,6 +83,18 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		this.mongoDbFactory = mongoDbFactory;
 		this.exceptionTranslator = mongoDbFactory.getExceptionTranslator();
 		this.objenesis = new ObjenesisStd(true);
+	}
+
+	/**
+	 * Creates a new {@link DefaultDbRefResolver} with the given {@link MongoDbFactory}.
+	 *
+	 * @param mongoDbFactory must not be {@literal null}.
+	 */
+	private DefaultDbRefResolver(DefaultDbRefResolver delegate) {
+
+		this.mongoDbFactory = delegate.mongoDbFactory;
+		this.exceptionTranslator = delegate.exceptionTranslator;
+		this.objenesis = delegate.objenesis;
 	}
 
 	/*
@@ -126,9 +139,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	public Document fetch(DBRef dbRef) {
 
 		StringUtils.hasText(dbRef.getDatabaseName());
-		return (StringUtils.hasText(dbRef.getDatabaseName()) ? mongoDbFactory.getDb(dbRef.getDatabaseName())
-				: mongoDbFactory.getDb()).getCollection(dbRef.getCollectionName(), Document.class)
-						.find(Filters.eq("_id", dbRef.getId())).first();
+		return getCollection(dbRef).find(Filters.eq("_id", dbRef.getId())).first();
 	}
 
 	/*
@@ -158,9 +169,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			ids.add(ref.getId());
 		}
 
-		MongoDatabase db = mongoDbFactory.getDb();
-
-		List<Document> result = db.getCollection(collection) //
+		List<Document> result = getCollection(refs.iterator().next()) //
 				.find(new Document("_id", new Document("$in", ids))) //
 				.into(new ArrayList<>());
 
@@ -466,6 +475,11 @@ public class DefaultDbRefResolver implements DbRefResolver {
 				} catch (RuntimeException ex) {
 
 					DataAccessException translatedException = this.exceptionTranslator.translateExceptionIfPossible(ex);
+
+					if (translatedException instanceof ClientSessionException) {
+						throw new LazyLoadingException("Unable to lazily resolve DBRef! Invalid session state.", ex);
+					}
+
 					throw new LazyLoadingException("Unable to lazily resolve DBRef!",
 							translatedException != null ? translatedException : ex);
 				}
@@ -473,5 +487,18 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 			return result;
 		}
+	}
+
+	/**
+	 * Customization hook for obtaining the {@link MongoCollection} for a given {@link DBRef}.
+	 *
+	 * @param dbref must not be {@literal null}.
+	 * @return the {@link MongoCollection} the given {@link DBRef} points to.
+	 * @since 2.1
+	 */
+	protected MongoCollection<Document> getCollection(DBRef dbref) {
+
+		return (StringUtils.hasText(dbref.getDatabaseName()) ? mongoDbFactory.getDb(dbref.getDatabaseName())
+				: mongoDbFactory.getDb()).getCollection(dbref.getCollectionName(), Document.class);
 	}
 }

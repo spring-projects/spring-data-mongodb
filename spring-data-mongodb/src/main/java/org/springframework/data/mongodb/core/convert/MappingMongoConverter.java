@@ -147,8 +147,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	public void setTypeMapper(@Nullable MongoTypeMapper typeMapper) {
 		this.typeMapper = typeMapper == null
-				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext)
-				: typeMapper;
+				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext) : typeMapper;
 	}
 
 	/*
@@ -557,8 +556,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
-				? mappingContext.getRequiredPersistentEntity(obj.getClass())
-				: mappingContext.getRequiredPersistentEntity(type);
+				? mappingContext.getRequiredPersistentEntity(obj.getClass()) : mappingContext.getRequiredPersistentEntity(type);
 
 		Object existingValue = accessor.get(prop);
 		Document document = existingValue instanceof Document ? (Document) existingValue : new Document();
@@ -777,8 +775,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return conversions.hasCustomWriteTarget(key.getClass(), String.class)
-				? (String) getPotentiallyConvertedSimpleWrite(key)
-				: key.toString();
+				? (String) getPotentiallyConvertedSimpleWrite(key) : key.toString();
 	}
 
 	/**
@@ -1438,8 +1435,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		List<Document> referencedRawDocuments = dbrefs.size() == 1
-				? Collections.singletonList(readRef(dbrefs.iterator().next()))
-				: bulkReadRefs(dbrefs);
+				? Collections.singletonList(readRef(dbrefs.iterator().next())) : bulkReadRefs(dbrefs);
 		String collectionName = dbrefs.iterator().next().getCollectionName();
 
 		List<T> targeList = new ArrayList<>(dbrefs.size());

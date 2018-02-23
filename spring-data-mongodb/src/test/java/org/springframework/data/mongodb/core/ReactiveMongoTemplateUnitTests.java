@@ -88,8 +88,8 @@ public class ReactiveMongoTemplateUnitTests {
 		when(db.getCollection(any())).thenReturn(collection);
 		when(db.getCollection(any(), any())).thenReturn(collection);
 		when(db.runCommand(any(), any(Class.class))).thenReturn(runCommandPublisher);
-		when(collection.find()).thenReturn(findPublisher);
-		when(collection.find(Mockito.any(Document.class))).thenReturn(findPublisher);
+		when(collection.find(any(Class.class))).thenReturn(findPublisher);
+		when(collection.find(any(Document.class), any(Class.class))).thenReturn(findPublisher);
 		when(findPublisher.projection(any())).thenReturn(findPublisher);
 		when(findPublisher.limit(anyInt())).thenReturn(findPublisher);
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
