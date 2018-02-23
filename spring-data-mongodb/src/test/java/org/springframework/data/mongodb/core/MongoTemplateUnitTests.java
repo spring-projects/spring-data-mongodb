@@ -129,8 +129,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(Mockito.any(String.class), eq(Document.class))).thenReturn(collection);
 		when(db.runCommand(Mockito.any(), Mockito.any(Class.class))).thenReturn(commandResultDocument);
-		when(collection.find(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
-		when(collection.mapReduce(Mockito.any(), Mockito.any())).thenReturn(mapReduceIterable);
+		when(collection.find(Mockito.any(org.bson.Document.class), any(Class.class))).thenReturn(findIterable);
+		when(collection.mapReduce(Mockito.any(), Mockito.any(), eq(Document.class))).thenReturn(mapReduceIterable);
 		when(collection.count(any(Bson.class), any(CountOptions.class))).thenReturn(1L);
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
 		when(collection.withReadPreference(any())).thenReturn(collection);
@@ -324,7 +324,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		BasicQuery query = new BasicQuery("{'foo':'bar'}");
 		template.findAllAndRemove(query, VersionedEntity.class);
-		verify(collection, times(1)).find(Matchers.eq(query.getQueryObject()));
+		verify(collection, times(1)).find(Mockito.eq(query.getQueryObject()), Mockito.any(Class.class));
 	}
 
 	@Test // DATAMONGO-566
@@ -445,7 +445,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 
-		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
+		when(collection.mapReduce(anyString(), anyString(), eq(Document.class))).thenReturn(output);
 
 		Query query = new BasicQuery("{'foo':'bar'}");
 		query.limit(100);
@@ -466,7 +466,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 
-		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
+		when(collection.mapReduce(anyString(), anyString(), eq(Document.class))).thenReturn(output);
 
 		Query query = new BasicQuery("{'foo':'bar'}");
 
@@ -487,7 +487,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 
-		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
+		when(collection.mapReduce(anyString(), anyString(), eq(Document.class))).thenReturn(output);
 
 		template.mapReduce("collection", "function(){}", "function(key,values){}", new MapReduceOptions().limit(1000),
 				Wrapper.class);
@@ -506,7 +506,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 
-		when(collection.mapReduce(anyString(), anyString())).thenReturn(output);
+		when(collection.mapReduce(anyString(), anyString(), eq(Document.class))).thenReturn(output);
 
 		Query query = new BasicQuery("{'foo':'bar'}");
 		query.limit(100);
@@ -808,6 +808,18 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		assertThat(cmd.getValue().get("group", Document.class).get("collation", Document.class),
 				equalTo(new Document("locale", "fr")));
+	}
+
+	@Test // DATAMONGO-1880
+	public void countShouldUseCollationWhenPresent() {
+
+		template.count(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).count(any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(equalTo(com.mongodb.client.model.Collation.builder().locale("fr").build())));
 	}
 
 	@Test // DATAMONGO-1733

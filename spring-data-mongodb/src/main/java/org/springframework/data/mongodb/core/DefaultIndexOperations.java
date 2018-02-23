@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.MongoTemplate.*;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -50,10 +48,11 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	private static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
 
-	private final MongoDbFactory mongoDbFactory;
 	private final String collectionName;
 	private final QueryMapper mapper;
 	private final @Nullable Class<?> type;
+
+	private MongoOperations mongoOperations;
 
 	/**
 	 * Creates a new {@link DefaultIndexOperations}.
@@ -61,7 +60,10 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param collectionName must not be {@literal null}.
 	 * @param queryMapper must not be {@literal null}.
+	 * @deprecated since 2.1. Please use
+	 *             {@link DefaultIndexOperations#DefaultIndexOperations(MongoOperations, String, Class)}.
 	 */
+	@Deprecated
 	public DefaultIndexOperations(MongoDbFactory mongoDbFactory, String collectionName, QueryMapper queryMapper) {
 		this(mongoDbFactory, collectionName, queryMapper, null);
 	}
@@ -74,7 +76,10 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * @param queryMapper must not be {@literal null}.
 	 * @param type Type used for mapping potential partial index filter expression. Can be {@literal null}.
 	 * @since 1.10
+	 * @deprecated since 2.1. Please use
+	 *             {@link DefaultIndexOperations#DefaultIndexOperations(MongoOperations, String, Class)}.
 	 */
+	@Deprecated
 	public DefaultIndexOperations(MongoDbFactory mongoDbFactory, String collectionName, QueryMapper queryMapper,
 			@Nullable Class<?> type) {
 
@@ -82,9 +87,25 @@ public class DefaultIndexOperations implements IndexOperations {
 		Assert.notNull(collectionName, "Collection name can not be null!");
 		Assert.notNull(queryMapper, "QueryMapper must not be null!");
 
-		this.mongoDbFactory = mongoDbFactory;
 		this.collectionName = collectionName;
 		this.mapper = queryMapper;
+		this.type = type;
+		this.mongoOperations = new MongoTemplate(mongoDbFactory);
+	}
+
+	/**
+	 * Creates a new {@link DefaultIndexOperations}.
+	 *
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 * @param type can be {@literal null}.
+	 * @since 2.1
+	 */
+	public DefaultIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type) {
+
+		this.mongoOperations = mongoOperations;
+		this.mapper = new QueryMapper(mongoOperations.getConverter());
+		this.collectionName = collectionName;
 		this.type = type;
 	}
 
@@ -187,11 +208,10 @@ public class DefaultIndexOperations implements IndexOperations {
 
 		Assert.notNull(callback, "CollectionCallback must not be null!");
 
-		try {
-			MongoCollection<Document> collection = mongoDbFactory.getDb().getCollection(collectionName);
-			return callback.doInCollection(collection);
-		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e, mongoDbFactory.getExceptionTranslator());
+		if (type != null) {
+			return mongoOperations.execute(type, callback);
 		}
+
+		return mongoOperations.execute(collectionName, callback);
 	}
 }

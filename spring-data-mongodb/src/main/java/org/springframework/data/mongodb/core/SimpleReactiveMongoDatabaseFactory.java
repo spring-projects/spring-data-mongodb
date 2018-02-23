@@ -15,20 +15,27 @@
  */
 package org.springframework.data.mongodb.core;
 
+import reactor.core.publisher.Mono;
+
 import java.net.UnknownHostException;
 
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
 import com.mongodb.WriteConcern;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.session.ClientSession;
 
 /**
  * Factory to create {@link MongoDatabase} instances from a {@link MongoClient} instance.
@@ -128,5 +135,112 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 */
 	public PersistenceExceptionTranslator getExceptionTranslator() {
 		return this.exceptionTranslator;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.ReactiveMongoDbFactory#getSession(com.mongodb.ClientSessionOptions)
+	 */
+	@Override
+	public Mono<ClientSession> getSession(ClientSessionOptions options) {
+		return Mono.from(mongo.startSession(options));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.ReactiveMongoDbFactory#withSession(com.mongodb.session.ClientSession)
+	 */
+	@Override
+	public ReactiveMongoDatabaseFactory withSession(ClientSession session) {
+		return new ClientSessionBoundMongoDbFactory(session, this);
+	}
+
+	/**
+	 * {@link ClientSession} bound {@link ReactiveMongoDatabaseFactory} decorating the database with a
+	 * {@link SessionAwareMethodInterceptor}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	static class ClientSessionBoundMongoDbFactory implements ReactiveMongoDatabaseFactory {
+
+		private final ClientSession session;
+		private final ReactiveMongoDatabaseFactory delegate;
+
+		ClientSessionBoundMongoDbFactory(ClientSession session, ReactiveMongoDatabaseFactory delegate) {
+
+			this.session = session;
+			this.delegate = delegate;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase()
+		 */
+		@Override
+		public MongoDatabase getMongoDatabase() throws DataAccessException {
+			return decorateDatabase(delegate.getMongoDatabase());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase(java.lang.String)
+		 */
+		@Override
+		public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
+			return decorateDatabase(delegate.getMongoDatabase(dbName));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getExceptionTranslator()
+		 */
+		@Override
+		public PersistenceExceptionTranslator getExceptionTranslator() {
+			return delegate.getExceptionTranslator();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getSession(com.mongodb.ClientSessionOptions)
+		 */
+		@Override
+		public Mono<ClientSession> getSession(ClientSessionOptions options) {
+			return delegate.getSession(options);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#withSession(com.mongodb.session.ClientSession)
+		 */
+		@Override
+		public ReactiveMongoDatabaseFactory withSession(ClientSession session) {
+			return delegate.withSession(session);
+		}
+
+		private MongoDatabase decorateDatabase(MongoDatabase database) {
+			return createProxyInstance(session, database, MongoDatabase.class);
+		}
+
+		private MongoDatabase proxyDatabase(ClientSession session, MongoDatabase database) {
+			return createProxyInstance(session, database, MongoDatabase.class);
+		}
+
+		private MongoCollection proxyCollection(ClientSession session, MongoCollection collection) {
+			return createProxyInstance(session, collection, MongoCollection.class);
+		}
+
+		private <T> T createProxyInstance(ClientSession session, T target, Class<T> targetType) {
+
+			ProxyFactory factory = new ProxyFactory();
+			factory.setTarget(target);
+			factory.setInterfaces(targetType);
+			factory.setOpaque(true);
+
+			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoDatabase.class, this::proxyDatabase,
+					MongoCollection.class, this::proxyCollection));
+
+			return (T) factory.getProxy();
+		}
 	}
 }

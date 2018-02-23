@@ -16,7 +16,8 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -59,8 +60,8 @@ public class DefaultDbRefResolverUnitTests {
 	public void setUp() {
 
 		when(factoryMock.getDb()).thenReturn(dbMock);
-		when(dbMock.getCollection(anyString())).thenReturn(collectionMock);
-		when(collectionMock.find(Mockito.any(Document.class))).thenReturn(cursorMock);
+		when(dbMock.getCollection(anyString(), any(Class.class))).thenReturn(collectionMock);
+		when(collectionMock.find(any(Document.class))).thenReturn(cursorMock);
 
 		resolver = new DefaultDbRefResolver(factoryMock);
 	}

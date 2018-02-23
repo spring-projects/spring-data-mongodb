@@ -124,6 +124,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -152,6 +153,7 @@ import com.mongodb.client.model.ValidationAction;
 import com.mongodb.client.model.ValidationLevel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.session.ClientSession;
 import com.mongodb.util.JSONParseException;
 
 /**
@@ -219,7 +221,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param databaseName must not be {@literal null} or empty.
 	 */
 	public MongoTemplate(MongoClient mongoClient, String databaseName) {
-		this(new SimpleMongoDbFactory(mongoClient, databaseName), null);
+		this(new SimpleMongoDbFactory(mongoClient, databaseName), (MongoConverter) null);
 	}
 
 	/**
@@ -228,7 +230,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param mongoDbFactory must not be {@literal null}.
 	 */
 	public MongoTemplate(MongoDbFactory mongoDbFactory) {
-		this(mongoDbFactory, null);
+		this(mongoDbFactory, (MongoConverter) null);
 	}
 
 	/**
@@ -259,6 +261,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 			}
 		}
+	}
+
+	private MongoTemplate(MongoDbFactory dbFactory, MongoTemplate that) {
+
+		this.mongoDbFactory = dbFactory;
+		this.exceptionTranslator = that.exceptionTranslator;
+		this.mongoConverter = that.mongoConverter instanceof MappingMongoConverter ? getDefaultMongoConverter(dbFactory)
+				: that.mongoConverter;
+		this.queryMapper = that.queryMapper;
+		this.updateMapper = that.updateMapper;
+		this.schemaMapper = that.schemaMapper;
+		this.projectionFactory = that.projectionFactory;
+
+		this.mappingContext = that.mappingContext;
 	}
 
 	/**
@@ -394,7 +410,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
 
 				FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType)
-						.prepare(collection.find(mappedQuery).projection(mappedFields));
+						.prepare(collection.find(mappedQuery, Document.class).projection(mappedFields));
 
 				return new CloseableIterableCursorAdapter<T>(cursor, exceptionTranslator,
 						new ProjectingReadCallback<>(mongoConverter, entityType, returnType, collectionName));
@@ -509,7 +525,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(action, "DbCallbackmust not be null!");
 
 		try {
-			MongoDatabase db = this.getDb();
+			MongoDatabase db = prepareDatabase(this.getDbInternal());
 			return action.doInDB(db);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -536,11 +552,29 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(callback, "CollectionCallback must not be null!");
 
 		try {
-			MongoCollection<Document> collection = getAndPrepareCollection(getDb(), collectionName);
+			MongoCollection<Document> collection = getAndPrepareCollection(getDbInternal(), collectionName);
 			return callback.doInCollection(collection);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#withSession(com.mongodb.ClientSessionOptions)
+	 */
+	@Override
+	public SessionScoped withSession(ClientSessionOptions options) {
+		return withSession(() -> mongoDbFactory.getSession(options));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#withSession(com.mongodb.session.ClientSession)
+	 */
+	@Override
+	public MongoTemplate withSession(ClientSession session) {
+		return new SessionBoundMongoTemplate(session, MongoTemplate.this);
 	}
 
 	/*
@@ -617,6 +651,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		return execute(new DbCallback<Boolean>() {
 			public Boolean doInDB(MongoDatabase db) throws MongoException, DataAccessException {
+
 				for (String name : db.listCollectionNames()) {
 					if (name.equals(collectionName)) {
 						return true;
@@ -659,7 +694,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#indexOps(java.lang.String)
 	 */
 	public IndexOperations indexOps(String collectionName) {
-		return new DefaultIndexOperations(getMongoDbFactory(), collectionName, queryMapper);
+		return new DefaultIndexOperations(this, collectionName, null);
 	}
 
 	/*
@@ -667,8 +702,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#indexOps(java.lang.Class)
 	 */
 	public IndexOperations indexOps(Class<?> entityClass) {
-		return new DefaultIndexOperations(getMongoDbFactory(), determineCollectionName(entityClass), queryMapper,
-				entityClass);
+		return new DefaultIndexOperations(this, determineCollectionName(entityClass), entityClass);
 	}
 
 	/*
@@ -847,10 +881,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Class<T> mongoDriverCompatibleType = getMongoDbFactory().getCodecFor(resultClass).map(Codec::getEncoderClass)
 				.orElse((Class) BsonValue.class);
 
-		MongoIterable<?> result = execute((db) -> {
+		MongoIterable<?> result = execute(collectionName, (collection) -> {
 
-			DistinctIterable<T> iterable = db.getCollection(collectionName).distinct(mappedFieldName, mappedQuery,
-					mongoDriverCompatibleType);
+			DistinctIterable<T> iterable = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
 
 			return query.getCollation().map(Collation::toMongoCollation).map(iterable::collation).orElse(iterable);
 		});
@@ -1055,10 +1088,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
+		CountOptions options = new CountOptions();
+		query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
+
 		Document document = queryMapper.getMappedObject(query.getQueryObject(),
 				Optional.ofNullable(entityClass).map(it -> mappingContext.getPersistentEntity(entityClass)));
 
-		return execute(collectionName, collection -> collection.count(document));
+		return execute(collectionName, collection -> collection.count(document, options));
 	}
 
 	/*
@@ -1105,8 +1141,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {
 
 		if (this.readPreference != null) {
-			return collection.withReadPreference(readPreference);
+			collection = collection.withReadPreference(readPreference);
 		}
+
 		return collection;
 	}
 
@@ -1372,6 +1409,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT, collectionName,
 						entityClass, document, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+
 				if (writeConcernToUse == null) {
 					collection.insertOne(document);
 				} else {
@@ -1781,10 +1819,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
-		MongoCollection<Document> inputCollection = getCollection(inputCollectionName);
+		MongoCollection<Document> inputCollection = getAndPrepareCollection(getDbInternal(), inputCollectionName);
 
 		// MapReduceOp
-		MapReduceIterable<Document> result = inputCollection.mapReduce(mapFunc, reduceFunc);
+		MapReduceIterable<Document> result = inputCollection.mapReduce(mapFunc, reduceFunc, Document.class);
 		if (query != null && result != null) {
 
 			if (query.getLimit() > 0 && mapReduceOptions.getLimit() == null) {
@@ -1867,13 +1905,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		if (document.containsKey("$reduce")) {
-			document.put("$reduce", replaceWithResourceIfNecessary(document.get("$reduce").toString()));
+			document.put("$reduce", replaceWithResourceIfNecessary(ObjectUtils.nullSafeToString(document.get("$reduce"))));
 		}
 		if (document.containsKey("$keyf")) {
-			document.put("$keyf", replaceWithResourceIfNecessary(document.get("$keyf").toString()));
+			document.put("$keyf", replaceWithResourceIfNecessary(ObjectUtils.nullSafeToString(document.get("$keyf"))));
 		}
 		if (document.containsKey("finalize")) {
-			document.put("finalize", replaceWithResourceIfNecessary(document.get("finalize").toString()));
+			document.put("finalize", replaceWithResourceIfNecessary(ObjectUtils.nullSafeToString(document.get("finalize"))));
 		}
 
 		Document commandObject = new Document("group", document);
@@ -1882,7 +1920,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			LOGGER.debug("Executing Group with Document [{}]", serializeToJsonSafely(commandObject));
 		}
 
-		Document commandResult = executeCommand(commandObject);
+		Document commandResult = executeCommand(commandObject, this.readPreference);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Group command result = [{}]", commandResult);
@@ -2107,7 +2145,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		return execute(collectionName, (CollectionCallback<CloseableIterator<O>>) collection -> {
 
-			AggregateIterable<Document> cursor = collection.aggregate(pipeline) //
+			AggregateIterable<Document> cursor = collection.aggregate(pipeline, Document.class) //
 					.allowDiskUse(options.isAllowDiskUse()) //
 					.useCursor(true);
 
@@ -2214,7 +2252,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	public MongoDatabase getDb() {
+		return getDbInternal();
+	}
+
+	protected MongoDatabase getDbInternal() {
 		return mongoDbFactory.getDb();
+	}
+
+	protected MongoDatabase prepareDatabase(MongoDatabase database) {
+		return database;
 	}
 
 	protected <T> void maybeEmitEvent(MongoMappingEvent<T> event) {
@@ -2559,7 +2605,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		try {
 			T result = objectCallback
-					.doWith(collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName)));
+					.doWith(collectionCallback.doInCollection(getAndPrepareCollection(getDbInternal(), collectionName)));
 			return result;
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -2594,7 +2640,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			try {
 
 				FindIterable<Document> iterable = collectionCallback
-						.doInCollection(getAndPrepareCollection(getDb(), collectionName));
+						.doInCollection(getAndPrepareCollection(getDbInternal(), collectionName));
 
 				if (preparer != null) {
 					iterable = preparer.prepare(iterable);
@@ -2630,7 +2676,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			try {
 				FindIterable<Document> iterable = collectionCallback
-						.doInCollection(getAndPrepareCollection(getDb(), collectionName));
+						.doInCollection(getAndPrepareCollection(getDbInternal(), collectionName));
 
 				if (preparer != null) {
 					iterable = preparer.prepare(iterable);
@@ -2775,7 +2821,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
-			FindIterable<Document> iterable = collection.find(query);
+			FindIterable<Document> iterable = collection.find(query, Document.class);
 
 			if (LOGGER.isDebugEnabled()) {
 
@@ -2820,7 +2866,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		public FindIterable<Document> doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
 
-			return collection.find(query).projection(fields);
+			return collection.find(query, Document.class).projection(fields);
 		}
 	}
 
@@ -3372,6 +3418,55 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		@Nullable
 		private static Object getNextBatchId(Document commandResult) {
 			return ((Document) commandResult.get(CURSOR_FIELD)).get("id");
+		}
+	}
+
+	/**
+	 * {@link MongoTemplate} extension bound to a specific {@link ClientSession} that is applied when interacting with the
+	 * server through the driver API.
+	 * <p />
+	 * The prepare steps for {@link MongoDatabase} and {@link MongoCollection} proxy the target and invoke the desired
+	 * target method matching the actual arguments plus a {@link ClientSession}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	static class SessionBoundMongoTemplate extends MongoTemplate {
+
+		private final MongoTemplate delegate;
+
+		/**
+		 * @param session must not be {@literal null}.
+		 * @param mongoDbFactory must not be {@literal null}.
+		 * @param mongoConverter must not be {@literal null}.
+		 */
+		SessionBoundMongoTemplate(ClientSession session, MongoTemplate that) {
+
+			super(that.getMongoDbFactory().withSession(session), that);
+
+			this.delegate = that;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.MongoTemplate#getCollection(java.lang.String)
+		 */
+		@Override
+		public MongoCollection<Document> getCollection(String collectionName) {
+
+			// native MongoDB objects that offer methods with ClientSession must not be proxied.
+			return delegate.getCollection(collectionName);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.MongoTemplate#getDb()
+		 */
+		@Override
+		public MongoDatabase getDb() {
+
+			// native MongoDB objects that offer methods with ClientSession must not be proxied.
+			return delegate.getDb();
 		}
 	}
 }

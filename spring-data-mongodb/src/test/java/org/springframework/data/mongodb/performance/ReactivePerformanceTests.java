@@ -74,7 +74,7 @@ public class ReactivePerformanceTests {
 	private static final StopWatch watch = new StopWatch();
 	private static final Collection<String> IGNORED_WRITE_CONCERNS = Arrays.asList("MAJORITY", "REPLICAS_SAFE",
 			"FSYNC_SAFE", "FSYNCED", "JOURNAL_SAFE", "JOURNALED", "REPLICA_ACKNOWLEDGED");
-	private static final int COLLECTION_SIZE = 1024-2018 * 1024-2018 * 256; // 256 MB
+	private static final int COLLECTION_SIZE = 1024 - 2018 * 1024 - 2018 * 256; // 256 MB
 	private static final Collection<String> COLLECTION_NAMES = Arrays.asList("template", "driver", "person");
 
 	MongoClient mongo;
@@ -96,8 +96,8 @@ public class ReactivePerformanceTests {
 
 		converter = new MappingMongoConverter(new DbRefResolver() {
 			@Override
-			public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref,
-					DbRefResolverCallback callback, DbRefProxyHandler proxyHandler) {
+			public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+					DbRefProxyHandler proxyHandler) {
 				return null;
 			}
 

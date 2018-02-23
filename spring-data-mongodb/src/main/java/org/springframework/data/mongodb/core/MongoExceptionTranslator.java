@@ -29,6 +29,7 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.BulkOperationException;
+import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.util.MongoDbErrorCodes;
 import org.springframework.lang.Nullable;
@@ -119,16 +120,24 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			int code = ((MongoException) ex).getCode();
 
 			if (MongoDbErrorCodes.isDuplicateKeyCode(code)) {
-				throw new DuplicateKeyException(ex.getMessage(), ex);
+				return new DuplicateKeyException(ex.getMessage(), ex);
 			} else if (MongoDbErrorCodes.isDataAccessResourceFailureCode(code)) {
-				throw new DataAccessResourceFailureException(ex.getMessage(), ex);
+				return new DataAccessResourceFailureException(ex.getMessage(), ex);
 			} else if (MongoDbErrorCodes.isInvalidDataAccessApiUsageCode(code) || code == 10003 || code == 12001
 					|| code == 12010 || code == 12011 || code == 12012) {
-				throw new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
+				return new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
 			} else if (MongoDbErrorCodes.isPermissionDeniedCode(code)) {
-				throw new PermissionDeniedDataAccessException(ex.getMessage(), ex);
+				return new PermissionDeniedDataAccessException(ex.getMessage(), ex);
 			}
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);
+		}
+
+		if (ex instanceof IllegalStateException) {
+			for (StackTraceElement elm : ex.getStackTrace()) {
+				if (elm.getClassName().contains("ClientSession")) {
+					return new ClientSessionException(ex.getMessage(), ex);
+				}
+			}
 		}
 
 		// If we get here, we have an exception that resulted from user code,
