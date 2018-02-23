@@ -20,8 +20,10 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.DB;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.session.ClientSession;
 
 /**
  * Interface for factories creating {@link DB} instances.
@@ -57,6 +59,15 @@ public interface MongoDbFactory extends CodecRegistryProvider {
 	PersistenceExceptionTranslator getExceptionTranslator();
 
 	DB getLegacyDb();
+
+	/**
+	 * Obtain a {@link ClientSession} for given ClientSessionOptions.
+	 *
+	 * @param options must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	ClientSession getSession(ClientSessionOptions options);
 
 	/**
 	 * Get the underlying {@link CodecRegistry} used by the MongoDB Java driver.

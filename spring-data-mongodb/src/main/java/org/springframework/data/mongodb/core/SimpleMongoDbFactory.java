@@ -24,11 +24,13 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.session.ClientSession;
 
 /**
  * Factory to create {@link DB} instances from a {@link MongoClient} instance.
@@ -146,5 +148,14 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	@Override
 	public DB getLegacyDb() {
 		return mongoClient.getDB(databaseName);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.MongoDbFactory#getSession(com.mongodb.ClientSessionOptions)
+	 */
+	@Override
+	public ClientSession getSession(ClientSessionOptions options) {
+		return mongoClient.startSession(options);
 	}
 }

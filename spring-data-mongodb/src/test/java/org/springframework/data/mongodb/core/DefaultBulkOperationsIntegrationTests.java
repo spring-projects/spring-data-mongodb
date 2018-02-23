@@ -23,11 +23,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.mongodb.BulkWriteException;
 import org.bson.Document;
+import org.hamcrest.core.IsInstanceOf;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -102,10 +105,12 @@ public class DefaultBulkOperationsIntegrationTests {
 		try {
 			createBulkOps(BulkMode.ORDERED).insert(documents).execute();
 			fail();
-		} catch (MongoBulkWriteException e) {
-			assertThat(e.getWriteResult().getInsertedCount(), is(1)); // fails after first error
-			assertThat(e.getWriteErrors(), notNullValue());
-			assertThat(e.getWriteErrors().size(), is(1));
+		} catch (DuplicateKeyException e) {
+
+			assertThat(e.getCause(), IsInstanceOf.instanceOf(MongoBulkWriteException.class));
+			assertThat(((MongoBulkWriteException)e.getCause()).getWriteResult().getInsertedCount(), is(1)); // fails after first error
+			assertThat(((MongoBulkWriteException)e.getCause()).getWriteErrors(), notNullValue());
+			assertThat(((MongoBulkWriteException)e.getCause()).getWriteErrors().size(), is(1));
 		}
 	}
 
@@ -125,10 +130,12 @@ public class DefaultBulkOperationsIntegrationTests {
 		try {
 			createBulkOps(BulkMode.UNORDERED).insert(documents).execute();
 			fail();
-		} catch (MongoBulkWriteException e) {
-			assertThat(e.getWriteResult().getInsertedCount(), is(2)); // two docs were inserted
-			assertThat(e.getWriteErrors(), notNullValue());
-			assertThat(e.getWriteErrors().size(), is(1));
+		} catch (DuplicateKeyException e) {
+
+			assertThat(e.getCause(), IsInstanceOf.instanceOf(MongoBulkWriteException.class));
+			assertThat(((MongoBulkWriteException)e.getCause()).getWriteResult().getInsertedCount(), is(2)); // two docs were inserted
+			assertThat(((MongoBulkWriteException)e.getCause()).getWriteErrors(), notNullValue());
+			assertThat(((MongoBulkWriteException)e.getCause()).getWriteErrors().size(), is(1));
 		}
 	}
 

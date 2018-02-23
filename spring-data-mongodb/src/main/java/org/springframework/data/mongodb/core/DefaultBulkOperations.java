@@ -274,19 +274,10 @@ class DefaultBulkOperations implements BulkOperations {
 	public com.mongodb.bulk.BulkWriteResult execute() {
 
 		try {
-
-			MongoCollection<Document> collection = mongoOperations.getCollection(collectionName);
-			if (defaultWriteConcern != null) {
-				collection = collection.withWriteConcern(defaultWriteConcern);
-			}
-
-			return collection.bulkWrite(models.stream().map(this::mapWriteModel).collect(Collectors.toList()), bulkOptions);
-
-		} catch (BulkWriteException o_O) {
-
-			DataAccessException toThrow = exceptionTranslator.translateExceptionIfPossible(o_O);
-			throw toThrow == null ? o_O : toThrow;
-
+			
+			return mongoOperations.execute(collectionName, collection -> {
+				return collection.bulkWrite(models.stream().map(this::mapWriteModel).collect(Collectors.toList()), bulkOptions);
+			});
 		} finally {
 			this.bulkOptions = getBulkWriteOptions(bulkOperationContext.getBulkMode());
 		}

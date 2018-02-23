@@ -66,7 +66,6 @@ import com.mongodb.client.model.IndexOptions;
 public class MongoPersistentEntityIndexCreatorUnitTests {
 
 	private @Mock MongoDbFactory factory;
-	private @Mock ApplicationContext context;
 	private @Mock MongoDatabase db;
 	private @Mock MongoCollection<org.bson.Document> collection;
 	private MongoTemplate mongoTemplate;
@@ -84,7 +83,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
-		when(db.getCollection(collectionCaptor.capture())).thenReturn(collection);
+		when(db.getCollection(collectionCaptor.capture(), Mockito.eq(org.bson.Document.class))).thenReturn((MongoCollection) collection);
 
 		mongoTemplate = new MongoTemplate(factory);
 
@@ -192,7 +191,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
 
-		verify(db, times(1)).getCollection(collectionNameCapturer.capture());
+		verify(db, times(1)).getCollection(collectionNameCapturer.capture(), Mockito.any());
 		assertThat(collectionNameCapturer.getValue(), equalTo("wrapper"));
 	}
 
@@ -204,14 +203,13 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
 
-		verify(db, times(1)).getCollection(collectionNameCapturer.capture());
+		verify(db, times(1)).getCollection(collectionNameCapturer.capture(), Mockito.any());
 		assertThat(collectionNameCapturer.getValue(), equalTo("indexedDocumentWrapper"));
 	}
 
 	@Test(expected = DataAccessException.class) // DATAMONGO-1125
 	public void createIndexShouldUsePersistenceExceptionTranslatorForNonDataIntegrityConcerns() {
 
-		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
 		doThrow(new MongoException(6, "HostUnreachable")).when(collection).createIndex(Mockito.any(org.bson.Document.class),
 				Mockito.any(IndexOptions.class));
 
@@ -223,7 +221,6 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	@Test(expected = ClassCastException.class) // DATAMONGO-1125
 	public void createIndexShouldNotConvertUnknownExceptionTypes() {
 
-		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
 		doThrow(new ClassCastException("o_O")).when(collection).createIndex(Mockito.any(org.bson.Document.class),
 				Mockito.any(IndexOptions.class));
 

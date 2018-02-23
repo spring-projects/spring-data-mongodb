@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.bson.Document;
 import org.springframework.data.geo.GeoResults;
@@ -39,12 +41,15 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.Cursor;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.session.ClientSession;
 
 /**
  * Interface that specifies a basic set of MongoDB operations. Implemented by {@link MongoTemplate}. Not often used but
@@ -150,6 +155,48 @@ public interface MongoOperations extends FluentMongoOperations {
 	 */
 	@Nullable
 	<T> T execute(String collectionName, CollectionCallback<T> action);
+
+	/**
+	 * Obtain a session bound instance of {@link SessionScoped} binding the {@link ClientSession} provided by the given
+	 * {@link Supplier} to each and every command issued against MongoDB.
+	 * <p />
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use
+	 * {@link #withSession(Supplier, Consumer)} to provide a hook for processing the {@link ClientSession} when done.
+	 *
+	 * @param sessionProvider must not be {@literal null}.
+	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
+	 * @since 2.1
+	 */
+	default SessionScoped withSession(Supplier<ClientSession> sessionProvider) {
+
+		Assert.notNull(sessionProvider, "SessionProvider must not be null!");
+
+		return withSession(sessionProvider, session -> {});
+	}
+
+	/**
+	 * Obtain a session bound instance of {@link SessionScoped} binding a new {@link ClientSession} with given
+	 * {@literal sessionOptions} to each and every command issued against MongoDB.
+	 *
+	 * @param sessionOptions must not be {@literal null}.
+	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
+	 * @since 2.1
+	 */
+	SessionScoped withSession(ClientSessionOptions sessionOptions);
+
+	/**
+	 * Obtain a session bound instance of {@link SessionScoped} binding the {@link ClientSession} provided by the given
+	 * {@link Supplier} to each and every command issued against MongoDB.
+	 * <p />
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
+	 * {@litera onComplete} hook to potentially close the {@link ClientSession}.
+	 *
+	 * @param sessionProvider must not be {@literal null}.
+	 * @param onComplete a simple hook called when done .Must not be {@literal null}.
+	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
+	 * @since 2.1
+	 */
+	SessionScoped withSession(Supplier<ClientSession> sessionProvider, Consumer<ClientSession> onComplete);
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB
@@ -769,8 +816,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -782,8 +829,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -796,8 +843,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -813,8 +860,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
-	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
