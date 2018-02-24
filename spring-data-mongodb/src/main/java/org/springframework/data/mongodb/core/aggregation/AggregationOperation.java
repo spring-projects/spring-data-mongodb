@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import org.bson.Document;
 
 /**
  * Represents one single operation in an aggregation pipeline.
- * 
+ *
  * @author Sebastian Herold
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -31,7 +31,7 @@ public interface AggregationOperation {
 	/**
 	 * Turns the {@link AggregationOperation} into a {@link Document} by using the given
 	 * {@link AggregationOperationContext}.
-	 * 
+	 *
 	 * @return the Document
 	 */
 	Document toDocument(AggregationOperationContext context);

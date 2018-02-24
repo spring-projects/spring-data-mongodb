@@ -1,6 +1,15 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.2-1-0]]
+== What's new in Spring Data MongoDB 2.1
+* Cursor-based aggregation execution.
+* <<mongo-template.query.distinct,Distinct queries>> for imperative and reactive Template API.
+* <<mongo.mongo-3.validation,`validator` support for collections>>.
+* <<mongo.jsonSchema,`$jsonSchema` support>> for queries and collection creation.
+* <<change-streams, Change Stream support>> for imperative and reactive drivers.
+* Tailable cursors for imperative driver.
+
 [[new-features.2-0-0]]
 == What's new in Spring Data MongoDB 2.0
 * Upgrade to Java 8.
@@ -27,6 +36,7 @@
 * Support for `$caseSensitive` and `$diacriticSensitive` text search.
 * Support for GeoJSON Polygon with hole.
 * Performance improvements by bulk fetching ``DBRef``s.
+* Multi-faceted aggregations using `$facet`, `$bucket` and `$bucketAuto` via `Aggregation`.
 
 [[new-features.1-9-0]]
 == What's new in Spring Data MongoDB 1.9

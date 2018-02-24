@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2017 the original author or authors.
+ * Copyright 2010-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,22 +24,14 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +57,8 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -79,9 +73,11 @@ import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOpe
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
@@ -111,6 +107,7 @@ import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.projection.ProjectionInformation;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -136,11 +133,13 @@ import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
@@ -149,6 +148,8 @@ import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ValidationAction;
+import com.mongodb.client.model.ValidationLevel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSONParseException;
@@ -173,6 +174,8 @@ import com.mongodb.util.JSONParseException;
  * @author Laszlo Csontos
  * @author Maninder Singh
  * @author Borislav Rangelov
+ * @author duozhilin
+ * @author Andreas Zink
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
@@ -198,6 +201,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
+	private final JsonSchemaMapper schemaMapper;
 	private final SpelAwareProxyProjectionFactory projectionFactory;
 
 	private @Nullable WriteConcern writeConcern;
@@ -242,6 +246,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter(mongoDbFactory) : mongoConverter;
 		this.queryMapper = new QueryMapper(this.mongoConverter);
 		this.updateMapper = new UpdateMapper(this.mongoConverter);
+		this.schemaMapper = new MongoJsonSchemaMapper(this.mongoConverter);
 		this.projectionFactory = new SpelAwareProxyProjectionFactory();
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
@@ -552,7 +557,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass,
 			@Nullable CollectionOptions collectionOptions) {
-		return createCollection(determineCollectionName(entityClass), collectionOptions);
+
+		Assert.notNull(entityClass, "EntityClass must not be null!");
+		return doCreateCollection(determineCollectionName(entityClass), convertToDocument(collectionOptions, entityClass));
 	}
 
 	/*
@@ -579,7 +586,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#getCollection(java.lang.String)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#getCollection(java.lang.String)
 	 */
 	public MongoCollection<Document> getCollection(final String collectionName) {
 
@@ -806,6 +813,88 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return doFindOne(collectionName, new Document(idKey, id), new Document(), entityClass);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#findDistinct(org.springframework.data.mongodb.core.query.Query, java.lang.String, java.lang.Class, java.lang.Class)
+	 */
+	@Override
+	public <T> List<T> findDistinct(Query query, String field, Class<?> entityClass, Class<T> resultClass) {
+		return findDistinct(query, field, determineCollectionName(entityClass), entityClass, resultClass);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#findDistinct(org.springframework.data.mongodb.core.query.Query, java.lang.String, java.lang.String, java.lang.Class, java.lang.Class)
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> List<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
+			Class<T> resultClass) {
+
+		Assert.notNull(query, "Query must not be null!");
+		Assert.notNull(field, "Field must not be null!");
+		Assert.notNull(collectionName, "CollectionName must not be null!");
+		Assert.notNull(entityClass, "EntityClass must not be null!");
+		Assert.notNull(resultClass, "ResultClass must not be null!");
+
+		MongoPersistentEntity<?> entity = entityClass != Object.class ? getPersistentEntity(entityClass) : null;
+
+		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entity);
+		String mappedFieldName = queryMapper.getMappedFields(new Document(field, 1), entity).keySet().iterator().next();
+
+		Class<T> mongoDriverCompatibleType = getMongoDbFactory().getCodecFor(resultClass).map(Codec::getEncoderClass)
+				.orElse((Class) BsonValue.class);
+
+		MongoIterable<?> result = execute((db) -> {
+
+			DistinctIterable<T> iterable = db.getCollection(collectionName).distinct(mappedFieldName, mappedQuery,
+					mongoDriverCompatibleType);
+
+			return query.getCollation().map(Collation::toMongoCollation).map(iterable::collation).orElse(iterable);
+		});
+
+		if (resultClass == Object.class || mongoDriverCompatibleType != resultClass) {
+
+			MongoConverter converter = getConverter();
+			DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory);
+
+			result = result.map((source) -> converter.mapValueToTargetType(source,
+					getMostSpecificConversionTargetType(resultClass, entityClass, field), dbRefResolver));
+		}
+
+		try {
+			return (List<T>) result.into(new ArrayList<>());
+		} catch (RuntimeException e) {
+			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
+		}
+	}
+
+	/**
+	 * @param userType must not be {@literal null}.
+	 * @param domainType must not be {@literal null}.
+	 * @param field must not be {@literal null}.
+	 * @return the most specific conversion target type depending on user preference and domain type property.
+	 * @since 2.1
+	 */
+	private static Class<?> getMostSpecificConversionTargetType(Class<?> userType, Class<?> domainType, String field) {
+
+		Class<?> conversionTargetType = userType;
+		try {
+
+			Class<?> propertyType = PropertyPath.from(field, domainType).getLeafProperty().getLeafType();
+
+			// use the more specific type but favor UserType over property one
+			if (ClassUtils.isAssignable(userType, propertyType)) {
+				conversionTargetType = propertyType;
+			}
+
+		} catch (PropertyReferenceException e) {
+			// just don't care about it as we default to Object.class anyway.
+		}
+
+		return conversionTargetType;
 	}
 
 	@Override
@@ -1594,13 +1683,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <T> DeleteResult doRemove(final String collectionName, final Query query,
 			@Nullable final Class<T> entityClass) {
 
+		Assert.notNull(query, "Query must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-		if (query == null) {
-			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null!");
-		}
 
-		final Document queryObject = query.getQueryObject();
 		final MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
+		final Document queryObject = queryMapper.getMappedObject(query.getQueryObject(), entity);
 
 		return execute(collectionName, new CollectionCallback<DeleteResult>() {
 
@@ -1609,7 +1696,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass, collectionName));
 
-				Document mappedQuery = queryMapper.getMappedObject(queryObject, entity);
+				Document removeQuery = queryObject;
 
 				DeleteOptions options = new DeleteOptions();
 				query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
@@ -1622,14 +1709,26 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				DeleteResult dr = null;
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Remove using query: {} in collection: {}.",
-							new Object[] { serializeToJsonSafely(mappedQuery), collectionName });
+							new Object[] { serializeToJsonSafely(removeQuery), collectionName });
+				}
+
+				if (query.getLimit() > 0 || query.getSkip() > 0) {
+
+					MongoCursor<Document> cursor = new QueryCursorPreparer(query, entityClass)
+							.prepare(collection.find(removeQuery).projection(new Document(ID_FIELD, 1))).iterator();
+
+					Set<Object> ids = new LinkedHashSet<>();
+					while (cursor.hasNext()) {
+						ids.add(cursor.next().get(ID_FIELD));
+					}
+
+					removeQuery = new Document(ID_FIELD, new Document("$in", ids));
 				}
 
 				if (writeConcernToUse == null) {
-
-					dr = collection.deleteMany(mappedQuery, options);
+					dr = collection.deleteMany(removeQuery, options);
 				} else {
-					dr = collection.withWriteConcern(writeConcernToUse).deleteMany(mappedQuery, options);
+					dr = collection.withWriteConcern(writeConcernToUse).deleteMany(removeQuery, options);
 				}
 
 				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass, collectionName));
@@ -1934,87 +2033,93 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(outputType, "Output type must not be null!");
 
 		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-		Document command = aggregation.toDocument(collectionName, rootContext);
+
+		return doAggregate(aggregation, collectionName, outputType, rootContext);
+	}
+
+	@SuppressWarnings("ConstantConditions")
+	protected <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
+			AggregationOperationContext context) {
+
+		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<>(mongoConverter, outputType, collectionName);
+
+		AggregationOptions options = aggregation.getOptions();
+		if (options.isExplain()) {
+
+			Document command = aggregation.toDocument(collectionName, context);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
+			}
+
+			Document commandResult = executeCommand(command);
+			return new AggregationResults<>(commandResult.get("results", new ArrayList<Document>(0)).stream()
+					.map(callback::doWith).collect(Collectors.toList()), commandResult);
+		}
+
+		List<Document> pipeline = aggregation.toPipeline(context);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
+			LOGGER.debug("Executing aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
 		}
 
-		Document commandResult = executeCommand(command, this.readPreference);
+		return execute(collectionName, collection -> {
 
-		return new AggregationResults<O>(returnPotentiallyMappedResults(outputType, commandResult, collectionName),
-				commandResult);
+			List<Document> rawResult = new ArrayList<>();
+
+			AggregateIterable<Document> aggregateIterable = collection.aggregate(pipeline, Document.class) //
+					.collation(options.getCollation().map(Collation::toMongoCollation).orElse(null)) //
+					.allowDiskUse(options.isAllowDiskUse());
+
+			if (options.getCursorBatchSize() != null) {
+				aggregateIterable = aggregateIterable.batchSize(options.getCursorBatchSize());
+			}
+
+			MongoIterable<O> iterable = aggregateIterable.map(val -> {
+
+				rawResult.add(val);
+				return callback.doWith(val);
+			});
+
+			return new AggregationResults<>(iterable.into(new ArrayList<>()),
+					new Document("results", rawResult).append("ok", 1.0D));
+		});
 	}
 
-	/**
-	 * Returns the potentially mapped results of the given {@code commandResult}.
-	 *
-	 * @param outputType
-	 * @param commandResult
-	 * @return
-	 */
-	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, Document commandResult,
-			String collectionName) {
-
-		@SuppressWarnings("unchecked")
-		Iterable<Document> resultSet = (Iterable<Document>) commandResult.get("result");
-		if (resultSet == null) {
-			return Collections.emptyList();
-		}
-
-		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<O>(mongoConverter, outputType, collectionName);
-
-		List<O> mappedResults = new ArrayList<O>();
-		for (Document document : resultSet) {
-			mappedResults.add(callback.doWith(document));
-		}
-
-		return mappedResults;
-	}
-
+	@SuppressWarnings("ConstantConditions")
 	protected <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName,
 			Class<O> outputType, @Nullable AggregationOperationContext context) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
+		Assert.isTrue(!aggregation.getOptions().isExplain(), "Can't use explain option with streaming!");
 
 		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-
-		Document command = aggregation.toDocument(collectionName, rootContext);
-
-		assertNotExplain(command);
+		AggregationOptions options = aggregation.getOptions();
+		List<Document> pipeline = aggregation.toPipeline(rootContext);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Streaming aggregation: {}", serializeToJsonSafely(command));
+			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
 		}
 
-		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<O>(mongoConverter, outputType, collectionName);
+		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 
-		return execute(collectionName, new CollectionCallback<CloseableIterator<O>>() {
+		return execute(collectionName, (CollectionCallback<CloseableIterator<O>>) collection -> {
 
-			@Override
-			public CloseableIterator<O> doInCollection(MongoCollection<Document> collection)
-					throws MongoException, DataAccessException {
+			AggregateIterable<Document> cursor = collection.aggregate(pipeline) //
+					.allowDiskUse(options.isAllowDiskUse()) //
+					.useCursor(true);
 
-				List<Document> pipeline = (List<Document>) command.get("pipeline");
-
-				AggregationOptions options = AggregationOptions.fromDocument(command);
-
-				AggregateIterable<Document> cursor = collection.aggregate(pipeline).allowDiskUse(options.isAllowDiskUse())
-						.useCursor(true);
-
-				Integer cursorBatchSize = options.getCursorBatchSize();
-				if (cursorBatchSize != null) {
-					cursor = cursor.batchSize(cursorBatchSize);
-				}
-
-				if (options.getCollation().isPresent()) {
-					cursor = cursor.collation(options.getCollation().map(Collation::toMongoCollation).get());
-				}
-
-				return new CloseableIterableCursorAdapter<O>(cursor.iterator(), exceptionTranslator, readCallback);
+			if (options.getCursorBatchSize() != null) {
+				cursor = cursor.batchSize(options.getCursorBatchSize());
 			}
+
+			if (options.getCollation().isPresent()) {
+				cursor = cursor.collation(options.getCollation().map(Collation::toMongoCollation).get());
+			}
+
+			return new CloseableIterableCursorAdapter<>(cursor.iterator(), exceptionTranslator, readCallback);
 		});
 	}
 
@@ -2061,20 +2166,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <T> ExecutableInsert<T> insert(Class<T> domainType) {
 		return new ExecutableInsertOperationSupport(this).insert(domainType);
-	}
-
-	/**
-	 * Assert that the {@link Document} does not enable Aggregation explain mode.
-	 *
-	 * @param command the command {@link Document}.
-	 */
-	private void assertNotExplain(Document command) {
-
-		Boolean explain = command.get("explain", Boolean.class);
-
-		if (explain != null && explain) {
-			throw new IllegalArgumentException("Can't use explain option with streaming!");
-		}
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {
@@ -2158,6 +2249,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				if (collectionOptions.containsKey("collation")) {
 					co.collation(IndexConverters.fromDocument(collectionOptions.get("collation", Document.class)));
+				}
+
+				if (collectionOptions.containsKey("validator")) {
+
+					com.mongodb.client.model.ValidationOptions options = new com.mongodb.client.model.ValidationOptions();
+
+					if (collectionOptions.containsKey("validationLevel")) {
+						options.validationLevel(ValidationLevel.fromString(collectionOptions.getString("validationLevel")));
+					}
+					if (collectionOptions.containsKey("validationAction")) {
+						options.validationAction(ValidationAction.fromString(collectionOptions.getString("validationAction")));
+					}
+
+					options.validator(collectionOptions.get("validator", Document.class));
+					co.validationOptions(options);
 				}
 
 				db.createCollection(collectionName, co);
@@ -2272,17 +2378,68 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				new ProjectingReadCallback<>(mongoConverter, sourceClass, targetClass, collectionName), collectionName);
 	}
 
+	/**
+	 * Convert given {@link CollectionOptions} to a document and take the domain type information into account when
+	 * creating a mapped schema for validation. <br />
+	 * This method calls {@link #convertToDocument(CollectionOptions)} for backwards compatibility and potentially
+	 * overwrites the validator with the mapped validator document. In the long run
+	 * {@link #convertToDocument(CollectionOptions)} will be removed so that this one becomes the only source of truth.
+	 *
+	 * @param collectionOptions can be {@literal null}.
+	 * @param targetType must not be {@literal null}. Use {@link Object} type instead.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	protected Document convertToDocument(@Nullable CollectionOptions collectionOptions, Class<?> targetType) {
+
+		Document doc = convertToDocument(collectionOptions);
+
+		if (collectionOptions != null) {
+
+			collectionOptions.getValidationOptions().ifPresent(it -> it.getValidator() //
+					.ifPresent(val -> doc.put("validator", getMappedValidator(val, targetType))));
+		}
+
+		return doc;
+	}
+
+	/**
+	 * @param collectionOptions can be {@literal null}.
+	 * @return never {@literal null}.
+	 * @deprecated since 2.1 in favor of {@link #convertToDocument(CollectionOptions, Class)}.
+	 */
+	@Deprecated
 	protected Document convertToDocument(@Nullable CollectionOptions collectionOptions) {
 
 		Document document = new Document();
+
 		if (collectionOptions != null) {
 
 			collectionOptions.getCapped().ifPresent(val -> document.put("capped", val));
 			collectionOptions.getSize().ifPresent(val -> document.put("size", val));
 			collectionOptions.getMaxDocuments().ifPresent(val -> document.put("max", val));
 			collectionOptions.getCollation().ifPresent(val -> document.append("collation", val.toDocument()));
+
+			collectionOptions.getValidationOptions().ifPresent(it -> {
+
+				it.getValidationLevel().ifPresent(val -> document.append("validationLevel", val.getValue()));
+				it.getValidationAction().ifPresent(val -> document.append("validationAction", val.getValue()));
+				it.getValidator().ifPresent(val -> document.append("validator", getMappedValidator(val, Object.class)));
+			});
 		}
+
 		return document;
+	}
+
+	Document getMappedValidator(Validator validator, Class<?> domainType) {
+
+		Document validationRules = validator.toDocument();
+
+		if (validationRules.containsKey("$jsonSchema")) {
+			return schemaMapper.mapSchema(validationRules, domainType);
+		}
+
+		return queryMapper.getMappedObject(validationRules, mappingContext.getPersistentEntity(domainType));
 	}
 
 	/**
@@ -2771,31 +2928,26 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @author Oliver Gierke
 	 * @author Christoph Strobl
 	 */
+	@RequiredArgsConstructor
 	private class ReadDocumentCallback<T> implements DocumentCallback<T> {
 
-		private final EntityReader<? super T, Bson> reader;
-		private final Class<T> type;
+		private final @NonNull EntityReader<? super T, Bson> reader;
+		private final @NonNull Class<T> type;
 		private final String collectionName;
 
-		public ReadDocumentCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
-
-			Assert.notNull(reader, "EntityReader must not be null!");
-			Assert.notNull(type, "Entity type must not be null!");
-
-			this.reader = reader;
-			this.type = type;
-			this.collectionName = collectionName;
-		}
-
 		@Nullable
-		public T doWith(Document object) {
+		public T doWith(@Nullable Document object) {
+
 			if (null != object) {
 				maybeEmitEvent(new AfterLoadEvent<T>(object, type, collectionName));
 			}
+
 			T source = reader.read(type, object);
+
 			if (null != source) {
 				maybeEmitEvent(new AfterConvertEvent<T>(object, source, collectionName));
 			}
+
 			return source;
 		}
 	}
@@ -2830,10 +2982,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			Class<?> typeToRead = targetType.isInterface() || targetType.isAssignableFrom(entityType) ? entityType
 					: targetType;
+
+			if (null != object) {
+				maybeEmitEvent(new AfterLoadEvent<T>(object, targetType, collectionName));
+			}
+
 			Object source = reader.read(typeToRead, object);
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
 
-			if (result == null) {
+			if (null != result) {
 				maybeEmitEvent(new AfterConvertEvent<>(object, result, collectionName));
 			}
 
@@ -2986,7 +3143,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			T doWith = delegate.doWith(content);
 
-			return new GeoResult<T>(doWith, new Distance(distance, metric));
+			return new GeoResult<>(doWith, new Distance(distance, metric));
 		}
 	}
 
@@ -3073,5 +3230,148 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	public MongoDbFactory getMongoDbFactory() {
 		return mongoDbFactory;
+	}
+
+	/**
+	 * {@link BatchAggregationLoader} is a little helper that can process cursor results returned by an aggregation
+	 * command execution. On presence of a {@literal nextBatch} indicated by presence of an {@code id} field in the
+	 * {@code cursor} another {@code getMore} command gets executed reading the next batch of documents until all results
+	 * are loaded.
+	 *
+	 * @author Christoph Strobl
+	 * @since 1.10
+	 */
+	static class BatchAggregationLoader {
+
+		private static final String CURSOR_FIELD = "cursor";
+		private static final String RESULT_FIELD = "result";
+		private static final String BATCH_SIZE_FIELD = "batchSize";
+		private static final String FIRST_BATCH = "firstBatch";
+		private static final String NEXT_BATCH = "nextBatch";
+		private static final String SERVER_USED = "serverUsed";
+		private static final String OK = "ok";
+
+		private final MongoTemplate template;
+		private final ReadPreference readPreference;
+		private final int batchSize;
+
+		BatchAggregationLoader(MongoTemplate template, ReadPreference readPreference, int batchSize) {
+
+			this.template = template;
+			this.readPreference = readPreference;
+			this.batchSize = batchSize;
+		}
+
+		/**
+		 * Run aggregation command and fetch all results.
+		 */
+		Document aggregate(String collectionName, Aggregation aggregation, AggregationOperationContext context) {
+
+			Document command = prepareAggregationCommand(collectionName, aggregation, context, batchSize);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
+			}
+
+			return mergeAggregationResults(aggregateBatched(command, collectionName, batchSize));
+		}
+
+		/**
+		 * Pre process the aggregation command sent to the server by adding {@code cursor} options to match execution on
+		 * different server versions.
+		 */
+		private static Document prepareAggregationCommand(String collectionName, Aggregation aggregation,
+				@Nullable AggregationOperationContext context, int batchSize) {
+
+			AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+			Document command = aggregation.toDocument(collectionName, rootContext);
+
+			if (!aggregation.getOptions().isExplain()) {
+				command.put(CURSOR_FIELD, new Document(BATCH_SIZE_FIELD, batchSize));
+			}
+
+			return command;
+		}
+
+		private List<Document> aggregateBatched(Document command, String collectionName, int batchSize) {
+
+			List<Document> results = new ArrayList<>();
+
+			Document commandResult = template.executeCommand(command, readPreference);
+			results.add(postProcessResult(commandResult));
+
+			while (hasNext(commandResult)) {
+
+				Document getMore = new Document("getMore", getNextBatchId(commandResult)) //
+						.append("collection", collectionName) //
+						.append(BATCH_SIZE_FIELD, batchSize);
+
+				commandResult = template.executeCommand(getMore, this.readPreference);
+				results.add(postProcessResult(commandResult));
+			}
+
+			return results;
+		}
+
+		private static Document postProcessResult(Document commandResult) {
+
+			if (!commandResult.containsKey(CURSOR_FIELD)) {
+				return commandResult;
+			}
+
+			Document resultObject = new Document(SERVER_USED, commandResult.get(SERVER_USED));
+			resultObject.put(OK, commandResult.get(OK));
+
+			Document cursor = (Document) commandResult.get(CURSOR_FIELD);
+			if (cursor.containsKey(FIRST_BATCH)) {
+				resultObject.put(RESULT_FIELD, cursor.get(FIRST_BATCH));
+			} else {
+				resultObject.put(RESULT_FIELD, cursor.get(NEXT_BATCH));
+			}
+
+			return resultObject;
+		}
+
+		private static Document mergeAggregationResults(List<Document> batchResults) {
+
+			if (batchResults.size() == 1) {
+				return batchResults.iterator().next();
+			}
+
+			Document commandResult = new Document();
+			List<Object> allResults = new ArrayList<>();
+
+			for (Document batchResult : batchResults) {
+
+				Collection documents = (Collection<?>) batchResult.get(RESULT_FIELD);
+				if (!CollectionUtils.isEmpty(documents)) {
+					allResults.addAll(documents);
+				}
+			}
+
+			// take general info from first batch
+			commandResult.put(SERVER_USED, batchResults.iterator().next().get(SERVER_USED));
+			commandResult.put(OK, batchResults.iterator().next().get(OK));
+
+			// and append the merged batchResults
+			commandResult.put(RESULT_FIELD, allResults);
+
+			return commandResult;
+		}
+
+		private static boolean hasNext(Document commandResult) {
+
+			if (!commandResult.containsKey(CURSOR_FIELD)) {
+				return false;
+			}
+
+			Object next = getNextBatchId(commandResult);
+			return next != null && ((Number) next).longValue() != 0L;
+		}
+
+		@Nullable
+		private static Object getNextBatchId(Document commandResult) {
+			return ((Document) commandResult.get(CURSOR_FIELD)).get("id");
+		}
 	}
 }

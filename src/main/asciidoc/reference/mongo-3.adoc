@@ -81,6 +81,38 @@ In order to use authentication with XML configuration use the `credentials` attr
 </beans>
 ----
 
+[[mongo.mongo-3.validation]]
+=== Server-side Validation
+
+MongoDB supports https://docs.mongodb.com/manual/core/schema-validation/[Schema Validation] as of version 3.2 with query operators
+and as of version 3.6 JSON-schema based validation.
+
+This chapter will point out the specialties for validation in MongoDB and how to apply JSON schema validation.
+
+[[mongo.mongo-3.validation.json-schema]]
+==== JSON Schema Validation
+
+MongoDB 3.6 allows validation and querying of documents using JSON schema draft 4 including core specification and validation specification, with some differences. `$jsonSchema` can be used in a document validator (when creating a collection), which enforces that inserted or updated documents are valid against the schema. It can also be used to query for documents with the `find` command or `$match` aggregation stage.
+
+Spring Data MongoDB supports MongoDB's specific JSON schema implementation to define and use schemas. See <<mongo.jsonSchema,JSON Schema>> for further details.
+
+[[mongo.mongo-3.validation.query-expression]]
+==== Query Expression Validation
+
+Next to the <<mongo.mongo-3.validation.json-schema>>, MongoDB supports  as of version 3.2 validating documents against a given structure described by a query. The structure can be built using `Criteria` objects just the same way as they are used for defining queries.
+
+[source,java]
+----
+Criteria queryExpression = Criteria.where("lastname").ne(null).type(2)
+    .and("age").ne(null).type(16).gt(0).lte(150);
+
+Validator validator = Validator.criteria(queryExpression);
+
+template.createCollection(Person.class, CollectionOptions.empty().validator(validator));
+----
+
+NOTE: Field names used within the query expression are mapped to the domain types property names taking potential `@Field` annotations into account.
+
 [[mongo.mongo-3.misc]]
 === Other things to be aware of
 

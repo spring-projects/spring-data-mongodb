@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.data.mongodb;
 
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
@@ -26,9 +27,10 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * Interface for factories creating reactive {@link MongoDatabase} instances.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
-public interface ReactiveMongoDatabaseFactory {
+public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 
 	/**
 	 * Creates a default {@link MongoDatabase} instance.
@@ -53,4 +55,14 @@ public interface ReactiveMongoDatabaseFactory {
 	 * @return will never be {@literal null}.
 	 */
 	PersistenceExceptionTranslator getExceptionTranslator();
+
+	/**
+	 * Get the underlying {@link CodecRegistry} used by the reactive MongoDB Java driver.
+	 *
+	 * @return never {@literal null}.
+	 */
+	@Override
+	default CodecRegistry getCodecRegistry() {
+		return getMongoDatabase().getCodecRegistry();
+	}
 }

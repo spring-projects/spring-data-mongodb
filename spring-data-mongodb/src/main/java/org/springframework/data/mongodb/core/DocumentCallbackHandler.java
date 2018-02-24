@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import com.mongodb.MongoException;
  * about exception handling. {@MongoException}s will be caught and translated by the calling MongoTemplate An
  * DocumentCallbackHandler is typically stateful: It keeps the result state within the object, to be available later for
  * later inspection.
- * 
+ *
  * @author Mark Pollack
  * @author Grame Rocher
  * @author Oliver Gierke

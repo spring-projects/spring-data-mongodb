@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
 /**
  * An {@link ExecutableMongoScript} assigned to a name that allows calling the function by its {@literal name} once it
  * has been saved to the {@link com.mongodb.DB} instance.
- * 
+ *
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @since 1.7
@@ -33,7 +33,7 @@ public class NamedMongoScript {
 
 	/**
 	 * Creates new {@link NamedMongoScript} that can be saved to the {@link com.mongodb.DB} instance.
-	 * 
+	 *
 	 * @param name must not be {@literal null} or empty.
 	 * @param rawScript the {@link String} representation of the {@literal JavaScript} function. Must not be
 	 *          {@literal null} or empty.
@@ -44,7 +44,7 @@ public class NamedMongoScript {
 
 	/**
 	 * Creates new {@link NamedMongoScript}.
-	 * 
+	 *
 	 * @param name must not be {@literal null} or empty.
 	 * @param script must not be {@literal null}.
 	 */
@@ -59,7 +59,7 @@ public class NamedMongoScript {
 
 	/**
 	 * Returns the actual script code.
-	 * 
+	 *
 	 * @return will never be {@literal null}.
 	 */
 	public String getCode() {
@@ -68,7 +68,7 @@ public class NamedMongoScript {
 
 	/**
 	 * Returns the underlying {@link ExecutableMongoScript}.
-	 * 
+	 *
 	 * @return will never be {@literal null}.
 	 */
 	public ExecutableMongoScript getScript() {
@@ -77,7 +77,7 @@ public class NamedMongoScript {
 
 	/**
 	 * Returns the name of the script.
-	 * 
+	 *
 	 * @return will never be {@literal null} or empty.
 	 */
 	public String getName() {

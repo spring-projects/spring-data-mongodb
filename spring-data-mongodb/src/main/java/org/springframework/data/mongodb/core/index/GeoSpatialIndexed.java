@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 the original author or authors.
+ * Copyright 2010-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 
 /**
  * Mark a field to be indexed using MongoDB's geospatial indexing feature.
- * 
+ *
  * @author Jon Brisbin
  * @author Laurent Canet
  * @author Thomas Darimont
@@ -40,7 +40,7 @@ public @interface GeoSpatialIndexed {
 	 * provided name will be prefixed with the path leading to the entity. <br />
 	 * <br />
 	 * The structure below
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * &#64;Document
@@ -48,20 +48,20 @@ public @interface GeoSpatialIndexed {
 	 *   Hybrid hybrid;
 	 *   Nested nested;
 	 * }
-	 * 
+	 *
 	 * &#64;Document
 	 * class Hybrid {
 	 *   &#64;GeoSpatialIndexed(name="index") Point h1;
 	 * }
-	 * 
+	 *
 	 * class Nested {
 	 *   &#64;GeoSpatialIndexed(name="index") Point n1;
 	 * }
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * resolves in the following index structures
-	 * 
+	 *
 	 * <pre>
 	 * <code>
 	 * db.root.createIndex( { hybrid.h1: "2d" } , { name: "hybrid.index" } )
@@ -69,7 +69,7 @@ public @interface GeoSpatialIndexed {
 	 * db.hybrid.createIndex( { h1: "2d" } , { name: "index" } )
 	 * </code>
 	 * </pre>
-	 * 
+	 *
 	 * @return
 	 */
 	String name() default "";
@@ -77,7 +77,7 @@ public @interface GeoSpatialIndexed {
 	/**
 	 * If set to {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults
 	 * to {@literal false}.
-	 * 
+	 *
 	 * @return
 	 * @since 1.5
 	 */
@@ -85,28 +85,28 @@ public @interface GeoSpatialIndexed {
 
 	/**
 	 * Minimum value for indexed values.
-	 * 
+	 *
 	 * @return
 	 */
 	int min() default -180;
 
 	/**
 	 * Maximum value for indexed values.
-	 * 
+	 *
 	 * @return
 	 */
 	int max() default 180;
 
 	/**
 	 * Bits of precision for boundary calculations.
-	 * 
+	 *
 	 * @return
 	 */
 	int bits() default 26;
 
 	/**
 	 * The type of the geospatial index. Default is {@link GeoSpatialIndexType#GEO_2D}
-	 * 
+	 *
 	 * @since 1.4
 	 * @return
 	 */
@@ -114,7 +114,7 @@ public @interface GeoSpatialIndexed {
 
 	/**
 	 * The bucket size for {@link GeoSpatialIndexType#GEO_HAYSTACK} indexes, in coordinate units.
-	 * 
+	 *
 	 * @since 1.4
 	 * @return
 	 */
@@ -122,7 +122,7 @@ public @interface GeoSpatialIndexed {
 
 	/**
 	 * The name of the additional field to use for {@link GeoSpatialIndexType#GEO_HAYSTACK} indexes
-	 * 
+	 *
 	 * @since 1.4
 	 * @return
 	 */

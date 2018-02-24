@@ -1,11 +1,11 @@
 /*
- * Copyright 2011-2017 by the original author(s).
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,7 @@ import org.springframework.core.GenericTypeResolver;
 
 /**
  * Base class to implement domain class specific {@link ApplicationListener}s.
- * 
+ *
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Martin Baumgartner
@@ -96,7 +96,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	/**
 	 * Captures {@link BeforeConvertEvent}.
-	 * 
+	 *
 	 * @param event never {@literal null}.
 	 * @since 1.8
 	 */
@@ -109,7 +109,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	/**
 	 * Captures {@link BeforeSaveEvent}.
-	 * 
+	 *
 	 * @param event will never be {@literal null}.
 	 * @since 1.8
 	 */
@@ -122,7 +122,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	/**
 	 * Captures {@link AfterSaveEvent}.
-	 * 
+	 *
 	 * @param event will never be {@literal null}.
 	 * @since 1.8
 	 */
@@ -135,7 +135,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	/**
 	 * Captures {@link AfterLoadEvent}.
-	 * 
+	 *
 	 * @param event will never be {@literal null}.
 	 * @since 1.8
 	 */
@@ -148,7 +148,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	/**
 	 * Captures {@link AfterConvertEvent}.
-	 * 
+	 *
 	 * @param event will never be {@literal null}.
 	 * @since 1.8
 	 */
@@ -161,7 +161,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	/**
 	 * Captures {@link AfterDeleteEvent}.
-	 * 
+	 *
 	 * @param event will never be {@literal null}.
 	 * @since 1.8
 	 */
@@ -174,7 +174,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	/**
 	 * Capture {@link BeforeDeleteEvent}.
-	 * 
+	 *
 	 * @param event will never be {@literal null}.
 	 * @since 1.8
 	 */

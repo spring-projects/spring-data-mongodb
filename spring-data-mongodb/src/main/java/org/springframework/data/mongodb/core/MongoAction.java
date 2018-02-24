@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import com.mongodb.WriteConcern;
  * <li>REMOVE has null document</li>
  * <li>INSERT_LIST has null entityType, document, and query</li>
  * </ul>
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -46,7 +46,7 @@ public class MongoAction {
 
 	/**
 	 * Create an instance of a {@link MongoAction}.
-	 * 
+	 *
 	 * @param defaultWriteConcern the default write concern. Can be {@literal null}.
 	 * @param mongoActionOperation action being taken against the collection. Must not be {@literal null}.
 	 * @param collectionName the collection name, must not be {@literal null} or empty.

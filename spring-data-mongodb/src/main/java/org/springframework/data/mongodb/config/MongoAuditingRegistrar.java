@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,13 +37,13 @@ import org.springframework.util.Assert;
 
 /**
  * {@link ImportBeanDefinitionRegistrar} to enable {@link EnableMongoAuditing} annotation.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
  */
 class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAnnotation()
 	 */
@@ -52,7 +52,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		return EnableMongoAuditing.class;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAuditingHandlerBeanName()
 	 */
@@ -61,7 +61,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		return "mongoAuditingHandler";
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#registerBeanDefinitions(org.springframework.core.type.AnnotationMetadata, org.springframework.beans.factory.support.BeanDefinitionRegistry)
 	 */
@@ -74,7 +74,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		super.registerBeanDefinitions(annotationMetadata, registry);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAuditHandlerBeanDefinitionBuilder(org.springframework.data.auditing.config.AuditingConfiguration)
 	 */
@@ -92,7 +92,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		return configureDefaultAuditHandlerAttributes(configuration, builder);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#registerAuditListener(org.springframework.beans.factory.config.BeanDefinition, org.springframework.beans.factory.support.BeanDefinitionRegistry)
 	 */
@@ -125,14 +125,14 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
 		/**
 		 * Creates a new {@link MongoMappingContextLookup} for the given {@link MappingMongoConverter}.
-		 * 
+		 *
 		 * @param converter must not be {@literal null}.
 		 */
 		public MongoMappingContextLookup(MappingMongoConverter converter) {
 			this.converter = converter;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.beans.factory.FactoryBean#getObject()
 		 */
@@ -141,7 +141,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 			return converter.getMappingContext();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.beans.factory.FactoryBean#getObjectType()
 		 */
@@ -150,7 +150,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 			return MappingContext.class;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.beans.factory.FactoryBean#isSingleton()
 		 */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/**
 	 * Creates a new {@link QuerydslMongoPredicateExecutor} for the given {@link MongoEntityInformation} and
-	 * {@link MongoTemplate}. Uses the {@link SimpleEntityPathResolver} to create an {@link EntityPath} for the given
+	 * {@link MongoOperations}. Uses the {@link SimpleEntityPathResolver} to create an {@link EntityPath} for the given
 	 * domain class.
 	 *
 	 * @param entityInformation must not be {@literal null}.
@@ -72,7 +72,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/**
 	 * Creates a new {@link QuerydslMongoPredicateExecutor} for the given {@link MongoEntityInformation},
-	 * {@link MongoTemplate} and {@link EntityPathResolver}.
+	 * {@link MongoOperations} and {@link EntityPathResolver}.
 	 *
 	 * @param entityInformation must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
@@ -108,19 +108,19 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate)
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate) {
 
 		Assert.notNull(predicate, "Predicate must not be null!");
 
-		return createQueryFor(predicate).fetchResults().getResults();
+		return createQueryFor(predicate).fetch();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, com.mysema.query.types.OrderSpecifier<?>[])
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, com.querydsl.core.types.OrderSpecifier<?>[])
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
@@ -128,12 +128,12 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 		Assert.notNull(predicate, "Predicate must not be null!");
 		Assert.notNull(orders, "Order specifiers must not be null!");
 
-		return createQueryFor(predicate).orderBy(orders).fetchResults().getResults();
+		return createQueryFor(predicate).orderBy(orders).fetch();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, org.springframework.data.domain.Sort)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Sort)
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, Sort sort) {
@@ -141,24 +141,24 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 		Assert.notNull(predicate, "Predicate must not be null!");
 		Assert.notNull(sort, "Sort must not be null!");
 
-		return applySorting(createQueryFor(predicate), sort).fetchResults().getResults();
+		return applySorting(createQueryFor(predicate), sort).fetch();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.OrderSpecifier[])
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.OrderSpecifier[])
 	 */
 	@Override
 	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
 
 		Assert.notNull(orders, "Order specifiers must not be null!");
 
-		return createQuery().orderBy(orders).fetchResults().getResults();
+		return createQuery().orderBy(orders).fetch();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, org.springframework.data.domain.Pageable)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Pageable)
 	 */
 	@Override
 	public Page<T> findAll(Predicate predicate, Pageable pageable) {
@@ -168,13 +168,12 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQueryFor(predicate);
 
-		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable,
-				() -> createQueryFor(predicate).fetchCount());
+		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetch(), pageable, query::fetchCount);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#count(com.mysema.query.types.Predicate)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#count(com.querydsl.core.types.Predicate)
 	 */
 	@Override
 	public long count(Predicate predicate) {
@@ -186,7 +185,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#exists(com.mysema.query.types.Predicate)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#exists(com.querydsl.core.types.Predicate)
 	 */
 	@Override
 	public boolean exists(Predicate predicate) {
@@ -197,7 +196,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	}
 
 	/**
-	 * Creates a {@link MongodbQuery} for the given {@link Predicate}.
+	 * Creates a {@link AbstractMongodbQuery} for the given {@link Predicate}.
 	 *
 	 * @param predicate
 	 * @return
@@ -207,12 +206,12 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	}
 
 	/**
-	 * Creates a {@link MongodbQuery}.
+	 * Creates a {@link AbstractMongodbQuery}.
 	 *
 	 * @return
 	 */
 	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> createQuery() {
-		return new SpringDataMongodbQuery<T>(mongoOperations, entityInformation.getJavaType());
+		return new SpringDataMongodbQuery<>(mongoOperations, entityInformation.getJavaType());
 	}
 
 	/**
@@ -248,13 +247,13 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 			return query;
 		}
 
-		sort.stream().map(this::toOrder).forEach(it -> query.orderBy(it));
+		sort.stream().map(this::toOrder).forEach(query::orderBy);
 
 		return query;
 	}
 
 	/**
-	 * Transforms a plain {@link Order} into a QueryDsl specific {@link OrderSpecifier}.
+	 * Transforms a plain {@link Order} into a Querydsl specific {@link OrderSpecifier}.
 	 *
 	 * @param order
 	 * @return

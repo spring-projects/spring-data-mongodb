@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core;
 /**
  * Enumeration for operations on a collection. Used with {@link MongoAction} to help determine the WriteConcern to use
  * for a given mutating operation
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @see MongoAction

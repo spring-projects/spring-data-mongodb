@@ -25,7 +25,7 @@ import kotlin.reflect.KClass
  * @since 2.0
  */
 fun <T : Any> ExecutableFindOperation.query(entityClass: KClass<T>): ExecutableFindOperation.ExecutableFind<T> =
-        query(entityClass.java)
+		query(entityClass.java)
 
 /**
  * Extension for [ExecutableFindOperation.query] leveraging reified type parameters.
@@ -35,7 +35,7 @@ fun <T : Any> ExecutableFindOperation.query(entityClass: KClass<T>): ExecutableF
  * @since 2.0
  */
 inline fun <reified T : Any> ExecutableFindOperation.query(): ExecutableFindOperation.ExecutableFind<T> =
-        query(T::class.java)
+		query(T::class.java)
 
 
 /**
@@ -46,7 +46,7 @@ inline fun <reified T : Any> ExecutableFindOperation.query(): ExecutableFindOper
  * @since 2.0
  */
 fun <T : Any> ExecutableFindOperation.FindWithProjection<T>.asType(resultType: KClass<T>): ExecutableFindOperation.FindWithQuery<T> =
-        `as`(resultType.java)
+		`as`(resultType.java)
 
 /**
  * Extension for [ExecutableFindOperation.FindWithProjection. as] leveraging reified type parameters.
@@ -56,6 +56,13 @@ fun <T : Any> ExecutableFindOperation.FindWithProjection<T>.asType(resultType: K
  * @since 2.0
  */
 inline fun <reified T : Any> ExecutableFindOperation.FindWithProjection<T>.asType(): ExecutableFindOperation.FindWithQuery<T> =
-        `as`(T::class.java)
+		`as`(T::class.java)
 
-
+/**
+ * Extension for [ExecutableFindOperation.DistinctWithProjection. as] providing a [KClass] based variant.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+fun <T : Any> ExecutableFindOperation.DistinctWithProjection.asType(resultType: KClass<T>): ExecutableFindOperation.TerminatingDistinct<T> =
+		`as`(resultType.java);

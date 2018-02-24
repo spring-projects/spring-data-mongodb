@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 /**
  * {@link TextIndexed} marks a field to be part of the text index. As there can be only one text index per collection
  * all fields marked with {@link TextIndexed} are combined into one single index. <br />
- * 
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.6
@@ -38,7 +38,7 @@ public @interface TextIndexed {
 	 * Defines the significance of the filed relative to other indexed fields. The value directly influences the documents
 	 * score. <br/>
 	 * Defaulted to {@literal 1.0}.
-	 * 
+	 *
 	 * @return
 	 */
 	float weight() default 1.0F;

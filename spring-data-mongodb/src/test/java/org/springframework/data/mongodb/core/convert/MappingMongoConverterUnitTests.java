@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
+
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -1803,6 +1805,22 @@ public class MappingMongoConverterUnitTests {
 		converter.read(TypeWithMapOfLongValues.class, source);
 	}
 
+	@Test // DATAMONGO-1831
+	public void shouldConvertArrayInConstructorCorrectly() {
+
+		org.bson.Document source = new org.bson.Document("array", Collections.emptyList());
+
+		assertThat(converter.read(WithArrayInConstructor.class, source).array, is(emptyArray()));
+	}
+
+	@Test // DATAMONGO-1831
+	public void shouldConvertNullForArrayInConstructorCorrectly() {
+
+		org.bson.Document source = new org.bson.Document();
+
+		assertThat(converter.read(WithArrayInConstructor.class, source).array, is(nullValue()));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2156,5 +2174,12 @@ public class MappingMongoConverterUnitTests {
 
 	static class TypeWithMapOfLongValues {
 		Map<String, Long> map;
+	}
+
+	@RequiredArgsConstructor
+	static class WithArrayInConstructor {
+
+		final String[] array;
+
 	}
 }

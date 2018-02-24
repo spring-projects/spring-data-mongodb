@@ -53,4 +53,11 @@ fun <T : Any> ReactiveFindOperation.FindWithProjection<T>.asType(resultType: KCl
 inline fun <reified T : Any> ReactiveFindOperation.FindWithProjection<T>.asType(): ReactiveFindOperation.FindWithQuery<T> =
 		`as`(T::class.java)
 
-
+/**
+ * Extension for [ExecutableFindOperation.DistinctWithProjection. as] providing a [KClass] based variant.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+fun <T : Any> ReactiveFindOperation.DistinctWithProjection.asType(resultType: KClass<T>): ReactiveFindOperation.TerminatingDistinct<T> =
+		`as`(resultType.java);

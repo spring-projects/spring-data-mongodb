@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * {@link GeoJsonMultiPoint} is defined as list of {@link Point}s.
- * 
+ *
  * @author Christoph Strobl
  * @since 1.7
  * @see <a href="http://geojson.org/geojson-spec.html#multipoint">http://geojson.org/geojson-spec.html#multipoint</a>
@@ -39,7 +39,7 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 
 	/**
 	 * Creates a new {@link GeoJsonMultiPoint} for the given {@link Point}s.
-	 * 
+	 *
 	 * @param points points must not be {@literal null} and have at least 2 entries.
 	 */
 	public GeoJsonMultiPoint(List<Point> points) {
@@ -52,7 +52,7 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 
 	/**
 	 * Creates a new {@link GeoJsonMultiPoint} for the given {@link Point}s.
-	 * 
+	 *
 	 * @param first must not be {@literal null}.
 	 * @param second must not be {@literal null}.
 	 * @param others must not be {@literal null}.

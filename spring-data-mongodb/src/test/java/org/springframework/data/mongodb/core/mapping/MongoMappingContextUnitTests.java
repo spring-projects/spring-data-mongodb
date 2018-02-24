@@ -1,11 +1,11 @@
 /*
- * Copyright 2011-2017 by the original author(s).
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -65,14 +64,14 @@ public class MongoMappingContextUnitTests {
 	public void doesNotReturnPersistentEntityForMongoSimpleType() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		assertThat(context.getPersistentEntity(DBRef.class), is(nullValue()));
+		assertThat(context.getPersistentEntity(DBRef.class)).isNull();
 	}
 
 	@Test // DATAMONGO-638
 	public void doesNotCreatePersistentEntityForAbstractMap() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		assertThat(context.getPersistentEntity(AbstractMap.class), is(nullValue()));
+		assertThat(context.getPersistentEntity(AbstractMap.class)).isNull();
 	}
 
 	@Test // DATAMONGO-607
@@ -88,7 +87,7 @@ public class MongoMappingContextUnitTests {
 		});
 
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(Person.class);
-		assertThat(entity.getRequiredPersistentProperty("firstname").getFieldName(), is("FIRSTNAME"));
+		assertThat(entity.getRequiredPersistentProperty("firstname").getFieldName()).isEqualTo("FIRSTNAME");
 	}
 
 	@Test // DATAMONGO-607
@@ -119,8 +118,8 @@ public class MongoMappingContextUnitTests {
 		MongoMappingContext context = new MongoMappingContext();
 		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithImplicitId.class);
 
-		assertThat(pe, is(not(nullValue())));
-		assertThat(pe.isIdProperty(pe.getRequiredPersistentProperty("id")), is(true));
+		assertThat(pe).isNotNull();
+		assertThat(pe.isIdProperty(pe.getRequiredPersistentProperty("id"))).isTrue();
 	}
 
 	@Test // DATAMONGO-688
@@ -129,8 +128,8 @@ public class MongoMappingContextUnitTests {
 		MongoMappingContext context = new MongoMappingContext();
 		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitId.class);
 
-		assertThat(pe, is(not(nullValue())));
-		assertThat(pe.isIdProperty(pe.getRequiredPersistentProperty("myId")), is(true));
+		assertThat(pe).isNotNull();
+		assertThat(pe.isIdProperty(pe.getRequiredPersistentProperty("myId"))).isTrue();
 	}
 
 	@Test // DATAMONGO-688
@@ -138,7 +137,7 @@ public class MongoMappingContextUnitTests {
 
 		MongoMappingContext context = new MongoMappingContext();
 		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitIdAndImplicitId.class);
-		assertThat(pe, is(not(nullValue())));
+		assertThat(pe).isNotNull();
 	}
 
 	@Test(expected = MappingException.class) // DATAMONGO-688

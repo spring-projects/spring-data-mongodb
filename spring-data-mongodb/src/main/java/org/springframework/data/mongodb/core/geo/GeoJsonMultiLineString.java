@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * {@link GeoJsonMultiLineString} is defined as list of {@link GeoJsonLineString}s.
- * 
+ *
  * @author Christoph Strobl
  * @since 1.7
  * @see <a href="http://geojson.org/geojson-spec.html#multilinestring">http://geojson.org/geojson-spec.html#multilinestring</a>
@@ -38,7 +38,7 @@ public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineStrin
 
 	/**
 	 * Creates new {@link GeoJsonMultiLineString} for the given {@link Point}s.
-	 * 
+	 *
 	 * @param lines must not be {@literal null}.
 	 */
 	public GeoJsonMultiLineString(List<Point>... lines) {
@@ -52,7 +52,7 @@ public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineStrin
 
 	/**
 	 * Creates new {@link GeoJsonMultiLineString} for the given {@link GeoJsonLineString}s.
-	 * 
+	 *
 	 * @param lines must not be {@literal null}.
 	 */
 	public GeoJsonMultiLineString(List<GeoJsonLineString> lines) {

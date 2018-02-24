@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,6 +185,16 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(query.getFieldsObject(), is(new Document()));
 	}
 
+	@Test // DATAMONGO-1865
+	public void limitingReturnsTrueIfTreeIsLimiting() {
+		assertThat(createQueryForMethod("findFirstBy").isLimiting(), is(true));
+	}
+
+	@Test // DATAMONGO-1865
+	public void limitingReturnsFalseIfTreeIsNotLimiting() {
+		assertThat(createQueryForMethod("findPersonBy").isLimiting(), is(false));
+	}
+
 	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object... args) {
 
 		Class<?>[] types = new Class<?>[args.length];
@@ -245,6 +255,8 @@ public class PartTreeMongoQueryUnitTests {
 		List<Person> findBySex(Sex sex);
 
 		OpenProjection findAllBy();
+
+		Person findFirstBy();
 	}
 
 	interface PersonProjection {

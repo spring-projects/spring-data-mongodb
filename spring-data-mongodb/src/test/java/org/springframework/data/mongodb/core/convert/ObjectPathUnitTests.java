@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ public class ObjectPathUnitTests {
 		assertThat(path.getPathItem("id-1", "one", ValueInterface.class)).isNotNull();
 	}
 
-	@Document(collection = "one")
+	@Document("one")
 	static class EntityOne {
 
 	}
@@ -94,7 +94,7 @@ public class ObjectPathUnitTests {
 
 	}
 
-	@Document(collection = "three")
+	@Document("three")
 	static class EntityThree implements ValueInterface {
 
 	}

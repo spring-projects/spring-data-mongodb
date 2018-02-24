@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -172,6 +172,15 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private static boolean hasAmbiguousProjectionFlags(boolean isCountQuery, boolean isExistsQuery,
 			boolean isDeleteQuery) {
 		return countBooleanValues(isCountQuery, isExistsQuery, isDeleteQuery) > 1;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isLimiting()
+	 */
+	@Override
+	protected boolean isLimiting() {
+		return false;
 	}
 
 	private static int countBooleanValues(boolean... values) {

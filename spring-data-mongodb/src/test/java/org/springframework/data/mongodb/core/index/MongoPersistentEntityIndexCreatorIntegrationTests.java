@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,7 +113,7 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 				new Index().named("stormlight").on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
 	}
 
-	@Document(collection = RECURSIVE_TYPE_COLLECTION_NAME)
+	@Document(RECURSIVE_TYPE_COLLECTION_NAME)
 	static abstract class RecursiveGenericType<RGT extends RecursiveGenericType<RGT>> {
 
 		@Id Long id;

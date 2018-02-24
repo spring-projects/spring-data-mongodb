@@ -1,11 +1,11 @@
 /*
- * Copyright 2011-2017 by the original author(s).
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,17 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import org.junit.Before;
@@ -31,9 +34,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -98,15 +101,16 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Test // DATAMONGO-607
 	public void usesCustomFieldNamingStrategyByDefault() throws Exception {
 
+		ClassTypeInformation<Person> type = ClassTypeInformation.from(Person.class);
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
 
-		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(field), entity,
+		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(type, field), entity,
 				SimpleTypeHolder.DEFAULT, UppercaseFieldNamingStrategy.INSTANCE);
 		assertThat(property.getFieldName(), is("LASTNAME"));
 
 		field = ReflectionUtils.findField(Person.class, "firstname");
 
-		property = new BasicMongoPersistentProperty(Property.of(field), entity, SimpleTypeHolder.DEFAULT,
+		property = new BasicMongoPersistentProperty(Property.of(type, field), entity, SimpleTypeHolder.DEFAULT,
 				UppercaseFieldNamingStrategy.INSTANCE);
 		assertThat(property.getFieldName(), is("foo"));
 	}
@@ -114,8 +118,10 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Test // DATAMONGO-607
 	public void rejectsInvalidValueReturnedByFieldNamingStrategy() {
 
+		ClassTypeInformation<Person> type = ClassTypeInformation.from(Person.class);
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
-		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(field), entity,
+
+		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(type, field), entity,
 				SimpleTypeHolder.DEFAULT, InvalidFieldNamingStrategy.INSTANCE);
 
 		exception.expect(MappingException.class);
@@ -183,21 +189,34 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.getFieldName(), is("myField"));
 	}
 
+	@Test // DATAMONGO-1737
+	public void honorsFieldOrderWhenIteratingOverProperties() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		BasicMongoPersistentEntity<?> entity = context.getPersistentEntity(Sample.class);
+
+		List<String> properties = new ArrayList<>();
+
+		entity.doWithProperties((MongoPersistentProperty property) -> properties.add(property.getName()));
+
+		assertThat(properties).containsExactly("first", "second", "third");
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
 
-	private <T> MongoPersistentProperty getPropertyFor(Class<T> type, String fieldname) {
+	private static <T> MongoPersistentProperty getPropertyFor(Class<T> type, String fieldname) {
 		return getPropertyFor(new BasicMongoPersistentEntity<T>(ClassTypeInformation.from(type)), fieldname);
 	}
 
-	private MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> persistentEntity, String fieldname) {
-		return getPropertyFor(persistentEntity, ReflectionUtils.findField(persistentEntity.getType(), fieldname));
+	private static MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> entity, String fieldname) {
+		return getPropertyFor(entity, ReflectionUtils.findField(entity.getType(), fieldname));
 	}
 
-	private MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> persistentEntity, Field field) {
-		return new BasicMongoPersistentProperty(Property.of(field), persistentEntity, SimpleTypeHolder.DEFAULT,
-				PropertyNameFieldNamingStrategy.INSTANCE);
+	private static MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> entity, Field field) {
+		return new BasicMongoPersistentProperty(Property.of(entity.getTypeInformation(), field), entity,
+				SimpleTypeHolder.DEFAULT, PropertyNameFieldNamingStrategy.INSTANCE);
 	}
 
 	class Person {
@@ -208,6 +227,13 @@ public class BasicMongoPersistentPropertyUnitTests {
 		String lastname;
 
 		@org.springframework.data.mongodb.core.mapping.Field(order = -20) String ssn;
+	}
+
+	class Sample {
+
+		@org.springframework.data.mongodb.core.mapping.Field(order = 2) String second;
+		@org.springframework.data.mongodb.core.mapping.Field(order = 3) String third;
+		@org.springframework.data.mongodb.core.mapping.Field(order = 1) String first;
 	}
 
 	enum UppercaseFieldNamingStrategy implements FieldNamingStrategy {

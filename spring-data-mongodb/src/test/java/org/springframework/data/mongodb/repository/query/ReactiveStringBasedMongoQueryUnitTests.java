@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -35,6 +36,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.mongodb.core.ReactiveFindOperation.ReactiveFind;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
@@ -56,6 +58,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * Unit tests for {@link ReactiveStringBasedMongoQuery}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ReactiveStringBasedMongoQueryUnitTests {
@@ -64,11 +67,15 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 	@Mock ReactiveMongoOperations operations;
 	@Mock DbRefResolver factory;
+	@Mock ReactiveFind reactiveFind;
 
 	MongoConverter converter;
 
 	@Before
 	public void setUp() {
+
+		when(operations.query(any())).thenReturn(reactiveFind);
+
 		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
 	}
 

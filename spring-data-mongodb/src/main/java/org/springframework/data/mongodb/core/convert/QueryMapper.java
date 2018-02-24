@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,6 +80,7 @@ public class QueryMapper {
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoExampleMapper exampleMapper;
+	private final MongoJsonSchemaMapper schemaMapper;
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
@@ -94,6 +95,7 @@ public class QueryMapper {
 		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
 		this.exampleMapper = new MongoExampleMapper(converter);
+		this.schemaMapper = new MongoJsonSchemaMapper(converter);
 	}
 
 	public Document getMappedObject(Bson query, Optional<? extends MongoPersistentEntity<?>> entity) {
@@ -270,6 +272,10 @@ public class QueryMapper {
 
 		if (keyword.isSample()) {
 			return exampleMapper.getMappedExample(keyword.<Example<?>> getValue(), entity);
+		}
+
+		if (keyword.isJsonSchema()) {
+			return schemaMapper.mapSchema(new Document(keyword.getKey(), keyword.getValue()), entity.getType());
 		}
 
 		return new Document(keyword.getKey(), convertSimpleOrDocument(keyword.getValue(), entity));
@@ -599,6 +605,7 @@ public class QueryMapper {
 	 * Value object to capture a query keyword representation.
 	 *
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 */
 	static class Keyword {
 
@@ -665,6 +672,16 @@ public class QueryMapper {
 		@SuppressWarnings("unchecked")
 		public <T> T getValue() {
 			return (T) value;
+		}
+
+		/**
+		 * Returns whether the current keyword indicates a {@literal $jsonSchema} object.
+		 *
+		 * @return {@literal true} if {@code key} equals {@literal $jsonSchema}.
+		 * @since 2.1
+		 */
+		public boolean isJsonSchema() {
+			return "$jsonSchema".equalsIgnoreCase(key);
 		}
 	}
 

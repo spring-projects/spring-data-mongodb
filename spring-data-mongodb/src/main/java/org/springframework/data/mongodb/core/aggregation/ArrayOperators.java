@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * Gateway to {@literal array} aggregation operations.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.0
  */
 public class ArrayOperators {
@@ -224,15 +225,10 @@ public class ArrayOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
-		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(final AggregationExpression expression) {
-			return new ArrayOperatorFactory.ReduceInitialValueBuilder() {
+		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(AggregationExpression expression) {
 
-				@Override
-				public Reduce startingWith(Object initialValue) {
-					return (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
-							.withInitialValue(initialValue).reduce(expression);
-				}
-			};
+			return initialValue -> (usesFieldRef() ? Reduce.arrayOf(fieldReference)
+					: Reduce.arrayOf(ArrayOperatorFactory.this.expression)).withInitialValue(initialValue).reduce(expression);
 		}
 
 		/**
@@ -242,16 +238,10 @@ public class ArrayOperators {
 		 * @param expressions
 		 * @return
 		 */
-		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(final PropertyExpression... expressions) {
+		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(PropertyExpression... expressions) {
 
-			return new ArrayOperatorFactory.ReduceInitialValueBuilder() {
-
-				@Override
-				public Reduce startingWith(Object initialValue) {
-					return (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
-							.withInitialValue(initialValue).reduce(expressions);
-				}
-			};
+			return initialValue -> (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
+					.withInitialValue(initialValue).reduce(expressions);
 		}
 
 		/**
@@ -1104,12 +1094,10 @@ public class ArrayOperators {
 		/**
 		 * Start creating new {@link Reduce}.
 		 *
-		 * @param expression must not be {@literal null}.
+		 * @param arrayValueExpression must not be {@literal null}.
 		 * @return
 		 */
-		public static InitialValueBuilder arrayOf(final AggregationExpression expression) {
-
-			Assert.notNull(expression, "AggregationExpression must not be null");
+		public static InitialValueBuilder arrayOf(final AggregationExpression arrayValueExpression) {
 
 			return new InitialValueBuilder() {
 
@@ -1124,14 +1112,14 @@ public class ArrayOperators {
 						public Reduce reduce(AggregationExpression expression) {
 
 							Assert.notNull(expression, "AggregationExpression must not be null");
-							return new Reduce(expression, initialValue, Collections.singletonList(expression));
+							return new Reduce(arrayValueExpression, initialValue, Collections.singletonList(expression));
 						}
 
 						@Override
 						public Reduce reduce(PropertyExpression... expressions) {
 
 							Assert.notNull(expressions, "PropertyExpressions must not be null");
-							return new Reduce(expression, initialValue, Arrays.<AggregationExpression> asList(expressions));
+							return new Reduce(arrayValueExpression, initialValue, Arrays.asList(expressions));
 						}
 					};
 				}

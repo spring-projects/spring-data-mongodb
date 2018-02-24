@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -710,8 +710,67 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link List}.
+	 *
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param entityClass the domain type used for determining the actual {@link MongoCollection}. Must not be
+	 *          {@literal null}.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	default <T> List<T> findDistinct(String field, Class<?> entityClass, Class<T> resultClass) {
+		return findDistinct(new Query(), field, entityClass, resultClass);
+	}
+
+	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link List}.
+	 *
+	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param entityClass the domain type used for determining the actual {@link MongoCollection} and mapping the
+	 *          {@link Query} to the domain type fields. Must not be {@literal null}.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	<T> List<T> findDistinct(Query query, String field, Class<?> entityClass, Class<T> resultClass);
+
+	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link List}.
+	 *
+	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param collectionName the explicit name of the actual {@link MongoCollection}. Must not be {@literal null}.
+	 * @param entityClass the domain type used for mapping the {@link Query} to the domain type fields.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	<T> List<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
+			Class<T> resultClass);
+
+	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link List}.
+	 *
+	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param collection the explicit name of the actual {@link MongoCollection}. Must not be {@literal null}.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	default <T> List<T> findDistinct(Query query, String field, String collection, Class<T> resultClass) {
+		return findDistinct(query, field, collection, Object.class, resultClass);
+	}
+
+	/**
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
+	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -723,8 +782,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
+	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -737,8 +796,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
+	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -754,8 +813,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify
+	 * <a/> to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -1083,6 +1142,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param query the query document that specifies the criteria used to remove a record.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws IllegalArgumentException when {@literal query} or {@literal entityClass} is {@literal null}.
 	 */
 	DeleteResult remove(Query query, Class<?> entityClass);
 
@@ -1094,6 +1154,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Can be {@literal null}.
 	 * @param collectionName name of the collection where the objects will removed, must not be {@literal null} or empty.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws IllegalArgumentException when {@literal query}, {@literal entityClass} or {@literal collectionName} is
+	 *           {@literal null}.
 	 */
 	DeleteResult remove(Query query, Class<?> entityClass, String collectionName);
 
@@ -1106,6 +1168,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param query the query document that specifies the criteria used to remove a record.
 	 * @param collectionName name of the collection where the objects will removed, must not be {@literal null} or empty.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws IllegalArgumentException when {@literal query} or {@literal collectionName} is {@literal null}.
 	 */
 	DeleteResult remove(Query query, String collectionName);
 

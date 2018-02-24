@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.springframework.data.geo.Point;
  * Annotation to be used for disambiguing method parameters that shall be used to trigger geo near queries. By default
  * those parameters are found without the need for additional annotation if they are the only parameters of the
  * according type (e.g. {@link Point}, {@code double[]}, {@link Distance}).
- * 
+ *
  * @author Oliver Gierke
  */
 @Documented

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import com.mongodb.WriteResult;
 
 /**
  * Mongo-specific {@link DataIntegrityViolationException}.
- * 
+ *
  * @author Oliver Gierke
  */
 public class MongoDataIntegrityViolationException extends DataIntegrityViolationException {
@@ -35,7 +35,7 @@ public class MongoDataIntegrityViolationException extends DataIntegrityViolation
 
 	/**
 	 * Creates a new {@link MongoDataIntegrityViolationException} using the given message and {@link WriteResult}.
-	 * 
+	 *
 	 * @param message the exception message
 	 * @param writeResult the {@link WriteResult} that causes the exception, must not be {@literal null}.
 	 * @param actionOperation the {@link MongoActionOperation} that caused the exception, must not be {@literal null}.
@@ -54,7 +54,7 @@ public class MongoDataIntegrityViolationException extends DataIntegrityViolation
 
 	/**
 	 * Returns the {@link WriteResult} that caused the exception.
-	 * 
+	 *
 	 * @return the writeResult
 	 */
 	public WriteResult getWriteResult() {
@@ -63,7 +63,7 @@ public class MongoDataIntegrityViolationException extends DataIntegrityViolation
 
 	/**
 	 * Returns the {@link MongoActionOperation} in which the current exception occured.
-	 * 
+	 *
 	 * @return the actionOperation
 	 */
 	public MongoActionOperation getActionOperation() {

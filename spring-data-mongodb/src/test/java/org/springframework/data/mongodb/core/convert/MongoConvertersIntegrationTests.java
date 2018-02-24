@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * Integration tests for {@link MongoConverters}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -102,7 +102,7 @@ public class MongoConvertersIntegrationTests {
 		assertThat(template.findOne(query(where("id").is(wbd.id)), WithBinaryDataType.class)).isEqualTo(wbd);
 	}
 
-	@Document(collection = COLLECTION)
+	@Document(COLLECTION)
 	static class Wrapper {
 
 		String id;
@@ -110,7 +110,7 @@ public class MongoConvertersIntegrationTests {
 	}
 
 	@Data
-	@Document(collection = COLLECTION)
+	@Document(COLLECTION)
 	static class WithBinaryDataInArray {
 
 		@Id String id;
@@ -118,7 +118,7 @@ public class MongoConvertersIntegrationTests {
 	}
 
 	@Data
-	@Document(collection = COLLECTION)
+	@Document(COLLECTION)
 	static class WithBinaryDataType {
 
 		@Id String id;

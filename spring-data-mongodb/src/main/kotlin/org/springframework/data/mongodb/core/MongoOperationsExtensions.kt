@@ -59,7 +59,7 @@ inline fun <reified T : Any> MongoOperations.getCollectionName(): String =
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.execute(action: CollectionCallback<T>): T =
+inline fun <reified T : Any> MongoOperations.execute(action: CollectionCallback<T>): T? =
 		execute(T::class.java, action)
 
 /**
@@ -278,7 +278,7 @@ inline fun <reified T : Any> MongoOperations.geoNear(near: NearQuery, collection
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findOne(query: Query, collectionName: String? = null): T =
+inline fun <reified T : Any> MongoOperations.findOne(query: Query, collectionName: String? = null): T? =
 		if (collectionName != null) findOne(query, T::class.java, collectionName) else findOne(query, T::class.java)
 
 /**
@@ -318,9 +318,47 @@ inline fun <reified T : Any> MongoOperations.find(query: Query, collectionName: 
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: String? = null): T =
+inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: String? = null): T? =
 		if (collectionName != null) findById(id, T::class.java, collectionName)
 		else findById(id, T::class.java)
+
+/**
+ * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+inline fun <reified T : Any> MongoOperations.findDistinct(field: String, entityClass: KClass<*>): List<T> =
+		findDistinct(field, entityClass.java, T::class.java);
+
+/**
+ * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+inline fun <reified T : Any> MongoOperations.findDistinct(query: Query, field: String, entityClass: KClass<*>): List<T> =
+		findDistinct(query, field, entityClass.java, T::class.java)
+
+/**
+ * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+inline fun <reified T : Any> MongoOperations.findDistinct(query: Query, field: String, collectionName: String, entityClass: KClass<*>): List<T> =
+		findDistinct(query, field, collectionName, entityClass.java, T::class.java)
+
+/**
+ * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @author Mark Paluch
+ * @since 2.1
+ */
+inline fun <reified T : Any, reified E : Any> MongoOperations.findDistinct(query: Query, field: String, collectionName: String? = null): List<T> =
+		if (collectionName != null) findDistinct(query, field, collectionName, E::class.java, T::class.java)
+		else findDistinct(query, field, E::class.java, T::class.java)
 
 /**
  * Extension for [MongoOperations.findAndModify] leveraging reified type parameters.
@@ -328,7 +366,7 @@ inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: S
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update: Update, options: FindAndModifyOptions, collectionName: String? = null): T =
+inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update: Update, options: FindAndModifyOptions, collectionName: String? = null): T? =
 		if (collectionName != null) findAndModify(query, update, options, T::class.java, collectionName)
 		else findAndModify(query, update, options, T::class.java)
 
@@ -338,7 +376,7 @@ inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update:
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findAndRemove(query: Query, collectionName: String? = null): T =
+inline fun <reified T : Any> MongoOperations.findAndRemove(query: Query, collectionName: String? = null): T? =
 		if (collectionName != null) findAndRemove(query, T::class.java, collectionName)
 		else findAndRemove(query, T::class.java)
 
@@ -413,7 +451,6 @@ fun <T : Any> MongoOperations.updateFirst(query: Query, update: Update, entityCl
 inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: Update, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateFirst(query, update, T::class.java, collectionName)
 		else updateFirst(query, update, T::class.java)
-
 
 /**
  * Extension for [MongoOperations.updateMulti] providing a [KClass] based variant.

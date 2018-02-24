@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.springframework.util.Assert;
 /**
  * {@link AggregationOperationContext} aware of a particular type and a {@link MappingContext} to potentially translate
  * property references into document field names.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -47,7 +47,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	/**
 	 * Creates a new {@link TypeBasedAggregationOperationContext} for the given type, {@link MappingContext} and
 	 * {@link QueryMapper}.
-	 * 
+	 *
 	 * @param type must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 * @param mapper must not be {@literal null}.
@@ -64,7 +64,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		this.mapper = mapper;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
 	 */
@@ -84,7 +84,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		return getReferenceFor(field);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
 	 */

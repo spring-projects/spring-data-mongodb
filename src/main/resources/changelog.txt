@@ -1,6 +1,99 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.4.RELEASE (2018-02-19)
+---------------------------------------------
+* DATAMONGO-1872 - SpEL Expressions in @Document annotations are not re-evaluated for repository query executions.
+* DATAMONGO-1871 - AggregationExpression rendering does not consider nested property aliasing.
+* DATAMONGO-1870 - Skip parameter not working in MongoTemplate#remove(Query, Class).
+* DATAMONGO-1865 - findFirst query method throws IncorrectResultSizeDataAccessException on non-unique result.
+* DATAMONGO-1860 - Mongo count operation called twice in QuerydslMongoPredicateExecutor.findAll(Predicate, Pageable).
+* DATAMONGO-1859 - Release 2.0.4 (Kay SR4).
+
+
+Changes in version 2.1.0.M1 (2018-02-06)
+----------------------------------------
+* DATAMONGO-1864 - Upgrade to MongoDB Java Driver 3.6.2.
+* DATAMONGO-1858 - Fix line endings.
+* DATAMONGO-1850 - GridFsResource.getContentType() throws NullPointerException on absent metadata.
+* DATAMONGO-1846 - Upgrade to MongoDB Java Driver 3.6.
+* DATAMONGO-1844 - Update copyright years to 2018.
+* DATAMONGO-1843 - Aggregation operator $reduce with ArrayOperators.Reduce produce a wrong Document.
+* DATAMONGO-1835 - Add support for $jsonSchema to Criteria API.
+* DATAMONGO-1831 - Failure to read Scala collection types in MappingMongoConverter.
+* DATAMONGO-1824 - Assert compatibility with MongoDB Server 3.6.
+* DATAMONGO-1823 - AfterConvertEvent is not published when using custom methods in repository interface.
+* DATAMONGO-1822 - Adapt repository readme to changed configuration support.
+* DATAMONGO-1821 - Fix method ambiguity in tests when compiling against MongoDB 3.6.
+* DATAMONGO-1820 - Investigate failing TravisCI build.
+* DATAMONGO-1818 - Reference documentation mentions @TailableCursor instead of @Tailable.
+* DATAMONGO-1817 - Kotlin extensions should return nullable types.
+* DATAMONGO-1815 - Adapt API changes in Property in test cases.
+* DATAMONGO-1814 - Missing documentation on Faceted classification.
+* DATAMONGO-1812 - Temporarily add milestone repository to plugin repositories.
+* DATAMONGO-1811 - Reference Documentation doesn't match with API Documentation 2.X vesrion.
+* DATAMONGO-1809 - Type hint usage broken when using positional parameters with more than one digit.
+* DATAMONGO-1806 - GridFsResource wrong type in javaDoc.
+* DATAMONGO-1805 - Documentation for operations.find uses wrong result type.
+* DATAMONGO-1803 - Add support for MongoDB 3.6 change streams.
+* DATAMONGO-1802 - No converter found capable of converting from type org.bson.types.Binary to type byte[].
+* DATAMONGO-1795 - Remove obsolete Kotlin build configuration.
+* DATAMONGO-1794 - Release 2.1 M1 (Lovelace).
+* DATAMONGO-1761 - Add distinct operation to MongoTemplate.
+* DATAMONGO-1696 - Reference documentation uses JPA Annotations.
+* DATAMONGO-1553 - Add $sortByCount aggregation stage.
+* DATAMONGO-1322 - Add support for validator when creating collection.
+
+
+Changes in version 2.0.3.RELEASE (2018-01-24)
+---------------------------------------------
+* DATAMONGO-1858 - Fix line endings.
+* DATAMONGO-1850 - GridFsResource.getContentType() throws NullPointerException on absent metadata.
+* DATAMONGO-1843 - Aggregation operator $reduce with ArrayOperators.Reduce produce a wrong Document.
+* DATAMONGO-1831 - Failure to read Scala collection types in MappingMongoConverter.
+* DATAMONGO-1830 - Release 2.0.3 (Kay SR3).
+* DATAMONGO-1824 - Assert compatibility with MongoDB Server 3.6.
+
+
+Changes in version 1.10.10.RELEASE (2018-01-24)
+-----------------------------------------------
+* DATAMONGO-1843 - Aggregation operator $reduce with ArrayOperators.Reduce produce a wrong Document.
+* DATAMONGO-1831 - Failure to read Scala collection types in MappingMongoConverter.
+* DATAMONGO-1829 - Release 1.10.10 (Ingalls SR10).
+* DATAMONGO-1824 - Assert compatibility with MongoDB Server 3.6.
+
+
+Changes in version 2.0.2.RELEASE (2017-11-27)
+---------------------------------------------
+* DATAMONGO-1823 - AfterConvertEvent is not published when using custom methods in repository interface.
+* DATAMONGO-1821 - Fix method ambiguity in tests when compiling against MongoDB 3.6.
+* DATAMONGO-1820 - Investigate failing TravisCI build.
+* DATAMONGO-1818 - Reference documentation mentions @TailableCursor instead of @Tailable.
+* DATAMONGO-1817 - Kotlin extensions should return nullable types.
+* DATAMONGO-1816 - Release 2.0.2 (Kay SR2).
+
+
+Changes in version 1.10.9.RELEASE (2017-11-27)
+----------------------------------------------
+* DATAMONGO-1809 - Type hint usage broken when using positional parameters with more than one digit.
+* DATAMONGO-1799 - Release 1.10.9 (Ingalls SR9).
+* DATAMONGO-1696 - Reference documentation uses JPA Annotations.
+
+
+Changes in version 2.0.1.RELEASE (2017-10-27)
+---------------------------------------------
+* DATAMONGO-1815 - Adapt API changes in Property in test cases.
+* DATAMONGO-1814 - Missing documentation on Faceted classification.
+* DATAMONGO-1811 - Reference Documentation doesn't match with API Documentation 2.X vesrion.
+* DATAMONGO-1809 - Type hint usage broken when using positional parameters with more than one digit.
+* DATAMONGO-1806 - GridFsResource wrong type in javaDoc.
+* DATAMONGO-1805 - Documentation for operations.find uses wrong result type.
+* DATAMONGO-1802 - No converter found capable of converting from type org.bson.types.Binary to type byte[].
+* DATAMONGO-1795 - Remove obsolete Kotlin build configuration.
+* DATAMONGO-1793 - Release 2.0.1 (Kay SR1).
+* DATAMONGO-1696 - Reference documentation uses JPA Annotations.
+
+
 Changes in version 1.10.8.RELEASE (2017-10-11)
 ----------------------------------------------
 * DATAMONGO-1784 - Add support for AggregationExpression in GroupOperation.sum.

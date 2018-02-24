@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,13 +33,13 @@ import org.w3c.dom.Element;
 
 /**
  * {@link BeanDefinitionParser} to parse {@code template} elements into {@link BeanDefinition}s.
- * 
+ *
  * @author Martin Baumgartner
  * @author Oliver Gierke
  */
 class MongoTemplateParser extends AbstractBeanDefinitionParser {
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#resolveId(org.w3c.dom.Element, org.springframework.beans.factory.support.AbstractBeanDefinition, org.springframework.beans.factory.xml.ParserContext)
 	 */

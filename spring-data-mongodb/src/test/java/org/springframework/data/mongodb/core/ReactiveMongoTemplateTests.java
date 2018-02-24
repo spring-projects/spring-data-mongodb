@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -34,7 +35,12 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.Assumptions;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.After;
@@ -62,6 +68,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -298,9 +305,12 @@ public class ReactiveMongoTemplateTests {
 	public void updateFirstByEntityTypeShouldUpdateObject() {
 
 		Person person = new Person("Oliver2", 25);
-		StepVerifier.create(template.insert(person) //
-				.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), Person.class)) //
-				.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class))).consumeNextWith(actual -> {
+		StepVerifier
+				.create(template.insert(person) //
+						.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"),
+								Person.class)) //
+						.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class)))
+				.consumeNextWith(actual -> {
 
 					assertThat(actual.getFirstName(), is(equalTo("Sven")));
 				}).verifyComplete();
@@ -324,7 +334,7 @@ public class ReactiveMongoTemplateTests {
 	public void updateMultiByEntityTypeShouldUpdateObjects() {
 
 		Query query = new Query(
-				new Criteria().orOperator(where("firstName").is("Walter Jr"), Criteria.where("firstName").is("Walter")));
+				new Criteria().orOperator(where("firstName").is("Walter Jr"), where("firstName").is("Walter")));
 
 		StepVerifier
 				.create(template
@@ -340,7 +350,7 @@ public class ReactiveMongoTemplateTests {
 	public void updateMultiByCollectionNameShouldUpdateObject() {
 
 		Query query = new Query(
-				new Criteria().orOperator(where("firstName").is("Walter Jr"), Criteria.where("firstName").is("Walter")));
+				new Criteria().orOperator(where("firstName").is("Walter Jr"), where("firstName").is("Walter")));
 
 		List<Person> people = Arrays.asList(new Person("Walter", 50), //
 				new Person("Skyler", 43), //
@@ -414,7 +424,7 @@ public class ReactiveMongoTemplateTests {
 				.expectNextCount(3) //
 				.verifyComplete();
 
-		Query query = new Query(Criteria.where("firstName").is("Harry"));
+		Query query = new Query(where("firstName").is("Harry"));
 		Update update = new Update().inc("age", 1);
 
 		Person p = template.findAndModify(query, update, Person.class).block(); // return old
@@ -436,7 +446,7 @@ public class ReactiveMongoTemplateTests {
 		p = template.findOne(query, Person.class).block();
 		assertThat(p.getAge(), is(27));
 
-		Query query2 = new Query(Criteria.where("firstName").is("Mary"));
+		Query query2 = new Query(where("firstName").is("Mary"));
 		p = template.findAndModify(query2, update, new FindAndModifyOptions().returnNew(true).upsert(true), Person.class)
 				.block();
 		assertThat(p.getFirstName(), is("Mary"));
@@ -481,7 +491,7 @@ public class ReactiveMongoTemplateTests {
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1774
 	public void removeWithNullShouldThrowError() {
-		template.remove((Object)null).subscribe();
+		template.remove((Object) null).subscribe();
 	}
 
 	@Test // DATAMONGO-1774
@@ -924,6 +934,228 @@ public class ReactiveMongoTemplateTests {
 		assertThat(documents.poll(1, TimeUnit.SECONDS), is(nullValue()));
 	}
 
+	@Test // DATAMONGO-1761
+	public void testDistinct() {
+
+		Person person1 = new Person("Christoph", 38);
+		Person person2 = new Person("Christine", 39);
+		Person person3 = new Person("Christoph", 37);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
+
+		StepVerifier.create(template.findDistinct("firstName", Person.class, String.class)).expectNextCount(2)
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1803
+	public void changeStreamEventsShouldBeEmittedCorrectly() throws InterruptedException {
+
+		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Document>> documents = new LinkedBlockingQueue<>(100);
+		Disposable disposable = template
+				.changeStream(Collections.emptyList(), Document.class, ChangeStreamOptions.empty(), "person")
+				.doOnNext(documents::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link to the collection.
+
+		Person person1 = new Person("Spring", 38);
+		Person person2 = new Person("Data", 39);
+		Person person3 = new Person("MongoDB", 37);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		try {
+			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList())).hasSize(3)
+					.allMatch(val -> val instanceof Document);
+		} finally {
+			disposable.dispose();
+		}
+	}
+
+	@Test // DATAMONGO-1803
+	public void changeStreamEventsShouldBeConvertedCorrectly() throws InterruptedException {
+
+		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
+		Disposable disposable = template
+				.changeStream(Collections.emptyList(), Person.class, ChangeStreamOptions.empty(), "person")
+				.doOnNext(documents::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link to the collection.
+
+		Person person1 = new Person("Spring", 38);
+		Person person2 = new Person("Data", 39);
+		Person person3 = new Person("MongoDB", 37);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		try {
+			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+					.containsExactly(person1, person2, person3);
+		} finally {
+			disposable.dispose();
+		}
+	}
+
+	@Test // DATAMONGO-1803
+	public void changeStreamEventsShouldBeFilteredCorrectly() throws InterruptedException {
+
+		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
+		Disposable disposable = template.changeStream(newAggregation(Person.class, match(where("age").gte(38))),
+				Person.class, ChangeStreamOptions.empty(), "person").doOnNext(documents::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link to the collection.
+
+		Person person1 = new Person("Spring", 38);
+		Person person2 = new Person("Data", 37);
+		Person person3 = new Person("MongoDB", 39);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		try {
+			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+					.containsExactly(person1, person3);
+		} finally {
+			disposable.dispose();
+		}
+	}
+
+	@Test // DATAMONGO-1803
+	public void mapsReservedWordsCorrectly() throws InterruptedException {
+
+		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
+		Disposable disposable = template
+				.changeStream(newAggregation(Person.class, match(where("operationType").is("replace"))), Person.class,
+						ChangeStreamOptions.empty(), "person")
+				.doOnNext(documents::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link to the collection.
+
+		Person person1 = new Person("Spring", 38);
+		Person person2 = new Person("Data", 37);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+
+		Person replacement = new Person(person2.getId(), "BDognoM");
+		replacement.setAge(person2.getAge());
+
+		StepVerifier.create(template.save(replacement)).expectNextCount(1).verifyComplete();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		try {
+			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+					.containsExactly(replacement);
+		} finally {
+			disposable.dispose();
+		}
+	}
+
+	@Test // DATAMONGO-1803
+	public void changeStreamEventsShouldBeResumedCorrectly() throws InterruptedException {
+
+		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
+		Disposable disposable = template
+				.changeStream(Collections.emptyList(), Person.class, ChangeStreamOptions.empty(), "person")
+				.doOnNext(documents::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link to the collection.
+
+		Person person1 = new Person("Spring", 38);
+		Person person2 = new Person("Data", 37);
+		Person person3 = new Person("MongoDB", 39);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		disposable.dispose();
+
+		BsonDocument resumeToken = documents.take().getRaw().getResumeToken();
+
+		BlockingQueue<ChangeStreamEvent<Person>> resumeDocuments = new LinkedBlockingQueue<>(100);
+		template
+				.changeStream(Collections.emptyList(), Person.class,
+						ChangeStreamOptions.builder().resumeToken(resumeToken).build(), "person")
+				.doOnNext(resumeDocuments::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		try {
+			Assertions.assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+					.containsExactly(person2, person3);
+		} finally {
+			disposable.dispose();
+		}
+
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderLimit() {
+
+		List<Sample> samples = IntStream.range(0, 100) //
+				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
+				.collect(Collectors.toList());
+
+		StepVerifier.create(template.insertAll(samples)).expectNextCount(100).verifyComplete();
+
+		StepVerifier.create(template.remove(query(where("field").is("lannister")).limit(25), Sample.class))
+				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(25L)).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderSkipAndSort() {
+
+		List<Sample> samples = IntStream.range(0, 100) //
+				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
+				.collect(Collectors.toList());
+
+		StepVerifier.create(template.insertAll(samples)).expectNextCount(100).verifyComplete();
+
+		StepVerifier.create(template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class))
+				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(75L)).verifyComplete();
+
+		StepVerifier.create(template.count(query(where("field").is("lannister")), Sample.class)).expectNext(25L)
+				.verifyComplete();
+		StepVerifier.create(template.count(query(where("field").is("stark")), Sample.class)).expectNext(0L)
+				.verifyComplete();
+	}
+
 	private PersonWithAList createPersonWithAList(String firstname, int age) {
 
 		PersonWithAList p = new PersonWithAList();
@@ -946,5 +1178,4 @@ public class ReactiveMongoTemplateTests {
 			this.field = field;
 		}
 	}
-
 }

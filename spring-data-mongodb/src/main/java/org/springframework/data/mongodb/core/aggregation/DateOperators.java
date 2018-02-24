@@ -192,7 +192,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the weekday number in ISO 8601 format, ranging from 1 (for
+		 * Creates new {@link AggregationExpression} that returns the weekday number in ISO 8601-2018 format, ranging from 1 (for
 		 * Monday) to 7 (for Sunday).
 		 *
 		 * @return
@@ -202,7 +202,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the week number in ISO 8601 format, ranging from 1 to 53.
+		 * Creates new {@link AggregationExpression} that returns the week number in ISO 8601-2018 format, ranging from 1 to 53.
 		 *
 		 * @return
 		 */
@@ -211,7 +211,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the year number in ISO 8601 format.
+		 * Creates new {@link AggregationExpression} that returns the year number in ISO 8601-2018 format.
 		 *
 		 * @return
 		 */

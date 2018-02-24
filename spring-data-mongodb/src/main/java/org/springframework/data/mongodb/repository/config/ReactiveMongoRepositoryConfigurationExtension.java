@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.w3c.dom.Element;
 
 /**
  * Reactive {@link RepositoryConfigurationExtension} for MongoDB.
- * 
+ *
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Oliver Gierke
@@ -42,7 +42,7 @@ public class ReactiveMongoRepositoryConfigurationExtension extends MongoReposito
 	private static final String MONGO_TEMPLATE_REF = "reactive-mongo-template-ref";
 	private static final String CREATE_QUERY_INDEXES = "create-query-indexes";
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getModuleName()
 	 */
@@ -59,7 +59,7 @@ public class ReactiveMongoRepositoryConfigurationExtension extends MongoReposito
 		return ReactiveMongoRepositoryFactoryBean.class.getName();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingTypes()
 	 */
@@ -68,7 +68,7 @@ public class ReactiveMongoRepositoryConfigurationExtension extends MongoReposito
 		return Collections.singleton(ReactiveMongoRepository.class);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.XmlRepositoryConfigurationSource)
 	 */
@@ -81,7 +81,7 @@ public class ReactiveMongoRepositoryConfigurationExtension extends MongoReposito
 		ParsingUtils.setPropertyValue(builder, element, CREATE_QUERY_INDEXES, "createIndexesForQueryMethods");
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource)
 	 */
@@ -94,7 +94,7 @@ public class ReactiveMongoRepositoryConfigurationExtension extends MongoReposito
 		builder.addPropertyValue("createIndexesForQueryMethods", attributes.getBoolean("createIndexesForQueryMethods"));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#useRepositoryConfiguration(org.springframework.data.repository.core.RepositoryMetadata)
 	 */

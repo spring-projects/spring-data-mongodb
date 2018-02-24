@@ -457,24 +457,6 @@ NOTE: This example is meant to show the use of save, update and remove operation
 
 The query syntax used in the example is explained in more detail in the section <<mongo.query,Querying Documents>>. Additional documentation can be found in <<mongo-template, the blocking MongoTemplate>> section.
 
-[[mongo.reactive.tailcursors]]
-== Infinite Streams
-
-By default, MongoDB will automatically close a cursor when the client has exhausted all results in the cursor. Closing a cursors turns a Stream into a finite stream. However, for capped collections you may use a https://docs.mongodb.com/manual/core/tailable-cursors/[Tailable Cursor] that remains open after the client exhausts the results in the initial cursor. Using Tailable Cursors with a reactive approach allows construction of infinite streams. A Tailable Cursor remains open until it's closed. It emits data as data arrives in a capped collection. Using Tailable Cursors with Collections is not possible as its result would never complete.
-
-[source,java]
-----
-Flux<Person> stream = template.tail(query(where("name").is("Joe")), Person.class);
-
-Disposable subscription = stream.doOnNext(person -> System.out.println(person)).subscribe();
-
-// …
-
-// Later: Dispose the stream
-subscription.dispose();
-----
-
-
 [[mongo.reactive.executioncallback]]
 == Execution callbacks
 

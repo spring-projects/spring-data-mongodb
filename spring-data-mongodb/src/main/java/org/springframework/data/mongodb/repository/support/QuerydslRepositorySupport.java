@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
  * Base class to create repository implementations based on Querydsl.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  */
@@ -36,7 +36,7 @@ public abstract class QuerydslRepositorySupport {
 
 	/**
 	 * Creates a new {@link QuerydslRepositorySupport} for the given {@link MongoOperations}.
-	 * 
+	 *
 	 * @param operations must not be {@literal null}.
 	 */
 	public QuerydslRepositorySupport(MongoOperations operations) {
@@ -50,7 +50,7 @@ public abstract class QuerydslRepositorySupport {
 	/**
 	 * Returns a {@link MongodbQuery} for the given {@link EntityPath}. The collection being queried is derived from the
 	 * entity metadata.
-	 * 
+	 *
 	 * @param path
 	 * @return
 	 */
@@ -63,7 +63,7 @@ public abstract class QuerydslRepositorySupport {
 
 	/**
 	 * Returns a {@link MongodbQuery} for the given {@link EntityPath} querying the given collection.
-	 * 
+	 *
 	 * @param path must not be {@literal null}
 	 * @param collection must not be blank or {@literal null}
 	 * @return

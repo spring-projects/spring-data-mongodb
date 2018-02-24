@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.springframework.util.Assert;
  * <p>
  * We recommend to use the static factory method {@link Aggregation#skip(int)} instead of creating instances of this
  * class directly.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -36,7 +36,7 @@ public class SkipOperation implements AggregationOperation {
 
 	/**
 	 * Creates a new {@link SkipOperation} skipping the given number of elements.
-	 * 
+	 *
 	 * @param skipCount number of documents to skip, must not be less than zero.
 	 */
 	public SkipOperation(long skipCount) {
@@ -45,7 +45,7 @@ public class SkipOperation implements AggregationOperation {
 		this.skipCount = skipCount;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */

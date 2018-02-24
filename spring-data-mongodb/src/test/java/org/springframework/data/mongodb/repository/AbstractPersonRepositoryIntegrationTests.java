@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -1176,5 +1177,20 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-1752
 	public void readsClosedProjection() {
 		assertThat(repository.findClosedProjectionBy()).isNotEmpty();
+	}
+
+	@Test // DATAMONGO-1865
+	public void findFirstEntityReturnsFirstResultEvenForNonUniqueMatches() {
+		assertThat(repository.findFirstBy()).isNotNull();
+	}
+
+	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1865
+	public void findSingleEntityThrowsErrorWhenNotUnique() {
+		repository.findPersonByLastnameLike(dave.getLastname());
+	}
+
+	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1865
+	public void findOptionalSingleEntityThrowsErrorWhenNotUnique() {
+		repository.findOptionalPersonByLastnameLike(dave.getLastname());
 	}
 }

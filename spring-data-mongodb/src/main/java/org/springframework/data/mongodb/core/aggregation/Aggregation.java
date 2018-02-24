@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Nikolay Bogdanov
  * @author Gustavo de Geus
+ * @author Jérôme Guyon
  * @since 1.3
  */
 public class Aggregation {
@@ -175,6 +176,16 @@ public class Aggregation {
 
 	private boolean isLast(AggregationOperation aggregationOperation, List<AggregationOperation> aggregationOperations) {
 		return aggregationOperations.indexOf(aggregationOperation) == aggregationOperations.size() - 1;
+	}
+
+	/**
+	 * Get the {@link AggregationOptions}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	public AggregationOptions getOptions() {
+		return options;
 	}
 
 	/**
@@ -345,6 +356,28 @@ public class Aggregation {
 	 */
 	public static SortOperation sort(Direction direction, String... fields) {
 		return new SortOperation(Sort.by(direction, fields));
+	}
+
+	/**
+	 * Creates a new {@link SortByCountOperation} given {@literal groupByField}.
+	 *
+	 * @param field must not be {@literal null} or empty.
+	 * @return
+	 * @since 2.1
+	 */
+	public static SortByCountOperation sortByCount(String field) {
+		return new SortByCountOperation(field(field));
+	}
+
+	/**
+	 * Creates a new {@link SortByCountOperation} given {@link AggregationExpression group and sort expression}.
+	 *
+	 * @param groupAndSortExpression must not be {@literal null}.
+	 * @return
+	 * @since 2.1
+	 */
+	public static SortByCountOperation sortByCount(AggregationExpression groupAndSortExpression) {
+		return new SortByCountOperation(groupAndSortExpression);
 	}
 
 	/**
@@ -575,21 +608,31 @@ public class Aggregation {
 	}
 
 	/**
-	 * Converts this {@link Aggregation} specification to a {@link Document}.
+	 * Renders this {@link Aggregation} specification to an aggregation pipeline returning a {@link List} of
+	 * {@link Document}.
 	 *
-	 * @param inputCollectionName the name of the input collection
-	 * @return the {@code Document} representing this aggregation
+	 * @return the aggregation pipeline representing this aggregation.
+	 * @since 2.1
+	 */
+	public List<Document> toPipeline(AggregationOperationContext rootContext) {
+		return AggregationOperationRenderer.toDocument(operations, rootContext);
+	}
+
+	/**
+	 * Converts this {@link Aggregation} specification to a {@link Document}.
+	 * <p/>
+	 * MongoDB requires as of 3.6 cursor-based aggregation. Use {@link #toPipeline(AggregationOperationContext)} to render
+	 * an aggregation pipeline.
+	 *
+	 * @param inputCollectionName the name of the input collection.
+	 * @return the {@code Document} representing this aggregation.
 	 */
 	public Document toDocument(String inputCollectionName, AggregationOperationContext rootContext) {
 
-		List<Document> operationDocuments = AggregationOperationRenderer.toDocument(operations, rootContext);
-
 		Document command = new Document("aggregate", inputCollectionName);
-		command.put("pipeline", operationDocuments);
+		command.put("pipeline", toPipeline(rootContext));
 
-		command = options.applyAndReturnPotentiallyChangedCommand(command);
-
-		return command;
+		return options.applyAndReturnPotentiallyChangedCommand(command);
 	}
 
 	/*

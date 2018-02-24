@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * GridFs-specific helper class to define {@link Criteria}s.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
@@ -28,7 +28,7 @@ public class GridFsCriteria extends Criteria {
 
 	/**
 	 * Creates a new {@link GridFsCriteria} for the given key.
-	 * 
+	 *
 	 * @param key
 	 */
 	public GridFsCriteria(String key) {
@@ -37,7 +37,7 @@ public class GridFsCriteria extends Criteria {
 
 	/**
 	 * Creates a {@link GridFsCriteria} for restrictions on the file's metadata.
-	 * 
+	 *
 	 * @return
 	 */
 	public static GridFsCriteria whereMetaData() {
@@ -46,7 +46,7 @@ public class GridFsCriteria extends Criteria {
 
 	/**
 	 * Creates a {@link GridFsCriteria} for restrictions on a single file's metadata item.
-	 * 
+	 *
 	 * @param metadataKey
 	 * @return
 	 */
@@ -58,7 +58,7 @@ public class GridFsCriteria extends Criteria {
 
 	/**
 	 * Creates a {@link GridFsCriteria} for restrictions on the file's name.
-	 * 
+	 *
 	 * @return
 	 */
 	public static GridFsCriteria whereFilename() {
@@ -67,7 +67,7 @@ public class GridFsCriteria extends Criteria {
 
 	/**
 	 * Creates a {@link GridFsCriteria} for restrictions on the file's content type.
-	 * 
+	 *
 	 * @return
 	 */
 	public static GridFsCriteria whereContentType() {

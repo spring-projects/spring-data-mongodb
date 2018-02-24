@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,18 +33,9 @@ import lombok.NoArgsConstructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
@@ -90,6 +81,8 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.MongoVersion;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
@@ -108,6 +101,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
 /**
@@ -122,24 +116,20 @@ import com.mongodb.client.result.UpdateResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Laszlo Csontos
+ * @author duozhilin
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
-
-	private static final org.springframework.data.util.Version TWO_DOT_FOUR = org.springframework.data.util.Version
-			.parse("2.4");
-	private static final org.springframework.data.util.Version THREE_DOT_FOUR = org.springframework.data.util.Version
-			.parse("3.4");
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
 
 	ConfigurableApplicationContext context;
 	MongoTemplate mappingTemplate;
-	org.springframework.data.util.Version mongoVersion;
 
 	@Rule public ExpectedException thrown = ExpectedException.none();
+	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
 
 	@Autowired
 	public void setApplicationContext(ConfigurableApplicationContext context) {
@@ -177,7 +167,6 @@ public class MongoTemplateTests {
 	public void setUp() {
 
 		cleanDb();
-		queryMongoVersionIfNecessary();
 
 		this.mappingTemplate.setApplicationContext(context);
 	}
@@ -185,14 +174,6 @@ public class MongoTemplateTests {
 	@After
 	public void cleanUp() {
 		cleanDb();
-	}
-
-	private void queryMongoVersionIfNecessary() {
-
-		if (mongoVersion == null) {
-			org.bson.Document result = template.executeCommand("{ buildInfo: 1 }");
-			mongoVersion = org.springframework.data.util.Version.parse(result.get("version").toString());
-		}
 	}
 
 	protected void cleanDb() {
@@ -747,6 +728,75 @@ public class MongoTemplateTests {
 		assertThat(found1, notNullValue());
 		assertThat(found2, notNullValue());
 		assertThat(notFound, nullValue());
+	}
+
+	@Test // DATAMONGO-1761
+	public void testDistinct() {
+
+		Address address1 = new Address();
+		address1.state = "PA";
+		address1.city = "Philadelphia";
+
+		Address address2 = new Address();
+		address2.state = "PA";
+		address2.city = " New York";
+
+		MyPerson person1 = new MyPerson();
+		person1.name = "Ben";
+		person1.address = address1;
+
+		MyPerson person2 = new MyPerson();
+		person2.name = "Eric";
+		person2.address = address2;
+
+		template.save(person1);
+		template.save(person2);
+
+		assertThat(template.findDistinct("name", MyPerson.class, String.class)).containsExactlyInAnyOrder(person1.getName(),
+				person2.getName());
+		assertThat(template.findDistinct(new BasicQuery("{'address.state' : 'PA'}"), "name", MyPerson.class, String.class))
+				.containsExactlyInAnyOrder(person1.getName(), person2.getName());
+		assertThat(template.findDistinct(new BasicQuery("{'address.state' : 'PA'}"), "name",
+				template.determineCollectionName(MyPerson.class), MyPerson.class, String.class))
+						.containsExactlyInAnyOrder(person1.getName(), person2.getName());
+	}
+
+	@Test // DATAMONGO-1761
+	public void testDistinctCovertsResultToPropertyTargetTypeCorrectly() {
+
+		template.insert(new Person("garvin"));
+
+		assertThat(template.findDistinct("firstName", Person.class, Object.class))
+				.allSatisfy(val -> instanceOf(String.class));
+	}
+
+	@Test // DATAMONGO-1761
+	public void testDistinctResolvesDbRefsCorrectly() {
+
+		SomeContent content1 = new SomeContent();
+		content1.text = "content-1";
+
+		SomeContent content2 = new SomeContent();
+		content2.text = "content-2";
+
+		template.save(content1);
+		template.save(content2);
+
+		SomeTemplate t1 = new SomeTemplate();
+		t1.content = content1;
+
+		SomeTemplate t2 = new SomeTemplate();
+		t2.content = content2;
+
+		SomeTemplate t3 = new SomeTemplate();
+		t3.content = content2;
+
+		template.insert(t1);
+		template.insert(t2);
+		template.insert(t3);
+
+		assertThat(template.findDistinct("content", SomeTemplate.class, SomeContent.class))
+				.containsExactlyInAnyOrder(content1, content2);
 	}
 
 	@Test
@@ -2349,9 +2399,8 @@ public class MongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-812
+	@MongoVersion(asOf = "2.4")
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithComplexTypes() {
-
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
 
 		DocumentWithCollection document = new DocumentWithCollection(Collections.<Model> emptyList());
 		template.save(document);
@@ -2365,9 +2414,8 @@ public class MongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-812
+	@MongoVersion(asOf = "2.4")
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithSimpleTypes() {
-
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
 
 		DocumentWithCollectionOfSimpleType document = new DocumentWithCollectionOfSimpleType();
 		document.values = Arrays.asList("spring");
@@ -2391,7 +2439,9 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(q, VersionedPerson.class), nullValue());
 	}
 
-	@Test // DATAMONGO-354
+	@Test // DATAMONGO-354, DATAMONGO-1824
+	@MongoVersion(until = "3.6")
+	@SuppressWarnings("deprecation")
 	public void testUpdateShouldAllowMultiplePushAll() {
 
 		DocumentWithMultipleCollections doc = new DocumentWithMultipleCollections();
@@ -3230,14 +3280,11 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query, DocumentWithCollection.class), is(equalTo(dwc)));
 	}
 
-	/**
-	 * @see DATAMONGO-1517
-	 */
-	@Test
+	@Test // DATAMONGO-1517
+	@MongoVersion(asOf = "3.4")
 	public void decimal128TypeShouldBeSavedAndLoadedCorrectly()
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR), is(true));
 		assumeThat(MongoClientVersion.isMongo34Driver(), is(true));
 
 		Class<?> decimal128Type = ClassUtils.resolveClassName("org.bson.types.Decimal128", null);
@@ -3280,6 +3327,38 @@ public class MongoTemplateTests {
 		template.insertAll(Arrays.asList(first, second));
 
 		assertThat(template.find(new Query().limit(1), Sample.class)).hasSize(1);
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderLimit() {
+
+		List<Sample> samples = IntStream.range(0, 100) //
+				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
+				.collect(Collectors.toList());
+
+		template.insertAll(samples);
+
+		DeleteResult wr = template.remove(query(where("field").is("lannister")).limit(25), Sample.class);
+
+		assertThat(wr.getDeletedCount()).isEqualTo(25L);
+		assertThat(template.count(new Query(), Sample.class)).isEqualTo(75L);
+	}
+
+	@Test // DATAMONGO-1870
+	public void removeShouldConsiderSkipAndSort() {
+
+		List<Sample> samples = IntStream.range(0, 100) //
+				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
+				.collect(Collectors.toList());
+
+		template.insertAll(samples);
+
+		DeleteResult wr = template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class);
+
+		assertThat(wr.getDeletedCount()).isEqualTo(75L);
+		assertThat(template.count(new Query(), Sample.class)).isEqualTo(25L);
+		assertThat(template.count(query(where("field").is("lannister")), Sample.class)).isEqualTo(25L);
+		assertThat(template.count(query(where("field").is("stark")), Sample.class)).isEqualTo(0L);
 	}
 
 	static class TypeWithNumbers {
@@ -3601,6 +3680,7 @@ public class MongoTemplateTests {
 		}
 	}
 
+	@EqualsAndHashCode
 	public static class SomeContent {
 
 		String id;
@@ -3675,5 +3755,58 @@ public class MongoTemplateTests {
 
 			person.setId(UUID.randomUUID());
 		}
+	}
+
+	public static class Message {
+
+		private ObjectId id;
+
+		private String text;
+
+		private Date timestamp;
+
+		public Message() {}
+
+		public Message(String text) {
+			super();
+			this.text = text;
+			this.timestamp = new Date();
+		}
+
+		public Message(String text, Date timestamp) {
+			super();
+			this.text = text;
+			this.timestamp = timestamp;
+		}
+
+		public ObjectId getId() {
+			return id;
+		}
+
+		public void setId(ObjectId id) {
+			this.id = id;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+
+		public Date getTimestamp() {
+			return timestamp;
+		}
+
+		public void setTimestamp(Date timestamp) {
+			this.timestamp = timestamp;
+		}
+
+		@Override
+		public String toString() {
+			return "Message [id=" + id + ", text=" + text + ", timestamp=" + timestamp + "]";
+		}
+
 	}
 }

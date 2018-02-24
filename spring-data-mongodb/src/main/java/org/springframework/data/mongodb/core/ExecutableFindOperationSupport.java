@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -205,6 +205,19 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return template.exists(query, domainType, getCollectionName());
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.FindDistinct#distinct(java.lang.String)
+		 */
+		@SuppressWarnings("unchecked")
+		@Override
+		public TerminatingDistinct<Object> distinct(String field) {
+
+			Assert.notNull(field, "Field must not be null!");
+
+			return new DistinctOperationSupport(this, field);
+		}
+
 		private List<T> doFind(@Nullable CursorPreparer preparer) {
 
 			Document queryObject = query.getQueryObject();
@@ -212,6 +225,12 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 			return template.doFind(getCollectionName(), queryObject, fieldsObject, domainType, returnType,
 					getCursorPreparer(query, preparer));
+		}
+
+		private List<T> doFindDistinct(String field) {
+
+			return template.findDistinct(query, field, getCollectionName(), domainType,
+					returnType == domainType ? (Class<T>) Object.class : returnType);
 		}
 
 		private CloseableIterator<T> doStream() {
@@ -259,6 +278,56 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 			this.limit = Optional.of(limit);
 			return this;
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	static class DistinctOperationSupport<T> implements TerminatingDistinct<T> {
+
+		private final String field;
+		private final ExecutableFindSupport<T> delegate;
+
+		public DistinctOperationSupport(ExecutableFindSupport<T> delegate, String field) {
+
+			this.delegate = delegate;
+			this.field = field;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.DistinctWithProjection#as(java.lang.Class)
+		 */
+		@Override
+		@SuppressWarnings("unchecked")
+		public <R> TerminatingDistinct<R> as(Class<R> resultType) {
+
+			Assert.notNull(resultType, "ResultType must not be null!");
+
+			return new DistinctOperationSupport<>((ExecutableFindSupport) delegate.as(resultType), field);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.DistinctWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
+		 */
+		@Override
+		public TerminatingDistinct<T> matching(Query query) {
+
+			Assert.notNull(query, "Query must not be null!");
+
+			return new DistinctOperationSupport<>((ExecutableFindSupport<T>) delegate.matching(query), field);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingDistinct#all()
+		 */
+		@Override
+		public List<T> all() {
+			return delegate.doFindDistinct(field);
 		}
 	}
 }

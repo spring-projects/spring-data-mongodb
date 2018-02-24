@@ -951,7 +951,25 @@ assertThat(p.getAge(), is(1));
 
 You can use several overloaded methods to remove an object from the database.
 
-* *remove* Remove the given document based on one of the following: a specific object instance, a query document criteria combined with a class or a query document criteria combined with a specific collection name.
+====
+[source,java]
+----
+template.remove(tywin, "GOT");                                              <1>
+
+template.remove(query(where("lastname").is("lannister")), "GOT");           <2>
+
+template.remove(new Query().limit(3), "GOT");                               <3>
+
+template.findAllAndRemove(query(where("lastname").is("lannister"), "GOT");  <4>
+
+template.findAllAndRemove(new Query().limit(3), "GOT");                     <5>
+----
+<1> Remove a single entity via its `_id` from the associated collection.
+<2> Remove all documents matching the criteria of the query from the `GOT` collection.
+<3> Remove the first 3 documents in the `GOT` collection. Unlike <2>, the documents to remove are identified via their `_id` executing the given query applying `sort`, `limit` and `skip` options first and then remove all at once in a separate step.
+<4> Remove all documents matching the criteria of the query from the `GOT` collection. Unlike <3>, documents do not get deleted in a batch but one by one.
+<5> Remove the first 3 documents in the `GOT` collection. Unlike <3>, documents do not get deleted in a batch but one by one.
+====
 
 [[mongo-template.optimistic-locking]]
 === Optimistic locking
@@ -1054,6 +1072,8 @@ As you can see most methods return the `Criteria` object to provide a fluent sty
 * `Criteria` *regex* `(String re)` Creates a criterion using a `$regex`
 * `Criteria` *size* `(int s)` Creates a criterion using the `$size` operator
 * `Criteria` *type* `(int t)` Creates a criterion using the `$type` operator
+* `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for <<mongo.jsonSchema,JSON schema criteria>>. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
+
 
 There are also methods on the Criteria class for geospatial queries. Here is a listing but look at the section on <<mongo.geospatial,GeoSpatial Queries>> to see them in action.
 
@@ -1086,6 +1106,45 @@ The query methods need to specify the target type T that will be returned and th
 * *findById* Return an object of the given id and target class.
 * *find* Map the results of an ad-hoc query on the collection to a List of the specified type.
 * *findAndRemove* Map the results of an ad-hoc query on the collection to a single instance of an object of the specified type. The first document that matches the query is returned and also removed from the collection in the database.
+
+[[mongo-template.query.distinct]]
+=== Query distinct values
+
+MongoDB provides an operation to obtain distinct values for a single field using a query from the resulting documents.
+Resulting values are not required to have the same data type, nor is the feature limited to simple types.
+For retriaval the actual result type does matter for the sake of conversion and typing.
+
+.Retrieving distinct values
+====
+[source,java]
+----
+template.query(Person.class)  <1>
+  .distinct("lastname")       <2>
+  .all();                     <3>
+----
+<1> Query the collection of `Person`.
+<2> Select _distinct_  values of the `lastname` field. The fieldname will be mapped according to the domain types property declaration, taking potential `@Field` annotations into account.
+<3> Retrieve all distinct values as `List` of `Object` due to no explicit result type specification.
+====
+
+Retrieving distinct values into a `Collection` of `Object` is the most flexible way as it will try to determine the property value of the domain type converting results to the desired type or mapping `Document` structures.
+
+Sometimes, when all values of the desired field are fixed to a certain type, it is more convenient to directly obtain a correctly typed `Collection`
+
+.Retrieving strongly typed distinct values
+====
+[source,java]
+----
+template.query(Person.class)  <1>
+  .distinct("lastname")       <2>
+  .as(String.class)           <3>
+  .all();                     <4>
+----
+<1> Query the collection of `Person`.
+<2> Select _distinct_  values of the `lastname` field. The fieldname will be mapped according to the domain types property declaration, taking potential `@Field` annotations into account.
+<3> Retrieved values will be converted into the desired target type. In this case `String`. It would also be possible to map the values to a more complex type if the stored field contains a document.
+<4> Retrieve all distinct values as a `List` of `String`. Throws a `DataAccessException` if the type cannot be converted into the desired target type.
+====
 
 [[mongo.geospatial]]
 === GeoSpatial Queries
@@ -1410,7 +1469,7 @@ List<Person> results = template.find(query, Person.class);
 ----
 Collation collation = Collation.of("de");
 
-AggregationOptions options = new AggregationOptions.Builder().collation(collation).build();
+AggregationOptions options = AggregationOptions.builder().collation(collation).build();
 
 Aggregation aggregation = newAggregation(
   project("tags"),
@@ -1424,6 +1483,170 @@ AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", T
 ====
 
 WARNING: Indexes are only used if the collation used for the operation and the index collation matches.
+
+[[mongo.jsonSchema]]
+=== JSON Schema
+
+As of version 3.6 MongoDB supports collections that validate ``Document``s against a provided JSON Schema.
+The schema itself and both validation action and level can be defined when creating the collection.
+
+.Sample JSON schema
+====
+[source,json]
+----
+{
+  "type": "object",                                                        <1>
+
+  "required": [ "firstname", "lastname" ],                                 <2>
+
+  "properties": {                                                          <3>
+
+    "firstname": {                                                         <4>
+      "type": "string",
+      "enum": [ "luke", "han" ]
+    },
+    "address": {                                                           <5>
+      "type": "object",
+      "properties": {
+        "postCode": { "type": "string", "minLength": 4, "maxLength": 5 }
+      }
+    }
+  }
+}
+----
+<1> JSON schema documents always describe a whole document from its root. A schema is a schema object itself that can contain
+embedded schema objects describing properties and subdocuments.
+<2> `required` is a property describing which properties are required in a document. It can be specified optionally along of other
+schema constraints. See MongoDB's documentation on https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#available-keywords[available keywords].
+<3> `properties` is related to a schema object describing an `object` type. It contains property-specific schema constraints.
+<4> `firstname` specifies constrains for the `firsname` field inside the document. Here it's a string-based properties declaring
+ possible field values.
+<5> `address` is a subdocument defining a schema for values in its `postCode` field.
+====
+
+You can provide a schema either by specifying a schema document (i.e. using the `Document` API by parsing or building a document object) or by building it with Spring Data's JSON schema utilities in `org.springframework.data.mongodb.core.schema`. `MongoJsonSchema` is the entry point for all JSON schema-related operations.
+
+.Creating a JSON schema
+====
+[source,java]
+----
+MongoJsonSchema.builder()                                                  <1>
+    .required("firstname", "lastname")                                     <2>
+
+    .properties(
+                string("firstname").possibleValues("luke", "han"),         <3>
+
+                object("address")
+                     .properties(string("postCode").minLength(4).maxLength(5)))
+
+    .build();                                                              <4>
+----
+<1> Obtain a schema builder to configure the schema with a fluent API.
+<2> Configure required properties.
+<3> Configure the String-typed `firstname` field allowing only `luke` and `han` values. Properties can be typed or untyped. Use a static import of  `JsonSchemaProperty` to make the syntax slightly more compact and to get entrypoints like `string(…)`.
+<4> Build the schema object. Use the schema to either create a collection or <<mongodb-template-query.criteria,query documents>>.
+====
+
+`CollectionOptions` provides the entry point to schema support for collections.
+
+.Create collection with `$jsonSchema`
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
+
+template.createCollection(Person.class, CollectionOptions.empty().schema(schema));
+----
+====
+
+You can use a schema to query any collection for documents that match a given structure defined by a JSON schema.
+
+.Query for Documents matching a `$jsonSchema`
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
+
+template.find(query(matchingDocumentStructure(schema)), Person.class);
+----
+====
+
+[cols="3,1,6", options="header"]
+.Supported JSON schema types
+|===
+| Schema Type
+| Java Type
+| Schema Properties
+
+| `untyped`
+| -
+| `description`, generated `description`, `enum`, `allOf`, `anyOf`, `oneOf`, `not`
+
+| `object`
+| `Object`
+| `required`, `additionalProperties`, `properties`, `minProperties`, `maxProperties`, `patternProperties`
+
+| `array`
+| any array except `byte[]`
+| `uniqueItems`, `additionalItems`, `items`, `minItems`, `maxItems`
+
+| `string`
+| `String`
+| `minLength`, `maxLentgth`, `pattern`
+
+| `int`
+| `int`, `Integer`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `long`
+| `long`, `Long`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `double`
+| `float`, `Float`, `double`, `Double`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `decimal`
+| `BigDecimal`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `number`
+| `Number`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `binData`
+| `byte[]`
+|
+
+| `boolean`
+| `boolean`, `Boolean`
+|
+
+| `null`
+| `null`
+|
+
+| `objectId`
+| `ObjectId`
+|
+
+| `date`
+| `java.util.Date`
+|
+
+| `timestamp`
+| `BsonTimestamp`
+|
+
+| `regex`
+| `java.util.regex.Pattern`
+|
+
+|===
+
+NOTE: `untyped` is a generic type that is inherited by all typed schema types providing all `untyped` schema properties to typed schema types.
+
+For more information, see https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#op._S_jsonSchema[$jsonSchema].
 
 [[mongo.query.fluent-template-api]]
 === Fluent Template API
@@ -1791,7 +2014,7 @@ At the time of this writing we provide support for the following Aggregation Ope
 [cols="2*"]
 |===
 | Pipeline Aggregation Operators
-| count, geoNear, graphLookup, group, limit, lookup, match, project, replaceRoot, skip, sort, unwind
+| bucket, bucketAuto, count, facet, geoNear, graphLookup, group, limit, lookup, match, project, replaceRoot, skip, sort, unwind
 
 | Set Aggregation Operators
 | setEquals, setIntersection, setUnion, setDifference, setIsSubset, anyElementTrue, allElementsTrue
@@ -1870,10 +2093,112 @@ project().and("foo").as("bar"), sort(ASC, "foo")
 
 More examples for project operations can be found in the `AggregationTests` class. Note that further details regarding the projection expressions can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project[corresponding section] of the MongoDB Aggregation Framework reference documentation.
 
+[[mongo.aggregation.facet]]
+=== Faceted classification
+
+MongoDB supports as of Version 3.4 faceted classification using the Aggregation Framework. A faceted classification uses semantic categories, either general or subject-specific, that are combined to create the full classification entry. Documents flowing through the aggregation pipeline are classificated into buckets. A multi-faceted classification enables various aggregations on the same set of input documents, without needing to retrieve the input documents multiple times.
+
+==== Buckets
+
+Bucket operations categorize incoming documents into groups, called buckets, based on a specified expression and bucket boundaries. Bucket operations require a grouping field or grouping expression. They can be defined via the `bucket()`/`bucketAuto()` methods of the `Aggregate` class. `BucketOperation` and `BucketAutoOperation` can expose accumulations based on aggregation expressions for input documents. The bucket operation can be extended with additional parameters through a fluent API via the `with…()` methods, the `andOutput(String)` method and aliased via the `as(String)` method. Each bucket is represented as a document in the output.
+
+`BucketOperation` takes a defined set of boundaries to group incoming documents into these categories. Boundaries are required to be sorted.
+
+.Bucket operation examples
+====
+[source,java]
+----
+// will generate {$bucket: {groupBy: $price, boundaries: [0, 100, 400]}}
+bucket("price").withBoundaries(0, 100, 400);
+
+// will generate {$bucket: {groupBy: $price, default: "Other" boundaries: [0, 100]}}
+bucket("price").withBoundaries(0, 100).withDefault("Other");
+
+// will generate {$bucket: {groupBy: $price, boundaries: [0, 100], output: { count: { $sum: 1}}}}
+bucket("price").withBoundaries(0, 100).andOutputCount().as("count");
+
+// will generate {$bucket: {groupBy: $price, boundaries: [0, 100], 5, output: { titles: { $push: "$title"}}}
+bucket("price").withBoundaries(0, 100).andOutput("title").push().as("titles");
+----
+====
+
+`BucketAutoOperation` determines boundaries itself in an attempt to evenly distribute documents into a specified number of buckets. `BucketAutoOperation` optionally takes a granularity specifies the https://en.wikipedia.org/wiki/Preferred_number[preferred number] series to use to ensure that the calculated boundary edges end on preferred round numbers or their powers of 10.
+
+.Bucket operation examples
+====
+[source,java]
+----
+// will generate {$bucketAuto: {groupBy: $price, buckets: 5}}
+bucketAuto("price", 5)
+
+// will generate {$bucketAuto: {groupBy: $price, buckets: 5, granularity: "E24"}}
+bucketAuto("price", 5).withGranularity(Granularities.E24).withDefault("Other");
+
+// will generate {$bucketAuto: {groupBy: $price, buckets: 5, output: { titles: { $push: "$title"}}}
+bucketAuto("price", 5).andOutput("title").push().as("titles");
+----
+====
+
+Bucket operations can use `AggregationExpression` via `andOutput()` and <<mongo.aggregation.projection.expressions, SpEL expressions>> via `andOutputExpression()` to create output fields in buckets.
+
+Note that further details regarding bucket expressions can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/bucket/[`$bucket` section] and
+http://docs.mongodb.org/manual/reference/operator/aggregation/bucketAuto/[`$bucketAuto` section] of the MongoDB Aggregation Framework reference documentation.
+
+==== Multi-faceted aggregation
+
+Multiple aggregation pipelines can be used to create multi-faceted aggregations which characterize data across multiple dimensions, or facets, within a single aggregation stage. Multi-faceted aggregations provide multiple filters and categorizations to guide data browsing and analysis. A common implementation of faceting is how many online retailers provide ways to narrow down search results by applying filters on product price, manufacturer, size, etc.
+
+A `FacetOperation` can be defined via the `facet()` method of the `Aggregation` class. It can be customized with multiple aggregation pipelines via the `and()` method. Each sub-pipeline has its own field in the output document where its results are stored as an array of documents.
+
+Sub-pipelines can project and filter input documents prior grouping. Common cases are extraction of date parts or calculations before categorization.
+
+.Facet operation examples
+====
+[source,java]
+----
+// will generate {$facet: {categorizedByPrice: [ { $match: { price: {$exists : true}}}, { $bucketAuto: {groupBy: $price, buckets: 5}}]}}
+facet(match(Criteria.where("price").exists(true)), bucketAuto("price", 5)).as("categorizedByPrice"))
+
+// will generate {$facet: {categorizedByCountry: [ { $match: { country: {$exists : true}}}, { $sortByCount: "$country"}]}}
+facet(match(Criteria.where("country").exists(true)), sortByCount("country")).as("categorizedByCountry"))
+
+// will generate {$facet: {categorizedByYear: [
+//     { $project: { title: 1, publicationYear: { $year: "publicationDate"}}},
+//     { $bucketAuto: {groupBy: $price, buckets: 5, output: { titles: {$push:"$title"}}}
+// ]}}
+facet(project("title").and("publicationDate").extractYear().as("publicationYear"),
+      bucketAuto("publicationYear", 5).andOutput("title").push().as("titles"))
+  .as("categorizedByYear"))
+----
+====
+
+Note that further details regarding facet operation can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/facet/[`$facet` section] of the MongoDB Aggregation Framework reference documentation.
+
+[[mongo.aggregation.sort-by-count]]
+==== SortByCount
+
+Sort by count operations group incoming documents based on the value of a specified expression, then compute the count of documents in each distinct group and sort the results by count. It's a handy shortcut to apply sorting for when using <<mongo.aggregation.facet>>. Sort by count operations require a grouping field or grouping expression.
+
+.Sort by count example
+====
+[source,java]
+----
+// will generate { $sortByCount: "$country" }
+sortByCount("country");
+----
+====
+
+A sort by count operation is equivalent to the following BSON:
+
+----
+{ $group: { _id: <expression>, count: { $sum: 1 } } },
+{ $sort: { count: -1 } }
+----
+
 [[mongo.aggregation.projection.expressions]]
 ==== Spring Expression Support in Projection Expressions
 
-As of Version 1.4.0 we support the use of SpEL expression in projection expressions via the `andExpression` method of the `ProjectionOperation` class. This allows you to define the desired expression as a SpEL expression which is translated into a corresponding MongoDB projection expression part on query execution. This makes it much easier to express complex calculations.
+We support the use of SpEL expression in projection expressions via the `andExpression` method of the `ProjectionOperation` and `BucketOperation` classes. This allows you to define the desired expression as a SpEL expression which is translated into a corresponding MongoDB projection expression part on query execution. This makes it much easier to express complex calculations.
 
 ===== Complex calculations with SpEL expressions
 
@@ -2631,3 +2956,56 @@ class GridFsClient {
 ====
 
 `GridFsOperations` extending `ResourcePatternResolver` allows the `GridFsTemplate` e.g. to be plugged into an `ApplicationContext` to read Spring Config files from a MongoDB.
+
+[[change-streams]]
+== Change Streams
+
+As of MongoDB 3.6, https://docs.mongodb.com/manual/changeStreams/[Change Streams] allow application to get notified about changes without having to tail the oplog.
+
+NOTE: Change Stream support is only possible for replica sets or a sharded cluster.
+
+Change Streams can be subscribed to with both the imperative and the reactive MongoDB Java driver. It is highly recommended to use the reactive variant as it is less resource intensive. However if you do not feel comfortable using the reactive API for whatever reason, you can sill obtain the change events via a Messaging concept already common in the Spring ecosystem.
+
+=== Change Streams using MessageListener
+
+Listening to a https://docs.mongodb.com/manual/tutorial/change-streams-example/[Change Stream using a Sync Driver] is a long running, blocking task that needs to be delegated to a separate component.
+In this case we need to create a `MessageListenerContainer` first which will be the main entry point for running the specific ``SubscriptionRequest``s.
+Spring Data MongoDB already ships with a default implementation that operates upon `MongoTemplate` and is capable of creating and executing ``Task``s for a `ChangeStreamRequest`.
+
+.Change Streams with `MessageListeners`
+====
+[source,java]
+----
+MessageListenerContainer container = new DefaultMessageListenerContainer(template);
+container.start();    <1>
+
+MessageListener<ChangeStreamDocument<Document>, User> listener = System.out::println; <2>
+ChangeStreamRequestOptions options = new ChangeStreamRequestOptions("user", ChangeStreamOptions.empty()); <3>
+
+Subscription subscription = container.register(new ChangeStreamRequest<>(listener, options), User.class); <4>
+
+// ...
+
+container.stop(); <5>
+----
+<1> Starting the container intializes the resources and starts the ``Task``s for already registered ``SubscriptionRequest``s. Requests added after the statup are run immediately.
+<2> Define the listener called when a `Message` is received. The `Message#getBody()` is converted to the requested domain type. Use `Document` to receive raw results without conversion.
+<3> Set the collection to listen to and provide additional options via `ChangeStreamOptions`.
+<4> Register the request. The returned `Subscription` can be used to check the current `Task` state and cancel the execution to free resources.
+<5> Do not forget to stop the container once you're sure you won't need it any more. This will stop all running ``Task``s within the container.
+====
+
+=== Change Streams - Reactive
+
+Subscribing to Change Stream via the reactive API is clearly more straight forward. Still the building blocks like `ChangeStreamOptions` remain the same.
+
+.Change Streams with `MessageListeners`
+====
+[source,java]
+----
+Aggregation filter = newAggregation(User.class, match(where("age").gte(38)); <1>
+Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream(filter), User.class, ChangeStreamOptions.empty()); <2>
+----
+<1> Use an aggregation pipeline to filter events.
+<2> Obtain a `Flux` of change stream events. The `ChangeStreamEvent#getBody()` is converted to requested domain type. Use `Document` to receive raw results without conversion.
+====

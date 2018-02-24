@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * {@link MongoPersistentProperty} caching access to {@link #isIdProperty()} and {@link #getFieldName()}.
- * 
+ *
  * @author Oliver Gierke
  */
 public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty {
@@ -35,7 +35,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 
 	/**
 	 * Creates a new {@link CachingMongoPersistentProperty}.
-	 * 
+	 *
 	 * @param field
 	 * @param propertyDescriptor
 	 * @param owner
@@ -61,7 +61,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.isIdProperty;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#isAssociation()
 	 */
@@ -87,7 +87,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.fieldName;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#usePropertyAccess()
 	 */
@@ -101,7 +101,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.usePropertyAccess;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#isTransient()
 	 */

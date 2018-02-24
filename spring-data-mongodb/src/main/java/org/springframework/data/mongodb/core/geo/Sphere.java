@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.springframework.util.Assert;
 
 /**
  * Represents a geospatial sphere value.
- * 
+ *
  * @author Thomas Darimont
  * @author Mark Paluch
  * @since 1.5
@@ -40,7 +40,7 @@ public class Sphere implements Shape {
 
 	/**
 	 * Creates a Sphere around the given center {@link Point} with the given radius.
-	 * 
+	 *
 	 * @param center must not be {@literal null}.
 	 * @param radius must not be {@literal null}.
 	 */
@@ -57,7 +57,7 @@ public class Sphere implements Shape {
 
 	/**
 	 * Creates a Sphere around the given center {@link Point} with the given radius.
-	 * 
+	 *
 	 * @param center
 	 * @param radius
 	 */
@@ -67,7 +67,7 @@ public class Sphere implements Shape {
 
 	/**
 	 * Creates a Sphere from the given {@link Circle}.
-	 * 
+	 *
 	 * @param circle
 	 */
 	public Sphere(Circle circle) {
@@ -76,7 +76,7 @@ public class Sphere implements Shape {
 
 	/**
 	 * Returns the center of the {@link Circle}.
-	 * 
+	 *
 	 * @return will never be {@literal null}.
 	 */
 	public Point getCenter() {
@@ -85,7 +85,7 @@ public class Sphere implements Shape {
 
 	/**
 	 * Returns the radius of the {@link Circle}.
-	 * 
+	 *
 	 * @return
 	 */
 	public Distance getRadius() {
@@ -135,7 +135,7 @@ public class Sphere implements Shape {
 	/**
 	 * Returns the {@link Shape} as a list of usually {@link Double} or {@link List}s of {@link Double}s. Wildcard bound
 	 * to allow implementations to return a more concrete element type.
-	 * 
+	 *
 	 * @return
 	 */
 	public List<? extends Object> asList() {
@@ -144,7 +144,7 @@ public class Sphere implements Shape {
 
 	/**
 	 * Returns the command to be used to create the {@literal $within} criterion.
-	 * 
+	 *
 	 * @return
 	 */
 	public String getCommand() {

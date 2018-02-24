@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.springframework.util.Assert;
 
 /**
  * Value object to abstract Ant paths.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  */
@@ -35,7 +35,7 @@ class AntPath {
 
 	/**
 	 * Creates a new {@link AntPath} from the given path.
-	 * 
+	 *
 	 * @param path must not be {@literal null}.
 	 */
 	public AntPath(String path) {
@@ -47,7 +47,7 @@ class AntPath {
 
 	/**
 	 * Returns whether the path is a pattern.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isPattern() {
@@ -62,7 +62,7 @@ class AntPath {
 
 	/**
 	 * Returns the regular expression equivalent of this Ant path.
-	 * 
+	 *
 	 * @return
 	 */
 	public String toRegex() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
@@ -378,6 +379,65 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Mono<T> findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link Flux}.
+	 *
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param entityClass the domain type used for determining the actual {@link MongoCollection}. Must not be
+	 *          {@literal null}.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	default <T> Flux<T> findDistinct(String field, Class<?> entityClass, Class<T> resultClass) {
+		return findDistinct(new Query(), field, entityClass, resultClass);
+	}
+
+	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link Flux}.
+	 *
+	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param entityClass the domain type used for determining the actual {@link MongoCollection} and mapping the
+	 *          {@link Query} to the domain type fields. Must not be {@literal null}.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	<T> Flux<T> findDistinct(Query query, String field, Class<?> entityClass, Class<T> resultClass);
+
+	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link Flux}.
+	 *
+	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param collectionName the explicit name of the actual {@link MongoCollection}. Must not be {@literal null}.
+	 * @param entityClass the domain type used for mapping the {@link Query} to the domain type fields.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	<T> Flux<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
+			Class<T> resultClass);
+
+	/**
+	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
+	 * returns the results in a {@link Flux}.
+	 *
+	 * @param query filter {@link Query} to restrict search. Must not be {@literal null}.
+	 * @param field the name of the field to inspect for distinct values. Must not be {@literal null}.
+	 * @param collection the explicit name of the actual {@link MongoCollection}. Must not be {@literal null}.
+	 * @param resultClass the result type. Must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	default <T> Flux<T> findDistinct(Query query, String field, String collection, Class<T> resultClass) {
+		return findDistinct(query, field, collection, Object.class, resultClass);
+	}
+
+	/**
 	 * Execute an aggregation operation.
 	 * <p>
 	 * The raw results will be mapped to the given entity class.
@@ -613,8 +673,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -673,8 +733,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -721,8 +781,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
@@ -739,8 +799,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
-	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's
-	 * Type Conversion"</a> for more details.
+	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
@@ -758,8 +818,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" >
-	 * Spring's Type Conversion"</a> for more details.
+	 * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
@@ -776,8 +836,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
-	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's
-	 * Type Conversion"</a> for more details.
+	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
+	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
@@ -1048,6 +1108,50 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @return the {@link Flux} of converted objects.
 	 */
 	<T> Flux<T> tail(Query query, Class<T> entityClass, String collectionName);
+
+	/**
+	 * Subscribe to a MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a> via the reactive
+	 * infrastructure. Use the optional provided {@link Aggregation} to filter events. The stream will not be completed
+	 * unless the {@link org.reactivestreams.Subscription} is {@link Subscription#cancel() canceled}.
+	 * <p />
+	 * The {@link ChangeStreamEvent#getBody()} is mapped to the {@literal resultType} while the
+	 * {@link ChangeStreamEvent#getRaw()} contains the unmodified payload.
+	 * <p />
+	 * Use {@link ChangeStreamOptions} to set arguments like {@link ChangeStreamOptions#getResumeToken() the resumseToken}
+	 * for resuming change streams.
+	 *
+	 * @param filter can be {@literal null}.
+	 * @param resultType must not be {@literal null}.
+	 * @param options must not be {@literal null}.
+	 * @param collectionName must not be {@literal null} nor empty.
+	 * @param <T>
+	 * @return
+	 * @since 2.1
+	 */
+	<T> Flux<ChangeStreamEvent<T>> changeStream(@Nullable Aggregation filter, Class<T> resultType,
+			ChangeStreamOptions options, String collectionName);
+
+	/**
+	 * Subscribe to a MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a> via the reactive
+	 * infrastructure. Use the optional provided aggregation chain to filter events. The stream will not be completed
+	 * unless the {@link org.reactivestreams.Subscription} is {@link Subscription#cancel() canceled}.
+	 * <p />
+	 * The {@link ChangeStreamEvent#getBody()} is mapped to the {@literal resultType} while the
+	 * {@link ChangeStreamEvent#getRaw()} contains the unmodified payload.
+	 * <p />
+	 * Use {@link ChangeStreamOptions} to set arguments like {@link ChangeStreamOptions#getResumeToken() the resumeToken}
+	 * for resuming change streams.
+	 *
+	 * @param filter can be empty, must not be {@literal null}.
+	 * @param resultType must not be {@literal null}.
+	 * @param options must not be {@literal null}.
+	 * @param collectionName must not be {@literal null} nor empty.
+	 * @param <T>
+	 * @return
+	 * @since 2.1
+	 */
+	<T> Flux<ChangeStreamEvent<T>> changeStream(List<Document> filter, Class<T> resultType, ChangeStreamOptions options,
+			String collectionName);
 
 	/**
 	 * Returns the underlying {@link MongoConverter}.

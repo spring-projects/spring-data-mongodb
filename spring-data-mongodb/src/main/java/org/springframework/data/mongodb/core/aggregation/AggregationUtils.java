@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,14 +23,14 @@ import org.springframework.util.Assert;
 
 /**
  * Utility methods for aggregation operation implementations.
- * 
+ *
  * @author Oliver Gierke
  */
 interface AggregationUtils {
 
 	/**
 	 * Converts the given {@link Range} into an array of values.
-	 * 
+	 *
 	 * @param range must not be {@literal null}.
 	 * @return
 	 */

@@ -83,7 +83,7 @@ You can have Spring automatically create a proxy for the interface by using the 
 class ApplicationConfig extends AbstractMongoConfiguration {
 
   @Override
-  public Mongo mongo() throws Exception {
+  public MongoClient mongoClient() throws Exception {
     return new MongoClient();
   }
 

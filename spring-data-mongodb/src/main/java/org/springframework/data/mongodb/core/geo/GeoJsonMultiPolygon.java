@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * {@link GeoJsonMultiPolygon} is defined as a list of {@link GeoJsonPolygon}s.
- * 
+ *
  * @author Christoph Strobl
  * @since 1.7
  */
@@ -36,7 +36,7 @@ public class GeoJsonMultiPolygon implements GeoJson<Iterable<GeoJsonPolygon>> {
 
 	/**
 	 * Creates a new {@link GeoJsonMultiPolygon} for the given {@link GeoJsonPolygon}s.
-	 * 
+	 *
 	 * @param polygons must not be {@literal null}.
 	 */
 	public GeoJsonMultiPolygon(List<GeoJsonPolygon> polygons) {

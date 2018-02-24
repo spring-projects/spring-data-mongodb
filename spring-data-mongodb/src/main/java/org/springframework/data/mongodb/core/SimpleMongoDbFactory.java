@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import com.mongodb.client.MongoDatabase;
 
 /**
  * Factory to create {@link DB} instances from a {@link MongoClient} instance.
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -49,7 +49,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClientURI}.
-	 * 
+	 *
 	 * @param uri must not be {@literal null}.
 	 * @throws UnknownHostException
 	 * @since 1.7
@@ -60,7 +60,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClient}.
-	 * 
+	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null}.
 	 * @since 1.7
@@ -90,7 +90,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Configures the {@link WriteConcern} to be used on the {@link DB} instance being created.
-	 * 
+	 *
 	 * @param writeConcern the writeConcern to set
 	 */
 	public void setWriteConcern(WriteConcern writeConcern) {
@@ -124,7 +124,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Clean up the Mongo instance if it was created by the factory itself.
-	 * 
+	 *
 	 * @see DisposableBean#destroy()
 	 */
 	public void destroy() throws Exception {
@@ -133,7 +133,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 		}
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.MongoDbFactory#getExceptionTranslator()
 	 */

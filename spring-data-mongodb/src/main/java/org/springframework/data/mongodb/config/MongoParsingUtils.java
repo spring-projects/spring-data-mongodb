@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.w3c.dom.Element;
 
 /**
  * Utility methods for {@link BeanDefinitionParser} implementations for MongoDB.
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -43,7 +43,7 @@ abstract class MongoParsingUtils {
 
 	/**
 	 * Parses the mongo replica-set element.
-	 * 
+	 *
 	 * @param parserContext the parser context
 	 * @param element the mongo element
 	 * @param mongoBuilder the bean definition builder to populate
@@ -56,7 +56,7 @@ abstract class MongoParsingUtils {
 	/**
 	 * Parses the {@code mongo:client-options} sub-element. Populates the given attribute factory with the proper
 	 * attributes.
-	 * 
+	 *
 	 * @param element must not be {@literal null}.
 	 * @param mongoClientBuilder must not be {@literal null}.
 	 * @return
@@ -102,7 +102,7 @@ abstract class MongoParsingUtils {
 	/**
 	 * Returns the {@link BeanDefinitionBuilder} to build a {@link BeanDefinition} for a
 	 * {@link WriteConcernPropertyEditor}.
-	 * 
+	 *
 	 * @return
 	 */
 	static BeanDefinitionBuilder getWriteConcernPropertyEditorBuilder() {
@@ -135,7 +135,7 @@ abstract class MongoParsingUtils {
 	/**
 	 * Returns the {@link BeanDefinitionBuilder} to build a {@link BeanDefinition} for a
 	 * {@link ReadPreferencePropertyEditor}.
-	 * 
+	 *
 	 * @return
 	 * @since 1.7
 	 */
@@ -153,7 +153,7 @@ abstract class MongoParsingUtils {
 	/**
 	 * Returns the {@link BeanDefinitionBuilder} to build a {@link BeanDefinition} for a
 	 * {@link MongoCredentialPropertyEditor}.
-	 * 
+	 *
 	 * @return
 	 * @since 1.7
 	 */
