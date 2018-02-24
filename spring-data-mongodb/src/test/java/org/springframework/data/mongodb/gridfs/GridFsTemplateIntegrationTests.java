@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.assertj.core.api.Assertions;
 import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -237,8 +236,8 @@ public class GridFsTemplateIntegrationTests {
 		GridFSFile file = operations.findOne(query(whereMetaData("key").is("value")));
 		GridFsResource result = operations.getResource(file);
 
-		assertThat(result.contentLength(), is(resource.contentLength()));
-		assertThat(((BsonObjectId) result.getId()).getValue(), is(reference));
+		assertThat(result.contentLength()).isEqualTo(resource.contentLength());
+		assertThat(((BsonObjectId) result.getId()).getValue()).isEqualTo(reference);
 	}
 
 	class Metadata {
