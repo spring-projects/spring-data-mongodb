@@ -400,6 +400,17 @@ public class Aggregation {
 	public static SkipOperation skip(long elementsToSkip) {
 		return new SkipOperation(elementsToSkip);
 	}
+	
+	/**
+	 * Creates a new {@link AddFieldsOperation} adding the expressions to the fields.
+	 *
+	 * @param field must not be null.
+	 * @param value must not be null.
+	 * @return
+	 */
+	public static AddFieldsOperation addFields(String field, Object value) {
+		return new AddFieldsOperation(field, value);
+	}
 
 	/**
 	 * Creates a new {@link LimitOperation} limiting the result to the given number of elements.
