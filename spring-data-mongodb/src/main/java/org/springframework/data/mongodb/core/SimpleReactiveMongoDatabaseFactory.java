@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import reactor.core.publisher.Mono;
+
 import java.net.UnknownHostException;
 
 import org.springframework.beans.factory.DisposableBean;
@@ -24,11 +26,13 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
 import com.mongodb.WriteConcern;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.session.ClientSession;
 
 /**
  * Factory to create {@link MongoDatabase} instances from a {@link MongoClient} instance.
@@ -120,6 +124,11 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 		if (mongoInstanceCreated) {
 			mongo.close();
 		}
+	}
+
+	@Override
+	public Mono<ClientSession> getSession(ClientSessionOptions options) {
+		return Mono.from(mongo.startSession(options));
 	}
 
 	/*

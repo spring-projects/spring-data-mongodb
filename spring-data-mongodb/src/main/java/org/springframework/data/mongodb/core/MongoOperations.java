@@ -157,24 +157,6 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T execute(String collectionName, CollectionCallback<T> action);
 
 	/**
-	 * Obtain a session bound instance of {@link SessionScoped} binding the {@link ClientSession} provided by the given
-	 * {@link Supplier} to each and every command issued against MongoDB.
-	 * <p />
-	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use
-	 * {@link #withSession(Supplier, Consumer)} to provide a hook for processing the {@link ClientSession} when done.
-	 *
-	 * @param sessionProvider must not be {@literal null}.
-	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
-	 * @since 2.1
-	 */
-	default SessionScoped withSession(Supplier<ClientSession> sessionProvider) {
-
-		Assert.notNull(sessionProvider, "SessionProvider must not be null!");
-
-		return withSession(sessionProvider, session -> {});
-	}
-
-	/**
 	 * Obtain a session bound instance of {@link SessionScoped} binding a new {@link ClientSession} with given
 	 * {@literal sessionOptions} to each and every command issued against MongoDB.
 	 *
@@ -188,15 +170,13 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Obtain a session bound instance of {@link SessionScoped} binding the {@link ClientSession} provided by the given
 	 * {@link Supplier} to each and every command issued against MongoDB.
 	 * <p />
-	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
-	 * {@litera onComplete} hook to potentially close the {@link ClientSession}.
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
 	 *
 	 * @param sessionProvider must not be {@literal null}.
 	 * @param onComplete a simple hook called when done .Must not be {@literal null}.
-	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
 	 * @since 2.1
 	 */
-	SessionScoped withSession(Supplier<ClientSession> sessionProvider, Consumer<ClientSession> onComplete);
+	SessionScoped withSession(Supplier<ClientSession> sessionProvider);
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB

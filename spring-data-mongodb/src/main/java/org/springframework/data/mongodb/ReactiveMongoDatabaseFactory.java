@@ -16,12 +16,15 @@
 
 package org.springframework.data.mongodb;
 
+import com.mongodb.ClientSessionOptions;
+import com.mongodb.session.ClientSession;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
 import com.mongodb.reactivestreams.client.MongoDatabase;
+import reactor.core.publisher.Mono;
 
 /**
  * Interface for factories creating reactive {@link MongoDatabase} instances.
@@ -65,4 +68,13 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	default CodecRegistry getCodecRegistry() {
 		return getMongoDatabase().getCodecRegistry();
 	}
+
+	/**
+	 * Obtain a {@link ClientSession} for given ClientSessionOptions.
+	 *
+	 * @param options must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	Mono<ClientSession> getSession(ClientSessionOptions options);
 }

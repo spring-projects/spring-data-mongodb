@@ -115,7 +115,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
-		this.template = new SessionBoundMongoTemplate(clientSession, factory, converter);
+		this.template = new SessionBoundMongoTemplate(clientSession, new MongoTemplate(factory, converter));
 	}
 
 	@Test // DATAMONGO-1880
@@ -336,7 +336,6 @@ public class SessionBoundMongoTemplateUnitTests {
 		bulkOps.execute();
 
 		verify(collection).bulkWrite(eq(clientSession), anyList(), any());
-
 	}
 
 	@Test // DATAMONGO-1880

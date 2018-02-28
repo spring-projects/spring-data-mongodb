@@ -24,7 +24,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -32,8 +31,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
@@ -127,7 +124,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -268,6 +264,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 			}
 		}
+	}
+
+	private MongoTemplate(MongoTemplate that) {
+
+		this.mongoDbFactory = that.mongoDbFactory;
+		this.exceptionTranslator = that.exceptionTranslator;
+		this.mongoConverter = that.mongoConverter;
+		this.queryMapper = that.queryMapper;
+		this.updateMapper = that.updateMapper;
+		this.schemaMapper = that.schemaMapper;
+		this.projectionFactory = that.projectionFactory;
+
+		this.mappingContext = that.mappingContext;
 	}
 
 	/**
@@ -558,26 +567,26 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public SessionScoped withSession(ClientSessionOptions options) {
-		return withSession(() -> mongoDbFactory.getSession(options), ClientSession::close);
+		return withSession(() -> mongoDbFactory.getSession(options));
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#withSession(java.util.function.Supplier, java.util.function.Consumer)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#withSession(java.util.function.Supplier)
 	 */
 	@Override
-	public SessionScoped withSession(Supplier<ClientSession> sessionProvider, Consumer<ClientSession> onClose) {
+	public SessionScoped withSession(Supplier<ClientSession> sessionProvider) {
 
 		return new SessionScoped() {
 
 			@Override
-			public <T> T execute(SessionCallback<T> action) {
+			public <T> T execute(SessionCallback<T> action, Consumer<ClientSession> onComplete) {
 
 				ClientSession session = sessionProvider.get();
 				try {
 					return action.doInSession(new SessionBoundMongoTemplate(session, MongoTemplate.this));
 				} finally {
-					onClose.accept(session);
+					onComplete.accept(session);
 				}
 			}
 		};
@@ -3443,16 +3452,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 * @param mongoConverter must not be {@literal null}.
 		 */
 		SessionBoundMongoTemplate(ClientSession session, MongoTemplate that) {
-			this(session, that.getMongoDbFactory(), that.getConverter());
-		}
 
-		/**
-		 * @param session must not be {@literal null}.
-		 * @param mongoDbFactory must not be {@literal null}.
-		 * @param mongoConverter must not be {@literal null}.
-		 */
-		SessionBoundMongoTemplate(ClientSession session, MongoDbFactory dbFactory, MongoConverter converter) {
-			super(dbFactory, converter);
+			super(that);
 
 			Assert.notNull(session, "Session must not be null!");
 			this.session = session;
@@ -3492,68 +3493,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			factory.addAdvice(new SessionAwareMethodInterceptor(session, database, MongoDatabase.class));
 
 			return (MongoDatabase) factory.getProxy();
-		}
-	}
-
-	/**
-	 * {@link MethodInterceptor} implementation looking up and invoking an alternative target method having
-	 * {@link ClientSession} as its first argument. This allows seamless integration with the existing code base.
-	 * 
-	 * @since 2.1
-	 */
-	static class SessionAwareMethodInterceptor implements MethodInterceptor {
-
-		private final ClientSession session;
-		private final Object target;
-		private final Class<?> targetType;
-
-		public <T> SessionAwareMethodInterceptor(ClientSession session, T target, @Nullable Class<? super T> targetType) {
-
-			this.session = session;
-			this.target = target;
-			this.targetType = ClassUtils.getUserClass(targetType == null ? target.getClass() : targetType);
-		}
-
-		@Override
-		public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-
-			if (!requiresSession(methodInvocation)) {
-				return methodInvocation.proceed();
-			}
-
-			Method targetMethod = findTargetWithSession(methodInvocation.getMethod());
-			return targetMethod == null ? methodInvocation.proceed()
-					: ReflectionUtils.invokeMethod(targetMethod, target, prependSessionToArguments(methodInvocation));
-		}
-
-		private boolean requiresSession(MethodInvocation methodInvocation) {
-
-			if (ObjectUtils.isEmpty(methodInvocation.getMethod().getParameterTypes())
-					|| !ClassUtils.isAssignable(ClientSession.class, methodInvocation.getMethod().getParameterTypes()[0])) {
-				return true;
-			}
-
-			return false;
-		}
-
-		private Method findTargetWithSession(Method sourceMethod) {
-
-			// TODO: should we be smart and pre identify methods so we do not have to look them up each time? - Think about it
-
-			Class<?>[] argTypes = sourceMethod.getParameterTypes();
-			Class<?>[] args = new Class<?>[argTypes.length + 1];
-			args[0] = ClientSession.class;
-			System.arraycopy(argTypes, 0, args, 1, argTypes.length);
-
-			return ReflectionUtils.findMethod(targetType, sourceMethod.getName(), args);
-		}
-
-		private Object[] prependSessionToArguments(MethodInvocation invocation) {
-
-			Object[] args = new Object[invocation.getArguments().length + 1];
-			args[0] = session;
-			System.arraycopy(invocation.getArguments(), 0, args, 1, invocation.getArguments().length);
-			return args;
 		}
 	}
 }

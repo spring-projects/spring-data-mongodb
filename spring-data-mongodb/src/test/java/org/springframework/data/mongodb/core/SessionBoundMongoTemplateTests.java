@@ -76,7 +76,7 @@ public class SessionBoundMongoTemplateTests {
 
 		session = client.startSession(ClientSessionOptions.builder().build());
 
-		this.template = new SessionBoundMongoTemplate(session, factory, getDefaultMongoConverter(factory)) {
+		this.template = new SessionBoundMongoTemplate(session, new MongoTemplate(factory, getDefaultMongoConverter(factory))) {
 
 			@Override
 			protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {

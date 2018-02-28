@@ -20,6 +20,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
@@ -37,11 +39,14 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.session.ClientSession;
 
 /**
  * Interface that specifies a basic set of MongoDB operations executed in a reactive way.
@@ -140,6 +145,47 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @return a result object returned by the action or {@literal null}.
 	 */
 	<T> Flux<T> execute(String collectionName, ReactiveCollectionCallback<T> action);
+
+	/**
+	 * Obtain a session bound instance of {@link SessionScoped} binding the {@link ClientSession} provided by the given
+	 * {@link Supplier} to each and every command issued against MongoDB.
+	 * <p />
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use
+	 * {@link #withSession(Supplier, Consumer)} to provide a hook for processing the {@link ClientSession} when done.
+	 *
+	 * @param sessionProvider must not be {@literal null}.
+	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
+	 * @since 2.1
+	 */
+	default ReactiveSessionScoped withSession(Supplier<ClientSession> sessionProvider) {
+
+		Assert.notNull(sessionProvider, "SessionProvider must not be null!");
+
+		return withSession(Mono.fromSupplier(sessionProvider));
+	}
+
+	/**
+	 * Obtain a session bound instance of {@link SessionScoped} binding a new {@link ClientSession} with given
+	 * {@literal sessionOptions} to each and every command issued against MongoDB.
+	 *
+	 * @param sessionOptions must not be {@literal null}.
+	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
+	 * @since 2.1
+	 */
+	ReactiveSessionScoped withSession(ClientSessionOptions sessionOptions);
+
+	/**
+	 * Obtain a session bound instance of {@link SessionScoped} binding the {@link ClientSession} provided by the given
+	 * {@link Supplier} to each and every command issued against MongoDB.
+	 * <p />
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
+	 * {@litera onComplete} hook to potentially close the {@link ClientSession}.
+	 *
+	 * @param sessionProvider must not be {@literal null}.
+	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
+	 * @since 2.1
+	 */
+	ReactiveSessionScoped withSession(Publisher<ClientSession> sessionProvider);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.

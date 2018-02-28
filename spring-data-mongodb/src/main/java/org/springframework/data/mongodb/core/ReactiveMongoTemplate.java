@@ -26,6 +26,7 @@ import reactor.util.function.Tuple2;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,7 @@ import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -105,6 +107,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.CursorType;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -113,6 +116,7 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.Filters;
@@ -132,6 +136,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.Success;
+import com.mongodb.session.ClientSession;
 import com.mongodb.util.JSONParseException;
 
 /**
@@ -234,6 +239,19 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 			}
 		}
+	}
+
+	private ReactiveMongoTemplate(ReactiveMongoTemplate that) {
+
+		this.mongoDatabaseFactory = that.mongoDatabaseFactory;
+		this.exceptionTranslator = that.exceptionTranslator;
+		this.mongoConverter = that.mongoConverter;
+		this.queryMapper = that.queryMapper;
+		this.updateMapper = that.updateMapper;
+		this.schemaMapper = that.schemaMapper;
+		this.projectionFactory = that.projectionFactory;
+
+		this.mappingContext = that.mappingContext;
 	}
 
 	/**
@@ -406,6 +424,36 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return createFlux(collectionName, callback);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#withSession(org.reactivestreams.Publisher, java.util.function.Consumer)
+	 */
+	@Override
+	public ReactiveSessionScoped withSession(Publisher<ClientSession> sessionProvider) {
+
+		return new ReactiveSessionScoped() {
+
+			@Override
+			public <T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
+
+				return Mono.from(sessionProvider).flatMapMany(session -> {
+					return Flux
+							.from(action.doInSession(new ReactiveSessionBoundMongoTemplate(session, ReactiveMongoTemplate.this)))
+							.doFinally((signalType) -> doFinally.accept(session));
+				});
+			}
+		};
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#withSession(com.mongodb.ClientSessionOptions)
+	 */
+	@Override
+	public ReactiveSessionScoped withSession(ClientSessionOptions sessionOptions) {
+		return withSession(mongoDatabaseFactory.getSession(sessionOptions));
+	}
+
 	/**
 	 * Create a reusable Flux for a {@link ReactiveDatabaseCallback}. It's up to the developer to choose to obtain a new
 	 * {@link Flux} or to reuse the {@link Flux}.
@@ -417,7 +465,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Flux.defer(() -> callback.doInDB(getMongoDatabase())).onErrorMap(translateException());
+		return Flux.defer(() -> callback.doInDB(prepareDatabase(getMongoDatabase()))).onErrorMap(translateException());
 	}
 
 	/**
@@ -431,7 +479,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Mono.defer(() -> Mono.from(callback.doInDB(getMongoDatabase()))).onErrorMap(translateException());
+		return Mono.defer(() -> Mono.from(callback.doInDB(prepareDatabase(getMongoDatabase()))))
+				.onErrorMap(translateException());
 	}
 
 	/**
@@ -548,7 +597,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public Mono<Void> dropCollection(final String collectionName) {
 
-		return createMono(db -> db.getCollection(collectionName).drop()).doOnSuccess(success -> {
+		return createMono(collectionName, collection -> collection.drop()).doOnSuccess(success -> {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Dropped collection [" + collectionName + "]");
 			}
@@ -619,7 +668,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return createFlux(collectionName, collection -> {
 
 			Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
-			FindPublisher<Document> findPublisher = collection.find(mappedQuery).projection(new Document("_id", 1));
+			FindPublisher<Document> findPublisher = collection.find(mappedQuery, Document.class)
+					.projection(new Document("_id", 1));
 
 			findPublisher = query.getCollation().map(Collation::toMongoCollation).map(findPublisher::collation)
 					.orElse(findPublisher);
@@ -821,8 +871,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline,
 			AggregationOptions options, ReadDocumentCallback<O> readCallback) {
 
-		AggregatePublisher<Document> cursor = collection.aggregate(pipeline).allowDiskUse(options.isAllowDiskUse())
-				.useCursor(true);
+		AggregatePublisher<Document> cursor = collection.aggregate(pipeline, Document.class)
+				.allowDiskUse(options.isAllowDiskUse()).useCursor(true);
 
 		if (options.getCollation().isPresent()) {
 			cursor = cursor.collation(options.getCollation().map(Collation::toMongoCollation).get());
@@ -988,7 +1038,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					: queryMapper.getMappedObject(query.getQueryObject(),
 							entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
 
-			return collection.count(Document);
+			CountOptions options = new CountOptions();
+			if (query != null) {
+				query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
+			}
+
+			return collection.count(Document, options);
 		});
 	}
 
@@ -2197,7 +2252,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private MongoCollection<Document> getAndPrepareCollection(MongoDatabase db, String collectionName) {
 
 		try {
-			MongoCollection<Document> collection = db.getCollection(collectionName);
+			MongoCollection<Document> collection = db.getCollection(collectionName, Document.class);
 			return prepareCollection(collection);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -2233,6 +2288,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return collection.withReadPreference(readPreference);
 		}
 		return collection;
+	}
+
+	/**
+	 * @param database
+	 * @return
+	 * @since 2.1
+	 */
+	protected MongoDatabase prepareDatabase(MongoDatabase database) {
+		return database;
 	}
 
 	/**
@@ -2484,7 +2548,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		public Publisher<Document> doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
 
-			FindPublisher<Document> publisher = collection.find(query);
+			FindPublisher<Document> publisher = collection.find(query, Document.class);
 
 			if (LOGGER.isDebugEnabled()) {
 
@@ -2526,13 +2590,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		public FindPublisher<Document> doInCollection(MongoCollection<Document> collection) {
 
 			FindPublisher<Document> findPublisher;
-			if (query == null || query.isEmpty()) {
-				findPublisher = collection.find();
+			if (ObjectUtils.isEmpty(query)) {
+				findPublisher = collection.find(Document.class);
 			} else {
-				findPublisher = collection.find(query);
+				findPublisher = collection.find(query, Document.class);
 			}
 
-			if (fields == null || fields.isEmpty()) {
+			if (ObjectUtils.isEmpty(fields)) {
 				return findPublisher;
 			} else {
 				return findPublisher.projection(fields);
@@ -2891,6 +2955,68 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		@Override
 		public List<Document> bulkFetch(List<DBRef> dbRefs) {
 			return Collections.emptyList();
+		}
+	}
+
+	/**
+	 * {@link MongoTemplate} extension bound to a specific {@link ClientSession} that is applied when interacting with the
+	 * server through the driver API.
+	 * <p />
+	 * The prepare steps for {@link MongoDatabase} and {@link MongoCollection} proxy the target and invoke the desired
+	 * target method matching the actual arguments plus a {@link ClientSession}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	static class ReactiveSessionBoundMongoTemplate extends ReactiveMongoTemplate {
+
+		private final ClientSession session;
+
+		/**
+		 * @param session must not be {@literal null}.
+		 * @param mongoDbFactory must not be {@literal null}.
+		 * @param mongoConverter must not be {@literal null}.
+		 */
+		ReactiveSessionBoundMongoTemplate(ClientSession session, ReactiveMongoTemplate that) {
+
+			super(that);
+			this.session = session;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#prepareCollection(MongoCollection)
+		 */
+		@Override
+		protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {
+
+			MongoCollection preparedCollection = super.prepareCollection(collection);
+
+			ProxyFactory factory = new ProxyFactory();
+			factory.setTarget(preparedCollection);
+			factory.setInterfaces(MongoCollection.class);
+			factory.setOpaque(true);
+
+			factory.addAdvice(new SessionAwareMethodInterceptor(session, preparedCollection, MongoCollection.class));
+
+			return (MongoCollection) factory.getProxy();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#prepareDatabase(MongoCollection)
+		 */
+		@Override
+		protected MongoDatabase prepareDatabase(MongoDatabase database) {
+
+			ProxyFactory factory = new ProxyFactory();
+			factory.setTarget(database);
+			factory.setInterfaces(MongoDatabase.class);
+			factory.setOpaque(true);
+
+			factory.addAdvice(new SessionAwareMethodInterceptor(session, database, MongoDatabase.class));
+
+			return (MongoDatabase) factory.getProxy();
 		}
 	}
 }

@@ -59,8 +59,8 @@ public class ReactiveAggregationUnitTests {
 		template = new ReactiveMongoTemplate(factory);
 
 		when(mongoClient.getDatabase("db")).thenReturn(db);
-		when(db.getCollection(INPUT_COLLECTION)).thenReturn(collection);
-		when(collection.aggregate(any())).thenReturn(publisher);
+		when(db.getCollection(eq(INPUT_COLLECTION), any(Class.class))).thenReturn(collection);
+		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(publisher);
 		when(publisher.allowDiskUse(any())).thenReturn(publisher);
 		when(publisher.useCursor(any())).thenReturn(publisher);
 		when(publisher.collation(any())).thenReturn(publisher);

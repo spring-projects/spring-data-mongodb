@@ -15,22 +15,23 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.function.Consumer;
+import reactor.core.publisher.Flux;
 
-import org.springframework.lang.Nullable;
+import java.util.function.Consumer;
 
 import com.mongodb.session.ClientSession;
 
 /**
- * Gateway interface to execute {@link ClientSession} bound operations against MongoDB via a {@link SessionCallback}.
+ * Gateway interface to execute {@link ClientSession} bound operations against MongoDB via a
+ * {@link ReactiveSessionCallback}.
  *
  * @author Christoph Strobl
  * @since 2.1
  */
-public interface SessionScoped {
+public interface ReactiveSessionScoped {
 
 	/**
-	 * Executes the given {@link SessionCallback} within the {@link com.mongodb.session.ClientSession}
+	 * Executes the given {@link ReactiveSessionCallback} within the {@link com.mongodb.session.ClientSession}
 	 * <p/>
 	 * It is up to the caller to make sure the {@link com.mongodb.session.ClientSession} is {@link ClientSession#close()
 	 * closed} when done.
@@ -39,13 +40,12 @@ public interface SessionScoped {
 	 * @param <T> return type.
 	 * @return a result object returned by the action. Can be {@literal null}.
 	 */
-	@Nullable
-	default <T> T execute(SessionCallback<T> action) {
-		return execute(action, session -> {});
+	default <T> Flux<T> execute(ReactiveSessionCallback<T> action) {
+		return execute(action, (session) -> {});
 	}
 
 	/**
-	 * Executes the given {@link SessionCallback} within the {@link com.mongodb.session.ClientSession}
+	 * Executes the given {@link ReactiveSessionCallback} within the {@link com.mongodb.session.ClientSession}
 	 * <p/>
 	 * It is up to the caller to make sure the {@link com.mongodb.session.ClientSession} is {@link ClientSession#close()
 	 * closed} when done.
@@ -55,6 +55,5 @@ public interface SessionScoped {
 	 * @param <T> return type.
 	 * @return a result object returned by the action. Can be {@literal null}.
 	 */
-	@Nullable
-	<T> T execute(SessionCallback<T> action, Consumer<ClientSession> doFinally);
+	<T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally);
 }

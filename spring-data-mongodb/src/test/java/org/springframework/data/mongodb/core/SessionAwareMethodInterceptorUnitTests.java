@@ -25,7 +25,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.aop.framework.ProxyFactory;
-import org.springframework.data.mongodb.core.MongoTemplate.SessionAwareMethodInterceptor;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
