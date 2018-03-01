@@ -19,8 +19,11 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
+import org.springframework.data.util.Version;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClient;
@@ -30,6 +33,8 @@ import com.mongodb.session.ClientSession;
  * @author Christoph Strobl
  */
 public class ClientSessionTests {
+
+	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 
 	MongoTemplate template;
 	MongoClient client;

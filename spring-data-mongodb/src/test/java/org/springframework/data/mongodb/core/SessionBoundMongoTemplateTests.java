@@ -26,6 +26,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.dao.DataAccessException;
@@ -39,6 +40,8 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
+import org.springframework.data.util.Version;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClient;
@@ -52,6 +55,8 @@ import com.mongodb.session.ClientSession;
  * @author Christoph Strobl
  */
 public class SessionBoundMongoTemplateTests {
+
+	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 
 	SessionBoundMongoTemplate template;
 	ClientSession session;
@@ -76,7 +81,8 @@ public class SessionBoundMongoTemplateTests {
 
 		session = client.startSession(ClientSessionOptions.builder().build());
 
-		this.template = new SessionBoundMongoTemplate(session, new MongoTemplate(factory, getDefaultMongoConverter(factory))) {
+		this.template = new SessionBoundMongoTemplate(session,
+				new MongoTemplate(factory, getDefaultMongoConverter(factory))) {
 
 			@Override
 			protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {
