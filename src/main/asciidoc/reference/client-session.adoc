@@ -1,0 +1,77 @@
+[[mongo.sessions]]
+= MongoDB Sessions
+
+As of version 3.6 MongoDB supports a concept of Sessions. The use of sessions enables MongoDBs https://docs.mongodb.com/manual/core/read-isolation-consistency-recency/#causal-consistency[Causal Consistency] model guaranteeing to execute operations in an order that respect their causal relationships. Those are split into ``ServerSession``s and ``ClientSession``s. In the following when we speak of session we refer to `ClientSession`.
+
+WARNING: Operations within a client session are not isolated from operations outside the session.
+
+Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for tying a `ClientSession` to the operations themselves. Within the callback all operations on `MongoCollection` and `MongoDatabase` are called with the provided session via a `Proxy` without the need to add it manually. This means that a potential call to `MongoCollection#find()` is delegated to `MongoCollection#find(ClientSession)`.
+
+NOTE: Methods like `(Reactive)MongoOperations#getCollection` returning native MongoDB java driver gateway objects, such as `MongoCollection`, that themselves offer dedicated methods for `ClientSession` will *NOT* be wrapped by the `Proxy`. So please make sure to provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not via one of the `#excute` callbacks on `MongoOperations`.
+
+.ClientSession with MongoOperations.
+====
+[source,java]
+----
+ClientSessionOptions sessionOptions = ClientSessionOptions.builder()
+    .causallyConsistent(true)
+    .build();
+
+ClientSession session = client.startSession(sessionOptions); <1>
+
+template.withSession(() -> session)
+    .execute(action -> {
+
+        Query query = query(where("name").is("Durzo Blint"));
+        Person durzo = action.findOne(query, Person.class);  <2>
+
+        Person azoth = new Person("Kylar Stern");
+        azoth.setMaster(durzo);
+
+        action.insert(azoth);                                <2>
+
+        return azoth;
+    });
+
+session.close()                                              <4>
+----
+<1> Obtain a new session from the server.
+<2> Use `MongoOperation` methods as before. The `ClientSession` gets applied automatically.
+<3> Important! Do not forget to close the session.
+====
+
+The reactive counterpart uses the very same building blocks as the imperative one.
+
+.ClientSession with ReactiveMongoOperations.
+====
+[source,java]
+----
+ClientSessionOptions sessionOptions = ClientSessionOptions.builder()
+    .causallyConsistent(true)
+    .build();
+
+Publisher<ClientSession> session = client.startSession(sessionOptions); <1>
+
+template.withSession(session)
+    .execute(action -> {
+
+        Query query = query(where("name").is("Durzo Blint"));
+        return action.findOne(query, Person.class)
+            .flatMap(durzo -> {
+
+                Person azoth = new Person("Kylar Stern");
+                azoth.setMaster(durzo);
+
+                return action.insert(azoth);                            <2>
+            });
+    }, ClientSession::close)                                            <4>
+    .subscribe();
+----
+<1> Obtain a `Publisher` for new session retrieval.
+<2> Use `MongoOperation` methods as before. The `ClientSession` is obtained and applied automatically.
+<3> Important! Do not forget to close the session.
+====
+
+By using a `Publisher` providing the actual session you can defer session acquisition to the point of actual subscription.
+Still you need to close the session when done in order to not pollute the server with stale sessions. Use the `doFinally` hook on `execute` to call `ClientSession#close()` when you don't need the session any more.
+In case you prefer having more control over the session itself, you can always obtain the `ClientSession` via the driver and provide it via a `Supplier`.

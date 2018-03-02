@@ -9,6 +9,7 @@
 * <<mongo.jsonSchema,`$jsonSchema` support>> for queries and collection creation.
 * <<change-streams, Change Stream support>> for imperative and reactive drivers.
 * Tailable cursors for imperative driver.
+* <<mongo.sessions, MongoDB Session>> support for the imperative and reactive Template API.
 
 [[new-features.2-0-0]]
 == What's new in Spring Data MongoDB 2.0
