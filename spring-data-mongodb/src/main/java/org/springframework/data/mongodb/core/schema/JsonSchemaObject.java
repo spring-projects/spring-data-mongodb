@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NullJs
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.StringJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.TimestampJsonSchemaObject;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
@@ -133,6 +134,15 @@ public interface JsonSchemaObject {
 	 */
 	static DateJsonSchemaObject date() {
 		return new DateJsonSchemaObject();
+	}
+
+	/**
+	 * Create a new {@link JsonSchemaObject} of {@code type : 'timestamp'}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static TimestampJsonSchemaObject timestamp() {
+		return new TimestampJsonSchemaObject();
 	}
 
 	/**
