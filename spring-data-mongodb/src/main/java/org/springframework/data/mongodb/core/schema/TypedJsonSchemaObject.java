@@ -1447,4 +1447,96 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return "Must be null.";
 		}
 	}
+
+	/**
+	 * {@link JsonSchemaObject} implementation of {@code type : 'null'} schema elements.<br />
+	 * Provides programmatic access to schema specifics via a fluent API producing immutable {@link JsonSchemaObject
+	 * schema objects}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	static class DateJsonSchemaObject extends TypedJsonSchemaObject {
+
+		DateJsonSchemaObject() {
+			this(null, false, null);
+		}
+
+		private DateJsonSchemaObject(@Nullable String description, boolean generateDescription,
+				@Nullable Restrictions restrictions) {
+			super(Type.dateType(), description, generateDescription, restrictions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
+		 */
+		@Override
+		public DateJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
+			return new DateJsonSchemaObject(description, generateDescription, restrictions.possibleValues(possibleValues));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
+		 */
+		@Override
+		public DateJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
+			return new DateJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
+		 */
+		@Override
+		public DateJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
+			return new DateJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
+		 */
+		@Override
+		public DateJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
+			return new DateJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
+		 */
+		@Override
+		public DateJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
+			return new DateJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
+		 */
+		@Override
+		public DateJsonSchemaObject description(String description) {
+			return new DateJsonSchemaObject(description, generateDescription, restrictions);
+		}
+
+		/*
+		* (non-Javadoc)
+		* @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
+		*/
+		@Override
+		public DateJsonSchemaObject generatedDescription() {
+			return new DateJsonSchemaObject(description, true, restrictions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
+		 */
+		@Override
+		protected String generateDescription() {
+			return "Must be a date.";
+		}
+	}
 }

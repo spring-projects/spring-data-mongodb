@@ -29,6 +29,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.DateJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NullJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
@@ -123,6 +124,15 @@ public interface JsonSchemaObject {
 	 */
 	static NullJsonSchemaObject nil() {
 		return new NullJsonSchemaObject();
+	}
+
+	/**
+	 * Create a new {@link JsonSchemaObject} of {@code type : 'date'}.
+	 *
+	 * @return never {@literal null}.
+	 */
+	static DateJsonSchemaObject date() {
+		return new DateJsonSchemaObject();
 	}
 
 	/**

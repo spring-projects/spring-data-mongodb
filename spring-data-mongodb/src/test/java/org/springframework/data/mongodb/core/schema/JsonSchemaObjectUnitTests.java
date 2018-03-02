@@ -264,6 +264,17 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	// -----------------
+	// type : 'date'
+	// -----------------
+
+	@Test // DATAMONGO-1877
+	public void dateShouldRenderCorrectly() {
+
+		assertThat(date().generatedDescription().toDocument())
+				.isEqualTo(new Document("bsonType", "date").append("description", "Must be a date."));
+	}
+
+	// -----------------
 	// type : 'any'
 	// -----------------
 

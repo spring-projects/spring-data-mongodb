@@ -19,11 +19,13 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
+import org.springframework.data.mongodb.core.schema.JsonSchemaProperty.JsonSchemaPropertyBuilder;
 
 /**
  * Unit tests for {@link JsonSchemaProperty}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class JsonSchemaPropertyUnitTests {
 
@@ -51,5 +53,10 @@ public class JsonSchemaPropertyUnitTests {
 	public void shouldRenderUntypedCorrectly() {
 		assertThat(JsonSchemaProperty.named("foo").ofType(Type.binaryType()).toDocument()).containsEntry("foo.bsonType",
 				"binData");
+	}
+
+	@Test // DATAMONGO-1877
+	public void shouldRenderDateCorrectly() {
+		assertThat(JsonSchemaProperty.date("foo").toDocument()).containsEntry("foo.bsonType", "date");
 	}
 }
