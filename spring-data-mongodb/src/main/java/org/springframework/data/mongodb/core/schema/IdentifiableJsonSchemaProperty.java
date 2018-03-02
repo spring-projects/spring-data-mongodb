@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NullJs
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.StringJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.TimestampJsonSchemaObject;
 import org.springframework.util.Assert;
 
 /**
@@ -943,19 +944,49 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 
 		/**
 		 * @param description must not be {@literal null}.
-		 * @return new instance of {@link NullJsonSchemaProperty}.
-		 * @see NullJsonSchemaObject#description(String)
+		 * @return new instance of {@link DateJsonSchemaProperty}.
+		 * @see DateJsonSchemaProperty#description(String)
 		 */
 		public DateJsonSchemaProperty description(String description) {
 			return new DateJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
 
 		/**
-		 * @return new instance of {@link NullJsonSchemaProperty}.
-		 * @see NullJsonSchemaObject#generateDescription()
+		 * @return new instance of {@link DateJsonSchemaProperty}.
+		 * @see DateJsonSchemaProperty#generateDescription()
 		 */
 		public DateJsonSchemaProperty generatedDescription() {
 			return new DateJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
+		}
+	}
+
+	/**
+	 * Convenience {@link JsonSchemaProperty} implementation for a {@code type : 'timestamp'} property.
+	 *
+	 * @author Mark Paluch
+	 * @since 2.1
+	 */
+	public static class TimestampJsonSchemaProperty extends IdentifiableJsonSchemaProperty<TimestampJsonSchemaObject> {
+
+		TimestampJsonSchemaProperty(String identifier, TimestampJsonSchemaObject schemaObject) {
+			super(identifier, schemaObject);
+		}
+
+		/**
+		 * @param description must not be {@literal null}.
+		 * @return new instance of {@link TimestampJsonSchemaProperty}.
+		 * @see TimestampJsonSchemaProperty#description(String)
+		 */
+		public TimestampJsonSchemaProperty description(String description) {
+			return new TimestampJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
+		}
+
+		/**
+		 * @return new instance of {@link TimestampJsonSchemaProperty}.
+		 * @see TimestampJsonSchemaProperty#generateDescription()
+		 */
+		public TimestampJsonSchemaProperty generatedDescription() {
+			return new TimestampJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
 	}
 }

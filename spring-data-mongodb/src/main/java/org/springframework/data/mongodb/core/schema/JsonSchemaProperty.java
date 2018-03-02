@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProper
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NumericJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.StringJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.TimestampJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.UntypedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
@@ -177,6 +178,17 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 */
 	static DateJsonSchemaProperty date(String identifier) {
 		return new DateJsonSchemaProperty(identifier, JsonSchemaObject.date());
+	}
+
+	/**
+	 * Creates a new {@link TimestampJsonSchemaProperty} with given {@literal identifier} of {@code type : 'timestamp'}.
+	 *
+	 * @param identifier the {@literal property} name or {@literal patternProperty} regex. Must not be {@literal null} nor
+	 *          {@literal empty}.
+	 * @return new instance of {@link TimestampJsonSchemaProperty}.
+	 */
+	static TimestampJsonSchemaProperty timestamp(String identifier) {
+		return new TimestampJsonSchemaProperty(identifier, JsonSchemaObject.timestamp());
 	}
 
 	/**
