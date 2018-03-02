@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.BooleanJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.DateJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NullJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NumericJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
@@ -150,7 +151,7 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 *
 	 * @param identifier the {@literal property} name or {@literal patternProperty} regex. Must not be {@literal null} nor
 	 *          {@literal empty}.
-	 * @return new instance of {@link ArrayJsonSchemaProperty}.
+	 * @return new instance of {@link BooleanJsonSchemaProperty}.
 	 */
 	static BooleanJsonSchemaProperty bool(String identifier) {
 		return new BooleanJsonSchemaProperty(identifier, JsonSchemaObject.bool());
@@ -161,10 +162,21 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 *
 	 * @param identifier the {@literal property} name or {@literal patternProperty} regex. Must not be {@literal null} nor
 	 *          {@literal empty}.
-	 * @return new instance of {@link ArrayJsonSchemaProperty}.
+	 * @return new instance of {@link NullJsonSchemaProperty}.
 	 */
 	static NullJsonSchemaProperty nil(String identifier) {
 		return new NullJsonSchemaProperty(identifier, JsonSchemaObject.nil());
+	}
+
+	/**
+	 * Creates a new {@link DateJsonSchemaProperty} with given {@literal identifier} of {@code type : 'date'}.
+	 *
+	 * @param identifier the {@literal property} name or {@literal patternProperty} regex. Must not be {@literal null} nor
+	 *          {@literal empty}.
+	 * @return new instance of {@link DateJsonSchemaProperty}.
+	 */
+	static DateJsonSchemaProperty date(String identifier) {
+		return new DateJsonSchemaProperty(identifier, JsonSchemaObject.date());
 	}
 
 	/**

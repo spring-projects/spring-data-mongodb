@@ -24,6 +24,7 @@ import org.bson.Document;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.DateJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NullJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
@@ -925,6 +926,36 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 */
 		public NullJsonSchemaProperty generatedDescription() {
 			return new NullJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
+		}
+	}
+
+	/**
+	 * Convenience {@link JsonSchemaProperty} implementation for a {@code type : 'date'} property.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	public static class DateJsonSchemaProperty extends IdentifiableJsonSchemaProperty<DateJsonSchemaObject> {
+
+		DateJsonSchemaProperty(String identifier, DateJsonSchemaObject schemaObject) {
+			super(identifier, schemaObject);
+		}
+
+		/**
+		 * @param description must not be {@literal null}.
+		 * @return new instance of {@link NullJsonSchemaProperty}.
+		 * @see NullJsonSchemaObject#description(String)
+		 */
+		public DateJsonSchemaProperty description(String description) {
+			return new DateJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
+		}
+
+		/**
+		 * @return new instance of {@link NullJsonSchemaProperty}.
+		 * @see NullJsonSchemaObject#generateDescription()
+		 */
+		public DateJsonSchemaProperty generatedDescription() {
+			return new DateJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
 	}
 }
