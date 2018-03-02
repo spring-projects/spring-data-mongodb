@@ -19,7 +19,6 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
-import org.springframework.data.mongodb.core.schema.JsonSchemaProperty.JsonSchemaPropertyBuilder;
 
 /**
  * Unit tests for {@link JsonSchemaProperty}.
@@ -58,5 +57,10 @@ public class JsonSchemaPropertyUnitTests {
 	@Test // DATAMONGO-1877
 	public void shouldRenderDateCorrectly() {
 		assertThat(JsonSchemaProperty.date("foo").toDocument()).containsEntry("foo.bsonType", "date");
+	}
+
+	@Test // DATAMONGO-1877
+	public void shouldRenderTimestampCorrectly() {
+		assertThat(JsonSchemaProperty.timestamp("foo").toDocument()).containsEntry("foo.bsonType", "timestamp");
 	}
 }

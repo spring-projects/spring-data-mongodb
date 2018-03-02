@@ -1449,7 +1449,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	}
 
 	/**
-	 * {@link JsonSchemaObject} implementation of {@code type : 'null'} schema elements.<br />
+	 * {@link JsonSchemaObject} implementation of {@code type : 'date'} schema elements.<br />
 	 * Provides programmatic access to schema specifics via a fluent API producing immutable {@link JsonSchemaObject
 	 * schema objects}.
 	 *
@@ -1537,6 +1537,99 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		@Override
 		protected String generateDescription() {
 			return "Must be a date.";
+		}
+	}
+
+	/**
+	 * {@link JsonSchemaObject} implementation of {@code type : 'timestamp'} schema elements.<br />
+	 * Provides programmatic access to schema specifics via a fluent API producing immutable {@link JsonSchemaObject
+	 * schema objects}.
+	 *
+	 * @author Mark Paluch
+	 * @since 2.1
+	 */
+	static class TimestampJsonSchemaObject extends TypedJsonSchemaObject {
+
+		TimestampJsonSchemaObject() {
+			this(null, false, null);
+		}
+
+		private TimestampJsonSchemaObject(@Nullable String description, boolean generateDescription,
+				@Nullable Restrictions restrictions) {
+			super(Type.timestampType(), description, generateDescription, restrictions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
+		 */
+		@Override
+		public TimestampJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
+			return new TimestampJsonSchemaObject(description, generateDescription,
+					restrictions.possibleValues(possibleValues));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
+		 */
+		@Override
+		public TimestampJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
+			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
+		 */
+		@Override
+		public TimestampJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
+			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
+		 */
+		@Override
+		public TimestampJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
+			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
+		 */
+		@Override
+		public TimestampJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
+			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
+		 */
+		@Override
+		public TimestampJsonSchemaObject description(String description) {
+			return new TimestampJsonSchemaObject(description, generateDescription, restrictions);
+		}
+
+		/*
+		* (non-Javadoc)
+		* @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
+		*/
+		@Override
+		public TimestampJsonSchemaObject generatedDescription() {
+			return new TimestampJsonSchemaObject(description, true, restrictions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
+		 */
+		@Override
+		protected String generateDescription() {
+			return "Must be a timestamp.";
 		}
 	}
 }

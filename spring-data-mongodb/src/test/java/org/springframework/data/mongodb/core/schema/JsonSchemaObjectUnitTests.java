@@ -275,6 +275,17 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	// -----------------
+	// type : 'timestamp'
+	// -----------------
+
+	@Test // DATAMONGO-1877
+	public void timestampShouldRenderCorrectly() {
+
+		assertThat(timestamp().generatedDescription().toDocument())
+				.isEqualTo(new Document("bsonType", "timestamp").append("description", "Must be a timestamp."));
+	}
+
+	// -----------------
 	// type : 'any'
 	// -----------------
 
