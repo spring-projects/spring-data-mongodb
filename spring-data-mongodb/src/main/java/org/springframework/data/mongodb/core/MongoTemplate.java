@@ -65,6 +65,7 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -266,11 +267,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	private MongoTemplate(MongoTemplate that) {
+	private MongoTemplate(MongoTemplate that, MongoConverter converter) {
 
 		this.mongoDbFactory = that.mongoDbFactory;
 		this.exceptionTranslator = that.exceptionTranslator;
-		this.mongoConverter = that.mongoConverter;
+		this.mongoConverter = converter;
 		this.queryMapper = that.queryMapper;
 		this.updateMapper = that.updateMapper;
 		this.schemaMapper = that.schemaMapper;
@@ -584,12 +585,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				ClientSession session = sessionProvider.get();
 				try {
-					return action.doInSession(new SessionBoundMongoTemplate(session, MongoTemplate.this));
+					return action.doInSession(MongoTemplate.this.withSession(session));
 				} finally {
 					onComplete.accept(session);
 				}
 			}
 		};
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#withSession(com.mongodb.session.ClientSession)
+	 */
+	@Override
+	public MongoTemplate withSession(ClientSession session) {
+		return new SessionBoundMongoTemplate(session, MongoTemplate.this);
 	}
 
 	/*
@@ -3453,7 +3463,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 */
 		SessionBoundMongoTemplate(ClientSession session, MongoTemplate that) {
 
-			super(that);
+			super(that, that.mongoConverter.withSession(session));
 
 			Assert.notNull(session, "Session must not be null!");
 			this.session = session;

@@ -29,6 +29,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.session.ClientSession;
+import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 
 /**
  * @author Christoph Strobl

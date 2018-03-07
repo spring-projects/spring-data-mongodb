@@ -66,6 +66,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -2933,6 +2934,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	static class NoOpDbRefResolver implements DbRefResolver {
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
+		 */
 		@Override
 		@Nullable
 		public Object resolveDbRef(@Nonnull MongoPersistentProperty property, @Nonnull DBRef dbref,
@@ -2940,6 +2945,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return null;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#created(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.mapping.MongoPersistentEntity, java.lang.Object)
+		 */
 		@Override
 		@Nullable
 		public DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation,
@@ -2947,14 +2956,31 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return null;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#fetch(com.mongodb.DBRef)
+		 */
 		@Override
 		public Document fetch(DBRef dbRef) {
 			return null;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#bulkFetch(java.util.List)
+		 */
 		@Override
 		public List<Document> bulkFetch(List<DBRef> dbRefs) {
 			return Collections.emptyList();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#withSession(com.mongodb.session.ClientSession)
+		 */
+		@Override
+		public DbRefResolver withSession(ClientSession session) {
+			return this;
 		}
 	}
 

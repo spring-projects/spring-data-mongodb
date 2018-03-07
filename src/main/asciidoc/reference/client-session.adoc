@@ -40,6 +40,8 @@ session.close()                                              <4>
 <3> Important! Do not forget to close the session.
 ====
 
+WARNING: When dealing with ``DBRef``s, especially lazily loaded ones, it is essential to **not** close the `ClientSession` before all data is loaded.
+
 The reactive counterpart uses the very same building blocks as the imperative one.
 
 .ClientSession with ReactiveMongoOperations.

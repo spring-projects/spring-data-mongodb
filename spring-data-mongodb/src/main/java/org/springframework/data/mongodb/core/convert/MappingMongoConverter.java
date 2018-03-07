@@ -70,6 +70,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.session.ClientSession;
 
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
@@ -147,8 +148,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	public void setTypeMapper(@Nullable MongoTypeMapper typeMapper) {
 		this.typeMapper = typeMapper == null
-				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext)
-				: typeMapper;
+				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext) : typeMapper;
 	}
 
 	/*
@@ -372,6 +372,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return createDBRef(object, referringProperty);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.MongoConverter#withSession(com.mongodb.session.ClientSession)
+	 */
+	@Override
+	public MappingMongoConverter withSession(ClientSession session) {
+		return new MappingMongoConverter(this.dbRefResolver.withSession(session), mappingContext);
+	}
+
 	/**
 	 * Root entry method into write conversion. Adds a type discriminator to the {@link Document}. Shouldn't be called for
 	 * nested conversions.
@@ -557,8 +566,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
-				? mappingContext.getRequiredPersistentEntity(obj.getClass())
-				: mappingContext.getRequiredPersistentEntity(type);
+				? mappingContext.getRequiredPersistentEntity(obj.getClass()) : mappingContext.getRequiredPersistentEntity(type);
 
 		Object existingValue = accessor.get(prop);
 		Document document = existingValue instanceof Document ? (Document) existingValue : new Document();
@@ -777,8 +785,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return conversions.hasCustomWriteTarget(key.getClass(), String.class)
-				? (String) getPotentiallyConvertedSimpleWrite(key)
-				: key.toString();
+				? (String) getPotentiallyConvertedSimpleWrite(key) : key.toString();
 	}
 
 	/**
@@ -1434,8 +1441,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		List<Document> referencedRawDocuments = dbrefs.size() == 1
-				? Collections.singletonList(readRef(dbrefs.iterator().next()))
-				: bulkReadRefs(dbrefs);
+				? Collections.singletonList(readRef(dbrefs.iterator().next())) : bulkReadRefs(dbrefs);
 		String collectionName = dbrefs.iterator().next().getCollectionName();
 
 		List<T> targeList = new ArrayList<>(dbrefs.size());

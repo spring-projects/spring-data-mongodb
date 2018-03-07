@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb;
 
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
@@ -33,13 +33,13 @@ import com.mongodb.session.ClientSession;
  * 
  * @since 2.1
  */
-class SessionAwareMethodInterceptor implements MethodInterceptor {
+public class SessionAwareMethodInterceptor implements MethodInterceptor {
 
 	private final Supplier<ClientSession> session;
 	private final Object target;
 	private final Class<?> targetType;
 
-	<T> SessionAwareMethodInterceptor(ClientSession session, T target, @Nullable Class<? super T> targetType) {
+	public <T> SessionAwareMethodInterceptor(ClientSession session, T target, @Nullable Class<? super T> targetType) {
 
 		this.session = () -> session;
 		this.target = target;

@@ -15,9 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,9 +30,14 @@ import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.ClientSessionException;
+import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.SessionBoundMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -38,6 +46,7 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
@@ -58,7 +67,10 @@ public class SessionBoundMongoTemplateTests {
 
 	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 
-	SessionBoundMongoTemplate template;
+	public @Rule ExpectedException exception = ExpectedException.none();
+
+	MongoTemplate template;
+	SessionBoundMongoTemplate sessionBoundTemplate;
 	ClientSession session;
 	volatile List<MongoCollection<Document>> spiedCollections = new ArrayList<>();
 	volatile List<MongoDatabase> spiedDatabases = new ArrayList<>();
@@ -81,7 +93,9 @@ public class SessionBoundMongoTemplateTests {
 
 		session = client.startSession(ClientSessionOptions.builder().build());
 
-		this.template = new SessionBoundMongoTemplate(session,
+		this.template = new MongoTemplate(factory);
+
+		this.sessionBoundTemplate = new SessionBoundMongoTemplate(session,
 				new MongoTemplate(factory, getDefaultMongoConverter(factory))) {
 
 			@Override
@@ -102,7 +116,7 @@ public class SessionBoundMongoTemplateTests {
 	@Test // DATAMONGO-1880
 	public void findDelegatesToMethodWithSession() {
 
-		template.find(new Query(), Person.class);
+		sessionBoundTemplate.find(new Query(), Person.class);
 
 		verify(operation(0)).find(eq(session), any(), any());
 	}
@@ -110,7 +124,7 @@ public class SessionBoundMongoTemplateTests {
 	@Test // DATAMONGO-1880
 	public void fluentFindDelegatesToMethodWithSession() {
 
-		template.query(Person.class).all();
+		sessionBoundTemplate.query(Person.class).all();
 
 		verify(operation(0)).find(eq(session), any(), any());
 	}
@@ -118,7 +132,8 @@ public class SessionBoundMongoTemplateTests {
 	@Test // DATAMONGO-1880
 	public void aggregateDelegatesToMethoddWithSession() {
 
-		template.aggregate(Aggregation.newAggregation(Aggregation.project("firstName")), Person.class, Person.class);
+		sessionBoundTemplate.aggregate(Aggregation.newAggregation(Aggregation.project("firstName")), Person.class,
+				Person.class);
 
 		verify(operation(0)).aggregate(eq(session), any(), any());
 	}
@@ -126,9 +141,115 @@ public class SessionBoundMongoTemplateTests {
 	@Test // DATAMONGO-1880
 	public void collectionExistsDelegatesToMethodWithSession() {
 
-		template.collectionExists(Person.class);
+		sessionBoundTemplate.collectionExists(Person.class);
 
 		verify(command(0)).listCollectionNames(eq(session));
+	}
+
+	@Test // DATAMONGO-1880
+	public void shouldLoadDbRefWhenSessionIsActive() {
+
+		Person person = new Person("Kylar Stern");
+
+		template.save(person);
+
+		WithDbRef wdr = new WithDbRef();
+		wdr.id = "id-1";
+		wdr.personRef = person;
+
+		template.save(wdr);
+
+		// fuck
+
+		WithDbRef result = sessionBoundTemplate.findById(wdr.id, WithDbRef.class);
+
+		assertThat(result.personRef).isEqualTo(person);
+	}
+
+	@Test // DATAMONGO-1880
+	public void shouldErrorOnLoadDbRefWhenSessionIsClosed() {
+
+		exception.expect(ClientSessionException.class);
+
+		Person person = new Person("Kylar Stern");
+
+		template.save(person);
+
+		WithDbRef wdr = new WithDbRef();
+		wdr.id = "id-1";
+		wdr.personRef = person;
+
+		template.save(wdr);
+
+		// fuck
+		session.close();
+
+		sessionBoundTemplate.findById(wdr.id, WithDbRef.class);
+	}
+
+	@Test // DATAMONGO-1880
+	public void shouldLoadLazyDbRefWhenSessionIsActive() {
+
+		Person person = new Person("Kylar Stern");
+
+		template.save(person);
+
+		WithLazyDbRef wdr = new WithLazyDbRef();
+		wdr.id = "id-1";
+		wdr.personRef = person;
+
+		template.save(wdr);
+
+		WithLazyDbRef result = sessionBoundTemplate.findById(wdr.id, WithLazyDbRef.class);
+
+		assertThat(result.getPersonRef()).isEqualTo(person);
+	}
+
+	@Test // DATAMONGO-1880
+	public void shouldErrorOnLoadLazyDbRefWhenSessionIsClosed() {
+
+		exception.expect(LazyLoadingException.class);
+		exception.expectMessage("Invalid session state");
+
+		Person person = new Person("Kylar Stern");
+
+		template.save(person);
+
+		WithLazyDbRef wdr = new WithLazyDbRef();
+		wdr.id = "id-1";
+		wdr.personRef = person;
+
+		template.save(wdr);
+
+		// fuck
+		WithLazyDbRef result = null;
+		try {
+			result = sessionBoundTemplate.findById(wdr.id, WithLazyDbRef.class);
+		} catch (Exception e) {
+			fail("Someting went wrong, seems the session was already closed when reading.", e);
+		}
+
+		session.close(); // now close the session
+
+		assertThat(result.getPersonRef()).isEqualTo(person); // resolve the lazy loading proxy
+	}
+
+	@Data
+	static class WithDbRef {
+
+		@Id String id;
+		@DBRef Person personRef;
+	}
+
+	@Data
+	static class WithLazyDbRef {
+
+		@Id String id;
+		@DBRef(lazy = true) Person personRef;
+
+		public Person getPersonRef() {
+			return personRef;
+		}
 	}
 
 	// --> Just some helpers for testing

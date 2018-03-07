@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
+import com.mongodb.session.ClientSession;
 
 /**
  * Used to resolve associations annotated with {@link org.springframework.data.mongodb.core.mapping.DBRef}.
@@ -83,4 +84,15 @@ public interface DbRefResolver {
 	 * @since 1.10
 	 */
 	List<Document> bulkFetch(List<DBRef> dbRefs);
+
+	/**
+	 * Obtain a {@link ClientSession} bound {@link DbRefResolver} instance.
+	 * <p />
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
+	 *
+	 * @param session must not be {@literal null}.
+	 * @return {@link ClientSession} bound {@link DbRefResolver} instance.
+	 * @since 2.1
+	 */
+	DbRefResolver withSession(ClientSession session);
 }

@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.bson.Document;
@@ -41,7 +40,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.Cursor;
@@ -177,6 +175,17 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @since 2.1
 	 */
 	SessionScoped withSession(Supplier<ClientSession> sessionProvider);
+
+	/**
+	 * Obtain a {@link ClientSession} bound instance of MongoOperations.
+	 * <p />
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
+	 *
+	 * @param session must not be {@literal null}.
+	 * @return {@link ClientSession} bound instance of {@link MongoOperations}.
+	 * @since 2.1
+	 */
+	MongoOperations withSession(ClientSession session);
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB

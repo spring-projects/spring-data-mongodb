@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.performance;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import com.mongodb.session.ClientSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -115,6 +116,11 @@ public class ReactivePerformanceTests {
 			@Override
 			public List<Document> bulkFetch(List<DBRef> dbRefs) {
 				return null;
+			}
+
+			@Override
+			public DbRefResolver withSession(ClientSession session) {
+				return this;
 			}
 		}, context);
 		operations = new ReactiveMongoTemplate(mongoDbFactory, converter);

@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.List;
 
+import com.mongodb.session.ClientSession;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.junit.Before;
@@ -91,6 +92,11 @@ public abstract class MongoOperationsUnitTests {
 			@Override
 			public MongoTypeMapper getTypeMapper() {
 				return null;
+			}
+
+			@Override
+			public MongoConverter withSession(ClientSession session) {
+				return this;
 			}
 		};
 	}
