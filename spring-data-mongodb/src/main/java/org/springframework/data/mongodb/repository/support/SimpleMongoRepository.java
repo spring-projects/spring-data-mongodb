@@ -100,7 +100,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		if (allNew) {
 
 			List<S> result = source.stream().collect(Collectors.toList());
-			mongoOperations.insertAll(result);
+			mongoOperations.insert(result, entityInformation.getCollectionName());
 			return result;
 
 		} else {
