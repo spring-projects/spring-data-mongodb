@@ -103,7 +103,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		}
 
 		if (allNew) {
-			mongoOperations.insertAll(result);
+			mongoOperations.insert(result, entityInformation.getCollectionName());
 		} else {
 
 			for (S entity : result) {
