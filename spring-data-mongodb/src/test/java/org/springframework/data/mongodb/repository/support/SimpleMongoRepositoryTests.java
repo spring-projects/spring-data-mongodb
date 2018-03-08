@@ -32,9 +32,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.ExampleMatcher.*;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -363,6 +363,24 @@ public class SimpleMongoRepositoryTests {
 		trimDomainType(sample, "id", "createdAt", "email");
 
 		assertThat(repository.count(Example.of(sample))).isEqualTo(2L);
+	}
+
+	@Test // DATAMONGO-1896
+	public void saveAllUsesEntityCollection() {
+
+		Person first = new PersonExtended();
+		first.setEmail("foo@bar.com");
+		ReflectionTestUtils.setField(first, "id", null);
+
+		Person second = new PersonExtended();
+		second.setEmail("bar@foo.com");
+		ReflectionTestUtils.setField(second, "id", null);
+
+		repository.deleteAll();
+
+		repository.saveAll(Arrays.asList(first, second));
+
+		assertThat(repository.findAll()).containsExactlyInAnyOrder(first, second);
 	}
 
 	private void assertThatAllReferencePersonsWereStoredCorrectly(Map<String, Person> references, List<Person> saved) {
