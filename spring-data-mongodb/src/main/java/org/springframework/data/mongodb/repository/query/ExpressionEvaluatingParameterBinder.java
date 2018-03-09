@@ -236,6 +236,7 @@ class ExpressionEvaluatingParameterBinder {
 	private Object evaluateExpression(String expressionString, MongoParameters parameters, Object[] parameterValues) {
 
 		EvaluationContext evaluationContext = evaluationContextProvider.getEvaluationContext(parameters, parameterValues);
+
 		Expression expression = expressionParser.parseExpression(expressionString);
 
 		return expression.getValue(evaluationContext, Object.class);
