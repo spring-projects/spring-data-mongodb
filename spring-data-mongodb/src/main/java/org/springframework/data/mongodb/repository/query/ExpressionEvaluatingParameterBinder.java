@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +33,7 @@ import javax.xml.bind.DatatypeConverter;
 import org.bson.BSON;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBinding;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider.ParameterContext;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -107,7 +109,7 @@ class ExpressionEvaluatingParameterBinder {
 		}
 
 		if (input.matches("^\\?\\d+$")) {
-			return getParameterValueForBinding(accessor, bindingContext.getParameters(),
+			return getParameterValueForBinding(accessor, bindingContext.getParameterContext(accessor::getValues),
 					bindingContext.getBindings().iterator().next());
 		}
 
@@ -119,7 +121,8 @@ class ExpressionEvaluatingParameterBinder {
 
 			Placeholder placeholder = extractPlaceholder(parameterIndex++, matcher);
 			ParameterBinding binding = bindingContext.getBindingFor(placeholder);
-			String valueForBinding = getParameterValueForBinding(accessor, bindingContext.getParameters(), binding);
+			String valueForBinding = getParameterValueForBinding(accessor,
+					bindingContext.getParameterContext(accessor::getValues), binding);
 
 			// appendReplacement does not like unescaped $ sign and others, so we need to quote that stuff first
 			matcher.appendReplacement(buffer, Matcher.quoteReplacement(valueForBinding));
@@ -190,15 +193,16 @@ class ExpressionEvaluatingParameterBinder {
 	 * Returns the serialized value to be used for the given {@link ParameterBinding}.
 	 *
 	 * @param accessor must not be {@literal null}.
-	 * @param parameters
+	 * @param parameterContext must not be {@literal null}.
 	 * @param binding must not be {@literal null}.
 	 * @return
 	 */
-	private String getParameterValueForBinding(MongoParameterAccessor accessor, MongoParameters parameters,
+	private String getParameterValueForBinding(MongoParameterAccessor accessor,
+			ParameterContext<MongoParameters> parameterContext,
 			ParameterBinding binding) {
 
 		Object value = binding.isExpression()
-				? evaluateExpression(binding.getExpression(), parameters, accessor.getValues())
+				? evaluateExpression(binding.getExpression(), parameterContext)
 				: accessor.getBindableValue(binding.getParameterIndex());
 
 		if (value instanceof String && binding.isQuoted()) {
@@ -228,14 +232,13 @@ class ExpressionEvaluatingParameterBinder {
 	 * Evaluates the given {@code expressionString}.
 	 *
 	 * @param expressionString must not be {@literal null} or empty.
-	 * @param parameters must not be {@literal null}.
-	 * @param parameterValues must not be {@literal null}.
+	 * @param parameterContext must not be {@literal null}.
 	 * @return
 	 */
 	@Nullable
-	private Object evaluateExpression(String expressionString, MongoParameters parameters, Object[] parameterValues) {
+	private Object evaluateExpression(String expressionString, ParameterContext<MongoParameters> parameterContext) {
 
-		EvaluationContext evaluationContext = evaluationContextProvider.getEvaluationContext(parameters, parameterValues);
+		EvaluationContext evaluationContext = evaluationContextProvider.getEvaluationContext(parameterContext);
 
 		Expression expression = expressionParser.parseExpression(expressionString);
 
@@ -324,6 +327,17 @@ class ExpressionEvaluatingParameterBinder {
 
 			this.parameters = parameters;
 			this.bindings = mapBindings(bindings);
+		}
+
+		/**
+		 * Creates a {@link ParameterContext} given {@link Supplier parameter value supplier}.
+		 *
+		 * @param parameterValueSupplier must not be {@literal null}.
+		 * @return
+		 * @since 2.1
+		 */
+		public ParameterContext<MongoParameters> getParameterContext(Supplier<Object[]> parameterValueSupplier) {
+			return ParameterContext.of(getParameters(), parameterValueSupplier);
 		}
 
 		/**

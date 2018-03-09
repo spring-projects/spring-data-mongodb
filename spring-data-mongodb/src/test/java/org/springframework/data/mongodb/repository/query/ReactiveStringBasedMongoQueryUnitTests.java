@@ -22,10 +22,13 @@ import static org.mockito.Mockito.any;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -51,7 +54,9 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
+import org.springframework.data.spel.spi.EvaluationContextExtension;
+import org.springframework.data.spel.spi.SubscriberContextAwareExtension;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
@@ -216,14 +221,34 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
 
+	@Test // DATAMONGO-1894
+	public void shouldApplyContextToQueryMethod() throws Exception {
+
+		Person person = new Person("Walter", "White");
+
+		Context context = Context.of("principal", person);
+
+		ContextualParameterAccessor accessor = new ContextualParameterAccessor(converter, new StubParameterAccessor(),
+				context);
+		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByPrincipal");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'White'}");
+
+		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+	}
+
 	private ReactiveStringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
-		return new ReactiveStringBasedMongoQuery(queryMethod, operations, PARSER,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+
+		ReactiveQueryMethodEvaluationContextProvider provider = new ReactiveQueryMethodEvaluationContextProvider(
+				Collections.singletonList(new ContextEvaluationContextExtension()));
+
+		return new ReactiveStringBasedMongoQuery(queryMethod, operations, PARSER, provider);
 	}
 
 	private interface SampleRepository extends Repository<Person, Long> {
@@ -260,5 +285,48 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 		@Query("{'id':?#{ [0] ? { $exists :true} : [1] }, 'foo':42, 'bar': ?#{ [0] ? { $exists :false} : [1] }}")
 		Flux<Person> findByQueryWithExpressionAndMultipleNestedObjects(boolean param0, String param1, String param2);
+
+		@Query("{'lastname': ?#{ principal?.lastname} }")
+		Flux<Person> findByPrincipal();
+	}
+
+	static class ContextEvaluationContextExtension
+			implements EvaluationContextExtension, SubscriberContextAwareExtension {
+
+		private final Context context;
+
+		public ContextEvaluationContextExtension() {
+			this.context = null;
+		}
+
+		public ContextEvaluationContextExtension(Context context) {
+			this.context = context;
+		}
+
+		@Override
+		public String getExtensionId() {
+			return "contextual";
+		}
+
+		@Override
+		public Map<String, Object> getProperties() {
+
+			if (context == null) {
+				return Collections.emptyMap();
+			}
+
+			return context.stream().filter(it -> it.getKey() instanceof String)
+					.collect(Collectors.toMap(it -> String.class.cast(it.getKey()), Entry::getValue));
+		}
+
+		@Override
+		public Object getRootObject() {
+			return context;
+		}
+
+		@Override
+		public EvaluationContextExtension withSubscriberContext(Context context) {
+			return new ContextEvaluationContextExtension(context);
+		}
 	}
 }

@@ -15,8 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import reactor.util.context.Context;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +30,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.BindingContext;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBinding;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBindingParser;
+import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider.ParameterContext;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider.ReactiveParameterContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 
@@ -84,22 +90,22 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
 
-		this.queryParameterBindings = new ArrayList<ParameterBinding>();
+		this.queryParameterBindings = new ArrayList<>();
 		this.query = BINDING_PARSER.parseAndCollectParameterBindingsFromQueryIntoBindings(query,
 				this.queryParameterBindings);
 
-		this.fieldSpecParameterBindings = new ArrayList<ParameterBinding>();
+		this.fieldSpecParameterBindings = new ArrayList<>();
 		this.fieldSpec = BINDING_PARSER.parseAndCollectParameterBindingsFromQueryIntoBindings(
 				method.getFieldSpecification(), this.fieldSpecParameterBindings);
 
-		this.isCountQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().count() : false;
-		this.isDeleteQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().delete() : false;
+		this.parameterBinder = new ExpressionEvaluatingParameterBinder(expressionParser, evaluationContextProvider);
+
+		this.isCountQuery = method.hasAnnotatedQuery() && method.getQueryAnnotation().count();
+		this.isDeleteQuery = method.hasAnnotatedQuery() && method.getQueryAnnotation().delete();
 
 		if (isCountQuery && isDeleteQuery) {
 			throw new IllegalArgumentException(String.format(COUND_AND_DELETE, method));
 		}
-
-		this.parameterBinder = new ExpressionEvaluatingParameterBinder(expressionParser, evaluationContextProvider);
 	}
 
 	/*
@@ -110,9 +116,9 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
 		String queryString = parameterBinder.bind(this.query, accessor,
-				new BindingContext(getQueryMethod().getParameters(), queryParameterBindings));
+				createBindingContext(accessor, queryParameterBindings));
 		String fieldsString = parameterBinder.bind(this.fieldSpec, accessor,
-				new BindingContext(getQueryMethod().getParameters(), fieldSpecParameterBindings));
+				createBindingContext(accessor, fieldSpecParameterBindings));
 
 		Query query = new BasicQuery(queryString, fieldsString).with(accessor.getSort());
 
@@ -121,6 +127,17 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 		}
 
 		return query;
+	}
+
+	private BindingContext createBindingContext(ParameterAccessor accessor,
+			List<ParameterBinding> queryParameterBindings) {
+
+		if (accessor instanceof ContextualParameterAccessor) {
+			return new ReactiveBindingContext(getQueryMethod().getParameters(), queryParameterBindings,
+					((ContextualParameterAccessor) accessor).getContext());
+		}
+
+		return new BindingContext(getQueryMethod().getParameters(), queryParameterBindings);
 	}
 
 	/*
@@ -148,6 +165,28 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	@Override
 	protected boolean isLimiting() {
 		return false;
+	}
+
+	/**
+	 * Extension to {@link BindingContext} that considers {@link Context subscriber context}.
+	 */
+	private static class ReactiveBindingContext extends BindingContext {
+
+		private final Context context;
+
+		ReactiveBindingContext(MongoParameters parameters, List<ParameterBinding> bindings, Context context) {
+			super(parameters, bindings);
+			this.context = context;
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.BindingContext#getParameterContext(Supplier)
+		 */
+		@Override
+		public ParameterContext<MongoParameters> getParameterContext(Supplier<Object[]> parameterValueSupplier) {
+			return ReactiveParameterContext.of(getParameters(), parameterValueSupplier, context);
+		}
 	}
 
 }

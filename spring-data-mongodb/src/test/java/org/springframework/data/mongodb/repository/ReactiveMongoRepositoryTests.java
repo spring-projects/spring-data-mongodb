@@ -20,16 +20,20 @@ import static org.junit.Assert.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 
 import lombok.NoArgsConstructor;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.context.Context;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,6 +60,9 @@ import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
+import org.springframework.data.spel.spi.EvaluationContextExtension;
+import org.springframework.data.spel.spi.SubscriberContextAwareExtension;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ClassUtils;
@@ -97,7 +104,10 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		factory.setRepositoryBaseClass(SimpleReactiveMongoRepository.class);
 		factory.setBeanClassLoader(classLoader);
 		factory.setBeanFactory(beanFactory);
-		factory.setEvaluationContextProvider(QueryMethodEvaluationContextProvider.DEFAULT);
+
+		ReactiveQueryMethodEvaluationContextProvider provider = new ReactiveQueryMethodEvaluationContextProvider(
+				Collections.singletonList(new ContextEvaluationContextExtension()));
+		factory.setEvaluationContextProvider(provider);
 
 		repository = factory.getRepository(ReactivePersonRepository.class);
 		cappedRepository = factory.getRepository(ReactiveCappedCollectionRepository.class);
@@ -174,10 +184,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	@Test // DATAMONGO-1444
 	public void shouldUseTailableCursor() throws Exception {
 
-		StepVerifier
-				.create(template.dropCollection(Capped.class) //
-						.then(template.createCollection(Capped.class, //
-								CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
+		StepVerifier.create(template.dropCollection(Capped.class) //
+				.then(template.createCollection(Capped.class, //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
@@ -199,10 +208,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	@Test // DATAMONGO-1444
 	public void shouldUseTailableCursorWithProjection() throws Exception {
 
-		StepVerifier
-				.create(template.dropCollection(Capped.class) //
-						.then(template.createCollection(Capped.class, //
-								CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
+		StepVerifier.create(template.dropCollection(Capped.class) //
+				.then(template.createCollection(Capped.class, //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
@@ -246,9 +254,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		dave.setLocation(point);
 		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		StepVerifier
-				.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), //
-						PageRequest.of(0, 10))) //
+		StepVerifier.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), //
+				PageRequest.of(0, 10))) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}
@@ -276,10 +283,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		dave.setLocation(point);
 		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		StepVerifier
-				.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
-						new Distance(2000, Metrics.KILOMETERS), //
-						PageRequest.of(0, 10))) //
+		StepVerifier.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
+				new Distance(2000, Metrics.KILOMETERS), //
+				PageRequest.of(0, 10))) //
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getDistance().getValue(), is(closeTo(1, 1)));
@@ -294,9 +300,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		dave.setLocation(point);
 		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		StepVerifier
-				.create(repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
-						new Distance(2000, Metrics.KILOMETERS))) //
+		StepVerifier.create(repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
+				new Distance(2000, Metrics.KILOMETERS))) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}
@@ -310,6 +315,16 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	@Test // DATAMONGO-1865
 	public void shouldReturnFirstFindFirstWithMoreResults() {
 		StepVerifier.create(repository.findFirstByLastname(dave.getLastname())).expectNextCount(1).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1108
+	public void shouldFindByPrincipalDerivedFromSubscriberContext() {
+
+		Person principal = new Person(dave.getFirstname(), dave.getLastname());
+		Context context = Context.of("principal", principal);
+
+		StepVerifier.create(repository.findFirstByPrincipal().subscriberContext(context)).expectNextCount(1)
+				.verifyComplete();
 	}
 
 	interface ReactivePersonRepository extends ReactiveMongoRepository<Person, String> {
@@ -340,6 +355,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		Flux<Person> findPersonByLocationNear(Point point, Distance maxDistance);
 
 		Mono<Person> findFirstByLastname(String lastname);
+
+		@Query("{ lastname: ?#{ principal?.lastname }, firstname: ?#{ principal?.firstname } }")
+		Mono<Person> findFirstByPrincipal();
 	}
 
 	interface ReactiveCappedCollectionRepository extends Repository<Capped, String> {
@@ -367,5 +385,40 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 	interface CappedProjection {
 		double getRandom();
+	}
+
+	static class ContextEvaluationContextExtension
+			implements EvaluationContextExtension, SubscriberContextAwareExtension {
+
+		private final Context context;
+
+		public ContextEvaluationContextExtension() {
+			this.context = null;
+		}
+
+		public ContextEvaluationContextExtension(Context context) {
+			this.context = context;
+		}
+
+		@Override
+		public String getExtensionId() {
+			return "contextual";
+		}
+
+		@Override
+		public Map<String, Object> getProperties() {
+
+			if (context == null) {
+				return Collections.emptyMap();
+			}
+
+			return context.stream().filter(it -> it.getKey() instanceof String)
+					.collect(Collectors.toMap(it -> String.class.cast(it.getKey()), Entry::getValue));
+		}
+
+		@Override
+		public EvaluationContextExtension withSubscriberContext(Context context) {
+			return new ContextEvaluationContextExtension(context);
+		}
 	}
 }
