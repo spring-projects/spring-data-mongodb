@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.repository.cdi;
 
 /**
  * @author Mark Paluch
  */
-class SamplePersonRepositoryImpl implements SamplePersonRepositoryCustom {
+class SamplePersonFragmentImpl implements SamplePersonFragment {
 
 	@Override
 	public int returnOne() {

@@ -21,4 +21,4 @@ import org.springframework.data.repository.Repository;
 /**
  * @author Mark Paluch
  */
-public interface SamplePersonRepository extends Repository<Person, Long>, SamplePersonRepositoryCustom {}
+public interface SamplePersonRepository extends Repository<Person, Long>, SamplePersonFragment {}
