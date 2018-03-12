@@ -63,11 +63,10 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(javax.enterprise.context.spi.CreationalContext, java.lang.Class)
 	 */
 	@Override
-	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType, Optional<Object> customImplementation) {
+	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
 
 		MongoOperations mongoOperations = getDependencyInstance(operations, MongoOperations.class);
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(mongoOperations);
 
-		return customImplementation.isPresent() ? factory.getRepository(repositoryType, customImplementation.get()) : factory.getRepository(repositoryType);
+		return create(() -> new MongoRepositoryFactory(mongoOperations), repositoryType);
 	}
 }
