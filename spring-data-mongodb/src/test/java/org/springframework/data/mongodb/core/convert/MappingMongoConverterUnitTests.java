@@ -16,8 +16,13 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static java.time.ZoneId.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
@@ -61,6 +66,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -1815,6 +1821,52 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(WithArrayInConstructor.class, source).array, is(nullValue()));
 	}
 
+	@Test // DATAMONGO-1898
+	public void writesInterfaceBackedEnumsToSimpleNameByDefault() {
+
+		org.bson.Document document = new org.bson.Document();
+
+		DocWithInterfacedEnum source = new DocWithInterfacedEnum();
+		source.property = InterfacedEnum.INSTANCE;
+
+		converter.write(source, document);
+
+		assertThat(document) //
+				.hasSize(2) //
+				.hasEntrySatisfying("_class", __ -> {}) //
+				.hasEntrySatisfying("property", value -> InterfacedEnum.INSTANCE.name().equals(value));
+	}
+
+	@Test // DATAMONGO-1898
+	public void rejectsConversionFromStringToEnumBackedInterface() {
+
+		org.bson.Document document = new org.bson.Document("property", InterfacedEnum.INSTANCE.name());
+
+		assertThatExceptionOfType(ConverterNotFoundException.class) //
+				.isThrownBy(() -> converter.read(DocWithInterfacedEnum.class, document));
+	}
+
+	@Test // DATAMONGO-1898
+	public void readsInterfacedEnumIfConverterIsRegistered() {
+
+		org.bson.Document document = new org.bson.Document("property", InterfacedEnum.INSTANCE.name());
+
+		Converter<String, SomeInterface> enumConverter = new Converter<String, SomeInterface>() {
+
+			@Override
+			public SomeInterface convert(String source) {
+				return InterfacedEnum.valueOf(source);
+			}
+		};
+
+		converter.setCustomConversions(new MongoCustomConversions(Arrays.asList(enumConverter)));
+		converter.afterPropertiesSet();
+
+		DocWithInterfacedEnum result = converter.read(DocWithInterfacedEnum.class, document);
+
+		assertThat(result.property).isEqualTo(InterfacedEnum.INSTANCE);
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2171,5 +2223,18 @@ public class MappingMongoConverterUnitTests {
 
 		final String[] array;
 
+	}
+
+	// DATAMONGO-1898
+
+	// DATACMNS-1278
+	static interface SomeInterface {}
+
+	static enum InterfacedEnum implements SomeInterface {
+		INSTANCE;
+	}
+
+	static class DocWithInterfacedEnum {
+		SomeInterface property;
 	}
 }
