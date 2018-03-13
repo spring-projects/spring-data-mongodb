@@ -16,12 +16,15 @@
 package org.springframework.data.mongodb;
 
 import java.lang.reflect.Method;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.core.MethodClassKey;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -34,6 +37,8 @@ import com.mongodb.session.ClientSession;
  * @since 2.1
  */
 public class SessionAwareMethodInterceptor implements MethodInterceptor {
+
+	private static final MethodCache METHOD_CACHE = new MethodCache();
 
 	private final Supplier<ClientSession> session;
 	private final Object target;
@@ -53,7 +58,8 @@ public class SessionAwareMethodInterceptor implements MethodInterceptor {
 			return methodInvocation.proceed();
 		}
 
-		Method targetMethod = findTargetWithSession(methodInvocation.getMethod());
+		Method targetMethod = METHOD_CACHE.lookup(methodInvocation.getMethod(), targetType);
+
 		return targetMethod == null ? methodInvocation.proceed()
 				: ReflectionUtils.invokeMethod(targetMethod, target, prependSessionToArguments(methodInvocation));
 	}
@@ -68,18 +74,6 @@ public class SessionAwareMethodInterceptor implements MethodInterceptor {
 		return false;
 	}
 
-	private Method findTargetWithSession(Method sourceMethod) {
-
-		// TODO: should we be smart and pre identify methods so we do not have to look them up each time? - Think about it
-
-		Class<?>[] argTypes = sourceMethod.getParameterTypes();
-		Class<?>[] args = new Class<?>[argTypes.length + 1];
-		args[0] = ClientSession.class;
-		System.arraycopy(argTypes, 0, args, 1, argTypes.length);
-
-		return ReflectionUtils.findMethod(targetType, sourceMethod.getName(), args);
-	}
-
 	private Object[] prependSessionToArguments(MethodInvocation invocation) {
 
 		Object[] args = new Object[invocation.getArguments().length + 1];
@@ -87,4 +81,51 @@ public class SessionAwareMethodInterceptor implements MethodInterceptor {
 		System.arraycopy(invocation.getArguments(), 0, args, 1, invocation.getArguments().length);
 		return args;
 	}
+
+	/**
+	 * Simple {@link Method} to {@link Method} caching facility for {@link ClientSession} overloaded targets.
+	 *
+	 * @since 2.1
+	 * @author Christoph Strobl
+	 */
+	static class MethodCache {
+
+		private final ConcurrentReferenceHashMap<MethodClassKey, Method> cache = new ConcurrentReferenceHashMap<MethodClassKey, Method>() {
+
+			@Override // TODO: remove when https://jira.spring.io/browse/SPR-16584 is fixed.
+			public Method computeIfAbsent(MethodClassKey key,
+					Function<? super MethodClassKey, ? extends Method> mappingFunction) {
+
+				Method newValue = null;
+
+				boolean containsKey = containsKey(key);
+				if (!containsKey) {
+					newValue = mappingFunction.apply(key);
+				}
+				Method existing = putIfAbsent(key, newValue);
+				return existing != newValue && !containsKey ? newValue : existing;
+			}
+		};
+
+		Method lookup(Method method, Class<?> targetClass) {
+
+			return cache.computeIfAbsent(new MethodClassKey(method, targetClass),
+					val -> findTargetWithSession(method, targetClass));
+		}
+
+		private Method findTargetWithSession(Method sourceMethod, Class<?> targetType) {
+
+			Class<?>[] argTypes = sourceMethod.getParameterTypes();
+			Class<?>[] args = new Class<?>[argTypes.length + 1];
+			args[0] = ClientSession.class;
+			System.arraycopy(argTypes, 0, args, 1, argTypes.length);
+
+			return ReflectionUtils.findMethod(targetType, sourceMethod.getName(), args);
+		}
+
+		boolean contains(Method method, Class<?> targetClass) {
+			return cache.containsKey(new MethodClassKey(method, targetClass));
+		}
+	}
+
 }
