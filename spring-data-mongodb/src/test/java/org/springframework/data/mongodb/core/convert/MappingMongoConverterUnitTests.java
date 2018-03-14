@@ -16,13 +16,8 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static java.time.ZoneId.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
@@ -1144,8 +1139,8 @@ public class MappingMongoConverterUnitTests {
 	@Test // DATAMONGO-592
 	public void recursivelyConvertsSpELReadValue() {
 
-		DBObject input = (DBObject) JSON
-				.parse("{ \"_id\" : { \"$oid\" : \"50ca271c4566a2b08f2d667a\" }, \"_class\" : \"com.recorder.TestRecorder2$ObjectContainer\", \"property\" : { \"property\" : 100 } }");
+		DBObject input = (DBObject) JSON.parse(
+				"{ \"_id\" : { \"$oid\" : \"50ca271c4566a2b08f2d667a\" }, \"_class\" : \"com.recorder.TestRecorder2$ObjectContainer\", \"property\" : { \"property\" : 100 } }");
 
 		converter.read(ObjectContainer.class, input);
 	}
@@ -1434,11 +1429,10 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(dbo, is(notNullValue()));
 		assertThat(dbo.get("circle"), is(instanceOf(DBObject.class)));
-		assertThat(
-				dbo.get("circle"),
-				is((Object) new BasicDBObject("center", new BasicDBObject("x", circle.getCenter().getX()).append("y", circle
-						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
-						radius.getMetric().toString())));
+		assertThat(dbo.get("circle"),
+				is((Object) new BasicDBObject("center",
+						new BasicDBObject("x", circle.getCenter().getX()).append("y", circle.getCenter().getY()))
+								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
 	}
 
 	@Test // DATAMONGO-858
@@ -1469,11 +1463,10 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(dbo, is(notNullValue()));
 		assertThat(dbo.get("sphere"), is(instanceOf(DBObject.class)));
-		assertThat(
-				dbo.get("sphere"),
-				is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere
-						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
-						radius.getMetric().toString())));
+		assertThat(dbo.get("sphere"),
+				is((Object) new BasicDBObject("center",
+						new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
+								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
 	}
 
 	@Test // DATAMONGO-858
@@ -1489,11 +1482,10 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(dbo, is(notNullValue()));
 		assertThat(dbo.get("sphere"), is(instanceOf(DBObject.class)));
-		assertThat(
-				dbo.get("sphere"),
-				is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere
-						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
-						radius.getMetric().toString())));
+		assertThat(dbo.get("sphere"),
+				is((Object) new BasicDBObject("center",
+						new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
+								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
 	}
 
 	@Test // DATAMONGO-858
@@ -1524,11 +1516,10 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(dbo, is(notNullValue()));
 		assertThat(dbo.get("shape"), is(instanceOf(DBObject.class)));
-		assertThat(
-				dbo.get("shape"),
-				is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere
-						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
-						radius.getMetric().toString())));
+		assertThat(dbo.get("shape"),
+				is((Object) new BasicDBObject("center",
+						new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
+								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
 	}
 
 	@Test // DATAMONGO-858
@@ -1563,8 +1554,8 @@ public class MappingMongoConverterUnitTests {
 	@Test // DATAMONGO-976
 	public void shouldIncludeTextScorePropertyWhenReading() {
 
-		ClassWithTextScoreProperty entity = converter
-				.read(ClassWithTextScoreProperty.class, new BasicDBObject("score", 5F));
+		ClassWithTextScoreProperty entity = converter.read(ClassWithTextScoreProperty.class,
+				new BasicDBObject("score", 5F));
 		assertThat(entity.score, equalTo(5F));
 	}
 
@@ -1643,8 +1634,8 @@ public class MappingMongoConverterUnitTests {
 	@Test // DATAMONGO-1050
 	public void readShouldUseExplicitFieldnameForIdPropertyWhenAnnotated() {
 
-		DBObject source = new BasicDBObjectBuilder().add("_id", "rootId")
-				.add("nested", new BasicDBObject("id", "nestedId")).get();
+		DBObject source = new BasicDBObjectBuilder().add("_id", "rootId").add("nested", new BasicDBObject("id", "nestedId"))
+				.get();
 
 		RootForClassWithExplicitlyRenamedIdField sink = converter.read(RootForClassWithExplicitlyRenamedIdField.class,
 				source);
@@ -1734,8 +1725,8 @@ public class MappingMongoConverterUnitTests {
 	public void convertsMapKeyUsingCustomConverterForAndBackwards() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
-		converter.setCustomConversions(new CustomConversions(Arrays.asList(new FooBarEnumToStringConverter(),
-				new StringToFooNumConverter())));
+		converter.setCustomConversions(
+				new CustomConversions(Arrays.asList(new FooBarEnumToStringConverter(), new StringToFooNumConverter())));
 		converter.afterPropertiesSet();
 
 		ClassWithMapUsingEnumAsKey source = new ClassWithMapUsingEnumAsKey();
@@ -1824,32 +1815,33 @@ public class MappingMongoConverterUnitTests {
 	@Test // DATAMONGO-1898
 	public void writesInterfaceBackedEnumsToSimpleNameByDefault() {
 
-		org.bson.Document document = new org.bson.Document();
+		DBObject document = new BasicDBObject();
 
 		DocWithInterfacedEnum source = new DocWithInterfacedEnum();
 		source.property = InterfacedEnum.INSTANCE;
 
 		converter.write(source, document);
 
-		assertThat(document) //
-				.hasSize(2) //
-				.hasEntrySatisfying("_class", __ -> {}) //
-				.hasEntrySatisfying("property", value -> InterfacedEnum.INSTANCE.name().equals(value));
+		assertThat(document.keySet(), hasSize(2));
+		assertThat(document.get("_class"), is(notNullValue()));
+		assertThat(document.get("property"), is((Object) InterfacedEnum.INSTANCE.name()));
 	}
 
 	@Test // DATAMONGO-1898
 	public void rejectsConversionFromStringToEnumBackedInterface() {
 
-		org.bson.Document document = new org.bson.Document("property", InterfacedEnum.INSTANCE.name());
+		DBObject document = new BasicDBObject("property", InterfacedEnum.INSTANCE.name());
 
-		assertThatExceptionOfType(ConverterNotFoundException.class) //
-				.isThrownBy(() -> converter.read(DocWithInterfacedEnum.class, document));
+		exception.expect(ConverterNotFoundException.class);
+
+		converter.read(DocWithInterfacedEnum.class, document);
 	}
 
 	@Test // DATAMONGO-1898
+	@SuppressWarnings("unchecked")
 	public void readsInterfacedEnumIfConverterIsRegistered() {
 
-		org.bson.Document document = new org.bson.Document("property", InterfacedEnum.INSTANCE.name());
+		DBObject document = new BasicDBObject("property", InterfacedEnum.INSTANCE.name());
 
 		Converter<String, SomeInterface> enumConverter = new Converter<String, SomeInterface>() {
 
@@ -1859,12 +1851,12 @@ public class MappingMongoConverterUnitTests {
 			}
 		};
 
-		converter.setCustomConversions(new MongoCustomConversions(Arrays.asList(enumConverter)));
+		converter.setCustomConversions(new CustomConversions(Arrays.asList(enumConverter)));
 		converter.afterPropertiesSet();
 
 		DocWithInterfacedEnum result = converter.read(DocWithInterfacedEnum.class, document);
 
-		assertThat(result.property).isEqualTo(InterfacedEnum.INSTANCE);
+		assertThat(result.property, is((Object) InterfacedEnum.INSTANCE));
 	}
 
 	static class GenericType<T> {
@@ -1888,7 +1880,7 @@ public class MappingMongoConverterUnitTests {
 			@Override
 			void method() {
 
-			}
+		}
 		};
 
 		abstract void method();
@@ -2119,8 +2111,8 @@ public class MappingMongoConverterUnitTests {
 
 	class ClassWithExplicitlyNamedDBRefProperty {
 
-		@Field("explict-name-for-db-ref")//
-		@org.springframework.data.mongodb.core.mapping.DBRef//
+		@Field("explict-name-for-db-ref") //
+		@org.springframework.data.mongodb.core.mapping.DBRef //
 		ClassWithIntId dbRefProperty;
 
 		public ClassWithIntId getDbRefProperty() {
