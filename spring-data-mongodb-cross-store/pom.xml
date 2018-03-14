@@ -16,6 +16,7 @@
 	<properties>
 		<jpa>2.0.0</jpa>
 		<hibernate>3.6.10.Final</hibernate>
+		<project.root>${basedir}/..</project.root>
 	</properties>
 
 	<dependencies>
