@@ -19,6 +19,7 @@
 		<objenesis>1.3</objenesis>
 		<equalsverifier>1.7.8</equalsverifier>
 		<java-module-name>spring.data.mongodb</java-module-name>
+		<project.root>${basedir}/..</project.root>
 	</properties>
 
 	<dependencies>
@@ -145,7 +146,7 @@
 			<version>1.0.1</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.interceptor</groupId>
 			<artifactId>javax.interceptor-api</artifactId>
@@ -288,7 +289,7 @@
 	</dependencies>
 
 	<build>
-	
+
 		<plugins>
 
 			<plugin>
@@ -340,8 +341,8 @@
 					</properties>
 				</configuration>
 			</plugin>
-			
+
 		</plugins>
-		
+
 	</build>
 </project>
