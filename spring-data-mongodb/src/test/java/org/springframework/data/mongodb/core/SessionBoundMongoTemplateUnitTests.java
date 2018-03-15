@@ -22,6 +22,8 @@ import java.lang.reflect.Proxy;
 import java.util.Collections;
 
 import org.bson.Document;
+import org.bson.codecs.BsonValueCodec;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +43,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import com.mongodb.MongoClient;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
@@ -71,9 +74,11 @@ public class SessionBoundMongoTemplateUnitTests {
 
 	SessionBoundMongoTemplate template;
 
-	@Mock MongoDbFactory factory;
+	MongoDbFactory factory;
+
 	@Mock MongoCollection collection;
 	@Mock MongoDatabase database;
+	@Mock MongoClient client;
 	@Mock ClientSession clientSession;
 	@Mock FindIterable findIterable;
 	@Mock MongoIterable mongoIterable;
@@ -81,6 +86,7 @@ public class SessionBoundMongoTemplateUnitTests {
 	@Mock AggregateIterable aggregateIterable;
 	@Mock MapReduceIterable mapReduceIterable;
 	@Mock MongoCursor cursor;
+	@Mock CodecRegistry codecRegistry;
 
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
@@ -88,8 +94,9 @@ public class SessionBoundMongoTemplateUnitTests {
 	@Before
 	public void setUp() {
 
-		when(factory.getDb()).thenReturn(database);
-		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
+		when(client.getDatabase(anyString())).thenReturn(database);
+		when(codecRegistry.get(any(Class.class))).thenReturn(new BsonValueCodec());
+		when(database.getCodecRegistry()).thenReturn(codecRegistry);
 		when(database.getCollection(anyString(), any())).thenReturn(collection);
 		when(database.listCollectionNames(any(ClientSession.class))).thenReturn(mongoIterable);
 		when(collection.find(any(ClientSession.class), any(), any())).thenReturn(findIterable);
@@ -112,6 +119,8 @@ public class SessionBoundMongoTemplateUnitTests {
 		when(mapReduceIterable.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 		when(findIterable.projection(any())).thenReturn(findIterable);
+
+		factory = new SimpleMongoDbFactory(client, "foo");
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);

@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.mockito.Mockito.*;
 
-import com.mongodb.session.ClientSession;
 import org.bson.conversions.Bson;
 import org.junit.Test;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -82,11 +81,6 @@ public class AbstractMongoConverterUnitTests {
 
 		@Override
 		public DBRef toDBRef(Object object, MongoPersistentProperty referingProperty) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public MongoConverter withSession(ClientSession session) {
 			throw new UnsupportedOperationException();
 		}
 	}

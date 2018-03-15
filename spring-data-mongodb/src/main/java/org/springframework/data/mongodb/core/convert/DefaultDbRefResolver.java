@@ -43,7 +43,6 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
@@ -55,7 +54,6 @@ import org.springframework.util.StringUtils;
 import com.mongodb.DBRef;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import com.mongodb.session.ClientSession;
 
 /**
  * A {@link DbRefResolver} that resolves {@link org.springframework.data.mongodb.core.mapping.DBRef}s by delegating to a
@@ -178,15 +176,6 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		return ids.stream() //
 				.flatMap(id -> documentWithId(id, result)) //
 				.collect(Collectors.toList());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#withSession(com.mongodb.session.ClientSession)
-	 */
-	@Override
-	public DbRefResolver withSession(ClientSession session) {
-		return new SessionAwareDBRefResolver(this.mongoDbFactory, session);
 	}
 
 	/**
@@ -511,36 +500,5 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		return (StringUtils.hasText(dbref.getDatabaseName()) ? mongoDbFactory.getDb(dbref.getDatabaseName())
 				: mongoDbFactory.getDb()).getCollection(dbref.getCollectionName(), Document.class);
-	}
-
-	/**
-	 * {@link ClientSession} bound {@link DbRefResolver}.
-	 *
-	 * @since 2.1
-	 * @author Christoph Strobl
-	 */
-	private static class SessionAwareDBRefResolver extends DefaultDbRefResolver {
-
-		private final ClientSession session;
-
-		SessionAwareDBRefResolver(MongoDbFactory delegate, ClientSession session) {
-
-			super(delegate);
-			this.session = session;
-		}
-
-		protected MongoCollection<Document> getCollection(DBRef dbRef) {
-
-			MongoCollection preparedCollection = super.getCollection(dbRef);
-
-			ProxyFactory factory = new ProxyFactory();
-			factory.setTarget(preparedCollection);
-			factory.setInterfaces(MongoCollection.class);
-			factory.setOpaque(true);
-
-			factory.addAdvice(new SessionAwareMethodInterceptor(session, preparedCollection, MongoCollection.class));
-
-			return (MongoCollection) factory.getProxy();
-		}
 	}
 }

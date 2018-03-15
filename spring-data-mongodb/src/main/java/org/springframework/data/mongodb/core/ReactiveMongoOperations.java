@@ -185,7 +185,24 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
 	 * @since 2.1
 	 */
-	ReactiveSessionScoped withSession(Publisher<ClientSession> sessionProvider);
+	default ReactiveSessionScoped withSession(Publisher<ClientSession> sessionProvider) {
+
+		return new ReactiveSessionScoped() {
+
+			private final Mono<ClientSession> cachedSession = Mono.from(sessionProvider).cache();
+
+			@Override
+			public <T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
+
+				return cachedSession.flatMapMany(session -> {
+					return Flux.from(action.doInSession(ReactiveMongoOperations.this.withSession(session)))
+							.doFinally((signalType) -> doFinally.accept(session));
+				});
+			}
+		};
+	}
+
+	ReactiveMongoOperations withSession(ClientSession session);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.

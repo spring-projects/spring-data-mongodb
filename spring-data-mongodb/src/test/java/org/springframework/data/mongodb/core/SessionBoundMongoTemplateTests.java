@@ -22,10 +22,13 @@ import static org.mockito.Mockito.*;
 
 import lombok.Data;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.aopalliance.aop.Advice;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
@@ -34,11 +37,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
+import org.springframework.aop.Advisor;
+import org.springframework.aop.framework.Advised;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.data.mongodb.core.MongoTemplate.SessionBoundMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -51,6 +57,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClient;
@@ -101,9 +108,23 @@ public class SessionBoundMongoTemplateTests {
 			@Override
 			protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {
 
-				MongoCollection<Document> spiedCollection = Mockito.spy(collection);
-				spiedCollections.add(spiedCollection);
-				return super.prepareCollection(spiedCollection);
+				InvocationHandler handler = Proxy.getInvocationHandler(collection);
+
+				Advised advised = (Advised) ReflectionTestUtils.getField(handler, "advised");
+
+				for (Advisor advisor : advised.getAdvisors()) {
+					Advice advice = advisor.getAdvice();
+					if (advice instanceof SessionAwareMethodInterceptor) {
+
+						MongoCollection<Document> spiedCollection = Mockito
+								.spy((MongoCollection<Document>) ReflectionTestUtils.getField(advice, "target"));
+						spiedCollections.add(spiedCollection);
+
+						ReflectionTestUtils.setField(advice, "target", spiedCollection);
+					}
+				}
+
+				return super.prepareCollection(collection);
 			}
 		};
 	}
@@ -159,8 +180,6 @@ public class SessionBoundMongoTemplateTests {
 
 		template.save(wdr);
 
-		// fuck
-
 		WithDbRef result = sessionBoundTemplate.findById(wdr.id, WithDbRef.class);
 
 		assertThat(result.personRef).isEqualTo(person);
@@ -181,7 +200,6 @@ public class SessionBoundMongoTemplateTests {
 
 		template.save(wdr);
 
-		// fuck
 		session.close();
 
 		sessionBoundTemplate.findById(wdr.id, WithDbRef.class);
@@ -221,7 +239,6 @@ public class SessionBoundMongoTemplateTests {
 
 		template.save(wdr);
 
-		// fuck
 		WithLazyDbRef result = null;
 		try {
 			result = sessionBoundTemplate.findById(wdr.id, WithLazyDbRef.class);

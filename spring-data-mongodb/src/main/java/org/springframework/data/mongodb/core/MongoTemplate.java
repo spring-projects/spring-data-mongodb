@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.bson.BsonValue;
@@ -37,7 +35,6 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -65,7 +62,6 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -225,7 +221,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param databaseName must not be {@literal null} or empty.
 	 */
 	public MongoTemplate(MongoClient mongoClient, String databaseName) {
-		this(new SimpleMongoDbFactory(mongoClient, databaseName), null);
+		this(new SimpleMongoDbFactory(mongoClient, databaseName), (MongoConverter) null);
 	}
 
 	/**
@@ -234,7 +230,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param mongoDbFactory must not be {@literal null}.
 	 */
 	public MongoTemplate(MongoDbFactory mongoDbFactory) {
-		this(mongoDbFactory, null);
+		this(mongoDbFactory, (MongoConverter) null);
 	}
 
 	/**
@@ -267,11 +263,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	private MongoTemplate(MongoTemplate that, MongoConverter converter) {
+	private MongoTemplate(MongoDbFactory dbFactory, MongoTemplate that) {
 
-		this.mongoDbFactory = that.mongoDbFactory;
+		this.mongoDbFactory = dbFactory;
 		this.exceptionTranslator = that.exceptionTranslator;
-		this.mongoConverter = converter;
+		this.mongoConverter = that.mongoConverter instanceof MappingMongoConverter ? getDefaultMongoConverter(dbFactory)
+				: that.mongoConverter;
 		this.queryMapper = that.queryMapper;
 		this.updateMapper = that.updateMapper;
 		this.schemaMapper = that.schemaMapper;
@@ -528,7 +525,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(action, "DbCallbackmust not be null!");
 
 		try {
-			MongoDatabase db = prepareDatabase(this.getDb());
+			MongoDatabase db = prepareDatabase(this.getDbInternal());
 			return action.doInDB(db);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -555,7 +552,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(callback, "CollectionCallback must not be null!");
 
 		try {
-			MongoCollection<Document> collection = getAndPrepareCollection(getDb(), collectionName);
+			MongoCollection<Document> collection = getAndPrepareCollection(getDbInternal(), collectionName);
 			return callback.doInCollection(collection);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -569,28 +566,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public SessionScoped withSession(ClientSessionOptions options) {
 		return withSession(() -> mongoDbFactory.getSession(options));
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#withSession(java.util.function.Supplier)
-	 */
-	@Override
-	public SessionScoped withSession(Supplier<ClientSession> sessionProvider) {
-
-		return new SessionScoped() {
-
-			@Override
-			public <T> T execute(SessionCallback<T> action, Consumer<ClientSession> onComplete) {
-
-				ClientSession session = sessionProvider.get();
-				try {
-					return action.doInSession(MongoTemplate.this.withSession(session));
-				} finally {
-					onComplete.accept(session);
-				}
-			}
-		};
 	}
 
 	/*
@@ -1844,7 +1819,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
-		MongoCollection<Document> inputCollection = getAndPrepareCollection(getDb(), inputCollectionName);
+		MongoCollection<Document> inputCollection = getAndPrepareCollection(getDbInternal(), inputCollectionName);
 
 		// MapReduceOp
 		MapReduceIterable<Document> result = inputCollection.mapReduce(mapFunc, reduceFunc, Document.class);
@@ -2277,6 +2252,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	public MongoDatabase getDb() {
+		return getDbInternal();
+	}
+
+	protected MongoDatabase getDbInternal() {
 		return mongoDbFactory.getDb();
 	}
 
@@ -2626,7 +2605,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		try {
 			T result = objectCallback
-					.doWith(collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName)));
+					.doWith(collectionCallback.doInCollection(getAndPrepareCollection(getDbInternal(), collectionName)));
 			return result;
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -2661,7 +2640,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			try {
 
 				FindIterable<Document> iterable = collectionCallback
-						.doInCollection(getAndPrepareCollection(getDb(), collectionName));
+						.doInCollection(getAndPrepareCollection(getDbInternal(), collectionName));
 
 				if (preparer != null) {
 					iterable = preparer.prepare(iterable);
@@ -2697,7 +2676,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			try {
 				FindIterable<Document> iterable = collectionCallback
-						.doInCollection(getAndPrepareCollection(getDb(), collectionName));
+						.doInCollection(getAndPrepareCollection(getDbInternal(), collectionName));
 
 				if (preparer != null) {
 					iterable = preparer.prepare(iterable);
@@ -3454,7 +3433,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	static class SessionBoundMongoTemplate extends MongoTemplate {
 
-		private final ClientSession session;
+		private final MongoTemplate delegate;
 
 		/**
 		 * @param session must not be {@literal null}.
@@ -3463,46 +3442,31 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 */
 		SessionBoundMongoTemplate(ClientSession session, MongoTemplate that) {
 
-			super(that, that.mongoConverter.withSession(session));
+			super(that.getMongoDbFactory().withSession(session), that);
 
-			Assert.notNull(session, "Session must not be null!");
-			this.session = session;
+			this.delegate = that;
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.MongoTemplate#prepareCollection(MongoCollection)
+		 * @see org.springframework.data.mongodb.core.MongoTemplate#getCollection(java.lang.String)
 		 */
 		@Override
-		protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {
+		public MongoCollection<Document> getCollection(String collectionName) {
 
-			MongoCollection preparedCollection = super.prepareCollection(collection);
-
-			ProxyFactory factory = new ProxyFactory();
-			factory.setTarget(preparedCollection);
-			factory.setInterfaces(MongoCollection.class);
-			factory.setOpaque(true);
-
-			factory.addAdvice(new SessionAwareMethodInterceptor(session, preparedCollection, MongoCollection.class));
-
-			return (MongoCollection) factory.getProxy();
+			// native MongoDB objects that offer methods with ClientSession must not be proxied.
+			return delegate.getCollection(collectionName);
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.MongoTemplate#prepareCollection(MongoCollection)
+		 * @see org.springframework.data.mongodb.core.MongoTemplate#getDb()
 		 */
 		@Override
-		protected MongoDatabase prepareDatabase(MongoDatabase database) {
+		public MongoDatabase getDb() {
 
-			ProxyFactory factory = new ProxyFactory();
-			factory.setTarget(database);
-			factory.setInterfaces(MongoDatabase.class);
-			factory.setOpaque(true);
-
-			factory.addAdvice(new SessionAwareMethodInterceptor(session, database, MongoDatabase.class));
-
-			return (MongoDatabase) factory.getProxy();
+			// native MongoDB objects that offer methods with ClientSession must not be proxied.
+			return delegate.getDb();
 		}
 	}
 }

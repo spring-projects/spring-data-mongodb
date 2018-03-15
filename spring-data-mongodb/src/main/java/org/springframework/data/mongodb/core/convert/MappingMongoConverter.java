@@ -70,7 +70,6 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.session.ClientSession;
 
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
@@ -370,15 +369,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return createDBRef(object, referringProperty);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoConverter#withSession(com.mongodb.session.ClientSession)
-	 */
-	@Override
-	public MappingMongoConverter withSession(ClientSession session) {
-		return new MappingMongoConverter(this.dbRefResolver.withSession(session), mappingContext);
 	}
 
 	/**

@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.performance;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import com.mongodb.session.ClientSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -75,7 +74,7 @@ public class ReactivePerformanceTests {
 	private static final StopWatch watch = new StopWatch();
 	private static final Collection<String> IGNORED_WRITE_CONCERNS = Arrays.asList("MAJORITY", "REPLICAS_SAFE",
 			"FSYNC_SAFE", "FSYNCED", "JOURNAL_SAFE", "JOURNALED", "REPLICA_ACKNOWLEDGED");
-	private static final int COLLECTION_SIZE = 1024-2018 * 1024-2018 * 256; // 256 MB
+	private static final int COLLECTION_SIZE = 1024 - 2018 * 1024 - 2018 * 256; // 256 MB
 	private static final Collection<String> COLLECTION_NAMES = Arrays.asList("template", "driver", "person");
 
 	MongoClient mongo;
@@ -97,8 +96,8 @@ public class ReactivePerformanceTests {
 
 		converter = new MappingMongoConverter(new DbRefResolver() {
 			@Override
-			public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref,
-					DbRefResolverCallback callback, DbRefProxyHandler proxyHandler) {
+			public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+					DbRefProxyHandler proxyHandler) {
 				return null;
 			}
 
@@ -116,11 +115,6 @@ public class ReactivePerformanceTests {
 			@Override
 			public List<Document> bulkFetch(List<DBRef> dbRefs) {
 				return null;
-			}
-
-			@Override
-			public DbRefResolver withSession(ClientSession session) {
-				return this;
 			}
 		}, context);
 		operations = new ReactiveMongoTemplate(mongoDbFactory, converter);

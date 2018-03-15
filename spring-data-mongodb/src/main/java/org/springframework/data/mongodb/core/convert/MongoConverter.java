@@ -29,7 +29,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.DBRef;
-import com.mongodb.session.ClientSession;
 
 /**
  * Central Mongo specific converter interface which combines {@link MongoWriter} and {@link EntityReader}.
@@ -50,17 +49,6 @@ public interface MongoConverter
 	 * @return will never be {@literal null}.
 	 */
 	MongoTypeMapper getTypeMapper();
-
-	/**
-	 * Obtain a {@link ClientSession} bound {@link MongoConverter} instance.
-	 * <p />
-	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
-	 *
-	 * @param session must not be {@literal null}.
-	 * @return {@link ClientSession} bound {@link MongoConverter} instance.
-	 * @since 2.1
-	 */
-	MongoConverter withSession(ClientSession session);
 
 	/**
 	 * Mapping function capable of converting values into a desired target type by eg. extracting the actual java type

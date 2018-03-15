@@ -40,7 +40,6 @@ import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -66,7 +65,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
-import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -197,7 +195,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param databaseName must not be {@literal null} or empty.
 	 */
 	public ReactiveMongoTemplate(MongoClient mongoClient, String databaseName) {
-		this(new SimpleReactiveMongoDatabaseFactory(mongoClient, databaseName), null);
+		this(new SimpleReactiveMongoDatabaseFactory(mongoClient, databaseName), (MongoConverter) null);
 	}
 
 	/**
@@ -206,7 +204,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param mongoDatabaseFactory must not be {@literal null}.
 	 */
 	public ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory) {
-		this(mongoDatabaseFactory, null);
+		this(mongoDatabaseFactory, (MongoConverter) null);
 	}
 
 	/**
@@ -242,9 +240,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 	}
 
-	private ReactiveMongoTemplate(ReactiveMongoTemplate that) {
+	private ReactiveMongoTemplate(ReactiveMongoDatabaseFactory dbFactory, ReactiveMongoTemplate that) {
 
-		this.mongoDatabaseFactory = that.mongoDatabaseFactory;
+		this.mongoDatabaseFactory = dbFactory;
 		this.exceptionTranslator = that.exceptionTranslator;
 		this.mongoConverter = that.mongoConverter;
 		this.queryMapper = that.queryMapper;
@@ -434,16 +432,26 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return new ReactiveSessionScoped() {
 
+			private final Mono<ClientSession> cachedSession = Mono.from(sessionProvider).cache();
+
 			@Override
 			public <T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
 
-				return Mono.from(sessionProvider).flatMapMany(session -> {
+				return cachedSession.flatMapMany(session -> {
 					return Flux
 							.from(action.doInSession(new ReactiveSessionBoundMongoTemplate(session, ReactiveMongoTemplate.this)))
 							.doFinally((signalType) -> doFinally.accept(session));
 				});
 			}
 		};
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#withSession(com.mongodb.session.ClientSession)
+	 */
+	public ReactiveMongoOperations withSession(ClientSession session) {
+		return new ReactiveSessionBoundMongoTemplate(session, ReactiveMongoTemplate.this);
 	}
 
 	/*
@@ -466,7 +474,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Flux.defer(() -> callback.doInDB(prepareDatabase(getMongoDatabase()))).onErrorMap(translateException());
+		return Flux.defer(() -> callback.doInDB(prepareDatabase(getDbInternal()))).onErrorMap(translateException());
 	}
 
 	/**
@@ -480,7 +488,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Mono.defer(() -> Mono.from(callback.doInDB(prepareDatabase(getMongoDatabase()))))
+		return Mono.defer(() -> Mono.from(callback.doInDB(prepareDatabase(getDbInternal()))))
 				.onErrorMap(translateException());
 	}
 
@@ -497,7 +505,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
-				.fromCallable(() -> getAndPrepareCollection(getMongoDatabase(), collectionName));
+				.fromCallable(() -> getAndPrepareCollection(getDbInternal(), collectionName));
 
 		return collectionPublisher.flatMapMany(callback::doInCollection).onErrorMap(translateException());
 	}
@@ -516,7 +524,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(callback, "ReactiveCollectionCallback must not be null!");
 
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
-				.fromCallable(() -> getAndPrepareCollection(getMongoDatabase(), collectionName));
+				.fromCallable(() -> getAndPrepareCollection(getDbInternal(), collectionName));
 
 		return collectionPublisher.flatMap(collection -> Mono.from(callback.doInCollection(collection)))
 				.onErrorMap(translateException());
@@ -614,6 +622,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	public MongoDatabase getMongoDatabase() {
+		return getDbInternal();
+	}
+
+	protected MongoDatabase getDbInternal() {
 		return mongoDatabaseFactory.getMongoDatabase();
 	}
 
@@ -2388,7 +2400,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(action, "MongoDatabaseCallback must not be null!");
 
 		try {
-			MongoDatabase db = this.getMongoDatabase();
+			MongoDatabase db = this.getDbInternal();
 			return action.doInDatabase(db);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -2973,15 +2985,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		public List<Document> bulkFetch(List<DBRef> dbRefs) {
 			return Collections.emptyList();
 		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#withSession(com.mongodb.session.ClientSession)
-		 */
-		@Override
-		public DbRefResolver withSession(ClientSession session) {
-			return this;
-		}
 	}
 
 	/**
@@ -2996,7 +2999,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	static class ReactiveSessionBoundMongoTemplate extends ReactiveMongoTemplate {
 
-		private final ClientSession session;
+		private final ReactiveMongoTemplate delegate;
 
 		/**
 		 * @param session must not be {@literal null}.
@@ -3005,44 +3008,31 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		 */
 		ReactiveSessionBoundMongoTemplate(ClientSession session, ReactiveMongoTemplate that) {
 
-			super(that);
-			this.session = session;
+			super(that.mongoDatabaseFactory.withSession(session), that);
+
+			this.delegate = that;
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#prepareCollection(MongoCollection)
+		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#getCollection(java.lang.String)
 		 */
 		@Override
-		protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {
+		public MongoCollection<Document> getCollection(String collectionName) {
 
-			MongoCollection preparedCollection = super.prepareCollection(collection);
-
-			ProxyFactory factory = new ProxyFactory();
-			factory.setTarget(preparedCollection);
-			factory.setInterfaces(MongoCollection.class);
-			factory.setOpaque(true);
-
-			factory.addAdvice(new SessionAwareMethodInterceptor(session, preparedCollection, MongoCollection.class));
-
-			return (MongoCollection) factory.getProxy();
+			// native MongoDB objects that offer methods with ClientSession must not be proxied.
+			return delegate.getCollection(collectionName);
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#prepareDatabase(MongoCollection)
+		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#getMongoDatabase()
 		 */
 		@Override
-		protected MongoDatabase prepareDatabase(MongoDatabase database) {
+		public MongoDatabase getMongoDatabase() {
 
-			ProxyFactory factory = new ProxyFactory();
-			factory.setTarget(database);
-			factory.setInterfaces(MongoDatabase.class);
-			factory.setOpaque(true);
-
-			factory.addAdvice(new SessionAwareMethodInterceptor(session, database, MongoDatabase.class));
-
-			return (MongoDatabase) factory.getProxy();
+			// native MongoDB objects that offer methods with ClientSession must not be proxied.
+			return delegate.getMongoDatabase();
 		}
 	}
 }

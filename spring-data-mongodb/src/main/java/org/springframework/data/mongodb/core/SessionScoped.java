@@ -23,6 +23,8 @@ import com.mongodb.session.ClientSession;
 
 /**
  * Gateway interface to execute {@link ClientSession} bound operations against MongoDB via a {@link SessionCallback}.
+ * <p />
+ * The very same bound {@link ClientSession} is used for all invocations of {@code execute} on the instance.
  *
  * @author Christoph Strobl
  * @since 2.1

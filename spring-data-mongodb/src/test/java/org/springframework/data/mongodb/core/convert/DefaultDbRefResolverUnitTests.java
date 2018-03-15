@@ -18,14 +18,12 @@ package org.springframework.data.mongodb.core.convert;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +40,6 @@ import com.mongodb.DBRef;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.session.ClientSession;
 
 /**
  * Unit tests for {@link DefaultDbRefResolver}.
@@ -65,7 +62,6 @@ public class DefaultDbRefResolverUnitTests {
 		when(factoryMock.getDb()).thenReturn(dbMock);
 		when(dbMock.getCollection(anyString(), any(Class.class))).thenReturn(collectionMock);
 		when(collectionMock.find(any(Document.class))).thenReturn(cursorMock);
-		when(collectionMock.find(any(ClientSession.class), any(Bson.class))).thenReturn(cursorMock);
 
 		resolver = new DefaultDbRefResolver(factoryMock);
 	}
@@ -131,15 +127,5 @@ public class DefaultDbRefResolverUnitTests {
 		when(cursorMock.into(any())).then(invocation -> Arrays.asList(document));
 
 		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(document, document);
-	}
-
-	@Test // 1880
-	public void sessionBoundResolverShouldPassOnClientSession() {
-
-		ClientSession session = mock(ClientSession.class);
-
-		resolver.withSession(session).fetch(new DBRef("collection-1", new ObjectId()));
-
-		verify(collectionMock).find(eq(session), any(Bson.class));
 	}
 }

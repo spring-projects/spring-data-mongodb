@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.bson.Document;
@@ -174,7 +175,30 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param onComplete a simple hook called when done .Must not be {@literal null}.
 	 * @since 2.1
 	 */
-	SessionScoped withSession(Supplier<ClientSession> sessionProvider);
+	default SessionScoped withSession(Supplier<ClientSession> sessionProvider) {
+
+		return new SessionScoped() {
+
+			private final Object lock = new Object();
+			private @Nullable ClientSession session = null;
+
+			@Override
+			public <T> T execute(SessionCallback<T> action, Consumer<ClientSession> onComplete) {
+
+				synchronized (lock) {
+					if (session == null) {
+						session = sessionProvider.get();
+					}
+				}
+
+				try {
+					return action.doInSession(MongoOperations.this.withSession(session));
+				} finally {
+					onComplete.accept(session);
+				}
+			}
+		};
+	}
 
 	/**
 	 * Obtain a {@link ClientSession} bound instance of MongoOperations.

@@ -61,6 +61,16 @@ public interface MongoDbFactory extends CodecRegistryProvider {
 	DB getLegacyDb();
 
 	/**
+	 * Get the underlying {@link CodecRegistry} used by the MongoDB Java driver.
+	 *
+	 * @return never {@literal null}.
+	 */
+	@Override
+	default CodecRegistry getCodecRegistry() {
+		return getDb().getCodecRegistry();
+	}
+
+	/**
 	 * Obtain a {@link ClientSession} for given ClientSessionOptions.
 	 *
 	 * @param options must not be {@literal null}.
@@ -70,12 +80,24 @@ public interface MongoDbFactory extends CodecRegistryProvider {
 	ClientSession getSession(ClientSessionOptions options);
 
 	/**
-	 * Get the underlying {@link CodecRegistry} used by the MongoDB Java driver.
+	 * Obtain a {@link ClientSession} bound instance of {@link MongoDbFactory} returning {@link MongoDatabase} instances
+	 * that are aware and bound to a new session with given {@link ClientSessionOptions options}.
 	 *
+	 * @param options must not be {@literal null}.
 	 * @return never {@literal null}.
+	 * @since 2.1
 	 */
-	@Override
-	default CodecRegistry getCodecRegistry() {
-		return getDb().getCodecRegistry();
+	default MongoDbFactory withSession(ClientSessionOptions options) {
+		return withSession(getSession(options));
 	}
+
+	/**
+	 * Obtain a {@link ClientSession} bound instance of {@link MongoDbFactory} returning {@link MongoDatabase} instances
+	 * that are aware and bound to the given session.
+	 *
+	 * @param options must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	MongoDbFactory withSession(ClientSession session);
 }

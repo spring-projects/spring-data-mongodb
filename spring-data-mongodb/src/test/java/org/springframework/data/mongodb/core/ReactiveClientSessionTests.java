@@ -20,6 +20,9 @@ import static org.assertj.core.api.Assertions.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -92,4 +95,40 @@ public class ReactiveClientSessionTests {
 		session.close();
 	}
 
+	@Test // DATAMONGO-1880
+	public void reusesClientSessionInSessionScopedCallback() {
+
+		ClientSession session = Mono
+				.from(client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build())).block();
+		CountingSessionSupplier sessionSupplier = new CountingSessionSupplier(session);
+
+		ReactiveSessionScoped sessionScoped = template.withSession(sessionSupplier);
+
+		sessionScoped.execute(action -> action.findOne(new Query(), Document.class, "test")).blockFirst();
+		assertThat(sessionSupplier.getInvocationCount()).isEqualTo(1);
+
+		sessionScoped.execute(action -> action.findOne(new Query(), Document.class, "test")).blockFirst();
+		assertThat(sessionSupplier.getInvocationCount()).isEqualTo(1);
+	}
+
+	static class CountingSessionSupplier implements Supplier<ClientSession> {
+
+		AtomicInteger invocationCount = new AtomicInteger(0);
+		final ClientSession session;
+
+		public CountingSessionSupplier(ClientSession session) {
+			this.session = session;
+		}
+
+		@Override
+		public ClientSession get() {
+
+			invocationCount.incrementAndGet();
+			return session;
+		}
+
+		int getInvocationCount() {
+			return invocationCount.get();
+		}
+	}
 }

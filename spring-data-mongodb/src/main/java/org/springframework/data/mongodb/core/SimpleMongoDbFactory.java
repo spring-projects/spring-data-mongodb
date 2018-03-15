@@ -17,10 +17,12 @@ package org.springframework.data.mongodb.core;
 
 import java.net.UnknownHostException;
 
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -29,6 +31,7 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.session.ClientSession;
 
@@ -157,5 +160,112 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	@Override
 	public ClientSession getSession(ClientSessionOptions options) {
 		return mongoClient.startSession(options);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.MongoDbFactory#withSession(com.mongodb.session.ClientSession)
+	 */
+	@Override
+	public MongoDbFactory withSession(ClientSession session) {
+		return new ClientSessionBoundMongoDbFactory(session, this);
+	}
+
+	/**
+	 * {@link ClientSession} bound {@link MongoDbFactory} decorating the database with a
+	 * {@link SessionAwareMethodInterceptor}.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	static class ClientSessionBoundMongoDbFactory implements MongoDbFactory {
+
+		private final ClientSession session;
+		private final MongoDbFactory delegate;
+
+		ClientSessionBoundMongoDbFactory(ClientSession session, MongoDbFactory delegate) {
+
+			this.session = session;
+			this.delegate = delegate;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.MongoDbFactory#getDb()
+		 */
+		@Override
+		public MongoDatabase getDb() throws DataAccessException {
+			return proxyMongoDatabase(delegate.getDb());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.MongoDbFactory#getDb(java.lang.String)
+		 */
+		@Override
+		public MongoDatabase getDb(String dbName) throws DataAccessException {
+			return proxyMongoDatabase(delegate.getDb(dbName));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.MongoDbFactory#getExceptionTranslator()
+		 */
+		@Override
+		public PersistenceExceptionTranslator getExceptionTranslator() {
+			return delegate.getExceptionTranslator();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.MongoDbFactory#getLegacyDb()
+		 */
+		@Override
+		public DB getLegacyDb() {
+			return delegate.getLegacyDb();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.MongoDbFactory#getSession(com.mongodb.ClientSessionOptions)
+		 */
+		@Override
+		public ClientSession getSession(ClientSessionOptions options) {
+			return delegate.getSession(options);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.MongoDbFactory#withSession(com.mongodb.session.ClientSession)
+		 */
+		@Override
+		public MongoDbFactory withSession(ClientSession session) {
+			return delegate.withSession(session);
+		}
+
+		private MongoDatabase proxyMongoDatabase(MongoDatabase database) {
+			return createProxyInstance(session, database, MongoDatabase.class);
+		}
+
+		private MongoDatabase proxyDatabase(ClientSession session, MongoDatabase database) {
+			return createProxyInstance(session, database, MongoDatabase.class);
+		}
+
+		private MongoCollection proxyCollection(ClientSession session, MongoCollection collection) {
+			return createProxyInstance(session, collection, MongoCollection.class);
+		}
+
+		private <T> T createProxyInstance(ClientSession session, T target, Class<T> targetType) {
+
+			ProxyFactory factory = new ProxyFactory();
+			factory.setTarget(target);
+			factory.setInterfaces(targetType);
+			factory.setOpaque(true);
+
+			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoDatabase.class, this::proxyDatabase,
+					MongoCollection.class, this::proxyCollection));
+
+			return (T) factory.getProxy();
+		}
 	}
 }

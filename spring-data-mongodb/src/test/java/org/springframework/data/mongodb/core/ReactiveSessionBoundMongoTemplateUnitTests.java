@@ -26,7 +26,10 @@ import static org.mockito.Mockito.anyString;
 
 import java.lang.reflect.Proxy;
 
+import com.mongodb.reactivestreams.client.MongoClient;
 import org.bson.Document;
+import org.bson.codecs.BsonValueCodec;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,6 +42,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate.ReactiveSessionBoundMongoTemplate;
+import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory.ClientSessionBoundMongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -69,7 +73,8 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 	MongoMappingContext mappingContext;
 	MappingMongoConverter converter;
 
-	@Mock ReactiveMongoDatabaseFactory factory;
+	ReactiveMongoDatabaseFactory factory;
+
 	@Mock MongoCollection collection;
 	@Mock MongoDatabase database;
 	@Mock ClientSession clientSession;
@@ -77,13 +82,15 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 	@Mock AggregatePublisher aggregatePublisher;
 	@Mock DistinctPublisher distinctPublisher;
 	@Mock Publisher resultPublisher;
+	@Mock MongoClient client;
+	@Mock CodecRegistry codecRegistry;
 
 	@Before
 	public void setUp() {
 
-		when(factory.getMongoDatabase()).thenReturn(database);
-		when(factory.getMongoDatabase(anyString())).thenReturn(database);
-		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
+		when(client.getDatabase(anyString())).thenReturn(database);
+		when(codecRegistry.get(any(Class.class))).thenReturn(new BsonValueCodec());
+		when(database.getCodecRegistry()).thenReturn(codecRegistry);
 		when(database.getCollection(anyString())).thenReturn(collection);
 		when(database.getCollection(anyString(), any())).thenReturn(collection);
 		when(database.listCollectionNames(any(ClientSession.class))).thenReturn(findPublisher);
@@ -111,6 +118,8 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(findPublisher.first()).thenReturn(resultPublisher);
 		when(aggregatePublisher.allowDiskUse(anyBoolean())).thenReturn(aggregatePublisher);
 		when(aggregatePublisher.useCursor(anyBoolean())).thenReturn(aggregatePublisher);
+
+		factory = new SimpleReactiveMongoDatabaseFactory(client, "foo");
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new NoOpDbRefResolver(), mappingContext);
