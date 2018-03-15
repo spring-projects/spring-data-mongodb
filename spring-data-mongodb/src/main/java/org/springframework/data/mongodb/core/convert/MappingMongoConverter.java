@@ -982,7 +982,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				if (dbObjItem instanceof List) {
-					items.add(readCollectionOrArray(ClassTypeInformation.OBJECT, (List) dbObjItem, path));
+					items.add(readCollectionOrArray(componentType, (List) dbObjItem, path));
 				} else {
 					items.add(getPotentiallyConvertedSimpleRead(dbObjItem, rawComponentType));
 				}
