@@ -870,7 +870,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object getPotentiallyConvertedSimpleRead(@Nullable Object value, Class<?> target) {
 
-		if (value == null || target == null || target.isAssignableFrom(value.getClass())) {
+		if (value == null || target == null || ClassUtils.isAssignableValue(target, value)) {
 			return value;
 		}
 
@@ -933,58 +933,62 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Reads the given {@link BasicDBList} into a collection of the given {@link TypeInformation}.
 	 *
 	 * @param targetType must not be {@literal null}.
-	 * @param sourceValue must not be {@literal null}.
+	 * @param source must not be {@literal null}.
 	 * @param path must not be {@literal null}.
 	 * @return the converted {@link Collection} or array, will never be {@literal null}.
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Object readCollectionOrArray(TypeInformation<?> targetType, List sourceValue, ObjectPath path) {
+	@SuppressWarnings("unchecked")
+	private Object readCollectionOrArray(TypeInformation<?> targetType, Collection<?> source, ObjectPath path) {
 
 		Assert.notNull(targetType, "Target type must not be null!");
 		Assert.notNull(path, "Object path must not be null!");
 
 		Class<?> collectionType = targetType.getType();
+		collectionType = Collection.class.isAssignableFrom(collectionType) //
+				? collectionType //
+				: List.class;
 
-		TypeInformation<?> componentType = targetType.getComponentType() != null ? targetType.getComponentType()
+		TypeInformation<?> componentType = targetType.getComponentType() != null //
+				? targetType.getComponentType() //
 				: ClassTypeInformation.OBJECT;
 		Class<?> rawComponentType = componentType.getType();
 
-		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
-		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<>(sourceValue.size())
-				: CollectionFactory.createCollection(collectionType, rawComponentType, sourceValue.size());
+		Collection<Object> items = targetType.getType().isArray() //
+				? new ArrayList<>(source.size()) //
+				: CollectionFactory.createCollection(collectionType, rawComponentType, source.size());
 
-		if (sourceValue.isEmpty()) {
+		if (source.isEmpty()) {
 			return getPotentiallyConvertedSimpleRead(items, targetType.getType());
 		}
 
-		if (!DBRef.class.equals(rawComponentType) && isCollectionOfDbRefWhereBulkFetchIsPossible(sourceValue)) {
+		if (!DBRef.class.equals(rawComponentType) && isCollectionOfDbRefWhereBulkFetchIsPossible(source)) {
 
-			List<Object> objects = bulkReadAndConvertDBRefs((List<DBRef>) sourceValue, componentType, path, rawComponentType);
+			List<Object> objects = bulkReadAndConvertDBRefs((List<DBRef>) source, componentType, path, rawComponentType);
 			return getPotentiallyConvertedSimpleRead(objects, targetType.getType());
 		}
 
-		for (Object dbObjItem : sourceValue) {
+		for (Object element : source) {
 
-			if (dbObjItem instanceof DBRef) {
-				items.add(DBRef.class.equals(rawComponentType) ? dbObjItem
-						: readAndConvertDBRef((DBRef) dbObjItem, componentType, path, rawComponentType));
-			} else if (dbObjItem instanceof Document) {
-				items.add(read(componentType, (Document) dbObjItem, path));
-			} else if (dbObjItem instanceof BasicDBObject) {
-				items.add(read(componentType, (BasicDBObject) dbObjItem, path));
+			if (element instanceof DBRef) {
+				items.add(DBRef.class.equals(rawComponentType) ? element
+						: readAndConvertDBRef((DBRef) element, componentType, path, rawComponentType));
+			} else if (element instanceof Document) {
+				items.add(read(componentType, (Document) element, path));
+			} else if (element instanceof BasicDBObject) {
+				items.add(read(componentType, (BasicDBObject) element, path));
 			} else {
 
-				if (dbObjItem instanceof Collection) {
+				if (element instanceof Collection) {
 					if (!rawComponentType.isArray() && !ClassUtils.isAssignable(Iterable.class, rawComponentType)) {
 						throw new MappingException(
-								String.format(INCOMPATIBLE_TYPES, dbObjItem, dbObjItem.getClass(), rawComponentType, path));
+								String.format(INCOMPATIBLE_TYPES, element, element.getClass(), rawComponentType, path));
 					}
 				}
 
-				if (dbObjItem instanceof List) {
-					items.add(readCollectionOrArray(componentType, (List) dbObjItem, path));
+				if (element instanceof List) {
+					items.add(readCollectionOrArray(componentType, (Collection<Object>) element, path));
 				} else {
-					items.add(getPotentiallyConvertedSimpleRead(dbObjItem, rawComponentType));
+					items.add(getPotentiallyConvertedSimpleRead(element, rawComponentType));
 				}
 			}
 		}
@@ -1045,8 +1049,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				map.put(key, DBRef.class.equals(rawValueType) ? value
 						: readAndConvertDBRef((DBRef) value, defaultedValueType, ObjectPath.ROOT, rawValueType));
 			} else if (value instanceof List) {
-				map.put(key,
-						readCollectionOrArray(valueType != null ? valueType : ClassTypeInformation.LIST, (List) value, path));
+				map.put(key, readCollectionOrArray(valueType != null ? valueType : ClassTypeInformation.LIST,
+						(List<Object>) value, path));
 			} else {
 				map.put(key, getPotentiallyConvertedSimpleRead(value, rawValueType));
 			}
@@ -1084,8 +1088,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				"Cannot add key/value pair to %s. as map. Given Bson must be a Document or DBObject!", bson.getClass()));
 	}
 
-	@SuppressWarnings("unchecked")
-	private static void addAllToMap(Bson bson, Map value) {
+	private static void addAllToMap(Bson bson, Map<String, ?> value) {
 
 		if (bson instanceof Document) {
 			((Document) bson).putAll(value);
@@ -1219,6 +1222,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param recursively whether to apply the removal recursively
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private Object removeTypeInfo(Object object, boolean recursively) {
 
 		if (!(object instanceof Document)) {
@@ -1239,7 +1243,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 						removeTypeInfo(element, recursively);
 					}
 				} else if (value instanceof List) {
-					for (Object element : (List) value) {
+					for (Object element : (List<Object>) value) {
 						removeTypeInfo(element, recursively);
 					}
 				} else {
@@ -1379,7 +1383,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		} else if (value instanceof DBRef) {
 			return potentiallyReadOrResolveDbRef((DBRef) value, type, path, rawType);
 		} else if (value instanceof List) {
-			return (T) readCollectionOrArray(type, (List) value, path);
+			return (T) readCollectionOrArray(type, (List<Object>) value, path);
 		} else if (value instanceof Document) {
 			return (T) read(type, (Document) value, path);
 		} else if (value instanceof DBObject) {
@@ -1495,7 +1499,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param source must not be {@literal null}.
 	 * @return
 	 */
-	private static boolean isCollectionOfDbRefWhereBulkFetchIsPossible(Iterable<Object> source) {
+	private static boolean isCollectionOfDbRefWhereBulkFetchIsPossible(Iterable<?> source) {
 
 		Assert.notNull(source, "Iterable of DBRefs must not be null!");
 
