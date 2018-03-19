@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.Value;
 import reactor.core.publisher.Mono;
 
 import java.net.UnknownHostException;
@@ -162,16 +163,11 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
+	@Value
 	static class ClientSessionBoundMongoDbFactory implements ReactiveMongoDatabaseFactory {
 
-		private final ClientSession session;
-		private final ReactiveMongoDatabaseFactory delegate;
-
-		ClientSessionBoundMongoDbFactory(ClientSession session, ReactiveMongoDatabaseFactory delegate) {
-
-			this.session = session;
-			this.delegate = delegate;
-		}
+		ClientSession session;
+		ReactiveMongoDatabaseFactory delegate;
 
 		/*
 		 * (non-Javadoc)
@@ -240,7 +236,7 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoDatabase.class, this::proxyDatabase,
 					MongoCollection.class, this::proxyCollection));
 
-			return (T) factory.getProxy();
+			return targetType.cast(factory.getProxy());
 		}
 	}
 }

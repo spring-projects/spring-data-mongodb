@@ -23,6 +23,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Christoph Strobl
  * @since 2.1
+ * @see com.mongodb.session.ClientSession
  */
 public interface SessionCallback<T> {
 
@@ -30,7 +31,7 @@ public interface SessionCallback<T> {
 	 * Execute operations against a MongoDB instance via session bound {@link MongoOperations}. The session is inferred
 	 * directly into the operation so that no further interaction is necessary.
 	 * <p />
-	 * Please note that only Spring Data specific abstractions like {@link MongoOperations#find(Query, Class)} and others
+	 * Please note that only Spring Data-specific abstractions like {@link MongoOperations#find(Query, Class)} and others
 	 * are enhanced with the {@link com.mongodb.session.ClientSession}. When obtaining plain MongoDB gateway objects like
 	 * {@link com.mongodb.client.MongoCollection} or {@link com.mongodb.client.MongoDatabase} via eg.
 	 * {@link MongoOperations#getCollection(String)} we leave responsibility for {@link com.mongodb.session.ClientSession}

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.Value;
+
 import java.net.UnknownHostException;
 
 import org.springframework.aop.framework.ProxyFactory;
@@ -174,20 +176,15 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	/**
 	 * {@link ClientSession} bound {@link MongoDbFactory} decorating the database with a
 	 * {@link SessionAwareMethodInterceptor}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
+	@Value
 	static class ClientSessionBoundMongoDbFactory implements MongoDbFactory {
 
-		private final ClientSession session;
-		private final MongoDbFactory delegate;
-
-		ClientSessionBoundMongoDbFactory(ClientSession session, MongoDbFactory delegate) {
-
-			this.session = session;
-			this.delegate = delegate;
-		}
+		ClientSession session;
+		MongoDbFactory delegate;
 
 		/*
 		 * (non-Javadoc)
@@ -265,7 +262,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoDatabase.class, this::proxyDatabase,
 					MongoCollection.class, this::proxyCollection));
 
-			return (T) factory.getProxy();
+			return targetType.cast(factory.getProxy());
 		}
 	}
 }
