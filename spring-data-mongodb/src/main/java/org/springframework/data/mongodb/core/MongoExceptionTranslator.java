@@ -132,6 +132,8 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);
 		}
 
+		// may interfere with OmitStackTraceInFastThrow (enabled by default).
+		// see https://jira.spring.io/browse/DATAMONGO-1905
 		if (ex instanceof IllegalStateException) {
 			for (StackTraceElement elm : ex.getStackTrace()) {
 				if (elm.getClassName().contains("ClientSession")) {

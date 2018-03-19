@@ -105,16 +105,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.ClientSessionOptions;
-import com.mongodb.CursorType;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBRef;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
+import com.mongodb.*;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
@@ -430,9 +421,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public ReactiveSessionScoped withSession(Publisher<ClientSession> sessionProvider) {
 
-		return new ReactiveSessionScoped() {
+		Mono<ClientSession> cachedSession = Mono.from(sessionProvider).cache();
 
-			private final Mono<ClientSession> cachedSession = Mono.from(sessionProvider).cache();
+		return new ReactiveSessionScoped() {
 
 			@Override
 			public <T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
@@ -474,7 +465,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Flux.defer(() -> callback.doInDB(prepareDatabase(getDbInternal()))).onErrorMap(translateException());
+		return Flux.defer(() -> callback.doInDB(prepareDatabase(doGetDatabase()))).onErrorMap(translateException());
 	}
 
 	/**
@@ -488,7 +479,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Mono.defer(() -> Mono.from(callback.doInDB(prepareDatabase(getDbInternal()))))
+		return Mono.defer(() -> Mono.from(callback.doInDB(prepareDatabase(doGetDatabase()))))
 				.onErrorMap(translateException());
 	}
 
@@ -505,7 +496,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
-				.fromCallable(() -> getAndPrepareCollection(getDbInternal(), collectionName));
+				.fromCallable(() -> getAndPrepareCollection(doGetDatabase(), collectionName));
 
 		return collectionPublisher.flatMapMany(callback::doInCollection).onErrorMap(translateException());
 	}
@@ -524,7 +515,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(callback, "ReactiveCollectionCallback must not be null!");
 
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
-				.fromCallable(() -> getAndPrepareCollection(getDbInternal(), collectionName));
+				.fromCallable(() -> getAndPrepareCollection(doGetDatabase(), collectionName));
 
 		return collectionPublisher.flatMap(collection -> Mono.from(callback.doInCollection(collection)))
 				.onErrorMap(translateException());
@@ -622,10 +613,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	public MongoDatabase getMongoDatabase() {
-		return getDbInternal();
+		return doGetDatabase();
 	}
 
-	protected MongoDatabase getDbInternal() {
+	protected MongoDatabase doGetDatabase() {
 		return mongoDatabaseFactory.getMongoDatabase();
 	}
 
@@ -2400,7 +2391,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(action, "MongoDatabaseCallback must not be null!");
 
 		try {
-			MongoDatabase db = this.getDbInternal();
+			MongoDatabase db = this.doGetDatabase();
 			return action.doInDatabase(db);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -3003,8 +2994,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		/**
 		 * @param session must not be {@literal null}.
-		 * @param mongoDbFactory must not be {@literal null}.
-		 * @param mongoConverter must not be {@literal null}.
+		 * @param that must not be {@literal null}.
 		 */
 		ReactiveSessionBoundMongoTemplate(ClientSession session, ReactiveMongoTemplate that) {
 

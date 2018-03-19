@@ -97,11 +97,14 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * Creates a new {@link DefaultIndexOperations}.
 	 *
 	 * @param mongoOperations must not be {@literal null}.
-	 * @param collectionName must not be {@literal null}.
+	 * @param collectionName must not be {@literal null} or empty.
 	 * @param type can be {@literal null}.
 	 * @since 2.1
 	 */
 	public DefaultIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type) {
+
+		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		this.mongoOperations = mongoOperations;
 		this.mapper = new QueryMapper(mongoOperations.getConverter());

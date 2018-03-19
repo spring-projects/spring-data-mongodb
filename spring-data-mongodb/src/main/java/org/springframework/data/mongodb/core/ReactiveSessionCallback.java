@@ -19,10 +19,12 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.query.Query;
 
 /**
- * Callback interface for executing operations within a {@link com.mongodb.session.ClientSession} reactively.
+ * Callback interface for executing operations within a {@link com.mongodb.session.ClientSession} using reactive
+ * infrastructure.
  *
  * @author Christoph Strobl
  * @since 2.1
+ * @see com.mongodb.session.ClientSession
  */
 @FunctionalInterface
 public interface ReactiveSessionCallback<T> {
@@ -31,15 +33,15 @@ public interface ReactiveSessionCallback<T> {
 	 * Execute operations against a MongoDB instance via session bound {@link ReactiveMongoOperations}. The session is
 	 * inferred directly into the operation so that no further interaction is necessary.
 	 * <p />
-	 * Please note that only Spring Data specific abstractions like {@link ReactiveMongoOperations#find(Query, Class)} and
+	 * Please note that only Spring Data-specific abstractions like {@link ReactiveMongoOperations#find(Query, Class)} and
 	 * others are enhanced with the {@link com.mongodb.session.ClientSession}. When obtaining plain MongoDB gateway
 	 * objects like {@link com.mongodb.reactivestreams.client.MongoCollection} or
-	 * {@link om.mongodb.reactivestreams.client.MongoDatabase} via eg.
+	 * {@link com.mongodb.reactivestreams.client.MongoDatabase} via eg.
 	 * {@link ReactiveMongoOperations#getCollection(String)} we leave responsibility for
 	 * {@link com.mongodb.session.ClientSession} again up to the caller.
 	 *
 	 * @param operations will never be {@literal null}.
-	 * @return can be {@literal null}.
+	 * @return never {@literal null}.
 	 */
 	Publisher<T> doInSession(ReactiveMongoOperations operations);
 }

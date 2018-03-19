@@ -40,6 +40,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.session.ClientSession;
 
 /**
+ * Unit tests for {@link SessionAwareMethodInterceptor}.
+ *
  * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -131,7 +133,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 	}
 
 	@Test // DATAMONGO-1880
-	public void proxiesNewDbInstanceReturnedByMethdod() {
+	public void proxiesNewDbInstanceReturnedByMethod() {
 
 		MongoDatabase otherDb = mock(MongoDatabase.class);
 		when(targetDatabase.withCodecRegistry(any())).thenReturn(otherDb);
@@ -145,7 +147,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 	}
 
 	@Test // DATAMONGO-1880
-	public void proxiesNewCollectionInstanceReturnedByMethdod() {
+	public void proxiesNewCollectionInstanceReturnedByMethod() {
 
 		MongoCollection otherCollection = mock(MongoCollection.class);
 		when(targetCollection.withCodecRegistry(any())).thenReturn(otherCollection);
@@ -176,7 +178,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 		factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoDatabase.class, this::proxyDatabase,
 				MongoCollection.class, this::proxyCollection));
 
-		return (T) factory.getProxy();
+		return targetType.cast(factory.getProxy());
 	}
 
 }

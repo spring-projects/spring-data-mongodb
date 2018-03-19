@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.Cursor;
@@ -156,8 +157,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T execute(String collectionName, CollectionCallback<T> action);
 
 	/**
-	 * Obtain a session bound instance of {@link SessionScoped} binding a new {@link ClientSession} with given
-	 * {@literal sessionOptions} to each and every command issued against MongoDB.
+	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding a new {@link ClientSession}
+	 * with given {@literal sessionOptions} to each and every command issued against MongoDB.
 	 *
 	 * @param sessionOptions must not be {@literal null}.
 	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
@@ -166,16 +167,18 @@ public interface MongoOperations extends FluentMongoOperations {
 	SessionScoped withSession(ClientSessionOptions sessionOptions);
 
 	/**
-	 * Obtain a session bound instance of {@link SessionScoped} binding the {@link ClientSession} provided by the given
-	 * {@link Supplier} to each and every command issued against MongoDB.
+	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
+	 * provided by the given {@link Supplier} to each and every command issued against MongoDB.
 	 * <p />
-	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
+	 * {@link SessionScoped#execute(SessionCallback, Consumer)} hook to potentially close the {@link ClientSession}.
 	 *
 	 * @param sessionProvider must not be {@literal null}.
-	 * @param onComplete a simple hook called when done .Must not be {@literal null}.
 	 * @since 2.1
 	 */
 	default SessionScoped withSession(Supplier<ClientSession> sessionProvider) {
+
+		Assert.notNull(sessionProvider, "SessionProvider must not be null!");
 
 		return new SessionScoped() {
 
@@ -201,7 +204,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Obtain a {@link ClientSession} bound instance of MongoOperations.
+	 * Obtain a {@link ClientSession} bound instance of {@link MongoOperations}.
 	 * <p />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
 	 *

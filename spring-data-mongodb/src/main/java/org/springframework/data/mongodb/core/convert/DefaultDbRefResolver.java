@@ -85,24 +85,12 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		this.objenesis = new ObjenesisStd(true);
 	}
 
-	/**
-	 * Creates a new {@link DefaultDbRefResolver} with the given {@link MongoDbFactory}.
-	 *
-	 * @param mongoDbFactory must not be {@literal null}.
-	 */
-	private DefaultDbRefResolver(DefaultDbRefResolver delegate) {
-
-		this.mongoDbFactory = delegate.mongoDbFactory;
-		this.exceptionTranslator = delegate.exceptionTranslator;
-		this.objenesis = delegate.objenesis;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
 	 */
 	@Override
-	public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+	public Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler handler) {
 
 		Assert.notNull(property, "Property must not be null!");
@@ -121,7 +109,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#created(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.mapping.MongoPersistentEntity, java.lang.Object)
 	 */
 	@Override
-	public DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation,
+	public DBRef createDbRef(@Nullable org.springframework.data.mongodb.core.mapping.DBRef annotation,
 			MongoPersistentEntity<?> entity, Object id) {
 
 		if (annotation != null && StringUtils.hasText(annotation.db())) {

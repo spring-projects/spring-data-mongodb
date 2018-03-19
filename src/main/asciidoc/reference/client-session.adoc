@@ -5,11 +5,11 @@ As of version 3.6 MongoDB supports a concept of Sessions. The use of sessions en
 
 WARNING: Operations within a client session are not isolated from operations outside the session.
 
-Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for tying a `ClientSession` to the operations themselves. Within the callback all operations on `MongoCollection` and `MongoDatabase` are called with the provided session via a `Proxy` without the need to add it manually. This means that a potential call to `MongoCollection#find()` is delegated to `MongoCollection#find(ClientSession)`.
+Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for tying a `ClientSession` to the operations themselves. `MongoCollection` and `MongoDatabase` use session proxy objects implementing MongoDB's collection and and database interfaces so there's no need to add a session on each call. This means that a potential call to `MongoCollection#find()` is delegated to `MongoCollection#find(ClientSession)`.
 
-NOTE: Methods like `(Reactive)MongoOperations#getCollection` returning native MongoDB java driver gateway objects, such as `MongoCollection`, that themselves offer dedicated methods for `ClientSession` will *NOT* be wrapped by the `Proxy`. So please make sure to provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not via one of the `#excute` callbacks on `MongoOperations`.
+NOTE: Methods like `(Reactive)MongoOperations#getCollection` returning native MongoDB Java Driver gateway objects, such as `MongoCollection`, that themselves offer dedicated methods for `ClientSession` are *NOT* be session-proxied. So make sure to provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not via one of the `#execute` callbacks on `MongoOperations`.
 
-.ClientSession with MongoOperations.
+.ClientSession with `MongoOperations`
 ====
 [source,java]
 ----
@@ -37,14 +37,14 @@ session.close()                                              <4>
 ----
 <1> Obtain a new session from the server.
 <2> Use `MongoOperation` methods as before. The `ClientSession` gets applied automatically.
-<3> Important! Do not forget to close the session.
+<3> Make sure to close the `ClientSession`.
 ====
 
-WARNING: When dealing with ``DBRef``s, especially lazily loaded ones, it is essential to **not** close the `ClientSession` before all data is loaded.
+WARNING: When dealing with ``DBRef``s, especially lazily loaded ones, it is essential to **not** close the `ClientSession` before all data is loaded. Otherwise, lazy fetch fails.
 
 The reactive counterpart uses the very same building blocks as the imperative one.
 
-.ClientSession with ReactiveMongoOperations.
+.ClientSession with `ReactiveMongoOperations`
 ====
 [source,java]
 ----
@@ -66,12 +66,12 @@ template.withSession(session)
 
                 return action.insert(azoth);                            <2>
             });
-    }, ClientSession::close)                                            <4>
+    }, ClientSession::close)                                            <3>
     .subscribe();
 ----
 <1> Obtain a `Publisher` for new session retrieval.
-<2> Use `MongoOperation` methods as before. The `ClientSession` is obtained and applied automatically.
-<3> Important! Do not forget to close the session.
+<2> Use `ReactiveMongoOperation` methods as before. The `ClientSession` is obtained and applied automatically.
+<3> Make sure to close the `ClientSession`.
 ====
 
 By using a `Publisher` providing the actual session you can defer session acquisition to the point of actual subscription.

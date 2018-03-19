@@ -67,6 +67,7 @@ import com.mongodb.session.ClientSession;
  *
  * @author Christoph Strobl
  */
+@SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class SessionBoundMongoTemplateUnitTests {
 
