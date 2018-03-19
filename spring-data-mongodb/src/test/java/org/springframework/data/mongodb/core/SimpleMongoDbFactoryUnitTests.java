@@ -20,6 +20,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.net.UnknownHostException;
 
 import org.junit.Rule;
@@ -28,26 +30,29 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.authentication.UserCredentials;
+import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import com.mongodb.MongoURI;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.session.ClientSession;
 
 /**
  * Unit tests for {@link SimpleMongoDbFactory}.
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class SimpleMongoDbFactoryUnitTests {
 
 	public @Rule ExpectedException expectedException = ExpectedException.none();
 	@Mock MongoClient mongo;
+	@Mock ClientSession clientSession;
+	@Mock MongoDatabase database;
 
 	@Test // DATADOC-254
 	public void rejectsIllegalDatabaseNames() {
@@ -80,6 +85,22 @@ public class SimpleMongoDbFactoryUnitTests {
 		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(uri);
 
 		assertThat(getField(factory, "databaseName").toString(), is("myDataBase"));
+	}
+
+	@Test // DATAMONGO-1880
+	public void cascadedWithSessionUsesRootFactory() {
+
+		when(mongo.getDatabase("foo")).thenReturn(database);
+
+		MongoDbFactory factory = new SimpleMongoDbFactory(mongo, "foo");
+		MongoDbFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
+
+		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getDb());
+
+		Object singletonTarget = AopProxyUtils
+				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));
+
+		assertThat(singletonTarget, is(sameInstance(database)));
 	}
 
 	@SuppressWarnings("deprecation")

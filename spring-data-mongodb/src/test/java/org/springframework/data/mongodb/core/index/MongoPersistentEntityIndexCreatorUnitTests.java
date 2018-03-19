@@ -15,30 +15,23 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import org.hamcrest.core.IsEqual;
-import org.hamcrest.number.IsCloseTo;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.DefaultIndexOperations;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -83,7 +76,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
-		when(db.getCollection(collectionCaptor.capture(), Mockito.eq(org.bson.Document.class))).thenReturn((MongoCollection) collection);
+		when(db.getCollection(collectionCaptor.capture(), eq(org.bson.Document.class)))
+				.thenReturn((MongoCollection) collection);
 
 		mongoTemplate = new MongoTemplate(factory);
 
@@ -97,11 +91,10 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue(), is(notNullValue()));
-		assertThat(keysCaptor.getValue().keySet(), hasItem("fieldname"));
-		assertThat(optionsCaptor.getValue().getName(), is("indexName"));
-		assertThat(optionsCaptor.getValue().isBackground(), is(false));
-		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS), nullValue());
+		assertThat(keysCaptor.getValue()).isNotNull().containsKey("fieldname");
+		assertThat(optionsCaptor.getValue().getName()).isEqualTo("indexName");
+		assertThat(optionsCaptor.getValue().isBackground()).isFalse();
+		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS)).isNull();
 	}
 
 	@Test
@@ -128,8 +121,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		mappingContext.initialize();
 
 		MongoPersistentEntityIndexCreator creator = new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
-		assertThat(creator.isIndexCreatorFor(mappingContext), is(true));
-		assertThat(creator.isIndexCreatorFor(new MongoMappingContext()), is(false));
+		assertThat(creator.isIndexCreatorFor(mappingContext)).isTrue();
+		assertThat(creator.isIndexCreatorFor(new MongoMappingContext())).isFalse();
 	}
 
 	@Test // DATAMONGO-554
@@ -138,11 +131,10 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(AnotherPerson.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue(), is(notNullValue()));
-		assertThat(keysCaptor.getValue().keySet(), hasItem("lastname"));
-		assertThat(optionsCaptor.getValue().getName(), is("lastname"));
-		assertThat(optionsCaptor.getValue().isBackground(), IsEqual.<Object> equalTo(true));
-		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS), nullValue());
+		assertThat(keysCaptor.getValue()).isNotNull().containsKey("lastname");
+		assertThat(optionsCaptor.getValue().getName()).isEqualTo("lastname");
+		assertThat(optionsCaptor.getValue().isBackground()).isTrue();
+		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS)).isNull();
 	}
 
 	@Test // DATAMONGO-544
@@ -151,9 +143,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(Milk.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue(), is(notNullValue()));
-		assertThat(keysCaptor.getValue().keySet(), hasItem("expiry"));
-		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS), IsEqual.<Object> equalTo(60L));
+		assertThat(keysCaptor.getValue()).isNotNull().containsKey("expiry");
+		assertThat(optionsCaptor.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(60);
 	}
 
 	@Test // DATAMONGO-899
@@ -162,13 +153,13 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(Wrapper.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue(), equalTo(new org.bson.Document().append("company.address.location", "2d")));
+		assertThat(keysCaptor.getValue()).isEqualTo(new org.bson.Document("company.address.location", "2d"));
 
 		IndexOptions opts = optionsCaptor.getValue();
-		assertThat(opts.getName(), is(equalTo("company.address.location")));
-		assertThat(opts.getMin(), IsCloseTo.closeTo(-180, 0));
-		assertThat(opts.getMax(), IsCloseTo.closeTo(180, 0));
-		assertThat(opts.getBits(), is(26));
+		assertThat(opts.getName()).isEqualTo("company.address.location");
+		assertThat(opts.getMin()).isCloseTo(-180d, offset(0d));
+		assertThat(opts.getMax()).isCloseTo(180d, offset(0d));
+		assertThat(opts.getBits()).isEqualTo(26);
 	}
 
 	@Test // DATAMONGO-827
@@ -177,10 +168,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = prepareMappingContext(EntityWithGeneratedIndexName.class);
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
-		assertThat(keysCaptor.getValue().containsKey("name"), is(false));
-		assertThat(keysCaptor.getValue().keySet(), hasItem("lastname"));
-
-		assertThat(optionsCaptor.getValue().getName(), nullValue());
+		assertThat(keysCaptor.getValue()).doesNotContainKey("name").containsKey("lastname");
+		assertThat(optionsCaptor.getValue().getName()).isNull();
 	}
 
 	@Test // DATAMONGO-367
@@ -191,8 +180,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
 
-		verify(db, times(1)).getCollection(collectionNameCapturer.capture(), Mockito.any());
-		assertThat(collectionNameCapturer.getValue(), equalTo("wrapper"));
+		verify(db, times(1)).getCollection(collectionNameCapturer.capture(), any());
+		assertThat(collectionNameCapturer.getValue()).isEqualTo("wrapper");
 	}
 
 	@Test // DATAMONGO-367
@@ -203,15 +192,15 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
 
-		verify(db, times(1)).getCollection(collectionNameCapturer.capture(), Mockito.any());
-		assertThat(collectionNameCapturer.getValue(), equalTo("indexedDocumentWrapper"));
+		verify(db, times(1)).getCollection(collectionNameCapturer.capture(), any());
+		assertThat(collectionNameCapturer.getValue()).isEqualTo("indexedDocumentWrapper");
 	}
 
 	@Test(expected = DataAccessException.class) // DATAMONGO-1125
 	public void createIndexShouldUsePersistenceExceptionTranslatorForNonDataIntegrityConcerns() {
 
-		doThrow(new MongoException(6, "HostUnreachable")).when(collection).createIndex(Mockito.any(org.bson.Document.class),
-				Mockito.any(IndexOptions.class));
+		doThrow(new MongoException(6, "HostUnreachable")).when(collection).createIndex(any(org.bson.Document.class),
+				any(IndexOptions.class));
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
 
@@ -221,8 +210,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	@Test(expected = ClassCastException.class) // DATAMONGO-1125
 	public void createIndexShouldNotConvertUnknownExceptionTypes() {
 
-		doThrow(new ClassCastException("o_O")).when(collection).createIndex(Mockito.any(org.bson.Document.class),
-				Mockito.any(IndexOptions.class));
+		doThrow(new ClassCastException("o_O")).when(collection).createIndex(any(org.bson.Document.class),
+				any(IndexOptions.class));
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
 

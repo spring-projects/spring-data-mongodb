@@ -47,7 +47,7 @@ public interface DbRefResolver {
 	 * @return
 	 */
 	@Nullable
-	Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+	Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler proxyHandler);
 
 	/**
@@ -59,7 +59,8 @@ public interface DbRefResolver {
 	 * @param id will never be {@literal null}.
 	 * @return
 	 */
-	DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation, MongoPersistentEntity<?> entity,
+	DBRef createDbRef(@Nullable org.springframework.data.mongodb.core.mapping.DBRef annotation,
+			MongoPersistentEntity<?> entity,
 			Object id);
 
 	/**

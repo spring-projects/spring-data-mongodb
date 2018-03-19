@@ -147,11 +147,12 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> execute(String collectionName, ReactiveCollectionCallback<T> action);
 
 	/**
-	 * Obtain a session bound instance of {@link SessionScoped} binding the {@link ClientSession} provided by the given
-	 * {@link Supplier} to each and every command issued against MongoDB.
+	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
+	 * provided by the given {@link Supplier} to each and every command issued against MongoDB.
 	 * <p />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use
-	 * {@link #withSession(Supplier, Consumer)} to provide a hook for processing the {@link ClientSession} when done.
+	 * {@link ReactiveSessionScoped#execute(ReactiveSessionCallback, Consumer)} to provide a hook for processing the
+	 * {@link ClientSession} when done.
 	 *
 	 * @param sessionProvider must not be {@literal null}.
 	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
@@ -165,8 +166,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	}
 
 	/**
-	 * Obtain a session bound instance of {@link SessionScoped} binding a new {@link ClientSession} with given
-	 * {@literal sessionOptions} to each and every command issued against MongoDB.
+	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding a new {@link ClientSession}
+	 * with given {@literal sessionOptions} to each and every command issued against MongoDB.
 	 *
 	 * @param sessionOptions must not be {@literal null}.
 	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
@@ -175,11 +176,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	ReactiveSessionScoped withSession(ClientSessionOptions sessionOptions);
 
 	/**
-	 * Obtain a session bound instance of {@link SessionScoped} binding the {@link ClientSession} provided by the given
-	 * {@link Supplier} to each and every command issued against MongoDB.
+	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
+	 * provided by the given {@link Supplier} to each and every command issued against MongoDB.
 	 * <p />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
-	 * {@litera onComplete} hook to potentially close the {@link ClientSession}.
+	 * {@literal onComplete} hook to potentially close the {@link ClientSession}.
 	 *
 	 * @param sessionProvider must not be {@literal null}.
 	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
@@ -202,6 +203,15 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 		};
 	}
 
+	/**
+	 * Obtain a {@link ClientSession} bound instance of {@link ReactiveMongoOperations}.
+	 * <p />
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
+	 *
+	 * @param session must not be {@literal null}.
+	 * @return {@link ClientSession} bound instance of {@link ReactiveMongoOperations}.
+	 * @since 2.1
+	 */
 	ReactiveMongoOperations withSession(ClientSession session);
 
 	/**

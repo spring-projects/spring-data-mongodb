@@ -83,10 +83,9 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	 * Obtain a {@link ClientSession} bound instance of {@link ReactiveMongoDatabaseFactory} returning
 	 * {@link MongoDatabase} instances that are aware and bound to the given session.
 	 *
-	 * @param options must not be {@literal null}.
+	 * @param session must not be {@literal null}.
 	 * @return never {@literal null}.
 	 * @since 2.1
 	 */
 	ReactiveMongoDatabaseFactory withSession(ClientSession session);
-
 }

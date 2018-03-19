@@ -108,6 +108,14 @@ public class SessionBoundMongoTemplateTests {
 			@Override
 			protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {
 
+				injectCollectionSpy(collection);
+
+				return super.prepareCollection(collection);
+			}
+
+			@SuppressWarnings({ "ConstantConditions", "unchecked" })
+			private void injectCollectionSpy(MongoCollection<Document> collection) {
+
 				InvocationHandler handler = Proxy.getInvocationHandler(collection);
 
 				Advised advised = (Advised) ReflectionTestUtils.getField(handler, "advised");
@@ -123,8 +131,6 @@ public class SessionBoundMongoTemplateTests {
 						ReflectionTestUtils.setField(advice, "target", spiedCollection);
 					}
 				}
-
-				return super.prepareCollection(collection);
 			}
 		};
 	}
@@ -294,5 +300,4 @@ public class SessionBoundMongoTemplateTests {
 
 		return converter;
 	}
-
 }

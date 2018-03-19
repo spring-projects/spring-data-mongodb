@@ -83,7 +83,7 @@ public class ReplicaSet implements TestRule {
 				}
 
 				if (!runsAsReplicaSet()) {
-					throw new AssumptionViolatedException("Not runnig in repl set mode");
+					throw new AssumptionViolatedException("Not running in repl set mode");
 				}
 				base.evaluate();
 			}

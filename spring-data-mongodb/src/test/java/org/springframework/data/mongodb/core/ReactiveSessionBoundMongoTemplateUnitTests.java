@@ -26,7 +26,6 @@ import static org.mockito.Mockito.anyString;
 
 import java.lang.reflect.Proxy;
 
-import com.mongodb.reactivestreams.client.MongoClient;
 import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -42,7 +41,6 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate.ReactiveSessionBoundMongoTemplate;
-import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory.ClientSessionBoundMongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -57,13 +55,17 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.session.ClientSession;
 
 /**
+ * Unit tests for {@link ReactiveSessionBoundMongoTemplate}.
+ *
  * @author Christoph Strobl
  */
+@SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ReactiveSessionBoundMongoTemplateUnitTests {
 

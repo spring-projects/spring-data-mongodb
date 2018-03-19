@@ -71,16 +71,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -141,16 +132,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.ValidationAction;
-import com.mongodb.client.model.ValidationLevel;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.session.ClientSession;
@@ -273,7 +255,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.updateMapper = that.updateMapper;
 		this.schemaMapper = that.schemaMapper;
 		this.projectionFactory = that.projectionFactory;
-
 		this.mappingContext = that.mappingContext;
 	}
 
@@ -522,10 +503,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	public <T> T execute(DbCallback<T> action) {
 
-		Assert.notNull(action, "DbCallbackmust not be null!");
+		Assert.notNull(action, "DbCallback must not be null!");
 
 		try {
-			MongoDatabase db = prepareDatabase(this.getDbInternal());
+			MongoDatabase db = prepareDatabase(this.doGetDatabase());
 			return action.doInDB(db);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -552,7 +533,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(callback, "CollectionCallback must not be null!");
 
 		try {
-			MongoCollection<Document> collection = getAndPrepareCollection(getDbInternal(), collectionName);
+			MongoCollection<Document> collection = getAndPrepareCollection(doGetDatabase(), collectionName);
 			return callback.doInCollection(collection);
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -565,6 +546,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public SessionScoped withSession(ClientSessionOptions options) {
+
+		Assert.notNull(options, "ClientSessionOptions must not be null!");
+
 		return withSession(() -> mongoDbFactory.getSession(options));
 	}
 
@@ -574,6 +558,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public MongoTemplate withSession(ClientSession session) {
+
+		Assert.notNull(session, "ClientSession must not be null!");
+
 		return new SessionBoundMongoTemplate(session, MongoTemplate.this);
 	}
 
@@ -1819,7 +1806,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
-		MongoCollection<Document> inputCollection = getAndPrepareCollection(getDbInternal(), inputCollectionName);
+		MongoCollection<Document> inputCollection = getAndPrepareCollection(doGetDatabase(), inputCollectionName);
 
 		// MapReduceOp
 		MapReduceIterable<Document> result = inputCollection.mapReduce(mapFunc, reduceFunc, Document.class);
@@ -2252,10 +2239,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	public MongoDatabase getDb() {
-		return getDbInternal();
+		return doGetDatabase();
 	}
 
-	protected MongoDatabase getDbInternal() {
+	protected MongoDatabase doGetDatabase() {
 		return mongoDbFactory.getDb();
 	}
 
@@ -2605,7 +2592,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		try {
 			T result = objectCallback
-					.doWith(collectionCallback.doInCollection(getAndPrepareCollection(getDbInternal(), collectionName)));
+					.doWith(collectionCallback.doInCollection(getAndPrepareCollection(doGetDatabase(), collectionName)));
 			return result;
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -2640,7 +2627,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			try {
 
 				FindIterable<Document> iterable = collectionCallback
-						.doInCollection(getAndPrepareCollection(getDbInternal(), collectionName));
+						.doInCollection(getAndPrepareCollection(doGetDatabase(), collectionName));
 
 				if (preparer != null) {
 					iterable = preparer.prepare(iterable);
@@ -2676,7 +2663,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			try {
 				FindIterable<Document> iterable = collectionCallback
-						.doInCollection(getAndPrepareCollection(getDbInternal(), collectionName));
+						.doInCollection(getAndPrepareCollection(doGetDatabase(), collectionName));
 
 				if (preparer != null) {
 					iterable = preparer.prepare(iterable);
@@ -3437,8 +3424,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		/**
 		 * @param session must not be {@literal null}.
-		 * @param mongoDbFactory must not be {@literal null}.
-		 * @param mongoConverter must not be {@literal null}.
+		 * @param that must not be {@literal null}.
 		 */
 		SessionBoundMongoTemplate(ClientSession session, MongoTemplate that) {
 
