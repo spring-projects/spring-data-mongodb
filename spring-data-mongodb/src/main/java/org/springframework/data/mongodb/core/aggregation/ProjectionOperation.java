@@ -140,11 +140,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	public ProjectionOperation andExclude(String... fieldNames) {
 
-		for (String fieldName : fieldNames) {
-			Assert.isTrue(Fields.UNDERSCORE_ID.equals(fieldName),
-					String.format(EXCLUSION_ERROR, fieldName, Fields.UNDERSCORE_ID));
-		}
-
 		List<FieldProjection> excludeProjections = FieldProjection.from(Fields.fields(fieldNames), false);
 		return new ProjectionOperation(this.projections, excludeProjections);
 	}
