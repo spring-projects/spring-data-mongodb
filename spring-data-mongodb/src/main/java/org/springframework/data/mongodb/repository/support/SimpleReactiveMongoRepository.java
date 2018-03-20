@@ -45,6 +45,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Ruben J Garcia
  * @since 2.0
  */
 @RequiredArgsConstructor

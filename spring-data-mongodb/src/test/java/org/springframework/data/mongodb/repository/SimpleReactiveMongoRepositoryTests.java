@@ -54,6 +54,7 @@ import org.springframework.util.ClassUtils;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Ruben J Garcia
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
