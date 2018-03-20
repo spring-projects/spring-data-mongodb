@@ -54,6 +54,7 @@ import org.springframework.util.ClassUtils;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Ruben J Garcia
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
@@ -439,6 +440,14 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 				matching().withIgnorePaths("age"));
 
 		StepVerifier.create(repository.findOne(example)).expectError(IncorrectResultSizeDataAccessException.class);
+	}
+
+	@Test // DATAMONGO-1907
+	public void existsByExampleShouldReturnNonExistingWithoutThrowException() {
+
+		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
+
+		StepVerifier.create(repository.findOne(example)).verifyComplete();
 	}
 
 	interface ReactivePersonRepostitory extends ReactiveMongoRepository<ReactivePerson, String> {
