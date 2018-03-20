@@ -45,6 +45,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Ruben J Garcia
  * @since 2.0
  */
 @RequiredArgsConstructor
@@ -97,7 +98,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 						return Mono.error(new IncorrectResultSizeDataAccessException(1));
 					}
 					return Mono.just(vals.iterator().next());
-				}).single();
+				}).next();
 	}
 
 	/*
