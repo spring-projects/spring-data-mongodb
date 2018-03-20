@@ -64,6 +64,33 @@ public class Aggregation {
 	 */
 	public static final String CURRENT = SystemVariable.CURRENT.toString();
 
+	/**
+	 * A variable which evaluates to the missing value. Allows for the conditional exclusion of fields. In a
+	 * {@code $projection}, a field set to the variable {@literal REMOVE} is excluded from the output.
+	 *
+	 * <pre>
+	 * <code>
+	 * 
+	 * db.books.aggregate( [
+	 * {
+	 *     $project: {
+	 *         title: 1,
+	 *         "author.first": 1,
+	 *         "author.last" : 1,
+	 *         "author.middle": {
+	 *             $cond: {
+	 *                 if: { $eq: [ "", "$author.middle" ] },
+	 *                 then: "$$REMOVE",
+	 *                 else: "$author.middle"
+	 *             }
+	 *         }
+	 *     }
+	 * } ] )
+	 * </code>
+	 * </pre>
+	 */
+	public static final String REMOVE = SystemVariable.REMOVE.toString();
+
 	public static final AggregationOperationContext DEFAULT_CONTEXT = AggregationOperationRenderer.DEFAULT_CONTEXT;
 	public static final AggregationOptions DEFAULT_OPTIONS = newAggregationOptions().build();
 
@@ -648,11 +675,12 @@ public class Aggregation {
 	 * Describes the system variables available in MongoDB aggregation framework pipeline expressions.
 	 *
 	 * @author Thomas Darimont
-	 * @see <a href="https://docs.mongodb.org/manual/reference/aggregation-variables">Aggregation Variables</a>
+	 * @author Christoph Strobl
+	 * @see <a href="https://docs.mongodb.com/manual/reference/aggregation-variables">Aggregation Variables</a>.
 	 */
 	enum SystemVariable {
 
-		ROOT, CURRENT;
+		ROOT, CURRENT, REMOVE;
 
 		private static final String PREFIX = "$$";
 
