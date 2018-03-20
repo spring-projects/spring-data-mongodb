@@ -441,6 +441,14 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		StepVerifier.create(repository.findOne(example)).expectError(IncorrectResultSizeDataAccessException.class);
 	}
 
+	@Test // DATAMONGO-1907
+	public void existsByExampleShouldReturnNonExistingWithoutThrowException() {
+
+		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
+
+		StepVerifier.create(repository.findOne(example)).expectNextCount(0).verifyComplete();
+	}
+
 	interface ReactivePersonRepostitory extends ReactiveMongoRepository<ReactivePerson, String> {
 
 		Flux<ReactivePerson> findByLastname(String lastname);
