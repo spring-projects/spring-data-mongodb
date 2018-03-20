@@ -2565,6 +2565,26 @@ List<InventoryItemProjection> stateStatsList = result.getMappedResults();
 
 * This one-step aggregation uses a projection operation with the `inventory` collection. We project the `discount` field using a conditional operation for all inventory items that have a `qty` greater or equal to `250`. A second conditional projection is performed for the `description` field. We apply the description `Unspecified` to all items that either do not have a `description` field of items that have a `null` description.
 
+As of MongoDB 3.6 it is possible to exclude fields from the projection using a conditional expression.
+
+.Conditional aggregation projection
+====
+[source,java]
+----
+TypedAggregation<Book> agg = Aggregation.newAggregation(Book.class,
+  project("title")
+    .and(ConditionalOperators.when(ComparisonOperators.valueOf("author.middle")     <1>
+        .equalToValue(""))                                                          <2>
+        .then("$$REMOVE")                                                           <3>
+        .otherwiseValueOf("author.middle")                                          <4>
+    )
+	.as("author.middle"));
+----
+<1> If the value of the field `author.middle`
+<2> does not contain a value
+<3> then use https://docs.mongodb.com/manual/reference/aggregation-variables/#variable.REMOVE[``$$REMOVE``] to exclude the field
+<4> else add the field value of `author.middle`.
+====
 
 [[mongo.custom-converters]]
 == Overriding default mapping with custom converters
