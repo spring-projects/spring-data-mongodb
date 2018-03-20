@@ -1,5 +1,5 @@
 /*
- * Copyright 2016. the original author or authors.
+ * Copyright 2016-2018. the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.springframework.util.ObjectUtils;
 
@@ -49,28 +51,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	@SuppressWarnings("unchecked")
 	public DBObject toDbObject(Object value, AggregationOperationContext context) {
 
-		Object valueToUse;
-		if (value instanceof List) {
-
-			List<Object> arguments = (List<Object>) value;
-			List<Object> args = new ArrayList<Object>(arguments.size());
-
-			for (Object val : arguments) {
-				args.add(unpack(val, context));
-			}
-			valueToUse = args;
-		} else if (value instanceof java.util.Map) {
-
-			DBObject dbo = new BasicDBObject();
-			for (java.util.Map.Entry<String, Object> entry : ((java.util.Map<String, Object>) value).entrySet()) {
-				dbo.put(entry.getKey(), unpack(entry.getValue(), context));
-			}
-			valueToUse = dbo;
-		} else {
-			valueToUse = unpack(value, context);
-		}
-
-		return new BasicDBObject(getMongoMethod(), valueToUse);
+		return new BasicDBObject(getMongoMethod(), unpack(value, context));
 	}
 
 	protected static List<Field> asFields(String... fieldRefs) {
@@ -87,13 +68,11 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 
 		if (value instanceof AggregationExpression) {
 			return ((AggregationExpression) value).toDbObject(context);
-		}
-
-		if (value instanceof Field) {
+		} else if (value instanceof DateFactory) {
+			return ((DateFactory) value).currentDate();
+		} else if (value instanceof Field) {
 			return context.getReference((Field) value).toString();
-		}
-
-		if (value instanceof List) {
+		} else if (value instanceof List) {
 
 			List<Object> sourceList = (List<Object>) value;
 			List<Object> mappedList = new ArrayList<Object>(sourceList.size());
@@ -101,12 +80,22 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 			for (Object item : sourceList) {
 				mappedList.add(unpack(item, context));
 			}
+
 			return mappedList;
+		} else if (value instanceof java.util.Map) {
+
+			DBObject dbo = new BasicDBObject();
+			for (Entry<String, Object> item : ((Map<String, Object>) value).entrySet()) {
+				dbo.put(item.getKey(), unpack(item.getValue(), context));
+			}
+
+			return dbo;
 		}
 
 		return value;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected List<Object> append(Object value) {
 
 		if (this.value instanceof List) {
@@ -138,6 +127,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected List<Object> values() {
 
 		if (value instanceof List) {
