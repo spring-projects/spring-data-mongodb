@@ -98,7 +98,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 						return Mono.error(new IncorrectResultSizeDataAccessException(1));
 					}
 					return Mono.just(vals.iterator().next());
-				}).singleOrEmpty();
+				}).next();
 	}
 
 	/*

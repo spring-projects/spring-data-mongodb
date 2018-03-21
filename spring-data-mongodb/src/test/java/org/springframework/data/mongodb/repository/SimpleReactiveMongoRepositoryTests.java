@@ -447,7 +447,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
 
-		StepVerifier.create(repository.findOne(example)).expectNextCount(0).verifyComplete();
+		StepVerifier.create(repository.findOne(example)).verifyComplete();
 	}
 
 	interface ReactivePersonRepostitory extends ReactiveMongoRepository<ReactivePerson, String> {
