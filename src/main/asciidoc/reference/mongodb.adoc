@@ -1487,7 +1487,7 @@ WARNING: Indexes are only used if the collation used for the operation and the i
 [[mongo.jsonSchema]]
 === JSON Schema
 
-As of version 3.6 MongoDB supports collections that validate ``Document``s against a provided JSON Schema.
+As of version 3.6 MongoDB supports collections that validate ``Document``s against a provided https://docs.mongodb.com/manual/core/schema-validation/#json-schema[JSON Schema].
 The schema itself and both validation action and level can be defined when creating the collection.
 
 .Sample JSON schema
@@ -1546,6 +1546,18 @@ MongoJsonSchema.builder()                                                  <1>
 <3> Configure the String-typed `firstname` field allowing only `luke` and `han` values. Properties can be typed or untyped. Use a static import of  `JsonSchemaProperty` to make the syntax slightly more compact and to get entrypoints like `string(…)`.
 <4> Build the schema object. Use the schema to either create a collection or <<mongodb-template-query.criteria,query documents>>.
 ====
+
+There are already some predefined strongly typed `JsonSchemaObject` and `JsonSchemaProperty` available via static methods on the gateway interfaces.
+However there may arise the need to build custom property validation rules which can be done via builder API.
+
+[source,java]
+----
+// "birthdate" : { "bsonType": "date" }
+JsonSchemaProperty.named("birthdate").ofType(Type.dateType());
+
+// "birthdate" : { "bsonType": "date", "description", "Must be a date" }
+JsonSchemaProperty.named("birthdate").with(JsonSchemaObject.of(Type.dateType()).description("Must be a date"));
+----
 
 `CollectionOptions` provides the entry point to schema support for collections.
 
