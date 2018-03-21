@@ -443,7 +443,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1907
-	public void existsByExampleShouldReturnNonExistingWithoutThrowException() {
+	public void findOneByExampleWithoutResultShouldCompleteEmpty() {
 
 		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
 
