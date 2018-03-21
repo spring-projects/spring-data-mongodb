@@ -21,6 +21,8 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import lombok.Data;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -210,6 +212,21 @@ public class ProjectionOperationUnitTests {
 		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 		assertThat((Integer) projectClause.get(Fields.UNDERSCORE_ID)).isEqualTo(0);
+	}
+
+	@Test // DATAMONGO-1906
+	public void rendersConditionalProjectionCorrectly() {
+
+		TypedAggregation aggregation = Aggregation.newAggregation(Book.class,
+				Aggregation.project("title")
+						.and(ConditionalOperators.when(ComparisonOperators.valueOf("author.middle").equalToValue(""))
+								.then("$$REMOVE").otherwiseValueOf("author.middle"))
+						.as("author.middle"));
+
+		Document document = aggregation.toDocument("books", Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(document).isEqualTo(Document.parse(
+				"{\"aggregate\" : \"books\", \"pipeline\" : [{\"$project\" : {\"title\" : 1, \"author.middle\" : {\"$cond\" : {\"if\" : {\"$eq\" : [\"$author.middle\", \"\"]}, \"then\" : \"$$REMOVE\",\"else\" : \"$author.middle\"} }}}]}"));
 	}
 
 	@Test // DATAMONGO-757
@@ -1713,6 +1730,19 @@ public class ProjectionOperationUnitTests {
 
 	private static Document exctractOperation(String field, Document fromProjectClause) {
 		return (Document) fromProjectClause.get(field);
+	}
+
+	@Data
+	static class Book {
+		String title;
+		Author author;
+	}
+
+	@Data
+	static class Author {
+		String first;
+		String last;
+		String middle;
 	}
 
 }
