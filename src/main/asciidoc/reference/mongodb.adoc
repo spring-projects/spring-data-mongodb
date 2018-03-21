@@ -1547,8 +1547,9 @@ MongoJsonSchema.builder()                                                  <1>
 <4> Build the schema object. Use the schema to either create a collection or <<mongodb-template-query.criteria,query documents>>.
 ====
 
-There are already some predefined strongly typed `JsonSchemaObject` and `JsonSchemaProperty` available via static methods on the gateway interfaces.
-However there may arise the need to build custom property validation rules which can be done via builder API.
+There are already some predefined and strongly typed schema objects (`JsonSchemaObject` and `JsonSchemaProperty`) available
+via static methods on the gateway interfaces.
+However there may arise the need to build custom property validation rules which can be created via builder API.
 
 [source,java]
 ----
