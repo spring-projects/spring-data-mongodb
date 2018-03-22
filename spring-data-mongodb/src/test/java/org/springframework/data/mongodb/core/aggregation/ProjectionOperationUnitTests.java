@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.P
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.Variable;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Slice;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
+import org.springframework.data.mongodb.core.aggregation.DateOperators.Timezone;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.StringOperators.Concat;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
@@ -1083,6 +1084,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { dayOfYear: { $dayOfYear: \"$date\" } } }"));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderDayOfYearAggregationExpressionWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).dayOfYear()).as("dayOfYear")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { dayOfYear: { $dayOfYear: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } }"));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderDayOfMonthAggregationExpression() {
 
@@ -1090,6 +1102,17 @@ public class ProjectionOperationUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { day: { $dayOfMonth: \"$date\" }} }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDayOfMonthAggregationExpressionWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).dayOfMonth()).as("day")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { day: { $dayOfMonth: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1101,6 +1124,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { dayOfWeek: { $dayOfWeek: \"$date\" } } }"));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderDayOfWeekAggregationExpressionWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).dayOfWeek()).as("dayOfWeek")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { dayOfWeek: { $dayOfWeek: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderYearAggregationExpression() {
 
@@ -1108,6 +1142,16 @@ public class ProjectionOperationUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { year: { $year: \"$date\" } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderYearAggregationExpressionWithTimezone() {
+
+		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).year())
+				.as("year").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project: { year: { $year: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1119,6 +1163,16 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { month: { $month: \"$date\" } } }"));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderMonthAggregationExpressionWithTimezone() {
+
+		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).month())
+				.as("month").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project: { month: { $month: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderWeekAggregationExpression() {
 
@@ -1126,6 +1180,16 @@ public class ProjectionOperationUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { week: { $week: \"$date\" } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderWeekAggregationExpressionWithTimezone() {
+
+		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).week())
+				.as("week").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project: { week: { $week: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1137,6 +1201,16 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { hour: { $hour: \"$date\" } } }"));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderHourAggregationExpressionWithTimezone() {
+
+		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).hour())
+				.as("hour").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project: { hour: { $hour: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderMinuteAggregationExpression() {
 
@@ -1144,6 +1218,17 @@ public class ProjectionOperationUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { minute: { $minute: \"$date\" } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderMinuteAggregationExpressionWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).minute()).as("minute")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { minute: { $minute: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1155,6 +1240,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { second: { $second: \"$date\" } } }"));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderSecondAggregationExpressionWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).second()).as("second")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { second: { $second: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderMillisecondAggregationExpression() {
 
@@ -1162,6 +1258,17 @@ public class ProjectionOperationUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { msec: { $millisecond: \"$date\" } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderMillisecondAggregationExpressionWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).millisecond()).as("msec")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { msec: { $millisecond: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1182,6 +1289,17 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(agg).isEqualTo(
 				Document.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateToStringAggregationExpressionWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).toString("%H:%M:%S:%L"))
+				.as("time").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\", \"timezone\" : \"America/Chicago\" } } } } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1440,11 +1558,11 @@ public class ProjectionOperationUnitTests {
 				.as("finalTotal").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project:{  \"finalTotal\" : { \"$let\": {" + //
-						"\"vars\": {" + //
-						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
-						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
-						"}," + //
-						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
+				"\"vars\": {" + //
+				"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
+				"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
+				"}," + //
+				"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
 				"}}}}"));
 	}
 
@@ -1463,11 +1581,11 @@ public class ProjectionOperationUnitTests {
 				.as("finalTotal").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project:{ \"finalTotal\" : { \"$let\": {" + //
-						"\"vars\": {" + //
-						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
-						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
-						"}," + //
-						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
+				"\"vars\": {" + //
+				"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
+				"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
+				"}," + //
+				"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
 				"}}}}"));
 	}
 
@@ -1660,6 +1778,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project : { dayOfWeek: { $isoDayOfWeek: \"$birthday\" } } }"));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoDayOfWeekWithTimezoneCorrectly() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("birthday").withTimezone(Timezone.valueOf("America/Chicago")).isoDayOfWeek())
+				.as("dayOfWeek").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : { dayOfWeek: { $isoDayOfWeek: { \"date\" : \"$birthday\", \"timezone\" : \"America/Chicago\" } } } } }"));
+	}
+
 	@Test // DATAMONGO-1548
 	public void shouldRenderIsoWeekCorrectly() {
 
@@ -1669,6 +1798,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project : { weekNumber: { $isoWeek: \"$date\" } } }"));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoWeekWithTimezoneCorrectly() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).isoWeek()).as("weekNumber")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : { weekNumber: { $isoWeek: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
+	}
+
 	@Test // DATAMONGO-1548
 	public void shouldRenderIsoWeekYearCorrectly() {
 
@@ -1676,6 +1816,17 @@ public class ProjectionOperationUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project : { yearNumber: { $isoWeekYear: \"$date\" } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoWeekYearWithTimezoneCorrectly() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).isoWeekYear())
+				.as("yearNumber").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : { yearNumber: { $isoWeekYear: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1726,6 +1877,128 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(DataTypeOperators.Type.typeOf("a")).as("a").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project : { a: { $type: \"$a\" } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromPartsWithJustTheYear() {
+
+		Document agg = project().and(DateOperators.dateFromParts().year(2018)).as("newDate")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { newDate: { $dateFromParts: { year : 2018 } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromParts() {
+
+		Document agg = project()
+				.and(DateOperators.dateFromParts().year(2018).month(3).day(23).hour(14).minute(25).second(10).milliseconds(2))
+				.as("newDate").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : { newDate: { $dateFromParts: { year : 2018, month : 3, day : 23, hour : 14, minute : 25, second : 10, milliseconds : 2 } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromPartsWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateFromParts().withTimezone(Timezone.valueOf("America/Chicago")).year(2018)).as("newDate")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project : { newDate: { $dateFromParts: { year : 2018, timezone : \"America/Chicago\" } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoDateFromPartsWithJustTheYear() {
+
+		Document agg = project().and(DateOperators.dateFromParts().isoWeekYear(2018)).as("newDate")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { newDate: { $dateFromParts: { isoWeekYear : 2018 } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoDateFromParts() {
+
+		Document agg = project().and(DateOperators.dateFromParts().isoWeekYear(2018).isoWeek(12).isoDayOfWeek(5).hour(14)
+				.minute(30).second(42).milliseconds(2)).as("newDate").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : { newDate: { $dateFromParts: { isoWeekYear : 2018, isoWeek : 12, isoDayOfWeek : 5, hour : 14, minute : 30, second : 42, milliseconds : 2 } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoDateFromPartsWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateFromParts().withTimezone(Timezone.valueOf("America/Chicago")).isoWeekYear(2018))
+				.as("newDate").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : { newDate: { $dateFromParts: { isoWeekYear : 2018, timezone : \"America/Chicago\" } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateToParts() {
+
+		Document agg = project().and(DateOperators.dateOf("date").toParts()).as("newDate")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { newDate: { $dateToParts: { date : \"$date\" } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateToIsoParts() {
+
+		Document agg = project().and(DateOperators.dateOf("date").toParts().iso8601()).as("newDate")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project : { newDate: { $dateToParts: { date : \"$date\", iso8601 : true } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateToPartsWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).toParts()).as("newDate")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project : { newDate: { $dateToParts: { date : \"$date\", timezone : \"America/Chicago\" } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromString() {
+
+		Document agg = project().and(DateOperators.dateFromString("2017-02-08T12:10:40.787")).as("newDate")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project : { newDate: { $dateFromString: { dateString : \"2017-02-08T12:10:40.787\" } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromStringWithFieldReference() {
+
+		Document agg = project().and(DateOperators.dateOf("date").fromString()).as("newDate")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $project : { newDate: { $dateFromString: { dateString : \"$date\" } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromStringWithTimezone() {
+
+		Document agg = project()
+				.and(DateOperators.dateFromString("2017-02-08T12:10:40.787").withTimezone(Timezone.valueOf("America/Chicago")))
+				.as("newDate").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project : { newDate: { $dateFromString: { dateString : \"2017-02-08T12:10:40.787\", timezone : \"America/Chicago\" } } } }"));
 	}
 
 	private static Document exctractOperation(String field, Document fromProjectClause) {
