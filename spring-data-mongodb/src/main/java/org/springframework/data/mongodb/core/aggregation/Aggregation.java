@@ -65,12 +65,12 @@ public class Aggregation {
 	public static final String CURRENT = SystemVariable.CURRENT.toString();
 
 	/**
-	 * A variable which evaluates to the missing value. Allows for the conditional exclusion of fields. In a
-	 * {@code $projection}, a field set to the variable {@literal REMOVE} is excluded from the output.
+	 * A variable to conditionally exclude a field. In a {@code $projection}, a field set to the variable
+	 * {@literal REMOVE} is excluded from the output.
 	 *
 	 * <pre>
 	 * <code>
-	 * 
+	 *
 	 * db.books.aggregate( [
 	 * {
 	 *     $project: {
