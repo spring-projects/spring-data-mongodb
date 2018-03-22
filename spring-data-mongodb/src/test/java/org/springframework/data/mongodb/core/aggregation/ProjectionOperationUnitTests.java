@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -211,9 +211,19 @@ public class ProjectionOperationUnitTests {
 	public void excludeShouldAllowExclusionOfFieldsOtherThanUnderscoreId/* since MongoDB 3.4 */() {
 
 		ProjectionOperation projectionOp = new ProjectionOperation().andExclude("foo");
-		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		assertThat((Integer) projectClause.get("foo")).isEqualTo(0);
+		DBObject document = projectionOp.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(document, PROJECT);
+
+		assertThat(projectionOp.inheritsFields(), is(true));
+		assertThat((Integer) projectClause.get("foo"), is(0));
+	}
+
+	@Test // DATAMONGO-1893
+	public void includeShouldNotInheritFields() {
+
+		ProjectionOperation projectionOp = new ProjectionOperation().andInclude("foo");
+
+		assertThat(projectionOp.inheritsFields(), is(false));
 	}
 
 	@Test // DATAMONGO-758
@@ -1548,14 +1558,13 @@ public class ProjectionOperationUnitTests {
 						.andApply(AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))) //
 				.as("finalTotal").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(JSON.parse("{ $project:{  \"finalTotal\" : { \"$let\": {" + //
-						"\"vars\": {" + //
-						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
-						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
-						"}," + //
-						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
-						"}}}}")));
+		assertThat(agg, is(JSON.parse("{ $project:{  \"finalTotal\" : { \"$let\": {" + //
+				"\"vars\": {" + //
+				"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
+				"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
+				"}," + //
+				"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
+				"}}}}")));
 	}
 
 	@Test // DATAMONGO-1538
@@ -1572,14 +1581,13 @@ public class ProjectionOperationUnitTests {
 						AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))
 				.as("finalTotal").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(JSON.parse("{ $project:{ \"finalTotal\" : { \"$let\": {" + //
-						"\"vars\": {" + //
-						"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
-						"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
-						"}," + //
-						"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
-						"}}}}")));
+		assertThat(agg, is(JSON.parse("{ $project:{ \"finalTotal\" : { \"$let\": {" + //
+				"\"vars\": {" + //
+				"\"total\": { \"$add\": [ \"$price\", \"$tax\" ] }," + //
+				"\"discounted\": { \"$cond\": { \"if\": \"$applyDiscount\", \"then\": 0.9, \"else\": 1.0 } }" + //
+				"}," + //
+				"\"in\": { \"$multiply\": [ \"$$total\", \"$$discounted\" ] }" + //
+				"}}}}")));
 	}
 
 	@Test // DATAMONGO-1548

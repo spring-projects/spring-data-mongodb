@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import lombok.AllArgsConstructor;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +36,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
@@ -196,6 +198,20 @@ public class TypeBasedAggregationOperationContextUnitTests {
 						.containing("age", "$age.value"));
 	}
 
+	@Test // DATAMONGO-1893
+	public void considersIncludedFieldsFromSingleExclusionsCorrectly() {
+
+		AggregationOperationContext context = getContext(FooPerson.class);
+		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class, project() //
+				.andExclude("name"), sort(new Sort("age.value", "lastName")));
+
+		DBObject dbo = agg.toDbObject("person", context);
+
+		DBObject sort = getPipelineElementFromAggregationAt(dbo, 1);
+		assertThat(getAsDBObject(sort, "$sort"),
+				is(equalTo((DBObject) new BasicDBObject("age.value", 1).append("last_name", 1))));
+	}
+
 	@Test // DATAMONGO-1133
 	public void shouldHonorAliasedFieldsInGroupExpressions() {
 
@@ -352,18 +368,13 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	@Document(collection = "person")
+	@AllArgsConstructor
 	public static class FooPerson {
 
 		final ObjectId id;
 		final String name;
+		@org.springframework.data.mongodb.core.mapping.Field("last_name") final String lastName;
 		final Age age;
-
-		@PersistenceConstructor
-		FooPerson(ObjectId id, String name, Age age) {
-			this.id = id;
-			this.name = name;
-			this.age = age;
-		}
 	}
 
 	public static class Age {

@@ -26,7 +26,7 @@ import com.mongodb.DBObject;
  * <p>
  * We recommend to use the static factory method {@link Aggregation#unwind(String)} instead of creating instances of
  * this class directly.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Mark Paluch
@@ -115,6 +115,14 @@ public class UnwindOperation
 	@Override
 	public ExposedFields getFields() {
 		return arrayIndex != null ? ExposedFields.from(arrayIndex) : ExposedFields.from();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#inheritsFields()
+	 */
+	@Override
+	public boolean inheritsFields() {
+		return true;
 	}
 
 	/**

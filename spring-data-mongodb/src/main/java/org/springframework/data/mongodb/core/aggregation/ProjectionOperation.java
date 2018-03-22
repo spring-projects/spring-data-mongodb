@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,20 +40,19 @@ import com.mongodb.DBObject;
  * <p>
  * We recommend to use the static factory method {@link Aggregation#project(Fields)} instead of creating instances of
  * this class directly.
- * 
+ *
  * @author Tobias Trelle
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.3
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/project/">MongoDB Aggregation Framework: $project</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/project/">MongoDB Aggregation Framework:
+ *      $project</a>
  */
 public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	private static final List<Projection> NONE = Collections.emptyList();
-	private static final String EXCLUSION_ERROR = "Exclusion of field %s not allowed. Projections by the mongodb "
-			+ "aggregation framework only support the exclusion of the %s field!";
 
 	private final List<Projection> projections;
 
@@ -66,7 +65,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Creates a new {@link ProjectionOperation} including the given {@link Fields}.
-	 * 
+	 *
 	 * @param fields must not be {@literal null}.
 	 */
 	public ProjectionOperation(Fields fields) {
@@ -76,7 +75,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * Copy constructor to allow building up {@link ProjectionOperation} instances from already existing
 	 * {@link Projection}s.
-	 * 
+	 *
 	 * @param current must not be {@literal null}.
 	 * @param projections must not be {@literal null}.
 	 */
@@ -92,7 +91,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Creates a new {@link ProjectionOperation} with the current {@link Projection}s and the given one.
-	 * 
+	 *
 	 * @param projection must not be {@literal null}.
 	 * @return
 	 */
@@ -103,7 +102,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * Creates a new {@link ProjectionOperation} with the current {@link Projection}s replacing the last current one with
 	 * the given one.
-	 * 
+	 *
 	 * @param projection must not be {@literal null}.
 	 * @return
 	 */
@@ -116,7 +115,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Creates a new {@link ProjectionOperationBuilder} to define a projection for the field with the given name.
-	 * 
+	 *
 	 * @param name must not be {@literal null} or empty.
 	 * @return
 	 */
@@ -134,7 +133,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Excludes the given fields from the projection.
-	 * 
+	 *
 	 * @param fieldNames must not be {@literal null}.
 	 * @return
 	 */
@@ -146,7 +145,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Includes the given fields into the projection.
-	 * 
+	 *
 	 * @param fieldNames must not be {@literal null}.
 	 * @return
 	 */
@@ -158,7 +157,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Includes the given fields into the projection.
-	 * 
+	 *
 	 * @param fields must not be {@literal null}.
 	 * @return
 	 */
@@ -185,6 +184,25 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#inheritsFields()
+	 */
+	@Override
+	public boolean inheritsFields() {
+
+		for (Projection projection : projections) {
+			if (projection instanceof FieldProjection) {
+
+				if (((FieldProjection) projection).isExcluded()) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
@@ -201,7 +219,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Base class for {@link ProjectionOperationBuilder}s.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 */
 	private static abstract class AbstractProjectionOperationBuilder implements AggregationOperation {
@@ -211,7 +229,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Creates a new {@link AbstractProjectionOperationBuilder} fot the given value and {@link ProjectionOperation}.
-		 * 
+		 *
 		 * @param value must not be {@literal null}.
 		 * @param operation must not be {@literal null}.
 		 */
@@ -224,7 +242,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.operation = operation;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
@@ -235,7 +253,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Returns the finally to be applied {@link ProjectionOperation} with the given alias.
-		 * 
+		 *
 		 * @param alias will never be {@literal null} or empty.
 		 * @return
 		 */
@@ -262,7 +280,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * An {@link ProjectionOperationBuilder} that is used for SpEL expression based projections.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 */
 	public static class ExpressionProjectionOperationBuilder extends ProjectionOperationBuilder {
@@ -273,7 +291,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Creates a new {@link ExpressionProjectionOperationBuilder} for the given value, {@link ProjectionOperation} and
 		 * parameters.
-		 * 
+		 *
 		 * @param expression must not be {@literal null}.
 		 * @param operation must not be {@literal null}.
 		 * @param parameters
@@ -321,7 +339,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * A {@link Projection} based on a SpEL expression.
-		 * 
+		 *
 		 * @author Thomas Darimont
 		 * @author Oliver Gierke
 		 */
@@ -334,7 +352,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			/**
 			 * Creates a new {@link ExpressionProjection} for the given field, SpEL expression and parameters.
-			 * 
+			 *
 			 * @param field must not be {@literal null}.
 			 * @param expression must not be {@literal null} or empty.
 			 * @param parameters must not be {@literal null}.
@@ -350,7 +368,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				this.params = parameters.clone();
 			}
 
-			/* 
+			/*
 			 * (non-Javadoc)
 			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 			 */
@@ -368,7 +386,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Builder for {@link ProjectionOperation}s on a field.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 * @author Christoph Strobl
@@ -384,7 +402,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Creates a new {@link ProjectionOperationBuilder} for the field with the given name on top of the given
 		 * {@link ProjectionOperation}.
-		 * 
+		 *
 		 * @param name must not be {@literal null} or empty.
 		 * @param operation must not be {@literal null}.
 		 * @param previousProjection the previous operation projection, may be {@literal null}.
@@ -400,7 +418,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Creates a new {@link ProjectionOperationBuilder} for the field with the given value on top of the given
 		 * {@link ProjectionOperation}.
-		 * 
+		 *
 		 * @param value
 		 * @param operation
 		 * @param previousProjection
@@ -417,7 +435,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Projects the result of the previous operation onto the current field. Will automatically add an exclusion for
 		 * {@code _id} as what would be held in it by default will now go into the field just projected into.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperation previousOperation() {
@@ -428,7 +446,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Defines a nested field binding for the current field.
-		 * 
+		 *
 		 * @param fields must not be {@literal null}.
 		 * @return
 		 */
@@ -438,7 +456,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Allows to specify an alias for the previous projection operation.
-		 * 
+		 *
 		 * @param alias
 		 * @return
 		 */
@@ -480,7 +498,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Generates an {@code $add} expression that adds the given number to the previously mentioned field.
-		 * 
+		 *
 		 * @param number
 		 * @return
 		 */
@@ -492,7 +510,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Generates an {@code $add} expression that adds the value of the given field to the previously mentioned field.
-		 * 
+		 *
 		 * @param fieldReference
 		 * @return
 		 */
@@ -504,7 +522,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Generates an {@code $subtract} expression that subtracts the given number to the previously mentioned field.
-		 * 
+		 *
 		 * @param number
 		 * @return
 		 */
@@ -517,7 +535,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates an {@code $subtract} expression that subtracts the value of the given field to the previously mentioned
 		 * field.
-		 * 
+		 *
 		 * @param fieldReference
 		 * @return
 		 */
@@ -543,7 +561,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Generates an {@code $multiply} expression that multiplies the given number with the previously mentioned field.
-		 * 
+		 *
 		 * @param number
 		 * @return
 		 */
@@ -556,7 +574,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates an {@code $multiply} expression that multiplies the value of the given field with the previously
 		 * mentioned field.
-		 * 
+		 *
 		 * @param fieldReference
 		 * @return
 		 */
@@ -582,7 +600,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Generates an {@code $divide} expression that divides the previously mentioned field by the given number.
-		 * 
+		 *
 		 * @param number
 		 * @return
 		 */
@@ -596,7 +614,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates an {@code $divide} expression that divides the value of the given field by the previously mentioned
 		 * field.
-		 * 
+		 *
 		 * @param fieldReference
 		 * @return
 		 */
@@ -623,7 +641,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates an {@code $mod} expression that divides the previously mentioned field by the given number and returns
 		 * the remainder.
-		 * 
+		 *
 		 * @param number
 		 * @return
 		 */
@@ -1232,7 +1250,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Adds a generic projection for the current field.
-		 * 
+		 *
 		 * @param operation the operation key, e.g. {@code $add}.
 		 * @param values the values to be set for the projection operation.
 		 * @return
@@ -1245,7 +1263,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * A {@link Projection} to pull in the result of the previous operation.
-		 * 
+		 *
 		 * @author Oliver Gierke
 		 */
 		static class PreviousOperationProjection extends Projection {
@@ -1254,7 +1272,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			/**
 			 * Creates a new {@link PreviousOperationProjection} for the field with the given name.
-			 * 
+			 *
 			 * @param name must not be {@literal null} or empty.
 			 */
 			public PreviousOperationProjection(String name) {
@@ -1262,7 +1280,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				this.name = name;
 			}
 
-			/* 
+			/*
 			 * (non-Javadoc)
 			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 			 */
@@ -1274,7 +1292,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * A {@link FieldProjection} to map a result of a previous {@link AggregationOperation} to a new field.
-		 * 
+		 *
 		 * @author Oliver Gierke
 		 * @author Thomas Darimont
 		 * @author Mark Paluch
@@ -1286,7 +1304,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			/**
 			 * Creates a new {@link FieldProjection} for the field of the given name, assigning the given value.
-			 * 
+			 *
 			 * @param name must not be {@literal null} or empty.
 			 * @param value
 			 */
@@ -1305,7 +1323,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			/**
 			 * Factory method to easily create {@link FieldProjection}s for the given {@link Fields}. Fields are projected as
 			 * references with their given name. A field {@code foo} will be projected as: {@code foo : 1 } .
-			 * 
+			 *
 			 * @param fields the {@link Fields} to in- or exclude, must not be {@literal null}.
 			 * @return
 			 */
@@ -1315,7 +1333,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			/**
 			 * Factory method to easily create {@link FieldProjection}s for the given {@link Fields}.
-			 * 
+			 *
 			 * @param fields the {@link Fields} to in- or exclude, must not be {@literal null}.
 			 * @param value to use for the given field.
 			 * @return
@@ -1332,7 +1350,14 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				return projections;
 			}
 
-			/* 
+			/**
+			 * @return {@literal true} if this field is excluded.
+			 */
+			public boolean isExcluded() {
+				return Boolean.FALSE.equals(value);
+			}
+
+			/*
 			 * (non-Javadoc)
 			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 			 */
@@ -1371,7 +1396,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			/**
 			 * Creates a new {@link OperationProjection} for the given field.
-			 * 
+			 *
 			 * @param field the name of the field to add the operation projection for, must not be {@literal null} or empty.
 			 * @param operation the actual operation key, must not be {@literal null} or empty.
 			 * @param values the values to pass into the operation, must not be {@literal null}.
@@ -1425,7 +1450,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			/**
 			 * Returns the field that holds the {@link OperationProjection}.
-			 * 
+			 *
 			 * @return
 			 */
 			protected Field getField() {
@@ -1448,7 +1473,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			/**
 			 * Creates a new instance of this {@link OperationProjection} with the given alias.
-			 * 
+			 *
 			 * @param alias the alias to set
 			 * @return
 			 */
@@ -1489,7 +1514,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				this.fields = fields;
 			}
 
-			/* 
+			/*
 			 * (non-Javadoc)
 			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 			 */
@@ -1508,7 +1533,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the minute from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractMinute() {
@@ -1517,7 +1542,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the hour from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractHour() {
@@ -1526,7 +1551,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the second from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractSecond() {
@@ -1535,7 +1560,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the millisecond from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractMillisecond() {
@@ -1544,7 +1569,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the year from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractYear() {
@@ -1553,7 +1578,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the month from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractMonth() {
@@ -1562,7 +1587,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the week from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractWeek() {
@@ -1571,7 +1596,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the dayOfYear from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractDayOfYear() {
@@ -1580,7 +1605,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the dayOfMonth from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractDayOfMonth() {
@@ -1589,7 +1614,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Extracts the dayOfWeek from a date expression.
-		 * 
+		 *
 		 * @return
 		 */
 		public ProjectionOperationBuilder extractDayOfWeek() {
@@ -1599,7 +1624,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Base class for {@link Projection} implementations.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	private static abstract class Projection {
@@ -1608,7 +1633,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Creates new {@link Projection} for the given {@link Field}.
-		 * 
+		 *
 		 * @param field must not be {@literal null}.
 		 */
 		public Projection(Field field) {
@@ -1619,7 +1644,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Returns the field exposed by the {@link Projection}.
-		 * 
+		 *
 		 * @return will never be {@literal null}.
 		 */
 		public ExposedField getExposedField() {
@@ -1629,7 +1654,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Renders the current {@link Projection} into a {@link DBObject} based on the given
 		 * {@link AggregationOperationContext}.
-		 * 
+		 *
 		 * @param context will never be {@literal null}.
 		 * @return
 		 */
@@ -1639,14 +1664,14 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * @author Thomas Darimont
 	 */
-	static class ExpressionProjection extends Projection {
+	static class ExpressionProjection extends ProjectionOperation.Projection {
 
 		private final AggregationExpression expression;
 		private final Field field;
 
 		/**
 		 * Creates a new {@link ExpressionProjection}.
-		 * 
+		 *
 		 * @param field
 		 * @param expression
 		 */

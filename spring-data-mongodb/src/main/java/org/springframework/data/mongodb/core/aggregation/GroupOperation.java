@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import com.mongodb.DBObject;
  * <p>
  * We recommend to use the static factory method {@link Aggregation#group(Fields)} instead of creating instances of this
  * class directly.
- * 
+ *
  * @author Sebastian Herold
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -53,7 +53,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Creates a new {@link GroupOperation} including the given {@link Fields}.
-	 * 
+	 *
 	 * @param fields must not be {@literal null}.
 	 */
 	public GroupOperation(Fields fields) {
@@ -64,7 +64,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Creates a new {@link GroupOperation} from the given {@link GroupOperation}.
-	 * 
+	 *
 	 * @param groupOperation must not be {@literal null}.
 	 */
 	protected GroupOperation(GroupOperation groupOperation) {
@@ -73,7 +73,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Creates a new {@link GroupOperation} from the given {@link GroupOperation} and the given {@link Operation}s.
-	 * 
+	 *
 	 * @param groupOperation
 	 * @param nextOperations
 	 */
@@ -90,7 +90,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Creates a new {@link GroupOperation} from the current one adding the given {@link Operation}.
-	 * 
+	 *
 	 * @param operation must not be {@literal null}.
 	 * @return
 	 */
@@ -100,7 +100,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Builder for {@link GroupOperation}s on a field.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 */
 	public static final class GroupOperationBuilder {
@@ -110,7 +110,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Creates a new {@link GroupOperationBuilder} from the given {@link GroupOperation} and {@link Operation}.
-		 * 
+		 *
 		 * @param groupOperation
 		 * @param operation
 		 */
@@ -125,7 +125,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 		/**
 		 * Allows to specify an alias for the new-operation operation.
-		 * 
+		 *
 		 * @param alias
 		 * @return
 		 */
@@ -139,7 +139,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 * <p>
 	 * Count expressions are emulated via {@code $sum: 1}.
 	 * <p>
-	 * 
+	 *
 	 * @return
 	 */
 	public GroupOperationBuilder count() {
@@ -148,7 +148,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for a {@code $sum}-expression for the given field-reference.
-	 * 
+	 *
 	 * @param reference
 	 * @return
 	 */
@@ -177,7 +177,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $add_to_set}-expression for the given field-reference.
-	 * 
+	 *
 	 * @param reference
 	 * @return
 	 */
@@ -187,7 +187,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $add_to_set}-expression for the given value.
-	 * 
+	 *
 	 * @param value
 	 * @return
 	 */
@@ -201,7 +201,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $last}-expression for the given field-reference.
-	 * 
+	 *
 	 * @param reference
 	 * @return
 	 */
@@ -212,7 +212,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $last}-expression for the given
 	 * {@link AggregationExpression}.
-	 * 
+	 *
 	 * @param expr
 	 * @return
 	 */
@@ -222,7 +222,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for a {@code $first}-expression for the given field-reference.
-	 * 
+	 *
 	 * @param reference
 	 * @return
 	 */
@@ -233,7 +233,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * Generates an {@link GroupOperationBuilder} for a {@code $first}-expression for the given
 	 * {@link AggregationExpression}.
-	 * 
+	 *
 	 * @param expr
 	 * @return
 	 */
@@ -243,7 +243,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $avg}-expression for the given field-reference.
-	 * 
+	 *
 	 * @param reference
 	 * @return
 	 */
@@ -254,7 +254,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $avg}-expression for the given
 	 * {@link AggregationExpression}.
-	 * 
+	 *
 	 * @param expr
 	 * @return
 	 */
@@ -264,7 +264,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $push}-expression for the given field-reference.
-	 * 
+	 *
 	 * @param reference
 	 * @return
 	 */
@@ -274,7 +274,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $push}-expression for the given value.
-	 * 
+	 *
 	 * @param value
 	 * @return
 	 */
@@ -288,7 +288,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $min}-expression that for the given field-reference.
-	 * 
+	 *
 	 * @param reference
 	 * @return
 	 */
@@ -299,7 +299,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $min}-expression that for the given
 	 * {@link AggregationExpression}.
-	 * 
+	 *
 	 * @param expr
 	 * @return
 	 */
@@ -309,7 +309,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $max}-expression that for the given field-reference.
-	 * 
+	 *
 	 * @param reference
 	 * @return
 	 */
@@ -320,7 +320,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $max}-expression that for the given
 	 * {@link AggregationExpression}.
-	 * 
+	 *
 	 * @param expr
 	 * @return
 	 */
@@ -379,7 +379,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return new GroupOperationBuilder(this, new Operation(keyword, null, reference, value));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields()
 	 */
@@ -393,6 +393,14 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		}
 
 		return fields;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#inheritsFields()
+	 */
+	@Override
+	public boolean inheritsFields() {
+		return false;
 	}
 
 	/*
