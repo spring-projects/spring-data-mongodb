@@ -30,6 +30,7 @@ import com.mongodb.DBObject;
 
 /**
  * @author Christoph Strobl
+ * @author Matt Morrissette
  * @since 1.10
  */
 abstract class AbstractAggregationExpression implements AggregationExpression {
@@ -68,11 +69,13 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 
 		if (value instanceof AggregationExpression) {
 			return ((AggregationExpression) value).toDbObject(context);
-		} else if (value instanceof DateFactory) {
-			return ((DateFactory) value).currentDate();
-		} else if (value instanceof Field) {
+		}
+
+		if (value instanceof Field) {
 			return context.getReference((Field) value).toString();
-		} else if (value instanceof List) {
+		}
+
+		if (value instanceof List) {
 
 			List<Object> sourceList = (List<Object>) value;
 			List<Object> mappedList = new ArrayList<Object>(sourceList.size());
@@ -84,18 +87,17 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 			return mappedList;
 		} else if (value instanceof java.util.Map) {
 
-			DBObject dbo = new BasicDBObject();
+			DBObject targetDbo = new BasicDBObject();
 			for (Entry<String, Object> item : ((Map<String, Object>) value).entrySet()) {
-				dbo.put(item.getKey(), unpack(item.getValue(), context));
+				targetDbo.put(item.getKey(), unpack(item.getValue(), context));
 			}
 
-			return dbo;
+			return targetDbo;
 		}
 
 		return value;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected List<Object> append(Object value) {
 
 		if (this.value instanceof List) {
@@ -121,13 +123,12 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		if (!(this.value instanceof java.util.Map)) {
 			throw new IllegalArgumentException("o_O");
 		}
-		java.util.Map<String, Object> clone = new LinkedHashMap<String, Object>((java.util.Map<String, Object>) this.value);
+		java.util.Map<String, Object> clone = new LinkedHashMap<String, Object>((java.util.Map) this.value);
 		clone.put(key, value);
 		return clone;
 
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected List<Object> values() {
 
 		if (value instanceof List) {
@@ -137,6 +138,66 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 			return new ArrayList<Object>(((java.util.Map) value).values());
 		}
 		return new ArrayList<Object>(Collections.singletonList(value));
+	}
+
+	/**
+	 * Get the value at a given index.
+	 *
+	 * @param index
+	 * @param <T>
+	 * @return
+	 * @since 2.1
+	 */
+	protected <T> T get(int index) {
+		return (T) values().get(index);
+	}
+
+	/**
+	 * Get the value for a given key.
+	 *
+	 * @param key
+	 * @param <T>
+	 * @return
+	 * @since 2.1
+	 */
+	protected <T> T get(Object key) {
+
+		if (!(this.value instanceof java.util.Map)) {
+			throw new IllegalArgumentException("o_O");
+		}
+
+		return (T) ((java.util.Map<String, Object>) this.value).get(key);
+	}
+
+	/**
+	 * Get the argument map.
+	 *
+	 * @since 2.1
+	 * @return
+	 */
+	protected java.util.Map<String, Object> argumentMap() {
+
+		if (!(this.value instanceof java.util.Map)) {
+			throw new IllegalArgumentException("o_O");
+		}
+
+		return Collections.unmodifiableMap((java.util.Map) value);
+	}
+
+	/**
+	 * Check if the given key is available.
+	 *
+	 * @param key
+	 * @return
+	 * @since 2.1
+	 */
+	protected boolean contains(Object key) {
+
+		if (!(this.value instanceof java.util.Map)) {
+			return false;
+		}
+
+		return ((java.util.Map<String, Object>) this.value).containsKey(key);
 	}
 
 	protected abstract String getMongoMethod();

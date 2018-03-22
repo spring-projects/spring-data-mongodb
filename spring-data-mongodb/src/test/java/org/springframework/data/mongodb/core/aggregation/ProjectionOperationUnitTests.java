@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.P
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.Variable;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Slice;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
+import org.springframework.data.mongodb.core.aggregation.DateOperators.Timezone;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.StringOperators.Concat;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
@@ -1050,6 +1051,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg, is(JSON.parse("{ $project: { dayOfYear: { $dayOfYear: \"$date\" } } }")));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderDayOfYearAggregationExpressionWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).dayOfYear()).as("dayOfYear")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { dayOfYear: { $dayOfYear: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } }")));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderDayOfMonthAggregationExpression() {
 
@@ -1057,6 +1069,17 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { day: { $dayOfMonth: \"$date\" }} }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDayOfMonthAggregationExpressionWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).dayOfMonth()).as("day")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { day: { $dayOfMonth: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1068,6 +1091,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg, is(JSON.parse("{ $project: { dayOfWeek: { $dayOfWeek: \"$date\" } } }")));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderDayOfWeekAggregationExpressionWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).dayOfWeek()).as("dayOfWeek")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { dayOfWeek: { $dayOfWeek: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderYearAggregationExpression() {
 
@@ -1075,6 +1109,16 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { year: { $year: \"$date\" } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderYearAggregationExpressionWithTimezone() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).year())
+				.as("year").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON
+				.parse("{ $project: { year: { $year: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1086,6 +1130,16 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg, is(JSON.parse("{ $project: { month: { $month: \"$date\" } } }")));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderMonthAggregationExpressionWithTimezone() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).month())
+				.as("month").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON
+				.parse("{ $project: { month: { $month: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderWeekAggregationExpression() {
 
@@ -1093,6 +1147,16 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { week: { $week: \"$date\" } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderWeekAggregationExpressionWithTimezone() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).week())
+				.as("week").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON
+				.parse("{ $project: { week: { $week: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1104,6 +1168,16 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg, is(JSON.parse("{ $project: { hour: { $hour: \"$date\" } } }")));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderHourAggregationExpressionWithTimezone() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).hour())
+				.as("hour").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON
+				.parse("{ $project: { hour: { $hour: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderMinuteAggregationExpression() {
 
@@ -1111,6 +1185,17 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { minute: { $minute: \"$date\" } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderMinuteAggregationExpressionWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).minute()).as("minute")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { minute: { $minute: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1122,6 +1207,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg, is(JSON.parse("{ $project: { second: { $second: \"$date\" } } }")));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderSecondAggregationExpressionWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).second()).as("second")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { second: { $second: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderMillisecondAggregationExpression() {
 
@@ -1129,6 +1225,17 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, is(JSON.parse("{ $project: { msec: { $millisecond: \"$date\" } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderMillisecondAggregationExpressionWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).millisecond()).as("msec")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { msec: { $millisecond: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1149,6 +1256,17 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(agg,
 				is(JSON.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateToStringAggregationExpressionWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).toString("%H:%M:%S:%L"))
+				.as("time").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\", \"timezone\" : \"America/Chicago\" } } } } } }")));
 	}
 
 	@Test // DATAMONGO-1536
@@ -1585,11 +1703,9 @@ public class ProjectionOperationUnitTests {
 				.reduce(Concat.valueOf("$$value").concat("/").concatValueOf("$$this")) //
 				.startingWith("");
 
-		assertThat(project().and(reduceEntryPoint).as("results").toDBObject(Aggregation.DEFAULT_CONTEXT),
-				is(expected));
+		assertThat(project().and(reduceEntryPoint).as("results").toDBObject(Aggregation.DEFAULT_CONTEXT), is(expected));
 
-		assertThat(project().and(arrayEntryPoint).as("results").toDBObject(Aggregation.DEFAULT_CONTEXT),
-				is(expected));
+		assertThat(project().and(arrayEntryPoint).as("results").toDBObject(Aggregation.DEFAULT_CONTEXT), is(expected));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1626,6 +1742,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg, Matchers.is(JSON.parse("{ $project : { dayOfWeek: { $isoDayOfWeek: \"$birthday\" } } }")));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoDayOfWeekWithTimezoneCorrectly() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("birthday").withTimezone(Timezone.valueOf("America/Chicago")).isoDayOfWeek())
+				.as("dayOfWeek").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project : { dayOfWeek: { $isoDayOfWeek: { \"date\" : \"$birthday\", \"timezone\" : \"America/Chicago\" } } } } }")));
+	}
+
 	@Test // DATAMONGO-1548
 	public void shouldRenderIsoWeekCorrectly() {
 
@@ -1635,6 +1762,17 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg, Matchers.is(JSON.parse("{ $project : { weekNumber: { $isoWeek: \"$date\" } } }")));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoWeekWithTimezoneCorrectly() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).isoWeek()).as("weekNumber")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project : { weekNumber: { $isoWeek: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
+	}
+
 	@Test // DATAMONGO-1548
 	public void shouldRenderIsoWeekYearCorrectly() {
 
@@ -1642,6 +1780,17 @@ public class ProjectionOperationUnitTests {
 				.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, Matchers.is(JSON.parse("{ $project : { yearNumber: { $isoWeekYear: \"$date\" } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoWeekYearWithTimezoneCorrectly() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).isoWeekYear())
+				.as("yearNumber").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project : { yearNumber: { $isoWeekYear: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } } }")));
 	}
 
 	@Test // DATAMONGO-1548
@@ -1692,6 +1841,127 @@ public class ProjectionOperationUnitTests {
 		DBObject agg = project().and(DataTypeOperators.Type.typeOf("a")).as("a").toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg, Matchers.is(JSON.parse("{ $project : { a: { $type: \"$a\" } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromPartsWithJustTheYear() {
+
+		DBObject agg = project().and(DateOperators.dateFromParts().year(2018)).as("newDate")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project : { newDate: { $dateFromParts: { year : 2018 } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromParts() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateFromParts().year(2018).month(3).day(23).hour(14).minute(25).second(10).milliseconds(2))
+				.as("newDate").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project : { newDate: { $dateFromParts: { year : 2018, month : 3, day : 23, hour : 14, minute : 25, second : 10, milliseconds : 2 } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromPartsWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateFromParts().withTimezone(Timezone.valueOf("America/Chicago")).year(2018)).as("newDate")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(
+				JSON.parse("{ $project : { newDate: { $dateFromParts: { year : 2018, timezone : \"America/Chicago\" } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoDateFromPartsWithJustTheYear() {
+
+		DBObject agg = project().and(DateOperators.dateFromParts().isoWeekYear(2018)).as("newDate")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project : { newDate: { $dateFromParts: { isoWeekYear : 2018 } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoDateFromParts() {
+
+		DBObject agg = project().and(DateOperators.dateFromParts().isoWeekYear(2018).isoWeek(12).isoDayOfWeek(5).hour(14)
+				.minute(30).second(42).milliseconds(2)).as("newDate").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project : { newDate: { $dateFromParts: { isoWeekYear : 2018, isoWeek : 12, isoDayOfWeek : 5, hour : 14, minute : 30, second : 42, milliseconds : 2 } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderIsoDateFromPartsWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateFromParts().withTimezone(Timezone.valueOf("America/Chicago")).isoWeekYear(2018))
+				.as("newDate").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project : { newDate: { $dateFromParts: { isoWeekYear : 2018, timezone : \"America/Chicago\" } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateToParts() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").toParts()).as("newDate")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project : { newDate: { $dateToParts: { date : \"$date\" } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateToIsoParts() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").toParts().iso8601()).as("newDate")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg,
+				is(JSON.parse("{ $project : { newDate: { $dateToParts: { date : \"$date\", iso8601 : true } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateToPartsWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).toParts()).as("newDate")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON
+				.parse("{ $project : { newDate: { $dateToParts: { date : \"$date\", timezone : \"America/Chicago\" } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromString() {
+
+		DBObject agg = project().and(DateOperators.dateFromString("2017-02-08T12:10:40.787")).as("newDate")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(
+				JSON.parse("{ $project : { newDate: { $dateFromString: { dateString : \"2017-02-08T12:10:40.787\" } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromStringWithFieldReference() {
+
+		DBObject agg = project().and(DateOperators.dateOf("date").fromString()).as("newDate")
+				.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse("{ $project : { newDate: { $dateFromString: { dateString : \"$date\" } } } }")));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderDateFromStringWithTimezone() {
+
+		DBObject agg = project()
+				.and(DateOperators.dateFromString("2017-02-08T12:10:40.787").withTimezone(Timezone.valueOf("America/Chicago")))
+				.as("newDate").toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(JSON.parse(
+				"{ $project : { newDate: { $dateFromString: { dateString : \"2017-02-08T12:10:40.787\", timezone : \"America/Chicago\" } } } }")));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
