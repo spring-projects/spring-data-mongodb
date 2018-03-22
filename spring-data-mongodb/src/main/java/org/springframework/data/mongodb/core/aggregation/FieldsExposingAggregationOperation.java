@@ -34,8 +34,25 @@ public interface FieldsExposingAggregationOperation extends AggregationOperation
 	ExposedFields getFields();
 
 	/**
+	 * @return {@literal true} to conditionally inherit fields from previous operations.
+	 * @since 2.0.6
+	 */
+	default boolean inheritsFields() {
+		return false;
+	}
+
+	/**
 	 * Marker interface for {@link AggregationOperation} that inherits fields from previous operations.
 	 */
-	interface InheritsFieldsAggregationOperation extends FieldsExposingAggregationOperation {}
+	interface InheritsFieldsAggregationOperation extends FieldsExposingAggregationOperation {
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#inheritsFields()
+		 */
+		@Override
+		default boolean inheritsFields() {
+			return true;
+		}
+	}
 }

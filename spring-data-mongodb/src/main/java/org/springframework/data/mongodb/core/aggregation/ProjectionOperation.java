@@ -185,6 +185,18 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#inheritsFields()
+	 */
+	@Override
+	public boolean inheritsFields() {
+
+		return projections.stream().filter(FieldProjection.class::isInstance) //
+				.map(FieldProjection.class::cast) //
+				.anyMatch(FieldProjection::isExcluded);
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
@@ -1337,6 +1349,13 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				}
 
 				return projections;
+			}
+
+			/**
+			 * @return {@literal true} if this field is excluded.
+			 */
+			public boolean isExcluded() {
+				return Boolean.FALSE.equals(value);
 			}
 
 			/*
