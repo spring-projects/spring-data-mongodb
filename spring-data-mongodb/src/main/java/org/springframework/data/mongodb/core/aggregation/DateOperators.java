@@ -15,25 +15,16 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.springframework.data.mongodb.core.aggregation.ConditionalOperators.*;
-
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.bson.Document;
-import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators.ArithmeticOperatorFactory;
-import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.*;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Gateway to {@literal Date} aggregation operations.
- * <p>
- * Prior to Mongo 3.6, all Date operations were in the UTC timezone<br>
- * New in Mongo 3.6 is support for timezone conversion on all aggregation operations. This is a <em>breaking</em> change
- * and using any of the aggregation methods with a 'timezone' attribute on a Mongo server prior to 3.6 will cause
- * errors.
  *
  * @author Christoph Strobl
  * @author Matt Morrissette
@@ -42,257 +33,157 @@ import org.springframework.util.Assert;
 public class DateOperators {
 
 	/**
-	 * Take the date referenced by given {@literal fieldReference} in the UTC timezone.
+	 * Take the date referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
 	 * @return
 	 */
 	public static DateOperatorFactory dateOf(String fieldReference) {
 
-		Assert.hasText(fieldReference, "FieldReference must not be null!");
-		return new DateOperatorFactory(fieldReference, null);
+		Assert.notNull(fieldReference, "FieldReference must not be null!");
+		return new DateOperatorFactory(fieldReference);
 	}
 
 	/**
-	 * Take the date referenced by given {@literal fieldReference} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-	 *
-	 * @param fieldReference must not be {@literal null}.
-	 * @param timezone nullable. The timezone ID or offset. If null, UTC is assumed.
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory dateOfWithTimezone(String fieldReference, @Nullable String timezone) {
-
-		Assert.hasText(fieldReference, "FieldReference must not be null!");
-		return new DateOperatorFactory(fieldReference, timezone);
-	}
-
-	/**
-	 * Take the date referenced by given {@literal fieldReference} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-	 *
-	 * @param fieldReference must not be {@literal null}.
-	 * @param timezoneExpression Must not be null. The expression to bind the timezone value from
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory dateOfWithTimezoneOf(String fieldReference,
-			AggregationExpression timezoneExpression) {
-
-		Assert.hasText(fieldReference, "FieldReference must not be null!");
-		Assert.notNull(timezoneExpression, "timezoneExpression must not be null!");
-		return new DateOperatorFactory(fieldReference, timezoneExpression);
-	}
-
-	/**
-	 * Take the date referenced by given {@literal fieldReference} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-	 *
-	 * @param fieldReference must not be {@literal null}. The field to bind the date value from
-	 * @param timezoneField Must not be null. The name of the field to bind the timezone value from
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory dateOfWithTimezoneOf(String fieldReference, String timezoneField) {
-
-		Assert.hasText(fieldReference, "FieldReference must not be null!");
-		return new DateOperatorFactory(fieldReference, Fields.field(timezoneField));
-	}
-
-	/**
-	 * Take the date resulting from the given {@link AggregationExpression} in the UTC timezone.
+	 * Take the date resulting from the given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
 	 * @return
 	 */
 	public static DateOperatorFactory dateOf(AggregationExpression expression) {
-		return DateOperators.dateOfWithTimezone(expression, null);
-	}
-
-	/**
-	 * Take the date resulting from the given {@link AggregationExpression} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-	 *
-	 * @param expression must not be {@literal null}.
-	 * @param timezone nullable. The timezone ID or offset. If null, UTC is assumed.
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory dateOfWithTimezone(AggregationExpression expression, @Nullable String timezone) {
 
 		Assert.notNull(expression, "Expression must not be null!");
-		return new DateOperatorFactory(expression, timezone);
+		return new DateOperatorFactory(expression);
 	}
 
 	/**
-	 * Take the date referenced by given {@link AggregationExpression} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
+	 * Take the given value as date.
+	 * <p/>
+	 * This can be one of:
+	 * <ul>
+	 * <li>{@link java.util.Date}</li>
+	 * <li>{@link java.util.Calendar}</li>
+	 * <li>{@link java.time.Instant}</li>
+	 * <li>{@link java.time.ZonedDateTime}</li>
+	 * <li>{@link java.lang.Long}</li>
+	 * <li>{@link Field}</li>
+	 * <li>{@link AggregationExpression}</li>
+	 * </ul>
 	 *
-	 * @param expression must not be {@literal null}.
-	 * @param timezoneExpression Must not be null. The expression to bind the timezone value from
+	 * @param value must not be {@literal null}.
+	 * @return new instance of {@link DateOperatorFactory}.
 	 * @since 2.1
-	 * @return
 	 */
-	public static DateOperatorFactory dateOfWithTimezoneOf(AggregationExpression expression,
-			AggregationExpression timezoneExpression) {
+	public static DateOperatorFactory dateValue(Object value) {
 
-		Assert.notNull(expression, "expression must not be null!");
-		Assert.notNull(timezoneExpression, "timezoneExpression must not be null!");
-		return new DateOperatorFactory(expression, timezoneExpression);
+		Assert.notNull(value, "Value must not be null!");
+		return new DateOperatorFactory(value);
 	}
 
 	/**
-	 * Take the date referenced by given {@link AggregationExpression} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
+	 * Construct a Date object by providing the date’s constituent properties.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 	 *
-	 * @param expression must not be {@literal null}.
-	 * @param timezoneField Must not be null. The name of the field to bind the timezone value from
+	 * @return new instance of {@link DateFromPartsOperatorFactory}.
 	 * @since 2.1
-	 * @return
 	 */
-	public static DateOperatorFactory dateOfWithTimezoneOf(AggregationExpression expression, String timezoneField) {
-
-		Assert.notNull(expression, "expression must not be null!");
-		return new DateOperatorFactory(expression, Fields.field(timezoneField));
+	public static DateFromPartsOperatorFactory dateFromParts() {
+		return new DateFromPartsOperatorFactory(Timezone.none());
 	}
 
 	/**
-	 * Take the current date as supplied by the {@link DateFactory} in the UTC timezone
+	 * Construct a Date object from the given date {@link String}.<br />
+	 * To use a {@link Field field reference} or {@link AggregationExpression} as source of the date string consider
+	 * {@link DateOperatorFactory#fromString()} or {@link DateFromString#fromStringOf(AggregationExpression)}.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 	 *
-	 * @param factory not nullable. The DateFactory to get the current date from
+	 * @return new instance of {@link DateFromPartsOperatorFactory}.
 	 * @since 2.1
-	 * @return
 	 */
-	public static DateOperatorFactory dateOf(DateFactory factory) {
-		return new DateOperatorFactory(factory, null);
+	public static DateFromString dateFromString(String value) {
+		return DateFromString.fromString(value);
 	}
 
 	/**
-	 * Take the current date resulting from the given {@link DateFactory} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If using Mongo prior to 3.6,
-	 * specify timezone as null.
+	 * Timezone represents a MongoDB timezone abstraction which can be represented with a timezone ID or offset as a
+	 * {@link String}. Also accepts a {@link AggregationExpression} or {@link Field} that resolves to a {@link String} of
+	 * either Olson Timezone Identifier or a UTC Offset.<br />
+	 * <table valign="top">
+	 * <tr>
+	 * <th>Format</th>
+	 * <th>Example</th>
+	 * </tr>
+	 * <tr>
+	 * <td>Olson Timezone Identifier</td>
+	 * <td>"America/New_York"<br />
+	 * "Europe/London"<br />
+	 * "GMT"</td>
+	 * </tr>
+	 * <tr>
+	 * <td>UTC Offset</td>
+	 * <td>+/-[hh]:[mm], e.g. "+04:45"<br />
+	 * -[hh][mm], e.g. "-0530"<br />
+	 * +/-[hh], e.g. "+03"</td>
+	 * </tr>
+	 * </table>
+	 * <strong>NOTE: </strong>Support for timezones in aggregations Requires MongoDB 3.6 or later.
 	 *
-	 * @param factory not nullable. The DateFactory to get the current date from
-	 * @param timezone nullable. The timezone ID or offset. If null, UTC is assumed. Must specify as null if using Mongo
-	 *          prior to 3.6
+	 * @author Christoph Strobl
 	 * @since 2.1
-	 * @return
 	 */
-	public static DateOperatorFactory dateOfWithTimezone(DateFactory factory, @Nullable String timezone) {
-		return new DateOperatorFactory(factory, timezone);
-	}
+	public static class Timezone {
 
-	/**
-	 * Take the date referenced by given {@link DateFactory} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-	 *
-	 * @param factory not nullable. The DateFactory to get the current date from
-	 * @param timezoneExpression Must not be null. The expression to bind the timezone value from
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory dateOfWithTimezoneOf(DateFactory factory,
-			AggregationExpression timezoneExpression) {
+		private static final Timezone NONE = new Timezone(null);
 
-		Assert.notNull(factory, "Factory must not be null!");
-		Assert.notNull(timezoneExpression, "timezoneExpression must not be null!");
-		return new DateOperatorFactory(factory, timezoneExpression);
-	}
+		private final @Nullable Object value;
 
-	/**
-	 * Take the date referenced by given {@link DateFactory}in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-	 *
-	 * @param factory {@link DateFactory#LOCAL_DATE_FACTORY}. Defaults to {@link DateOperators#getCurrentDateFactory} if
-	 *          null.
-	 * @param timezoneField Must not be null. The name of the field to bind the timezone value from
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory dateOfWithTimezoneOf(DateFactory factory, String timezoneField) {
+		private Timezone(@Nullable Object value) {
+			this.value = value;
+		}
 
-		Assert.notNull(factory, "Factory must not be null!");
-		Assert.notNull(timezoneField, "timezoneField must not be null!");
-		return new DateOperatorFactory(factory, Fields.field(timezoneField));
-	}
+		/**
+		 * Return an empty {@link Timezone}.
+		 *
+		 * @return never {@literal null}.
+		 */
+		public static Timezone none() {
+			return NONE;
+		}
 
-	/**
-	 * Take the current date using the default {@link DateOperators#getCurrentDateFactory()} in the UTC timezone.
-	 *
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory currentDate() {
-		return dateOf(CURRENT_DATE_FACTORY);
-	}
+		/**
+		 * Create a {@link Timezone} for the given value which must be a valid expression that resolves to a {@link String}
+		 * representing an Olson Timezone Identifier or UTC Offset.
+		 *
+		 * @param value the plain timezone {@link String}, a {@link Field} holding the timezone or an
+		 *          {@link AggregationExpression} resulting in the timezone.
+		 * @return new instance of {@link Timezone}.
+		 */
+		public static Timezone valueOf(Object value) {
 
-	/**
-	 * Take the current date using the default {@link DateOperators#getCurrentDateFactory()} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-	 *
-	 * @param timezone nullable. The timezone ID or offset. If null, UTC is assumed.
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory currentDateWithTimezone(@Nullable String timezone) {
-		return DateOperators.dateOfWithTimezone(CURRENT_DATE_FACTORY, timezone);
-	}
+			Assert.notNull(value, "Value must not be null!");
+			return new Timezone(value);
+		}
 
-	/**
-	 * Take the current date using the default {@link DateOperators#getCurrentDateFactory()} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-	 *
-	 * @param timezoneExpression Must not be null. The name of the field to bind the timezone value from
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory currentDateWithTimezoneOf(AggregationExpression timezoneExpression) {
-		return DateOperators.dateOfWithTimezoneOf(CURRENT_DATE_FACTORY, timezoneExpression);
-	}
+		/**
+		 * Create a {@link Timezone} for the {@link Field} reference holding the Olson Timezone Identifier or UTC Offset.
+		 *
+		 * @param fieldReference the {@link Field} holding the timezone.
+		 * @return new instance of {@link Timezone}.
+		 */
+		public static Timezone ofField(String fieldReference) {
+			return valueOf(Fields.field(fieldReference));
+		}
 
-	/**
-	 * Take the current date using the default {@link DateOperators#getCurrentDateFactory()} in the given timezone.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-	 *
-	 * @param timezoneField Must not be null. The name of the field to bind the timezone value from
-	 * @since 2.1
-	 * @return
-	 */
-	public static DateOperatorFactory currentDateWithTimezoneOf(String timezoneField) {
-		return DateOperators.dateOfWithTimezoneOf(CURRENT_DATE_FACTORY, timezoneField);
-	}
-
-	/**
-	 * @see DateFromParts#fromParts
-	 * @since 2.1
-	 * @author Matt Morrissette
-	 * @return
-	 */
-	public static DateFromParts.CalendarDatePartsBuilder dateFromParts() {
-		return DateFromParts.fromParts();
-	}
-
-	/**
-	 * @see DateFromParts#fromIsoWeekParts
-	 * @since 2.1
-	 * @author Matt Morrissette
-	 * @return
-	 */
-	public static DateFromParts.IsoWeekDatePartsBuilder dateFromIsoWeekParts() {
-		return DateFromParts.fromIsoWeekParts();
+		/**
+		 * Create a {@link Timezone} for the {@link AggregationExpression} resulting in the Olson Timezone Identifier or UTC
+		 * Offset.
+		 *
+		 * @param value the {@link AggregationExpression} resulting in the timezone.
+		 * @return new instance of {@link Timezone}.
+		 */
+		public static Timezone ofExpression(AggregationExpression expression) {
+			return valueOf(expression);
+		}
 	}
 
 	/**
@@ -301,600 +192,253 @@ public class DateOperators {
 	 */
 	public static class DateOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
-		private final DateFactory dateFactory;
-		private final Object timezone;
+		private final @Nullable String fieldReference;
+		private final @Nullable Object dateValue;
+		private final @Nullable AggregationExpression expression;
+		private final Timezone timezone;
 
 		/**
-		 * Creates new {@link ArithmeticOperatorFactory} for given {@literal fieldReference} in the UTC timezone.
+		 * @param fieldReference
+		 * @param expression
+		 * @param value
+		 * @param timezone
+		 * @since 2.1
+		 */
+		private DateOperatorFactory(@Nullable String fieldReference, @Nullable AggregationExpression expression,
+				@Nullable Object value, Timezone timezone) {
+
+			this.fieldReference = fieldReference;
+			this.expression = expression;
+			this.dateValue = value;
+			this.timezone = timezone;
+		}
+
+		/**
+		 * Creates new {@link DateOperatorFactory} for given {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 */
 		public DateOperatorFactory(String fieldReference) {
-			this(fieldReference, null);
-		}
 
-		private DateOperatorFactory(String fieldReference, Object timezone) {
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			this.fieldReference = fieldReference;
-			this.expression = null;
-			this.dateFactory = null;
-			this.timezone = timezone;
+			this(fieldReference, null, null, Timezone.none());
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
 		}
 
 		/**
-		 * Creates new {@link ArithmeticOperatorFactory} for given {@link AggregationExpression} in the UTC timezone.
+		 * Creates new {@link DateOperatorFactory} for given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 */
 		public DateOperatorFactory(AggregationExpression expression) {
-			this(expression, null);
-		}
 
-		private DateOperatorFactory(AggregationExpression expression, Object timezone) {
+			this(null, expression, null, Timezone.none());
 
 			Assert.notNull(expression, "Expression must not be null!");
-			this.fieldReference = null;
-			this.expression = expression;
-			this.timezone = timezone;
-			this.dateFactory = null;
-		}
-
-		private DateOperatorFactory(@Nullable DateFactory dateFactory, Object timezone) {
-
-			this.fieldReference = null;
-			this.expression = null;
-			this.timezone = timezone;
-			this.dateFactory = dateFactory != null ? dateFactory : CURRENT_DATE_FACTORY;
-		}
-
-		private DateOperatorFactory(String fieldRefererence, AggregationExpression expression, DateFactory dateFactory,
-				Object timezone) {
-
-			this.fieldReference = fieldRefererence;
-			this.expression = expression;
-			this.dateFactory = dateFactory;
-			this.timezone = timezone;
 		}
 
 		/**
-		 * @param timezone nullable. The timezone ID or offset as a String.
-		 * @return a new DateOperator factory with the same date reference/expression/factory but with the given timezone
+		 * Creates new {@link DateOperatorFactory} for given {@code value} that resolves to a Date.
+		 * <p/>
+		 * <ul>
+		 * <li>{@link java.util.Date}</li>
+		 * <li>{@link java.util.Calendar}</li>
+		 * <li>{@link java.time.Instant}</li>
+		 * <li>{@link java.time.ZonedDateTime}</li>
+		 * <li>{@link java.lang.Long}</li>
+		 * </ul>
+		 *
+		 * @param value must not be {@literal null}.
+		 * @since 2.1
 		 */
-		public DateOperatorFactory withTimezone(String timezone) {
-			return new DateOperatorFactory(fieldReference, expression, dateFactory, timezone);
+		public DateOperatorFactory(Object value) {
+
+			this(null, null, value, Timezone.none());
+
+			Assert.notNull(value, "Value must not be null!");
 		}
 
 		/**
-		 * @param timezoneField not nullable. The field reference to bind the timezone from.
-		 * @return a new DateOperator factory with the same date reference/expression/factory but with the given timezone
+		 * Create a new {@link DateOperatorFactory} bound to a given {@link Timezone}.<br />
+		 * <strong>NOTE:</strong> Requires Mongo 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Use {@link Timezone#none()} instead.
+		 * @return new instance of {@link DateOperatorFactory}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 * @since 2.1
 		 */
-		public DateOperatorFactory withTimezoneOf(String timezoneField) {
+		public DateOperatorFactory withTimezone(Timezone timezone) {
 
-			Assert.hasText(timezoneField, "timezoneField cannot be null or empty");
-			return new DateOperatorFactory(fieldReference, expression, dateFactory, Fields.field(timezoneField));
-		}
-
-		/**
-		 * @param timezoneExpression not nullable. The expression to bind the timezone from
-		 * @return a new DateOperator factory with the same date reference/expression/factory but with the given timezone
-		 */
-		public DateOperatorFactory withTimezoneOf(AggregationExpression timezoneExpression) {
-
-			Assert.notNull(timezoneExpression, "timezoneExpression cannot be null or empty");
-			return new DateOperatorFactory(fieldReference, expression, dateFactory, timezoneExpression);
+			Assert.notNull(timezone, "Timezone must not be null!");
+			return new DateOperatorFactory(fieldReference, expression, dateValue, timezone);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the day of the year for a date as a number between 1 and
-		 * 366 in the factory timezone (default UTC).
+		 * 366.
 		 *
 		 * @return
 		 */
 		public DayOfYear dayOfYear() {
-			return dayOfYear(timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the day of the year for a date as a number between 1 and
-		 * 366 in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public DayOfYear dayOfYear(@Nullable Object timezone) {
-			return usesFieldRef() ? DayOfYear.dayOfYear(fieldReference, timezone)
-					: usesExpression() ? DayOfYear.dayOfYear(expression, timezone) : DayOfYear.dayOfYear(dateFactory, timezone);
+			return applyTimezone(DayOfYear.dayOfYear(dateReference()), timezone);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the day of the month for a date as a number between 1 and
-		 * 31 in the factory timezone (default UTC).
+		 * 31.
 		 *
 		 * @return
 		 */
 		public DayOfMonth dayOfMonth() {
-			return dayOfMonth(timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the day of the month for a date as a number between 1 and
-		 * 31 in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public DayOfMonth dayOfMonth(@Nullable Object timezone) {
-			return usesFieldRef() ? DayOfMonth.dayOfMonth(fieldReference, timezone)
-					: usesExpression() ? DayOfMonth.dayOfMonth(expression, timezone)
-							: DayOfMonth.dayOfMonth(dateFactory, timezone);
+			return applyTimezone(DayOfMonth.dayOfMonth(dateReference()), timezone);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the day of the week for a date as a number between 1
-		 * (Sunday) and 7 (Saturday) in the factory timezone (default UTC).
+		 * (Sunday) and 7 (Saturday).
 		 *
 		 * @return
 		 */
 		public DayOfWeek dayOfWeek() {
-			return dayOfWeek(timezone);
+			return applyTimezone(DayOfWeek.dayOfWeek(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the day of the week for a date as a number between 1
-		 * (Sunday) and 7 (Saturday) in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public DayOfWeek dayOfWeek(@Nullable Object timezone) {
-			return usesFieldRef() ? DayOfWeek.dayOfWeek(fieldReference, timezone)
-					: usesExpression() ? DayOfWeek.dayOfWeek(expression, timezone) : DayOfWeek.dayOfWeek(dateFactory, timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the year portion of a date in the factory timezone
-		 * (default UTC).
+		 * Creates new {@link AggregationExpression} that returns the year portion of a date.
 		 *
 		 * @return
 		 */
 		public Year year() {
-			return year(timezone);
+			return applyTimezone(Year.year(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the year portion of a date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public Year year(@Nullable Object timezone) {
-			return usesFieldRef() ? Year.yearOf(fieldReference, timezone)
-					: usesExpression() ? Year.yearOf(expression, timezone) : Year.yearOf(dateFactory, timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the quarter of a date as a number between 1 and 4 in the
-		 * factory timezone (default UTC).
-		 *
-		 * @return
-		 */
-		public Quarter quarter() {
-			return quarter(timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the business quarter of a date as a number between 1 and 4
-		 * in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public Quarter quarter(@Nullable Object timezone) {
-			return usesFieldRef() ? Quarter.quarterOf(fieldReference, timezone)
-					: usesExpression() ? Quarter.quarterOf(expression, timezone) : Quarter.quarterOf(dateFactory, timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the month of a date as a number between 1 and 12 in the
-		 * factory timezone (default UTC).
+		 * Creates new {@link AggregationExpression} that returns the month of a date as a number between 1 and 12.
 		 *
 		 * @return
 		 */
 		public Month month() {
-			return month(timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the month of a date as a number between 1 and 12 in the
-		 * given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public Month month(@Nullable Object timezone) {
-			return usesFieldRef() ? Month.monthOf(fieldReference, timezone)
-					: usesExpression() ? Month.monthOf(expression, timezone) : Month.monthOf(dateFactory, timezone);
+			return applyTimezone(Month.month(dateReference()), timezone);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the week of the year for a date as a number between 0 and
-		 * 53 in the factory timezone (default UTC).
+		 * 53.
 		 *
 		 * @return
 		 */
 		public Week week() {
-			return week(timezone);
+			return applyTimezone(Week.week(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the week of the year for a date as a number between 0 and
-		 * 53 in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. The timezone ID or offset. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public Week week(@Nullable Object timezone) {
-			return usesFieldRef() ? Week.weekOf(fieldReference, timezone)
-					: usesExpression() ? Week.weekOf(expression, timezone) : Week.weekOf(dateFactory, timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the hour portion of a date as a number between 0 and 23 in
-		 * the factory timezone (default UTC).
+		 * Creates new {@link AggregationExpression} that returns the hour portion of a date as a number between 0 and 23.
 		 *
 		 * @return
 		 */
 		public Hour hour() {
-			return hour(timezone);
+			return applyTimezone(Hour.hour(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the hour portion of a date as a number between 0 and 23 in
-		 * the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public Hour hour(@Nullable Object timezone) {
-			return usesFieldRef() ? Hour.hourOf(fieldReference, timezone)
-					: usesExpression() ? Hour.hourOf(expression, timezone) : Hour.hourOf(dateFactory, timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the minute portion of a date as a number between 0 and 59
-		 * in the factory timezone (default UTC).
+		 * Creates new {@link AggregationExpression} that returns the minute portion of a date as a number between 0 and 59.
 		 *
 		 * @return
 		 */
 		public Minute minute() {
-			return minute(timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the minute portion of a date as a number between 0 and 59
-		 * in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public Minute minute(@Nullable Object timezone) {
-			return usesFieldRef() ? Minute.minuteOf(fieldReference, timezone)
-					: usesExpression() ? Minute.minuteOf(expression, timezone) : Minute.minuteOf(dateFactory, timezone);
+			return applyTimezone(Minute.minute(dateReference()), timezone);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the second portion of a date as a number between 0 and 59,
-		 * but can be 60 to account for leap seconds in the factory timezone (default UTC).
+		 * but can be 60 to account for leap seconds.
 		 *
 		 * @return
 		 */
 		public Second second() {
-			return second(timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the second portion of a date as a number between 0 and 59,
-		 * but can be 60 to account for leap seconds in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public Second second(@Nullable Object timezone) {
-			return usesFieldRef() ? Second.secondOf(fieldReference, timezone)
-					: usesExpression() ? Second.secondOf(expression, timezone) : Second.secondOf(dateFactory, timezone);
+			return applyTimezone(Second.second(dateReference()), timezone);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the millisecond portion of a date as an integer between 0
-		 * and 999 in the factory timezone (default UTC).
+		 * and 999.
 		 *
 		 * @return
 		 */
 		public Millisecond millisecond() {
-			return millisecond(timezone);
+			return applyTimezone(Millisecond.millisecond(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the millisecond portion of a date as an integer between 0
-		 * and 999 in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
+		 * Creates new {@link AggregationExpression} that converts a date object to a string according to a user-specified
+		 * {@literal format}.
 		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
+		 * @param format must not be {@literal null}.
 		 * @return
 		 */
-		public Millisecond millisecond(@Nullable Object timezone) {
-			return usesFieldRef() ? Millisecond.millisecondOf(fieldReference, timezone)
-					: usesExpression() ? Millisecond.millisecondOf(expression, timezone)
-							: Millisecond.millisecondOf(dateFactory, timezone);
+		public DateToString toString(String format) {
+			return applyTimezone(DateToString.dateToString(dateReference()).toString(format), timezone);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the weekday number in ISO 8601 format, ranging from 1
-		 * (for Monday) to 7 (for Sunday) in the factory timezone (default UTC).
+		 * (for Monday) to 7 (for Sunday).
 		 *
 		 * @return
 		 */
 		public IsoDayOfWeek isoDayOfWeek() {
-			return isoDayOfWeek(timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the weekday number in ISO 8601-2018 format, ranging from 1
-		 * (for Monday) to 7 (for Sunday) in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public IsoDayOfWeek isoDayOfWeek(@Nullable Object timezone) {
-			return usesFieldRef() ? IsoDayOfWeek.isoDayOfWeek(fieldReference, timezone)
-					: usesExpression() ? IsoDayOfWeek.isoDayOfWeek(expression, timezone)
-							: IsoDayOfWeek.isoDayOfWeek(dateFactory, timezone);
+			return applyTimezone(IsoDayOfWeek.isoDayWeek(dateReference()), timezone);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the week number in ISO 8601 format, ranging from 1 to
-		 * 53 in the factory timezone (default UTC).
+		 * 53.
 		 *
 		 * @return
 		 */
 		public IsoWeek isoWeek() {
-			return isoWeek(timezone);
+			return applyTimezone(IsoWeek.isoWeek(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the week number in ISO 8601-2018 format, ranging from 1 to
-		 * 53 in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public IsoWeek isoWeek(@Nullable Object timezone) {
-			return usesFieldRef() ? IsoWeek.isoWeekOf(fieldReference, timezone)
-					: usesExpression() ? IsoWeek.isoWeekOf(expression, timezone) : IsoWeek.isoWeekOf(dateFactory, timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that returns the year number in ISO 8601 format in the factory
-		 * timezone (default UTC).
+		 * Creates new {@link AggregationExpression} that returns the year number in ISO 8601 format.
 		 *
 		 * @return
 		 */
 		public IsoWeekYear isoWeekYear() {
-			return isoWeekYear(timezone);
+			return applyTimezone(IsoWeekYear.isoWeekYear(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that returns the year number in ISO 8601-2018 format in the given
-		 * timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
+		 * Creates new {@link AggregationExpression} that returns a document containing the constituent parts of the date as
+		 * individual properties.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
+		 * @return new instance of {@link DateToParts}.
 		 * @since 2.1
-		 * @return
-		 */
-		public IsoWeekYear isoWeekYear(@Nullable Object timezone) {
-			return usesFieldRef() ? IsoWeekYear.isoWeekYearOf(fieldReference, timezone)
-					: usesExpression() ? IsoWeekYear.isoWeekYearOf(expression, timezone)
-							: IsoWeekYear.isoWeekYearOf(dateFactory, timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that converts a date object to a string according to a user-specified
-		 * {@literal format} in the factory timezone (default UTC).
-		 *
-		 * @param format must not be {@literal null}.
-		 * @since 2.1
-		 * @return
-		 */
-		public DateToString toString(String format) {
-			return toString(format, timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that converts a date object to a string according to a user-specified
-		 * {@literal format} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param format must not be {@literal null}.
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public DateToString toString(String format, @Nullable Object timezone) {
-			return (usesFieldRef() ? DateToString.dateOf(fieldReference, timezone)
-					: usesExpression() ? DateToString.dateOf(expression, timezone) : DateToString.dateOf(dateFactory, timezone))
-							.toString(format);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that converts a string to a date object in the factory timezone
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @since 2.1
-		 * @return
-		 */
-		public DateFromString fromString() {
-			return fromString(timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that converts a string to a date object in the given timezone
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public DateFromString fromString(@Nullable Object timezone) {
-			return usesFieldRef() ? DateFromString.dateFromString(fieldReference, timezone)
-					: usesExpression() ? DateFromString.dateFromString(expression, timezone)
-							: DateFromString.dateFromString(dateFactory, timezone);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that converts a string to a date object in the factory timezone using
-		 * calendar parts (year/month/day)
-		 * <p>
-		 * WARNING: Mongo 3.6+ only
-		 *
-		 * @since 2.1
-		 * @return
 		 */
 		public DateToParts toParts() {
-			return toParts(timezone, null);
+			return applyTimezone(DateToParts.dateToParts(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that converts a string to a date object in the factory timezone using
-		 * isoWeek parts (isoWeekYear/isoWeek/isoDayOfWeek)
-		 * <p>
-		 * WARNING: Mongo 3.6+ only
+		 * Creates new {@link AggregationExpression} that converts a date/time string to a date object.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
+		 * @return new instance of {@link DateFromString}.
 		 * @since 2.1
-		 * @return
 		 */
-		public DateToParts toIsoWeekParts() {
-			return toParts(timezone, true);
+		public DateFromString fromString() {
+			return applyTimezone(DateFromString.fromString(dateReference()), timezone);
 		}
 
-		/**
-		 * Creates new {@link AggregationExpression} that converts a string to a date object in the factory timezone
-		 * <p>
-		 * WARNING: Mongo 3.6+ only
-		 *
-		 * @param iso8601 If set to true, modifies the output document to use ISO week date fields. Defaults to false.
-		 * @since 2.1
-		 * @return
-		 */
-		public DateToParts toParts(Boolean iso8601) {
-			return toParts(timezone, iso8601);
-		}
+		private Object dateReference() {
 
-		/**
-		 * Creates new {@link AggregationExpression} that converts a string to a date object in the given timezone using
-		 * calendar parts (year/month/day)
-		 * <p>
-		 * WARNING: Mongo 3.6+ only
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public DateToParts toParts(@Nullable Object timezone) {
-			return toParts(timezone, null);
-		}
+			if (usesFieldRef()) {
+				return Fields.field(fieldReference);
+			}
 
-		/**
-		 * Creates new {@link AggregationExpression} that converts a string to a date object in the given timezone using
-		 * isoWeek parts (isoWeekYear/isoWeek/isoDayOfWeek)
-		 * <p>
-		 * WARNING: Mongo 3.6+ only
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public DateToParts toIsoWeekParts(@Nullable Object timezone) {
-			return toParts(timezone, true);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that converts a string to a date object in the given timezone
-		 * <p>
-		 * WARNING: Mongo 3.6+ only
-		 *
-		 * @param timezone nullable. Overrides factory timezone. The timezone ID or offset as a String. Also accepts a
-		 *          {@link AggregationExpression} or {@link Field}. If null UTC is assumed.
-		 * @param iso8601 If set to true, modifies the output document to use ISO week date fields
-		 *          (isoWeekYear/isoWeek/isoDayOfWeek). Defaults to false.
-		 * @since 2.1
-		 * @return
-		 */
-		public DateToParts toParts(@Nullable Object timezone, @Nullable Boolean iso8601) {
-			return usesFieldRef() ? DateToParts.dateToParts(fieldReference, timezone, iso8601)
-					: usesExpression() ? DateToParts.dateToParts(expression, timezone, iso8601)
-							: DateToParts.dateToParts(dateFactory, timezone, iso8601);
+			return usesExpression() ? expression : dateValue;
 		}
 
 		private boolean usesFieldRef() {
@@ -906,152 +450,225 @@ public class DateOperators {
 		}
 	}
 
-	// contemplates support for the future functionality described in:
-	// https://jira.mongodb.org/browse/SERVER-23656
-	private static DateFactory CURRENT_DATE_FACTORY = DateFactory.LOCAL_DATE_FACTORY;
-
 	/**
-	 * Sets the {@link DateFactory} used by {@link DateOperators#currentDate()} and
-	 * {@link DateOperators#currentDate(java.lang.String)} for the entire application (statically).
-	 *
-	 * @param defaultFactory
-	 */
-	public static void setCurrentDateFactory(final DateFactory defaultFactory) {
-
-		Assert.notNull(defaultFactory, "Default DateFactory cannot be null");
-		CURRENT_DATE_FACTORY = defaultFactory;
-	}
-
-	/**
-	 * @return the {@link DateFactory} used by {@link DateOperators#currentDate()} and
-	 *         {@link DateOperators#currentDate(java.lang.String)}
-	 */
-	public static DateFactory getCurrentDateFactory() {
-		return CURRENT_DATE_FACTORY;
-	}
-
-	/**
-	 * New in Mongo 3.6 is support for timezone specification with all date types.
-	 * <p>
-	 * WARNING: Using timezone requires Mongo 3.6+ and will error on prior versions of Mongo
-	 *
+	 * @author Matt Morrissette
+	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	private abstract static class DateAggregationExpression extends AbstractAggregationExpression {
+	public static class DateFromPartsOperatorFactory {
 
-		protected DateAggregationExpression(Object date, @Nullable Object timezone) {
-			super(arguments(date, timezone));
+		private final Timezone timezone;
+
+		private DateFromPartsOperatorFactory(Timezone timezone) {
+			this.timezone = timezone;
 		}
 
-		private static Object arguments(Object date, @Nullable Object timezone) {
+		/**
+		 * Set the {@literal week date year} to the given value which must resolve to a weekday in range {@code 0 - 9999}.
+		 * Can be a simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param isoWeekYear must not be {@literal null}.
+		 * @return new instance of {@link IsoDateFromParts} with {@link Timezone} if set.
+		 * @throws IllegalArgumentException if given {@literal isoWeekYear} is {@literal null}.
+		 */
+		public IsoDateFromParts isoWeekYear(Object isoWeekYear) {
+			return applyTimezone(IsoDateFromParts.dateFromParts().isoWeekYear(isoWeekYear), timezone);
+		}
 
-			if (timezone != null) {
-				Assert.isTrue(DateAggregationExpression.isValidTimezoneObject(timezone),
-						() -> "Timezone was not a valid timezone: " + timezone
-								+ ". Must be String, AggregationExpression or Field");
+		/**
+		 * Set the {@literal week date year} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link IsoDateFromParts} with {@link Timezone} if set.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public IsoDateFromParts isoWeekYearOf(String fieldReference) {
+			return isoWeekYear(Fields.field(fieldReference));
+		}
 
-				java.util.Map<String, Object> args = new LinkedHashMap<>(4);
-				args.put("date", date);
-				args.put("timezone", timezone);
-				return args;
+		/**
+		 * Set the {@literal week date year} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link IsoDateFromParts} with {@link Timezone} if set.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public IsoDateFromParts isoWeekYearOf(AggregationExpression expression) {
+			return isoWeekYear(expression);
+		}
+
+		/**
+		 * Set the {@literal year} to the given value which must resolve to a calendar year. Can be a simple value,
+		 * {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param year must not be {@literal null}.
+		 * @return new instance of {@link DateFromParts} with {@link Timezone} if set.
+		 * @throws IllegalArgumentException if given {@literal year} is {@literal null}
+		 */
+		public DateFromParts year(Object year) {
+			return applyTimezone(DateFromParts.dateFromParts().year(year), timezone);
+		}
+
+		/**
+		 * Set the {@literal year} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link DateFromParts} with {@link Timezone} if set.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public DateFromParts yearOf(String fieldReference) {
+			return year(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Set the {@literal year} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DateFromParts} with {@link Timezone} if set.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public DateFromParts yearOf(AggregationExpression expression) {
+			return year(expression);
+		}
+
+		/**
+		 * Create a new {@link DateFromPartsOperatorFactory} bound to a given {@link Timezone}.<br />
+		 *
+		 * @param timezone must not be {@literal null}. Use {@link Timezone#none()} instead.
+		 * @return new instance of {@link DateFromPartsOperatorFactory}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 */
+		public DateFromPartsOperatorFactory withTimezone(Timezone timezone) {
+
+			Assert.notNull(timezone, "Timezone must not be null!");
+			return new DateFromPartsOperatorFactory(timezone);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} capable of setting a given {@link Timezone}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	public static abstract class TimezonedDateAggregationExpression extends AbstractAggregationExpression {
+
+		protected TimezonedDateAggregationExpression(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Append the {@code timezone} to a given source. The source itself can be a {@link Map} of already set properties
+		 * or a single value. In case of single value {@code source} the value will be added as {@code date} property.
+		 *
+		 * @param source must not be {@literal null}.
+		 * @param timezone must not be {@literal null} use {@link Timezone#none()} instead.
+		 * @return
+		 */
+		protected static java.util.Map<String, Object> appendTimezone(Object source, Timezone timezone) {
+
+			java.util.Map<String, Object> args;
+
+			if (source instanceof Map) {
+				args = new LinkedHashMap<>((Map) source);
 			} else {
-				return date;
+				args = new LinkedHashMap<>(2);
+				args.put("date", source);
 			}
+
+			if (!ObjectUtils.nullSafeEquals(Timezone.none(), timezone)) {
+				args.put("timezone", timezone.value);
+			} else if (args.containsKey("timezone")) {
+				args.remove("timezone");
+			}
+
+			return args;
 		}
 
-		public static boolean isValidTimezoneObject(Object timezone) {
-			return timezone == null
-					|| (timezone instanceof String || timezone instanceof Field || timezone instanceof AggregationExpression);
-		}
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 */
+		protected abstract TimezonedDateAggregationExpression withTimezone(Timezone timezone);
 
+		protected boolean hasTimezone() {
+			return contains("timezone");
+		}
 	}
 
 	/**
 	 * {@link AggregationExpression} for {@code $dayOfYear}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/dayOfYear/
+	 * @author Matt Morrissette
 	 */
-	public static class DayOfYear extends DateAggregationExpression {
+	public static class DayOfYear extends TimezonedDateAggregationExpression {
 
-		private DayOfYear(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$dayOfYear";
+		private DayOfYear(Object value) {
+			super(value);
 		}
 
 		/**
-		 * Creates new {@link DayOfYear} in UTC.
+		 * Creates new {@link DayOfYear}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link DayOfYear}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static DayOfYear dayOfYear(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new DayOfYear(value);
+		}
+
+		/**
+		 * Creates new {@link DayOfYear}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static DayOfYear dayOfYear(String fieldReference) {
-			return dayOfYear(fieldReference, null);
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return dayOfYear(Fields.field(fieldReference));
 		}
 
 		/**
-		 * Creates new {@link DayOfYear} for the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static DayOfYear dayOfYear(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new DayOfYear(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link DayOfYear} in UTC.
+		 * Creates new {@link DayOfYear}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static DayOfYear dayOfYear(AggregationExpression expression) {
-			return dayOfYear(expression, null);
-		}
-
-		/**
-		 * Creates new {@link DayOfYear} for the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static DayOfYear dayOfYear(AggregationExpression expression, @Nullable Object timezone) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new DayOfYear(expression, timezone);
+			return dayOfYear((Object) expression);
 		}
 
 		/**
-		 * Creates new {@link DayOfYear} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DayOfYear}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 * @since 2.1
-		 * @return
 		 */
-		public static DayOfYear dayOfYear(DateFactory dateFactory, @Nullable Object timezone) {
+		@Override
+		public DayOfYear withTimezone(Timezone timezone) {
 
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new DayOfYear(dateFactory, timezone);
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new DayOfYear(appendTimezone(values().iterator().next(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dayOfYear";
 		}
 	}
 
@@ -1059,89 +676,71 @@ public class DateOperators {
 	 * {@link AggregationExpression} for {@code $dayOfMonth}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/dayOfMonth/
+	 * @author Matt Morrissette
 	 */
-	public static class DayOfMonth extends DateAggregationExpression {
+	public static class DayOfMonth extends TimezonedDateAggregationExpression {
 
-		private DayOfMonth(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$dayOfMonth";
+		private DayOfMonth(Object value) {
+			super(value);
 		}
 
 		/**
-		 * Creates new {@link DayOfMonth} in UTC.
+		 * Creates new {@link DayOfMonth}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link DayOfMonth}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static DayOfMonth dayOfMonth(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new DayOfMonth(value);
+		}
+
+		/**
+		 * Creates new {@link DayOfMonth}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static DayOfMonth dayOfMonth(String fieldReference) {
-			return dayOfMonth(fieldReference, null);
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return dayOfMonth(Fields.field(fieldReference));
 		}
 
 		/**
-		 * Creates new {@link DayOfMonth} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static DayOfMonth dayOfMonth(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new DayOfMonth(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link DayOfMonth} in UTC.
+		 * Creates new {@link DayOfMonth}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static DayOfMonth dayOfMonth(AggregationExpression expression) {
-			return dayOfMonth(expression, null);
-		}
-
-		/**
-		 * Creates new {@link DayOfMonth} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static DayOfMonth dayOfMonth(AggregationExpression expression, @Nullable Object timezone) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new DayOfMonth(expression, timezone);
+			return dayOfMonth((Object) expression);
 		}
 
 		/**
-		 * Creates new {@link DayOfMonth} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DayOfMonth}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 * @since 2.1
-		 * @return
 		 */
-		public static DayOfMonth dayOfMonth(DateFactory dateFactory, @Nullable Object timezone) {
+		@Override
+		public DayOfMonth withTimezone(Timezone timezone) {
 
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new DayOfMonth(dateFactory, timezone);
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new DayOfMonth(appendTimezone(values().iterator().next(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dayOfMonth";
 		}
 	}
 
@@ -1149,17 +748,26 @@ public class DateOperators {
 	 * {@link AggregationExpression} for {@code $dayOfWeek}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/dayOfWeek/
+	 * @author Matt Morrissette
 	 */
-	public static class DayOfWeek extends DateAggregationExpression {
+	public static class DayOfWeek extends TimezonedDateAggregationExpression {
 
-		private DayOfWeek(Object value, Object timezone) {
-			super(value, timezone);
+		private DayOfWeek(Object value) {
+			super(value);
 		}
 
-		@Override
-		protected String getMongoMethod() {
-			return "$dayOfWeek";
+		/**
+		 * Creates new {@link DayOfWeek}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link DayOfWeek}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static DayOfWeek dayOfWeek(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new DayOfWeek(value);
 		}
 
 		/**
@@ -1169,24 +777,9 @@ public class DateOperators {
 		 * @return
 		 */
 		public static DayOfWeek dayOfWeek(String fieldReference) {
-			return dayOfWeek(fieldReference, null);
-		}
 
-		/**
-		 * Creates new {@link DayOfWeek} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static DayOfWeek dayOfWeek(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new DayOfWeek(Fields.field(fieldReference), timezone);
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return dayOfWeek(Fields.field(fieldReference));
 		}
 
 		/**
@@ -1196,42 +789,30 @@ public class DateOperators {
 		 * @return
 		 */
 		public static DayOfWeek dayOfWeek(AggregationExpression expression) {
-			return dayOfWeek(expression, null);
-		}
-
-		/**
-		 * Creates new {@link DayOfWeek} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static DayOfWeek dayOfWeek(AggregationExpression expression, @Nullable Object timezone) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new DayOfWeek(expression, timezone);
+			return dayOfWeek((Object) expression);
 		}
 
 		/**
-		 * Creates new {@link DayOfWeek} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DayOfWeek}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 * @since 2.1
-		 * @return
 		 */
-		public static DayOfWeek dayOfWeek(DateFactory dateFactory, @Nullable Object timezone) {
+		@Override
+		public DayOfWeek withTimezone(Timezone timezone) {
 
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new DayOfWeek(dateFactory, timezone);
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new DayOfWeek(appendTimezone(values().iterator().next(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dayOfWeek";
 		}
 	}
 
@@ -1239,188 +820,71 @@ public class DateOperators {
 	 * {@link AggregationExpression} for {@code $year}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/year/
+	 * @author Matt Morrissette
 	 */
-	public static class Year extends DateAggregationExpression {
+	public static class Year extends TimezonedDateAggregationExpression {
 
-		private Year(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$year";
+		private Year(Object value) {
+			super(value);
 		}
 
 		/**
-		 * Creates new {@link Year} in the UTC timezone.
+		 * Creates new {@link Year}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link Year}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static Year year(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new Year(value);
+		}
+
+		/**
+		 * Creates new {@link Year}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static Year yearOf(String fieldReference) {
-			return yearOf(fieldReference, null);
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return year(Fields.field(fieldReference));
 		}
 
 		/**
-		 * Creates new {@link Year} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Year yearOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new Year(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link Year} in the UTC timezone.
+		 * Creates new {@link Year}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static Year yearOf(AggregationExpression expression) {
-			return yearOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link Year} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Year yearOf(AggregationExpression expression, @Nullable Object timezone) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new Year(expression, timezone);
+			return year(expression);
 		}
 
 		/**
-		 * Creates new {@link Year} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link Year}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 * @since 2.1
-		 * @return
 		 */
-		public static Year yearOf(DateFactory dateFactory, @Nullable Object timezone) {
+		@Override
+		public Year withTimezone(Timezone timezone) {
 
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new Year(dateFactory, timezone);
-		}
-	}
-
-	/**
-	 * Pseudo {@link AggregationExpression} to represent the current business quarter using conditionals. Can be used in a
-	 * $group aggregation state to group results by business quarter
-	 *
-	 * @author Matt Morrissette
-	 */
-	public static class Quarter implements AggregationExpression {
-
-		private final Cond cond;
-
-		private Quarter(Object value, Object timezone) {
-
-			final Month month = new Month(value, timezone);
-			cond = when(quarterConditional(month, 3)).then(1).otherwiseValueOf(when(quarterConditional(month, 6)).then(2)
-					.otherwiseValueOf(when(quarterConditional(month, 9)).then(3).otherwise(4)));
-		}
-
-		private static AggregationExpression quarterConditional(final Month month, int mininumMonth) {
-			return ComparisonOperators.valueOf(month).lessThanEqualToValue(mininumMonth);
-		}
-
-		/**
-		 * Creates new {@link Quarter} in the UTC timezone.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @return
-		 */
-		public static Quarter quarterOf(String fieldReference) {
-			return quarterOf(fieldReference, null);
-		}
-
-		/**
-		 * Creates new {@link Quarter} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Quarter quarterOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new Quarter(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link Quarter} in the UTC timezone.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @return
-		 */
-		public static Quarter quarterOf(AggregationExpression expression) {
-			return quarterOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link Quarter} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Quarter quarterOf(AggregationExpression expression, @Nullable Object timezone) {
-
-			Assert.notNull(expression, "Expression must not be null!");
-			return new Quarter(expression, timezone);
-		}
-
-		/**
-		 * Creates new {@link Quarter} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
-		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
-		 * @since 2.1
-		 * @return
-		 */
-		public static Quarter quarterOf(DateFactory dateFactory, @Nullable Object timezone) {
-
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new Quarter(dateFactory, timezone);
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new Year(appendTimezone(values().iterator().next(), timezone));
 		}
 
 		@Override
-		public Document toDocument(AggregationOperationContext context) {
-			return cond.toDocument(context);
+		protected String getMongoMethod() {
+			return "$year";
 		}
 	}
 
@@ -1428,179 +892,143 @@ public class DateOperators {
 	 * {@link AggregationExpression} for {@code $month}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/month/
+	 * @author Matt Morrissette
 	 */
-	public static class Month extends DateAggregationExpression {
+	public static class Month extends TimezonedDateAggregationExpression {
 
-		private Month(Object value, Object timezone) {
-			super(value, timezone);
+		private Month(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link Month}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link Month}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static Month month(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new Month(value);
+		}
+
+		/**
+		 * Creates new {@link Month}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static Month monthOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return month(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link Month}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static Month monthOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return month(expression);
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link Month}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 * @since 2.1
+		 */
+		@Override
+		public Month withTimezone(Timezone timezone) {
+
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new Month(appendTimezone(values().iterator().next(), timezone));
 		}
 
 		@Override
 		protected String getMongoMethod() {
 			return "$month";
 		}
-
-		/**
-		 * Creates new {@link Month} in the UTC timezone.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @return
-		 */
-		public static Month monthOf(String fieldReference) {
-			return monthOf(fieldReference, null);
-		}
-
-		/**
-		 * Creates new {@link Month} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Month monthOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new Month(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link Month} in the UTC timezone.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @return
-		 */
-		public static Month monthOf(AggregationExpression expression) {
-			return monthOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link Month} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Month monthOf(AggregationExpression expression, @Nullable Object timezone) {
-
-			Assert.notNull(expression, "Expression must not be null!");
-			return new Month(expression, timezone);
-		}
-
-		/**
-		 * Creates new {@link Month} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
-		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
-		 * @since 2.1
-		 * @return
-		 */
-		public static Month monthOf(DateFactory dateFactory, @Nullable Object timezone) {
-
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new Month(dateFactory, timezone);
-		}
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $week}. This behavior is the same as the “%U” operator to the strftime
+	 * {@link AggregationExpression} for {@code $week}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/week/
+	 * @author Matt Morrissette
 	 */
-	public static class Week extends DateAggregationExpression {
+	public static class Week extends TimezonedDateAggregationExpression {
 
-		private Week(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$week";
+		private Week(Object value) {
+			super(value);
 		}
 
 		/**
-		 * Creates new {@link Week} in the UTC timezone.
+		 * Creates new {@link Week}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link Week}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static Week week(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new Week(value);
+		}
+
+		/**
+		 * Creates new {@link Week}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static Week weekOf(String fieldReference) {
-			return weekOf(fieldReference, null);
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return week(Fields.field(fieldReference));
 		}
 
 		/**
-		 * Creates new {@link Week} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Week weekOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new Week(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link Week} in the UTC timezone.
+		 * Creates new {@link Week}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static Week weekOf(AggregationExpression expression) {
-			return weekOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link Week} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Week weekOf(AggregationExpression expression, @Nullable Object timezone) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new Week(expression, timezone);
+			return week(expression);
 		}
 
 		/**
-		 * Creates new {@link Week} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link Week}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 * @since 2.1
-		 * @return
 		 */
-		public static Week weekOf(DateFactory dateFactory, @Nullable Object timezone) {
+		@Override
+		public Week withTimezone(Timezone timezone) {
 
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new Week(dateFactory, timezone);
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new Week(appendTimezone(values().iterator().next(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$week";
 		}
 	}
 
@@ -1608,89 +1036,71 @@ public class DateOperators {
 	 * {@link AggregationExpression} for {@code $hour}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/hour/
+	 * @author Matt Morrissette
 	 */
-	public static class Hour extends DateAggregationExpression {
+	public static class Hour extends TimezonedDateAggregationExpression {
 
-		private Hour(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$hour";
+		private Hour(Object value) {
+			super(value);
 		}
 
 		/**
-		 * Creates new {@link Hour} in the UTC timezone.
+		 * Creates new {@link Hour}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link Hour}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static Hour hour(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new Hour(value);
+		}
+
+		/**
+		 * Creates new {@link Hour}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static Hour hourOf(String fieldReference) {
-			return hourOf(fieldReference, null);
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return hour(Fields.field(fieldReference));
 		}
 
 		/**
-		 * Creates new {@link Hour} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Hour hourOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new Hour(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link Hour} in the UTC timezone.
+		 * Creates new {@link Hour}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static Hour hourOf(AggregationExpression expression) {
-			return hourOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link Hour} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Hour hourOf(AggregationExpression expression, @Nullable Object timezone) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new Hour(expression, timezone);
+			return hour(expression);
 		}
 
 		/**
-		 * Creates new {@link Hour} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link Hour}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 * @since 2.1
-		 * @return
 		 */
-		public static Hour hourOf(DateFactory dateFactory, @Nullable Object timezone) {
+		@Override
+		public Hour withTimezone(Timezone timezone) {
 
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new Hour(dateFactory, timezone);
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new Hour(appendTimezone(values().iterator().next(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$hour";
 		}
 	}
 
@@ -1698,89 +1108,71 @@ public class DateOperators {
 	 * {@link AggregationExpression} for {@code $minute}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/minute/
+	 * @author Matt Morrissette
 	 */
-	public static class Minute extends DateAggregationExpression {
+	public static class Minute extends TimezonedDateAggregationExpression {
 
-		private Minute(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$minute";
+		private Minute(Object value) {
+			super(value);
 		}
 
 		/**
-		 * Creates new {@link Minute} in the UTC timezone.
+		 * Creates new {@link Minute}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link Minute}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static Minute minute(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new Minute(value);
+		}
+
+		/**
+		 * Creates new {@link Minute}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static Minute minuteOf(String fieldReference) {
-			return minuteOf(fieldReference, null);
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return minute(Fields.field(fieldReference));
 		}
 
 		/**
-		 * Creates new {@link Minute} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Minute minuteOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new Minute(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link Minute} in the UTC timezone.
+		 * Creates new {@link Minute}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static Minute minuteOf(AggregationExpression expression) {
-			return minuteOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link Minute} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Minute minuteOf(AggregationExpression expression, @Nullable Object timezone) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new Minute(expression, timezone);
+			return minute(expression);
 		}
 
 		/**
-		 * Creates new {@link Minute} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link Minute}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 * @since 2.1
-		 * @return
 		 */
-		public static Minute minuteOf(DateFactory dateFactory, @Nullable Object timezone) {
+		@Override
+		public Minute withTimezone(Timezone timezone) {
 
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new Minute(dateFactory, timezone);
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new Minute(appendTimezone(values().iterator().next(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$minute";
 		}
 	}
 
@@ -1788,89 +1180,71 @@ public class DateOperators {
 	 * {@link AggregationExpression} for {@code $second}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/second/
+	 * @author Matt Morrissette
 	 */
-	public static class Second extends DateAggregationExpression {
+	public static class Second extends TimezonedDateAggregationExpression {
 
-		private Second(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$second";
+		private Second(Object value) {
+			super(value);
 		}
 
 		/**
-		 * Creates new {@link Second} in the UTC timezone.
+		 * Creates new {@link Second}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link Second}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static Second second(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new Second(value);
+		}
+
+		/**
+		 * Creates new {@link Second}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static Second secondOf(String fieldReference) {
-			return secondOf(fieldReference, null);
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return second(Fields.field(fieldReference));
 		}
 
 		/**
-		 * Creates new {@link Second} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Second secondOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new Second(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link Second} in the UTC timezone.
+		 * Creates new {@link Second}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static Second secondOf(AggregationExpression expression) {
-			return secondOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link Second} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Second secondOf(AggregationExpression expression, @Nullable Object timezone) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new Second(expression, timezone);
+			return second(expression);
 		}
 
 		/**
-		 * Creates new {@link Second} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link Second}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 * @since 2.1
-		 * @return
 		 */
-		public static Second secondOf(DateFactory dateFactory, @Nullable Object timezone) {
+		@Override
+		public Second withTimezone(Timezone timezone) {
 
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new Second(dateFactory, timezone);
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new Second(appendTimezone(values().iterator().next(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$second";
 		}
 	}
 
@@ -1878,360 +1252,71 @@ public class DateOperators {
 	 * {@link AggregationExpression} for {@code $millisecond}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/millisecond/
+	 * @author Matt Morrissette
 	 */
-	public static class Millisecond extends DateAggregationExpression {
+	public static class Millisecond extends TimezonedDateAggregationExpression {
 
-		private Millisecond(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$millisecond";
+		private Millisecond(Object value) {
+			super(value);
 		}
 
 		/**
-		 * Creates new {@link Millisecond} in the UTC timezone.
+		 * Creates new {@link Millisecond}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link Millisecond}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static Millisecond millisecond(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new Millisecond(value);
+		}
+
+		/**
+		 * Creates new {@link Millisecond}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
 		public static Millisecond millisecondOf(String fieldReference) {
-			return millisecondOf(fieldReference, null);
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return millisecond(Fields.field(fieldReference));
 		}
 
 		/**
-		 * Creates new {@link Millisecond} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Millisecond millisecondOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new Millisecond(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link Millisecond} in the UTC timezone.
+		 * Creates new {@link Millisecond}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
 		public static Millisecond millisecondOf(AggregationExpression expression) {
-			return millisecondOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link Millisecond} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static Millisecond millisecondOf(AggregationExpression expression, @Nullable Object timezone) {
 
 			Assert.notNull(expression, "Expression must not be null!");
-			return new Millisecond(expression, timezone);
+			return millisecond(expression);
 		}
 
 		/**
-		 * Creates new {@link Millisecond} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
 		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link Millisecond}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 * @since 2.1
-		 * @return
 		 */
-		public static Millisecond millisecondOf(DateFactory dateFactory, @Nullable Object timezone) {
+		@Override
+		public Millisecond withTimezone(Timezone timezone) {
 
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new Millisecond(dateFactory, timezone);
-		}
-	}
-
-	/**
-	 * {@link AggregationExpression} for {@code $isoDayOfWeek}.
-	 *
-	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/isoDayOfWeek/
-	 */
-	public static class IsoDayOfWeek extends DateAggregationExpression {
-
-		private IsoDayOfWeek(Object value, Object timezone) {
-			super(value, timezone);
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new Millisecond(appendTimezone(values().iterator().next(), timezone));
 		}
 
 		@Override
 		protected String getMongoMethod() {
-			return "$isoDayOfWeek";
-		}
-
-		/**
-		 * Creates new {@link IsoDayOfWeek} in the UTC timezone.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @return
-		 */
-		public static IsoDayOfWeek isoDayOfWeek(String fieldReference) {
-			return isoDayOfWeek(fieldReference, null);
-		}
-
-		/**
-		 * Creates new {@link IsoDayOfWeek} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @since 2.1
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @return
-		 */
-		public static IsoDayOfWeek isoDayOfWeek(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new IsoDayOfWeek(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link IsoDayOfWeek} in the UTC timezone.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @return
-		 */
-		public static IsoDayOfWeek isoDayOfWeek(AggregationExpression expression) {
-			return isoDayOfWeek(expression, null);
-		}
-
-		/**
-		 * Creates new {@link IsoDayOfWeek} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static IsoDayOfWeek isoDayOfWeek(AggregationExpression expression, @Nullable Object timezone) {
-
-			Assert.notNull(expression, "Expression must not be null!");
-			return new IsoDayOfWeek(expression, timezone);
-		}
-
-		/**
-		 * Creates new {@link IsoDayOfWeek} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
-		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
-		 * @since 2.1
-		 * @return
-		 */
-		public static IsoDayOfWeek isoDayOfWeek(DateFactory dateFactory, @Nullable Object timezone) {
-
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new IsoDayOfWeek(dateFactory, timezone);
-		}
-
-	}
-
-	/**
-	 * {@link AggregationExpression} for {@code $isoWeek}.
-	 *
-	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/isoWeek/
-	 */
-	public static class IsoWeek extends DateAggregationExpression {
-
-		private IsoWeek(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$isoWeek";
-		}
-
-		/**
-		 * Creates new {@link IsoWeek} in the UTC timezone.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @return
-		 */
-		public static IsoWeek isoWeekOf(String fieldReference) {
-			return isoWeekOf(fieldReference, null);
-		}
-
-		/**
-		 * Creates new {@link IsoWeek} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static IsoWeek isoWeekOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new IsoWeek(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link IsoWeek} in the UTC timezone.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @return
-		 */
-		public static IsoWeek isoWeekOf(AggregationExpression expression) {
-			return isoWeekOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link IsoWeek} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static IsoWeek isoWeekOf(AggregationExpression expression, @Nullable Object timezone) {
-
-			Assert.notNull(expression, "Expression must not be null!");
-			return new IsoWeek(expression, timezone);
-		}
-
-		/**
-		 * Creates new {@link IsoWeek} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
-		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
-		 * @since 2.1
-		 * @return
-		 */
-		public static IsoWeek isoWeekOf(DateFactory dateFactory, @Nullable Object timezone) {
-
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new IsoWeek(dateFactory, timezone);
-		}
-	}
-
-	/**
-	 * {@link AggregationExpression} for {@code $isoWeekYear}.
-	 *
-	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/isoWeekYear/
-	 */
-	public static class IsoWeekYear extends DateAggregationExpression {
-
-		private IsoWeekYear(Object value, Object timezone) {
-			super(value, timezone);
-		}
-
-		@Override
-		protected String getMongoMethod() {
-			return "$isoWeekYear";
-		}
-
-		/**
-		 * Creates new {@link IsoWeekYear} in the UTC timezone.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @return
-		 */
-		public static IsoWeekYear isoWeekYearOf(String fieldReference) {
-			return isoWeekYearOf(fieldReference, null);
-		}
-
-		/**
-		 * Creates new {@link IsoWeekYear} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static IsoWeekYear isoWeekYearOf(String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-			return new IsoWeekYear(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link Millisecond} in the UTC timezone.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @return
-		 */
-		public static IsoWeekYear isoWeekYearOf(AggregationExpression expression) {
-			return isoWeekYearOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link Millisecond} in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static IsoWeekYear isoWeekYearOf(AggregationExpression expression, @Nullable Object timezone) {
-
-			Assert.notNull(expression, "Expression must not be null!");
-			return new IsoWeekYear(expression, timezone);
-		}
-
-		/**
-		 * Creates new {@link IsoWeekYear} for current date in the given timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
-		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
-		 * @since 2.1
-		 * @return
-		 */
-		public static IsoWeekYear isoWeekYearOf(DateFactory dateFactory, @Nullable Object timezone) {
-
-			Assert.notNull(dateFactory, "dateFactory must not be null!");
-			return new IsoWeekYear(dateFactory, timezone);
+			return "$millisecond";
 		}
 	}
 
@@ -2239,12 +1324,75 @@ public class DateOperators {
 	 * {@link AggregationExpression} for {@code $dateToString}.
 	 *
 	 * @author Christoph Strobl
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/dateToString/
+	 * @author Matt Morrissette
 	 */
-	public static class DateToString extends AbstractAggregationExpression {
+	public static class DateToString extends TimezonedDateAggregationExpression {
 
 		private DateToString(Object value) {
 			super(value);
+		}
+
+		/**
+		 * Creates new {@link FormatBuilder}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link FormatBuilder}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static FormatBuilder dateToString(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+
+			return new FormatBuilder() {
+
+				@Override
+				public DateToString toString(String format) {
+
+					Assert.notNull(format, "Format must not be null!");
+					return new DateToString(argumentMap(value, format, Timezone.none()));
+				}
+			};
+		}
+
+		/**
+		 * Creates new {@link FormatBuilder} allowing to define the date format to apply.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static FormatBuilder dateOf(final String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return dateToString(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link FormatBuilder} allowing to define the date format to apply.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static FormatBuilder dateOf(final AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return dateToString(expression);
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link Millisecond}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 * @since 2.1
+		 */
+		@Override
+		public DateToString withTimezone(Timezone timezone) {
+
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new DateToString(argumentMap(get("date"), get("format"), timezone));
 		}
 
 		@Override
@@ -2252,132 +1400,14 @@ public class DateOperators {
 			return "$dateToString";
 		}
 
-		/**
-		 * Creates new {@link FormatBuilder} allowing to define the date format to apply in the UTC timezone
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @return
-		 */
-		public static FormatBuilder dateOf(final String fieldReference) {
-			return dateOf(fieldReference, null);
-		}
+		private static java.util.Map<String, Object> argumentMap(Object date, String format, Timezone timezone) {
 
-		/**
-		 * Creates new {@link FormatBuilder} allowing to define the date format to apply in the specified timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static FormatBuilder dateOf(final String fieldReference, @Nullable Object timezone) {
-
-			Assert.hasText(fieldReference, "FieldReference must not be null!");
-
-			return new FormatBuilder() {
-
-				@Override
-				public DateToString toString(String format) {
-					return toString(format, timezone);
-				}
-
-				@Override
-				public DateToString toString(String format, @Nullable Object timezone) {
-
-					Assert.notNull(format, "Format must not be null!");
-					return new DateToString(argumentMap(Fields.field(fieldReference), format, timezone));
-				}
-			};
-		}
-
-		/**
-		 * Creates new {@link FormatBuilder} allowing to define the date format to apply in the UTC timezone.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @return
-		 */
-		public static FormatBuilder dateOf(final AggregationExpression expression) {
-			return dateOf(expression, null);
-		}
-
-		/**
-		 * Creates new {@link FormatBuilder} allowing to define the date format to apply in the specified timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @since 2.1
-		 * @return
-		 */
-		public static FormatBuilder dateOf(final AggregationExpression expression, @Nullable Object timezone) {
-
-			Assert.notNull(expression, "Expression must not be null!");
-			Assert.isTrue(DateAggregationExpression.isValidTimezoneObject(timezone),
-					() -> "Timezone was not a valid timezone: " + timezone + ". Must be String, AggregationExpression or Field");
-
-			return new FormatBuilder() {
-
-				@Override
-				public DateToString toString(String format) {
-					return toString(format, timezone);
-				}
-
-				@Override
-				public DateToString toString(String format, @Nullable Object timezone) {
-					Assert.notNull(format, "Format must not be null!");
-					return new DateToString(argumentMap(expression, format, timezone));
-				}
-			};
-		}
-
-		/**
-		 * Creates new {@link FormatBuilder} allowing to define the date format to apply in the specified timezone.
-		 * <p>
-		 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors. If Mongo is less than 3.6,
-		 * timezone must be null.
-		 *
-		 * @param dateFactory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed. (supports Mongo prior to 3.6 if null)
-		 * @since 2.1
-		 * @return
-		 */
-		public static FormatBuilder dateOf(final DateFactory dateFactory, @Nullable Object timezone) {
-
-			Assert.notNull(dateFactory, "CurrentDateFactory must not be null!");
-			Assert.isTrue(DateAggregationExpression.isValidTimezoneObject(timezone),
-					() -> "Timezone was not a valid timezone: " + timezone + ". Must be String, AggregationExpression or Field");
-
-			return new FormatBuilder() {
-
-				@Override
-				public DateToString toString(String format) {
-					return toString(format, timezone);
-				}
-
-				@Override
-				public DateToString toString(String format, @Nullable Object timezone) {
-					Assert.notNull(format, "Format must not be null!");
-					return new DateToString(argumentMap(dateFactory, format, timezone));
-				}
-			};
-		}
-
-		private static java.util.Map<String, Object> argumentMap(Object date, String format, @Nullable Object timezone) {
-
-			java.util.Map<String, Object> args = new LinkedHashMap<>(5);
-			args.put("date", date);
+			java.util.Map<String, Object> args = new LinkedHashMap<String, Object>(2);
 			args.put("format", format);
-			if (timezone != null) {
-				Assert.isTrue(DateAggregationExpression.isValidTimezoneObject(timezone),
-						() -> "Timezone was not a valid timezone: " + timezone
-								+ ". Must be String, AggregationExpression or Field");
-				args.put("timezone", timezone);
+			args.put("date", date);
+
+			if (!ObjectUtils.nullSafeEquals(timezone, Timezone.none())) {
+				args.put("timezone", timezone.value);
 			}
 			return args;
 		}
@@ -2385,313 +1415,491 @@ public class DateOperators {
 		public interface FormatBuilder {
 
 			/**
-			 * Creates new {@link DateToString} with all previously added arguments appending the given one in the builder
-			 * timezone (default UTC).
+			 * Creates new {@link DateToString} with all previously added arguments appending the given one.
 			 *
 			 * @param format must not be {@literal null}.
 			 * @return
 			 */
 			DateToString toString(String format);
-
-			/**
-			 * Creates new {@link DateToString} with all previously added arguments appending the given one in the given
-			 * timezone.
-			 * <p>
-			 * WARNING: Mongo 3.6+ only. Using timezone on prior Mongo versions will cause errors.
-			 *
-			 * @param format must not be {@literal null}.
-			 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression}
-			 *          or {@link Field}. If null, UTC is assumed.
-			 * @since 2.1
-			 * @return
-			 */
-			DateToString toString(String format, @Nullable Object timezone);
 		}
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $dateFromString}.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only.
+	 * {@link AggregationExpression} for {@code $isoDayOfWeek}.
 	 *
-	 * @since 2.1
+	 * @author Christoph Strobl
 	 * @author Matt Morrissette
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/
 	 */
-	public static class DateFromString extends AbstractAggregationExpression {
+	public static class IsoDayOfWeek extends TimezonedDateAggregationExpression {
 
-		private DateFromString(Object value, Object timezone) {
-			super(argumentMap(value, timezone));
+		private IsoDayOfWeek(Object value) {
+			super(value);
 		}
 
-		private static Map<String, Object> argumentMap(final Object value, final Object timezone) {
+		/**
+		 * Creates new {@link IsoDayOfWeek}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link IsoDayOfWeek}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static IsoDayOfWeek isoDayWeek(Object value) {
 
-			final Map<String, Object> vals = new LinkedHashMap<>(4);
-			vals.put("dateString", value);
-			if (timezone != null) {
-				Assert.isTrue(DateAggregationExpression.isValidTimezoneObject(timezone),
-						() -> "Timezone was not a valid timezone: " + timezone
-								+ ". Must be String, AggregationExpression or Field");
-				vals.put("timezone", timezone);
-			}
-			return vals;
+			Assert.notNull(value, "value must not be null!");
+			return new IsoDayOfWeek(value);
+		}
+
+		/**
+		 * Creates new {@link IsoDayOfWeek}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoDayOfWeek isoDayOfWeek(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return isoDayWeek(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link IsoDayOfWeek}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoDayOfWeek isoDayOfWeek(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return isoDayWeek(expression);
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link IsoDayOfWeek}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 * @since 2.1
+		 */
+		@Override
+		public IsoDayOfWeek withTimezone(Timezone timezone) {
+
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new IsoDayOfWeek(appendTimezone(values().iterator().next(), timezone));
 		}
 
 		@Override
 		protected String getMongoMethod() {
-			return "$dateFromString";
-		}
-
-		/**
-		 * Creates new {@link DateFromString} in the UTC timezone for a date referencing a field.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @return
-		 */
-		public static DateFromString dateFromString(final String fieldReference) {
-			return dateFromString(fieldReference, null);
-		}
-
-		/**
-		 * Creates new {@link DateFromString} in the given timezone for a date referencing a field.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @return
-		 */
-		public static DateFromString dateFromString(final String fieldReference, @Nullable final Object timezone) {
-
-			Assert.notNull(fieldReference, "fieldReference must not be null!");
-			return new DateFromString(Fields.field(fieldReference), timezone);
-		}
-
-		/**
-		 * Creates new {@link DateFromString} in the given timezone for a date from evaluating an AggregationExpression.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @return
-		 */
-		public static DateFromString dateFromString(final AggregationExpression expression) {
-			return dateFromString(expression, null);
-		}
-
-		/**
-		 * Creates new {@link DateFromString} in the given timezone for a date from evaluating an AggregationExpression.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @return
-		 */
-		public static DateFromString dateFromString(final AggregationExpression expression,
-				@Nullable final Object timezone) {
-
-			Assert.notNull(expression, "expression must not be null!");
-			return new DateFromString(expression, timezone);
-		}
-
-		/**
-		 * Creates new {@link DateFromString} in the given timezone for a date provided by the given factory.
-		 *
-		 * @param factory must not be {@literal null}.
-		 * @return
-		 */
-		public static DateFromString dateFromString(final DateFactory factory) {
-			return dateFromString(factory, null);
-		}
-
-		/**
-		 * Creates new {@link DateFromString} in the given timezone for a date provided by the given factory.
-		 *
-		 * @param factory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @return
-		 */
-		public static DateFromString dateFromString(final DateFactory factory, final @Nullable Object timezone) {
-
-			Assert.notNull(factory, "factory must not be null!");
-			return new DateFromString(factory, timezone);
+			return "$isoDayOfWeek";
 		}
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $dateToParts}.
-	 * <p>
-	 * WARNING: Mongo 3.6+ only.
+	 * {@link AggregationExpression} for {@code $isoWeek}.
 	 *
-	 * @since 2.1
+	 * @author Christoph Strobl
 	 * @author Matt Morrissette
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/
 	 */
-	public static class DateToParts extends AbstractAggregationExpression {
+	public static class IsoWeek extends TimezonedDateAggregationExpression {
 
-		private DateToParts(Object value, Object timezone, Boolean iso8601) {
-			super(argumentMap(value, timezone, iso8601));
+		private IsoWeek(Object value) {
+			super(value);
 		}
 
-		private static Map<String, Object> argumentMap(final Object value, Object timezone, Boolean iso8601) {
+		/**
+		 * Creates new {@link IsoWeek}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link IsoWeek}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static IsoWeek isoWeek(Object value) {
 
-			final Map<String, Object> vals = new LinkedHashMap<>(6);
-			vals.put("date", value);
-			if (timezone != null) {
-				if (timezone instanceof Boolean) {
-					// iso8601 passed as second argument
-					if (iso8601 == null) {
-						iso8601 = (Boolean) timezone;
-					} else {
-						throw new IllegalArgumentException(
-								"Timezone was not a valid timezone: " + timezone + ". Must be String, AggregationExpression or Field");
-					}
-				} else {
-					Assert.isTrue(DateAggregationExpression.isValidTimezoneObject(timezone),
-							() -> "Timezone was not a valid timezone: " + timezone
-									+ ". Must be String, AggregationExpression or Field");
-					vals.put("timezone", timezone);
-				}
-			}
-			if (iso8601 != null) {
-				vals.put("iso8601", iso8601);
-			}
-			return vals;
+			Assert.notNull(value, "value must not be null!");
+			return new IsoWeek(value);
+		}
+
+		/**
+		 * Creates new {@link IsoWeek}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoWeek isoWeekOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return isoWeek(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link IsoWeek}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoWeek isoWeekOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return isoWeek(expression);
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link IsoWeek}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 * @since 2.1
+		 */
+		@Override
+		public IsoWeek withTimezone(Timezone timezone) {
+
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new IsoWeek(appendTimezone(values().iterator().next(), timezone));
 		}
 
 		@Override
 		protected String getMongoMethod() {
-			return "$dateToParts";
+			return "$isoWeek";
 		}
-
-		/**
-		 * Creates new {@link DateToParts} in the UTC timezone.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @return
-		 */
-		public static DateToParts dateToParts(final String fieldReference) {
-			return dateToParts(fieldReference, null, null);
-		}
-
-		/**
-		 * Creates new {@link DateToParts} in the given timezone.
-		 *
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @param fieldReference must not be {@literal null}.
-		 * @return
-		 */
-		public static DateToParts dateToParts(final String fieldReference, final Object timezone) {
-			return dateToParts(fieldReference, timezone, null);
-		}
-
-		/**
-		 * Creates new {@link DateToParts} in the given timezone.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @param iso8601 If set to true, modifies the output document to use ISO week date fields. Defaults to false.
-		 * @return
-		 */
-		public static DateToParts dateToParts(final String fieldReference, @Nullable final Object timezone,
-				@Nullable final Boolean iso8601) {
-
-			Assert.notNull(fieldReference, "fieldReference must not be null!");
-			return new DateToParts(Fields.field(fieldReference), timezone, iso8601);
-		}
-
-		/**
-		 * Creates new {@link DateToParts} in the UTC timezone.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @return
-		 */
-		public static DateToParts dateToParts(final AggregationExpression expression) {
-			return dateToParts(expression, null, null);
-		}
-
-		/**
-		 * Creates new {@link DateToParts} in the given timezone.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @return
-		 */
-		public static DateToParts dateToParts(final AggregationExpression expression, @Nullable final Object timezone) {
-			return dateToParts(expression, timezone, null);
-		}
-
-		/**
-		 * Creates new {@link DateToParts} in the given timezone.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @param iso8601 If set to true, modifies the output document to use ISO week date fields. Defaults to false.
-		 * @return
-		 */
-		public static DateToParts dateToParts(final AggregationExpression expression, @Nullable final Object timezone,
-				final Boolean iso8601) {
-
-			Assert.notNull(expression, "expression must not be null!");
-			return new DateToParts(expression, timezone, iso8601);
-		}
-
-		/**
-		 * Creates new {@link DateToParts} in the UTC timezone.
-		 *
-		 * @param factory must not be {@literal null}.
-		 * @return
-		 */
-		public static DateToParts dateToParts(final DateFactory factory) {
-			return dateToParts(factory, null, null);
-		}
-
-		/**
-		 * Creates new {@link DateToParts} in the given timezone.
-		 *
-		 * @param factory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @return
-		 */
-		public static DateToParts dateToParts(final DateFactory factory, final @Nullable Object timezone) {
-			return dateToParts(factory, timezone, null);
-		}
-
-		/**
-		 * Creates new {@link DateToParts} in the given timezone.
-		 *
-		 * @param factory must not be {@literal null}.
-		 * @param timezone nullable. The timezone ID or offset as a String. Also accepts a {@link AggregationExpression} or
-		 *          {@link Field}. If null, UTC is assumed.
-		 * @param iso8601 If set to true, modifies the output document to use ISO week date fields. Defaults to false.
-		 * @return
-		 */
-		public static DateToParts dateToParts(final DateFactory factory, final @Nullable Object timezone,
-				@Nullable final Boolean iso8601) {
-
-			Assert.notNull(factory, "factory must not be null!");
-			return new DateToParts(factory, timezone, iso8601);
-		}
-
 	}
 
 	/**
-	 * AggregationExpression for '$dateFromParts'
+	 * {@link AggregationExpression} for {@code $isoWeekYear}.
 	 *
-	 * @author matt.morrissette
-	 * @see https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/
+	 * @author Christoph Strobl
+	 * @author Matt Morrissette
 	 */
-	public static class DateFromParts extends AbstractAggregationExpression {
+	public static class IsoWeekYear extends TimezonedDateAggregationExpression {
 
-		private DateFromParts(boolean isoWeek, Object yearOrIsoWeekYear, Object monthOrIsoWeek, Object dayOrIsoDayOfWeek,
-				Object hour, Object minute, Object second, Object millisecond, Object timezone) {
-			super(isoWeek
-					? isoWeekMap(yearOrIsoWeekYear, monthOrIsoWeek, dayOrIsoDayOfWeek, hour, minute, second, millisecond,
-							timezone)
-					: calMap(yearOrIsoWeekYear, monthOrIsoWeek, dayOrIsoDayOfWeek, hour, minute, second, millisecond, timezone));
+		private IsoWeekYear(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link IsoWeekYear}.
+		 *
+		 * @param value must not be {@literal null} and resolve to field, expression or object that represents a date.
+		 * @return new instance of {@link IsoWeekYear}.
+		 * @throws IllegalArgumentException if given value is {@literal null}.
+		 * @since 2.1
+		 */
+		public static IsoWeekYear isoWeekYear(Object value) {
+
+			Assert.notNull(value, "value must not be null!");
+			return new IsoWeekYear(value);
+		}
+
+		/**
+		 * Creates new {@link IsoWeekYear}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoWeekYear isoWeekYearOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return isoWeekYear(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link Millisecond}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return
+		 */
+		public static IsoWeekYear isoWeekYearOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return isoWeekYear(expression);
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link IsoWeekYear}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 * @since 2.1
+		 */
+		@Override
+		public IsoWeekYear withTimezone(Timezone timezone) {
+
+			Assert.notNull(timezone, "Timezone must not be null.");
+			return new IsoWeekYear(appendTimezone(values().iterator().next(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$isoWeekYear";
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	public interface DateParts<T extends DateParts<T>> {
+
+		/**
+		 * Set the {@literal hour} to the given value which must resolve to a value in range of {@code 0 - 23}. Can be a
+		 * simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param hour must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal hour} is {@literal null}
+		 */
+		T hour(Object hour);
+
+		/**
+		 * Set the {@literal hour} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		default T hourOf(String fieldReference) {
+			return hour(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Set the {@literal hour} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		default T hourOf(AggregationExpression expression) {
+			return hour(expression);
+		}
+
+		/**
+		 * Set the {@literal minute} to the given value which must resolve to a value in range {@code 0 - 59}. Can be a
+		 * simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param minute must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal minute} is {@literal null}
+		 */
+		T minute(Object minute);
+
+		/**
+		 * Set the {@literal minute} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		default T minuteOf(String fieldReference) {
+			return minute(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Set the {@literal minute} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		default T minuteOf(AggregationExpression expression) {
+			return minute(expression);
+		}
+
+		/**
+		 * Set the {@literal second} to the given value which must resolve to a value in range {@code 0 - 59}. Can be a
+		 * simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param second must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal second} is {@literal null}
+		 */
+		T second(Object second);
+
+		/**
+		 * Set the {@literal second} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		default T secondOf(String fieldReference) {
+			return second(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Set the {@literal second} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		default T secondOf(AggregationExpression expression) {
+			return second(expression);
+		}
+
+		/**
+		 * Set the {@literal milliseconds} to the given value which must resolve to a value in range {@code 0 - 999}. Can be
+		 * a simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param milliseconds must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal milliseconds} is {@literal null}
+		 */
+		T milliseconds(Object milliseconds);
+
+		/**
+		 * Set the {@literal milliseconds} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		default T millisecondsOf(String fieldReference) {
+			return milliseconds(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Set the {@literal milliseconds} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		default T millisecondsOf(AggregationExpression expression) {
+			return milliseconds(expression);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dateFromParts}.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+	 *
+	 * @author Matt Morrissette
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
+	 * @since 2.1
+	 */
+	public static class DateFromParts extends TimezonedDateAggregationExpression implements DateParts<DateFromParts> {
+
+		private DateFromParts(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link DateFromPartsWithYear}.
+		 *
+		 * @return new instance of {@link DateFromPartsWithYear}.
+		 * @since 2.1
+		 */
+		public static DateFromPartsWithYear dateFromParts() {
+			return year -> new DateFromParts(Collections.singletonMap("year", year));
+		}
+
+		/**
+		 * Set the {@literal month} to the given value which must resolve to a calendar month in range {@code 1 - 12}. Can
+		 * be a simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param month must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal month} is {@literal null}.
+		 */
+		public DateFromParts month(Object month) {
+			return new DateFromParts(append("month", month));
+		}
+
+		/**
+		 * Set the {@literal month} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public DateFromParts monthOf(String fieldReference) {
+			return month(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Set the {@literal month} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public DateFromParts monthOf(AggregationExpression expression) {
+			return month(expression);
+		}
+
+		/**
+		 * Set the {@literal day} to the given value which must resolve to a calendar day in range {@code 1 - 31}. Can be a
+		 * simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param day must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal day} is {@literal null}.
+		 */
+		public DateFromParts day(Object day) {
+			return new DateFromParts(append("day", day));
+		}
+
+		/**
+		 * Set the {@literal day} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public DateFromParts dayOf(String fieldReference) {
+			return day(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Set the {@literal day} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public DateFromParts dayOf(AggregationExpression expression) {
+			return day(expression);
+		}
+
+		@Override
+		public DateFromParts hour(Object hour) {
+			return new DateFromParts(append("hour", hour));
+		}
+
+		@Override
+		public DateFromParts minute(Object minute) {
+			return new DateFromParts(append("minute", minute));
+		}
+
+		@Override
+		public DateFromParts second(Object second) {
+			return new DateFromParts(append("second", second));
+		}
+
+		@Override
+		public DateFromParts milliseconds(Object milliseconds) {
+			return new DateFromParts(append("milliseconds", milliseconds));
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DateFromParts}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 */
+		@Override
+		public DateFromParts withTimezone(Timezone timezone) {
+			return new DateFromParts(appendTimezone(argumentMap(), timezone));
 		}
 
 		@Override
@@ -2700,539 +1908,377 @@ public class DateOperators {
 		}
 
 		/**
-		 * @return a new builder for {@link DateFromParts} using year/month/day
-		 *         <p>
-		 *         year is required
-		 *         <p>
-		 *         Timezone defaults to UTC if not specified
-		 *         <p>
-		 *         year and month default to 1 if not specified. All other fields default to 0.
+		 * @author Christoph Strobl
 		 */
-		public static CalendarDatePartsBuilder fromParts() {
-			return new CalendarDatePartsBuilder();
+		public interface DateFromPartsWithYear {
+
+			/**
+			 * Set the {@literal year} to the given value which must resolve to a calendar year. Can be a simple value,
+			 * {@link Field field reference} or {@link AggregationExpression expression}.
+			 *
+			 * @param year must not be {@literal null}.
+			 * @return new instance of {@link DateFromParts}.
+			 * @throws IllegalArgumentException if given {@literal year} is {@literal null}
+			 */
+			DateFromParts year(Object year);
+
+			/**
+			 * Set the {@literal year} to the value resolved by following the given {@link Field field reference}.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 * @return new instance of {@link DateFromParts}.
+			 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+			 */
+			default DateFromParts yearOf(String fieldReference) {
+
+				Assert.hasText(fieldReference, "Field reference must not be null nor empty.");
+				return year(Fields.field(fieldReference));
+			}
+
+			/**
+			 * Set the {@literal year} to the result of the given {@link AggregationExpression expression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return new instance of {@link DateFromParts}.
+			 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+			 */
+			default DateFromParts yearOf(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return year(expression);
+			}
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dateFromParts} using ISO week date.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+	 *
+	 * @author Matt Morrissette
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
+	 * @since 2.1
+	 */
+	public static class IsoDateFromParts extends TimezonedDateAggregationExpression
+			implements DateParts<IsoDateFromParts> {
+
+		private IsoDateFromParts(Object value) {
+			super(value);
 		}
 
 		/**
-		 * @return a new builder for {@link DateFromParts} using isoWeekYear/isoWeek/isoDayOfWeek
-		 *         <p>
-		 *         isoWeekYear is required
-		 *         <p>
-		 *         Timezone defaults to UTC if not specified
-		 *         <p>
-		 *         isoWeek and isoDayOfWeek default to 1 if not specified. All other fields default to 0.
-		 */
-		public static IsoWeekDatePartsBuilder fromIsoWeekParts() {
-			return new IsoWeekDatePartsBuilder();
-		}
-
-		/**
-		 * A Mutable builder to create a {@link DateFromParts} aggregation expression. All methods mutate this builder (they
-		 * all return this for convenience)
+		 * Creates new {@link IsoDateFromPartsWithYear}.
 		 *
-		 * @param <Builder> The concrete builder (either {@link CalendarDatePartsBuilder} for calendar date (i.e.
-		 *          year/month/day) or {@link IsoWeekDatePartsBuilder} for ISO week 8601 dates
-		 *          (isoWeekYear/isoWeek/isoDayOfWeek)
+		 * @return new instance of {@link IsoDateFromPartsWithYear}.
+		 * @since 2.1
 		 */
-		public abstract static class DatePartsBuilder<Builder extends DatePartsBuilder<Builder>> {
-
-			protected Object hour;
-
-			protected Object minute;
-
-			protected Object second;
-
-			protected Object millisecond;
-
-			protected Object timezone;
-
-			/**
-			 * Sets the 'hour' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param hour the fixed value to bind the field
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder hour(Number hour) {
-
-				this.hour = hour;
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'hour' of the {@link DateFromParts} to given the field
-			 *
-			 * @param hour the field to read the 'hour' value from
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder hourOf(String hour) {
-
-				this.hour = Fields.field(hour);
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'hour' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param hour the expression to evaluate the 'hour' value
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder hourOf(AggregationExpression hour) {
-
-				this.hour = hour;
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'minute' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param minute the fixed value to bind the field
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder minute(Number minute) {
-
-				this.minute = minute;
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'minute' of the {@link DateFromParts} to given the field
-			 *
-			 * @param minute the field to read the 'minute' value from
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder minuteOf(String minute) {
-
-				this.minute = Fields.field(minute);
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'minute' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param minute the expression to evaluate the 'minute' value
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder minuteOf(AggregationExpression minute) {
-
-				this.minute = minute;
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'second' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param second the fixed value to bind the field
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder second(Number second) {
-
-				this.second = second;
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'second' of the {@link DateFromParts} to given the field
-			 *
-			 * @param second the field to read the 'second' value from
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder secondOf(String second) {
-
-				this.second = Fields.field(second);
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'second' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param second the expression to evaluate the 'second' value
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder secondOf(AggregationExpression second) {
-
-				this.second = second;
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'millisecond' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param millisecond the fixed value to bind the field
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder millisecond(Number millisecond) {
-
-				this.millisecond = millisecond;
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'millisecond' of the {@link DateFromParts} to given the field
-			 *
-			 * @param millisecond the field to read the 'millisecond' value from
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder millisecondOf(String millisecond) {
-
-				this.millisecond = Fields.field(millisecond);
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'millisecond' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param millisecond the expression to evaluate the 'millisecond' value
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder millisecondOf(AggregationExpression millisecond) {
-
-				this.millisecond = millisecond;
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'timezone' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param timezone the fixed value to bind the field
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder timezone(String timezone) {
-
-				this.timezone = timezone;
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'timezone' of the {@link DateFromParts} to given the field
-			 *
-			 * @param timezone the field to read the 'timezone' value from
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder timezoneOf(String timezone) {
-
-				this.timezone = Fields.field(timezone);
-				return (Builder) this;
-			}
-
-			/**
-			 * Sets the 'timezone' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param timezone the expression to evaluate the 'timezone' value
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			public Builder timezoneOf(AggregationExpression timezone) {
-
-				this.timezone = timezone;
-				return (Builder) this;
-			}
-
-			public abstract DateFromParts toDate();
+		public static IsoDateFromPartsWithYear dateFromParts() {
+			return year -> new IsoDateFromParts(Collections.singletonMap("isoWeekYear", year));
 		}
 
-		public static class CalendarDatePartsBuilder extends DatePartsBuilder<CalendarDatePartsBuilder> {
-
-			private Object year;
-
-			private Object month;
-
-			private Object day;
-
-			@Override
-			public DateFromParts toDate() {
-				return new DateFromParts(false, year, month, day, hour, minute, second, millisecond, timezone);
-			}
-
-			/**
-			 * Sets the 'year' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param year the fixed value to bind the field
-			 * @return
-			 */
-			public CalendarDatePartsBuilder year(Number year) {
-
-				this.year = year;
-				return this;
-			}
-
-			/**
-			 * Sets the 'year' of the {@link DateFromParts} to given the field
-			 *
-			 * @param year the field to read the 'year' value from
-			 * @return
-			 */
-			public CalendarDatePartsBuilder yearOf(String year) {
-
-				this.year = Fields.field(year);
-				return this;
-			}
-
-			/**
-			 * Sets the 'year' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param year the expression to evaluate the 'year' value
-			 * @return
-			 */
-			public CalendarDatePartsBuilder yearOf(AggregationExpression year) {
-
-				this.year = year;
-				return this;
-			}
-
-			/**
-			 * Sets the 'month' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param month the fixed value to bind the field
-			 * @return
-			 */
-			public CalendarDatePartsBuilder month(Number month) {
-
-				this.month = month;
-				return this;
-			}
-
-			/**
-			 * Sets the 'month' of the {@link DateFromParts} to given the field
-			 *
-			 * @param month the field to read the 'month' value from
-			 * @return
-			 */
-			public CalendarDatePartsBuilder monthOf(String month) {
-
-				this.month = Fields.field(month);
-				return this;
-			}
-
-			/**
-			 * Sets the 'month' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param month the expression to evaluate the 'month' value
-			 * @return
-			 */
-			public CalendarDatePartsBuilder monthOf(AggregationExpression month) {
-
-				this.month = month;
-				return this;
-			}
-
-			/**
-			 * Sets the 'day' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param day the fixed value to bind the field
-			 * @return
-			 */
-			public CalendarDatePartsBuilder day(Number day) {
-
-				this.day = day;
-				return this;
-			}
-
-			/**
-			 * Sets the 'day' of the {@link DateFromParts} to given the field
-			 *
-			 * @param day the field to read the 'day' value from
-			 * @return
-			 */
-			public CalendarDatePartsBuilder dayOf(String day) {
-
-				this.day = Fields.field(day);
-				return this;
-			}
-
-			/**
-			 * Sets the 'day' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param day the expression to evaluate the 'day' value
-			 * @return
-			 */
-			public CalendarDatePartsBuilder dayOf(AggregationExpression day) {
-
-				this.day = day;
-				return this;
-			}
-
+		/**
+		 * Set the {@literal week of year} to the given value which must resolve to a calendar week in range {@code 1 - 53}.
+		 * Can be a simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param isoWeek must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal isoWeek} is {@literal null}.
+		 */
+		public IsoDateFromParts isoWeek(Object isoWeek) {
+			return new IsoDateFromParts(append("isoWeek", isoWeek));
 		}
 
-		public static class IsoWeekDatePartsBuilder extends DatePartsBuilder<IsoWeekDatePartsBuilder> {
-
-			private Object isoWeekYear;
-
-			private Object isoWeek;
-
-			private Object isoDayOfWeek;
-
-			@Override
-			public DateFromParts toDate() {
-				return new DateFromParts(true, isoWeekYear, isoWeek, isoDayOfWeek, hour, minute, second, millisecond, timezone);
-			}
-
-			/**
-			 * Sets the 'isoWeekYear' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param isoWeekYear the fixed value to bind the field
-			 * @return
-			 */
-			public IsoWeekDatePartsBuilder isoWeekYear(Number isoWeekYear) {
-
-				this.isoWeekYear = isoWeekYear;
-				return this;
-			}
-
-			/**
-			 * Sets the 'isoWeekYear' of the {@link DateFromParts} to given the field
-			 *
-			 * @param isoWeekYear the field to read the 'isoWeekYear' value from
-			 * @return
-			 */
-			public IsoWeekDatePartsBuilder isoWeekYearOf(String isoWeekYear) {
-
-				this.isoWeekYear = Fields.field(isoWeekYear);
-				return this;
-			}
-
-			/**
-			 * Sets the 'isoWeekYear' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param isoWeekYear the expression to evaluate the 'isoWeekYear' value
-			 * @return
-			 */
-			public IsoWeekDatePartsBuilder isoWeekYearOf(AggregationExpression isoWeekYear) {
-
-				this.isoWeekYear = isoWeekYear;
-				return this;
-			}
-
-			/**
-			 * Sets the 'isoWeek' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param isoWeek the fixed value to bind the field
-			 * @return
-			 */
-			public IsoWeekDatePartsBuilder isoWeek(Number isoWeek) {
-
-				this.isoWeek = isoWeek;
-				return this;
-			}
-
-			/**
-			 * Sets the 'isoWeek' of the {@link DateFromParts} to given the field
-			 *
-			 * @param isoWeek the field to read the 'isoWeek' value from
-			 * @return
-			 */
-			public IsoWeekDatePartsBuilder isoWeekOf(String isoWeek) {
-
-				this.isoWeek = Fields.field(isoWeek);
-				return this;
-			}
-
-			/**
-			 * Sets the 'isoWeek' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param isoWeek the expression to evaluate the 'isoWeek' value
-			 * @return
-			 */
-			public IsoWeekDatePartsBuilder isoWeekOf(AggregationExpression isoWeek) {
-
-				this.isoWeek = isoWeek;
-				return this;
-			}
-
-			/**
-			 * Sets the 'isoDayOfWeek' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param isoDayOfWeek the fixed value to bind the field
-			 * @return
-			 */
-			public IsoWeekDatePartsBuilder isoDayOfWeek(Number isoDayOfWeek) {
-
-				this.isoDayOfWeek = isoDayOfWeek;
-				return this;
-			}
-
-			/**
-			 * Sets the 'isoDayOfWeek' of the {@link DateFromParts} to given the field
-			 *
-			 * @param isoDayOfWeek the field to read the 'isoDayOfWeek' value from
-			 * @return
-			 */
-			public IsoWeekDatePartsBuilder isoDayOfWeekOf(String isoDayOfWeek) {
-
-				this.isoDayOfWeek = Fields.field(isoDayOfWeek);
-				return this;
-			}
-
-			/**
-			 * Sets the 'isoDayOfWeek' of the {@link DateFromParts} to given the fixed value
-			 *
-			 * @param isoDayOfWeek the expression to evaluate the 'isoDayOfWeek' value
-			 * @return
-			 */
-			public IsoWeekDatePartsBuilder isoDayOfWeekOf(AggregationExpression isoDayOfWeek) {
-
-				this.isoDayOfWeek = isoDayOfWeek;
-				return this;
-			}
-
+		/**
+		 * Set the {@literal week of year} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public IsoDateFromParts isoWeekOf(String fieldReference) {
+			return isoWeek(Fields.field(fieldReference));
 		}
 
-		private static Map<String, Object> calMap(Object year, Object month, Object day, Object hour, Object minute,
-				Object second, Object millisecond, Object timezone) {
-
-			final Map<String, Object> vals = new LinkedHashMap<>(11);
-			put(vals, "year", year, true);
-			put(vals, "month", month, false);
-			put(vals, "day", day, false);
-			putCommonMap(vals, hour, minute, second, millisecond, timezone);
-			return vals;
+		/**
+		 * Set the {@literal week of year} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public IsoDateFromParts isoWeekOf(AggregationExpression expression) {
+			return isoWeek(expression);
 		}
 
-		private static Map<String, Object> isoWeekMap(Object isoWeekYear, Object isoWeek, Object isoDayOfWeek, Object hour,
-				Object minute, Object second, Object millisecond, Object timezone) {
-
-			final Map<String, Object> vals = new LinkedHashMap<>(11);
-			put(vals, "isoWeekYear", isoWeekYear, true);
-			put(vals, "isoWeek", isoWeek, false);
-			put(vals, "isoDayOfWeek", isoDayOfWeek, false);
-			putCommonMap(vals, hour, minute, second, millisecond, timezone);
-			return vals;
+		/**
+		 * Set the {@literal day of week} to the given value which must resolve to a weekday in range {@code 1 - 7}. Can be
+		 * a simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param day must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal isoWeek} is {@literal null}.
+		 */
+		public IsoDateFromParts isoDayOfWeek(Object day) {
+			return new IsoDateFromParts(append("isoDayOfWeek", day));
 		}
 
-		private static void putCommonMap(final Map<String, Object> vals, Object hour, Object minute, Object second,
-				Object millisecond, Object timezone) {
+		/**
+		 * Set the {@literal day of week} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public IsoDateFromParts isoDayOfWeekOf(String fieldReference) {
+			return isoDayOfWeek(Fields.field(fieldReference));
+		}
 
-			put(vals, "hour", hour, false);
-			put(vals, "minute", minute, false);
-			put(vals, "second", second, false);
-			put(vals, "millisecond", millisecond, false);
-			if (timezone != null) {
-				Assert.isTrue(DateAggregationExpression.isValidTimezoneObject(timezone),
-						() -> "Timezone was not a valid timezone: " + timezone
-								+ ". Must be String, AggregationExpression or Field");
-				vals.put("timezone", timezone);
+		/**
+		 * Set the {@literal day of week} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public IsoDateFromParts isoDayOfWeekOf(AggregationExpression expression) {
+			return isoDayOfWeek(expression);
+		}
+
+		@Override
+		public IsoDateFromParts hour(Object hour) {
+			return new IsoDateFromParts(append("hour", hour));
+		}
+
+		@Override
+		public IsoDateFromParts minute(Object minute) {
+			return new IsoDateFromParts(append("minute", minute));
+		}
+
+		@Override
+		public IsoDateFromParts second(Object second) {
+			return new IsoDateFromParts(append("second", second));
+		}
+
+		@Override
+		public IsoDateFromParts milliseconds(Object milliseconds) {
+			return new IsoDateFromParts(append("milliseconds", milliseconds));
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link IsoDateFromParts}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 */
+		@Override
+		public IsoDateFromParts withTimezone(Timezone timezone) {
+			return new IsoDateFromParts(appendTimezone(argumentMap(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dateFromParts";
+		}
+
+		/**
+		 * @author Christoph Strobl
+		 */
+		public interface IsoDateFromPartsWithYear {
+
+			/**
+			 * Set the {@literal week date year} to the given value which must resolve to a weekday in range {@code 0 - 9999}.
+			 * Can be a simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+			 *
+			 * @param isoWeekYear must not be {@literal null}.
+			 * @return new instance.
+			 * @throws IllegalArgumentException if given {@literal isoWeekYear} is {@literal null}.
+			 */
+			IsoDateFromParts isoWeekYear(Object isoWeekYear);
+
+			/**
+			 * Set the {@literal week date year} to the value resolved by following the given {@link Field field reference}.
+			 *
+			 * @param fieldReference must not be {@literal null}.
+			 * @return new instance.
+			 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+			 */
+			default IsoDateFromParts isoWeekYearOf(String fieldReference) {
+
+				Assert.hasText(fieldReference, "Field reference must not be null nor empty.");
+				return isoWeekYear(Fields.field(fieldReference));
+			}
+
+			/**
+			 * Set the {@literal week date year} to the result of the given {@link AggregationExpression expression}.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return new instance.
+			 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+			 */
+			default IsoDateFromParts isoWeekYearOf(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null!");
+				return isoWeekYear(expression);
 			}
 		}
+	}
 
-		private static void put(final Map<String, Object> map, final String key, final Object val, boolean throwIfAbsent) {
+	/**
+	 * {@link AggregationExpression} for {@code $dateToParts}.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+	 *
+	 * @author Matt Morrissette
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/</a>
+	 * @since 2.1
+	 */
+	public static class DateToParts extends TimezonedDateAggregationExpression {
 
-			if (val != null) {
-				map.put(key, val);
-			} else if (throwIfAbsent) {
-				throw new IllegalArgumentException(key + "is required");
-			}
+		private DateToParts(Object value) {
+			super(value);
 		}
+
+		/**
+		 * Creates new {@link DateToParts}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link DateToParts}.
+		 * @throws IllegalArgumentException if given {@literal value} is {@literal null}.
+		 */
+		public static DateToParts dateToParts(Object value) {
+
+			Assert.notNull(value, "Value must not be null!");
+			return new DateToParts(Collections.singletonMap("date", value));
+		}
+
+		/**
+		 * Creates new {@link DateToParts}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link DateToParts}.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public static DateToParts datePartsOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return dateToParts(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link DateToParts}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DateToParts}.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public static DateToParts datePartsOf(AggregationExpression expression) {
+			return dateToParts(expression);
+		}
+
+		/**
+		 * Use ISO week date fields in the resulting document.
+		 *
+		 * @return new instance of {@link DateToParts}.
+		 */
+		public DateToParts iso8601() {
+			return new DateToParts(append("iso8601", true));
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DateFromParts}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 */
+		@Override
+		public  DateToParts withTimezone(Timezone timezone) {
+		 return
+		  new  DateToParts(appendTimezone(argumentMap(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dateToParts";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dateFromString}.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+	 *
+	 * @author Matt Morrissette
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/</a>
+	 * @since 2.1
+	 */
+	public static class DateFromString extends TimezonedDateAggregationExpression {
+
+		private DateFromString(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link DateFromString}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link DateFromString}.
+		 * @throws IllegalArgumentException if given {@literal value} is {@literal null}.
+		 */
+		public static DateFromString fromString(Object value) {
+			return new DateFromString(Collections.singletonMap("dateString", value));
+		}
+
+		/**
+		 * Creates new {@link DateFromString}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link DateFromString}.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public static DateFromString fromStringOf(String fieldReference) {
+			return fromString(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link DateFromString}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DateFromString}.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public static DateFromString fromStringOf(AggregationExpression expression) {
+			return fromString(expression);
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DateFromString}.
+		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
+		 */
+		@Override
+		public DateFromString withTimezone(Timezone timezone) {
+			return new DateFromString(appendTimezone(argumentMap(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dateFromString";
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T extends TimezonedDateAggregationExpression> T applyTimezone(T instance, Timezone timezone) {
+		return !ObjectUtils.nullSafeEquals(Timezone.none(), timezone) && !instance.hasTimezone()
+				? (T) instance.withTimezone(timezone) : instance;
 	}
 }

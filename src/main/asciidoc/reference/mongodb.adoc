@@ -1833,7 +1833,7 @@ At the time of this writing we provide support for the following Aggregation Ope
 | literal
 
 | Date Aggregation Operators
-| dayOfYear, dayOfMonth, dayOfWeek, year, month, week, hour, minute, second, millisecond, dateToString, isoDayOfWeek, isoWeek, isoWeekYear
+| dayOfYear, dayOfMonth, dayOfWeek, year, month, week, hour, minute, second, millisecond, dateToString, dateFromString, dateFromParts, dateToParts, isoDayOfWeek, isoWeek, isoWeekYear
 
 | Variable Operators
 | map
