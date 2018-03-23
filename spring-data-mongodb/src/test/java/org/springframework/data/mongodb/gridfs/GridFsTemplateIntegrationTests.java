@@ -42,6 +42,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.MongoGridFSException;
 import com.mongodb.client.gridfs.GridFSFindIterable;
+import com.mongodb.client.gridfs.model.GridFSFile;
 
 /**
  * Integration tests for {@link GridFsTemplate}.
@@ -50,6 +51,7 @@ import com.mongodb.client.gridfs.GridFSFindIterable;
  * @author Philipp Schneider
  * @author Thomas Darimont
  * @author Martin Baumgartner
+ * @author Hartmut Lang
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:gridfs/gridfs.xml")
@@ -223,6 +225,20 @@ public class GridFsTemplateIntegrationTests {
 		GridFsResource result = operations.getResource("no-content-type");
 
 		assertThatThrownBy(() -> result.getContentType()).isInstanceOf(MongoGridFSException.class);
+	}
+
+	@Test // DATAMONGO-1813
+	public void convertFileToResource() throws IOException {
+
+		Document metadata = new Document("key", "value");
+		ObjectId reference = operations.store(resource.getInputStream(), "foobar", metadata);
+
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		GridFSFile file = operations.findOne(query(whereMetaData("key").is("value")));
+		GridFsResource result = operations.getResource(file);
+
+		assertThat(result.contentLength()).isEqualTo(resource.contentLength());
+		assertThat(((BsonObjectId) result.getId()).getValue()).isEqualTo(reference);
 	}
 
 	class Metadata {
