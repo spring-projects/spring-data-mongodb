@@ -2224,15 +2224,18 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param savedObject
 	 * @param id
 	 */
+	@SuppressWarnings("unchecked")
 	private void populateIdIfNecessary(Object savedObject, @Nullable Object id) {
 
 		if (id == null) {
 			return;
 		}
 
-		if (savedObject instanceof Document) {
-			Document Document = (Document) savedObject;
-			Document.put(ID_FIELD, id);
+		if (savedObject instanceof Map) {
+
+			Map<String, Object> map = (Map<String, Object>) savedObject;
+			map.put(ID_FIELD, id);
+
 			return;
 		}
 

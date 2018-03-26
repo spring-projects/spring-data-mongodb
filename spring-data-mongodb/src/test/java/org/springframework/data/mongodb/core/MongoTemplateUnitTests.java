@@ -26,7 +26,9 @@ import lombok.Data;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -216,6 +218,19 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.save(entity);
 
 		assertThat(entity.id, is(notNullValue()));
+	}
+
+	@Test // DATAMONGO-1912
+	public void autogeneratesIdForMap() {
+
+		MongoTemplate template = spy(this.template);
+		doReturn(new ObjectId()).when(template).saveDocument(Mockito.any(String.class), Mockito.any(Document.class),
+				Mockito.any(Class.class));
+
+		Map<String, String> entity = new LinkedHashMap<>();
+		template.save(entity, "foo");
+
+		assertThat(entity, hasKey("_id"));
 	}
 
 	@Test // DATAMONGO-374
