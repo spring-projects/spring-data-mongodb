@@ -21,7 +21,11 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import lombok.Data;
+import org.bson.types.ObjectId;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
@@ -57,6 +61,7 @@ import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
+import reactor.test.StepVerifier;
 
 /**
  * Unit tests for {@link ReactiveMongoTemplate}.
@@ -115,6 +120,20 @@ public class ReactiveMongoTemplateUnitTests {
 	public void defaultsConverterToMappingMongoConverter() throws Exception {
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(mongoClient, "database");
 		assertTrue(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter);
+	}
+
+	@Test // DATAMONGO-1912
+	public void autogeneratesIdForMap() {
+
+		ReactiveMongoTemplate template = spy(this.template);
+		doReturn(Mono.just(new ObjectId())).when(template).saveDocument(Mockito.any(String.class), Mockito.any(Document.class),
+				Mockito.any(Class.class));
+
+		Map<String, String> entity = new LinkedHashMap<>();
+		StepVerifier.create(template.save(entity, "foo")).consumeNextWith(actual -> {
+
+			assertThat(entity, hasKey("_id"));
+		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1518

@@ -2536,15 +2536,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param savedObject
 	 * @param id
 	 */
+	@SuppressWarnings("unchecked")
 	protected void populateIdIfNecessary(Object savedObject, Object id) {
 
 		if (id == null) {
 			return;
 		}
 
-		if (savedObject instanceof Document) {
-			Document document = (Document) savedObject;
-			document.put(ID_FIELD, id);
+		if (savedObject instanceof Map) {
+
+			Map<String, Object> map = (Map<String, Object>) savedObject;
+			map.put(ID_FIELD, id);
+
 			return;
 		}
 
