@@ -56,7 +56,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 	private final MongoDbFactory dbFactory;
 
-	private final String bucket;
+	private final @Nullable String bucket;
 	private final MongoConverter converter;
 	private final QueryMapper queryMapper;
 
@@ -77,7 +77,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @param converter must not be {@literal null}.
 	 * @param bucket
 	 */
-	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter, String bucket) {
+	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter, @Nullable String bucket) {
 
 		Assert.notNull(dbFactory, "MongoDbFactory must not be null!");
 		Assert.notNull(converter, "MongoConverter must not be null!");
