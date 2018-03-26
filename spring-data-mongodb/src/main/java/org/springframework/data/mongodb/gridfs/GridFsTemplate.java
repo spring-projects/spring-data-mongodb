@@ -227,9 +227,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @see org.springframework.core.io.ResourceLoader#getResource(java.lang.String)
 	 */
 	public GridFsResource getResource(String location) {
-
-		GridFSFile file = findOne(query(whereFilename().is(location)));
-		return file != null ? getResource(file) : null;
+		return Optional.ofNullable(findOne(query(whereFilename().is(location)))).map(this::getResource).orElse(null);
 	}
 
 	/*
@@ -237,6 +235,8 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#getResource(com.mongodb.client.gridfs.model.GridFSFile)
 	 */
 	public GridFsResource getResource(GridFSFile file) {
+
+		Assert.notNull(file, "GridFSFile must not be null!");
 
 		return new GridFsResource(file, getGridFs().openDownloadStream(file.getFilename()));
 	}
@@ -256,13 +256,13 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		if (path.isPattern()) {
 
 			GridFSFindIterable files = find(query(whereFilename().regex(path.toRegex())));
-			List<GridFsResource> resources = new ArrayList<GridFsResource>();
+			List<GridFsResource> resources = new ArrayList<>();
 
 			for (GridFSFile file : files) {
 				resources.add(new GridFsResource(file, getGridFs().openDownloadStream(file.getFilename())));
 			}
 
-			return resources.toArray(new GridFsResource[resources.size()]);
+			return resources.toArray(new GridFsResource[0]);
 		}
 
 		return new GridFsResource[] { getResource(locationPattern) };

@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.assertj.core.api.Assertions;
 import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -233,7 +232,6 @@ public class GridFsTemplateIntegrationTests {
 		Document metadata = new Document("key", "value");
 		ObjectId reference = operations.store(resource.getInputStream(), "foobar", metadata);
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
 		GridFSFile file = operations.findOne(query(whereMetaData("key").is("value")));
 		GridFsResource result = operations.getResource(file);
 

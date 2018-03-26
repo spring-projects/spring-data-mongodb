@@ -160,8 +160,10 @@ public interface GridFsOperations extends ResourcePatternResolver {
 
 	/**
 	 * Returns the {@link GridFsResource} for a {@link com.mongodb.client.gridfs.model.GridFSFile}.
+	 *
 	 * @param file must not be {@literal null}.
 	 * @return the resource for the file.
+	 * @since 2.1
 	 */
 	GridFsResource getResource(com.mongodb.client.gridfs.model.GridFSFile file);
 
