@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -34,6 +35,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @Document
 public class Person extends Contact {
@@ -55,6 +57,8 @@ public class Person extends Contact {
 
 	private @Field("add") Address address;
 	private Set<Address> shippingAddresses;
+
+	private UUID uniqueId;
 
 	@DBRef User creator;
 
@@ -194,6 +198,14 @@ public class Person extends Contact {
 	 */
 	public void setShippingAddresses(Set<Address> addresses) {
 		this.shippingAddresses = addresses;
+	}
+
+	public UUID getUniqueId() {
+		return uniqueId;
+	}
+
+	public void setUniqueId(UUID uniqueId) {
+		this.uniqueId = uniqueId;
 	}
 
 	/* (non-Javadoc)

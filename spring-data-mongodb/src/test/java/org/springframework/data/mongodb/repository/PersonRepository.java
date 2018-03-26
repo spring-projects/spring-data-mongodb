@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
@@ -317,6 +318,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	// DATAMONGO-990
 	@Query("{ firstname : :#{#firstname}}")
 	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterVariableOnly(@Param("firstname") String firstname);
+
+	// DATAMONGO-1911
+	@Query("{ uniqueId: ?0}")
+	Person findByUniqueId(UUID uniqueId);
 
 	/**
 	 * Returns the count of {@link Person} with the given firstname. Uses {@link CountQuery} annotation to define the

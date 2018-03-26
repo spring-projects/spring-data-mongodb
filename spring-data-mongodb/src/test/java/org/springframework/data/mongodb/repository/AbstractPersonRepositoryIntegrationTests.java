@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1092,6 +1093,17 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(users, hasSize(1));
 		assertThat(users.get(0), is(dave));
+	}
+
+	@Test // DATAMONGO-1911
+	public void findByUUIDShouldReturnCorrectResult() {
+
+		dave.setUniqueId(UUID.randomUUID());
+		repository.save(dave);
+
+		Person dave = repository.findByUniqueId(this.dave.getUniqueId());
+
+		assertThat(dave, is(equalTo(dave)));
 	}
 
 	@Test // DATAMONGO-1245

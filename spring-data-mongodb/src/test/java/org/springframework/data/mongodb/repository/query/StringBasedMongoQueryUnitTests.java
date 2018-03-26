@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -321,6 +322,34 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
 
+	@Test // DATAMONGO-1911
+	public void shouldSupportNonQuotedUUIDReplacement() {
+
+		UUID uuid = UUID.fromString("864de43b-e3ea-f1e4-3663-fb8240b659b9");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, (Object) uuid);
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsUUID", UUID.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
+				"{'lastname' : { $binary:\"5PHq4zvkTYa5WbZAgvtjNg==\", $type: \"03\"}}");
+
+		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+	}
+
+	@Test // DATAMONGO-1911
+	public void shouldSupportQuotedUUIDReplacement() {
+
+		UUID uuid = UUID.randomUUID();
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, (Object) uuid);
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsStringUUID", UUID.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
+				"{'lastname' : '" + uuid.toString() + "'}");
+
+		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+	}
+
 	@Test // DATAMONGO-1454
 	public void shouldSupportExistsProjection() {
 
@@ -550,6 +579,12 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'lastname' : ?0 }")
 		Person findByLastnameAsBinary(byte[] lastname);
+
+		@Query("{ 'lastname' : ?0 }")
+		Person findByLastnameAsUUID(UUID lastname);
+
+		@Query("{ 'lastname' : '?0' }")
+		Person findByLastnameAsStringUUID(UUID lastname);
 
 		@Query("{ 'lastname' : '?0' }")
 		Person findByLastnameQuoted(String lastname);

@@ -19,11 +19,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -221,7 +224,31 @@ class ExpressionEvaluatingParameterBinder {
 			return base64representation;
 		}
 
+		if (value instanceof UUID) {
+
+			UUID uuid = (UUID) value;
+
+			if (binding.isQuoted()) {
+				return uuid.toString();
+			}
+
+			String base64representation = DatatypeConverter.printBase64Binary(asBinary(uuid));
+			return "{ '$binary' : '" + base64representation + "', '$type' : '" + BSON.B_UUID + "'}";
+		}
+
 		return JSON.serialize(value);
+	}
+
+	private static byte[] asBinary(UUID uuid) {
+
+		byte[] bytes = new byte[16];
+
+		ByteBuffer bb = ByteBuffer.wrap(bytes) //
+				.order(ByteOrder.LITTLE_ENDIAN) //
+				.putLong(uuid.getMostSignificantBits()) //
+				.putLong(uuid.getLeastSignificantBits());
+
+		return bb.array();
 	}
 
 	/**
