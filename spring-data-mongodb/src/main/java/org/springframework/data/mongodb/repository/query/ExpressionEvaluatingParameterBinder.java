@@ -19,20 +19,25 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.bson.BSON;
+import org.bson.codecs.BinaryCodec;
+import org.bson.codecs.Codec;
+import org.bson.codecs.UuidCodec;
+import org.bson.json.JsonWriter;
+import org.bson.types.Binary;
+import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBinding;
 import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
@@ -44,6 +49,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
 import com.mongodb.util.JSON;
 
 /**
@@ -60,6 +66,7 @@ class ExpressionEvaluatingParameterBinder {
 
 	private final SpelExpressionParser expressionParser;
 	private final EvaluationContextProvider evaluationContextProvider;
+	private final CodecRegistryProvider codecRegistryProvider;
 
 	/**
 	 * Creates new {@link ExpressionEvaluatingParameterBinder}
@@ -75,6 +82,7 @@ class ExpressionEvaluatingParameterBinder {
 
 		this.expressionParser = expressionParser;
 		this.evaluationContextProvider = evaluationContextProvider;
+		this.codecRegistryProvider = () -> MongoClient.getDefaultCodecRegistry();
 	}
 
 	/**
@@ -215,40 +223,35 @@ class ExpressionEvaluatingParameterBinder {
 
 		if (value instanceof byte[]) {
 
-			String base64representation = DatatypeConverter.printBase64Binary((byte[]) value);
-
-			if (!binding.isQuoted()) {
-				return "{ '$binary' : '" + base64representation + "', '$type' : '" + BSON.B_GENERAL + "'}";
+			if (binding.isQuoted()) {
+				return DatatypeConverter.printBase64Binary((byte[]) value);
 			}
 
-			return base64representation;
+			return encode(new Binary((byte[]) value), BinaryCodec::new);
 		}
 
 		if (value instanceof UUID) {
 
-			UUID uuid = (UUID) value;
-
 			if (binding.isQuoted()) {
-				return uuid.toString();
+				return value.toString();
 			}
 
-			String base64representation = DatatypeConverter.printBase64Binary(asBinary(uuid));
-			return "{ '$binary' : '" + base64representation + "', '$type' : '" + BSON.B_UUID + "'}";
+			return encode((UUID) value, UuidCodec::new);
 		}
 
 		return JSON.serialize(value);
 	}
 
-	private static byte[] asBinary(UUID uuid) {
+	private <T> String encode(T value, Supplier<Codec<T>> defaultCodec) {
 
-		byte[] bytes = new byte[16];
+		Codec<T> codec = codecRegistryProvider.getCodecFor((Class<T>) value.getClass()).orElseGet(defaultCodec);
 
-		ByteBuffer bb = ByteBuffer.wrap(bytes) //
-				.order(ByteOrder.LITTLE_ENDIAN) //
-				.putLong(uuid.getMostSignificantBits()) //
-				.putLong(uuid.getLeastSignificantBits());
+		StringWriter writer = new StringWriter();
 
-		return bb.array();
+		codec.encode(new JsonWriter(writer), value, null);
+		writer.flush();
+
+		return writer.toString();
 	}
 
 	/**
