@@ -1095,6 +1095,29 @@ public class ProjectionOperationUnitTests {
 				"{ $project: { dayOfYear: { $dayOfYear: { \"date\" : \"$date\", \"timezone\" : \"America/Chicago\" } } } }"));
 	}
 
+	@Test // DATAMONGO-1834
+	public void shouldRenderTimeZoneFromField() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").withTimezone(Timezone.ofField("tz")).dayOfYear()).as("dayOfYear")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { dayOfYear: { $dayOfYear: { \"date\" : \"$date\", \"timezone\" : \"$tz\" } } } }"));
+	}
+
+	@Test // DATAMONGO-1834
+	public void shouldRenderTimeZoneFromExpression() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date")
+						.withTimezone(Timezone.ofExpression(LiteralOperators.valueOf("America/Chicago").asLiteral())).dayOfYear())
+				.as("dayOfYear").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { dayOfYear: { $dayOfYear: { \"date\" : \"$date\", \"timezone\" : { $literal: \"America/Chicago\"} } } } }"));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderDayOfMonthAggregationExpression() {
 
