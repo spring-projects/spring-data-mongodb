@@ -36,7 +36,7 @@ import com.mongodb.WriteConcern;
 
 /**
  * Factory to create {@link DB} instances from a {@link Mongo} instance.
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -55,7 +55,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Create an instance of {@link SimpleMongoDbFactory} given the {@link Mongo} instance and database name.
-	 * 
+	 *
 	 * @param mongo Mongo instance, must not be {@literal null}.
 	 * @param databaseName database name, not be {@literal null} or empty.
 	 * @deprecated since 1.7. Please use {@link #SimpleMongoDbFactory(MongoClient, String)}.
@@ -67,7 +67,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Create an instance of SimpleMongoDbFactory given the Mongo instance, database name, and username/password
-	 * 
+	 *
 	 * @param mongo Mongo instance, must not be {@literal null}.
 	 * @param databaseName Database name, must not be {@literal null} or empty.
 	 * @param credentials username and password.
@@ -80,7 +80,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Create an instance of SimpleMongoDbFactory given the Mongo instance, database name, and username/password
-	 * 
+	 *
 	 * @param mongo Mongo instance, must not be {@literal null}.
 	 * @param databaseName Database name, must not be {@literal null} or empty.
 	 * @param credentials username and password.
@@ -95,7 +95,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoURI}.
-	 * 
+	 *
 	 * @param uri must not be {@literal null}.
 	 * @throws MongoException
 	 * @throws UnknownHostException
@@ -110,7 +110,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClientURI}.
-	 * 
+	 *
 	 * @param uri must not be {@literal null}.
 	 * @throws UnknownHostException
 	 * @since 1.7
@@ -121,7 +121,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClient}.
-	 * 
+	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null}.
 	 * @since 1.7
@@ -140,8 +140,8 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 		Assert.notNull(mongo, "Mongo must not be null");
 		Assert.hasText(databaseName, "Database name must not be empty");
-		Assert.isTrue(databaseName.matches("[\\w-]+"),
-				"Database name must only contain letters, numbers, underscores and dashes!");
+		Assert.isTrue(databaseName.matches("[^/\\\\.$\"]+"),
+				"Database name must not contain any of the symbols[" + "[^/\\\\.$\"]+" + "]");
 
 		this.mongo = mongo;
 		this.databaseName = databaseName;
@@ -163,8 +163,13 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 */
 	private SimpleMongoDbFactory(MongoClient client, String databaseName, boolean mongoInstanceCreated) {
 
+		Boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
+		String validNamePattern = isWindows ? "[^/\\\\.$*<>:|?\"]+" : "[^/\\\\.$\"]+";
+
 		Assert.notNull(client, "MongoClient must not be null!");
 		Assert.hasText(databaseName, "Database name must not be empty!");
+		Assert.isTrue(databaseName.matches(validNamePattern),
+				"Database name must not contain any of the symbols[" + (isWindows ? "/\\.$*<>:|?\"" : "/\\.$\"") + "]");
 
 		this.mongo = client;
 		this.databaseName = databaseName;
@@ -176,7 +181,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Configures the {@link WriteConcern} to be used on the {@link DB} instance being created.
-	 * 
+	 *
 	 * @param writeConcern the writeConcern to set
 	 */
 	public void setWriteConcern(WriteConcern writeConcern) {
@@ -211,7 +216,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Clean up the Mongo instance if it was created by the factory itself.
-	 * 
+	 *
 	 * @see DisposableBean#destroy()
 	 */
 	public void destroy() throws Exception {
@@ -224,7 +229,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 		return chars == null ? null : String.valueOf(chars);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.MongoDbFactory#getExceptionTranslator()
 	 */

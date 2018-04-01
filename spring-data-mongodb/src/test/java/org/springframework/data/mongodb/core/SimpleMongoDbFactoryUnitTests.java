@@ -52,7 +52,7 @@ public class SimpleMongoDbFactoryUnitTests {
 	@Test // DATADOC-254
 	public void rejectsIllegalDatabaseNames() {
 		rejectsDatabaseName("foo.bar");
-		rejectsDatabaseName("foo!bar");
+		rejectsDatabaseName("foo$bar");
 	}
 
 	@Test // DATADOC-254
