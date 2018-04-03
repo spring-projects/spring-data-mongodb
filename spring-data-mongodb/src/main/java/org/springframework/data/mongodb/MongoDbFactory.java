@@ -23,16 +23,16 @@ import com.mongodb.DB;
 import com.mongodb.client.MongoDatabase;
 
 /**
- * Interface for factories creating {@link DB} instances.
- * 
+ * Interface for factories creating {@link MongoDatabase} instances.
+ *
  * @author Mark Pollack
  * @author Thomas Darimont
  */
 public interface MongoDbFactory {
 
 	/**
-	 * Creates a default {@link DB} instance.
-	 * 
+	 * Creates a default {@link MongoDatabase} instance.
+	 *
 	 * @return
 	 * @throws DataAccessException
 	 */
@@ -40,7 +40,7 @@ public interface MongoDbFactory {
 
 	/**
 	 * Creates a {@link DB} instance to access the database with the given name.
-	 * 
+	 *
 	 * @param dbName must not be {@literal null} or empty.
 	 * @return
 	 * @throws DataAccessException
@@ -49,7 +49,7 @@ public interface MongoDbFactory {
 
 	/**
 	 * Exposes a shared {@link MongoExceptionTranslator}.
-	 * 
+	 *
 	 * @return will never be {@literal null}.
 	 */
 	PersistenceExceptionTranslator getExceptionTranslator();

@@ -72,8 +72,8 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 
 		Assert.notNull(client, "MongoClient must not be null!");
 		Assert.hasText(databaseName, "Database name must not be empty!");
-		Assert.isTrue(databaseName.matches("[\\w-]+"),
-				"Database name must only contain letters, numbers, underscores and dashes!");
+		Assert.isTrue(databaseName.matches("[^/\\\\.$\"\\s]+"),
+				"Database name must not contain slashes, dots, spaces, quotes, or dollar signs!");
 
 		this.mongo = client;
 		this.databaseName = databaseName;

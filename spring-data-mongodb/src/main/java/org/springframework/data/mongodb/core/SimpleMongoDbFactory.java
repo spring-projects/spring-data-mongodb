@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.net.UnknownHostException;
-
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -31,12 +29,14 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoDatabase;
 
 /**
- * Factory to create {@link DB} instances from a {@link MongoClient} instance.
- * 
+ * Factory to create {@link MongoDatabase} instances from a {@link MongoClient} instance.
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author George Moraitis
+ * @author Mark Paluch
  */
 public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
@@ -49,9 +49,8 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClientURI}.
-	 * 
+	 *
 	 * @param uri must not be {@literal null}.
-	 * @throws UnknownHostException
 	 * @since 1.7
 	 */
 	public SimpleMongoDbFactory(MongoClientURI uri) {
@@ -60,7 +59,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClient}.
-	 * 
+	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null}.
 	 * @since 1.7
@@ -70,20 +69,17 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	}
 
 	/**
-	 * @param client
+	 * @param mongoClient
 	 * @param databaseName
 	 * @param mongoInstanceCreated
 	 * @since 1.7
 	 */
 	private SimpleMongoDbFactory(MongoClient mongoClient, String databaseName, boolean mongoInstanceCreated) {
 
-		Boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
-		String validNamePattern = isWindows ? "[^/\\\\.$*<>:|?\"]+" : "[^/\\\\.$\"]+";
-
 		Assert.notNull(mongoClient, "MongoClient must not be null!");
 		Assert.hasText(databaseName, "Database name must not be empty!");
-		Assert.isTrue(databaseName.matches(validNamePattern),
-				"Database name must not contain any of the symbols[" + (isWindows ? "/\\.$*<>:|?\"" : "/\\.$\"") + "]");
+		Assert.isTrue(databaseName.matches("[^/\\\\.$\"\\s]+"),
+				"Database name must not contain slashes, dots, spaces, quotes, or dollar signs!");
 
 		this.mongoClient = mongoClient;
 		this.databaseName = databaseName;
@@ -93,7 +89,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Configures the {@link WriteConcern} to be used on the {@link DB} instance being created.
-	 * 
+	 *
 	 * @param writeConcern the writeConcern to set
 	 */
 	public void setWriteConcern(WriteConcern writeConcern) {
@@ -127,7 +123,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	/**
 	 * Clean up the Mongo instance if it was created by the factory itself.
-	 * 
+	 *
 	 * @see DisposableBean#destroy()
 	 */
 	public void destroy() throws Exception {
@@ -136,7 +132,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 		}
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.MongoDbFactory#getExceptionTranslator()
 	 */
