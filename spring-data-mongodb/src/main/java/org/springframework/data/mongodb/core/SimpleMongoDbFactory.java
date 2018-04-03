@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,8 @@ import com.mongodb.WriteConcern;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author George Moraitis
+ * @author Mark Paluch
  */
 public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
@@ -140,8 +142,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 		Assert.notNull(mongo, "Mongo must not be null");
 		Assert.hasText(databaseName, "Database name must not be empty");
-		Assert.isTrue(databaseName.matches("[^/\\\\.$\"]+"),
-				"Database name must not contain any of the symbols[" + "[^/\\\\.$\"]+" + "]");
+		assertDatabaseName(databaseName);
 
 		this.mongo = mongo;
 		this.databaseName = databaseName;
@@ -163,13 +164,9 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 */
 	private SimpleMongoDbFactory(MongoClient client, String databaseName, boolean mongoInstanceCreated) {
 
-		Boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
-		String validNamePattern = isWindows ? "[^/\\\\.$*<>:|?\"]+" : "[^/\\\\.$\"]+";
-
 		Assert.notNull(client, "MongoClient must not be null!");
 		Assert.hasText(databaseName, "Database name must not be empty!");
-		Assert.isTrue(databaseName.matches(validNamePattern),
-				"Database name must not contain any of the symbols[" + (isWindows ? "/\\.$*<>:|?\"" : "/\\.$\"") + "]");
+		assertDatabaseName(databaseName);
 
 		this.mongo = client;
 		this.databaseName = databaseName;
@@ -236,5 +233,11 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	@Override
 	public PersistenceExceptionTranslator getExceptionTranslator() {
 		return this.exceptionTranslator;
+	}
+
+	private static void assertDatabaseName(String databaseName) {
+
+		Assert.isTrue(databaseName.matches("[^/\\\\.$\"\\s]+"),
+				"Database name must not contain slashes, dots, spaces, quotes, or dollar signs!");
 	}
 }

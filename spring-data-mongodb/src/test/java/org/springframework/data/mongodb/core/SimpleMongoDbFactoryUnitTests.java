@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import com.mongodb.MongoURI;
 
 /**
  * Unit tests for {@link SimpleMongoDbFactory}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
@@ -49,10 +49,15 @@ public class SimpleMongoDbFactoryUnitTests {
 	public @Rule ExpectedException expectedException = ExpectedException.none();
 	@Mock Mongo mongo;
 
-	@Test // DATADOC-254
+	@Test // DATADOC-254, DATAMONGO-1903
 	public void rejectsIllegalDatabaseNames() {
+
 		rejectsDatabaseName("foo.bar");
 		rejectsDatabaseName("foo$bar");
+		rejectsDatabaseName("foo\\bar");
+		rejectsDatabaseName("foo//bar");
+		rejectsDatabaseName("foo bar");
+		rejectsDatabaseName("foo\"bar");
 	}
 
 	@Test // DATADOC-254
@@ -134,8 +139,6 @@ public class SimpleMongoDbFactoryUnitTests {
 		try {
 			new SimpleMongoDbFactory(mongo, databaseName);
 			fail("Expected database name " + databaseName + " to be rejected!");
-		} catch (IllegalArgumentException ex) {
-
-		}
+		} catch (IllegalArgumentException ex) {}
 	}
 }
