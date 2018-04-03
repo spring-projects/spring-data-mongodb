@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.core;
 import lombok.Value;
 import reactor.core.publisher.Mono;
 
-import java.net.UnknownHostException;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
@@ -59,9 +57,8 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 * Creates a new {@link SimpleReactiveMongoDatabaseFactory} instance from the given {@link ConnectionString}.
 	 *
 	 * @param connectionString must not be {@literal null}.
-	 * @throws UnknownHostException
 	 */
-	public SimpleReactiveMongoDatabaseFactory(ConnectionString connectionString) throws UnknownHostException {
+	public SimpleReactiveMongoDatabaseFactory(ConnectionString connectionString) {
 		this(MongoClients.create(connectionString), connectionString.getDatabase(), true);
 	}
 
@@ -80,8 +77,8 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 
 		Assert.notNull(client, "MongoClient must not be null!");
 		Assert.hasText(databaseName, "Database name must not be empty!");
-		Assert.isTrue(databaseName.matches("[\\w-]+"),
-				"Database name must only contain letters, numbers, underscores and dashes!");
+		Assert.isTrue(databaseName.matches("[^/\\\\.$\"\\s]+"),
+				"Database name must not contain slashes, dots, spaces, quotes, or dollar signs!");
 
 		this.mongo = client;
 		this.databaseName = databaseName;

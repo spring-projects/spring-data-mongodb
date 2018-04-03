@@ -26,7 +26,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.session.ClientSession;
 
 /**
- * Interface for factories creating {@link DB} instances.
+ * Interface for factories creating {@link MongoDatabase} instances.
  *
  * @author Mark Pollack
  * @author Thomas Darimont
@@ -35,7 +35,7 @@ import com.mongodb.session.ClientSession;
 public interface MongoDbFactory extends CodecRegistryProvider {
 
 	/**
-	 * Creates a default {@link DB} instance.
+	 * Creates a default {@link MongoDatabase} instance.
 	 *
 	 * @return
 	 * @throws DataAccessException

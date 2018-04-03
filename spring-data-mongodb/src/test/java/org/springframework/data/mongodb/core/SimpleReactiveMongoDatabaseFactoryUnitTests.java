@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.InvocationHandler;
@@ -60,5 +61,21 @@ public class SimpleReactiveMongoDatabaseFactoryUnitTests {
 				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));
 
 		assertThat(singletonTarget, is(sameInstance(database)));
+	}
+
+	@Test // DATAMONGO-1903
+	public void rejectsIllegalDatabaseNames() {
+
+		rejectsDatabaseName("foo.bar");
+		rejectsDatabaseName("foo$bar");
+		rejectsDatabaseName("foo\\bar");
+		rejectsDatabaseName("foo//bar");
+		rejectsDatabaseName("foo bar");
+		rejectsDatabaseName("foo\"bar");
+	}
+
+	private void rejectsDatabaseName(String databaseName) {
+		assertThatThrownBy(() -> new SimpleReactiveMongoDatabaseFactory(mongoClient, databaseName))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 }
