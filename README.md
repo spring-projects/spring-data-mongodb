@@ -138,6 +138,42 @@ public class MyService {
 }
 ```
 
+### MongoDB 4.0 Transactions
+
+As of version 4 MongoDB supports [Transactions](https://www.mongodb.com/transactions). Transactions are built on top of
+ `ClientSessions` and therefore require an active session.
+
+`MongoTransactionManager` is the gateway to the well known Spring transaction support. It allows applications to use 
+[managed transaction features of Spring](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/transaction.html).
+The `MongoTransactionManager` binds a `ClientSession` to the thread. `MongoTemplate` automatically detects those and operates on them accordingly.
+
+```java
+@Configuration
+static class Config extends AbstractMongoConfiguration {
+
+	@Bean
+	MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
+		return new MongoTransactionManager(dbFactory);
+	}
+
+	// ...
+}
+
+@Component
+public class StateService {
+
+	@Transactional
+	void someBusinessFunction(Step step) {
+
+		template.insert(step);
+
+		process(step);
+
+		template.update(Step.class).apply(Update.set("state", // ...
+	};
+});
+```
+
 ## Contributing to Spring Data
 
 Here are some ways for you to get involved in the community:

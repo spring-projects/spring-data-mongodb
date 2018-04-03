@@ -98,10 +98,16 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		 */
 		@Override
 		public DeleteResult all() {
+			return template.doRemove(getCollectionName(), query, domainType, true);
+		}
 
-			String collectionName = getCollectionName();
-
-			return template.doRemove(collectionName, query, domainType);
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove#one()
+		 */
+		@Override
+		public DeleteResult one() {
+			return template.doRemove(getCollectionName(), query, domainType, false);
 		}
 
 		/*

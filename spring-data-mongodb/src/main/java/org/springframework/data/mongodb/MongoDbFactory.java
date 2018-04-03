@@ -22,8 +22,8 @@ import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.DB;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.session.ClientSession;
 
 /**
  * Interface for factories creating {@link MongoDatabase} instances.
@@ -32,7 +32,7 @@ import com.mongodb.session.ClientSession;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-public interface MongoDbFactory extends CodecRegistryProvider {
+public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvider {
 
 	/**
 	 * Creates a default {@link MongoDatabase} instance.

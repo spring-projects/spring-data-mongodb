@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 
 import org.springframework.lang.Nullable;
 
-import com.mongodb.session.ClientSession;
+import com.mongodb.client.ClientSession;
 
 /**
  * Gateway interface to execute {@link ClientSession} bound operations against MongoDB via a {@link SessionCallback}.

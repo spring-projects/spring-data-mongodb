@@ -56,7 +56,7 @@ import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.session.ClientSession;
+import com.mongodb.client.ClientSession;
 
 /**
  * Unit test for {@link SessionBoundMongoTemplate} making sure a proxied {@link MongoCollection} and

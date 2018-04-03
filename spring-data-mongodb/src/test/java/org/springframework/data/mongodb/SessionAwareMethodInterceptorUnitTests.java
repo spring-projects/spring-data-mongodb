@@ -35,9 +35,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.MongoClient;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.session.ClientSession;
 
 /**
  * Unit tests for {@link SessionAwareMethodInterceptor}.
@@ -129,7 +129,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 		collection.getReadConcern();
 
 		assertThat(cache.contains(readConcernMethod, MongoCollection.class)).isTrue();
-		assertThat(cache.lookup(readConcernMethod, MongoCollection.class)).isEmpty();
+		assertThat(cache.lookup(readConcernMethod, MongoCollection.class, ClientSession.class)).isEmpty();
 	}
 
 	@Test // DATAMONGO-1880
@@ -160,23 +160,23 @@ public class SessionAwareMethodInterceptorUnitTests {
 		verify(otherCollection).drop(eq(session));
 	}
 
-	private MongoDatabase proxyDatabase(ClientSession session, MongoDatabase database) {
+	private MongoDatabase proxyDatabase(com.mongodb.session.ClientSession session, MongoDatabase database) {
 		return createProxyInstance(session, database, MongoDatabase.class);
 	}
 
-	private MongoCollection proxyCollection(ClientSession session, MongoCollection collection) {
+	private MongoCollection proxyCollection(com.mongodb.session.ClientSession session, MongoCollection collection) {
 		return createProxyInstance(session, collection, MongoCollection.class);
 	}
 
-	private <T> T createProxyInstance(ClientSession session, T target, Class<T> targetType) {
+	private <T> T createProxyInstance(com.mongodb.session.ClientSession session, T target, Class<T> targetType) {
 
 		ProxyFactory factory = new ProxyFactory();
 		factory.setTarget(target);
 		factory.setInterfaces(targetType);
 		factory.setOpaque(true);
 
-		factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoDatabase.class, this::proxyDatabase,
-				MongoCollection.class, this::proxyCollection));
+		factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, ClientSession.class, MongoDatabase.class,
+				this::proxyDatabase, MongoCollection.class, this::proxyCollection));
 
 		return targetType.cast(factory.getProxy());
 	}

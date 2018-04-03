@@ -16,20 +16,29 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.Version;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClient;
-import com.mongodb.session.ClientSession;
+import com.mongodb.client.ClientSession;
 
 /**
  * @author Christoph Strobl
@@ -37,8 +46,11 @@ import com.mongodb.session.ClientSession;
  */
 public class ClientSessionTests {
 
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 	public static @ClassRule TestRule replSet = ReplicaSet.required();
+	public @Rule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
+
+	private static final String DB_NAME = "client-session-tests";
+	private static final String COLLECTION_NAME = "test";
 
 	MongoTemplate template;
 	MongoClient client;
@@ -46,11 +58,12 @@ public class ClientSessionTests {
 	@Before
 	public void setUp() {
 
-		client = new MongoClient();
-		template = new MongoTemplate(client, "reflective-client-session-tests");
-		template.getDb().getCollection("test").drop();
+		client = MongoTestUtils.replSetClient();
 
-		template.getDb().getCollection("test").insertOne(new Document("_id", "id-1").append("value", "spring"));
+		MongoTestUtils.createOrReplaceCollection(DB_NAME, COLLECTION_NAME, client);
+
+		template = new MongoTemplate(client, DB_NAME);
+		template.getDb().getCollection(COLLECTION_NAME).insertOne(new Document("_id", "id-1").append("value", "spring"));
 	}
 
 	@Test // DATAMONGO-1880
@@ -69,4 +82,66 @@ public class ClientSessionTests {
 
 		session.close();
 	}
+
+	@Test // DATAMONGO-1920
+	@MongoVersion(asOf = "3.7.3")
+	public void withCommittedTransaction() {
+
+		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+
+		assertThat(session.getOperationTime()).isNull();
+
+		session.startTransaction();
+
+		SomeDoc saved = template.withSession(() -> session).execute(action -> {
+
+			SomeDoc doc = new SomeDoc("id-2", "value2");
+			action.insert(doc);
+			return doc;
+		});
+
+		session.commitTransaction();
+		session.close();
+
+		assertThat(saved).isNotNull();
+		assertThat(session.getOperationTime()).isNotNull();
+
+		assertThat(template.exists(query(where("id").is(saved.getId())), SomeDoc.class)).isTrue();
+	}
+
+	@Test // DATAMONGO-1920
+	@MongoVersion(asOf = "3.7.3")
+	public void withAbortedTransaction() {
+
+		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+
+		assertThat(session.getOperationTime()).isNull();
+
+		session.startTransaction();
+
+		SomeDoc saved = template.withSession(() -> session).execute(action -> {
+
+			SomeDoc doc = new SomeDoc("id-2", "value2");
+			action.insert(doc);
+			return doc;
+		});
+
+		session.abortTransaction();
+		session.close();
+
+		assertThat(saved).isNotNull();
+		assertThat(session.getOperationTime()).isNotNull();
+
+		assertThat(template.exists(query(where("id").is(saved.getId())), SomeDoc.class)).isFalse();
+	}
+
+	@Data
+	@AllArgsConstructor
+	@org.springframework.data.mongodb.core.mapping.Document(COLLECTION_NAME)
+	static class SomeDoc {
+
+		@Id String id;
+		String value;
+	}
+
 }

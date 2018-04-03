@@ -46,10 +46,10 @@ import org.springframework.util.Assert;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.Cursor;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import com.mongodb.session.ClientSession;
 
 /**
  * Interface that specifies a basic set of MongoDB operations. Implemented by {@link MongoTemplate}. Not often used but

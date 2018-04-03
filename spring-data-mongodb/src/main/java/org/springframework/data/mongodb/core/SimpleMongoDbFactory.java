@@ -31,9 +31,9 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.session.ClientSession;
 
 /**
  * Factory to create {@link MongoDatabase} instances from a {@link MongoClient} instance.
@@ -243,22 +243,22 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
-		private MongoDatabase proxyDatabase(ClientSession session, MongoDatabase database) {
+		private MongoDatabase proxyDatabase(com.mongodb.session.ClientSession session, MongoDatabase database) {
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
-		private MongoCollection proxyCollection(ClientSession session, MongoCollection collection) {
+		private MongoCollection proxyCollection(com.mongodb.session.ClientSession session, MongoCollection collection) {
 			return createProxyInstance(session, collection, MongoCollection.class);
 		}
 
-		private <T> T createProxyInstance(ClientSession session, T target, Class<T> targetType) {
+		private <T> T createProxyInstance(com.mongodb.session.ClientSession session, T target, Class<T> targetType) {
 
 			ProxyFactory factory = new ProxyFactory();
 			factory.setTarget(target);
 			factory.setInterfaces(targetType);
 			factory.setOpaque(true);
 
-			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoDatabase.class, this::proxyDatabase,
+			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, ClientSession.class, MongoDatabase.class, this::proxyDatabase,
 					MongoCollection.class, this::proxyCollection));
 
 			return targetType.cast(factory.getProxy());
