@@ -428,7 +428,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (Collection.class.isAssignableFrom(entityType)) {
-			writeCollectionInternal((Collection<?>) obj, ClassTypeInformation.LIST, (BasicDBList) bson);
+			writeCollectionInternal((Collection<?>) obj, ClassTypeInformation.LIST, (Collection) bson);
 			return;
 		}
 
@@ -654,16 +654,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Populates the given {@link BasicDBList} with values from the given {@link Collection}.
+	 * Populates the given {@link Collection sink} with converted values from the given {@link Collection source}.
 	 *
-	 * @param source the collection to create a {@link BasicDBList} for, must not be {@literal null}.
+	 * @param source the collection to create a {@link Collection} for, must not be {@literal null}.
 	 * @param type the {@link TypeInformation} to consider or {@literal null} if unknown.
-	 * @param sink the {@link BasicDBList} to write to.
+	 * @param sink the {@link Collection} to write to.
 	 * @return
 	 */
-	private BasicDBList writeCollectionInternal(Collection<?> source, TypeInformation<?> type, BasicDBList sink) {
+	private List<Object> writeCollectionInternal(Collection<?> source, TypeInformation<?> type, Collection sink) {
 
 		TypeInformation<?> componentType = null;
+
+		List<Object> collection = sink instanceof List ? (List) sink : new ArrayList<>(sink);
 
 		if (type != null) {
 			componentType = type.getComponentType();
@@ -674,17 +676,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Class<?> elementType = element == null ? null : element.getClass();
 
 			if (elementType == null || conversions.isSimpleType(elementType)) {
-				sink.add(getPotentiallyConvertedSimpleWrite(element));
+				collection.add(getPotentiallyConvertedSimpleWrite(element));
 			} else if (element instanceof Collection || elementType.isArray()) {
-				sink.add(writeCollectionInternal(asCollection(element), componentType, new BasicDBList()));
+				collection.add(writeCollectionInternal(asCollection(element), componentType, new BasicDBList()));
 			} else {
 				Document document = new Document();
 				writeInternal(element, document, componentType);
-				sink.add(document);
+				collection.add(document);
 			}
 		}
 
-		return sink;
+		return collection;
 	}
 
 	/**
