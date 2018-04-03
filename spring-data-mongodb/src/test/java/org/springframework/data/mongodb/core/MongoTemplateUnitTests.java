@@ -22,6 +22,7 @@ import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import com.mongodb.client.model.ReplaceOptions;
 import lombok.Data;
 
 import java.math.BigInteger;
@@ -716,7 +717,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1518
 	public void findAndRemoveManyShouldUseCollationWhenPresent() {
 
-		template.doRemove("collection-1", new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
+		template.doRemove("collection-1", new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class, true);
 
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
 		verify(collection).deleteMany(any(), options.capture());
@@ -754,7 +755,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class);
 
-		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		ArgumentCaptor<ReplaceOptions> options = ArgumentCaptor.forClass(ReplaceOptions.class);
 		verify(collection).replaceOne(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));

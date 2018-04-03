@@ -37,7 +37,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.session.ClientSession;
+import com.mongodb.client.ClientSession;
 
 /**
  * Unit tests for {@link SimpleMongoDbFactory}.

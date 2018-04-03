@@ -127,6 +127,7 @@ import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.ValidationOptions;
@@ -1470,10 +1471,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				}
 			} else if (writeConcernToUse == null) {
 				publisher = collection.replaceOne(Filters.eq(ID_FIELD, document.get(ID_FIELD)), document,
-						new UpdateOptions().upsert(true));
+						new ReplaceOptions().upsert(true));
 			} else {
 				publisher = collection.withWriteConcern(writeConcernToUse)
-						.replaceOne(Filters.eq(ID_FIELD, document.get(ID_FIELD)), document, new UpdateOptions().upsert(true));
+						.replaceOne(Filters.eq(ID_FIELD, document.get(ID_FIELD)), document, new ReplaceOptions().upsert(true));
 			}
 
 			return Mono.from(publisher).map(o -> document.get(ID_FIELD));
@@ -1580,7 +1581,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			query.getCollation().map(Collation::toMongoCollation).ifPresent(updateOptions::collation);
 
 			if (!UpdateMapper.isUpdateObject(updateObj)) {
-				return collectionToUse.replaceOne(queryObj, updateObj, updateOptions);
+
+				ReplaceOptions replaceOptions = new ReplaceOptions();
+				replaceOptions.upsert(updateOptions.isUpsert());
+				replaceOptions.collation(updateOptions.getCollation());
+
+				return collectionToUse.replaceOne(queryObj, updateObj, replaceOptions);
 			}
 			if (multi) {
 				return collectionToUse.updateMany(queryObj, updateObj, updateOptions);

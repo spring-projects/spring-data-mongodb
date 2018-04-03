@@ -61,7 +61,9 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -134,6 +136,7 @@ import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
@@ -141,19 +144,9 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.ValidationAction;
-import com.mongodb.client.model.ValidationLevel;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import com.mongodb.session.ClientSession;
 import com.mongodb.util.JSONParseException;
 
 /**
@@ -214,6 +207,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private @Nullable ResourceLoader resourceLoader;
 	private @Nullable MongoPersistentEntityIndexCreator indexCreator;
 
+	private SessionSynchronization sessionSynchronization = SessionSynchronization.NATIVE;
+
 	/**
 	 * Constructor used for a basic template configuration
 	 *
@@ -267,6 +262,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		this.mongoDbFactory = dbFactory;
 		this.exceptionTranslator = that.exceptionTranslator;
+		this.sessionSynchronization = that.sessionSynchronization;
 		this.mongoConverter = that.mongoConverter instanceof MappingMongoConverter ? getDefaultMongoConverter(dbFactory)
 				: that.mongoConverter;
 		this.queryMapper = that.queryMapper;
@@ -582,6 +578,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return new SessionBoundMongoTemplate(session, MongoTemplate.this);
 	}
 
+	/**
+	 * Define if {@link MongoTemplate} should participate in transactions. Default is set to
+	 * {@link SessionSynchronization#NATIVE}.<br />
+	 * <strong>NOTE:</strong> MongoDB transactions require at least MongoDB 4.0.
+	 *
+	 * @since 2.1
+	 */
+	public void setSessionSynchronization(SessionSynchronization sessionSynchronization) {
+		this.sessionSynchronization = sessionSynchronization;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#createCollection(java.lang.Class)
@@ -687,7 +694,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 				collection.drop();
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Dropped collection [{}]", collection.getNamespace().getCollectionName());
+					LOGGER.debug("Dropped collection [{}]",
+							collection.getNamespace() != null ? collection.getNamespace().getCollectionName() : collectionName);
 				}
 				return null;
 			}
@@ -1158,7 +1166,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * In case of using MongoDB Java driver version 3 the returned {@link WriteConcern} will be defaulted to
 	 * {@link WriteConcern#ACKNOWLEDGED} when {@link WriteResultChecking} is set to {@link WriteResultChecking#EXCEPTION}.
 	 *
-	 * @param writeConcern any WriteConcern already configured or null
+	 * @param mongoAction any MongoAction already configured or null
 	 * @return The prepared WriteConcern or null
 	 */
 	@Nullable
@@ -1474,10 +1482,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 						collection.withWriteConcern(writeConcernToUse).insertOne(dbDoc);
 					}
 				} else if (writeConcernToUse == null) {
-					collection.replaceOne(Filters.eq(ID_FIELD, dbDoc.get(ID_FIELD)), dbDoc, new UpdateOptions().upsert(true));
+					collection.replaceOne(Filters.eq(ID_FIELD, dbDoc.get(ID_FIELD)), dbDoc, new ReplaceOptions().upsert(true));
 				} else {
 					collection.withWriteConcern(writeConcernToUse).replaceOne(Filters.eq(ID_FIELD, dbDoc.get(ID_FIELD)), dbDoc,
-							new UpdateOptions().upsert(true));
+							new ReplaceOptions().upsert(true));
 				}
 				return dbDoc.get(ID_FIELD);
 			}
@@ -1583,7 +1591,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				collection = writeConcernToUse != null ? collection.withWriteConcern(writeConcernToUse) : collection;
 
 				if (!UpdateMapper.isUpdateObject(updateObj)) {
-					return collection.replaceOne(queryObj, updateObj, opts);
+
+					ReplaceOptions replaceOptions = new ReplaceOptions();
+					replaceOptions.collation(opts.getCollation());
+					replaceOptions.upsert(opts.isUpsert());
+
+					return collection.replaceOne(queryObj, updateObj, replaceOptions);
 				} else {
 					if (multi) {
 						return collection.updateMany(queryObj, updateObj, opts);
@@ -1619,7 +1632,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(object, "Object must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		return doRemove(collectionName, getIdQueryFor(object), object.getClass());
+		return doRemove(collectionName, getIdQueryFor(object), object.getClass(), false);
 	}
 
 	/**
@@ -1708,7 +1721,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public DeleteResult remove(Query query, String collectionName) {
-		return doRemove(collectionName, query, null);
+		return doRemove(collectionName, query, null, true);
 	}
 
 	@Override
@@ -1720,11 +1733,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public DeleteResult remove(Query query, Class<?> entityClass, String collectionName) {
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
-		return doRemove(collectionName, query, entityClass);
+		return doRemove(collectionName, query, entityClass, true);
 	}
 
 	protected <T> DeleteResult doRemove(final String collectionName, final Query query,
-			@Nullable final Class<T> entityClass) {
+			@Nullable final Class<T> entityClass, boolean multi) {
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
@@ -1749,7 +1762,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
-				DeleteResult dr = null;
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Remove using query: {} in collection: {}.",
 							new Object[] { serializeToJsonSafely(removeQuery), collectionName });
@@ -1768,15 +1780,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					removeQuery = new Document(ID_FIELD, new Document("$in", ids));
 				}
 
-				if (writeConcernToUse == null) {
-					dr = collection.deleteMany(removeQuery, options);
-				} else {
-					dr = collection.withWriteConcern(writeConcernToUse).deleteMany(removeQuery, options);
-				}
+				MongoCollection<Document> collectionToUse = writeConcernToUse != null
+						? collection.withWriteConcern(writeConcernToUse) : collection;
+
+				DeleteResult result = multi ? collectionToUse.deleteMany(removeQuery, options)
+						: collection.deleteOne(removeQuery, options);
 
 				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass, collectionName));
 
-				return dr;
+				return result;
 			}
 		});
 	}
@@ -2288,7 +2300,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	protected MongoDatabase doGetDatabase() {
-		return mongoDbFactory.getDb();
+		return MongoDatabaseUtils.getDatabase(mongoDbFactory, sessionSynchronization);
 	}
 
 	protected MongoDatabase prepareDatabase(MongoDatabase database) {
@@ -2350,7 +2362,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				// TODO: Emit a collection created event
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Created collection [{}]", coll.getNamespace().getCollectionName());
+					LOGGER.debug("Created collection [{}]",
+							coll.getNamespace() != null ? coll.getNamespace().getCollectionName() : collectionName);
 				}
 				return coll;
 			}
@@ -2861,7 +2874,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (LOGGER.isDebugEnabled()) {
 
 				LOGGER.debug("findOne using query: {} fields: {} in db.collection: {}", serializeToJsonSafely(query),
-						serializeToJsonSafely(fields.orElseGet(Document::new)), collection.getNamespace().getFullName());
+						serializeToJsonSafely(fields.orElseGet(Document::new)),
+						collection.getNamespace() != null ? collection.getNamespace().getFullName() : "n/a");
 			}
 
 			if (fields.isPresent()) {
@@ -3004,7 +3018,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Simple {@link DocumentCallback} that will transform {@link Document} into the given target type using the given
-	 * {@link MongoReader}.
+	 * {@link EntityReader}.
 	 *
 	 * @author Oliver Gierke
 	 * @author Christoph Strobl

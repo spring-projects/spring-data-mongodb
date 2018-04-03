@@ -25,6 +25,7 @@ import org.springframework.lang.Nullable;
  * @since 2.1
  * @see com.mongodb.session.ClientSession
  */
+@FunctionalInterface
 public interface SessionCallback<T> {
 
 	/**

@@ -57,6 +57,7 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 	private final Class<?> targetType;
 	private final Class<?> collectionType;
 	private final Class<?> databaseType;
+	private final Class<? extends ClientSession> sessionType;
 
 	/**
 	 * Create a new SessionAwareMethodInterceptor for given target.
@@ -71,12 +72,13 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 	 *          {@code MongoCollection}.
 	 * @param <T> target object type.
 	 */
-	public <T> SessionAwareMethodInterceptor(ClientSession session, T target, Class<D> databaseType,
-			ClientSessionOperator<D> databaseDecorator, Class<C> collectionType,
+	public <T> SessionAwareMethodInterceptor(ClientSession session, T target, Class<? extends ClientSession> sessionType,
+			Class<D> databaseType, ClientSessionOperator<D> databaseDecorator, Class<C> collectionType,
 			ClientSessionOperator<C> collectionDecorator) {
 
 		Assert.notNull(session, "ClientSession must not be null!");
 		Assert.notNull(target, "Target must not be null!");
+		Assert.notNull(sessionType, "SessionType must not be null!");
 		Assert.notNull(databaseType, "Database type must not be null!");
 		Assert.notNull(databaseDecorator, "Database ClientSessionOperator must not be null!");
 		Assert.notNull(collectionType, "Collection type must not be null!");
@@ -90,6 +92,7 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 		this.databaseDecorator = databaseDecorator;
 
 		this.targetType = ClassUtils.isAssignable(databaseType, target.getClass()) ? databaseType : collectionType;
+		this.sessionType = sessionType;
 	}
 
 	/*
@@ -114,7 +117,7 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 			return methodInvocation.proceed();
 		}
 
-		Optional<Method> targetMethod = METHOD_CACHE.lookup(methodInvocation.getMethod(), targetType);
+		Optional<Method> targetMethod = METHOD_CACHE.lookup(methodInvocation.getMethod(), targetType, sessionType);
 
 		return !targetMethod.isPresent() ? methodInvocation.proceed()
 				: ReflectionUtils.invokeMethod(targetMethod.get(), target,
@@ -171,18 +174,19 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 		 * @param targetClass
 		 * @return
 		 */
-		Optional<Method> lookup(Method method, Class<?> targetClass) {
+		Optional<Method> lookup(Method method, Class<?> targetClass, Class<? extends ClientSession> sessionType) {
 
 			return cache.computeIfAbsent(new MethodClassKey(method, targetClass),
-					val -> Optional.ofNullable(findTargetWithSession(method, targetClass)));
+					val -> Optional.ofNullable(findTargetWithSession(method, targetClass, sessionType)));
 		}
 
 		@Nullable
-		private Method findTargetWithSession(Method sourceMethod, Class<?> targetType) {
+		private Method findTargetWithSession(Method sourceMethod, Class<?> targetType,
+				Class<? extends ClientSession> sessionType) {
 
 			Class<?>[] argTypes = sourceMethod.getParameterTypes();
 			Class<?>[] args = new Class<?>[argTypes.length + 1];
-			args[0] = ClientSession.class;
+			args[0] = sessionType;
 			System.arraycopy(argTypes, 0, args, 1, argTypes.length);
 
 			return ReflectionUtils.findMethod(targetType, sourceMethod.getName(), args);
