@@ -84,10 +84,13 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 */
 	private SimpleMongoDbFactory(MongoClient mongoClient, String databaseName, boolean mongoInstanceCreated) {
 
+		Boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
+		String validNamePattern = isWindows ? "[^/\\\\.$*<>:|?\"]+" : "[^/\\\\.$\"]+";
+
 		Assert.notNull(mongoClient, "MongoClient must not be null!");
 		Assert.hasText(databaseName, "Database name must not be empty!");
-		Assert.isTrue(databaseName.matches("[\\w-]+"),
-				"Database name must only contain letters, numbers, underscores and dashes!");
+		Assert.isTrue(databaseName.matches(validNamePattern),
+				"Database name must not contain any of the symbols[" + (isWindows ? "/\\.$*<>:|?\"" : "/\\.$\"") + "]");
 
 		this.mongoClient = mongoClient;
 		this.databaseName = databaseName;
