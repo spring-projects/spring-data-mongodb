@@ -61,9 +61,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClient;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.session.ClientSession;
 
 /**
  * Integration tests for {@link SessionBoundMongoTemplate} operating up an active {@link ClientSession}.

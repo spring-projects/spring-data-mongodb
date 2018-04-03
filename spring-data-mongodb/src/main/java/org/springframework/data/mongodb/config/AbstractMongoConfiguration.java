@@ -40,8 +40,7 @@ import com.mongodb.MongoClient;
  * @see MongoConfigurationSupport
  */
 @Configuration
-public abstract class
-AbstractMongoConfiguration extends MongoConfigurationSupport {
+public abstract class AbstractMongoConfiguration extends MongoConfigurationSupport {
 
 	/**
 	 * Return the {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want to expose a
@@ -111,4 +110,5 @@ AbstractMongoConfiguration extends MongoConfigurationSupport {
 
 		return converter;
 	}
+
 }

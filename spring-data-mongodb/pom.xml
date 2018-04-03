@@ -253,6 +253,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>javax.transaction</groupId>
+			<artifactId>jta</artifactId>
+			<version>1.1</version>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- Kotlin extension -->
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>

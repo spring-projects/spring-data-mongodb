@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
+import com.mongodb.client.model.ReplaceOptions;
 import lombok.Data;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -233,12 +234,12 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void replaceOneShouldUseCollationWhenPresent() {
 
-		when(collection.replaceOne(any(Bson.class), any(), any())).thenReturn(Mono.empty());
+		when(collection.replaceOne(any(Bson.class), any(), any(ReplaceOptions.class))).thenReturn(Mono.empty());
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class)
 				.subscribe();
 
-		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		ArgumentCaptor<ReplaceOptions> options = ArgumentCaptor.forClass(ReplaceOptions.class);
 		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));

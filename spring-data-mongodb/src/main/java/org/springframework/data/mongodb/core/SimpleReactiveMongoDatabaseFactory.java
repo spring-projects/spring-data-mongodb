@@ -230,7 +230,7 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 			factory.setInterfaces(targetType);
 			factory.setOpaque(true);
 
-			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, MongoDatabase.class, this::proxyDatabase,
+			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, ClientSession.class, MongoDatabase.class, this::proxyDatabase,
 					MongoCollection.class, this::proxyCollection));
 
 			return targetType.cast(factory.getProxy());
