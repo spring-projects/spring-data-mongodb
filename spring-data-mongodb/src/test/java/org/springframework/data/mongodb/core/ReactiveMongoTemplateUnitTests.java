@@ -21,22 +21,22 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
+import lombok.Data;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import lombok.Data;
-import org.bson.types.ObjectId;
-import reactor.core.publisher.Mono;
-
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,7 +61,6 @@ import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import reactor.test.StepVerifier;
 
 /**
  * Unit tests for {@link ReactiveMongoTemplate}.
@@ -126,8 +125,8 @@ public class ReactiveMongoTemplateUnitTests {
 	public void autogeneratesIdForMap() {
 
 		ReactiveMongoTemplate template = spy(this.template);
-		doReturn(Mono.just(new ObjectId())).when(template).saveDocument(Mockito.any(String.class), Mockito.any(Document.class),
-				Mockito.any(Class.class));
+		doReturn(Mono.just(new ObjectId())).when(template).saveDocument(any(String.class), any(Document.class),
+				any(Class.class));
 
 		Map<String, String> entity = new LinkedHashMap<>();
 		StepVerifier.create(template.save(entity, "foo")).consumeNextWith(actual -> {
@@ -170,7 +169,7 @@ public class ReactiveMongoTemplateUnitTests {
 				.subscribe();
 
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
-		verify(collection).findOneAndUpdate(Mockito.any(), Mockito.any(), options.capture());
+		verify(collection).findOneAndUpdate(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -183,7 +182,7 @@ public class ReactiveMongoTemplateUnitTests {
 		template.findAndRemove(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class).subscribe();
 
 		ArgumentCaptor<FindOneAndDeleteOptions> options = ArgumentCaptor.forClass(FindOneAndDeleteOptions.class);
-		verify(collection).findOneAndDelete(Mockito.any(), options.capture());
+		verify(collection).findOneAndDelete(any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -197,7 +196,7 @@ public class ReactiveMongoTemplateUnitTests {
 				.subscribe();
 
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
-		verify(collection).deleteMany(Mockito.any(), options.capture());
+		verify(collection).deleteMany(any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -211,7 +210,7 @@ public class ReactiveMongoTemplateUnitTests {
 				AutogenerateableId.class).subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(Mockito.any(), Mockito.any(), options.capture());
+		verify(collection).updateOne(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -225,7 +224,7 @@ public class ReactiveMongoTemplateUnitTests {
 				AutogenerateableId.class).subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateMany(Mockito.any(), Mockito.any(), options.capture());
+		verify(collection).updateMany(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 
@@ -240,7 +239,7 @@ public class ReactiveMongoTemplateUnitTests {
 				.subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).replaceOne(Mockito.any(Bson.class), Mockito.any(), options.capture());
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -254,7 +253,7 @@ public class ReactiveMongoTemplateUnitTests {
 		// template.aggregate(aggregation, AutogenerateableId.class, Document.class).subscribe();
 
 		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
+		verify(db).runCommand(cmd.capture(), any(Class.class));
 
 		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
 	}
@@ -276,7 +275,7 @@ public class ReactiveMongoTemplateUnitTests {
 		template.geoNear(query, AutogenerateableId.class).subscribe();
 
 		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
+		verify(db).runCommand(cmd.capture(), any(Class.class));
 
 		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
 	}

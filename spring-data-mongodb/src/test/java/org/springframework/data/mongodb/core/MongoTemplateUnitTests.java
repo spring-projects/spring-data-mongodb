@@ -44,7 +44,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -129,20 +128,20 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(findIterable.iterator()).thenReturn(cursor);
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
-		when(db.getCollection(Mockito.any(String.class), eq(Document.class))).thenReturn(collection);
-		when(db.runCommand(Mockito.any(), Mockito.any(Class.class))).thenReturn(commandResultDocument);
-		when(collection.find(Mockito.any(org.bson.Document.class), any(Class.class))).thenReturn(findIterable);
-		when(collection.mapReduce(Mockito.any(), Mockito.any(), eq(Document.class))).thenReturn(mapReduceIterable);
+		when(db.getCollection(any(String.class), eq(Document.class))).thenReturn(collection);
+		when(db.runCommand(any(), any(Class.class))).thenReturn(commandResultDocument);
+		when(collection.find(any(org.bson.Document.class), any(Class.class))).thenReturn(findIterable);
+		when(collection.mapReduce(any(), any(), eq(Document.class))).thenReturn(mapReduceIterable);
 		when(collection.count(any(Bson.class), any(CountOptions.class))).thenReturn(1L);
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
 		when(collection.withReadPreference(any())).thenReturn(collection);
-		when(findIterable.projection(Mockito.any())).thenReturn(findIterable);
-		when(findIterable.sort(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
-		when(findIterable.modifiers(Mockito.any(org.bson.Document.class))).thenReturn(findIterable);
-		when(findIterable.collation(Mockito.any())).thenReturn(findIterable);
+		when(findIterable.projection(any())).thenReturn(findIterable);
+		when(findIterable.sort(any(org.bson.Document.class))).thenReturn(findIterable);
+		when(findIterable.modifiers(any(org.bson.Document.class))).thenReturn(findIterable);
+		when(findIterable.collation(any())).thenReturn(findIterable);
 		when(findIterable.limit(anyInt())).thenReturn(findIterable);
-		when(mapReduceIterable.collation(Mockito.any())).thenReturn(mapReduceIterable);
-		when(mapReduceIterable.sort(Mockito.any())).thenReturn(mapReduceIterable);
+		when(mapReduceIterable.collation(any())).thenReturn(mapReduceIterable);
+		when(mapReduceIterable.sort(any())).thenReturn(mapReduceIterable);
 		when(mapReduceIterable.iterator()).thenReturn(cursor);
 		when(mapReduceIterable.filter(any())).thenReturn(mapReduceIterable);
 		when(aggregateIterable.collation(any())).thenReturn(aggregateIterable);
@@ -211,8 +210,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		this.converter.afterPropertiesSet();
 
 		MongoTemplate template = spy(this.template);
-		doReturn(new ObjectId()).when(template).saveDocument(Mockito.any(String.class), Mockito.any(Document.class),
-				Mockito.any(Class.class));
+		doReturn(new ObjectId()).when(template).saveDocument(any(String.class), any(Document.class), any(Class.class));
 
 		AutogenerateableId entity = new AutogenerateableId();
 		template.save(entity);
@@ -224,8 +222,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void autogeneratesIdForMap() {
 
 		MongoTemplate template = spy(this.template);
-		doReturn(new ObjectId()).when(template).saveDocument(Mockito.any(String.class), Mockito.any(Document.class),
-				Mockito.any(Class.class));
+		doReturn(new ObjectId()).when(template).saveDocument(any(String.class), any(Document.class), any(Class.class));
 
 		Map<String, String> entity = new LinkedHashMap<>();
 		template.save(entity, "foo");
@@ -248,9 +245,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		QueryMapper queryMapper = new QueryMapper(converter);
 		Document reference = queryMapper.getMappedObject(update.getUpdateObject(), Optional.empty());
 
-		verify(collection, times(1)).updateOne(Mockito.any(org.bson.Document.class), eq(reference),
-				Mockito.any(UpdateOptions.class)); // .update(Mockito.any(Document.class), eq(reference), anyBoolean(),
-																						// anyBoolean());
+		verify(collection, times(1)).updateOne(any(org.bson.Document.class), eq(reference), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-474
@@ -282,13 +277,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<org.bson.Document> captor = ArgumentCaptor.forClass(org.bson.Document.class);
 
 		template.findAndModify(new Query(), new Update().set("id", "10"), VersionedEntity.class);
-		// verify(collection, times(1)).findAndModify(Matchers.any(Document.class),
-		// org.mockito.Matchers.isNull(Document.class), org.mockito.Matchers.isNull(Document.class), eq(false),
-		// captor.capture(), eq(false), eq(false));
 
-		verify(collection, times(1)).findOneAndUpdate(Matchers.any(org.bson.Document.class), captor.capture(),
-				Matchers.any(FindOneAndUpdateOptions.class));
-		Assert.assertThat(captor.getValue().get("$inc"), Is.<Object> is(new org.bson.Document("version", 1L)));
+		verify(collection, times(1)).findOneAndUpdate(any(org.bson.Document.class), captor.capture(),
+				any(FindOneAndUpdateOptions.class));
+		Assert.assertThat(captor.getValue().get("$inc"), Is.is(new org.bson.Document("version", 1L)));
 	}
 
 	@Test // DATAMONGO-868
@@ -302,13 +294,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.findAndModify(new Query(), new Update().set("version", 100), VersionedEntity.class);
 
-		verify(collection, times(1)).findOneAndUpdate(Matchers.any(org.bson.Document.class), captor.capture(),
-				Matchers.any(FindOneAndUpdateOptions.class));
+		verify(collection, times(1)).findOneAndUpdate(any(org.bson.Document.class), captor.capture(),
+				any(FindOneAndUpdateOptions.class));
 
-		// verify(collection, times(1)).findAndModify(Matchers.any(Document.class), isNull(Document.class),
-		// isNull(Document.class), eq(false), captor.capture(), eq(false), eq(false));
-
-		Assert.assertThat(captor.getValue().get("$set"), Is.<Object> is(new org.bson.Document("version", 100)));
+		Assert.assertThat(captor.getValue().get("$set"), Is.is(new org.bson.Document("version", 100)));
 		Assert.assertThat(captor.getValue().get("$inc"), nullValue());
 	}
 
@@ -339,7 +328,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		BasicQuery query = new BasicQuery("{'foo':'bar'}");
 		template.findAllAndRemove(query, VersionedEntity.class);
-		verify(collection, times(1)).find(Mockito.eq(query.getQueryObject()), Mockito.any(Class.class));
+		verify(collection, times(1)).find(Mockito.eq(query.getQueryObject()), any(Class.class));
 	}
 
 	@Test // DATAMONGO-566
@@ -353,7 +342,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		BasicQuery query = new BasicQuery("{'foo':'bar'}");
 		template.findAllAndRemove(query, VersionedEntity.class);
 
-		verify(collection, times(1)).deleteMany(queryCaptor.capture(), Mockito.any());
+		verify(collection, times(1)).deleteMany(queryCaptor.capture(), any());
 
 		Document idField = DocumentTestUtils.getAsDocument(queryCaptor.getValue(), "_id");
 		assertThat((List<Object>) idField.get("$in"),
@@ -364,7 +353,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void findAllAndRemoveShouldNotTriggerRemoveIfFindResultIsEmpty() {
 
 		template.findAllAndRemove(new BasicQuery("{'foo':'bar'}"), VersionedEntity.class);
-		verify(collection, never()).deleteMany(Mockito.any(org.bson.Document.class));
+		verify(collection, never()).deleteMany(any(org.bson.Document.class));
 	}
 
 	@Test // DATAMONGO-948
@@ -406,26 +395,26 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1166
 	public void geoNearShouldHonorReadPreferenceWhenSet() {
 
-		when(db.runCommand(Mockito.any(org.bson.Document.class), Mockito.any(ReadPreference.class), eq(Document.class)))
+		when(db.runCommand(any(org.bson.Document.class), any(ReadPreference.class), eq(Document.class)))
 				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		template.geoNear(query, Wrapper.class);
 
-		verify(this.db, times(1)).runCommand(Mockito.any(org.bson.Document.class), eq(ReadPreference.secondary()),
+		verify(this.db, times(1)).runCommand(any(org.bson.Document.class), eq(ReadPreference.secondary()),
 				eq(Document.class));
 	}
 
 	@Test // DATAMONGO-1166
 	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
 
-		when(db.runCommand(Mockito.any(Document.class), eq(Document.class))).thenReturn(mock(Document.class));
+		when(db.runCommand(any(Document.class), eq(Document.class))).thenReturn(mock(Document.class));
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		template.geoNear(query, Wrapper.class);
 
-		verify(this.db, times(1)).runCommand(Mockito.any(Document.class), eq(Document.class));
+		verify(this.db, times(1)).runCommand(any(Document.class), eq(Document.class));
 	}
 
 	@Test // DATAMONGO-1334
@@ -435,8 +424,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
 		when(output.limit(anyInt())).thenReturn(output);
-		when(output.sort(Mockito.any(Document.class))).thenReturn(output);
-		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
+		when(output.sort(any(Document.class))).thenReturn(output);
+		when(output.filter(any(Document.class))).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 
@@ -456,7 +445,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MapReduceIterable output = mock(MapReduceIterable.class);
 		when(output.limit(anyInt())).thenReturn(output);
 		when(output.sort(any())).thenReturn(output);
-		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
+		when(output.filter(any(Document.class))).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 
@@ -477,7 +466,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MapReduceIterable output = mock(MapReduceIterable.class);
 		when(output.limit(anyInt())).thenReturn(output);
 		when(output.sort(any())).thenReturn(output);
-		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
+		when(output.filter(any(Document.class))).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 
@@ -517,7 +506,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MapReduceIterable output = mock(MapReduceIterable.class);
 		when(output.limit(anyInt())).thenReturn(output);
 		when(output.sort(any())).thenReturn(output);
-		when(output.filter(Mockito.any(Document.class))).thenReturn(output);
+		when(output.filter(any(Document.class))).thenReturn(output);
 		when(output.iterator()).thenReturn(cursor);
 		when(cursor.hasNext()).thenReturn(false);
 
@@ -556,8 +545,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		UpdateResult result = mock(UpdateResult.class);
 		doReturn(1L).when(result).getModifiedCount();
 
-		doReturn(result).when(spy).doUpdate(anyString(), Mockito.any(Query.class), Mockito.any(Update.class),
-				Mockito.any(Class.class), anyBoolean(), anyBoolean());
+		doReturn(result).when(spy).doUpdate(anyString(), any(Query.class), any(Update.class), any(Class.class),
+				anyBoolean(), anyBoolean());
 
 		spy.save(entity);
 	}
@@ -708,7 +697,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.findAndModify(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class);
 
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
-		verify(collection).findOneAndUpdate(Mockito.any(), Mockito.any(), options.capture());
+		verify(collection).findOneAndUpdate(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -719,7 +708,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.findAndRemove(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
 
 		ArgumentCaptor<FindOneAndDeleteOptions> options = ArgumentCaptor.forClass(FindOneAndDeleteOptions.class);
-		verify(collection).findOneAndDelete(Mockito.any(), options.capture());
+		verify(collection).findOneAndDelete(any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -730,7 +719,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.doRemove("collection-1", new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
 
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
-		verify(collection).deleteMany(Mockito.any(), options.capture());
+		verify(collection).deleteMany(any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -742,7 +731,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				AutogenerateableId.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(Mockito.any(), Mockito.any(), options.capture());
+		verify(collection).updateOne(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -754,7 +743,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				AutogenerateableId.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateMany(Mockito.any(), Mockito.any(), options.capture());
+		verify(collection).updateMany(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 
@@ -766,7 +755,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).replaceOne(Mockito.any(), Mockito.any(), options.capture());
+		verify(collection).replaceOne(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
@@ -806,7 +795,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.geoNear(query, AutogenerateableId.class);
 
 		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
+		verify(db).runCommand(cmd.capture(), any(Class.class));
 
 		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
 	}
@@ -819,7 +808,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				AutogenerateableId.class);
 
 		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		verify(db).runCommand(cmd.capture(), Mockito.any(Class.class));
+		verify(db).runCommand(cmd.capture(), any(Class.class));
 
 		assertThat(cmd.getValue().get("group", Document.class).get("collation", Document.class),
 				equalTo(new Document("locale", "fr")));
@@ -974,9 +963,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		return template;
 	}
 
-	/* (non-Javadoc)
-	  * @see org.springframework.data.mongodb.core.core.MongoOperationsUnitTests#getOperations()
-	  */
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.core.MongoOperationsUnitTests#getOperations()
+	 */
 	@Override
 	protected MongoOperations getOperationsForExceptionHandling() {
 		MongoTemplate template = spy(this.template);
@@ -984,9 +974,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		return template;
 	}
 
-	/* (non-Javadoc)
-	  * @see org.springframework.data.mongodb.core.core.MongoOperationsUnitTests#getOperations()
-	  */
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.core.MongoOperationsUnitTests#getOperations()
+	 */
 	@Override
 	protected MongoOperations getOperations() {
 		return this.template;
