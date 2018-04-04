@@ -1,6 +1,23 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.6.RELEASE (2018-04-04)
+---------------------------------------------
+* DATAMONGO-1916 - Potential ClassCastException in MappingMongoConverter#writeInternal when writing collections.
+* DATAMONGO-1915 - Remove explicit declaration of Jackson library versions.
+* DATAMONGO-1913 - Missing @Nullable annotation in GridFsTemplate.bucket.
+* DATAMONGO-1911 - String-query accepting UUID renders to $uuid.
+* DATAMONGO-1909 - Fix typo in tests.
+* DATAMONGO-1907 - Error in method findOne(Example example) in ReactiveQueryByExampleExecutor when there is no results.
+* DATAMONGO-1904 - MappingMongoConverter fails to properly read nested arrays.
+* DATAMONGO-1903 - Align database name check in SimpleMongoDbFactory with MongoDB limitations.
+* DATAMONGO-1901 - Declare project.root property to make sure JavaDoc generation works.
+* DATAMONGO-1898 - Verify handling of enums in MappingMongoConverter.
+* DATAMONGO-1896 - In case of inheritance, MongoRepository.saveAll(…) does not insert elements into the aggregate collection.
+* DATAMONGO-1888 - Release 2.0.6 (Kay SR6).
+* DATAMONGO-1834 - Add support for aggregation operators $dateFromString, $dateFromParts and $dateToParts.
+
+
 Changes in version 1.10.11.RELEASE (2018-04-04)
 -----------------------------------------------
 * DATAMONGO-1915 - Remove explicit declaration of Jackson library versions.
