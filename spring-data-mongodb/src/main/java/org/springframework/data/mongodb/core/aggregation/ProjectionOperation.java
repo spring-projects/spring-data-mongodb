@@ -140,11 +140,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	public ProjectionOperation andExclude(String... fieldNames) {
 
-		for (String fieldName : fieldNames) {
-			Assert.isTrue(Fields.UNDERSCORE_ID.equals(fieldName),
-					String.format(EXCLUSION_ERROR, fieldName, Fields.UNDERSCORE_ID));
-		}
-
 		List<FieldProjection> excludeProjections = FieldProjection.from(Fields.fields(fieldNames), false);
 		return new ProjectionOperation(this.projections, excludeProjections);
 	}
@@ -186,6 +181,18 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		return fields != null ? fields : ExposedFields.empty();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#inheritsFields()
+	 */
+	@Override
+	public boolean inheritsFields() {
+
+		return projections.stream().filter(FieldProjection.class::isInstance) //
+				.map(FieldProjection.class::cast) //
+				.anyMatch(FieldProjection::isExcluded);
 	}
 
 	/*
@@ -1342,6 +1349,13 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				}
 
 				return projections;
+			}
+
+			/**
+			 * @return {@literal true} if this field is excluded.
+			 */
+			public boolean isExcluded() {
+				return Boolean.FALSE.equals(value);
 			}
 
 			/*

@@ -200,10 +200,23 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(MOD)).isEqualTo((Object) Arrays.<Object> asList("$a", 3));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-758
-	public void excludeShouldThrowExceptionForFieldsOtherThanUnderscoreId() {
+	@Test // DATAMONGO-758, DATAMONGO-1893
+	public void excludeShouldAllowExclusionOfFieldsOtherThanUnderscoreId/* since MongoDB 3.4 */() {
 
-		new ProjectionOperation().andExclude("foo");
+		ProjectionOperation projectionOp = new ProjectionOperation().andExclude("foo");
+		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+
+		assertThat(projectionOp.inheritsFields()).isTrue();
+		assertThat((Integer) projectClause.get("foo")).isEqualTo(0);
+	}
+
+	@Test // DATAMONGO-1893
+	public void includeShouldNotInheritFields() {
+
+		ProjectionOperation projectionOp = new ProjectionOperation().andInclude("foo");
+
+		assertThat(projectionOp.inheritsFields()).isFalse();
 	}
 
 	@Test // DATAMONGO-758
