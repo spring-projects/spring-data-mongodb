@@ -18,9 +18,9 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 import org.bson.Document;
+import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
