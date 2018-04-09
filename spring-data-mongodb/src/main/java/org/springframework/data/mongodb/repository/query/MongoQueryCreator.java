@@ -61,10 +61,10 @@ import org.springframework.util.ClassUtils;
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MongoQueryCreator.class);
-	private final MongoParameterAccessor accessor;
-	private final boolean isGeoNearQuery;
 
+	private final MongoParameterAccessor accessor;
 	private final MappingContext<?, MongoPersistentProperty> context;
+	private final boolean isGeoNearQuery;
 
 	/**
 	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}, {@link ConvertingParameterAccessor} and
