@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
+import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -1262,6 +1263,63 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 */
 	<T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, String inputCollectionName, Class<T> resultType,
 			String mapFunction, String reduceFunction, MapReduceOptions options);
+
+	/**
+	 * Execute a group operation over the entire collection. The group operation targetType should match the 'shape' of
+	 * the returned object that takes int account the initial document structure as well as any finalize functions.
+	 *
+	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
+	 *          reduce function.
+	 * @param targetType The parametrized type of the returned {@link Flux} used for mapping result documents and
+	 *          resolving the input collection name.
+	 * @return a {@link Flux} emitting the converted group operation result.
+	 * @since 2.1
+	 */
+	<T> Flux<T> group(GroupBy groupBy, Class<T> targetType);
+
+	/**
+	 * Execute a group operation over the entire collection. The group operation targetType should match the 'shape' of
+	 * the returned object that takes int account the initial document structure as well as any finalize functions.
+	 *
+	 * @param domainType used for resolving the input collection name.
+	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
+	 *          reduce function.
+	 * @param targetType The parametrized type of the returned {@link Flux} used for mapping result documents.
+	 * @return a {@link Flux} emitting the converted group operation result.
+	 * @since 2.1
+	 */
+	<T> Flux<T> group(Class<?> domainType, GroupBy groupBy, Class<T> targetType);
+
+	/**
+	 * Execute a group operation over the entire collection. The group operation targetType should match the 'shape' of
+	 * the returned object that takes int account the initial document structure as well as any finalize functions.
+	 *
+	 * @param inputCollectionName the collection where the group operation will read from.
+	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
+	 *          reduce function.
+	 * @param targetType The parametrized type of the returned {@link Flux} used for mapping result documents.
+	 * @return a {@link Flux} emitting the converted group operation result.
+	 * @since 2.1
+	 */
+	default <T> Flux<T> group(String inputCollectionName, GroupBy groupBy, Class<T> targetType) {
+		return group(null, targetType, inputCollectionName, groupBy, targetType);
+	}
+
+	/**
+	 * Execute a group operation over the entire collection. The group operation targetType should match the 'shape' of
+	 * the returned object that takes int account the initial document structure as well as any finalize functions.
+	 *
+	 * @param criteria the criteria that restricts the row that are considered for grouping. Can be {@literal null}.
+	 * @param domainType used for resolving the input collection name.
+	 * @param inputCollectionName the collection where the group operation will read from.
+	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
+	 *          reduce function.
+	 * @param targetType The parametrized type of the returned {@link Flux} used for mapping result documents.
+	 * @return a {@link Flux} emitting the converted group operation result.
+	 * @since 2.1
+	 */
+	<T> Flux<T> group(@Nullable Criteria criteria, Class<?> domainType, String inputCollectionName, GroupBy groupBy,
+			Class<T> targetType);
 
 	/**
 	 * Returns the underlying {@link MongoConverter}.

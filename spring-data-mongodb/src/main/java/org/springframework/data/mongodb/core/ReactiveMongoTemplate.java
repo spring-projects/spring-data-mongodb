@@ -90,6 +90,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
+import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -2013,6 +2014,94 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	private static void assertLocalFunctionNames(String... functions) {
+
+		for (String function : functions) {
+
+			if (ResourceUtils.isUrl(function)) {
+
+				throw new IllegalArgumentException(String.format(
+						"Blocking accessing to resource %s is not allowed using reactive infrastructure. You may load the resource at startup and cache its value.",
+						function));
+			}
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(org.springframework.data.mongodb.core.mapreduce.GroupBy, java.lang.Class)
+	 */
+	@Override
+	public <T> Flux<T> group(GroupBy groupBy, Class<T> targetType) {
+		return group(getCollectionName(targetType), groupBy, targetType);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(java.lang.Class, org.springframework.data.mongodb.core.mapreduce.GroupBy, java.lang.Class)
+	 */
+	@Override
+	public <T> Flux<T> group(Class<?> domainType, GroupBy groupBy, Class<T> targetType) {
+		return group(null, targetType, getCollectionName(domainType), groupBy, targetType);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(org.springframework.data.mongodb.core.query.Criteria, java.lang.Class, java.lang.String, org.springframework.data.mongodb.core.mapreduce.GroupBy, java.lang.Class)
+	 */
+	@Override
+	public <T> Flux<T> group(@Nullable Criteria criteria, Class<?> domainType, String inputCollectionName,
+			GroupBy groupBy, Class<T> targetType) {
+
+		Document document = groupBy.getGroupByObject();
+		document.put("ns", inputCollectionName);
+
+		if (criteria == null) {
+			document.put("cond", null);
+		} else {
+			document.put("cond",
+					queryMapper.getMappedObject(criteria.getCriteriaObject(), mappingContext.getPersistentEntity(domainType)));
+		}
+
+		if (document.containsKey("initial")) {
+			Object initialObj = document.get("initial");
+			if (initialObj instanceof String) {
+				document.put("initial", Document.parse((String) initialObj));
+			} else {
+				document.put("initial", initialObj);
+			}
+		}
+
+		if (document.containsKey("$reduce")) {
+			verifyFunctions(ObjectUtils.nullSafeToString(document.get("$reduce")));
+			document.put("$reduce", ObjectUtils.nullSafeToString(document.get("$reduce")));
+		}
+		if (document.containsKey("$keyf")) {
+			verifyFunctions(ObjectUtils.nullSafeToString(document.get("$keyf")));
+			document.put("$keyf", ObjectUtils.nullSafeToString(document.get("$keyf")));
+		}
+		if (document.containsKey("finalize")) {
+			verifyFunctions(ObjectUtils.nullSafeToString(document.get("finalize")));
+			document.put("finalize", ObjectUtils.nullSafeToString(document.get("finalize")));
+		}
+
+		Document commandObject = new Document("group", document);
+
+		return Flux.defer(() -> {
+
+			return executeCommand(commandObject, this.readPreference).flatMapMany(commandResult -> {
+
+				List<Document> results = commandResult.get("retval", List.class);
+				if (CollectionUtils.isEmpty(results)) {
+					return Flux.empty();
+				}
+
+				return Flux.fromIterable(results)
+						.map(new ReadDocumentCallback<>(mongoConverter, targetType, inputCollectionName)::doWith);
+			});
+		});
+	}
+
+	private void verifyFunctions(String... functions) {
 
 		for (String function : functions) {
 
