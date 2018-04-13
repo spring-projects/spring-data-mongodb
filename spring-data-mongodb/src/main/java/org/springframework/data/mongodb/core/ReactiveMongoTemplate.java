@@ -26,6 +26,7 @@ import reactor.util.function.Tuple2;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -88,6 +89,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -102,10 +104,21 @@ import org.springframework.data.util.Pair;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.*;
+import com.mongodb.BasicDBObject;
+import com.mongodb.ClientSessionOptions;
+import com.mongodb.CursorType;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBRef;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
@@ -122,6 +135,7 @@ import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
 import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
@@ -1906,6 +1920,114 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#mapReduce(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.Class, java.lang.String, java.lang.String, org.springframework.data.mongodb.core.mapreduce.MapReduceOptions)
+	 */
+	public <T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, Class<T> resultType, String mapFunction,
+			String reduceFunction, MapReduceOptions options) {
+
+		return mapReduce(filterQuery, domainType, determineCollectionName(domainType), resultType, mapFunction,
+				reduceFunction, options);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#mapReduce(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String, java.lang.Class, java.lang.String, java.lang.String, org.springframework.data.mongodb.core.mapreduce.MapReduceOptions)
+	 */
+	public <T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, String inputCollectionName, Class<T> resultType,
+			String mapFunction, String reduceFunction, MapReduceOptions options) {
+
+		verifyFunctions(mapFunction, reduceFunction);
+
+		Class<?> mappingTarget = domainType != null ? domainType : resultType;
+
+		return createFlux(inputCollectionName, collection -> {
+
+			Document mappedQuery = queryMapper.getMappedObject(filterQuery.getQueryObject(),
+					mappingContext.getPersistentEntity(mappingTarget));
+
+			MapReducePublisher<Document> publisher = collection.mapReduce(mapFunction, reduceFunction, Document.class);
+
+			if (options != null) {
+				if (StringUtils.hasText(options.getOutputCollection())) {
+					publisher = publisher.collectionName(options.getOutputCollection());
+				}
+			}
+
+			publisher.filter(mappedQuery);
+			publisher.sort(getMappedSortObject(filterQuery, mappingTarget));
+
+			if (filterQuery.getMeta() != null && filterQuery.getMeta().getMaxTimeMsec() != null) {
+				publisher.maxTime(filterQuery.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
+			}
+
+			if (filterQuery.getLimit() > 0 || (options != null && options.getLimit() != null)) {
+
+				if (filterQuery.getLimit() > 0 && (options != null && options.getLimit() != null)) {
+					throw new IllegalArgumentException("which one do ya want?");
+				}
+
+				if (filterQuery.getLimit() > 0) {
+					publisher.limit(filterQuery.getLimit());
+				}
+
+				if ((options != null && options.getLimit() != null)) {
+					publisher.limit(options.getLimit());
+				}
+
+			}
+
+			Optional<Collation> collation = filterQuery.getCollation();
+
+			if (options != null) {
+
+				Optionals.ifAllPresent(filterQuery.getCollation(), options.getCollation(), (l, r) -> {
+					throw new IllegalArgumentException(
+							"Both Query and MapReduceOptions define a collation. Please provide the collation only via one of the two.");
+				});
+
+				if (options.getCollation().isPresent()) {
+					collation = options.getCollation();
+				}
+
+				if (!CollectionUtils.isEmpty(options.getScopeVariables())) {
+					publisher = publisher.scope(new Document(options.getScopeVariables()));
+				}
+				if (options.getLimit() != null && options.getLimit().intValue() > 0) {
+					publisher = publisher.limit(options.getLimit());
+				}
+				if (options.getFinalizeFunction().filter(StringUtils::hasText).isPresent()) {
+					publisher = publisher.finalizeFunction(options.getFinalizeFunction().get());
+				}
+				if (options.getJavaScriptMode() != null) {
+					publisher = publisher.jsMode(options.getJavaScriptMode());
+				}
+				if (options.getOutputSharded().isPresent()) {
+					publisher = publisher.sharded(options.getOutputSharded().get());
+				}
+			}
+
+			publisher = collation.map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
+
+			return Flux.from(publisher)
+					.map(new ReadDocumentCallback<>(mongoConverter, resultType, inputCollectionName)::doWith);
+		});
+	}
+
+	private void verifyFunctions(String... functions) {
+
+		for (String function : functions) {
+
+			if (ResourceUtils.isUrl(function)) {
+
+				throw new IllegalArgumentException(String.format(
+						"Blocking accessing to resource %s is not allowed using reactive infrastructure. You may load the resource at startup and cache its value.",
+						function));
+			}
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveFindOperation#query(java.lang.Class)
 	 */
 	@Override
@@ -2829,7 +2951,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final Metric metric;
 
 		/**
-		 * Creates a new {@link GeoNearResultDbObjectCallback} using the given {@link DbObjectCallback} delegate for
+		 * Creates a new {@link GeoNearResultDbObjectCallback} using the given {@link DocumentCallback} delegate for
 		 * {@link GeoResult} content unmarshalling.
 		 *
 		 * @param delegate must not be {@literal null}.
