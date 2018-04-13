@@ -1,6 +1,42 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.0.M2 (2018-04-13)
+----------------------------------------
+* DATAMONGO-1923 - Adapt to API changes in Spring Data Commons.
+* DATAMONGO-1916 - Potential ClassCastException in MappingMongoConverter#writeInternal when writing collections.
+* DATAMONGO-1915 - Remove explicit declaration of Jackson library versions.
+* DATAMONGO-1913 - Missing @Nullable annotation in GridFsTemplate.bucket.
+* DATAMONGO-1912 - Unable to retrieve Mongo's generated id when inserting java.util.Map.
+* DATAMONGO-1911 - String-query accepting UUID renders to $uuid.
+* DATAMONGO-1909 - Fix typo in tests.
+* DATAMONGO-1907 - Error in method findOne(Example example) in ReactiveQueryByExampleExecutor when there is no results.
+* DATAMONGO-1906 - Add support for conditional $$REMOVE operator in aggregation $project.
+* DATAMONGO-1904 - MappingMongoConverter fails to properly read nested arrays.
+* DATAMONGO-1903 - Align database name check in SimpleMongoDbFactory with MongoDB limitations.
+* DATAMONGO-1901 - Declare project.root property to make sure JavaDoc generation works.
+* DATAMONGO-1900 - Add section to reference documentation about mapping of enums with interfaces.
+* DATAMONGO-1899 - Export composable repositories via CDI.
+* DATAMONGO-1898 - Verify handling of enums in MappingMongoConverter.
+* DATAMONGO-1896 - In case of inheritance, MongoRepository.saveAll(…) does not insert elements into the aggregate collection.
+* DATAMONGO-1893 - Exclusions in projection.
+* DATAMONGO-1891 - Improve $jsonSchema documentation.
+* DATAMONGO-1881 - Upgrade MongoDB sync & reactive streams Java driver to 3.6.3 and 1.7.1.
+* DATAMONGO-1880 - Add support for Client Sessions.
+* DATAMONGO-1877 - JsonSchemaProperty needs static method date().
+* DATAMONGO-1873 - Add value() alias to @Document(collection= "…").
+* DATAMONGO-1872 - SpEL Expressions in @Document annotations are not re-evaluated for repository query executions.
+* DATAMONGO-1871 - AggregationExpression rendering does not consider nested property aliasing.
+* DATAMONGO-1870 - Skip parameter not working in MongoTemplate#remove(Query, Class).
+* DATAMONGO-1869 - Release 2.1 M2 (Lovelace).
+* DATAMONGO-1866 - Update travis build to use single node replica set.
+* DATAMONGO-1865 - findFirst query method throws IncorrectResultSizeDataAccessException on non-unique result.
+* DATAMONGO-1860 - Mongo count operation called twice in QuerydslMongoPredicateExecutor.findAll(Predicate, Pageable).
+* DATAMONGO-1834 - Add support for aggregation operators $dateFromString, $dateFromParts and $dateToParts.
+* DATAMONGO-1819 - Discovering the preferred constructor lead to InaccessibleObjectException with Java 9.
+* DATAMONGO-1813 - Provide method to create GridFsResource from GridFSFile.
+
+
 Changes in version 2.0.6.RELEASE (2018-04-04)
 ---------------------------------------------
 * DATAMONGO-1916 - Potential ClassCastException in MappingMongoConverter#writeInternal when writing collections.
