@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -69,7 +70,7 @@ public class ReactiveMapReduceTests {
 		createMapReduceData();
 
 		StepVerifier
-				.create(template.mapReduce(new Query(), null, "jmr1", ValueObject.class, mapFunction, reduceFunction,
+				.create(template.mapReduce(new Query(), Person.class, "jmr1", ValueObject.class, mapFunction, reduceFunction,
 						MapReduceOptions.options()).buffer(4)) //
 				.consumeNextWith(result -> {
 					assertThat(result).containsExactlyInAnyOrder(new ValueObject("a", 1), new ValueObject("b", 2),
@@ -145,8 +146,8 @@ public class ReactiveMapReduceTests {
 	@Test // DATAMONGO-1890
 	public void throwsExceptionWhenTryingToLoadFunctionsFromDisk() {
 
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> template.mapReduce(new Query(), null,
-				"foo", ValueObject.class, "classpath:map.js", "classpath:reduce.js", null))
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> template.mapReduce(new Query(), Person.class,
+				"foo", ValueObject.class, "classpath:map.js", "classpath:reduce.js", MapReduceOptions.options()))
 				.withMessageContaining("classpath:map.js");
 	}
 

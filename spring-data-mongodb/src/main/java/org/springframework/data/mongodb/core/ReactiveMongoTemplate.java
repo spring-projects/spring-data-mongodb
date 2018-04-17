@@ -1936,74 +1936,73 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, String inputCollectionName, Class<T> resultType,
 			String mapFunction, String reduceFunction, MapReduceOptions options) {
 
-		verifyFunctions(mapFunction, reduceFunction);
-
-		Class<?> mappingTarget = domainType != null ? domainType : resultType;
+		Assert.notNull(filterQuery, "Filter query must not be null!");
+		Assert.notNull(domainType, "Domain type must not be null!");
+		Assert.hasText(inputCollectionName, "Input collection name must not be null or empty!");
+		Assert.notNull(resultType, "Result type must not be null!");
+		Assert.notNull(options, "MapReduceOptions must not be null!");
+		Assert.notNull(mapFunction, "Map function must not be null!");
+		Assert.notNull(reduceFunction, "Reduce function must not be null!");
+		assertLocalFunctionNames(mapFunction, reduceFunction);
 
 		return createFlux(inputCollectionName, collection -> {
 
 			Document mappedQuery = queryMapper.getMappedObject(filterQuery.getQueryObject(),
-					mappingContext.getPersistentEntity(mappingTarget));
+					mappingContext.getPersistentEntity(domainType));
 
 			MapReducePublisher<Document> publisher = collection.mapReduce(mapFunction, reduceFunction, Document.class);
 
-			if (options != null) {
-				if (StringUtils.hasText(options.getOutputCollection())) {
-					publisher = publisher.collectionName(options.getOutputCollection());
-				}
+			if (StringUtils.hasText(options.getOutputCollection())) {
+				publisher = publisher.collectionName(options.getOutputCollection());
 			}
 
 			publisher.filter(mappedQuery);
-			publisher.sort(getMappedSortObject(filterQuery, mappingTarget));
+			publisher.sort(getMappedSortObject(filterQuery, domainType));
 
-			if (filterQuery.getMeta() != null && filterQuery.getMeta().getMaxTimeMsec() != null) {
+			if (filterQuery.getMeta().getMaxTimeMsec() != null) {
 				publisher.maxTime(filterQuery.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
 			}
 
-			if (filterQuery.getLimit() > 0 || (options != null && options.getLimit() != null)) {
+			if (filterQuery.getLimit() > 0 || (options.getLimit() != null)) {
 
-				if (filterQuery.getLimit() > 0 && (options != null && options.getLimit() != null)) {
-					throw new IllegalArgumentException("which one do ya want?");
+				if (filterQuery.getLimit() > 0 && (options.getLimit() != null)) {
+					throw new IllegalArgumentException("Both Query and MapReduceOptions define a limit. Please provide the limit only via one of the two.");
 				}
 
 				if (filterQuery.getLimit() > 0) {
 					publisher.limit(filterQuery.getLimit());
 				}
 
-				if ((options != null && options.getLimit() != null)) {
+				if (options.getLimit() != null) {
 					publisher.limit(options.getLimit());
 				}
-
 			}
 
 			Optional<Collation> collation = filterQuery.getCollation();
 
-			if (options != null) {
+			Optionals.ifAllPresent(filterQuery.getCollation(), options.getCollation(), (l, r) -> {
+				throw new IllegalArgumentException(
+						"Both Query and MapReduceOptions define a collation. Please provide the collation only via one of the two.");
+			});
 
-				Optionals.ifAllPresent(filterQuery.getCollation(), options.getCollation(), (l, r) -> {
-					throw new IllegalArgumentException(
-							"Both Query and MapReduceOptions define a collation. Please provide the collation only via one of the two.");
-				});
+			if (options.getCollation().isPresent()) {
+				collation = options.getCollation();
+			}
 
-				if (options.getCollation().isPresent()) {
-					collation = options.getCollation();
-				}
-
-				if (!CollectionUtils.isEmpty(options.getScopeVariables())) {
-					publisher = publisher.scope(new Document(options.getScopeVariables()));
-				}
-				if (options.getLimit() != null && options.getLimit().intValue() > 0) {
-					publisher = publisher.limit(options.getLimit());
-				}
-				if (options.getFinalizeFunction().filter(StringUtils::hasText).isPresent()) {
-					publisher = publisher.finalizeFunction(options.getFinalizeFunction().get());
-				}
-				if (options.getJavaScriptMode() != null) {
-					publisher = publisher.jsMode(options.getJavaScriptMode());
-				}
-				if (options.getOutputSharded().isPresent()) {
-					publisher = publisher.sharded(options.getOutputSharded().get());
-				}
+			if (!CollectionUtils.isEmpty(options.getScopeVariables())) {
+				publisher = publisher.scope(new Document(options.getScopeVariables()));
+			}
+			if (options.getLimit() != null && options.getLimit() > 0) {
+				publisher = publisher.limit(options.getLimit());
+			}
+			if (options.getFinalizeFunction().filter(StringUtils::hasText).isPresent()) {
+				publisher = publisher.finalizeFunction(options.getFinalizeFunction().get());
+			}
+			if (options.getJavaScriptMode() != null) {
+				publisher = publisher.jsMode(options.getJavaScriptMode());
+			}
+			if (options.getOutputSharded().isPresent()) {
+				publisher = publisher.sharded(options.getOutputSharded().get());
 			}
 
 			publisher = collation.map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
@@ -2013,7 +2012,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		});
 	}
 
-	private void verifyFunctions(String... functions) {
+	private static void assertLocalFunctionNames(String... functions) {
 
 		for (String function : functions) {
 

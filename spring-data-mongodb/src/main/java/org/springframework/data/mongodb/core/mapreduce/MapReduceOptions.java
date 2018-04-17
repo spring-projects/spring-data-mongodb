@@ -37,8 +37,8 @@ public class MapReduceOptions {
 
 	private Optional<String> outputDatabase = Optional.empty();
 	private MapReduceCommand.OutputType outputType = MapReduceCommand.OutputType.REPLACE;
-	private Map<String, Object> scopeVariables = new HashMap<String, Object>();
-	private Map<String, Object> extraOptions = new HashMap<String, Object>();
+	private Map<String, Object> scopeVariables = new HashMap<>();
+	private Map<String, Object> extraOptions = new HashMap<>();
 	private @Nullable Boolean jsMode;
 	private Boolean verbose = Boolean.TRUE;
 	private @Nullable Integer limit;
