@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import org.bson.BSON;
 import org.bson.BsonRegularExpression;
 import org.bson.Document;
+import org.bson.types.Binary;
 import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -41,6 +42,7 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.Base64Utils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -357,7 +359,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using the {@literal $type} operator.
 	 *
-	 * @param type must not be {@literal null}.
+	 * @param types must not be {@literal null}.
 	 * @return this
 	 * @since 2.1
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/type/">MongoDB Query operator: $type</a>
@@ -624,6 +626,18 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
+	 * Use {@link BitwiseCriteriaOperators} as gateway to create a criterion using one of the
+	 * <a href="https://docs.mongodb.com/manual/reference/operator/query-bitwise/">bitwise operators</a> like
+	 * {@code $bitsAllClear}.
+	 *
+	 * @return new instance of {@link BitwiseCriteriaOperators}. Never {@literal null}.
+	 * @since 2.1
+	 */
+	public BitwiseCriteriaOperators bits() {
+		return new BitwiseCriteriaOperatorsImpl(this);
+	}
+
+	/**
 	 * Creates an 'or' criteria using the $or operator for all of the provided criteria
 	 * <p>
 	 * Note that mongodb doesn't support an $or operator to be wrapped in a $not operator.
@@ -663,118 +677,6 @@ public class Criteria implements CriteriaDefinition {
 	public Criteria andOperator(Criteria... criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
-	}
-	
-	/**
-	 * Creates a criterion using the {@literal $bitsAllClear} operator.
-	 *
-	 * @param numericBitmask non-negative numeric bitmask
-	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllClear/">MongoDB Query operator:
-	 *      $bitsAllClear</a>
-	 * @since 2.1
-	 */
-	public Criteria bitsAllClear(int numericBitmask) {
-		criteria.put("$bitsAllClear", Integer.valueOf(numericBitmask));
-		return this;
-	}
-
-	/**
-	 * Creates a criterion using the {@literal $bitsAllClear} operator.
-	 *
-	 * @param bitPositions positions of set bits
-	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllClear/">MongoDB Query operator:
-	 *      $bitsAllClear</a>
-	 * @since 2.1
-	 */
-	public Criteria bitsAllClear(Collection<Integer> bitPositions) {
-		criteria.put("$bitsAllClear", bitPositions);
-		return this;
-	}
-
-	/**
-	 * Creates a criterion using the {@literal $bitsAllSet} operator.
-	 *
-	 * @param numericBitmask non-negative numeric bitmask
-	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllSet/">MongoDB Query operator:
-	 *      $bitsAllSet</a>
-	 * @since 2.1
-	 */
-	public Criteria bitsAllSet(int numericBitmask) {
-		criteria.put("$bitsAllSet", Integer.valueOf(numericBitmask));
-		return this;
-	}
-
-	/**
-	 * Creates a criterion using the {@literal $bitsAllSet} operator.
-	 *
-	 * @param bitPositions positions of set bits
-	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllSet/">MongoDB Query operator:
-	 *      $bitsAllSet</a>
-	 * @since 2.1
-	 */
-	public Criteria bitsAllSet(Collection<Integer> bitPositions) {
-		criteria.put("$bitsAllSet", bitPositions);
-		return this;
-	}
-
-	/**
-	 * Creates a criterion using the {@literal $bitsAnyClear} operator.
-	 *
-	 * @param numericBitmask non-negative numeric bitmask
-	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnyClear/">MongoDB Query operator:
-	 *      $bitsAnyClear</a>
-	 * @since 2.1
-	 */
-	public Criteria bitsAnyClear(int numericBitmask) {
-		criteria.put("$bitsAnyClear", Integer.valueOf(numericBitmask));
-		return this;
-	}
-
-	/**
-	 * Creates a criterion using the {@literal $bitsAnyClear} operator.
-	 *
-	 * @param bitPositions positions of set bits
-	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnyClear/">MongoDB Query operator:
-	 *      $bitsAnyClear</a>
-	 * @since 2.1
-	 */
-	public Criteria bitsAnyClear(Collection<Integer> bitPositions) {
-		criteria.put("$bitsAnyClear", bitPositions);
-		return this;
-	}
-
-	/**
-	 * Creates a criterion using the {@literal $bitsAnySet} operator.
-	 *
-	 * @param numericBitmask non-negative numeric bitmask
-	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnySet/">MongoDB Query operator:
-	 *      $bitsAnySet</a>
-	 * @since 2.1
-	 */
-	public Criteria bitsAnySet(int numericBitmask) {
-		criteria.put("$bitsAnySet", Integer.valueOf(numericBitmask));
-		return this;
-	}
-
-	/**
-	 * Creates a criterion using the {@literal $bitsAnySet} operator.
-	 *
-	 * @param bitPositions positions of set bits
-	 * @return
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnySet/">MongoDB Query operator:
-	 *      $bitsAnySet</a>
-	 * @since 2.1
-	 */
-	public Criteria bitsAnySet(Collection<Integer> bitPositions) {
-		criteria.put("$bitsAnySet", bitPositions);
-		return this;
 	}
 
 	private Criteria registerCriteriaChainElement(Criteria criteria) {
@@ -992,5 +894,325 @@ public class Criteria implements CriteriaDefinition {
 	private static boolean requiresGeoJsonFormat(Object value) {
 		return value instanceof GeoJson
 				|| (value instanceof GeoCommand && ((GeoCommand) value).getShape() instanceof GeoJson);
+	}
+
+	/**
+	 * MongoDB specific <a href="https://docs.mongodb.com/manual/reference/operator/query-bitwise/">bitwise query
+	 * operators</a> like {@code $bitsAllClear, $bitsAllSet,...} for usage with {@link Criteria#bits()} and {@link Query}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/query-bitwise/">https://docs.mongodb.com/manual/reference/operator/query-bitwise/</a>
+	 * @currentRead Beyond the Shadows - Brent Weeks
+	 */
+	public interface BitwiseCriteriaOperators {
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllClear} matching documents where all given bit positions are clear
+		 * (i.e. 0).
+		 *
+		 * @param numericBitmask non-negative numeric bitmask.
+		 * @return target {@link Criteria}.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllClear/">MongoDB Query operator:
+		 *      $bitsAllClear</a>
+		 * @since 2.1
+		 */
+		Criteria allClear(int numericBitmask);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllClear} matching documents where all given bit positions are clear
+		 * (i.e. 0).
+		 *
+		 * @param bitmask string representation of a bitmask that will be converted to its base64 encoded {@link Binary}
+		 *          representation. Must not be {@literal null} nor empty.
+		 * @return target {@link Criteria}.
+		 * @throws IllegalArgumentException when bitmask is {@literal null} or empty.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllClear/">MongoDB Query operator:
+		 *      $bitsAllClear</a>
+		 * @since 2.1
+		 */
+		Criteria allClear(String bitmask);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllClear} matching documents where all given bit positions are clear
+		 * (i.e. 0).
+		 *
+		 * @param positions list of non-negative integer positions. Positions start at 0 from the least significant bit.
+		 *          Must not be {@literal null} nor contain {@literal null} elements.
+		 * @return target {@link Criteria}.
+		 * @throws IllegalArgumentException when positions is {@literal null} or contains {@literal null} elements.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllClear/">MongoDB Query operator:
+		 *      $bitsAllClear</a>
+		 * @since 2.1
+		 */
+		Criteria allClear(List<Integer> positions);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllSet} matching documents where all given bit positions are set (i.e.
+		 * 1).
+		 *
+		 * @param numericBitmask non-negative numeric bitmask.
+		 * @return target {@link Criteria}.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllSet/">MongoDB Query operator:
+		 *      $bitsAllSet</a>
+		 * @since 2.1
+		 */
+		Criteria allSet(int numericBitmask);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllSet} matching documents where all given bit positions are set (i.e.
+		 * 1).
+		 *
+		 * @param bitmask string representation of a bitmask that will be converted to its base64 encoded {@link Binary}
+		 *          representation. Must not be {@literal null} nor empty.
+		 * @return target {@link Criteria}.
+		 * @throws IllegalArgumentException when bitmask is {@literal null} or empty.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllSet/">MongoDB Query operator:
+		 *      $bitsAllSet</a>
+		 * @since 2.1
+		 */
+		Criteria allSet(String bitmask);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllSet} matching documents where all given bit positions are set (i.e.
+		 * 1).
+		 *
+		 * @param positions list of non-negative integer positions. Positions start at 0 from the least significant bit.
+		 *          Must not be {@literal null} nor contain {@literal null} elements.
+		 * @return target {@link Criteria}.
+		 * @throws IllegalArgumentException when positions is {@literal null} or contains {@literal null} elements.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAllSet/">MongoDB Query operator:
+		 *      $bitsAllSet</a>
+		 * @since 2.1
+		 */
+		Criteria allSet(List<Integer> positions);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllClear} matching documents where any given bit positions are clear
+		 * (i.e. 0).
+		 *
+		 * @param numericBitmask non-negative numeric bitmask.
+		 * @return target {@link Criteria}.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnyClear/">MongoDB Query operator:
+		 *      $bitsAnyClear</a>
+		 * @since 2.1
+		 */
+		Criteria anyClear(int numericBitmask);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllClear} matching documents where any given bit positions are clear
+		 * (i.e. 0).
+		 *
+		 * @param bitmask string representation of a bitmask that will be converted to its base64 encoded {@link Binary}
+		 *          representation. Must not be {@literal null} nor empty.
+		 * @return target {@link Criteria}.
+		 * @throws IllegalArgumentException when bitmask is {@literal null} or empty.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnyClear/">MongoDB Query operator:
+		 *      $bitsAnyClear</a>
+		 * @since 2.1
+		 */
+		Criteria anyClear(String bitmask);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllClear} matching documents where any given bit positions are clear
+		 * (i.e. 0).
+		 *
+		 * @param positions list of non-negative integer positions. Positions start at 0 from the least significant bit.
+		 *          Must not be {@literal null} nor contain {@literal null} elements.
+		 * @return target {@link Criteria}.
+		 * @throws IllegalArgumentException when positions is {@literal null} or contains {@literal null} elements.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnyClear/">MongoDB Query operator:
+		 *      $bitsAnyClear</a>
+		 * @since 2.1
+		 */
+		Criteria anyClear(List<Integer> positions);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAllSet} matching documents where any given bit positions are set (i.e.
+		 * 1).
+		 *
+		 * @param numericBitmask non-negative numeric bitmask.
+		 * @return target {@link Criteria}.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnySet/">MongoDB Query operator:
+		 *      $bitsAnySet</a>
+		 * @since 2.1
+		 */
+		Criteria anySet(int numericBitmask);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAnySet} matching documents where any given bit positions are set (i.e.
+		 * 1).
+		 *
+		 * @param bitmask string representation of a bitmask that will be converted to its base64 encoded {@link Binary}
+		 *          representation. Must not be {@literal null} nor empty.
+		 * @return target {@link Criteria}.
+		 * @throws IllegalArgumentException when bitmask is {@literal null} or empty.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnySet/">MongoDB Query operator:
+		 *      $bitsAnySet</a>
+		 * @since 2.1
+		 */
+		Criteria anySet(String bitmask);
+
+		/**
+		 * Creates a criterion using {@literal $bitsAnySet} matching documents where any given bit positions are set (i.e.
+		 * 1).
+		 *
+		 * @param positions list of non-negative integer positions. Positions start at 0 from the least significant bit.
+		 *          Must not be {@literal null} nor contain {@literal null} elements.
+		 * @return target {@link Criteria}.
+		 * @throws IllegalArgumentException when positions is {@literal null} or contains {@literal null} elements.
+		 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/bitsAnySet/">MongoDB Query operator:
+		 *      $bitsAnySet</a>
+		 * @since 2.1
+		 */
+		Criteria anySet(List<Integer> positions);
+
+	}
+
+	/**
+	 * Default implementation of {@link BitwiseCriteriaOperators}.
+	 * 
+	 * @author Christoph Strobl
+	 * @currentRead Beyond the Shadows - Brent Weeks
+	 */
+	private static class BitwiseCriteriaOperatorsImpl implements BitwiseCriteriaOperators {
+
+		private final Criteria target;
+
+		BitwiseCriteriaOperatorsImpl(Criteria target) {
+			this.target = target;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allClear(int)
+		 */
+		@Override
+		public Criteria allClear(int numericBitmask) {
+			return numericBitmask("$bitsAllClear", numericBitmask);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allClear(java.lang.String)
+		 */
+		@Override
+		public Criteria allClear(String bitmask) {
+			return stringBitmask("$bitsAllClear", bitmask);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allClear(java.util.List)
+		 */
+		@Override
+		public Criteria allClear(List<Integer> positions) {
+			return positions("$bitsAllClear", positions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allSet(int)
+		 */
+		@Override
+		public Criteria allSet(int numericBitmask) {
+			return numericBitmask("$bitsAllSet", numericBitmask);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allSet(java.lang.String)
+		 */
+		@Override
+		public Criteria allSet(String bitmask) {
+			return stringBitmask("$bitsAllSet", bitmask);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allSet(java.util.List)
+		 */
+		@Override
+		public Criteria allSet(List<Integer> positions) {
+			return positions("$bitsAllSet", positions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anyClear(int)
+		 */
+		@Override
+		public Criteria anyClear(int numericBitmask) {
+			return numericBitmask("$bitsAnyClear", numericBitmask);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anyClear(java.lang.String)
+		 */
+		@Override
+		public Criteria anyClear(String bitmask) {
+			return stringBitmask("$bitsAnyClear", bitmask);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anyClear(java.util.List)
+		 */
+		@Override
+		public Criteria anyClear(List<Integer> positions) {
+			return positions("$bitsAnyClear", positions);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anySet(int)
+		 */
+		@Override
+		public Criteria anySet(int numericBitmask) {
+			return numericBitmask("$bitsAnySet", numericBitmask);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anySet(java.lang.String)
+		 */
+		@Override
+		public Criteria anySet(String bitmask) {
+			return stringBitmask("$bitsAnySet", bitmask);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anySet(java.util.Collection)
+		 */
+		@Override
+		public Criteria anySet(List<Integer> positions) {
+			return positions("$bitsAnySet", positions);
+		}
+
+		private Criteria positions(String operator, List<Integer> positions) {
+
+			Assert.notNull(positions, "Positions must not be null!");
+			Assert.noNullElements(positions.toArray(), "Positions must not contain null values.");
+
+			target.criteria.put(operator, positions);
+			return target;
+		}
+
+		private Criteria stringBitmask(String operator, String bitmask) {
+
+			Assert.hasText(bitmask, "Bitmask must not be null!");
+
+			target.criteria.put(operator, new Binary(Base64Utils.decodeFromString(bitmask)));
+			return target;
+		}
+
+		private Criteria numericBitmask(String operator, int bitmask) {
+
+			target.criteria.put(operator, bitmask);
+			return target;
+		}
 	}
 }

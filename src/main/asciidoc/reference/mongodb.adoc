@@ -1073,6 +1073,7 @@ As you can see most methods return the `Criteria` object to provide a fluent sty
 * `Criteria` *size* `(int s)` Creates a criterion using the `$size` operator
 * `Criteria` *type* `(int t)` Creates a criterion using the `$type` operator
 * `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for <<mongo.jsonSchema,JSON schema criteria>>. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
+* `Criteria` *bits()* is the gateway to https://docs.mongodb.com/manual/reference/operator/query-bitwise/[MongoDB bitwise query operators] like `$bitsAllClear`.
 
 
 There are also methods on the Criteria class for geospatial queries. Here is a listing but look at the section on <<mongo.geospatial,GeoSpatial Queries>> to see them in action.
