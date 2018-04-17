@@ -1265,7 +1265,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 			String mapFunction, String reduceFunction, MapReduceOptions options);
 
 	/**
-	 * Execute a group operation over the entire collection. The group operation targetType should match the 'shape' of
+	 * Execute a group operation over the entire collection. The group operation {@link Class targetType} should match the 'shape' of
 	 * the returned object that takes int account the initial document structure as well as any finalize functions.
 	 *
 	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
@@ -1278,7 +1278,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> group(GroupBy groupBy, Class<T> targetType);
 
 	/**
-	 * Execute a group operation over the entire collection. The group operation targetType should match the 'shape' of
+	 * Execute a group operation over the entire collection. The group operation {@link Class targetType} should match the 'shape' of
 	 * the returned object that takes int account the initial document structure as well as any finalize functions.
 	 *
 	 * @param domainType used for resolving the input collection name.
@@ -1291,7 +1291,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> group(Class<?> domainType, GroupBy groupBy, Class<T> targetType);
 
 	/**
-	 * Execute a group operation over the entire collection. The group operation targetType should match the 'shape' of
+	 * Execute a group operation over the entire collection. The group operation {@link Class targetType} should match the 'shape' of
 	 * the returned object that takes int account the initial document structure as well as any finalize functions.
 	 *
 	 * @param inputCollectionName the collection where the group operation will read from.
@@ -1306,7 +1306,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	}
 
 	/**
-	 * Execute a group operation over the entire collection. The group operation targetType should match the 'shape' of
+	 * Execute a group operation over the entire collection. The group operation {@link Class targetType} should match the 'shape' of
 	 * the returned object that takes int account the initial document structure as well as any finalize functions.
 	 *
 	 * @param criteria the criteria that restricts the row that are considered for grouping. Can be {@literal null}.
