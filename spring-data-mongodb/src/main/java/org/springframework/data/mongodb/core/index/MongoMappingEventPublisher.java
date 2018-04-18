@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.index;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationListener;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -38,7 +39,19 @@ import org.springframework.util.Assert;
  */
 public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 
-	private final MongoPersistentEntityIndexCreator indexCreator;
+	private final ApplicationListener<MappingContextEvent<?, ?>> indexCreator;
+
+	/**
+	 * Creates a new {@link MongoMappingEventPublisher} for the given {@link ApplicationListener}.
+	 *
+	 * @param indexCreator must not be {@literal null}.
+	 * @since 2.1
+	 */
+	public MongoMappingEventPublisher(ApplicationListener<MappingContextEvent<?, ?>> indexCreator) {
+
+		Assert.notNull(indexCreator, "ApplicationListener must not be null!");
+		this.indexCreator = indexCreator;
+	}
 
 	/**
 	 * Creates a new {@link MongoMappingEventPublisher} for the given {@link MongoPersistentEntityIndexCreator}.

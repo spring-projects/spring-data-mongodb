@@ -39,6 +39,7 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -59,10 +60,12 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -73,10 +76,9 @@ import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggr
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.*;
-import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
-import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
+import org.springframework.data.mongodb.core.index.ReactiveMongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -185,13 +187,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private final UpdateMapper updateMapper;
 	private final JsonSchemaMapper schemaMapper;
 	private final SpelAwareProxyProjectionFactory projectionFactory;
+	private final ApplicationListener<MappingContextEvent<?, ?>> indexCreatorListener;
 
 	private @Nullable WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 	private @Nullable ReadPreference readPreference;
 	private @Nullable ApplicationEventPublisher eventPublisher;
-	private @Nullable MongoPersistentEntityIndexCreator indexCreator;
+	private @Nullable ReactiveMongoPersistentEntityIndexCreator indexCreator;
 
 	/**
 	 * Constructor used for a basic template configuration.
@@ -220,6 +223,21 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory,
 			@Nullable MongoConverter mongoConverter) {
+		this(mongoDatabaseFactory, mongoConverter, ReactiveMongoTemplate::handleSubscriptionException);
+	}
+
+	/**
+	 * Constructor used for a basic template configuration.
+	 *
+	 * @param mongoDatabaseFactory must not be {@literal null}.
+	 * @param mongoConverter can be {@literal null}.
+	 * @param subscriptionExceptionHandler exception handler called by {@link Flux#doOnError(Consumer)} on reactive type
+	 *          materialization via {@link Publisher#subscribe(Subscriber)}. This callback is used during non-blocking
+	 *          subscription of e.g. index creation {@link Publisher}s. Must not be {@literal null}.
+	 * @since 2.1
+	 */
+	public ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory,
+			@Nullable MongoConverter mongoConverter, Consumer<Throwable> subscriptionExceptionHandler) {
 
 		Assert.notNull(mongoDatabaseFactory, "ReactiveMongoDatabaseFactory must not be null!");
 
@@ -230,18 +248,21 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.updateMapper = new UpdateMapper(this.mongoConverter);
 		this.schemaMapper = new MongoJsonSchemaMapper(this.mongoConverter);
 		this.projectionFactory = new SpelAwareProxyProjectionFactory();
+		this.indexCreatorListener = new IndexCreatorEventListener(subscriptionExceptionHandler);
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
-		mappingContext = this.mongoConverter.getMappingContext();
-		// We create indexes based on mapping events
+		this.mappingContext = this.mongoConverter.getMappingContext();
 
-		if (mappingContext instanceof MongoMappingContext) {
-			indexCreator = new MongoPersistentEntityIndexCreator((MongoMappingContext) mappingContext,
-					(collectionName) -> IndexOperationsAdapter.blocking(indexOps(collectionName)));
-			eventPublisher = new MongoMappingEventPublisher(indexCreator);
-			if (mappingContext instanceof ApplicationEventPublisherAware) {
-				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
-			}
+		// We create indexes based on mapping events
+		if (this.mappingContext instanceof MongoMappingContext) {
+
+			MongoMappingContext mongoMappingContext = (MongoMappingContext) this.mappingContext;
+			this.indexCreator = new ReactiveMongoPersistentEntityIndexCreator(mongoMappingContext, this::indexOps);
+			this.eventPublisher = new MongoMappingEventPublisher(this.indexCreatorListener);
+
+			mongoMappingContext.setApplicationEventPublisher(this.eventPublisher);
+			this.mappingContext.getPersistentEntities()
+					.forEach(entity -> onCheckForIndexes(entity, subscriptionExceptionHandler));
 		}
 	}
 
@@ -254,8 +275,20 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.updateMapper = that.updateMapper;
 		this.schemaMapper = that.schemaMapper;
 		this.projectionFactory = that.projectionFactory;
-
+		this.indexCreator = that.indexCreator;
+		this.indexCreatorListener = that.indexCreatorListener;
 		this.mappingContext = that.mappingContext;
+	}
+
+	private void onCheckForIndexes(MongoPersistentEntity<?> entity, Consumer<Throwable> subscriptionExceptionHandler) {
+
+		if (indexCreator != null) {
+			indexCreator.checkForIndexes(entity).subscribe(v -> {}, subscriptionExceptionHandler);
+		}
+	}
+
+	private static void handleSubscriptionException(Throwable t) {
+		LOGGER.error("Unexpected exception during asynchronous execution", t);
 	}
 
 	/**
@@ -289,7 +322,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * Used by @{link {@link #prepareCollection(MongoCollection)} to set the {@link ReadPreference} before any operations
+	 * Used by {@link {@link #prepareCollection(MongoCollection)} to set the {@link ReadPreference} before any operations
 	 * are performed.
 	 *
 	 * @param readPreference
@@ -316,26 +349,28 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * Inspects the given {@link ApplicationContext} for {@link MongoPersistentEntityIndexCreator} and those in turn if
-	 * they were registered for the current {@link MappingContext}. If no creator for the current {@link MappingContext}
-	 * can be found we manually add the internally created one as {@link ApplicationListener} to make sure indexes get
-	 * created appropriately for entity types persisted through this {@link ReactiveMongoTemplate} instance.
+	 * Inspects the given {@link ApplicationContext} for {@link ReactiveMongoPersistentEntityIndexCreator} and those in
+	 * turn if they were registered for the current {@link MappingContext}. If no creator for the current
+	 * {@link MappingContext} can be found we manually add the internally created one as {@link ApplicationListener} to
+	 * make sure indexes get created appropriately for entity types persisted through this {@link ReactiveMongoTemplate}
+	 * instance.
 	 *
 	 * @param context must not be {@literal null}.
 	 */
 	private void prepareIndexCreator(ApplicationContext context) {
 
-		String[] indexCreators = context.getBeanNamesForType(MongoPersistentEntityIndexCreator.class);
+		String[] indexCreators = context.getBeanNamesForType(ReactiveMongoPersistentEntityIndexCreator.class);
 
 		for (String creator : indexCreators) {
-			MongoPersistentEntityIndexCreator creatorBean = context.getBean(creator, MongoPersistentEntityIndexCreator.class);
+			ReactiveMongoPersistentEntityIndexCreator creatorBean = context.getBean(creator,
+					ReactiveMongoPersistentEntityIndexCreator.class);
 			if (creatorBean.isIndexCreatorFor(mappingContext)) {
 				return;
 			}
 		}
 
 		if (context instanceof ConfigurableApplicationContext) {
-			((ConfigurableApplicationContext) context).addApplicationListener(indexCreator);
+			((ConfigurableApplicationContext) context).addApplicationListener(indexCreatorListener);
 		}
 	}
 
@@ -3147,6 +3182,27 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getMongoDatabase();
+		}
+	}
+
+	@RequiredArgsConstructor
+	class IndexCreatorEventListener implements ApplicationListener<MappingContextEvent<?, ?>> {
+
+		final Consumer<Throwable> subscriptionExceptionHandler;
+
+		@Override
+		public void onApplicationEvent(MappingContextEvent<?, ?> event) {
+
+			if (!event.wasEmittedBy(mappingContext)) {
+				return;
+			}
+
+			PersistentEntity<?, ?> entity = event.getPersistentEntity();
+
+			// Double check type as Spring infrastructure does not consider nested generics
+			if (entity instanceof MongoPersistentEntity) {
+				onCheckForIndexes((MongoPersistentEntity<?>) entity, subscriptionExceptionHandler);
+			}
 		}
 	}
 }

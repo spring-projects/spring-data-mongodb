@@ -23,7 +23,11 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
+import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
@@ -32,11 +36,13 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -60,7 +66,9 @@ public class ReactiveMongoTemplateIndexTests {
 
 	@Before
 	public void setUp() {
+
 		StepVerifier.create(template.dropCollection(Person.class)).verifyComplete();
+		StepVerifier.create(template.dropCollection("indexfail")).verifyComplete();
 	}
 
 	@After
@@ -175,6 +183,39 @@ public class ReactiveMongoTemplateIndexTests {
 				}).verifyComplete();
 	}
 
+	@Test // DATAMONGO-1928
+	public void shouldCreateIndexOnAccess() {
+
+		template.findAll(IndexedSample.class) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		template.indexOps(IndexedSample.class).getIndexInfo() //
+				.as(StepVerifier::create) //
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1928
+	public void indexCreationShouldFail() throws InterruptedException {
+
+		String command = "db.indexfail" + ".createIndex({'field':1}, {'name':'foo', 'unique':true, 'sparse':true}), 1";
+
+		StepVerifier.create(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		BlockingQueue<Throwable> queue = new LinkedBlockingQueue<>();
+
+		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory, this.template.getConverter(), queue::add);
+
+		template.findAll(IndexCreationShouldFail.class).subscribe();
+
+		Throwable failure = queue.poll(10, TimeUnit.SECONDS);
+
+		Assertions.assertThat(failure).isNotNull().isInstanceOf(DataIntegrityViolationException.class);
+	}
+
 	@Data
 	static class Sample {
 
@@ -187,5 +228,21 @@ public class ReactiveMongoTemplateIndexTests {
 			this.id = id;
 			this.field = field;
 		}
+	}
+
+	@Data
+	@org.springframework.data.mongodb.core.mapping.Document
+	static class IndexedSample {
+
+		@Id String id;
+		@Indexed String field;
+	}
+
+	@Data
+	@org.springframework.data.mongodb.core.mapping.Document("indexfail")
+	static class IndexCreationShouldFail {
+
+		@Id String id;
+		@Indexed(name = "foo") String field;
 	}
 }
