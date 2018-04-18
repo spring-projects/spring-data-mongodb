@@ -15,19 +15,17 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.data.Index.atIndex;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
@@ -47,10 +45,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.reactivestreams.client.ListIndexesPublisher;
-import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
- * Integration test for {@link MongoTemplate}.
+ * Integration test for index creation via {@link ReactiveMongoTemplate}.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
@@ -67,8 +64,11 @@ public class ReactiveMongoTemplateIndexTests {
 	@Before
 	public void setUp() {
 
-		StepVerifier.create(template.dropCollection(Person.class)).verifyComplete();
-		StepVerifier.create(template.dropCollection("indexfail")).verifyComplete();
+		template.dropCollection(Person.class) //
+				.as(StepVerifier::create).verifyComplete();
+
+		template.dropCollection("indexfail") //
+				.as(StepVerifier::create).verifyComplete();
 	}
 
 	@After
@@ -84,28 +84,29 @@ public class ReactiveMongoTemplateIndexTests {
 		p2.setAge(40);
 		template.insert(p2);
 
-		StepVerifier
-				.create(template.indexOps(Person.class) //
-						.ensureIndex(new Index().on("age", Direction.DESC).unique())) //
+		template.indexOps(Person.class) //
+				.ensureIndex(new Index().on("age", Direction.DESC).unique()) //
+				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		MongoCollection<Document> coll = template.getCollection(template.getCollectionName(Person.class));
-		StepVerifier.create(Flux.from(coll.listIndexes()).collectList()).consumeNextWith(indexInfo -> {
+		Flux.from(template.getCollection(template.getCollectionName(Person.class)).listIndexes()).collectList() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(indexInfo -> {
 
-			assertThat(indexInfo.size(), is(2));
-			Object indexKey = null;
-			boolean unique = false;
-			for (Document ix : indexInfo) {
+					assertThat(indexInfo).hasSize(2);
+					Object indexKey = null;
+					boolean unique = false;
+					for (Document ix : indexInfo) {
 
-				if ("age_-1".equals(ix.get("name"))) {
-					indexKey = ix.get("key");
-					unique = (Boolean) ix.get("unique");
-				}
-			}
-			assertThat(((Document) indexKey), hasEntry("age", -1));
-			assertThat(unique, is(true));
-		}).verifyComplete();
+						if ("age_-1".equals(ix.get("name"))) {
+							indexKey = ix.get("key");
+							unique = (Boolean) ix.get("unique");
+						}
+					}
+					assertThat((Document) indexKey).containsEntry("age", -1);
+					assertThat(unique).isTrue();
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -113,27 +114,29 @@ public class ReactiveMongoTemplateIndexTests {
 
 		Person p1 = new Person("Oliver");
 		p1.setAge(25);
-		StepVerifier.create(template.insert(p1)).expectNextCount(1).verifyComplete();
-
-		StepVerifier
-				.create(template.indexOps(Person.class) //
-						.ensureIndex(new Index().on("age", Direction.DESC).unique())) //
+		template.insert(p1) //
+				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		StepVerifier.create(template.indexOps(Person.class).getIndexInfo().collectList()).consumeNextWith(indexInfos -> {
+		template.indexOps(Person.class) //
+				.ensureIndex(new Index().on("age", Direction.DESC).unique()) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
 
-			assertThat(indexInfos.size(), is(2));
+		template.indexOps(Person.class).getIndexInfo().collectList() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(indexInfos -> {
 
-			IndexInfo ii = indexInfos.get(1);
-			assertThat(ii.isUnique(), is(true));
-			assertThat(ii.isSparse(), is(false));
+					assertThat(indexInfos).hasSize(2);
 
-			List<IndexField> indexFields = ii.getIndexFields();
-			IndexField field = indexFields.get(0);
+					IndexInfo ii = indexInfos.get(1);
+					assertThat(ii.isUnique()).isTrue();
+					assertThat(ii.isSparse()).isFalse();
 
-			assertThat(field, is(IndexField.create("age", Direction.DESC)));
-		}).verifyComplete();
+					assertThat(ii.getIndexFields()).contains(IndexField.create("age", Direction.DESC), atIndex(0));
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -141,45 +144,50 @@ public class ReactiveMongoTemplateIndexTests {
 
 		String command = "db." + template.getCollectionName(Person.class)
 				+ ".createIndex({'age':-1}, {'unique':true, 'sparse':true}), 1";
-		StepVerifier.create(template.indexOps(Person.class).dropAllIndexes()).verifyComplete();
+		template.indexOps(Person.class).dropAllIndexes() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
 
-		StepVerifier.create(template.indexOps(Person.class).getIndexInfo()).verifyComplete();
+		template.indexOps(Person.class).getIndexInfo() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
 
-		StepVerifier.create(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))) //
+		Flux.from(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))) //
+				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
 		ListIndexesPublisher<Document> listIndexesPublisher = template
 				.getCollection(template.getCollectionName(Person.class)).listIndexes();
 
-		StepVerifier.create(Flux.from(listIndexesPublisher).collectList()).consumeNextWith(indexInfos -> {
+		Flux.from(listIndexesPublisher).collectList() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(indexInfos -> {
 
-			Document indexKey = null;
-			boolean unique = false;
+					Document indexKey = null;
+					boolean unique = false;
 
-			for (Document document : indexInfos) {
+					for (Document document : indexInfos) {
 
-				if ("age_-1".equals(document.get("name"))) {
-					indexKey = (org.bson.Document) document.get("key");
-					unique = (Boolean) document.get("unique");
-				}
-			}
+						if ("age_-1".equals(document.get("name"))) {
+							indexKey = (org.bson.Document) document.get("key");
+							unique = (Boolean) document.get("unique");
+						}
+					}
 
-			assertThat(indexKey, hasEntry("age", -1D));
-			assertThat(unique, is(true));
-		}).verifyComplete();
+					assertThat(indexKey).containsEntry("age", -1D);
+					assertThat(unique).isTrue();
+				}).verifyComplete();
 
-		StepVerifier.create(Flux.from(template.indexOps(Person.class).getIndexInfo().collectList()))
+		Flux.from(template.indexOps(Person.class).getIndexInfo().collectList()) //
+				.as(StepVerifier::create) //
 				.consumeNextWith(indexInfos -> {
 
 					IndexInfo info = indexInfos.get(1);
-					assertThat(info.isUnique(), is(true));
-					assertThat(info.isSparse(), is(true));
+					assertThat(info.isUnique()).isTrue();
+					assertThat(info.isSparse()).isTrue();
 
-					List<IndexField> indexFields = info.getIndexFields();
-					IndexField field = indexFields.get(0);
-
-					assertThat(field, is(IndexField.create("age", Direction.DESC)));
+					assertThat(info.getIndexFields()).contains(IndexField.create("age", Direction.DESC), atIndex(0));
 				}).verifyComplete();
 	}
 
@@ -201,19 +209,19 @@ public class ReactiveMongoTemplateIndexTests {
 
 		String command = "db.indexfail" + ".createIndex({'field':1}, {'name':'foo', 'unique':true, 'sparse':true}), 1";
 
-		StepVerifier.create(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))) //
+		Flux.from(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))) //
+				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
 		BlockingQueue<Throwable> queue = new LinkedBlockingQueue<>();
-
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory, this.template.getConverter(), queue::add);
 
 		template.findAll(IndexCreationShouldFail.class).subscribe();
 
 		Throwable failure = queue.poll(10, TimeUnit.SECONDS);
 
-		Assertions.assertThat(failure).isNotNull().isInstanceOf(DataIntegrityViolationException.class);
+		assertThat(failure).isNotNull().isInstanceOf(DataIntegrityViolationException.class);
 	}
 
 	@Data
