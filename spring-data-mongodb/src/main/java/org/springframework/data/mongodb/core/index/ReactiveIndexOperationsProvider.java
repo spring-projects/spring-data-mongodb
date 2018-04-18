@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,19 @@
 package org.springframework.data.mongodb.core.index;
 
 /**
+ * Provider interface to obtain {@link ReactiveIndexOperations} by MongoDB collection name.
+ *
  * @author Mark Paluch
- * @author Jens Schauder
- * @since 2.0
+ * @since 2.1
  */
 @FunctionalInterface
-public interface IndexOperationsProvider {
+public interface ReactiveIndexOperationsProvider {
 
 	/**
-	 * Returns the operations that can be performed on indexes
+	 * Returns the operations that can be performed on indexes.
 	 *
+	 * @param collectionName name of the MongoDB collection, must not be {@literal null}.
 	 * @return index operations on the named collection
 	 */
-	IndexOperations indexOps(String collectionName);
+	ReactiveIndexOperations indexOps(String collectionName);
 }
