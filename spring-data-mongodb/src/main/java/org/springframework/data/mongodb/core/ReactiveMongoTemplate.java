@@ -2001,7 +2001,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (filterQuery.getLimit() > 0 || (options.getLimit() != null)) {
 
 				if (filterQuery.getLimit() > 0 && (options.getLimit() != null)) {
-					throw new IllegalArgumentException("Both Query and MapReduceOptions define a limit. Please provide the limit only via one of the two.");
+					throw new IllegalArgumentException(
+							"Both Query and MapReduceOptions define a limit. Please provide the limit only via one of the two.");
 				}
 
 				if (filterQuery.getLimit() > 0) {
@@ -2103,6 +2104,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <T> ReactiveAggregation<T> aggregateAndReturn(Class<T> domainType) {
 		return new ReactiveAggregationOperationSupport(this).aggregateAndReturn(domainType);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMapReduceOperation#mapReduce(java.lang.Class)
+	 */
+	@Override
+	public <T> ReactiveMapReduce<T> mapReduce(Class<T> domainType) {
+		return new ReactiveMapReduceOperationSupport(this).mapReduce(domainType);
 	}
 
 	/**

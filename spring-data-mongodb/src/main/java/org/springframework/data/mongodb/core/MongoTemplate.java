@@ -71,7 +71,16 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.*;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -132,7 +141,16 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ValidationAction;
+import com.mongodb.client.model.ValidationLevel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.session.ClientSession;
@@ -1798,9 +1816,29 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
 			String reduceFunction, @Nullable MapReduceOptions mapReduceOptions, Class<T> entityClass) {
 
+		return new MapReduceResults<T>(
+				mapReduce(query, entityClass, inputCollectionName, mapFunction, reduceFunction, mapReduceOptions, entityClass),
+				new Document());
+	}
+
+	/**
+	 * @param query
+	 * @param domainType
+	 * @param inputCollectionName
+	 * @param mapFunction
+	 * @param reduceFunction
+	 * @param mapReduceOptions
+	 * @param resultType
+	 * @param <T>
+	 * @return
+	 * @since 2.1
+	 */
+	public <T> List<T> mapReduce(Query query, Class<?> domainType, String inputCollectionName, String mapFunction,
+			String reduceFunction, @Nullable MapReduceOptions mapReduceOptions, Class<T> resultType) {
+
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(inputCollectionName, "InputCollectionName must not be null!");
-		Assert.notNull(entityClass, "EntityClass must not be null!");
+		Assert.notNull(resultType, "EntityClass must not be null!");
 		Assert.notNull(reduceFunction, "ReduceFunction must not be null!");
 		Assert.notNull(mapFunction, "MapFunction must not be null!");
 
@@ -1818,9 +1856,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (query.getMeta() != null && query.getMeta().getMaxTimeMsec() != null) {
 				result = result.maxTime(query.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
 			}
-			result = result.sort(getMappedSortObject(query, entityClass));
+			result = result.sort(getMappedSortObject(query, domainType));
 
-			result = result.filter(queryMapper.getMappedObject(query.getQueryObject(), Optional.empty()));
+			result = result
+					.filter(queryMapper.getMappedObject(query.getQueryObject(), mappingContext.getPersistentEntity(domainType)));
 		}
 
 		Optional<Collation> collation = query.getCollation();
@@ -1856,13 +1895,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		result = collation.map(Collation::toMongoCollation).map(result::collation).orElse(result);
 
 		List<T> mappedResults = new ArrayList<T>();
-		DocumentCallback<T> callback = new ReadDocumentCallback<T>(mongoConverter, entityClass, inputCollectionName);
+		DocumentCallback<T> callback = new ReadDocumentCallback<T>(mongoConverter, resultType, inputCollectionName);
 
 		for (Document document : result) {
 			mappedResults.add(callback.doWith(document));
 		}
 
-		return new MapReduceResults<T>(mappedResults, new Document());
+		return mappedResults;
 	}
 
 	public <T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass) {
@@ -2182,6 +2221,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <T> ExecutableAggregation<T> aggregateAndReturn(Class<T> domainType) {
 		return new ExecutableAggregationOperationSupport(this).aggregateAndReturn(domainType);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation#aggregateAndReturn(java.lang.Class)
+	 */
+	@Override
+	public <T> ExecutableMapReduce<T> mapReduce(Class<T> domainType) {
+		return new ExecutableMapReduceOperationSupport(this).mapReduce(domainType);
 	}
 
 	/*
