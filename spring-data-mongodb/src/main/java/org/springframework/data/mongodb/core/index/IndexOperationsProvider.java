@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.core.index;
 
 /**
+ * Provider interface to obtain {@link IndexOperations} by MongoDB collection name.
+ *
  * @author Mark Paluch
  * @author Jens Schauder
  * @since 2.0
@@ -26,6 +28,7 @@ public interface IndexOperationsProvider {
 	/**
 	 * Returns the operations that can be performed on indexes
 	 *
+	 * @param collectionName name of the MongoDB collection, must not be {@literal null}.
 	 * @return index operations on the named collection
 	 */
 	IndexOperations indexOps(String collectionName);
