@@ -19,7 +19,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.function.Consumer;
 
-import com.mongodb.session.ClientSession;
+import com.mongodb.reactivestreams.client.ClientSession;
 
 /**
  * Gateway interface to execute {@link ClientSession} bound operations against MongoDB via a

@@ -29,23 +29,27 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.Version;
 
 import com.mongodb.ClientSessionOptions;
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
-import com.mongodb.session.ClientSession;
+import com.mongodb.reactivestreams.client.Success;
 
 /**
  * @author Christoph Strobl
- * @author Mark Paluch
+ * @currentRead Beyond the Shadows - Brent Weeks
  */
 public class ReactiveClientSessionTests {
 
 	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 	public static @ClassRule TestRule replSet = ReplicaSet.required();
+
+	static final String DATABASE_NAME = "reflective-client-session-tests";
+	static final String COLLECTION_NAME = "test";
 
 	MongoClient client;
 	ReactiveMongoTemplate template;
@@ -53,13 +57,14 @@ public class ReactiveClientSessionTests {
 	@Before
 	public void setUp() {
 
-		client = MongoClients.create();
+		client = MongoTestUtils.reactiveReplSetClient();
 
-		template = new ReactiveMongoTemplate(client, "reflective-client-session-tests");
+		template = new ReactiveMongoTemplate(client, DATABASE_NAME);
 
-		StepVerifier.create(template.dropCollection("test")).verifyComplete();
+		StepVerifier.create(MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, COLLECTION_NAME, client))
+				.expectNext(Success.SUCCESS).verifyComplete();
 
-		StepVerifier.create(template.insert(new Document("_id", "id-1").append("value", "spring"), "test"))
+		StepVerifier.create(template.insert(new Document("_id", "id-1").append("value", "spring"), COLLECTION_NAME))
 				.expectNextCount(1).verifyComplete();
 	}
 
@@ -71,7 +76,8 @@ public class ReactiveClientSessionTests {
 
 		assertThat(session.getOperationTime()).isNull();
 
-		StepVerifier.create(template.withSession(() -> session).execute(action -> action.findAll(Document.class, "test")))
+		StepVerifier
+				.create(template.withSession(() -> session).execute(action -> action.findAll(Document.class, COLLECTION_NAME)))
 				.expectNextCount(1).verifyComplete();
 
 		assertThat(session.getOperationTime()).isNotNull();
@@ -89,8 +95,8 @@ public class ReactiveClientSessionTests {
 		assertThat(session.getOperationTime()).isNull();
 
 		StepVerifier
-				.create(
-						template.withSession(() -> session).execute(action -> action.findOne(new Query(), Document.class, "test")))
+				.create(template.withSession(() -> session)
+						.execute(action -> action.findOne(new Query(), Document.class, COLLECTION_NAME)))
 				.expectNextCount(1).verifyComplete();
 
 		assertThat(session.getOperationTime()).isNotNull();
@@ -108,10 +114,10 @@ public class ReactiveClientSessionTests {
 
 		ReactiveSessionScoped sessionScoped = template.withSession(sessionSupplier);
 
-		sessionScoped.execute(action -> action.findOne(new Query(), Document.class, "test")).blockFirst();
+		sessionScoped.execute(action -> action.findOne(new Query(), Document.class, COLLECTION_NAME)).blockFirst();
 		assertThat(sessionSupplier.getInvocationCount()).isEqualTo(1);
 
-		sessionScoped.execute(action -> action.findOne(new Query(), Document.class, "test")).blockFirst();
+		sessionScoped.execute(action -> action.findOne(new Query(), Document.class, COLLECTION_NAME)).blockFirst();
 		assertThat(sessionSupplier.getInvocationCount()).isEqualTo(1);
 	}
 

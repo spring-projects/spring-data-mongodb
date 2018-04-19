@@ -46,8 +46,8 @@ import com.mongodb.ClientSessionOptions;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.session.ClientSession;
 
 /**
  * Interface that specifies a basic set of MongoDB operations executed in a reactive way.

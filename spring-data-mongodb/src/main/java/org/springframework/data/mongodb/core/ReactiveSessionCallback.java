@@ -15,16 +15,20 @@
  */
 package org.springframework.data.mongodb.core;
 
+import reactor.core.publisher.Mono;
+
 import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.reactivestreams.client.ClientSession;
+
 /**
- * Callback interface for executing operations within a {@link com.mongodb.session.ClientSession} using reactive
- * infrastructure.
+ * Callback interface for executing operations within a {@link com.mongodb.reactivestreams.client.ClientSession} using
+ * reactive infrastructure.
  *
  * @author Christoph Strobl
  * @since 2.1
- * @see com.mongodb.session.ClientSession
+ * @see com.mongodb.reactivestreams.client.ClientSession
  */
 @FunctionalInterface
 public interface ReactiveSessionCallback<T> {
@@ -44,4 +48,19 @@ public interface ReactiveSessionCallback<T> {
 	 * @return never {@literal null}.
 	 */
 	Publisher<T> doInSession(ReactiveMongoOperations operations);
+
+	class ReactiveSessionContext {
+
+		private static final Class<?> KEY = ClientSession.class;
+
+		/**
+		 * Gets the {@code Mono<ClientSession>} from Reactor {@link reactor.util.context.Context}
+		 *
+		 * @return the {@link Mono} emitting the client session.
+		 */
+		static Mono<ClientSession> getSession() {
+			return Mono.subscriberContext().filter(ctx -> ctx.hasKey(KEY)).flatMap(ctx -> ctx.<Mono<ClientSession>> get(KEY));
+		}
+	}
+
 }
