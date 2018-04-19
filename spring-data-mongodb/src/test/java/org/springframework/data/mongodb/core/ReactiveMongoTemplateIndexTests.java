@@ -45,6 +45,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.reactivestreams.client.ListIndexesPublisher;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Integration test for index creation via {@link ReactiveMongoTemplate}.
@@ -60,15 +62,14 @@ public class ReactiveMongoTemplateIndexTests {
 
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoTemplate template;
+	@Autowired MongoClient client;
 
 	@Before
 	public void setUp() {
 
-		template.dropCollection(Person.class) //
-				.as(StepVerifier::create).verifyComplete();
-
-		template.dropCollection("indexfail") //
-				.as(StepVerifier::create).verifyComplete();
+		StepVerifier.create(template.getCollection("person").drop()).expectNext(Success.SUCCESS).verifyComplete();
+		StepVerifier.create(template.getCollection("indexfail").drop()).expectNext(Success.SUCCESS).verifyComplete();
+		StepVerifier.create(template.getCollection("indexedSample").drop()).expectNext(Success.SUCCESS).verifyComplete();
 	}
 
 	@After
@@ -144,6 +145,7 @@ public class ReactiveMongoTemplateIndexTests {
 
 		String command = "db." + template.getCollectionName(Person.class)
 				+ ".createIndex({'age':-1}, {'unique':true, 'sparse':true}), 1";
+
 		template.indexOps(Person.class).dropAllIndexes() //
 				.as(StepVerifier::create) //
 				.verifyComplete();
@@ -194,13 +196,14 @@ public class ReactiveMongoTemplateIndexTests {
 	@Test // DATAMONGO-1928
 	public void shouldCreateIndexOnAccess() {
 
+		StepVerifier.create(template.getCollection("indexedSample").listIndexes(Document.class)).expectNextCount(0)
+				.verifyComplete();
+
 		template.findAll(IndexedSample.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		template.indexOps(IndexedSample.class).getIndexInfo() //
-				.as(StepVerifier::create) //
-				.expectNextCount(2) //
+		StepVerifier.create(template.getCollection("indexedSample").listIndexes(Document.class)).expectNextCount(2)
 				.verifyComplete();
 	}
 
