@@ -19,7 +19,8 @@ package org.springframework.data.mongodb.core;
  * Stripped down interface providing access to a fluent API that specifies a basic set of reactive MongoDB operations.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  */
 public interface ReactiveFluentMongoOperations extends ReactiveFindOperation, ReactiveInsertOperation,
-		ReactiveUpdateOperation, ReactiveRemoveOperation, ReactiveAggregationOperation {}
+		ReactiveUpdateOperation, ReactiveRemoveOperation, ReactiveAggregationOperation, ReactiveMapReduceOperation {}
