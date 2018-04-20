@@ -178,6 +178,8 @@
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
 			<version>${mongo}</version>
+			<scope>system</scope>
+			<systemPath>/Users/cstrobl/git/mongodb/mongo-java-driver/mongo-java-driver/build/libs/mongo-java-driver-3.8.0-SNAPSHOT.jar</systemPath>
 		</dependency>
 	</dependencies>
 

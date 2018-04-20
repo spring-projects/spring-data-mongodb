@@ -87,6 +87,8 @@
 			<artifactId>mongodb-driver-reactivestreams</artifactId>
 			<version>${mongo.reactivestreams}</version>
 			<optional>true</optional>
+			<scope>system</scope>
+			<systemPath>/Users/cstrobl/git/mongodb/mongo-java-driver-reactivestreams/driver/build/libs/mongodb-driver-reactivestreams-1.9.0-SNAPSHOT.jar</systemPath>
 		</dependency>
 
 		<dependency>
@@ -94,6 +96,8 @@
 			<artifactId>mongodb-driver-async</artifactId>
 			<version>${mongo}</version>
 			<optional>true</optional>
+			<scope>system</scope>
+			<systemPath>/Users/cstrobl/git/mongodb/mongo-java-driver/driver-async/build/libs/mongodb-driver-async-3.8.0-SNAPSHOT.jar</systemPath>
 			<exclusions>
 				<exclusion>
 					<groupId>org.mongodb</groupId>
