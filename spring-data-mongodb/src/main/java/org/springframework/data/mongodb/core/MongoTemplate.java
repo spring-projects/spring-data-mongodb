@@ -1816,7 +1816,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
 			String reduceFunction, @Nullable MapReduceOptions mapReduceOptions, Class<T> entityClass) {
 
-		return new MapReduceResults<T>(
+		return new MapReduceResults<>(
 				mapReduce(query, entityClass, inputCollectionName, mapFunction, reduceFunction, mapReduceOptions, entityClass),
 				new Document());
 	}
@@ -1829,38 +1829,35 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param reduceFunction
 	 * @param mapReduceOptions
 	 * @param resultType
-	 * @param <T>
 	 * @return
 	 * @since 2.1
 	 */
 	public <T> List<T> mapReduce(Query query, Class<?> domainType, String inputCollectionName, String mapFunction,
 			String reduceFunction, @Nullable MapReduceOptions mapReduceOptions, Class<T> resultType) {
 
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(inputCollectionName, "InputCollectionName must not be null!");
-		Assert.notNull(resultType, "EntityClass must not be null!");
-		Assert.notNull(reduceFunction, "ReduceFunction must not be null!");
-		Assert.notNull(mapFunction, "MapFunction must not be null!");
+		Assert.notNull(domainType, "Domain type must not be null!");
+		Assert.notNull(inputCollectionName, "Input collection name must not be null!");
+		Assert.notNull(resultType, "Result type must not be null!");
+		Assert.notNull(mapFunction, "Map function must not be null!");
+		Assert.notNull(reduceFunction, "Reduce function must not be null!");
 
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
 		MongoCollection<Document> inputCollection = getAndPrepareCollection(doGetDatabase(), inputCollectionName);
 
 		// MapReduceOp
-		MapReduceIterable<Document> result = inputCollection.mapReduce(mapFunc, reduceFunc, Document.class);
-		if (query != null && result != null) {
+		MapReduceIterable<Document> mapReduce = inputCollection.mapReduce(mapFunc, reduceFunc, Document.class);
 
-			if (query.getLimit() > 0 && mapReduceOptions.getLimit() == null) {
-				result = result.limit(query.getLimit());
-			}
-			if (query.getMeta() != null && query.getMeta().getMaxTimeMsec() != null) {
-				result = result.maxTime(query.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
-			}
-			result = result.sort(getMappedSortObject(query, domainType));
-
-			result = result
-					.filter(queryMapper.getMappedObject(query.getQueryObject(), mappingContext.getPersistentEntity(domainType)));
+		if (query.getLimit() > 0 && mapReduceOptions != null && mapReduceOptions.getLimit() == null) {
+			mapReduce = mapReduce.limit(query.getLimit());
 		}
+		if (query.getMeta().getMaxTimeMsec() != null) {
+			mapReduce = mapReduce.maxTime(query.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
+		}
+		mapReduce = mapReduce.sort(getMappedSortObject(query, domainType));
+
+		mapReduce = mapReduce
+				.filter(queryMapper.getMappedObject(query.getQueryObject(), mappingContext.getPersistentEntity(domainType)));
 
 		Optional<Collation> collation = query.getCollation();
 
@@ -1876,28 +1873,28 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			if (!CollectionUtils.isEmpty(mapReduceOptions.getScopeVariables())) {
-				result = result.scope(new Document(mapReduceOptions.getScopeVariables()));
+				mapReduce = mapReduce.scope(new Document(mapReduceOptions.getScopeVariables()));
 			}
-			if (mapReduceOptions.getLimit() != null && mapReduceOptions.getLimit().intValue() > 0) {
-				result = result.limit(mapReduceOptions.getLimit());
+			if (mapReduceOptions.getLimit() != null && mapReduceOptions.getLimit() > 0) {
+				mapReduce = mapReduce.limit(mapReduceOptions.getLimit());
 			}
 			if (mapReduceOptions.getFinalizeFunction().filter(StringUtils::hasText).isPresent()) {
-				result = result.finalizeFunction(mapReduceOptions.getFinalizeFunction().get());
+				mapReduce = mapReduce.finalizeFunction(mapReduceOptions.getFinalizeFunction().get());
 			}
 			if (mapReduceOptions.getJavaScriptMode() != null) {
-				result = result.jsMode(mapReduceOptions.getJavaScriptMode());
+				mapReduce = mapReduce.jsMode(mapReduceOptions.getJavaScriptMode());
 			}
 			if (mapReduceOptions.getOutputSharded().isPresent()) {
-				result = result.sharded(mapReduceOptions.getOutputSharded().get());
+				mapReduce = mapReduce.sharded(mapReduceOptions.getOutputSharded().get());
 			}
 		}
 
-		result = collation.map(Collation::toMongoCollation).map(result::collation).orElse(result);
+		mapReduce = collation.map(Collation::toMongoCollation).map(mapReduce::collation).orElse(mapReduce);
 
-		List<T> mappedResults = new ArrayList<T>();
-		DocumentCallback<T> callback = new ReadDocumentCallback<T>(mongoConverter, resultType, inputCollectionName);
+		List<T> mappedResults = new ArrayList<>();
+		DocumentCallback<T> callback = new ReadDocumentCallback<>(mongoConverter, resultType, inputCollectionName);
 
-		for (Document document : result) {
+		for (Document document : mapReduce) {
 			mappedResults.add(callback.doWith(document));
 		}
 

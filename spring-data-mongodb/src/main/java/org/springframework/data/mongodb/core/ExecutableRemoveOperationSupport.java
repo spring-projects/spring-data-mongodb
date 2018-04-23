@@ -36,24 +36,12 @@ import com.mongodb.client.result.DeleteResult;
  * @author Mark Paluch
  * @since 2.0
  */
+@RequiredArgsConstructor
 class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final MongoTemplate tempate;
-
-	/**
-	 * Create new {@link ExecutableRemoveOperationSupport}.
-	 *
-	 * @param template must not be {@literal null}.
-	 * @throws IllegalArgumentException if template is {@literal null}.
-	 */
-	ExecutableRemoveOperationSupport(MongoTemplate template) {
-
-		Assert.notNull(template, "Template must not be null!");
-
-		this.tempate = template;
-	}
+	private final @NonNull MongoTemplate tempate;
 
 	/*
 	 * (non-Javadoc)

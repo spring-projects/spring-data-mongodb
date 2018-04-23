@@ -35,7 +35,6 @@ class ExecutableMapReduceOperationExtensionsTests {
 	@Mock(answer = Answers.RETURNS_MOCKS)
 	lateinit var operationWithProjection: ExecutableMapReduceOperation.MapReduceWithProjection<First>
 
-
 	@Test // DATAMONGO-1929
 	fun `ExecutableMapReduceOperation#mapReduce(KClass) extension should call its Java counterpart`() {
 

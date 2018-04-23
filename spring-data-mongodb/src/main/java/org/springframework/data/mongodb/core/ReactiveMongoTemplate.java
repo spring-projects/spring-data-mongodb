@@ -1975,9 +1975,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(domainType, "Domain type must not be null!");
 		Assert.hasText(inputCollectionName, "Input collection name must not be null or empty!");
 		Assert.notNull(resultType, "Result type must not be null!");
-		Assert.notNull(options, "MapReduceOptions must not be null!");
 		Assert.notNull(mapFunction, "Map function must not be null!");
 		Assert.notNull(reduceFunction, "Reduce function must not be null!");
+		Assert.notNull(options, "MapReduceOptions must not be null!");
+
 		assertLocalFunctionNames(mapFunction, reduceFunction);
 
 		return createFlux(inputCollectionName, collection -> {

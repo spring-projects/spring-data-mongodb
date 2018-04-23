@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -29,23 +31,12 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.1
  */
+@RequiredArgsConstructor
 class ExecutableMapReduceOperationSupport implements ExecutableMapReduceOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final MongoTemplate template;
-
-	/**
-	 * Create new {@link ExecutableMapReduceOperationSupport}.
-	 *
-	 * @param template must not be {@literal null}.
-	 * @throws IllegalArgumentException if template is {@literal null}.
-	 */
-	ExecutableMapReduceOperationSupport(MongoTemplate template) {
-
-		Assert.notNull(template, "Template must not be null!");
-		this.template = template;
-	}
+	private final @NonNull MongoTemplate template;
 
 	/*
 	 * (non-Javascript)
@@ -56,7 +47,7 @@ class ExecutableMapReduceOperationSupport implements ExecutableMapReduceOperatio
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ExecutableMapReduceSupport(template, domainType, domainType, null, ALL_QUERY, null, null, null);
+		return new ExecutableMapReduceSupport<>(template, domainType, domainType, null, ALL_QUERY, null, null, null);
 	}
 
 	/**
@@ -76,8 +67,8 @@ class ExecutableMapReduceOperationSupport implements ExecutableMapReduceOperatio
 		private final @Nullable String reduceFunction;
 		private final @Nullable MapReduceOptions options;
 
-		ExecutableMapReduceSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType, String collection,
-				Query query, @Nullable String mapFunction, @Nullable String reduceFunction, MapReduceOptions options) {
+		ExecutableMapReduceSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType, @Nullable String collection,
+				Query query, @Nullable String mapFunction, @Nullable String reduceFunction, @Nullable MapReduceOptions options) {
 
 			this.template = template;
 			this.domainType = domainType;

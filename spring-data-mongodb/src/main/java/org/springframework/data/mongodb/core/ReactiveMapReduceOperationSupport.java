@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -29,23 +31,12 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.1
  */
+@RequiredArgsConstructor
 class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final ReactiveMongoTemplate template;
-
-	/**
-	 * Create new {@link ReactiveMapReduceOperationSupport}.
-	 *
-	 * @param template must not be {@literal null}.
-	 * @throws IllegalArgumentException if template is {@literal null}.
-	 */
-	ReactiveMapReduceOperationSupport(ReactiveMongoTemplate template) {
-
-		Assert.notNull(template, "Template must not be null!");
-		this.template = template;
-	}
+	private final @NonNull ReactiveMongoTemplate template;
 
 	/*
 	 * (non-Javascript)
@@ -56,7 +47,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ReactiveMapReduceSupport(template, domainType, domainType, null, ALL_QUERY, null, null, null);
+		return new ReactiveMapReduceSupport<>(template, domainType, domainType, null, ALL_QUERY, null, null, null);
 	}
 
 	/**
@@ -77,8 +68,8 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		private final @Nullable MapReduceOptions options;
 
 		ReactiveMapReduceSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType,
-				String collection, Query query, @Nullable String mapFunction, @Nullable String reduceFunction,
-				MapReduceOptions options) {
+				@Nullable String collection, Query query, @Nullable String mapFunction, @Nullable String reduceFunction,
+				@Nullable MapReduceOptions options) {
 
 			this.template = template;
 			this.domainType = domainType;

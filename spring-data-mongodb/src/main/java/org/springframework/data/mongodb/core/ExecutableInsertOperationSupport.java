@@ -37,22 +37,10 @@ import com.mongodb.bulk.BulkWriteResult;
  * @author Mark Paluch
  * @since 2.0
  */
+@RequiredArgsConstructor
 class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 
-	private final MongoTemplate template;
-
-	/**
-	 * Create new {@link ExecutableInsertOperationSupport}.
-	 *
-	 * @param template must not be {@literal null}.
-	 * @throws IllegalArgumentException if template is {@literal null}.
-	 */
-	ExecutableInsertOperationSupport(MongoTemplate template) {
-
-		Assert.notNull(template, "Template must not be null!");
-
-		this.template = template;
-	}
+	private final @NonNull MongoTemplate template;
 
 	/*
 	 * (non-Javadoc)

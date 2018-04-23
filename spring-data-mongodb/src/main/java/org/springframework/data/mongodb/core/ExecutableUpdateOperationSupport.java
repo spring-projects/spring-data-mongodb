@@ -35,23 +35,12 @@ import com.mongodb.client.result.UpdateResult;
  * @author Mark Paluch
  * @since 2.0
  */
+@RequiredArgsConstructor
 class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final MongoTemplate template;
-
-	/**
-	 * Creates new {@link ExecutableUpdateOperationSupport}.
-	 *
-	 * @param template must not be {@literal null}.
-	 */
-	ExecutableUpdateOperationSupport(MongoTemplate template) {
-
-		Assert.notNull(template, "Template must not be null!");
-
-		this.template = template;
-	}
+	private final @NonNull MongoTemplate template;
 
 	/*
 	 * (non-Javadoc)
