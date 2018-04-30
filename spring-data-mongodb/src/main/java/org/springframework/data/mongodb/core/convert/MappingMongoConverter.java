@@ -638,6 +638,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object key = entry.getKey();
 			Object value = entry.getValue();
 
+			if (key == null) throw new RuntimeException("key cannot be null");
+
 			if (conversions.isSimpleType(key.getClass())) {
 
 				String simpleKey = prepareMapKey(key.toString());
@@ -701,6 +703,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			Object key = entry.getKey();
 			Object val = entry.getValue();
+
+			if (key == null) throw new RuntimeException("key cannot be null");
 
 			if (conversions.isSimpleType(key.getClass())) {
 
@@ -1032,6 +1036,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			Object key = potentiallyUnescapeMapKey(entry.getKey());
+
+			if (key == null) throw new RuntimeException("key cannot be null");
 
 			if (rawKeyType != null && !rawKeyType.isAssignableFrom(key.getClass())) {
 				key = conversionService.convert(key, rawKeyType);
