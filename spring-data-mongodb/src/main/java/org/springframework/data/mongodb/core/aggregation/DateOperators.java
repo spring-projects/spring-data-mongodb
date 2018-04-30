@@ -189,10 +189,10 @@ public class DateOperators {
 	 */
 	public static class DateOperatorFactory {
 
-		private final String fieldReference;
-		private final Object dateValue;
-		private final AggregationExpression expression;
-		private final Timezone timezone;
+		protected final String fieldReference;
+		protected final Object dateValue;
+		protected final AggregationExpression expression;
+		protected final Timezone timezone;
 
 		/**
 		 * @param fieldReference
@@ -201,7 +201,7 @@ public class DateOperators {
 		 * @param timezone
 		 * @since 2.1
 		 */
-		private DateOperatorFactory(String fieldReference, AggregationExpression expression, Object value,
+		protected DateOperatorFactory(String fieldReference, AggregationExpression expression, Object value,
 				Timezone timezone) {
 
 			this.fieldReference = fieldReference;
