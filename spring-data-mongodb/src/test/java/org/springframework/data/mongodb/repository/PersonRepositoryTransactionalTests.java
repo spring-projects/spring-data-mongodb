@@ -103,15 +103,15 @@ public class PersonRepositoryTransactionalTests {
 
 	List<Person> all;
 
-	List<org.springframework.data.mongodb.test.util.AfterTransactionAssertion<Persistable<String>>> assertionList;
+	List<AfterTransactionAssertion<? extends Persistable<?>>> assertionList;
 
 	@Before
-	public void setUp() throws InterruptedException {
+	public void setUp() {
 		assertionList = new CopyOnWriteArrayList<>();
 	}
 
 	@BeforeTransaction
-	public void beforeTransaction() throws InterruptedException {
+	public void beforeTransaction() {
 
 		createOrReplaceCollection(DB_NAME, template.getCollectionName(Person.class), client);
 
@@ -123,7 +123,7 @@ public class PersonRepositoryTransactionalTests {
 	}
 
 	@AfterTransaction
-	public void verifyDbState() throws InterruptedException {
+	public void verifyDbState() {
 
 		MongoCollection<Document> collection = client.getDatabase(DB_NAME)
 				.getCollection(template.getCollectionName(Person.class));
@@ -143,6 +143,7 @@ public class PersonRepositoryTransactionalTests {
 	@Test // DATAMONGO-1920
 	public void shouldHonorCommitForDerivedQuery() {
 
+		repository.removePersonByLastnameUsingAnnotatedQuery(durzo.getLastname());
 		repository.removePersonByLastnameUsingAnnotatedQuery(durzo.getLastname());
 
 		assertAfterTransaction(durzo).isNotPresent();
@@ -171,7 +172,7 @@ public class PersonRepositoryTransactionalTests {
 
 	private AfterTransactionAssertion assertAfterTransaction(Person person) {
 
-		AfterTransactionAssertion assertion = new AfterTransactionAssertion(new Persistable() {
+		AfterTransactionAssertion assertion = new AfterTransactionAssertion<>(new Persistable<Object>() {
 
 			@Nullable
 			@Override

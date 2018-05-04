@@ -207,7 +207,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private @Nullable ResourceLoader resourceLoader;
 	private @Nullable MongoPersistentEntityIndexCreator indexCreator;
 
-	private SessionSynchronization sessionSynchronization = SessionSynchronization.NATIVE;
+	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
 
 	/**
 	 * Constructor used for a basic template configuration
@@ -580,7 +580,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Define if {@link MongoTemplate} should participate in transactions. Default is set to
-	 * {@link SessionSynchronization#NATIVE}.<br />
+	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION}.<br />
 	 * <strong>NOTE:</strong> MongoDB transactions require at least MongoDB 4.0.
 	 *
 	 * @since 2.1

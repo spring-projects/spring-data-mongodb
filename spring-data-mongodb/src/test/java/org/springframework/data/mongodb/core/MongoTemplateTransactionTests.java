@@ -94,7 +94,7 @@ public class MongoTemplateTransactionTests {
 	@Autowired MongoTemplate template;
 	@Autowired MongoClient client;
 
-	List<AfterTransactionAssertion<Persistable<String>>> assertionList;
+	List<AfterTransactionAssertion<? extends Persistable<?>>> assertionList;
 
 	@Before
 	public void setUp() {
@@ -104,13 +104,12 @@ public class MongoTemplateTransactionTests {
 	}
 
 	@BeforeTransaction
-	public void xxx() {
-
+	public void beforeTransaction() {
 		createOrReplaceCollection(DB_NAME, COLLECTION_NAME, client);
 	}
 
 	@AfterTransaction
-	public void verifyDbState() throws InterruptedException {
+	public void verifyDbState()  {
 
 		MongoCollection<Document> collection = client.getDatabase(DB_NAME).withReadPreference(ReadPreference.primary())
 				.getCollection(COLLECTION_NAME);
@@ -162,7 +161,7 @@ public class MongoTemplateTransactionTests {
 
 	private AfterTransactionAssertion assertAfterTransaction(Assassin assassin) {
 
-		AfterTransactionAssertion assertion = new AfterTransactionAssertion(assassin);
+		AfterTransactionAssertion<Assassin> assertion = new AfterTransactionAssertion<>(assassin);
 		assertionList.add(assertion);
 		return assertion;
 	}
