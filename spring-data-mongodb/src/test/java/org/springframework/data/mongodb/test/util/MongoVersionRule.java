@@ -133,14 +133,14 @@ public class MongoVersionRule implements TestRule {
 						MongoVersion version = description.getAnnotation(MongoVersion.class);
 						if (version != null) {
 
-							Version tmpMinVersion = Version.parse(version.asOf());
-							if (!tmpMinVersion.equals(ANY) && !tmpMinVersion.equals(DEFAULT_LOW)) {
-								minVersion = tmpMinVersion;
+							Version expectedMinVersion = Version.parse(version.asOf());
+							if (!expectedMinVersion.equals(ANY) && !expectedMinVersion.equals(DEFAULT_LOW)) {
+								minVersion = expectedMinVersion;
 							}
 
-							Version tmpMaxVersion = Version.parse(version.until());
-							if (!tmpMaxVersion.equals(ANY) && !tmpMaxVersion.equals(DEFAULT_HIGH)) {
-								maxVersion = tmpMaxVersion;
+							Version expectedMaxVersion = Version.parse(version.until());
+							if (!expectedMaxVersion.equals(ANY) && !expectedMaxVersion.equals(DEFAULT_HIGH)) {
+								maxVersion = expectedMaxVersion;
 							}
 						}
 					}

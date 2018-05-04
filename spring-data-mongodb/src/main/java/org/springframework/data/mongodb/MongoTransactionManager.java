@@ -43,11 +43,17 @@ import com.mongodb.client.ClientSession;
  * {@link TransactionDefinition#isReadOnly() Readonly} transactions operate on a {@link ClientSession} and enable causal
  * consistency, and also {@link ClientSession#startTransaction() start}, {@link ClientSession#commitTransaction()
  * commit} or {@link ClientSession#abortTransaction() abort} a transaction.
- *
+ * <p />
+ * Application code is required to retrieve the {@link com.mongodb.client.MongoDatabase} via
+ * {@link MongoDatabaseUtils#getDatabase(MongoDbFactory)} instead of a standard {@link MongoDbFactory#getDb()} call.
+ * Spring classes such as {@link org.springframework.data.mongodb.core.MongoTemplate} use this strategy implicitly.
+ * 
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Shadow's Edge - Brent Weeks
  * @since 2.1
  * @see <a href="https://www.mongodb.com/transactions">MongoDB Transaction Documentation</a>
+ * @see MongoDatabaseUtils#getDatabase(MongoDbFactory, SessionSynchronization) 
  */
 public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		implements ResourceTransactionManager, InitializingBean {
@@ -62,7 +68,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * before using the instance. Use this constructor to prepare a {@link MongoTransactionManager} via a
 	 * {@link org.springframework.beans.factory.BeanFactory}.
 	 * <p />
-	 * Optionally it is possible to set default {@link TransactionOptions transaction options} defining eg.
+	 * Optionally it is possible to set default {@link TransactionOptions transaction options} defining
 	 * {@link com.mongodb.ReadConcern} and {@link com.mongodb.WriteConcern}.
 	 * 
 	 * @see #setDbFactory(MongoDbFactory)
@@ -145,7 +151,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		}
 
 		resourceHolder.setSynchronizedWithTransaction(true);
-		TransactionSynchronizationManager.bindResource(dbFactory, resourceHolder);
+		TransactionSynchronizationManager.bindResource(getRequiredDbFactory(), resourceHolder);
 	}
 
 	/*
@@ -296,7 +302,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
 	 */
 	@Override
-	public void afterPropertiesSet() throws Exception {
+	public void afterPropertiesSet() {
 		getRequiredDbFactory();
 	}
 
@@ -345,25 +351,25 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 			return "null";
 		}
 
-		String debugString = "[" + ClassUtils.getShortName(session.getClass()) + "@"
-				+ Integer.toHexString(session.hashCode()) + " ";
+		String debugString = String.format("[%s@%s ", ClassUtils.getShortName(session.getClass()),
+				Integer.toHexString(session.hashCode()));
 
 		try {
 			if (session.getServerSession() != null) {
-				debugString += "id = " + session.getServerSession().getIdentifier() + ", ";
-				debugString += "causallyConsistent = " + session.isCausallyConsistent() + ", ";
-				debugString += "txActive = " + session.hasActiveTransaction() + ", ";
-				debugString += "txNumber = " + session.getServerSession().getTransactionNumber() + ", ";
-				debugString += "statementId = " + session.getServerSession().getStatementId() + ", ";
-				debugString += "clusterTime = " + session.getClusterTime();
+				debugString += String.format("id = %s, ", session.getServerSession().getIdentifier());
+				debugString += String.format("causallyConsistent = %s, ", session.isCausallyConsistent());
+				debugString += String.format("txActive = %s, ", session.hasActiveTransaction());
+				debugString += String.format("txNumber = %d, ", session.getServerSession().getTransactionNumber());
+				debugString += String.format("statementId = %d, ", session.getServerSession().getStatementId());
+				debugString += String.format("clusterTime = %s", session.getClusterTime());
 			} else {
 				debugString += "id = n/a";
-				debugString += "causallyConsistent = " + session.isCausallyConsistent() + ", ";
-				debugString += "txActive = " + session.hasActiveTransaction() + ", ";
-				debugString += "clusterTime = " + session.getClusterTime();
+				debugString += String.format("causallyConsistent = %s, ", session.isCausallyConsistent());
+				debugString += String.format("txActive = %s, ", session.hasActiveTransaction());
+				debugString += String.format("clusterTime = %s", session.getClusterTime());
 			}
 		} catch (RuntimeException e) {
-			debugString += "error = " + e.getMessage();
+			debugString += String.format("error = %s", e.getMessage());
 		}
 
 		debugString += "]";
@@ -376,6 +382,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * {@link MongoTransactionManager}.
 	 *
 	 * @author Christoph Strobl
+	 * @author Mark Paluch
 	 * @since 2.1
 	 * @see MongoResourceHolder
 	 */
@@ -387,22 +394,27 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 			this.resourceHolder = resourceHolder;
 		}
 
+		/**
+		 * Set the {@link MongoResourceHolder}.
+		 *
+		 * @param resourceHolder can be {@literal null}.
+		 */
 		void setResourceHolder(@Nullable MongoResourceHolder resourceHolder) {
 			this.resourceHolder = resourceHolder;
 		}
 
+		/**
+		 * @return {@literal true} if a {@link MongoResourceHolder} is set.
+		 */
 		boolean hasResourceHolder() {
 			return resourceHolder != null;
 		}
 
-		void commitTransaction() {
-			getRequiredSession().commitTransaction();
-		}
-
-		void abortTransaction() {
-			getRequiredSession().abortTransaction();
-		}
-
+		/**
+		 * Start a MongoDB transaction optionally given {@link TransactionOptions}.
+		 *
+		 * @param options can be {@literal null}
+		 */
 		void startTransaction(@Nullable TransactionOptions options) {
 
 			ClientSession session = getRequiredSession();
@@ -413,6 +425,23 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 			}
 		}
 
+		/**
+		 * Commit the transaction.
+		 */
+		void commitTransaction() {
+			getRequiredSession().commitTransaction();
+		}
+
+		/**
+		 * Rollback (abort) the transaction.
+		 */
+		void abortTransaction() {
+			getRequiredSession().abortTransaction();
+		}
+
+		/**
+		 * Close a {@link ClientSession} without regard to its transactional state.
+		 */
 		void closeSession() {
 
 			ClientSession session = getRequiredSession();

@@ -20,18 +20,19 @@ package org.springframework.data.mongodb;
  * define in which type of transactions to participate if any.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 public enum SessionSynchronization {
 
 	/**
-	 * Synchronize with native MongoDB transactions as those initiated via {@link MongoTransactionManager}.
+	 * Synchronize with any transaction even with empty transactions and initiate a MongoDB transaction when doing so by
+	 * registering a MongoDB specific {@link org.springframework.transaction.support.ResourceHolderSynchronization}.
 	 */
-	NATIVE,
+	ALWAYS,
 
 	/**
-	 * Synchronize with any ongoing transaction and initiate a MongoDB transaction when doing so by registering a MongoDB
-	 * specific {@link org.springframework.transaction.support.ResourceHolderSynchronization}.
+	 * Synchronize with native MongoDB transactions initiated via {@link MongoTransactionManager}.
 	 */
-	ANY;
+	ON_ACTUAL_TRANSACTION;
 }

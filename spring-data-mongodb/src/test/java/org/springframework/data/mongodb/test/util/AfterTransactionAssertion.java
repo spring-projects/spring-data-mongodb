@@ -27,14 +27,14 @@ import org.springframework.data.domain.Persistable;
 public class AfterTransactionAssertion<T extends Persistable> {
 
 	private final T persistable;
-	private boolean presentAfterTransaction;
+	private boolean expectToBePresent;
 
 	public void isPresent() {
-		presentAfterTransaction = true;
+		expectToBePresent = true;
 	}
 
 	public void isNotPresent() {
-		presentAfterTransaction = false;
+		expectToBePresent = false;
 	}
 
 	public Object getId() {
@@ -42,6 +42,6 @@ public class AfterTransactionAssertion<T extends Persistable> {
 	}
 
 	public boolean shouldBePresent() {
-		return presentAfterTransaction;
+		return expectToBePresent;
 	}
 }

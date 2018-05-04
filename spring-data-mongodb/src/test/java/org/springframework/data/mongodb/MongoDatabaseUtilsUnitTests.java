@@ -81,7 +81,7 @@ public class MongoDatabaseUtilsUnitTests {
 	@Test // DATAMONGO-1920
 	public void shouldNotStartSessionWhenNoTransactionOngoing() {
 
-		MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.NATIVE);
+		MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ON_ACTUAL_TRANSACTION);
 
 		verify(dbFactory, never()).getSession(any());
 		verify(dbFactory, never()).withSession(any(ClientSession.class));
@@ -105,7 +105,7 @@ public class MongoDatabaseUtilsUnitTests {
 				assertThat(transactionStatus.isNewTransaction()).isTrue();
 				assertThat(TransactionSynchronizationManager.hasResource(dbFactory)).isFalse();
 
-				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ANY);
+				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ALWAYS);
 
 				assertThat(TransactionSynchronizationManager.hasResource(dbFactory)).isTrue();
 			}
@@ -136,7 +136,7 @@ public class MongoDatabaseUtilsUnitTests {
 				assertThat(transactionStatus.isNewTransaction()).isTrue();
 				assertThat(TransactionSynchronizationManager.hasResource(dbFactory)).isFalse();
 
-				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ANY);
+				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ALWAYS);
 
 				assertThat(TransactionSynchronizationManager.hasResource(dbFactory)).isTrue();
 
@@ -170,7 +170,7 @@ public class MongoDatabaseUtilsUnitTests {
 				assertThat(transactionStatus.isNewTransaction()).isTrue();
 				assertThat(TransactionSynchronizationManager.hasResource(dbFactory)).isFalse();
 
-				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.NATIVE);
+				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ON_ACTUAL_TRANSACTION);
 
 				assertThat(TransactionSynchronizationManager.hasResource(dbFactory)).isFalse();
 
@@ -200,7 +200,7 @@ public class MongoDatabaseUtilsUnitTests {
 				assertThat(transactionStatus.isNewTransaction()).isTrue();
 				assertThat(TransactionSynchronizationManager.hasResource(dbFactory)).isTrue();
 
-				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.NATIVE);
+				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ON_ACTUAL_TRANSACTION);
 
 				transactionStatus.setRollbackOnly();
 			}
@@ -226,7 +226,7 @@ public class MongoDatabaseUtilsUnitTests {
 				assertThat(transactionStatus.isNewTransaction()).isTrue();
 				assertThat(TransactionSynchronizationManager.hasResource(dbFactory)).isTrue();
 
-				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ANY);
+				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ALWAYS);
 
 				transactionStatus.setRollbackOnly();
 			}
