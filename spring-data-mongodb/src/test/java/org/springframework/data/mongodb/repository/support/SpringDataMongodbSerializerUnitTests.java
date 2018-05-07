@@ -45,6 +45,8 @@ import org.springframework.data.mongodb.repository.QPerson;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.BooleanOperation;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.core.types.dsl.SimplePath;
@@ -182,6 +184,16 @@ public class SpringDataMongodbSerializerUnitTests {
 
 		assertThat(mappedPredicate, is(instanceOf(DBObject.class)));
 		assertThat(((DBObject) mappedPredicate).get("sex"), is((Object) "f"));
+	}
+
+	@Test // DATAMONGO-1943
+	public void shouldRemarshallListsAndDocuments() {
+
+		BooleanExpression criteria = QPerson.person.firstname.isNotEmpty()
+				.and(QPerson.person.firstname.containsIgnoreCase("foo")).not();
+
+		assertThat(this.serializer.handle(criteria), is(equalTo(JSON.parse("{ \"$or\" : [ { \"firstname\" : { \"$ne\" : { "
+				+ "\"$ne\" : \"\"}}} , { \"firstname\" : { \"$not\" : { \"$regex\" : \".*\\\\Qfoo\\\\E.*\" , \"$options\" : \"i\"}}}]}"))));
 	}
 
 	class Address {
