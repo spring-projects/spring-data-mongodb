@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.gridfs;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.io.FileNotFoundException;
 import java.util.Date;
 
 import org.bson.BsonObjectId;
@@ -65,8 +66,29 @@ public class GridFsResourceUnitTests {
 	@Test // DATAMONGO-1914
 	public void gettersThrowExceptionForAbsentResource() {
 
-		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> GridFsResource.absent().getContentType());
-		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> GridFsResource.absent().getFilename());
-		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> GridFsResource.absent().contentLength());
+		GridFsResource absent = GridFsResource.absent("foo");
+
+		assertThat(absent.exists()).isFalse();
+		assertThat(absent.getDescription()).contains("GridFs resource [foo]");
+
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(absent::getContentType);
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(absent::getId);
+
+		assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(absent::contentLength);
+		assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(absent::getInputStream);
+		assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(absent::lastModified);
+		assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(absent::getURI);
+		assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(absent::getURL);
+	}
+
+	@Test // DATAMONGO-1914
+	public void shouldReturnFilenameForAbsentResource() {
+
+		GridFsResource absent = GridFsResource.absent("foo");
+
+		assertThat(absent.exists()).isFalse();
+		assertThat(absent.getDescription()).contains("GridFs resource [foo]");
+		assertThat(absent.getFilename()).isEqualTo("foo");
+
 	}
 }

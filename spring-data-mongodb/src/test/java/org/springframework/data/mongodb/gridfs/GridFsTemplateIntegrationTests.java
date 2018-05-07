@@ -179,7 +179,7 @@ public class GridFsTemplateIntegrationTests {
 
 	@Test // DATAMONGO-813, DATAMONGO-1914
 	public void getResourceShouldReturnAbsentResourceForNonExistingResource() {
-		assertThat(operations.getResource("doesnotexist")).isEqualTo(GridFsResource.absent());
+		assertThat(operations.getResource("doesnotexist")).isEqualTo(GridFsResource.absent("doesnotexist"));
 	}
 
 	@Test // DATAMONGO-809
