@@ -23,6 +23,7 @@ import java.util.Optional;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.util.Optionals;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.MongoGridFSException;
 import com.mongodb.client.gridfs.model.GridFSFile;
@@ -37,9 +38,24 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  */
 public class GridFsResource extends InputStreamResource {
 
+	private static final GridFsResource ABSENT = new GridFsResource() {
+
+		@Override
+		public boolean exists() {
+			return false;
+		}
+
+	};
+
 	static final String CONTENT_TYPE_FIELD = "_contentType";
 
-	private final GridFSFile file;
+	private final @Nullable GridFSFile file;
+
+	private GridFsResource() {
+
+		super(new ByteArrayInputStream(new byte[] {}));
+		file = null;
+	}
 
 	/**
 	 * Creates a new {@link GridFsResource} from the given {@link GridFSFile}.
@@ -62,12 +78,24 @@ public class GridFsResource extends InputStreamResource {
 		this.file = file;
 	}
 
+	/**
+	 * Obtain an absent {@link GridFsResource}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	public static GridFsResource absent() {
+		return ABSENT;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.core.io.AbstractResource#contentLength()
 	 */
 	@Override
 	public long contentLength() throws IOException {
+
+		verifyExists();
 		return file.getLength();
 	}
 
@@ -77,15 +105,19 @@ public class GridFsResource extends InputStreamResource {
 	 */
 	@Override
 	public String getFilename() throws IllegalStateException {
+
+		verifyExists();
 		return file.getFilename();
 	}
 
 	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#lastModified()
-	 */
+		 * (non-Javadoc)
+		 * @see org.springframework.core.io.AbstractResource#lastModified()
+		 */
 	@Override
 	public long lastModified() throws IOException {
+
+		verifyExists();
 		return file.getUploadDate().getTime();
 	}
 
@@ -95,6 +127,8 @@ public class GridFsResource extends InputStreamResource {
 	 * @return never {@literal null}.
 	 */
 	public Object getId() {
+
+		verifyExists();
 		return file.getId();
 	}
 
@@ -108,10 +142,19 @@ public class GridFsResource extends InputStreamResource {
 	@SuppressWarnings("deprecation")
 	public String getContentType() {
 
+		verifyExists();
+
 		return Optionals
 				.firstNonEmpty(
 						() -> Optional.ofNullable(file.getMetadata()).map(it -> it.get(CONTENT_TYPE_FIELD, String.class)),
 						() -> Optional.ofNullable(file.getContentType()))
 				.orElseThrow(() -> new MongoGridFSException("No contentType data for this GridFS file"));
+	}
+
+	private void verifyExists() {
+
+		if (!exists()) {
+			throw new IllegalStateException("The resource does not exist.");
+		}
 	}
 }

@@ -153,7 +153,8 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * Returns the {@link GridFsResource} with the given file name.
 	 *
 	 * @param filename must not be {@literal null}.
-	 * @return the resource if it exists or {@literal null}.
+	 * @return the resource. Use {@link org.springframework.core.io.Resource#exists()} to check if the returned
+	 *         {@link GridFsResource} is actually present.
 	 * @see ResourcePatternResolver#getResource(String)
 	 */
 	GridFsResource getResource(String filename);
