@@ -229,7 +229,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	public GridFsResource getResource(String location) {
 
 		return Optional.ofNullable(findOne(query(whereFilename().is(location)))).map(this::getResource)
-				.orElseGet(GridFsResource::absent);
+				.orElseGet(() -> GridFsResource.absent(location));
 	}
 
 	/*
