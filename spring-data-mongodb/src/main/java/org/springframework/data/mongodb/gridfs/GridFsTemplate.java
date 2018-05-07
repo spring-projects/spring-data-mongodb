@@ -227,7 +227,9 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @see org.springframework.core.io.ResourceLoader#getResource(java.lang.String)
 	 */
 	public GridFsResource getResource(String location) {
-		return Optional.ofNullable(findOne(query(whereFilename().is(location)))).map(this::getResource).orElse(null);
+
+		return Optional.ofNullable(findOne(query(whereFilename().is(location)))).map(this::getResource)
+				.orElseGet(GridFsResource::absent);
 	}
 
 	/*

@@ -61,4 +61,12 @@ public class GridFsResourceUnitTests {
 
 		assertThatThrownBy(resource::getContentType).isInstanceOf(MongoGridFSException.class);
 	}
+
+	@Test // DATAMONGO-1914
+	public void gettersThrowExceptionForAbsentResource() {
+
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> GridFsResource.absent().getContentType());
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> GridFsResource.absent().getFilename());
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> GridFsResource.absent().contentLength());
+	}
 }
