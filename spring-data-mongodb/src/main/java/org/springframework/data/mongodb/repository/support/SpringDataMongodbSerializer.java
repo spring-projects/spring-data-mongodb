@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -27,10 +28,12 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
@@ -93,7 +96,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 			return super.visit(expr, context);
 		}
 
-		return converter.convertToMongoType(expr.getConstant());
+		return toQuerydslMongoType(expr.getConstant());
 	}
 
 	/*
@@ -128,7 +131,8 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 			Document mappedIdValue = mapper.getMappedObject((BasicDBObject) superIdValue, Optional.empty());
 			return (DBObject) JSON.parse(mappedIdValue.toJson());
 		}
-		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
+
+		return super.asDBObject(key, value instanceof Pattern ? value : toQuerydslMongoType(value));
 	}
 
 	/*
@@ -230,5 +234,26 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		}
 
 		return property;
+	}
+
+	Object toQuerydslMongoType(Object source) {
+
+		Object target = converter.convertToMongoType(source);
+
+		if (target instanceof List) {
+
+			BasicDBList newList = new BasicDBList();
+
+			for (Object item : (List) target) {
+				if (item instanceof Document) {
+					newList.add(new BasicDBObject(BsonUtils.asMap((Document) item)));
+				} else {
+					newList.add(item);
+				}
+			}
+			return newList;
+		}
+
+		return target;
 	}
 }
