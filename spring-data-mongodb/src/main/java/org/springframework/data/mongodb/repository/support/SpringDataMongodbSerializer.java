@@ -236,13 +236,13 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		return property;
 	}
 
-	Object toQuerydslMongoType(Object source) {
+	private Object toQuerydslMongoType(Object source) {
 
 		Object target = converter.convertToMongoType(source);
 
 		if (target instanceof List) {
 
-			BasicDBList newList = new BasicDBList();
+			List<Object> newList = new BasicDBList();
 
 			for (Object item : (List) target) {
 				if (item instanceof Document) {
