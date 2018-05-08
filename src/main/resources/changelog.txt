@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.12.RELEASE (2018-05-08)
+-----------------------------------------------
+* DATAMONGO-1917 - Release 1.10.12 (Ingalls SR12).
+* DATAMONGO-1893 - Exclusions in projection.
+
+
 Changes in version 2.1.0.M2 (2018-04-13)
 ----------------------------------------
 * DATAMONGO-1923 - Adapt to API changes in Spring Data Commons.
