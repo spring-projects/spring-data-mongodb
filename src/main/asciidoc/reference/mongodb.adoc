@@ -366,6 +366,28 @@ NOTE: Username/password credentials used in XML configuration must be URL encode
 Example: `m0ng0@dmin:mo_res:bw6},Qsdxx@admin@database` -> `m0ng0%40dmin:mo_res%3Abw6%7D%2CQsdxx%40admin@database`
 See https://tools.ietf.org/html/rfc3986#section-2.2[section 2.2 of RFC 3986] for further details.
 
+As of MongoDB java driver 3.7.0 there is an alternative entry point to `MongoClient` via the http://search.maven
+.org/#search%7Cgav%7C1%7Cg%3A%22org.mongodb%22%20AND%20a%3A%22mongodb-driver-sync%22[mongodb-driver-sync] artifact.
+`com.mongodb.client.MongoClient` is *not* compatible with `com.mongodb.MongoClient` and does not longer support
+the legacy `DBObject` codec. Therefore it cannot be used with `Querydsl` and requires a different configuration.
+You may use `AbstractMongoClientConfiguration` to leverage the new `MongoClients` builder API.
+
+[source,java]
+----
+@Configuration
+public class MongoClientConfiguration extends AbstractMongoClientConfiguration {
+
+	@Override
+	protected String getDatabaseName() {
+		return "database";
+	}
+
+	@Override
+	public MongoClient mongoClient() {
+		return MongoClients.create("mongodb://localhost:27017/?replicaSet=rs0&w=majority");
+	}
+}
+----
 
 [[mongo.mongo-db-factory-xml]]
 === Registering a MongoDbFactory instance using XML based metadata

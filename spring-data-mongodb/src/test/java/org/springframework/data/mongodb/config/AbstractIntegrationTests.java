@@ -30,9 +30,9 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 
 /**
@@ -43,7 +43,7 @@ import com.mongodb.client.MongoCollection;
 public abstract class AbstractIntegrationTests {
 
 	@Configuration
-	static class TestConfig extends AbstractMongoConfiguration {
+	static class TestConfig extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -52,7 +52,7 @@ public abstract class AbstractIntegrationTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return MongoClients.create();
 		}
 	}
 
