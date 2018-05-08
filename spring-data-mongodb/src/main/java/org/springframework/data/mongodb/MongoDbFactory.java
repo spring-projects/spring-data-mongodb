@@ -58,6 +58,11 @@ public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvi
 	 */
 	PersistenceExceptionTranslator getExceptionTranslator();
 
+	/**
+	 * Get the legacy database entry point. Please consider {@link #getDb()} instead.
+	 *
+	 * @return
+	 */
 	DB getLegacyDb();
 
 	/**

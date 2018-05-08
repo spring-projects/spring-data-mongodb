@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2018 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -26,24 +27,17 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.lang.Nullable;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
- * Base class for Spring Data MongoDB configuration using JavaConfig with {@link com.mongodb.MongoClient}.
- * <p />
- * <strong>INFO:</strong>In case you want to use {@link com.mongodb.client.MongoClients} for configuration please refer
- * to {@link AbstractMongoClientConfiguration}.
+ * Base class for Spring Data MongoDB configuration using JavaConfig with {@link com.mongodb.client.MongoClient}.
  *
- * @author Mark Pollack
- * @author Oliver Gierke
- * @author Thomas Darimont
- * @author Ryan Tenney
  * @author Christoph Strobl
- * @author Mark Paluch
  * @see MongoConfigurationSupport
+ * @since 2.1
  */
 @Configuration
-public abstract class AbstractMongoConfiguration extends MongoConfigurationSupport {
+public abstract class AbstractMongoClientConfiguration extends MongoConfigurationSupport {
 
 	/**
 	 * Return the {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want to expose a
@@ -73,13 +67,13 @@ public abstract class AbstractMongoConfiguration extends MongoConfigurationSuppo
 	 */
 	@Bean
 	public MongoDbFactory mongoDbFactory() {
-		return new SimpleMongoDbFactory(mongoClient(), getDatabaseName());
+		return new SimpleMongoClientDbFactory(mongoClient(), getDatabaseName());
 	}
 
 	/**
 	 * Return the base package to scan for mapped {@link Document}s. Will return the package name of the configuration
 	 * class' (the concrete class, not this one here) by default. So if you have a {@code com.acme.AppConfig} extending
-	 * {@link AbstractMongoConfiguration} the base package will be considered {@code com.acme} unless the method is
+	 * {@link AbstractMongoClientConfiguration} the base package will be considered {@code com.acme} unless the method is
 	 * overridden to implement alternate behavior.
 	 *
 	 * @return the base package to scan for mapped {@link Document} classes or {@literal null} to not enable scanning for
@@ -113,5 +107,4 @@ public abstract class AbstractMongoConfiguration extends MongoConfigurationSuppo
 
 		return converter;
 	}
-
 }
