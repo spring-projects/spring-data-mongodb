@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.7.RELEASE (2018-05-08)
+---------------------------------------------
+* DATAMONGO-1943 - QueryDSL functionality defect while using NOT operator for negate operation.
+* DATAMONGO-1918 - Release 2.0.7 (Kay SR7).
+* DATAMONGO-1893 - Exclusions in projection.
+* DATAMONGO-1819 - Discovering the preferred constructor lead to InaccessibleObjectException with Java 9.
+
+
 Changes in version 1.10.12.RELEASE (2018-05-08)
 -----------------------------------------------
 * DATAMONGO-1917 - Release 1.10.12 (Ingalls SR12).
