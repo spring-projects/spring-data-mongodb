@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ public class Field {
 	private final Map<String, Integer> criteria = new HashMap<String, Integer>();
 	private final Map<String, Object> slices = new HashMap<String, Object>();
 	private final Map<String, Criteria> elemMatchs = new HashMap<String, Criteria>();
-	private String postionKey;
+	private String positionKey;
 	private int positionValue;
 
 	public Field include(String key) {
@@ -66,7 +66,7 @@ public class Field {
 	/**
 	 * The array field must appear in the query. Only one positional {@code $} operator can appear in the projection and
 	 * only one array field can appear in the query.
-	 * 
+	 *
 	 * @param field query array field, must not be {@literal null} or empty.
 	 * @param value
 	 * @return
@@ -75,7 +75,7 @@ public class Field {
 
 		Assert.hasText(field, "DocumentField must not be null or empty!");
 
-		postionKey = field;
+		positionKey = field;
 		positionValue = value;
 
 		return this;
@@ -94,14 +94,14 @@ public class Field {
 			dbo.put(entry.getKey(), dbObject);
 		}
 
-		if (postionKey != null) {
-			dbo.put(postionKey + ".$", positionValue);
+		if (positionKey != null) {
+			dbo.put(positionKey + ".$", positionValue);
 		}
 
 		return dbo;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
@@ -130,14 +130,14 @@ public class Field {
 			return false;
 		}
 
-		boolean samePositionKey = this.postionKey == null ? that.postionKey == null
-				: this.postionKey.equals(that.postionKey);
+		boolean samePositionKey = this.positionKey == null ? that.positionKey == null
+				: this.positionKey.equals(that.positionKey);
 		boolean samePositionValue = this.positionValue == that.positionValue;
 
 		return samePositionKey && samePositionValue;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -149,7 +149,7 @@ public class Field {
 		result += 31 * ObjectUtils.nullSafeHashCode(this.criteria);
 		result += 31 * ObjectUtils.nullSafeHashCode(this.elemMatchs);
 		result += 31 * ObjectUtils.nullSafeHashCode(this.slices);
-		result += 31 * ObjectUtils.nullSafeHashCode(this.postionKey);
+		result += 31 * ObjectUtils.nullSafeHashCode(this.positionKey);
 		result += 31 * ObjectUtils.nullSafeHashCode(this.positionValue);
 
 		return result;
