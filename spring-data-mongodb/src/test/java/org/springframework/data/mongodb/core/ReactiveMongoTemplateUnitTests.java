@@ -233,7 +233,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void replaceOneShouldUseCollationWhenPresent() {
 
-		when(collection.replaceOne(any(Bson.class), any(), any())).thenReturn(Mono.empty());
+		when(collection.replaceOne(any(Bson.class), any(), any(UpdateOptions.class))).thenReturn(Mono.empty());
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class)
 				.subscribe();
