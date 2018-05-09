@@ -38,7 +38,7 @@ public class Field {
 	private final Map<String, Integer> criteria = new HashMap<String, Integer>();
 	private final Map<String, Object> slices = new HashMap<String, Object>();
 	private final Map<String, Criteria> elemMatchs = new HashMap<String, Criteria>();
-	private @Nullable String postionKey;
+	private @Nullable String positionKey;
 	private int positionValue;
 
 	public Field include(String key) {
@@ -78,7 +78,7 @@ public class Field {
 
 		Assert.hasText(field, "DocumentField must not be null or empty!");
 
-		postionKey = field;
+		positionKey = field;
 		positionValue = value;
 
 		return this;
@@ -97,8 +97,8 @@ public class Field {
 			document.put(entry.getKey(), new Document("$elemMatch", entry.getValue().getCriteriaObject()));
 		}
 
-		if (postionKey != null) {
-			document.put(postionKey + ".$", positionValue);
+		if (positionKey != null) {
+			document.put(positionKey + ".$", positionValue);
 		}
 
 		return document;
