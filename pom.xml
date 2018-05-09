@@ -115,38 +115,6 @@
 
 	<profiles>
 
-		<!-- not-yet available profile>
-
-			<id>mongo35-next</id>
-			<properties>
-				<mongo>3.5.1-SNAPSHOT</mongo>
-			</properties>
-
-			<repositories>
-				<repository>
-					<id>mongo-snapshots</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-				</repository>
-			</repositories>
-
-		</profile -->
-
-		<profile>
-
-			<id>mongo36-next</id>
-			<properties>
-				<mongo>3.6.0-SNAPSHOT</mongo>
-			</properties>
-
-			<repositories>
-				<repository>
-					<id>mongo-snapshots</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-				</repository>
-			</repositories>
-
-		</profile>
-
 		<profile>
 			<id>release</id>
 			<build>
