@@ -1,19 +1,16 @@
 [[mongo.reactive.repositories]]
 = Reactive MongoDB repositories
 
-[[mongo.reactive.repositories.intro]]
-== Introduction
-
-This chapter will point out the specialties for reactive repository support for MongoDB. This builds on the core repository support explained in <<repositories>>. So make sure you've got a sound understanding of the basic concepts explained there.
+This chapter describes the specialties for reactive repository support for MongoDB. This chapter builds on the core repository support explained in <<repositories>>. You should have a sound understanding of the basic concepts explained there.
 
 [[mongo.reactive.repositories.libraries]]
 == Reactive Composition Libraries
 
 The reactive space offers various reactive composition libraries. The most common libraries are https://github.com/ReactiveX/RxJava[RxJava] and https://projectreactor.io/[Project Reactor].
 
-Spring Data MongoDB is built on top of the https://mongodb.github.io/mongo-java-driver-reactivestreams/[MongoDB Reactive Streams] driver to provide maximal interoperability relying on the http://www.reactive-streams.org/[Reactive Streams] initiative. Static APIs such as `ReactiveMongoOperations` are provided by using Project Reactor's `Flux` and `Mono` types. Project Reactor offers various adapters to convert reactive wrapper types  (`Flux` to `Observable` and vice versa) but conversion can easily clutter your code.
+Spring Data MongoDB is built on top of the https://mongodb.github.io/mongo-java-driver-reactivestreams/[MongoDB Reactive Streams] driver, to provide maximal interoperability by relying on the http://www.reactive-streams.org/[Reactive Streams] initiative. Static APIs, such as `ReactiveMongoOperations`, are provided by using Project Reactor's `Flux` and `Mono` types. Project Reactor offers various adapters to convert reactive wrapper types  (`Flux` to `Observable` and vice versa), but conversion can easily clutter your code.
 
-Spring Data's Repository abstraction is a dynamic API, mostly defined by you and your requirements, as you're declaring query methods. Reactive MongoDB repositories can be either implemented using RxJava or Project Reactor wrapper types by simply extending from one of the library-specific repository interfaces:
+Spring Data's Repository abstraction is a dynamic API, mostly defined by you and your requirements as you declare query methods. Reactive MongoDB repositories can be implemented by using either RxJava or Project Reactor wrapper types by extending from one of the following library-specific repository interfaces:
 
 * `ReactiveCrudRepository`
 * `ReactiveSortingRepository`
@@ -25,9 +22,9 @@ Spring Data converts reactive wrapper types behind the scenes so that you can st
 [[mongo.reactive.repositories.usage]]
 == Usage
 
-To access domain entities stored in a MongoDB you can leverage our sophisticated repository support that eases implementing those quite significantly. To do so, simply create an interface for your repository:
+To access domain entities stored in a MongoDB database, you can use our sophisticated repository support that eases implementing those quite significantly. To do so, create an interface similar for your repository. Before you can do that, though, you need an entity, such as the entity defined in the following example:
 
-.Sample Person entity
+.Sample `Person` entity
 ====
 [source,java]
 ----
@@ -44,7 +41,7 @@ public class Person {
 ----
 ====
 
-We have a quite simple domain object here. Note that it has a property named `id` of type `ObjectId`. The default serialization mechanism used in `MongoTemplate` (which is backing the repository support) regards properties named id as document id. Currently we support `String`, `ObjectId` and `BigInteger` as id-types.
+Note that the entity defined in the preceding example has a property named `id` of type `ObjectId`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as id-types. The following example shows how to create an interface that defines queries against the `Person` object from the preceding example:
 
 .Basic repository interface to persist Person entities
 ====
@@ -63,18 +60,20 @@ public interface ReactivePersonRepository extends ReactiveSortingRepository<Pers
   Mono<Person> findFirstByLastname(String lastname);                                <5>
 }
 ----
-<1> The method shows a query for all people with the given lastname. The query will be derived parsing the method name for constraints which can be concatenated with `And` and `Or`. Thus the method name will result in a query expression of `{"lastname" : lastname}`.
-<2> The method shows a query for all people with the given firstname once the firstname is emitted via the given `Publisher`.
-<3> Use `Pageable` to pass on offset and sorting parameters to the database.
-<4> Find a single entity for given criteria. Completes with `IncorrectResultSizeDataAccessException` on non unique results.
-<5> Unless <4> the first entity is always emitted even if the query yields more result documents.
+<1> The method shows a query for all people with the given `lastname`. The query us derived by parsing the method name for constraints that can be concatenated with `And` and `Or`. Thus, the method name results in a query expression of `{"lastname" : lastname}`.
+<2> The method shows a query for all people with the given `firstname` once the `firstname` is emitted by the given `Publisher`.
+<3> Use `Pageable` to pass offset and sorting parameters to the database.
+<4> Find a single entity for the given criteria. It completes with `IncorrectResultSizeDataAccessException` on non-unique results.
+<5> Unless <4>, the first entity is always emitted even if the query yields more result documents.
 ====
 
-For JavaConfig use the `@EnableReactiveMongoRepositories` annotation. The annotation carries the very same attributes like the namespace element. If no base package is configured the infrastructure will scan the package of the annotated configuration class.
+For Java configuration, use the `@EnableReactiveMongoRepositories` annotation. The annotation carries the same attributes as the namespace element. If no base package is configured, the infrastructure scans the package of the annotated configuration class.
 
-NOTE: MongoDB uses two different drivers for blocking and reactive (non-blocking) data access. It's required to create a connection using the Reactive Streams driver to provide the required infrastructure for Spring Data's Reactive MongoDB support hence you're required to provide a separate Configuration for MongoDB's Reactive Streams driver. Please also note that your application will operate on two different connections if using Reactive and Blocking Spring Data MongoDB Templates and Repositories.
+NOTE: MongoDB uses two different drivers for blocking and reactive (non-blocking) data access. You must create a connection by using the Reactive Streams driver to provide the required infrastructure for Spring Data's Reactive MongoDB support. Consequently, you must provide a separate configuration for MongoDB's Reactive Streams driver. Note that your application operates on two different connections if you use reactive and blocking Spring Data MongoDB templates and repositories.
 
-.JavaConfig for repositories
+The following listing shows how to use Java configuration for a repository:
+
+.Java configuration for repositories
 ====
 [source,java]
 ----
@@ -100,7 +99,7 @@ class ApplicationConfig extends AbstractReactiveMongoConfiguration {
 ----
 ====
 
-As our domain repository extends `ReactiveSortingRepository` it provides you with CRUD operations as well as methods for sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client.
+Because our domain repository extends `ReactiveSortingRepository`, it provides you with CRUD operations as well as methods for sorted access to the entities. Working with the repository instance is a matter of dependency injecting it into a client, as the following example shows:
 
 .Sorted access to Person entities
 ====
@@ -123,7 +122,7 @@ public class PersonRepositoryTests {
 
 Spring Data's Reactive MongoDB support comes with a reduced feature set compared to the blocking <<mongo.repositories,MongoDB Repositories>>.
 
-Following features are supported:
+It supports the following features:
 
 * Query Methods using <<mongodb.repositories.queries,String queries and Query Derivation>>
 * <<mongodb.reactive.repositories.queries.geo-spatial>>
@@ -132,12 +131,14 @@ Following features are supported:
 * <<mongodb.repositories.queries.full-text>>
 * <<projections>>
 
-WARNING: Reactive Repositories do not support Type-safe Query methods using Querydsl.
+WARNING: Reactive Repositories do not support type-safe query methods that use `Querydsl`.
 
 [[mongodb.reactive.repositories.queries.geo-spatial]]
-=== Geo-spatial repository queries
+=== Geo-spatial Repository Queries
 
-As you've just seen there are a few keywords triggering geo-spatial operations within a MongoDB query. The `Near` keyword allows some further modification. Let's have look at some examples:
+As you saw earlier in "`<<mongodb.reactive.repositories.queries.geo-spatial>>`", a few keywords trigger geo-spatial operations within a MongoDB query. The `Near` keyword allows some further modification, as the next few examples show.
+
+The following example shows how to define a `near` query that finds all persons with a given distance of a given point:
 
 .Advanced `Near` queries
 ====
@@ -151,9 +152,7 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 ----
 ====
 
-Adding a `Distance` parameter to the query method allows restricting results to those within the given distance. If the `Distance` was set up containing a `Metric` we will transparently use `$nearSphere` instead of $code.
-
-NOTE: Reactive Geo-spatial repository queries support the domain type and `GeoResult<T>` results within a reactive wrapper type. `GeoPage` and `GeoResults` are not supported as they contradict the deferred result approach with pre-calculating the average distance. Howevery, you can still pass in a `Pageable` argument to page results yourself.
+Adding a `Distance` parameter to the query method allows restricting results to those within the given distance. If the `Distance` was set up containing a `Metric`, we transparently use `$nearSphere` instead of $code, as the following example shows:
 
 .Using `Distance` with `Metrics`
 ====
@@ -166,11 +165,17 @@ Distance distance = new Distance(200, Metrics.KILOMETERS);
 ----
 ====
 
-As you can see using a `Distance` equipped with a `Metric` causes `$nearSphere` clause to be added instead of a plain `$near`. Beyond that the actual distance gets calculated according to the `Metrics` used.
+NOTE: Reactive Geo-spatial repository queries support the domain type and `GeoResult<T>` results within a reactive wrapper type. `GeoPage` and `GeoResults` are not supported as they contradict the deferred result approach with pre-calculating the average distance. Howevery, you can still pass in a `Pageable` argument to page results yourself.
+
+Using a `Distance` with a `Metric` causes a `$nearSphere` (instead of a plain `$near`) clause to be added. Beyond that, the actual distance gets calculated according to the `Metrics` used.
+
+(Note that `Metric` does not refer to metric units of measure. It could be miles rather than kilometers. Rather, `metric` refers to the concept of a system of measurement, regardless of which system you use.)
 
 NOTE: Using `@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)` on the target property forces usage of `$nearSphere` operator.
 
-==== Geo-near queries
+==== Geo-near Queries
+
+Spring Data MongoDb supports geo-near queries, as the following example shows:
 
 [source,java]
 ----
@@ -197,9 +202,9 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 [[mongo.reactive.repositories.infinite-streams]]
 == Infinite Streams with Tailable Cursors
 
-By default, MongoDB will automatically close a cursor when the client exhausts all results supplied by the cursor. Closing a cursor on exhaustion turns a stream into a finite stream. For https://docs.mongodb.com/manual/core/capped-collections/[capped collections] you may use a https://docs.mongodb.com/manual/core/tailable-cursors/[Tailable Cursor] that remains open after the client consumes all initially returned data. Using tailable cursors with a reactive data types allows construction of infinite streams. A tailable cursor remains open until it is closed externally. It emits data as new documents arrive in a capped collection.
+By default, MongoDB automatically closes a cursor when the client exhausts all results supplied by the cursor. Closing a cursor on exhaustion turns a stream into a finite stream. For https://docs.mongodb.com/manual/core/capped-collections/[capped collections], you can use a https://docs.mongodb.com/manual/core/tailable-cursors/[Tailable Cursor] that remains open after the client consumes all initially returned data. Using tailable cursors with a reactive data types allows construction of infinite streams. A tailable cursor remains open until it is closed externally. It emits data as new documents arrive in a capped collection.
 
-Tailable cursors may become dead, or invalid, if either the query returns no match or the cursor returns the document at the "end" of the collection and then the application deletes that document.
+Tailable cursors may become dead, or invalid, if either the query returns no match or the cursor returns the document at the "`end`" of the collection and the application then deletes that document. The following example shows how to create and use an infinite stream query:
 
 
 .Infinite Stream queries with ReactiveMongoOperations
@@ -217,7 +222,7 @@ subscription.dispose();
 ----
 ====
 
-Spring Data MongoDB Reactive repositories support infinite streams by annotating a query method with `@Tailable`. This works for methods returning `Flux` and other reactive types capable of emitting multiple elements.
+Spring Data MongoDB Reactive repositories support infinite streams by annotating a query method with `@Tailable`. This works for methods that return `Flux` and other reactive types capable of emitting multiple elements, as the following example shows:
 
 .Infinite Stream queries with ReactiveMongoRepository
 ====
@@ -242,4 +247,4 @@ subscription.dispose();
 ----
 ====
 
-TIP: Capped collections can be created via `MongoOperations.createCollection`. Just provide the required `CollectionOptions.empty().capped()...`
+TIP: Capped collections can be created with `MongoOperations.createCollection`. To do so, provide the required `CollectionOptions.empty().capped()...`.

@@ -2,61 +2,60 @@
 = New & Noteworthy
 
 [[new-features.2-0-0]]
-== What's new in Spring Data MongoDB 2.0
+== What's New in Spring Data MongoDB 2.0
 * Upgrade to Java 8.
-* Usage of the `Document` API instead of `DBObject`.
+* Usage of the `Document` API, instead of `DBObject`.
 * <<mongo.reactive>>.
 * <<mongo.reactive.repositories.infinite-streams,Tailable Cursor>> queries.
-* Support for aggregation result streaming via Java 8 `Stream`.
+* Support for aggregation result streaming by using Java 8 `Stream`.
 * <<mongo.query.fluent-template-api,Fluent Collection API>> for CRUD and aggregation operations.
-* Kotlin extensions for Template and Collection API.
+* Kotlin extensions for Template and Collection APIs.
 * Integration of collations for collection and index creation and query operations.
 * Query-by-Example support without type matching.
-* Add support for isolation ``Update``s.
-* Tooling support for null-safety via Spring's `@NonNullApi` and `@Nullable` annotations.
+* Support for isolation `Update` operations.
+* Tooling support for null-safety by using Spring's `@NonNullApi` and `@Nullable` annotations.
 * Deprecated cross-store support and removed Log4j appender.
 
 [[new-features.1-10-0]]
-== What's new in Spring Data MongoDB 1.10
+== What's New in Spring Data MongoDB 1.10
 * Compatible with MongoDB Server 3.4 and the MongoDB Java Driver 3.4.
-* New annotations for `@CountQuery`, `@DeleteQuery` and `@ExistsQuery`.
+* New annotations for `@CountQuery`, `@DeleteQuery`, and `@ExistsQuery`.
 * Extended support for MongoDB 3.2 and MongoDB 3.4 aggregation operators (see <<mongo.aggregation.supported-aggregation-operations>>).
-* Support partial filter expression when creating indexes.
-* Publish lifecycle events when loading/converting ``DBRef``s.
+* Support for partial filter expression when creating indexes.
+* Publishing lifecycle events when loading or converting `DBRef` instances.
 * Added any-match mode for Query By Example.
 * Support for `$caseSensitive` and `$diacriticSensitive` text search.
 * Support for GeoJSON Polygon with hole.
-* Performance improvements by bulk fetching ``DBRef``s.
-* Multi-faceted aggregations using `$facet`, `$bucket` and `$bucketAuto` via `Aggregation`.
+* Performance improvements by bulk-fetching `DBRef` instances.
+* Multi-faceted aggregations using `$facet`, `$bucket`, and `$bucketAuto` with `Aggregation`.
 
 [[new-features.1-9-0]]
-== What's new in Spring Data MongoDB 1.9
-* The following annotations have been enabled to build own, composed annotations: `@Document`, `@Id`, `@Field`, `@Indexed`, `@CompoundIndex`, `@GeoSpatialIndexed`, `@TextIndexed`, `@Query`, `@Meta`.
+== What's New in Spring Data MongoDB 1.9
+* The following annotations have been enabled to build your own composed annotations: `@Document`, `@Id`, `@Field`, `@Indexed`, `@CompoundIndex`, `@GeoSpatialIndexed`, `@TextIndexed`, `@Query`, and `@Meta`.
 * Support for <<projections>> in repository query methods.
 * Support for <<query-by-example>>.
 * Out-of-the-box support for `java.util.Currency` in object mapping.
-* Add support for the bulk operations introduced in MongoDB 2.6.
+* Support for the bulk operations introduced in MongoDB 2.6.
 * Upgrade to Querydsl 4.
 * Assert compatibility with MongoDB 3.0 and MongoDB Java Driver 3.2 (see: <<mongo.mongo-3>>).
 
 [[new-features.1-8-0]]
-== What's new in Spring Data MongoDB 1.8
+== What's New in Spring Data MongoDB 1.8
 
 * `Criteria` offers support for creating `$geoIntersects`.
-* Support http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#expressions[SpEL expressions] in `@Query`.
-* `MongoMappingEvents` expose the collection name they are issued for.
+* Support for http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#expressions[SpEL expressions] in `@Query`.
+* `MongoMappingEvents` expose the collection name for which they are issued.
 * Improved support for `<mongo:mongo-client credentials="..." />`.
 * Improved index creation failure error message.
 
 [[new-features.1-7-0]]
-== What's new in Spring Data MongoDB 1.7
+== What's New in Spring Data MongoDB 1.7
 
 * Assert compatibility with MongoDB 3.0 and MongoDB Java Driver 3-beta3 (see: <<mongo.mongo-3>>).
 * Support JSR-310 and ThreeTen back-port date/time types.
-* Allow `Stream` as query method return type (see: <<mongodb.repositories.queries>>).
-* Added http://geojson.org/[GeoJSON] support in both domain types and queries (see: <<mongo.geo-json>>).
+* Allow `Stream` as a query method return type (see: <<mongodb.repositories.queries>>).
+* http://geojson.org/[GeoJSON] support in both domain types and queries (see: <<mongo.geo-json>>).
 * `QueryDslPredicateExcecutor` now supports `findAll(OrderSpecifier<?>… orders)`.
-* Support calling JavaScript functions via <<mongo.server-side-scripts>>.
-* Improve support for `CONTAINS` keyword on collection like properties.
-* Support for `$bit`, `$mul` and `$position` operators to `Update`.
-
+* Support calling JavaScript functions with <<mongo.server-side-scripts>>.
+* Improve support for `CONTAINS` keyword on collection-like properties.
+* Support for `$bit`, `$mul`, and `$position` operators to `Update`.
