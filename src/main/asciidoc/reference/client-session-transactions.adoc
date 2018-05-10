@@ -1,15 +1,15 @@
 [[mongo.sessions]]
 = MongoDB Sessions
 
-As of version 3.6, MongoDB supports a concept of Sessions. The use of sessions enables MongoDB's https://docs.mongodb.com/manual/core/read-isolation-consistency-recency/#causal-consistency[Causal Consistency] model guaranteeing to execute operations in an order that respect their causal relationships. Those are split into ``ServerSession``s and ``ClientSession``s. In the following when we speak of session, we refer to `ClientSession`.
+As of version 3.6, MongoDB supports the concept of "`Sessions`". The use of sessions enables MongoDB's https://docs.mongodb.com/manual/core/read-isolation-consistency-recency/#causal-consistency[Causal Consistency] model, which guarantees running operations in an order that respects their causal relationships. Those are split into `ServerSession` instancess and `ClientSession` instances. In this section, when we speak of a session, we refer to `ClientSession`.
 
 WARNING: Operations within a client session are not isolated from operations outside the session.
 
-Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for tying a `ClientSession` to the operations themselves. `MongoCollection` and `MongoDatabase` use session proxy objects implementing MongoDB's collection and database interfaces, so there's no need to add a session on each call. This means that a potential call to `MongoCollection#find()` is delegated to `MongoCollection#find(ClientSession)`.
+Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for tying a `ClientSession` to the operations. `MongoCollection` and `MongoDatabase` use session proxy objects that implement MongoDB's collection and database interfaces, so you need not add a session on each call. This means that a potential call to `MongoCollection#find()` is delegated to `MongoCollection#find(ClientSession)`.
 
-NOTE: Methods like `(Reactive)MongoOperations#getCollection` returning native MongoDB Java Driver gateway objects, such as `MongoCollection`, that themselves offer dedicated methods for `ClientSession` are *NOT* be session-proxied. So make sure to provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not via one of the `#execute` callbacks on `MongoOperations`.
+NOTE: Methods such as `(Reactive)MongoOperations#getCollection` return native MongoDB Java Driver gateway objects (such as `MongoCollection`) that themselves offer dedicated methods for `ClientSession`. These methods are *NOT* be session-proxied. You should provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not through one of the `#execute` callbacks on `MongoOperations`.
 
-Let's take a look at a simple session example:
+The following example shows a session:
 
 .`ClientSession` with `MongoOperations`
 ====
@@ -40,11 +40,12 @@ session.close()                                              <4>
 <1> Obtain a new session from the server.
 <2> Use `MongoOperation` methods as before. The `ClientSession` gets applied automatically.
 <3> Make sure to close the `ClientSession`.
+<4> Close the session.
 ====
 
-WARNING: When dealing with ``DBRef``s, especially lazily loaded ones, it is essential to **not** close the `ClientSession` before all data is loaded. Otherwise, lazy fetch fails.
+WARNING: When dealing with `DBRef` instances, especially lazily loaded ones, it is essential to *not* close the `ClientSession` before all data is loaded. Otherwise, lazy fetch fails.
 
-The reactive counterpart uses the very same building blocks as the imperative one:
+The reactive counterpart uses the same building blocks as the imperative one, as the following example shows:
 
 .ClientSession with `ReactiveMongoOperations`
 ====
@@ -69,27 +70,28 @@ template.withSession(session)
                 return action.insert(azoth);                            <2>
             });
     }, ClientSession::close)                                            <3>
-    .subscribe();
+    .subscribe();                                                       <4>
 ----
 <1> Obtain a `Publisher` for new session retrieval.
 <2> Use `ReactiveMongoOperation` methods as before. The `ClientSession` is obtained and applied automatically.
 <3> Make sure to close the `ClientSession`.
+<4> Nothing happens until you subscribe. See http://projectreactor.io/docs/core/release/reference/#reactive.subscribe[the Project Reactor Reference Guide] for details.
 ====
 
-By using a `Publisher` providing the actual session, you can defer session acquisition to the point of actual subscription.
-Still, you need to close the session when done to not pollute the server with stale sessions. Use the `doFinally` hook on `execute` to call `ClientSession#close()` when you don't need the session anymore.
-In case you prefer having more control over the session itself, you can always obtain the `ClientSession` via the driver and provide it via a `Supplier`.
+By using a `Publisher` that provides the actual session, you can defer session acquisition to the point of actual subscription.
+Still, you need to close the session when done, so as to not pollute the server with stale sessions. Use the `doFinally` hook on `execute` to call `ClientSession#close()` when you no longer need the session.
+If you prefer having more control over the session itself, you can obtain the `ClientSession` through the driver and provide it through a `Supplier`.
 
 [[mongo.transactions]]
 = MongoDB Transactions
 
-As of version 4, MongoDB supports https://www.mongodb.com/transactions[Transactions]. Transactions are built on top of <<mongo.sessions,Sessions>> and therefore require an active `ClientSession`.
+As of version 4, MongoDB supports https://www.mongodb.com/transactions[Transactions]. Transactions are built on top of <<mongo.sessions,Sessions>> and, consequently, require an active `ClientSession`.
 
-NOTE: Unless you specify a `MongoTransactionManager` within your application context, transaction support is **DISABLED**. You may use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
+NOTE: Unless you specify a `MongoTransactionManager` within your application context, transaction support is *DISABLED*. You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
 
 To get full programmatic control over transactions, you may want to use the session callback on `MongoOperations`.
 
-An example of programmatic transaction control within a `SessionCallback` is shown below:
+The following example shows programmatic transaction control within a `SessionCallback`:
 
 .Programmatic transactions
 ====
@@ -121,15 +123,17 @@ template.withSession(session)
 ----
 <1> Obtain a new `ClientSession`.
 <2> Start the transaction.
-<3> If everything works out as expected, go on and commit the changes.
-<4> Something broke, just roll back everything.
+<3> If everything works out as expected, commit the changes.
+<4> Something broke, so roll back everything.
 <5> Do not forget to close the session when done.
 ====
 
-The above example allows you to have full control over transactional behavior while using the session scoped `MongoOperations` instance within the callback to ensure the session is passed on to every server call.
-To avoid some of the overhead that comes with this approach usage of a `TransactionTemplate` can take away some of the noise of manual transaction flow.
+The preceding example lets you have full control over transactional behavior while using the session scoped `MongoOperations` instance within the callback to ensure the session is passed on to every server call.
+To avoid some of the overhead that comes with this approach, you can use a `TransactionTemplate` to take away some of the noise of manual transaction flow.
 
 == Transactions with `TransactionTemplate`
+
+Spring Data MongoDB transactions support a `TransactionTemplate`. The following example shows how to create and use a `TransactionTemplate`:
 
 .Transactions with `TransactionTemplate`
 ====
@@ -155,15 +159,17 @@ txTemplate.execute(new TransactionCallbackWithoutResult() {
 	};
 });
 ----
-<1> Enable transaction synchronization during Template API configuration. Changing state of `MongoTemplate` during runtime can cause threading/visibility issues.
+<1> Enable transaction synchronization during Template API configuration.
 <2> Create the `TransactionTemplate` using the provided `PlatformTransactionManager`.
 <3> Within the callback the `ClientSession` and transaction are already registered.
 ====
 
+CAUTION: Changing state of `MongoTemplate` during runtime (as you might think would be possible in item 1 of the preceding listing) can cause threading and visibility issues.
+
 == Transactions with `MongoTransactionManager`
 
-`MongoTransactionManager` is the gateway to the well known Spring transaction support. It allows applications to use http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/transaction.html[managed transaction features of Spring].
-The `MongoTransactionManager` binds a `ClientSession` to the thread. `MongoTemplate` detects those and operates on these resources which are associated with the transaction accordingly. `MongoTemplate` can also participate in other, ongoing transactions.
+`MongoTransactionManager` is the gateway to the well known Spring transaction support. It lets applications use  http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/transaction.html[the managed transaction features of Spring].
+The `MongoTransactionManager` binds a `ClientSession` to the thread. `MongoTemplate` detects the session and operates on these resources which are associated with the transaction accordingly. `MongoTemplate` can also participate in other, ongoing transactions. The following example shows how to create and use transactions with a `MongoTransactionManager`:
 
 .Transactions with `MongoTransactionManager`
 ====
@@ -199,5 +205,5 @@ public class StateService {
 <2> Mark methods as transactional.
 ====
 
-NOTE: `@Transactional(readOnly = true)` advises `MongoTransactionManager` also to start a transaction adding the
+NOTE: `@Transactional(readOnly = true)` advises `MongoTransactionManager` to also start a transaction that adds the
  `ClientSession` to outgoing requests.

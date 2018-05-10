@@ -1,24 +1,26 @@
 [[mongo.mongo-3]]
 = MongoDB 3.0 Support
 
-Spring Data MongoDB allows usage of both MongoDB Java driver generations 2 and 3 when connecting to a MongoDB 2.6/3.0 server running _MMap.v1_ or a MongoDB server 3.0 using _MMap.v1_ or the _WiredTiger_ storage engine.
+Spring Data MongoDB allows usage of both MongoDB Java driver generations 2 and 3 when connecting to a MongoDB 2.6/3.0 server running MMap.v1 or a MongoDB server 3.0 using MMap.v1 or the WiredTiger storage engine.
 
-NOTE: Please refer to the driver and database specific documentation for major differences between those.
+NOTE: See the driver- and database-specific documentation for major differences between those engines.
 
-NOTE: Operations that are no longer valid using a 3.x MongoDB Java driver have been deprecated within Spring Data and will be removed in a subsequent release.
+NOTE: Operations that are no longer valid when using a 3.x MongoDB Java driver have been deprecated within Spring Data and will be removed in a subsequent release.
 
 == Using Spring Data MongoDB with MongoDB 3.0
+
+The rest of this section describes how to use Spring Data MongoDB with MongoDB 3.0.
 
 [[mongo.mongo-3.configuration]]
 === Configuration Options
 
-Some of the configuration options have been changed / removed for the _mongo-java-driver_. The following options will be ignored using the generation 3 driver:
+Some of the configuration options have been changed or removed for the `mongo-java-driver`. The following options are ignored when using the generation 3 driver:
 
- * autoConnectRetry
- * maxAutoConnectRetryTime
- * slaveOk
+ * `autoConnectRetry`
+ * `maxAutoConnectRetryTime`
+ * `slaveOk`
 
-Generally it is recommended to use the `<mongo:mongo-client ... />` and `<mongo:client-options ... />` elements instead of `<mongo:mongo ... />` when doing XML based configuration, since those elements will only provide you with attributes valid for the 3 generation java driver.
+Generally, you should use the `<mongo:mongo-client ... />` and `<mongo:client-options ... />` elements instead of `<mongo:mongo ... />` when doing XML based configuration, since those elements provide you with attributes that are only valid for the third generation Java driver. The follwoing example shows how to configure a Mongo client connection:
 
 [source,xml]
 ----
@@ -37,14 +39,14 @@ Generally it is recommended to use the `<mongo:mongo-client ... />` and `<mongo:
 ----
 
 [[mongo.mongo-3.write-concern]]
-=== WriteConcern and WriteConcernChecking
+=== `WriteConcern` and `WriteConcernChecking`
 
-The `WriteConcern.NONE`, which had been used as default by Spring Data MongoDB, was removed in 3.0. Therefore in a MongoDB 3 environment the `WriteConcern` will be defaulted to `WriteConcern.UNACKNOWLEGED`. In case `WriteResultChecking.EXCEPTION` is enabled the `WriteConcern` will be altered to `WriteConcern.ACKNOWLEDGED` for write operations, as otherwise errors during execution would not be throw correctly, since simply not raised by the driver.
+`WriteConcern.NONE`, which had been used as the default by Spring Data MongoDB, was removed in 3.0. Therefore, in a MongoDB 3 environment, the `WriteConcern` defaults to `WriteConcern.UNACKNOWLEGED`. If `WriteResultChecking.EXCEPTION` is enabled, the `WriteConcern` is altered to `WriteConcern.ACKNOWLEDGED` for write operations. Otherwise, errors during execution would not be thrown correctly, since they are not raised by the driver.
 
 [[mongo.mongo-3.authentication]]
 === Authentication
 
-MongoDB Server generation 3 changed the authentication model when connecting to the DB. Therefore some of the configuration options available for authentication are no longer valid. Please use the `MongoClient` specific options for setting credentials via `MongoCredential` to provide authentication data.
+MongoDB Server generation 3 changed the authentication model when connecting to the DB. Therefore, some of the configuration options available for authentication are no longer valid. You should use the `MongoClient`-specific options when setting credentials with `MongoCredential` to provide authentication data, as the following example shows:
 
 [source,java]
 ----
@@ -65,7 +67,7 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
 }
 ----
 
-In order to use authentication with XML configuration use the `credentials` attribue on `<mongo-client>`.
+In order to use authentication with XML configuration, you can use the `credentials` attribute on `<mongo-client>`, as the following example shows:
 
 [source,xml]
 ----
@@ -92,14 +94,14 @@ This chapter will point out the specialties for validation in MongoDB and how to
 [[mongo.mongo-3.validation.json-schema]]
 ==== JSON Schema Validation
 
-MongoDB 3.6 allows validation and querying of documents using JSON schema draft 4 including core specification and validation specification, with some differences. `$jsonSchema` can be used in a document validator (when creating a collection), which enforces that inserted or updated documents are valid against the schema. It can also be used to query for documents with the `find` command or `$match` aggregation stage.
+MongoDB 3.6 allows validation and querying of documents with JSON schema draft 4 (including core specification and validation specification) with some differences. `$jsonSchema` can be used in a document validator (when creating a collection), which enforces that inserted or updated documents are valid against the schema. It can also be used to query for documents with the `find` command or `$match` aggregation stage.
 
 Spring Data MongoDB supports MongoDB's specific JSON schema implementation to define and use schemas. See <<mongo.jsonSchema,JSON Schema>> for further details.
 
 [[mongo.mongo-3.validation.query-expression]]
 ==== Query Expression Validation
 
-Next to the <<mongo.mongo-3.validation.json-schema>>, MongoDB supports  as of version 3.2 validating documents against a given structure described by a query. The structure can be built using `Criteria` objects just the same way as they are used for defining queries.
+In addition to the <<mongo.mongo-3.validation.json-schema>>, MongoDB supports (as of version 3.2) validating documents against a given structure described by a query. The structure can be built from `Criteria` objects in the same way as they are used for defining queries. The following example shows how to create and use such a validator:
 
 [source,java]
 ----
@@ -111,17 +113,16 @@ Validator validator = Validator.criteria(queryExpression);
 template.createCollection(Person.class, CollectionOptions.empty().validator(validator));
 ----
 
-NOTE: Field names used within the query expression are mapped to the domain types property names taking potential `@Field` annotations into account.
+NOTE: The field names used within the query expression are mapped to the domain types property names, taking potential `@Field` annotations into account.
 
 [[mongo.mongo-3.misc]]
-=== Other things to be aware of
+=== Miscellaneous Details
 
-This section covers additional things to keep in mind when using the 3.0 driver.
+This section covers briefly lists additional things to keep in mind when using the 3.0 driver:
 
 * `IndexOperations.resetIndexCache()` is no longer supported.
 * Any `MapReduceOptions.extraOption` is silently ignored.
-* `WriteResult` does not longer hold error information but throws an Exception.
-* `MongoOperations.executeInSession(…)` no longer calls `requestStart` / `requestDone`.
-* Index name generation has become a driver internal operations, still we use the 2.x schema to generate names.
-* Some Exception messages differ between the generation 2 and 3 servers as well as between _MMap.v1_ and _WiredTiger_ storage engine.
-
+* `WriteResult` no longer holds error information but, instead, throws an `Exception`.
+* `MongoOperations.executeInSession(…)` no longer calls `requestStart` and `requestDone`.
+* Index name generation has become a driver-internal operation. Spring Data MongoDB still uses the 2.x schema to generate names.
+* Some `Exception` messages differ between the generation 2 and 3 servers as well as between the MMap.v1 and WiredTiger storage engines.
