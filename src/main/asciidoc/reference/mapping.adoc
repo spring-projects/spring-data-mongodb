@@ -1,25 +1,25 @@
 [[mapping-chapter]]
 = Mapping
 
-Rich mapping support is provided by the `MappingMongoConverter`. `MappingMongoConverter` has a rich metadata model that provides a full feature set of functionality to map domain objects to MongoDB documents.The mapping metadata model is populated using annotations on your domain objects. However, the infrastructure is not limited to using annotations as the only source of metadata information. The `MappingMongoConverter` also allows you to map objects to documents without providing any additional metadata, by following a set of conventions.
+Rich mapping support is provided by the `MappingMongoConverter`. `MappingMongoConverter` has a rich metadata model that provides a full feature set to map domain objects to MongoDB documents. The mapping metadata model is populated by using annotations on your domain objects. However, the infrastructure is not limited to using annotations as the only source of metadata information. The `MappingMongoConverter` also lets you map objects to documents without providing any additional metadata, by following a set of conventions.
 
-In this section we will describe the features of the `MappingMongoConverter`. How to use conventions for mapping objects to documents and how to override those conventions with annotation based mapping metadata.
+This section describes the features of the `MappingMongoConverter`, including how to use conventions for mapping objects to documents and how to override those conventions with annotation-based mapping metadata.
 
 NOTE: `SimpleMongoConverter` has been deprecated in Spring Data MongoDB M3 as all of its functionality has been subsumed into `MappingMongoConverter`.
 
 [[mapping-conventions]]
-== Convention based Mapping
+== Convention-based Mapping
 
 `MappingMongoConverter` has a few conventions for mapping objects to documents when no additional mapping metadata is provided. The conventions are:
 
-* The short Java class name is mapped to the collection name in the following manner. The class `com.bigbank.SavingsAccount` maps to `savingsAccount` collection name.
-* All nested objects are stored as nested objects in the document and *not* as DBRefs
-* The converter will use any Spring Converters registered with it to override the default mapping of object properties to document field/values.
-* The fields of an object are used to convert to and from fields in the document. Public JavaBean properties are not used.
-* You can have a single non-zero argument constructor whose constructor argument names match top level field names of document, that constructor will be used. Otherwise the zero arg constructor will be used. if there is more than one non-zero argument constructor an exception will be thrown.
+* The short Java class name is mapped to the collection name in the following manner. The class `com.bigbank.SavingsAccount` maps to the `savingsAccount` collection name.
+* All nested objects are stored as nested objects in the document and *not* as DBRefs.
+* The converter uses any Spring Converters registered with it to override the default mapping of object properties to document fields and values.
+* The fields of an object are used to convert to and from fields in the document. Public `JavaBean` properties are not used.
+* If you have a single non-zero-argument constructor whose constructor argument names match top-level field names of document, that constructor is used. Otherwise, the zero-argument constructor is used. If there is more than one non-zero-argument constructor, an exception will be thrown.
 
 [[mapping.conventions.id-field]]
-=== How the `_id` field is handled in the mapping layer
+=== How the `_id` field is handled in the mapping layer.
 
 MongoDB requires that you have an `_id` field for all documents. If you don't provide one the driver will assign a ObjectId with a generated value. The "_id" field can be of any type the, other than arrays, so long as it is unique. The driver naturally supports all primitive types and Dates. When using the `MappingMongoConverter` there are certain rules that govern how properties from the Java class is mapped to this `_id` field.
 
@@ -60,10 +60,12 @@ The following outlines what type conversion, if any, will be done on the propert
 When querying and updating `MongoTemplate` will use the converter to handle conversions of the `Query` and `Update` objects that correspond to the above rules for saving documents so field names and types used in your queries will be able to match what is in your domain classes.
 
 [[mapping-conversion]]
-== Data mapping and type conversion
+== Data Mapping and Type Conversion
 
-This section explain how types are mapped to a MongoDB representation and vice versa. Spring Data MongoDB supports all types that can be represented as BSON, MongoDB's internal document format.
-In addition to these types, Spring Data MongoDB provides a set of built-in converters to map additional types. You can provide your own converters to adjust type conversion, see <<mapping-explicit-converters>> for further details.
+This section explains how types are mapped to and from a MongoDB representation. Spring Data MongoDB supports all types that can be represented as BSON, MongoDB's internal document format.
+In addition to these types, Spring Data MongoDB provides a set of built-in converters to map additional types. You can provide your own converters to adjust type conversion. See <<mapping-explicit-converters>> for further details.
+
+The following provides samples of each available type conversion:
 
 [cols="3,1,6", options="header"]
 .Type
@@ -250,9 +252,9 @@ calling `get()` before the actual conversion
 [[mapping-configuration]]
 == Mapping Configuration
 
-Unless explicitly configured, an instance of `MappingMongoConverter` is created by default when creating a `MongoTemplate`. You can create your own instance of the `MappingMongoConverter` so as to tell it where to scan the classpath at startup your domain classes in order to extract metadata and construct indexes. Also, by creating your own instance you can register Spring converters to use for mapping specific classes to and from the database.
+Unless explicitly configured, an instance of `MappingMongoConverter` is created by default when you create a `MongoTemplate`. You can create your own instance of the `MappingMongoConverter`. Doing so lets you dictate where to in the classpath your domain classes can be found, so that Spring Data MongoDB can extract metadata and construct indexes. Also, by creating your own instance, you can register Spring converters to map specific classes to and from the database.
 
-You can configure the `MappingMongoConverter` as well as `com.mongodb.Mongo` and MongoTemplate either using Java or XML based metadata. Here is an example using Spring's Java based configuration
+You can configure the `MappingMongoConverter` as well as `com.mongodb.Mongo` and MongoTemplate by using either Java-based or XML-based metadata. The following example uses Spring's Java-based configuration:
 
 .@Configuration class to configure MongoDB mapping support
 ====
@@ -296,15 +298,15 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 ----
 ====
 
-`AbstractMongoConfiguration` requires you to implement methods that define a `com.mongodb.Mongo` as well as provide a database name. `AbstractMongoConfiguration` also has a method you can override named  `getMappingBasePackage(…)` which tells the converter where to scan for classes annotated with the `@Document` annotation.
+`AbstractMongoConfiguration` requires you to implement methods that define a `com.mongodb.Mongo` as well as provide a database name. `AbstractMongoConfiguration` also has a method named  `getMappingBasePackage(…)` that you can override to tell the converter where to scan for classes annotated with the `@Document` annotation.
 
-You can add additional converters to the converter by overriding the method afterMappingMongoConverterCreation. Also shown in the above example is a `LoggingEventListener` which logs `MongoMappingEvent` s that are posted onto Spring's `ApplicationContextEvent` infrastructure.
+You can add additional converters to the converter by overriding the `afterMappingMongoConverterCreation` method. Also shown in the preceding example is a `LoggingEventListener`, which logs `MongoMappingEvent` instances that are posted onto Spring's `ApplicationContextEvent` infrastructure.
 
-NOTE: AbstractMongoConfiguration will create a MongoTemplate instance and registered with the container under the name `mongoTemplate`.
+NOTE: `AbstractMongoConfiguration` creates a `MongoTemplate` instance and registers it with the container under the name `mongoTemplate`.
 
-You can also override the method `UserCredentials getUserCredentials()` to provide the username and password information to connect to the database.
+You can also override the `UserCredentials getUserCredentials()` method to provide the username and password information to connect to the database.
 
-Spring's MongoDB namespace enables you to easily enable mapping functionality in XML
+Spring's MongoDB namespace lets you  enable mapping functionality in XML, as the following example shows:
 
 .XML schema to configure MongoDB mapping support
 ====
@@ -351,9 +353,9 @@ Spring's MongoDB namespace enables you to easily enable mapping functionality in
 The `base-package` property tells it where to scan for classes annotated with the `@org.springframework.data.mongodb.core.mapping.Document` annotation.
 
 [[mapping-usage]]
-== Metadata based Mapping
+== Metadata-based Mapping
 
-To take full advantage of the object mapping functionality inside the Spring Data/MongoDB support, you should annotate your mapped objects with the `@Document` annotation. Although it is not necessary for the mapping framework to have this annotation (your POJOs will be mapped correctly, even without any annotations), it allows the classpath scanner to find and pre-process your domain objects to extract the necessary metadata. If you don't use this annotation, your application will take a slight performance hit the first time you store a domain object because the mapping framework needs to build up its internal metadata model so it knows about the properties of your domain object and how to persist them.
+To take full advantage of the object mapping functionality inside the Spring Data MongoDB support, you should annotate your mapped objects with the `@Document` annotation. Although it is not necessary for the mapping framework to have this annotation (your POJOs are mapped correctly, even without any annotations), it lets the classpath scanner find and pre-process your domain objects to extract the necessary metadata. If you do not use this annotation, your application takes a slight performance hit the first time you store a domain object, because the mapping framework needs to build up its internal metadata model so that it knows about the properties of your domain object and how to persist them. The following example shows a domain object:
 
 .Example domain object
 ====
@@ -378,28 +380,28 @@ public class Person {
 ----
 ====
 
-IMPORTANT: The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property and the `@Indexed` annotation tells the mapping framework to call `createIndex(…)` on that property of your document, making searches faster.
+IMPORTANT: The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property, and the `@Indexed` annotation tells the mapping framework to call `createIndex(…)` on that property of your document, making searches faster.
 
 IMPORTANT: Automatic index creation is only done for types annotated with `@Document`.
 
 [[mapping-usage-annotations]]
-=== Mapping annotation overview
+=== Mapping Annotation Overview
 
-The MappingMongoConverter can use metadata to drive the mapping of objects to documents. An overview of the annotations is provided below
+The MappingMongoConverter can use metadata to drive the mapping of objects to documents. The following annotations are available:
 
-* `@Id` - applied at the field level to mark the field used for identity purpose.
-* `@Document` - applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the database will be stored.
-* `@DBRef` - applied at the field to indicate it is to be stored using a com.mongodb.DBRef.
-* `@Indexed` - applied at the field level to describe how to index the field.
-* `@CompoundIndex` - applied at the type level to declare Compound Indexes
-* `@GeoSpatialIndexed` - applied at the field level to describe how to geoindex the field.
-* `@TextIndexed` - applied at the field level to mark the field to be included in the text index.
-* `@Language` - applied at the field level to set the language override property for text index.
-* `@Transient` - by default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
-* `@PersistenceConstructor` - marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved DBObject.
-* `@Value` - this annotation is part of the Spring Framework . Within the mapping framework it can be applied to constructor arguments. This lets you use a Spring Expression Language statement to transform a key's value retrieved in the database before it is used to construct a domain object. In order to reference a property of a given document one has to use expressions like: `@Value("#root.myProperty")` where `root` refers to the root of the given document.
-* `@Field` - applied at the field level and described the name of the field as it will be represented in the MongoDB BSON document thus allowing the name to be different than the fieldname of the class.
-* `@Version` - applied at field level is used for optimistic locking and checked for modification on save operations. The initial value is `zero` which is bumped automatically on every update.
+* `@Id`: Applied at the field level to mark the field used for identity purpose.
+* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the database will be stored.
+* `@DBRef`: Applied at the field to indicate it is to be stored using a com.mongodb.DBRef.
+* `@Indexed`: Applied at the field level to describe how to index the field.
+* `@CompoundIndex`: Applied at the type level to declare Compound Indexes
+* `@GeoSpatialIndexed`: Applied at the field level to describe how to geoindex the field.
+* `@TextIndexed`: Applied at the field level to mark the field to be included in the text index.
+* `@Language`: Applied at the field level to set the language override property for text index.
+* `@Transient`: By default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
+* `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved DBObject.
+* `@Value`: This annotation is part of the Spring Framework . Within the mapping framework it can be applied to constructor arguments. This lets you use a Spring Expression Language statement to transform a key's value retrieved in the database before it is used to construct a domain object. In order to reference a property of a given document one has to use expressions like: `@Value("#root.myProperty")` where `root` refers to the root of the given document.
+* `@Field`: Applied at the field level and described the name of the field as it will be represented in the MongoDB BSON document thus allowing the name to be different than the fieldname of the class.
+* `@Version`: Applied at field level is used for optimistic locking and checked for modification on save operations. The initial value is `zero` which is bumped automatically on every update.
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic. Specific subclasses are using in the MongoDB support to support annotation based metadata. Other strategies are also possible to put in place if there is demand.
 
@@ -534,7 +536,7 @@ public class Person {
 
 NOTE: The text index feature is disabled by default for mongodb v.2.4.
 
-Creating a text index allows accumulating several fields into a searchable full text index. It is only possible to have one text index per collection so all fields marked with `@TextIndexed` are combined into this index. Properties can be weighted to influence document score for ranking results. The default language for the text index is english, to change the default language set `@Document(language="spanish")` to any language you want. Using a property called `language` or `@Language` allows to define a language override on a per document base.
+Creating a text index allows accumulating several fields into a searchable full-text index. It is only possible to have one text index per collection, so all fields marked with `@TextIndexed` are combined into this index. Properties can be weighted to influence the document score for ranking results. The default language for the text index is English. To change the default language, set the `language` attribute to whichever language you want (for example,`@Document(language="spanish")`). Using a property called `language` or `@Language` lets you define a language override on a per document base. The following example shows how to created a text index and set the language to Spanish:
 
 .Example Text Index Usage
 ====
@@ -561,9 +563,9 @@ class Nested {
 [[mapping-usage-references]]
 === Using DBRefs
 
-The mapping framework doesn't have to store child objects embedded within the document. You can also store them separately and use a DBRef to refer to that document. When the object is loaded from MongoDB, those references will be eagerly resolved and you will get back a mapped object that looks the same as if it had been stored embedded within your master document.
+The mapping framework does not have to store child objects embedded within the document. You can also store them separately and use a DBRef to refer to that document. When the object is loaded from MongoDB, those references are eagerly resolved so that you get back a mapped object that looks the same as if it had been stored embedded within your master document.
 
-Here's an example of using a DBRef to refer to a specific document that exists independently of the object in which it is referenced (both classes are shown in-line for brevity's sake):
+The following example uses a DBRef to refer to a specific document that exists independently of the object in which it is referenced (both classes are shown in-line for brevity's sake):
 
 ====
 [source,java]
@@ -589,27 +591,27 @@ public class Person {
 ----
 ====
 
-There's no need to use something like `@OneToMany` because the mapping framework sees that you want a one-to-many relationship because there is a List of objects. When the object is stored in MongoDB, there will be a list of DBRefs rather than the `Account` objects themselves.
+You need not use `@OneToMany` or similar mechanisms because the List of objects tells the mapping framework sees that you want a one-to-many relationship. When the object is stored in MongoDB, there is a list of DBRefs rather than the `Account` objects themselves.
 
-IMPORTANT: The mapping framework does not handle cascading saves. If you change an `Account` object that is referenced by a `Person` object, you must save the Account object separately. Calling `save` on the `Person` object will not automatically save the `Account` objects in the property `accounts`.
+IMPORTANT: The mapping framework does not handle cascading saves. If you change an `Account` object that is referenced by a `Person` object, you must save the `Account` object separately. Calling `save` on the `Person` object does not automatically save the `Account` objects in the `accounts` property.
 
 [[mapping-usage-events]]
 === Mapping Framework Events
 
 Events are fired throughout the lifecycle of the mapping process. This is described in the <<mongodb.mapping-usage.events,Lifecycle Events>> section.
 
-Simply declaring these beans in your Spring ApplicationContext will cause them to be invoked whenever the event is dispatched.
+Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
 
 [[mapping-explicit-converters]]
-=== Overriding Mapping with explicit Converters
+=== Overriding Mapping with Explicit Converters
 
 When storing and querying your objects it is convenient to have a `MongoConverter` instance handle the mapping of all Java types to DBObjects. However, sometimes you may want the `MongoConverter` s do most of the work but allow you to selectively handle the conversion for a particular type or to optimize performance.
 
-To selectively handle the conversion yourself, register one or more one or more `org.springframework.core.convert.converter.Converter` instances with the MongoConverter.
+To selectively handle the conversion yourself, register one or more one or more `org.springframework.core.convert.converter.Converter` instances with the `MongoConverter`.
 
-NOTE: Spring 3.0 introduced a core.convert package that provides a general type conversion system. This is described in detail in the Spring reference documentation section entitled http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/validation.html#core-convert[Spring Type Conversion].
+NOTE: Spring 3.0 introduced a core.convert package that provides a general type conversion system. This is described in detail in the Spring reference documentation section entitled http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/validation.html#core-convert["`Spring Type Conversion`"].
 
-The method `customConversions` in `AbstractMongoConfiguration` can be used to configure Converters. The examples <<mapping-configuration,here>> at the beginning of this chapter show how to perform the configuration using Java and XML.
+You can use the `customConversions` method in `AbstractMongoConfiguration` to configure converters. The examples <<mapping-configuration, at the beginning of this chapter>> show how to perform the configuration using Java and XML.
 
 Below is an example of a Spring Converter implementation that converts from a DBObject to a Person POJO.
 
