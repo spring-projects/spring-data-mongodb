@@ -1,12 +1,12 @@
 [[mongo.jmx]]
 = JMX support
 
-The JMX support for MongoDB exposes the results of executing the 'serverStatus' command on the admin database for a single MongoDB server instance. It also exposes an administrative MBean, MongoAdmin which will let you perform administrative operations such as drop or create a database. The JMX features build upon the JMX feature set available in the Spring Framework. See http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/integration.html#jmx[here ] for more details.
+The JMX support for MongoDB exposes the results of executing the 'serverStatus' command on the admin database for a single MongoDB server instance. It also exposes an administrative MBean, `MongoAdmin`, that lets you perform administrative operations, such as dropping or creating a database. The JMX features build upon the JMX feature set available in the Spring Framework. See http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/integration.html#jmx[here] for more details.
 
 [[mongodb:jmx-configuration]]
 == MongoDB JMX Configuration
 
-Spring's Mongo namespace enables you to easily enable JMX functionality
+Spring's Mongo namespace lets you enable JMX functionality, as the following example shows:
 
 .XML schema to configure MongoDB
 ====
@@ -47,18 +47,18 @@ Spring's Mongo namespace enables you to easily enable JMX functionality
 ----
 ====
 
-This will expose several MBeans
+The preceding code exposes several MBeans:
 
-* AssertMetrics
-* BackgroundFlushingMetrics
-* BtreeIndexCounters
-* ConnectionMetrics
-* GlobalLoclMetrics
-* MemoryMetrics
-* OperationCounters
-* ServerInfo
-* MongoAdmin
+* `AssertMetrics`
+* `BackgroundFlushingMetrics`
+* `BtreeIndexCounters`
+* `ConnectionMetrics`
+* `GlobalLockMetrics`
+* `MemoryMetrics`
+* `OperationCounters`
+* `ServerInfo`
+* `MongoAdmin`
 
-This is shown below in a screenshot from JConsole
+The following screenshot from JConsole shows the resulting configuration:
 
 image::jconsole.png[]

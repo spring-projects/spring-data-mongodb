@@ -1,7 +1,9 @@
 [[query-by-example.execution]]
-== Executing an example
+== Running an Example
 
-.Query by Example using a Repository
+The following example shows how to query by example when using a repository (of `Person` objects, in this case):
+
+.Query by Example using a repository
 ====
 [source, java]
 ----
@@ -20,9 +22,9 @@ public class PersonService {
 ----
 ====
 
-An `Example` containing an untyped `ExampleSpec` uses the Repository type and its collection name. Typed `ExampleSpec` use their type as result type and the collection name from the Repository.
+An `Example` containing an untyped `ExampleSpec` uses the Repository type and its collection name. Typed `ExampleSpec` instances use their type as the result type and the collection name from the `Repository` instance.
 
-NOTE: When including `null` values in the `ExampleSpec` Spring Data Mongo uses embedded document matching instead of dot notation property matching. This forces exact document matching for all property values and the property order in the embedded document.
+NOTE: When including `null` values in the `ExampleSpec`, Spring Data Mongo uses embedded document matching instead of dot notation property matching. Doing so forces exact document matching for all property values and the property order in the embedded document.
 
 Spring Data MongoDB provides support for the following matching options:
 
@@ -73,9 +75,9 @@ Spring Data MongoDB provides support for the following matching options:
 [[query-by-example.untyped]]
 == Untyped Example
 
-By default `Example` is strictly typed. This means the mapped query will have a type match included restricting it to probe assignable types. Eg. when sticking with the default type key `_class` the query has restrictions like `_class : { $in : [ com.acme.Person] }`.
+By default `Example` is strictly typed. This means that the mapped query has an included type match, restricting it to probe assignable types. For example, when sticking with the default type key (`_class`), the query has restrictions such as (`_class : { $in : [ com.acme.Person] }`).
 
-By using the `UntypedExampleMatcher` it is possible bypasses the default behavior and skip the type restriction. So as long as field names match nearly any domain type can be used as the probe for creating the reference.
+By using the `UntypedExampleMatcher`, it is possible to bypass the default behavior and skip the type restriction. So, as long as field names match, nearly any domain type can be used as the probe for creating the reference, as the following example shows:
 
 .Untyped Example Query
 ====

@@ -1,50 +1,48 @@
 = Spring Data MongoDB - Reference Documentation
-Mark Pollack; Thomas Risberg; Oliver Gierke; Costin Leau; Jon Brisbin; Thomas Darimont; Christoph Strobl; Mark Paluch
+Mark Pollack; Thomas Risberg; Oliver Gierke; Costin Leau; Jon Brisbin; Thomas Darimont; Christoph Strobl; Mark Paluch; Jay Bryant
 :revnumber: {version}
 :revdate: {localdate}
-:toc:
-:toc-placement!:
+:linkcss:
+:doctype: book
+:docinfo: shared
+:toc: left
+:toclevels: 4
+:source-highlighter: prettify
+:icons: font
+:imagesdir: images
+ifdef::backend-epub3[:front-cover-image: image:epub-cover.png[Front Cover,1050,1600]]
 :spring-data-commons-docs: ../../../../spring-data-commons/src/main/asciidoc
 
 (C) 2008-2018 The original authors.
 
-NOTE: _Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically._
-
-toc::[]
+NOTE: Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
 
 include::preface.adoc[]
 
-:leveloffset: +1
-include::new-features.adoc[]
-include::{spring-data-commons-docs}/dependencies.adoc[]
-include::{spring-data-commons-docs}/repositories.adoc[]
-:leveloffset: -1
+include::new-features.adoc[leveloffset=+1]
+include::{spring-data-commons-docs}/dependencies.adoc[leveloffset=+1]
+include::{spring-data-commons-docs}/repositories.adoc[leveloffset=+1]
 
 [[reference]]
 = Reference Documentation
 
-:leveloffset: +1
-include::reference/introduction.adoc[]
-include::reference/mongodb.adoc[]
-include::reference/reactive-mongodb.adoc[]
-include::reference/client-session-transactions.adoc[]
-include::reference/mongo-repositories.adoc[]
-include::reference/reactive-mongo-repositories.adoc[]
-include::{spring-data-commons-docs}/auditing.adoc[]
-include::reference/mongo-auditing.adoc[]
-include::reference/mapping.adoc[]
-include::reference/cross-store.adoc[]
-include::reference/jmx.adoc[]
-include::reference/mongo-3.adoc[]
-:leveloffset: -1
+include::reference/introduction.adoc[leveloffset=+1]
+include::reference/mongodb.adoc[leveloffset=+1]
+include::reference/reactive-mongodb.adoc[leveloffset=+1]
+include::reference/mongo-repositories.adoc[leveloffset=+1]
+include::reference/reactive-mongo-repositories.adoc[leveloffset=+1]
+include::{spring-data-commons-docs}/auditing.adoc[leveloffset=+1]
+include::reference/mongo-auditing.adoc[leveloffset=+1]
+include::reference/mapping.adoc[leveloffset=+1]
+include::reference/cross-store.adoc[leveloffset=+1]
+include::reference/jmx.adoc[leveloffset=+1]
+include::reference/mongo-3.adoc[leveloffset=+1]
 
 [[appendix]]
 = Appendix
 
 :numbered!:
-:leveloffset: +1
-include::{spring-data-commons-docs}/repository-namespace-reference.adoc[]
-include::{spring-data-commons-docs}/repository-populator-namespace-reference.adoc[]
-include::{spring-data-commons-docs}/repository-query-keywords-reference.adoc[]
-include::{spring-data-commons-docs}/repository-query-return-types-reference.adoc[]
-:leveloffset: -1
+include::{spring-data-commons-docs}/repository-namespace-reference.adoc[leveloffset=+1]
+include::{spring-data-commons-docs}/repository-populator-namespace-reference.adoc[leveloffset=+1]
+include::{spring-data-commons-docs}/repository-query-keywords-reference.adoc[leveloffset=+1]
+include::{spring-data-commons-docs}/repository-query-return-types-reference.adoc[leveloffset=+1]
