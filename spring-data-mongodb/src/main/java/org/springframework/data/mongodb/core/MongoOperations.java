@@ -894,7 +894,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
 	 * class.
 	 *
-	 * @param collectionToSave the list of objects to save. Must not be {@literal null}.
+	 * @param objectsToSave the list of objects to save. Must not be {@literal null}.
 	 */
 	void insertAll(Collection<? extends Object> objectsToSave);
 

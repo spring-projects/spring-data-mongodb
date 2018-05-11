@@ -4,13 +4,13 @@
 The reactive MongoDB support contains the following basic set of features:
 
 * Spring configuration support that uses Java-based `@Configuration` classes, a `MongoClient` instance, and replica sets.
-* `ReactiveMongoTemplate`, which is a helper class that increases productivity by using `MongoOperations in a reactive manner. It includes integrated object mapping between `Document` instances and POJOs.
+* `ReactiveMongoTemplate`, which is a helper class that increases productivity by using `MongoOperations` in a reactive manner. It includes integrated object mapping between `Document` instances and POJOs.
 * Exception translation into Spring's portable Data Access Exception hierarchy.
 * Feature-rich Object Mapping integrated with Spring's `ConversionService`.
 * Annotation-based mapping metadata that is extensible to support other metadata formats.
 * Persistence and mapping lifecycle events.
 * Java based `Query`, `Criteria`, and `Update` DSLs.
-* Automatic implementation of reactive repository interfaces including support for custom finder methods.
+* Automatic implementation of reactive repository interfaces including support for custom query methods.
 
 For most tasks, you should use `ReactiveMongoTemplate` or the repository support, both of which use the rich mapping functionality. `ReactiveMongoTemplate` is the place to look for accessing functionality such as incrementing counters or ad-hoc CRUD operations. `ReactiveMongoTemplate` also provides callback methods so that you can use the low-level API artifacts (such as `MongoDatabase`) to communicate directly with MongoDB. The goal with naming conventions on various API artifacts is to copy those in the base MongoDB Java driver so that you can map your existing knowledge onto the Spring APIs.
 
@@ -19,7 +19,7 @@ For most tasks, you should use `ReactiveMongoTemplate` or the repository support
 
 Spring MongoDB support requires MongoDB 2.6 or higher and Java SE 8 or higher.
 
-First, you need to set up a running Mongodb server. Refer to the http://docs.mongodb.org/manual/core/introduction/[Mongodb Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed, starting MongoDB is typically a matter of executing the following command: `MONGO_HOME/bin/mongod`
+First, you need to set up a running MongoDB server. Refer to the http://docs.mongodb.org/manual/core/introduction/[MongoDB Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed, starting MongoDB is typically a matter of executing the following command: `${MONGO_HOME}/bin/mongod`
 
 To create a Spring project in STS, go to File -> New -> Spring Template Project -> Simple Spring Utility Project and press Yes when prompted. Then enter a project and a package name, such as org.spring.mongodb.example.
 
@@ -127,13 +127,13 @@ Running the preceding class produces the following output:
 
 Even in this simple example, there are a few things to take notice of:
 
-* You can instantiate the central helper class of Spring Mongo (<<mongo.reactive.template,`MongoTemplate`>>) by using the standard `com.mongodb.reactivestreams.client.MongoClient` object and the name of the database to use.
-* The mapper works against standard POJO objects without the need for any additional metadata (though you can optionally provide that information. See <<mongo.mapping,here>>.).
+* You can instantiate the central helper class of Spring Mongo (<<mongo.reactive.template,`ReactiveMongoTemplate`>>) by using the standard `com.mongodb.reactivestreams.client.MongoClient` object and the name of the database to use.
+* The mapper works against standard POJO objects without the need for any additional metadata (though you can optionally provide that information. See <<mapping-chapter,here>>.).
 * Conventions are used for handling the ID field, converting it to be an `ObjectId` when stored in the database.
 * Mapping conventions can use field access. Notice that the `Person` class has only getters.
 * If the constructor argument names match the field names of the stored document, they are used to instantiate the object
 
-There is a https://github.com/spring-projects/spring-data-examples[github repository with several examples] that you can download and play around with to get a feel for how the library works.
+There is a https://github.com/spring-projects/spring-data-examples[GitHub repository with several examples] that you can download and play around with to get a feel for how the library works.
 
 [[mongo.reactive.driver]]
 == Connecting to MongoDB with Spring and the Reactive Streams Driver
@@ -298,7 +298,7 @@ The `ReactiveMongoTemplate` class implements the `ReactiveMongoOperations` inter
 
 NOTE: The preferred way to reference the operations on `ReactiveMongoTemplate` instance is through its `ReactiveMongoOperations` interface.
 
-The default converter implementation used by `ReactiveMongoTemplate` is `MappingMongoConverter`. While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions as well as the use of mapping annotations are explained in the <<mongo.mapping,Mapping chapter>>.
+The default converter implementation used by `ReactiveMongoTemplate` is `MappingMongoConverter`. While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions as well as the use of mapping annotations are explained in the <<mapping-chapter,Mapping chapter>>.
 
 Another central feature of `ReactiveMongoTemplate` is exception translation of exceptions thrown in the MongoDB Java driver into Spring's portable Data Access Exception hierarchy. See the section on <<mongo.exception,exception translation>> for more information.
 
