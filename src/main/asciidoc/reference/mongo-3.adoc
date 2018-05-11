@@ -1,7 +1,7 @@
 [[mongo.mongo-3]]
 = MongoDB 3.0 Support
 
-Spring Data MongoDB allows usage of both MongoDB Java driver generations 2 and 3 when connecting to a MongoDB 2.6/3.0 server running MMap.v1 or a MongoDB server 3.0 using MMap.v1 or the WiredTiger storage engine.
+Spring Data MongoDB requires MongoDB Java driver generations 3 when connecting to a MongoDB 2.6/3.0 server running MMap.v1 or a MongoDB server 3.0 using MMap.v1 or the WiredTiger storage engine.
 
 NOTE: See the driver- and database-specific documentation for major differences between those engines.
 
