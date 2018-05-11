@@ -821,7 +821,7 @@ public interface MongoOperations {
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
 	 * class.
 	 *
-	 * @param collectionToSave the list of objects to save.
+	 * @param objectsToSave the list of objects to save.
 	 */
 	void insertAll(Collection<? extends Object> objectsToSave);
 
