@@ -369,8 +369,8 @@ See https://tools.ietf.org/html/rfc3986#section-2.2[section 2.2 of RFC 3986] for
 As of MongoDB java driver 3.7.0 there is an alternative entry point to `MongoClient` via the http://search.maven
 .org/#search%7Cgav%7C1%7Cg%3A%22org.mongodb%22%20AND%20a%3A%22mongodb-driver-sync%22[mongodb-driver-sync] artifact.
 `com.mongodb.client.MongoClient` is *not* compatible with `com.mongodb.MongoClient` and does not longer support
-the legacy `DBObject` codec. Therefore it cannot be used with `Querydsl` and requires a different configuration.
-You may use `AbstractMongoClientConfiguration` to leverage the new `MongoClients` builder API.
+the legacy `DBObject` codec. Therefore, it cannot be used with `Querydsl` and requires a different configuration.
+You can use `AbstractMongoClientConfiguration` to leverage the new `MongoClients` builder API.
 
 [source,java]
 ----

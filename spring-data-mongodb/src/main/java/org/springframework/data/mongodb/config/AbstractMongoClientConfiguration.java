@@ -33,8 +33,9 @@ import com.mongodb.client.MongoClient;
  * Base class for Spring Data MongoDB configuration using JavaConfig with {@link com.mongodb.client.MongoClient}.
  *
  * @author Christoph Strobl
- * @see MongoConfigurationSupport
  * @since 2.1
+ * @see MongoConfigurationSupport
+ * @see AbstractMongoConfiguration
  */
 @Configuration
 public abstract class AbstractMongoClientConfiguration extends MongoConfigurationSupport {

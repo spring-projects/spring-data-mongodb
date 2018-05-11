@@ -161,9 +161,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		new MongoTemplate(mongo, null);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullMongo() throws Exception {
-		new MongoTemplate(null, "database");
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1968 
+	public void rejectsNullMongo() {
+		new MongoTemplate((MongoClient) null, "database");
+	}
+
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1968
+	public void rejectsNullMongoClient() {
+		new MongoTemplate((com.mongodb.client.MongoClient) null, "database");
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1870

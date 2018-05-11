@@ -23,7 +23,9 @@ import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
 import lombok.Data;
 import reactor.test.StepVerifier;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
@@ -32,11 +34,13 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 
-import com.mongodb.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class JsonSchemaQueryTests {
 
@@ -44,13 +48,19 @@ public class JsonSchemaQueryTests {
 
 	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 
+	static MongoClient client = MongoClients.create();
 	MongoTemplate template;
 	Person jellyBelly, roseSpringHeart, kazmardBoombub;
+
+	@BeforeClass
+	public static void beforeClass() {
+		 client = MongoClients.create();
+	}
 
 	@Before
 	public void setUp() {
 
-		template = new MongoTemplate(new MongoClient(), DATABASE_NAME);
+		template = new MongoTemplate(client, DATABASE_NAME);
 
 		jellyBelly = new Person();
 		jellyBelly.id = "1";
@@ -80,6 +90,13 @@ public class JsonSchemaQueryTests {
 		template.save(roseSpringHeart);
 		template.save(kazmardBoombub);
 	}
+	
+	@AfterClass
+	public static void afterClass() {
+		if (client != null) {
+			client.close();
+		}
+	}
 
 	@Test // DATAMONGO-1835
 	public void findsDocumentsWithRequiredFieldsCorrectly() {
@@ -95,8 +112,12 @@ public class JsonSchemaQueryTests {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
 
-		StepVerifier.create(new ReactiveMongoTemplate(MongoClients.create(), DATABASE_NAME)
+		com.mongodb.reactivestreams.client.MongoClient mongoClient = com.mongodb.reactivestreams.client.MongoClients.create();
+
+		StepVerifier.create(new ReactiveMongoTemplate(mongoClient, DATABASE_NAME)
 				.find(query(matchingDocumentStructure(schema)), Person.class)).expectNextCount(2).verifyComplete();
+		
+		mongoClient.close();
 	}
 
 	@Test // DATAMONGO-1835

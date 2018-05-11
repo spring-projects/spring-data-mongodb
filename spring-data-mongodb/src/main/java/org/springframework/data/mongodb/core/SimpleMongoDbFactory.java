@@ -36,12 +36,12 @@ import com.mongodb.client.MongoDatabase;
  * @author George Moraitis
  * @author Mark Paluch
  */
-public class SimpleMongoDbFactory extends MongoDbFactoryBase<MongoClient> implements DisposableBean {
+public class SimpleMongoDbFactory extends MongoDbFactorySupport<MongoClient> implements DisposableBean {
 
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClientURI}.
 	 *
-	 * @param uri must not be {@literal null}.
+	 * @param uri coordinates for a database connection. Must contain a database name and must not be {@literal null}.
 	 * @since 1.7
 	 */
 	public SimpleMongoDbFactory(MongoClientURI uri) {
@@ -52,7 +52,7 @@ public class SimpleMongoDbFactory extends MongoDbFactoryBase<MongoClient> implem
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClient}.
 	 *
 	 * @param mongoClient must not be {@literal null}.
-	 * @param databaseName must not be {@literal null}.
+	 * @param databaseName must not be {@literal null} or empty.
 	 * @since 1.7
 	 */
 	public SimpleMongoDbFactory(MongoClient mongoClient, String databaseName) {
@@ -69,6 +69,10 @@ public class SimpleMongoDbFactory extends MongoDbFactoryBase<MongoClient> implem
 		super(mongoClient, databaseName, mongoInstanceCreated, new MongoExceptionTranslator());
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.MongoDbFactory#getLegacyDb()
+	 */
 	@Override
 	public DB getLegacyDb() {
 		return getMongoClient().getDB(getDefaultDatabaseName());
@@ -83,11 +87,19 @@ public class SimpleMongoDbFactory extends MongoDbFactoryBase<MongoClient> implem
 		return getMongoClient().startSession(options);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoDbFactoryBase#closeClient()
+	 */
 	@Override
 	protected void closeClient() {
 		getMongoClient().close();
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoDbFactoryBase#doGetMongoDatabase(java.lang.String)
+	 */
 	@Override
 	protected MongoDatabase doGetMongoDatabase(String dbName) {
 		return getMongoClient().getDatabase(dbName);

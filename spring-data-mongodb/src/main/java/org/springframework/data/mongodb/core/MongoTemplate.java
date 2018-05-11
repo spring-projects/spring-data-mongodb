@@ -210,13 +210,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
 
 	/**
-	 * Constructor used for a basic template configuration
+	 * Constructor used for a basic template configuration.
 	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null} or empty.
 	 */
 	public MongoTemplate(MongoClient mongoClient, String databaseName) {
 		this(new SimpleMongoDbFactory(mongoClient, databaseName), (MongoConverter) null);
+	}
+	
+	/**
+	 * Constructor used for a basic template configuration.
+	 *
+	 * @param mongoClient must not be {@literal null}.
+	 * @param databaseName must not be {@literal null} or empty.
+	 * @since 2.1
+	 */
+	public MongoTemplate(com.mongodb.client.MongoClient mongoClient, String databaseName) {
+		this(new SimpleMongoClientDbFactory(mongoClient, databaseName), (MongoConverter) null);
 	}
 
 	/**

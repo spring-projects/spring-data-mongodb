@@ -33,21 +33,38 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 /**
- * Common base class for usage with both {@link com.mongodb.client.MongoClients} and {@link com.mongodb.MongoClient}.
+ * Common base class for usage with both {@link com.mongodb.client.MongoClients} and {@link com.mongodb.MongoClient}
+ * defining common properties such as database name and exception translator.
+ * <p/>
+ * Not intended to be used directly.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
+ * @param <C> Client type.
  * @since 2.1
+ * @see SimpleMongoDbFactory
+ * @see SimpleMongoClientDbFactory
  */
-abstract class MongoDbFactoryBase<T> implements MongoDbFactory {
+public abstract class MongoDbFactorySupport<C> implements MongoDbFactory {
 
-	private final T mongoClient;
+	private final C mongoClient;
 	private final String databaseName;
 	private final boolean mongoInstanceCreated;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 
 	private @Nullable WriteConcern writeConcern;
 
-	protected MongoDbFactoryBase(T mongoClient, String databaseName, boolean mongoInstanceCreated,
+	/**
+	 * Create a new {@link MongoDbFactorySupport} object given {@code mongoClient}, {@code databaseName},
+	 * {@code mongoInstanceCreated} and {@link PersistenceExceptionTranslator}.
+	 * 
+	 * @param mongoClient must not be {@literal null}.
+	 * @param databaseName must not be {@literal null} or empty.
+	 * @param mongoInstanceCreated {@literal true} if the client instance was created by a subclass of
+	 *          {@link MongoDbFactorySupport} to close the client on {@link #destroy()}.
+	 * @param exceptionTranslator must not be {@literal null}.
+	 */
+	protected MongoDbFactorySupport(C mongoClient, String databaseName, boolean mongoInstanceCreated,
 			PersistenceExceptionTranslator exceptionTranslator) {
 
 		Assert.notNull(mongoClient, "MongoClient must not be null!");
@@ -62,7 +79,7 @@ abstract class MongoDbFactoryBase<T> implements MongoDbFactory {
 	}
 
 	/**
-	 * Configures the {@link WriteConcern} to be used on the {@link DB} instance being created.
+	 * Configures the {@link WriteConcern} to be used on the {@link MongoDatabase} instance being created.
 	 *
 	 * @param writeConcern the writeConcern to set
 	 */
@@ -85,7 +102,7 @@ abstract class MongoDbFactoryBase<T> implements MongoDbFactory {
 	@Override
 	public MongoDatabase getDb(String dbName) throws DataAccessException {
 
-		Assert.hasText(dbName, "Database name must not be empty.");
+		Assert.hasText(dbName, "Database name must not be empty!");
 
 		MongoDatabase db = doGetMongoDatabase(dbName);
 
@@ -96,6 +113,18 @@ abstract class MongoDbFactoryBase<T> implements MongoDbFactory {
 		return db.withWriteConcern(writeConcern);
 	}
 
+	/**
+	 * Get the actual {@link MongoDatabase} from the client.
+	 * 
+	 * @param dbName must not be {@literal null} or empty.
+	 * @return
+	 */
+	protected abstract MongoDatabase doGetMongoDatabase(String dbName);
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.DisposableBean#destroy()
+	 */
 	public void destroy() throws Exception {
 		if (mongoInstanceCreated) {
 			closeClient();
@@ -115,17 +144,24 @@ abstract class MongoDbFactoryBase<T> implements MongoDbFactory {
 	 * @see org.springframework.data.mongodb.MongoDbFactory#withSession(com.mongodb.session.Session)
 	 */
 	public MongoDbFactory withSession(ClientSession session) {
-		return new MongoDbFactoryBase.ClientSessionBoundMongoDbFactory(session, this);
+		return new MongoDbFactorySupport.ClientSessionBoundMongoDbFactory(session, this);
 	}
 
+	/**
+	 * Close the client instance.
+	 */
 	protected abstract void closeClient();
 
-	protected abstract MongoDatabase doGetMongoDatabase(String dbName);
-
-	protected T getMongoClient() {
+	/**
+	 * @return the Mongo client object.
+	 */
+	protected C getMongoClient() {
 		return mongoClient;
 	}
 
+	/**
+	 * @return the database name.
+	 */
 	protected String getDefaultDatabaseName() {
 		return databaseName;
 	}
@@ -205,7 +241,7 @@ abstract class MongoDbFactoryBase<T> implements MongoDbFactory {
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
-		private MongoCollection proxyCollection(com.mongodb.session.ClientSession session, MongoCollection collection) {
+		private MongoCollection<?> proxyCollection(com.mongodb.session.ClientSession session, MongoCollection<?> collection) {
 			return createProxyInstance(session, collection, MongoCollection.class);
 		}
 

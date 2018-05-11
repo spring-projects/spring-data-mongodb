@@ -31,12 +31,13 @@ import com.mongodb.client.MongoDatabase;
  * @author Christoph Strobl
  * @since 2.1
  */
-public class SimpleMongoClientDbFactory extends MongoDbFactoryBase<MongoClient> implements DisposableBean {
+public class SimpleMongoClientDbFactory extends MongoDbFactorySupport<MongoClient> implements DisposableBean {
 
 	/**
 	 * Creates a new {@link SimpleMongoClientDbFactory} instance for the given {@code connectionString}.
 	 *
-	 * @param connectionString must not be {@literal null}.
+	 * @param connectionString connection coordinates for a database connection. Must contain a database name and must not
+	 *          be {@literal null} or empty.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/connection-string/">MongoDB Connection String reference</a>
 	 */
 	public SimpleMongoClientDbFactory(String connectionString) {
@@ -46,7 +47,8 @@ public class SimpleMongoClientDbFactory extends MongoDbFactoryBase<MongoClient> 
 	/**
 	 * Creates a new {@link SimpleMongoClientDbFactory} instance from the given {@link MongoClient}.
 	 *
-	 * @param connectionString must not be {@literal null}.
+	 * @param connectionString connection coordinates for a database connection. Must contain also a database name and not
+	 *          be {@literal null}.
 	 */
 	public SimpleMongoClientDbFactory(ConnectionString connectionString) {
 		this(MongoClients.create(connectionString), connectionString.getDatabase(), true);
@@ -56,7 +58,7 @@ public class SimpleMongoClientDbFactory extends MongoDbFactoryBase<MongoClient> 
 	 * Creates a new {@link SimpleMongoClientDbFactory} instance from the given {@link MongoClient}.
 	 *
 	 * @param mongoClient must not be {@literal null}.
-	 * @param databaseName must not be {@literal null}.
+	 * @param databaseName must not be {@literal null} or empty.
 	 */
 	public SimpleMongoClientDbFactory(MongoClient mongoClient, String databaseName) {
 		this(mongoClient, databaseName, false);
@@ -66,7 +68,7 @@ public class SimpleMongoClientDbFactory extends MongoDbFactoryBase<MongoClient> 
 	 * Creates a new {@link SimpleMongoClientDbFactory} instance from the given {@link MongoClient}.
 	 *
 	 * @param mongoClient must not be {@literal null}.
-	 * @param databaseName must not be {@literal null}.
+	 * @param databaseName must not be {@literal null} or empty.
 	 * @param mongoInstanceCreated
 	 */
 	private SimpleMongoClientDbFactory(MongoClient mongoClient, String databaseName, boolean mongoInstanceCreated) {
@@ -81,7 +83,7 @@ public class SimpleMongoClientDbFactory extends MongoDbFactoryBase<MongoClient> 
 	public DB getLegacyDb() {
 
 		throw new UnsupportedOperationException(String.format(
-				"%s does not support legacy DBObject API! Please " + "consider using SimpleMongoDbFactory for that purpose.",
+				"%s does not support legacy DBObject API! Please consider using SimpleMongoDbFactory for that purpose.",
 				MongoClient.class));
 	}
 

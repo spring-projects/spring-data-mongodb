@@ -19,10 +19,12 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import com.mongodb.MongoClient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import org.bson.Document;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -37,7 +39,6 @@ import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.Version;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.MongoClient;
 import com.mongodb.client.ClientSession;
 
 /**
@@ -64,6 +65,11 @@ public class ClientSessionTests {
 
 		template = new MongoTemplate(client, DB_NAME);
 		template.getDb().getCollection(COLLECTION_NAME).insertOne(new Document("_id", "id-1").append("value", "spring"));
+	}
+
+	@After
+	public void tearDown() {
+		client.close();
 	}
 
 	@Test // DATAMONGO-1880

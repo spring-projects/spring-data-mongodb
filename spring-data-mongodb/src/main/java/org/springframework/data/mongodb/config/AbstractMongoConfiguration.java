@@ -41,6 +41,7 @@ import com.mongodb.MongoClient;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @see MongoConfigurationSupport
+ * @see AbstractMongoClientConfiguration
  */
 @Configuration
 public abstract class AbstractMongoConfiguration extends MongoConfigurationSupport {
