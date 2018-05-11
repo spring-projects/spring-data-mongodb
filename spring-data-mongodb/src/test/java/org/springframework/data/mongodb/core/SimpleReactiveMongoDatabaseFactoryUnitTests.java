@@ -31,9 +31,9 @@ import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.session.ClientSession;
 
 /**
  * Unit tests for {@link SimpleReactiveMongoDatabaseFactory}.

@@ -360,7 +360,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 				debugString += String.format("causallyConsistent = %s, ", session.isCausallyConsistent());
 				debugString += String.format("txActive = %s, ", session.hasActiveTransaction());
 				debugString += String.format("txNumber = %d, ", session.getServerSession().getTransactionNumber());
-				debugString += String.format("statementId = %d, ", session.getServerSession().getStatementId());
+				debugString += String.format("closed = %d, ", session.getServerSession().isClosed());
 				debugString += String.format("clusterTime = %s", session.getClusterTime());
 			} else {
 				debugString += "id = n/a";

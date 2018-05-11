@@ -19,12 +19,12 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.query.Query;
 
 /**
- * Callback interface for executing operations within a {@link com.mongodb.session.ClientSession} using reactive
- * infrastructure.
+ * Callback interface for executing operations within a {@link com.mongodb.reactivestreams.client.ClientSession} using
+ * reactive infrastructure.
  *
  * @author Christoph Strobl
  * @since 2.1
- * @see com.mongodb.session.ClientSession
+ * @see com.mongodb.reactivestreams.client.ClientSession
  */
 @FunctionalInterface
 public interface ReactiveSessionCallback<T> {
