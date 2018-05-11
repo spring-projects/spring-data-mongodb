@@ -9,6 +9,9 @@ Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for
 
 NOTE: Methods such as `(Reactive)MongoOperations#getCollection` return native MongoDB Java Driver gateway objects (such as `MongoCollection`) that themselves offer dedicated methods for `ClientSession`. These methods are *NOT* session-proxied. You should provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not through one of the `#execute` callbacks on `MongoOperations`.
 
+[[mongo.sessions.sync]]
+== Synchronous `ClientSession` support.
+
 The following example shows the usage of a session:
 
 .`ClientSession` with `MongoOperations`
@@ -44,6 +47,9 @@ session.close()                                              <4>
 ====
 
 WARNING: When dealing with `DBRef` instances, especially lazily loaded ones, it is essential to *not* close the `ClientSession` before all data is loaded. Otherwise, lazy fetch fails.
+
+[[mongo.sessions.reactive]]
+== Reactive `ClientSession` support
 
 The reactive counterpart uses the same building blocks as the imperative one, as the following example shows:
 
@@ -207,3 +213,72 @@ public class StateService {
 
 NOTE: `@Transactional(readOnly = true)` advises `MongoTransactionManager` to also start a transaction that adds the
  `ClientSession` to outgoing requests.
+
+== Reactive transactions
+
+Same as with the reactive `ClientSession` support, the `ReactiveMongoTemplate` offers dedicated methods for operating
+within a transaction without having to worry about the commit/abort actions depending on the operations outcome.
+
+Using the plain MongoDB reactive driver API a `delete within a transactional flow may look like this.
+
+.Native driver support
+====
+[source,java]
+----
+Mono<DeleteResult> result = Mono
+      .from(client.startSession())                                                              <1>
+      .flatMap(session -> {
+         session.startTransaction();                                                            <2>
+         return Mono.from(collection.deleteMany(session, ...))                                  <3>
+               .onErrorResume(e -> Mono.from(session.abortTransaction()).then(Mono.error(e)))   <4>
+               .flatMap(val -> Mono.from(session.commitTransaction()).then(Mono.just(val)))     <5>
+               .doFinally(signal -> session.close());                                           <6>
+      });
+----
+<1> Ok, first we obvoiusly need to initiate the session.
+<2> Once we've the `ClientSession` at hand, start the transaction.
+<3> Operate within the transaction by passing on the `ClientSession` to the operation.
+<4> If the operations errors, we need to abort the transaction and preserve the error.
+<5> Or of course, commit the changes in case of success. Still preserving the operations result.
+<6> Last, we need to make sure to close the session.
+====`
+
+The culprit of the above operation is in keeping the main flows `DeleteResult` instead of the transaction outcome
+published via either `commitTransaction()` or `abortTransaction()`, which leads to a rather complicated setup.
+
+`MongoOperations.inTransaction()` allows you to utilize the callback from for the <<mongo.sessions.reactive,
+reactive session support>> to actually preserve the flows outcome but also perform commit and abort actions
+accordingly. This allows you to express the above flow simply as the following:
+
+.ReactiveMongoTemplate transactions
+====
+[source,java]
+----
+Mono<DeleteResult> result = template.inTransaction()                                        <1>
+      .execute(action -> action.remove(query(where("id").is("step-1")), Step.class));       <2>
+----
+<1> Initiate the transaction.
+<2> Operate within the `ClientSession`.
+====
+
+NOTE: In case you need access to the `ClientSession` within the flow, you can use `ReactiveMongoContext.getSession()`
+ to obtain in from the Reactor `Context`.
+
+Everything happening inside the transactional callback is executed within a transaction. Errors subsequent in the
+reactive flow do not influence the operations within the transaction.
+
+====
+[source,java]
+----
+template.inTransaction()                                                                                                    <1>
+	.execute(action -> action.find(query(where("state").is("active")), Step.class).flatMap(step ->
+			action.update(Step.class).matching(query(where("id").is(step.id))).apply(update("state", "paused")).all()))     <2>
+	.flatMap(deleted -> {
+		// errors here                                                                                                      <3>
+	}).subscribe();
+----
+<1> Initiate the transaction.
+<2> Operate within the `ClientSession`. The transaction is committed after when this is done or rolled back if an
+error occurs here.
+<3> An error outside the transaction flow has no affect on the previous transactional execution.
+====

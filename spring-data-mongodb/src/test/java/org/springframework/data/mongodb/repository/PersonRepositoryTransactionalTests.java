@@ -54,8 +54,8 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
 import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
@@ -123,27 +123,36 @@ public class PersonRepositoryTransactionalTests {
 	}
 
 	@AfterTransaction
-	public void verifyDbState() {
+	public void verifyDbState() throws InterruptedException {
 
-		MongoCollection<Document> collection = client.getDatabase(DB_NAME)
+		Thread.sleep(100);
+
+		MongoCollection<Document> collection = client.getDatabase(DB_NAME) //
+				.withWriteConcern(WriteConcern.MAJORITY) //
+				.withReadPreference(ReadPreference.primary()) //
 				.getCollection(template.getCollectionName(Person.class));
 
-		assertionList.forEach(it -> {
+		try {
+			assertionList.forEach(it -> {
 
-			boolean isPresent = collection.find(Filters.eq("_id", new ObjectId(it.getId().toString()))).limit(1).iterator()
-					.hasNext();
+				boolean isPresent = collection.find(Filters.eq("_id", new ObjectId(it.getId().toString()))).iterator()
+						.hasNext();
 
-			assertThat(isPresent).isEqualTo(it.shouldBePresent())
-					.withFailMessage(String.format("After transaction entity %s should %s.", it.getPersistable(),
-							it.shouldBePresent() ? "be present" : "NOT be present"));
-		});
+				assertThat(isPresent) //
+						.withFailMessage(String.format("After transaction entity %s should %s.", it.getPersistable(),
+								it.shouldBePresent() ? "be present" : "NOT be present"))
+						.isEqualTo(it.shouldBePresent());
+
+			});
+		} finally {
+			assertionList.clear();
+		}
 	}
 
 	@Rollback(false)
 	@Test // DATAMONGO-1920
 	public void shouldHonorCommitForDerivedQuery() {
 
-		repository.removePersonByLastnameUsingAnnotatedQuery(durzo.getLastname());
 		repository.removePersonByLastnameUsingAnnotatedQuery(durzo.getLastname());
 
 		assertAfterTransaction(durzo).isNotPresent();
@@ -183,6 +192,11 @@ public class PersonRepositoryTransactionalTests {
 			@Override
 			public boolean isNew() {
 				return person.id != null;
+			}
+
+			@Override
+			public String toString() {
+				return getId() + " - " + person.toString();
 			}
 		});
 
