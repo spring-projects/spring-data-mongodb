@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -91,7 +92,8 @@ abstract class GeoConverters {
 				, DocumentToGeoJsonMultiLineStringConverter.INSTANCE //
 				, DocumentToGeoJsonMultiPointConverter.INSTANCE //
 				, DocumentToGeoJsonMultiPolygonConverter.INSTANCE //
-				, DocumentToGeoJsonGeometryCollectionConverter.INSTANCE);
+				, DocumentToGeoJsonGeometryCollectionConverter.INSTANCE //
+				, DocumentToGeoJsonConverter.INSTANCE);
 	}
 
 	/**
@@ -756,7 +758,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DocumentToGeoJsonGeometryCollectionConverter implements Converter<Document, GeoJsonGeometryCollection> {
+	enum DocumentToGeoJsonGeometryCollectionConverter implements Converter<Document, GeoJsonGeometryCollection> {
 
 		INSTANCE;
 
@@ -775,41 +777,12 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "GeometryCollection"),
 					String.format("Cannot convert type '%s' to GeometryCollection.", source.get("type")));
 
-			List<GeoJson<?>> geometries = new ArrayList<GeoJson<?>>();
+			List<GeoJson<?>> geometries = new ArrayList<>();
 			for (Object o : (List) source.get("geometries")) {
-				geometries.add(convertGeometries((Document) o));
+				geometries.add(toGenericGeoJson((Document) o));
 			}
+
 			return new GeoJsonGeometryCollection(geometries);
-
-		}
-
-		private static GeoJson<?> convertGeometries(Document source) {
-
-			Object type = source.get("type");
-			if (ObjectUtils.nullSafeEquals(type, "Point")) {
-				return DocumentToGeoJsonPointConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "MultiPoint")) {
-				return DocumentToGeoJsonMultiPointConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "LineString")) {
-				return DocumentToGeoJsonLineStringConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "MultiLineString")) {
-				return DocumentToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "Polygon")) {
-				return DocumentToGeoJsonPolygonConverter.INSTANCE.convert(source);
-			}
-			if (ObjectUtils.nullSafeEquals(type, "MultiPolygon")) {
-				return DocumentToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
-			}
-
-			throw new IllegalArgumentException(String.format("Cannot convert unknown GeoJson type %s", type));
 		}
 	}
 
@@ -850,6 +823,64 @@ abstract class GeoConverters {
 	 */
 	static GeoJsonPolygon toGeoJsonPolygon(List dbList) {
 		return new GeoJsonPolygon(toListOfPoint((List) dbList.get(0)));
+	}
+
+	/**
+	 * Converter implementation transforming a {@link Document} into a concrete {@link GeoJson} based on the embedded
+	 * {@literal type} information.
+	 *
+	 * @since 2.1
+	 * @author Christoph Strobl
+	 */
+	@ReadingConverter
+	enum DocumentToGeoJsonConverter implements Converter<Document, GeoJson> {
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		@Nullable
+		@Override
+		public GeoJson convert(Document source) {
+			return toGenericGeoJson(source);
+		}
+	}
+
+	private static GeoJson<?> toGenericGeoJson(Document source) {
+
+		String type = source.get("type", String.class);
+
+		if ("point".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonPointConverter.INSTANCE.convert(source);
+		}
+
+		if ("multipoint".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonMultiPointConverter.INSTANCE.convert(source);
+		}
+
+		if ("linestring".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonLineStringConverter.INSTANCE.convert(source);
+		}
+
+		if ("multilinestring".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
+		}
+
+		if ("polygon".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonPolygonConverter.INSTANCE.convert(source);
+		}
+
+		if ("multipolygon".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
+		}
+
+		if ("geometrycollection".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonGeometryCollectionConverter.INSTANCE.convert(source);
+		}
+
+		throw new IllegalArgumentException(
+				String.format("No converter found capable of converting GeoJson type " + "%s.", type));
 	}
 
 	private static double toPrimitiveDoubleValue(Object value) {

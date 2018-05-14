@@ -20,10 +20,11 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import lombok.Data;
+
 import java.util.Arrays;
 import java.util.List;
 
-import com.mongodb.client.MongoCollection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,16 +44,17 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoCollection;
 
 /**
  * @author Christoph Strobl
@@ -190,8 +192,9 @@ public class GeoJsonTests {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonMultiLineString";
-		obj.geoJsonMultiLineString = new GeoJsonMultiLineString(Arrays.asList(new GeoJsonLineString(new Point(0, 0),
-				new Point(0, 1), new Point(1, 1)), new GeoJsonLineString(new Point(199, 0), new Point(2, 3))));
+		obj.geoJsonMultiLineString = new GeoJsonMultiLineString(
+				Arrays.asList(new GeoJsonLineString(new Point(0, 0), new Point(0, 1), new Point(1, 1)),
+						new GeoJsonLineString(new Point(199, 0), new Point(2, 3))));
 
 		template.save(obj);
 
@@ -221,8 +224,8 @@ public class GeoJsonTests {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonMultiPolygon";
-		obj.geoJsonMultiPolygon = new GeoJsonMultiPolygon(Arrays.asList(new GeoJsonPolygon(new Point(0, 0),
-				new Point(0, 1), new Point(1, 1), new Point(0, 0))));
+		obj.geoJsonMultiPolygon = new GeoJsonMultiPolygon(
+				Arrays.asList(new GeoJsonPolygon(new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(0, 0))));
 
 		template.save(obj);
 
@@ -237,9 +240,8 @@ public class GeoJsonTests {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonGeometryCollection";
-		obj.geoJsonGeometryCollection = new GeoJsonGeometryCollection(Arrays.<GeoJson<?>> asList(
-				new GeoJsonPoint(100, 200), new GeoJsonPolygon(new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1,
-						0), new Point(0, 0))));
+		obj.geoJsonGeometryCollection = new GeoJsonGeometryCollection(Arrays.<GeoJson<?>> asList(new GeoJsonPoint(100, 200),
+				new GeoJsonPolygon(new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1, 0), new Point(0, 0))));
 
 		template.save(obj);
 
@@ -286,7 +288,8 @@ public class GeoJsonTests {
 				new CollectionCallback<Object>() {
 
 					@Override
-					public Object doInCollection(MongoCollection<org.bson.Document> collection) throws MongoException, DataAccessException {
+					public Object doInCollection(MongoCollection<org.bson.Document> collection)
+							throws MongoException, DataAccessException {
 
 						org.bson.Document pointRepresentation = new org.bson.Document();
 						pointRepresentation.put("type", "Point");
@@ -313,7 +316,8 @@ public class GeoJsonTests {
 				new CollectionCallback<Object>() {
 
 					@Override
-					public Object doInCollection(MongoCollection<org.bson.Document> collection) throws MongoException, DataAccessException {
+					public Object doInCollection(MongoCollection<org.bson.Document> collection)
+							throws MongoException, DataAccessException {
 
 						org.bson.Document lineStringRepresentation = new org.bson.Document();
 						lineStringRepresentation.put("type", "LineString");
@@ -337,6 +341,27 @@ public class GeoJsonTests {
 				is(equalTo(new GeoJsonLineString(new Point(0D, 0D), new Point(1, 1)))));
 	}
 
+	@Test // DATAMONGO-1466
+	public void readGeoJsonBasedOnEmbeddedTypeInformation() {
+
+		Point first = new Point(-73.99756, 40.73083);
+		Point second = new Point(-73.99756, 40.741404);
+		Point third = new Point(-73.988135, 40.741404);
+		Point fourth = new Point(-73.988135, 40.73083);
+
+		GeoJsonPolygon polygon = new GeoJsonPolygon(first, second, third, fourth, first);
+
+		ConcreteGeoJson source = new ConcreteGeoJson();
+		source.shape = polygon;
+		source.id = "id-1";
+
+		template.save(source);
+
+		OpenGeoJson target = template.findOne(query(where("id").is(source.id)), OpenGeoJson.class);
+
+		assertThat(target.shape, is(equalTo(source.shape)));
+	}
+
 	private void addVenues() {
 
 		template.insert(new Venue2DSphere("Penn Station", -73.99408, 40.75057));
@@ -355,8 +380,8 @@ public class GeoJsonTests {
 
 	protected void createIndex() {
 		dropIndex();
-		template.indexOps(Venue2DSphere.class).ensureIndex(
-				new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE));
+		template.indexOps(Venue2DSphere.class)
+				.ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE));
 	}
 
 	protected void dropIndex() {
@@ -414,6 +439,20 @@ public class GeoJsonTests {
 		GeoJsonMultiPoint geoJsonMultiPoint;
 		GeoJsonMultiPolygon geoJsonMultiPolygon;
 		GeoJsonGeometryCollection geoJsonGeometryCollection;
+	}
+
+	@Data
+	@Document(collection = "geo-json-shapes")
+	static class ConcreteGeoJson {
+		String id;
+		GeoJsonPolygon shape;
+	}
+
+	@Data
+	@Document(collection = "geo-json-shapes")
+	static class OpenGeoJson {
+		String id;
+		GeoJson shape;
 	}
 
 }
