@@ -461,6 +461,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Flux<T> execute(String collectionName, ReactiveCollectionCallback<T> callback) {
 
 		Assert.notNull(callback, "ReactiveCollectionCallback must not be null!");
+
 		return createFlux(collectionName, callback);
 	}
 
@@ -476,14 +477,50 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return new ReactiveSessionScoped() {
 
 			@Override
-			public <T> Flux<T> flatMap(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
+			public <T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
 
 				return cachedSession.flatMapMany(session -> {
 
-					return Flux
+					return ReactiveMongoTemplate.this.withSession(action, session) //
+							.doFinally(signalType -> {
+								doFinally.accept(session);
+							});
+				});
+			}
+		};
+	}
 
-							.from(action.doInSession(new ReactiveSessionBoundMongoTemplate(session, ReactiveMongoTemplate.this))) //
-							.subscriberContext(ctx -> ReactiveMongoContext.setSession(ctx, cachedSession)) //
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#inTransaction()
+	 */
+	@Override
+	public ReactiveSessionScoped inTransaction() {
+		return inTransaction(mongoDatabaseFactory
+				.getSession(ClientSessionOptions.builder().causallyConsistent(true).build()));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#inTransaction(org.reactivestreams.Publisher)
+	 */
+	@Override
+	public ReactiveSessionScoped inTransaction(Publisher<ClientSession> sessionProvider) {
+
+		Mono<ClientSession> cachedSession = Mono.from(sessionProvider).cache();
+
+		return new ReactiveSessionScoped() {
+
+			@Override
+			public <T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
+
+				return cachedSession.flatMapMany(session -> {
+
+					if (!session.hasActiveTransaction()) {
+						session.startTransaction();
+					}
+
+					return ReactiveMongoTemplate.this.withSession(action, session) //
 							.materialize() //
 							.flatMap(signal -> {
 
@@ -506,14 +543,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		};
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#inTransaction()
-	 */
-	@Override
-	public ReactiveSessionScoped inTransaction() {
-		return inTransaction(
-				mongoDatabaseFactory.getSession(ClientSessionOptions.builder().causallyConsistent(true).build()));
+	private <T> Flux<T> withSession(ReactiveSessionCallback<T> action, ClientSession session) {
+
+		return Flux.from(action.doInSession(new ReactiveSessionBoundMongoTemplate(session, ReactiveMongoTemplate.this))) //
+				.subscriberContext(ctx -> ReactiveMongoContext.setSession(ctx, Mono.just(session)));
 	}
 
 	/*

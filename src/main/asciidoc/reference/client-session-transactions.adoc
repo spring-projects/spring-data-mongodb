@@ -88,6 +88,9 @@ By using a `Publisher` that provides the actual session, you can defer session a
 Still, you need to close the session when done, so as to not pollute the server with stale sessions. Use the `doFinally` hook on `execute` to call `ClientSession#close()` when you no longer need the session.
 If you prefer having more control over the session itself, you can obtain the `ClientSession` through the driver and provide it through a `Supplier`.
 
+NOTE: Reactive use of `ClientSession` is limited to Template API usage. There's currently no session integration with reactive repositories.
+
+
 [[mongo.transactions]]
 = MongoDB Transactions
 
@@ -219,7 +222,9 @@ NOTE: `@Transactional(readOnly = true)` advises `MongoTransactionManager` to als
 Same as with the reactive `ClientSession` support, the `ReactiveMongoTemplate` offers dedicated methods for operating
 within a transaction without having to worry about the commit/abort actions depending on the operations outcome.
 
-Using the plain MongoDB reactive driver API a `delete within a transactional flow may look like this.
+NOTE: Reactive use of `ClientSession` and transactions is limited to Template API usage. There's currently no session or transaction integration with reactive repositories.
+
+Using the plain MongoDB reactive driver API a `delete` within a transactional flow may look like this.
 
 .Native driver support
 ====
@@ -227,21 +232,26 @@ Using the plain MongoDB reactive driver API a `delete within a transactional flo
 ----
 Mono<DeleteResult> result = Mono
       .from(client.startSession())                                                              <1>
+
       .flatMap(session -> {
          session.startTransaction();                                                            <2>
+
          return Mono.from(collection.deleteMany(session, ...))                                  <3>
+
                .onErrorResume(e -> Mono.from(session.abortTransaction()).then(Mono.error(e)))   <4>
+
                .flatMap(val -> Mono.from(session.commitTransaction()).then(Mono.just(val)))     <5>
+
                .doFinally(signal -> session.close());                                           <6>
       });
 ----
-<1> Ok, first we obvoiusly need to initiate the session.
-<2> Once we've the `ClientSession` at hand, start the transaction.
+<1> First we obviously need to initiate the session.
+<2> Once we have the `ClientSession` at hand, start the transaction.
 <3> Operate within the transaction by passing on the `ClientSession` to the operation.
-<4> If the operations errors, we need to abort the transaction and preserve the error.
+<4> If the operations completes exceptionally, we need to abort the transaction and preserve the error.
 <5> Or of course, commit the changes in case of success. Still preserving the operations result.
-<6> Last, we need to make sure to close the session.
-====`
+<6> Lastly, we need to make sure to close the session.
+====
 
 The culprit of the above operation is in keeping the main flows `DeleteResult` instead of the transaction outcome
 published via either `commitTransaction()` or `abortTransaction()`, which leads to a rather complicated setup.
@@ -250,35 +260,41 @@ published via either `commitTransaction()` or `abortTransaction()`, which leads 
 reactive session support>> to actually preserve the flows outcome but also perform commit and abort actions
 accordingly. This allows you to express the above flow simply as the following:
 
-.ReactiveMongoTemplate transactions
+.`ReactiveMongoTemplate` Transactions
 ====
 [source,java]
 ----
 Mono<DeleteResult> result = template.inTransaction()                                        <1>
+
       .execute(action -> action.remove(query(where("id").is("step-1")), Step.class));       <2>
 ----
 <1> Initiate the transaction.
-<2> Operate within the `ClientSession`.
+<2> Operate within the `ClientSession`. Each `execute(…)` unit of work callback initiates a new transaction in the scope of the same `ClientSession`.
 ====
 
 NOTE: In case you need access to the `ClientSession` within the flow, you can use `ReactiveMongoContext.getSession()`
  to obtain in from the Reactor `Context`.
 
-Everything happening inside the transactional callback is executed within a transaction. Errors subsequent in the
-reactive flow do not influence the operations within the transaction.
+Everything happening inside the transactional callback is executed within a managed transaction. Errors within the
+reactive flow of `execute(…)` that are not propagated to outside of the callback do not affect the operations within the transaction.
 
 ====
 [source,java]
 ----
-template.inTransaction()                                                                                                    <1>
-	.execute(action -> action.find(query(where("state").is("active")), Step.class).flatMap(step ->
-			action.update(Step.class).matching(query(where("id").is(step.id))).apply(update("state", "paused")).all()))     <2>
-	.flatMap(deleted -> {
-		// errors here                                                                                                      <3>
-	}).subscribe();
+template.inTransaction()                                                                    <1>
+
+	.execute(action -> action.find(query(where("state").is("active")), Step.class)
+	                     .flatMap(step -> action.update(Step.class)
+			                                    .matching(query(where("id").is(step.id)))
+			                                    .apply(update("state", "paused"))
+			                                    .all()))                                    <2>
+
+	.flatMap(updated -> {
+		// Exception could happen here                                                      <3>
+	});
 ----
-<1> Initiate the transaction.
-<2> Operate within the `ClientSession`. The transaction is committed after when this is done or rolled back if an
+<1> Initiate the managed transaction.
+<2> Operate within the `ClientSession`. The transaction is committed after this is done or rolled back if an
 error occurs here.
 <3> An error outside the transaction flow has no affect on the previous transactional execution.
 ====
