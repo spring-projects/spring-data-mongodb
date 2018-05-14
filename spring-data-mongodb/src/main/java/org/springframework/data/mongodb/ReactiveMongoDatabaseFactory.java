@@ -24,7 +24,7 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.session.ClientSession;
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**

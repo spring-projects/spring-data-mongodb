@@ -15,19 +15,24 @@
  */
 package org.springframework.data.mongodb.test.util;
 
+import reactor.core.publisher.Mono;
+
 import org.bson.Document;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.reactivestreams.client.Success;
 
 /**
  * @author Christoph Strobl
  */
 public class MongoTestUtils {
+
+	public static final String CONNECTION_STRING = "mongodb://localhost:27017/?replicaSet=rs0"; // &readPreference=primary&w=majority
 
 	/**
 	 * Create a {@link com.mongodb.client.MongoCollection} if it does not exist, or drop and recreate it if it does.
@@ -37,7 +42,7 @@ public class MongoTestUtils {
 	 * @param client must not be {@literal null}.
 	 */
 	public static MongoCollection<Document> createOrReplaceCollection(String dbName, String collectionName,
-			MongoClient client) {
+			com.mongodb.MongoClient client) {
 
 		MongoDatabase database = client.getDatabase(dbName);
 
@@ -59,14 +64,39 @@ public class MongoTestUtils {
 	}
 
 	/**
-	 * Create a new {@link MongoClient} with defaults suitable for replica set usage.
+	 * Create a {@link com.mongodb.client.MongoCollection} if it does not exist, or drop and recreate it if it does.
 	 *
-	 * @return new instance of {@link MongoClient}.
+	 * @param dbName must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 * @param client must not be {@literal null}.
 	 */
-	public static MongoClient replSetClient() {
+	public static Mono<Success> createOrReplaceCollection(String dbName, String collectionName,
+			com.mongodb.reactivestreams.client.MongoClient client) {
 
-		return new MongoClient("localhost",
-				MongoClientOptions.builder().requiredReplicaSetName("rs0").build());
+		com.mongodb.reactivestreams.client.MongoDatabase database = client.getDatabase(dbName)
+				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
+
+		return Mono.from(database.getCollection(collectionName).drop())
+				.then(Mono.from(database.createCollection(collectionName)));
+	}
+
+	/**
+	 * Create a new {@link com.mongodb.MongoClient} with defaults suitable for replica set usage.
+	 *
+	 * @return new instance of {@link com.mongodb.MongoClient}.
+	 */
+	public static com.mongodb.MongoClient replSetClient() {
+
+		return new com.mongodb.MongoClient(new MongoClientURI(CONNECTION_STRING));
+	}
+
+	/**
+	 * Create a new {@link com.mongodb.reactivestreams.client.MongoClient} with defaults suitable for replica set usage.
+	 *
+	 * @return new instance of {@link com.mongodb.reactivestreams.client.MongoClient}.
+	 */
+	public static com.mongodb.reactivestreams.client.MongoClient reactiveReplSetClient() {
+		return MongoClients.create(CONNECTION_STRING);
 	}
 
 }

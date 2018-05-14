@@ -19,7 +19,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.function.Consumer;
 
-import com.mongodb.session.ClientSession;
+import com.mongodb.reactivestreams.client.ClientSession;
 
 /**
  * Gateway interface to execute {@link ClientSession} bound operations against MongoDB via a
@@ -39,7 +39,7 @@ public interface ReactiveSessionScoped {
 	 *
 	 * @param action callback object that specifies the MongoDB action the callback action. Must not be {@literal null}.
 	 * @param <T> return type.
-	 * @return a result object returned by the action. Can be {@literal null}.
+	 * @return a result object returned by the action, can be {@link Flux#empty()}.
 	 */
 	default <T> Flux<T> execute(ReactiveSessionCallback<T> action) {
 		return execute(action, (session) -> {});
@@ -56,7 +56,7 @@ public interface ReactiveSessionScoped {
 	 *          This {@link Consumer} is guaranteed to be notified in any case (successful and exceptional outcome of
 	 *          {@link ReactiveSessionCallback}).
 	 * @param <T> return type.
-	 * @return a result object returned by the action. Can be {@literal null}.
+	 * @return a result object returned by the action, can be {@link Flux#empty()}.
 	 */
 	<T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally);
 }

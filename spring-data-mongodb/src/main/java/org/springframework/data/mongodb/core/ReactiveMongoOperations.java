@@ -46,8 +46,8 @@ import com.mongodb.ClientSessionOptions;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.session.ClientSession;
 
 /**
  * Interface that specifies a basic set of MongoDB operations executed in a reactive way.
@@ -156,7 +156,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * {@link ClientSession} when done.
 	 *
 	 * @param sessionProvider must not be {@literal null}.
-	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
+	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
 	 * @since 2.1
 	 */
 	default ReactiveSessionScoped withSession(Supplier<ClientSession> sessionProvider) {
@@ -169,40 +169,30 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding a new {@link ClientSession}
 	 * with given {@literal sessionOptions} to each and every command issued against MongoDB.
+	 * <p />
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use
+	 * {@link ReactiveSessionScoped#execute(ReactiveSessionCallback, Consumer)} to provide a hook for processing the
+	 * {@link ClientSession} when done.
 	 *
 	 * @param sessionOptions must not be {@literal null}.
-	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
+	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
 	 * @since 2.1
 	 */
 	ReactiveSessionScoped withSession(ClientSessionOptions sessionOptions);
 
 	/**
-	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
-	 * provided by the given {@link Supplier} to each and every command issued against MongoDB.
+	 * Obtain a {@link ClientSession session} bound instance of {@link ReactiveSessionScoped} binding the
+	 * {@link ClientSession} provided by the given {@link Publisher} to each and every command issued against MongoDB.
 	 * <p />
-	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
-	 * {@literal onComplete} hook to potentially close the {@link ClientSession}.
+	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use
+	 * {@link ReactiveSessionScoped#execute(ReactiveSessionCallback, Consumer)} to provide a hook for processing the
+	 * {@link ClientSession} when done.
 	 *
 	 * @param sessionProvider must not be {@literal null}.
-	 * @return new instance of {@link SessionScoped}. Never {@literal null}.
+	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
 	 * @since 2.1
 	 */
-	default ReactiveSessionScoped withSession(Publisher<ClientSession> sessionProvider) {
-
-		return new ReactiveSessionScoped() {
-
-			private final Mono<ClientSession> cachedSession = Mono.from(sessionProvider).cache();
-
-			@Override
-			public <T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
-
-				return cachedSession.flatMapMany(session -> {
-					return Flux.from(action.doInSession(ReactiveMongoOperations.this.withSession(session)))
-							.doFinally((signalType) -> doFinally.accept(session));
-				});
-			}
-		};
-	}
+	ReactiveSessionScoped withSession(Publisher<ClientSession> sessionProvider);
 
 	/**
 	 * Obtain a {@link ClientSession} bound instance of {@link ReactiveMongoOperations}.
@@ -214,6 +204,34 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @since 2.1
 	 */
 	ReactiveMongoOperations withSession(ClientSession session);
+
+	/**
+	 * Initiate a new {@link ClientSession} and obtain a {@link ClientSession session} bound instance of
+	 * {@link ReactiveSessionScoped}. Starts the transaction and adds the {@link ClientSession} to each and every command
+	 * issued against MongoDB.
+	 * <p/>
+	 * Each {@link ReactiveSessionScoped#execute(ReactiveSessionCallback) execution} initiates a new managed transaction
+	 * that is {@link ClientSession#commitTransaction() committed} on success. Transactions are
+	 * {@link ClientSession#abortTransaction() rolled back} upon errors.
+	 *
+	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
+	 */
+	ReactiveSessionScoped inTransaction();
+
+	/**
+	 * Obtain a {@link ClientSession session} bound instance of {@link ReactiveSessionScoped}, start the transaction and
+	 * bind the {@link ClientSession} provided by the given {@link Publisher} to each and every command issued against
+	 * MongoDB.
+	 * <p/>
+	 * Each {@link ReactiveSessionScoped#execute(ReactiveSessionCallback) execution} initiates a new managed transaction
+	 * that is {@link ClientSession#commitTransaction() committed} on success. Transactions are
+	 * {@link ClientSession#abortTransaction() rolled back} upon errors.
+	 *
+	 * @param sessionProvider must not be {@literal null}.
+	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
+	 * @since 2.1
+	 */
+	ReactiveSessionScoped inTransaction(Publisher<ClientSession> sessionProvider);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.
