@@ -62,11 +62,15 @@ public class ReactiveClientSessionTests {
 
 		template = new ReactiveMongoTemplate(client, DATABASE_NAME);
 
-		StepVerifier.create(MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, COLLECTION_NAME, client))
-				.expectNext(Success.SUCCESS).verifyComplete();
+		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, COLLECTION_NAME, client) //
+				.as(StepVerifier::create) //
+				.expectNext(Success.SUCCESS) //
+				.verifyComplete();
 
-		StepVerifier.create(template.insert(new Document("_id", "id-1").append("value", "spring"), COLLECTION_NAME))
-				.expectNextCount(1).verifyComplete();
+		template.insert(new Document("_id", "id-1").append("value", "spring"), COLLECTION_NAME) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1880
@@ -77,8 +81,9 @@ public class ReactiveClientSessionTests {
 
 		assertThat(session.getOperationTime()).isNull();
 
-		StepVerifier
-				.create(template.withSession(() -> session).execute(action -> action.findAll(Document.class, COLLECTION_NAME)))
+		template.withSession(() -> session) //
+				.execute(action -> action.findAll(Document.class, COLLECTION_NAME)) //
+				.as(StepVerifier::create) //
 				.expectNextCount(1).verifyComplete();
 
 		assertThat(session.getOperationTime()).isNotNull();
@@ -95,10 +100,11 @@ public class ReactiveClientSessionTests {
 
 		assertThat(session.getOperationTime()).isNull();
 
-		StepVerifier
-				.create(template.withSession(() -> session)
-						.execute(action -> action.findOne(new Query(), Document.class, COLLECTION_NAME)))
-				.expectNextCount(1).verifyComplete();
+		template.withSession(() -> session)
+						.execute(action -> action.findOne(new Query(), Document.class, COLLECTION_NAME)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
 
 		assertThat(session.getOperationTime()).isNotNull();
 		assertThat(session.getServerSession().isClosed()).isFalse();
@@ -126,8 +132,10 @@ public class ReactiveClientSessionTests {
 	public void addsClientSessionToContext() {
 
 		template.withSession(client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build()))
-				.execute(action -> ReactiveMongoContext.getSession()).as(StepVerifier::create)
-				.consumeNextWith(session -> assertThat(session).isNotNull()).verifyComplete();
+				.execute(action -> ReactiveMongoContext.getSession()) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
 	static class CountingSessionSupplier implements Supplier<ClientSession> {

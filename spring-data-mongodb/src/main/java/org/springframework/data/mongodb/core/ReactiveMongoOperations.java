@@ -198,7 +198,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Obtain a {@link ClientSession} bound instance of {@link ReactiveMongoOperations}.
 	 * <p />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
-	 * 
+	 *
 	 * @param session must not be {@literal null}.
 	 * @return {@link ClientSession} bound instance of {@link ReactiveMongoOperations}.
 	 * @since 2.1
@@ -209,6 +209,10 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Initiate a new {@link ClientSession} and obtain a {@link ClientSession session} bound instance of
 	 * {@link ReactiveSessionScoped}. Starts the transaction and adds the {@link ClientSession} to each and every command
 	 * issued against MongoDB.
+	 * <p/>
+	 * Each {@link ReactiveSessionScoped#execute(ReactiveSessionCallback) execution} initiates a new managed transaction
+	 * that is {@link ClientSession#commitTransaction() committed} on success. Transactions are
+	 * {@link ClientSession#abortTransaction() rolled back} upon errors.
 	 *
 	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
 	 */
@@ -218,29 +222,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Obtain a {@link ClientSession session} bound instance of {@link ReactiveSessionScoped}, start the transaction and
 	 * bind the {@link ClientSession} provided by the given {@link Publisher} to each and every command issued against
 	 * MongoDB.
-	 * 
+	 * <p/>
+	 * Each {@link ReactiveSessionScoped#execute(ReactiveSessionCallback) execution} initiates a new managed transaction
+	 * that is {@link ClientSession#commitTransaction() committed} on success. Transactions are
+	 * {@link ClientSession#abortTransaction() rolled back} upon errors.
+	 *
 	 * @param sessionProvider must not be {@literal null}.
 	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
 	 * @since 2.1
 	 */
-	default ReactiveSessionScoped inTransaction(Publisher<ClientSession> sessionProvider) {
-
-		return new ReactiveSessionScoped() {
-
-			@Override
-			public <T> Flux<T> flatMap(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
-
-				return ReactiveMongoOperations.this.withSession(Mono.from(sessionProvider).flatMap(session -> {
-
-					if (!session.hasActiveTransaction()) {
-						session.startTransaction();
-					}
-
-					return Mono.just(session);
-				})).execute(action, doFinally);
-			}
-		};
-	}
+	ReactiveSessionScoped inTransaction(Publisher<ClientSession> sessionProvider);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.
