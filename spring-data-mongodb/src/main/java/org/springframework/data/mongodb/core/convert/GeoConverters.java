@@ -50,7 +50,7 @@ import com.mongodb.DBObject;
 
 /**
  * Wrapper class to contain useful geo structure converters for the usage with Mongo.
- * 
+ *
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -66,7 +66,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Returns the geo converters to be registered.
-	 * 
+	 *
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -92,12 +92,13 @@ abstract class GeoConverters {
 				, DbObjectToGeoJsonMultiLineStringConverter.INSTANCE //
 				, DbObjectToGeoJsonMultiPointConverter.INSTANCE //
 				, DbObjectToGeoJsonMultiPolygonConverter.INSTANCE //
-				, DbObjectToGeoJsonGeometryCollectionConverter.INSTANCE);
+				, DbObjectToGeoJsonGeometryCollectionConverter.INSTANCE //
+				, DbObjectToGeoJsonConverter.INSTANCE);
 	}
 
 	/**
 	 * Converts a {@link List} of {@link Double}s into a {@link Point}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -129,7 +130,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Point} into a {@link List} of {@link Double}s.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -149,7 +150,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Box} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -178,7 +179,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link BasicDBList} into a {@link Box}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -207,7 +208,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Circle} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -236,7 +237,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link DBObject} into a {@link Circle}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -278,7 +279,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Sphere} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -307,7 +308,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link BasicDBList} into a {@link Sphere}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -349,7 +350,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Polygon} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -383,7 +384,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link BasicDBList} into a {@link Polygon}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -419,7 +420,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a {@link Sphere} into a {@link BasicDBList}.
-	 * 
+	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
@@ -757,7 +758,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonGeometryCollectionConverter implements Converter<DBObject, GeoJsonGeometryCollection> {
+	enum DbObjectToGeoJsonGeometryCollectionConverter implements Converter<DBObject, GeoJsonGeometryCollection> {
 
 		INSTANCE;
 
@@ -778,8 +779,9 @@ abstract class GeoConverters {
 
 			List<GeoJson<?>> geometries = new ArrayList<GeoJson<?>>();
 			for (Object o : (List) source.get("geometries")) {
-				geometries.add(convertGeometries((DBObject) o));
+				geometries.add(toGenericGeoJson((DBObject) o));
 			}
+
 			return new GeoJsonGeometryCollection(geometries);
 
 		}
@@ -820,7 +822,7 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPoint}s.
-	 * 
+	 *
 	 * @param listOfCoordinatePairs
 	 * @return
 	 * @since 1.7
@@ -844,13 +846,70 @@ abstract class GeoConverters {
 
 	/**
 	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPolygon}.
-	 * 
+	 *
 	 * @param dbList
 	 * @return
 	 * @since 1.7
 	 */
 	static GeoJsonPolygon toGeoJsonPolygon(BasicDBList dbList) {
 		return new GeoJsonPolygon(toListOfPoint((BasicDBList) dbList.get(0)));
+	}
+
+	/**
+	 * Converter implementation transforming a {@link DbObject} into a concrete {@link GeoJson} based on the embedded
+	 * {@literal type} information.
+	 *
+	 * @since 2.1
+	 * @author Christoph Strobl
+	 */
+	@ReadingConverter
+	enum DbObjectToGeoJsonConverter implements Converter<DBObject, GeoJson> {
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		@Override
+		public GeoJson convert(DBObject source) {
+			return toGenericGeoJson(source);
+		}
+	}
+
+	private static GeoJson<?> toGenericGeoJson(DBObject source) {
+
+		String type = String.class.cast(source.get("type"));
+
+		if ("point".equalsIgnoreCase(type)) {
+			return DbObjectToGeoJsonPointConverter.INSTANCE.convert(source);
+		}
+
+		if ("multipoint".equalsIgnoreCase(type)) {
+			return DbObjectToGeoJsonMultiPointConverter.INSTANCE.convert(source);
+		}
+
+		if ("linestring".equalsIgnoreCase(type)) {
+			return DbObjectToGeoJsonLineStringConverter.INSTANCE.convert(source);
+		}
+
+		if ("multilinestring".equalsIgnoreCase(type)) {
+			return DbObjectToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
+		}
+
+		if ("polygon".equalsIgnoreCase(type)) {
+			return DbObjectToGeoJsonPolygonConverter.INSTANCE.convert(source);
+		}
+
+		if ("multipolygon".equalsIgnoreCase(type)) {
+			return DbObjectToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
+		}
+
+		if ("geometrycollection".equalsIgnoreCase(type)) {
+			return DbObjectToGeoJsonGeometryCollectionConverter.INSTANCE.convert(source);
+		}
+
+		throw new IllegalArgumentException(
+				String.format("No converter found capable of converting GeoJson type %s.", type));
 	}
 
 	private static double toPrimitiveDoubleValue(Object value) {
