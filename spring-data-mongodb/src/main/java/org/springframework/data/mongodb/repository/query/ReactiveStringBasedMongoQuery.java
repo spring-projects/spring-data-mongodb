@@ -27,7 +27,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.BindingContext;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBinding;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBindingParser;
-import org.springframework.data.repository.query.EvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 
@@ -62,7 +63,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, EvaluationContextProvider evaluationContextProvider) {
+			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
 	}
 
@@ -77,7 +78,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 */
 	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations mongoOperations, SpelExpressionParser expressionParser,
-			EvaluationContextProvider evaluationContextProvider) {
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, mongoOperations);
 

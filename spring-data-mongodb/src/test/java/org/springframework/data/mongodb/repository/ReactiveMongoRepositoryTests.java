@@ -55,7 +55,7 @@ import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.Repository;
-import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ClassUtils;
@@ -97,7 +97,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		factory.setRepositoryBaseClass(SimpleReactiveMongoRepository.class);
 		factory.setBeanClassLoader(classLoader);
 		factory.setBeanFactory(beanFactory);
-		factory.setEvaluationContextProvider(DefaultEvaluationContextProvider.INSTANCE);
+		factory.setEvaluationContextProvider(QueryMethodEvaluationContextProvider.DEFAULT);
 
 		repository = factory.getRepository(ReactivePersonRepository.class);
 		cappedRepository = factory.getRepository(ReactiveCappedCollectionRepository.class);
@@ -174,10 +174,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	@Test // DATAMONGO-1444
 	public void shouldUseTailableCursor() throws Exception {
 
-		StepVerifier
-				.create(template.dropCollection(Capped.class) //
-						.then(template.createCollection(Capped.class, //
-								CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
+		StepVerifier.create(template.dropCollection(Capped.class) //
+				.then(template.createCollection(Capped.class, //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
@@ -199,10 +198,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	@Test // DATAMONGO-1444
 	public void shouldUseTailableCursorWithProjection() throws Exception {
 
-		StepVerifier
-				.create(template.dropCollection(Capped.class) //
-						.then(template.createCollection(Capped.class, //
-								CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
+		StepVerifier.create(template.dropCollection(Capped.class) //
+				.then(template.createCollection(Capped.class, //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
@@ -246,9 +244,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		dave.setLocation(point);
 		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		StepVerifier
-				.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), //
-						PageRequest.of(0, 10))) //
+		StepVerifier.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), //
+				PageRequest.of(0, 10))) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}
@@ -276,10 +273,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		dave.setLocation(point);
 		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		StepVerifier
-				.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
-						new Distance(2000, Metrics.KILOMETERS), //
-						PageRequest.of(0, 10))) //
+		StepVerifier.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
+				new Distance(2000, Metrics.KILOMETERS), //
+				PageRequest.of(0, 10))) //
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getDistance().getValue(), is(closeTo(1, 1)));
@@ -294,9 +290,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		dave.setLocation(point);
 		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
 
-		StepVerifier
-				.create(repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
-						new Distance(2000, Metrics.KILOMETERS))) //
+		StepVerifier.create(repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
+				new Distance(2000, Metrics.KILOMETERS))) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}

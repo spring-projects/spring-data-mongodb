@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.any;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -51,7 +51,7 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
@@ -223,7 +223,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
 		return new ReactiveStringBasedMongoQuery(queryMethod, operations, PARSER,
-				DefaultEvaluationContextProvider.INSTANCE);
+				QueryMethodEvaluationContextProvider.DEFAULT);
 	}
 
 	private interface SampleRepository extends Repository<Person, Long> {

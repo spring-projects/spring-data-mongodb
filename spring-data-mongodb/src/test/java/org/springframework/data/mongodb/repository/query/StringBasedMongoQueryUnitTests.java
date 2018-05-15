@@ -53,7 +53,7 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
@@ -565,7 +565,7 @@ public class StringBasedMongoQueryUnitTests {
 			ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
 					factory, converter.getMappingContext());
-			return new StringBasedMongoQuery(queryMethod, operations, PARSER, DefaultEvaluationContextProvider.INSTANCE);
+			return new StringBasedMongoQuery(queryMethod, operations, PARSER, QueryMethodEvaluationContextProvider.DEFAULT);
 
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
