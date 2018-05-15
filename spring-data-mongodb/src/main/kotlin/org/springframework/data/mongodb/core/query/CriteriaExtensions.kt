@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.query
 
 /**
- * Extension for [Criteria.is] providing an `isEqualTo` alias since `in` is a reserved keyword in Kotlin.
+ * Extension for [Criteria.is] providing an `isEqualTo` alias since `is` is a reserved keyword in Kotlin.
  *
  * @author Sebastien Deleuze
  * @since 2.0
