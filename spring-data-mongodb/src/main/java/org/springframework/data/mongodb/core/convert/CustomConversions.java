@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -48,7 +49,7 @@ public class CustomConversions extends MongoCustomConversions {
 	 *
 	 * @param converters
 	 */
-	public CustomConversions(List<?> converters) {
+	public CustomConversions(Collection<?> converters) {
 		super(converters);
 	}
 
