@@ -16,8 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import lombok.Data;
@@ -36,6 +35,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TestRule;
 import org.mockito.Mockito;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.Advised;
@@ -56,6 +56,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
+import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.Version;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -73,6 +74,7 @@ import com.mongodb.client.MongoDatabase;
 public class SessionBoundMongoTemplateTests {
 
 	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
+	public static @ClassRule TestRule replSet = ReplicaSet.required();
 
 	public @Rule ExpectedException exception = ExpectedException.none();
 
