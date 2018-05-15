@@ -15,10 +15,13 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
@@ -47,6 +50,7 @@ import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBList;
+import com.mongodb.Function;
 
 /**
  * Wrapper class to contain useful geo structure converters for the usage with Mongo.
@@ -58,6 +62,26 @@ import com.mongodb.BasicDBList;
  * @since 1.5
  */
 abstract class GeoConverters {
+
+
+	private final static Map<String, Function<Document, GeoJson<?>>> converters;
+
+	static {
+
+		Collator caseInsensitive = Collator.getInstance();
+		caseInsensitive.setStrength(Collator.PRIMARY);
+
+		Map<String, Function<Document, GeoJson<?>>> geoConverters = new TreeMap<>(caseInsensitive);
+		geoConverters.put("point", DocumentToGeoJsonPointConverter.INSTANCE::convert);
+		geoConverters.put("multipoint", DocumentToGeoJsonMultiPointConverter.INSTANCE::convert);
+		geoConverters.put("linestring", DocumentToGeoJsonLineStringConverter.INSTANCE::convert);
+		geoConverters.put("multilinestring", DocumentToGeoJsonMultiLineStringConverter.INSTANCE::convert);
+		geoConverters.put("polygon", DocumentToGeoJsonPolygonConverter.INSTANCE::convert);
+		geoConverters.put("multipolygon", DocumentToGeoJsonMultiPolygonConverter.INSTANCE::convert);
+		geoConverters.put("geometrycollection", DocumentToGeoJsonGeometryCollectionConverter.INSTANCE::convert);
+
+		converters = geoConverters;
+	}
 
 	/**
 	 * Private constructor to prevent instantiation.
@@ -836,6 +860,7 @@ abstract class GeoConverters {
 	enum DocumentToGeoJsonConverter implements Converter<Document, GeoJson> {
 		INSTANCE;
 
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
@@ -851,36 +876,17 @@ abstract class GeoConverters {
 
 		String type = source.get("type", String.class);
 
-		if ("point".equalsIgnoreCase(type)) {
-			return DocumentToGeoJsonPointConverter.INSTANCE.convert(source);
-		}
+		if(type != null) {
 
-		if ("multipoint".equalsIgnoreCase(type)) {
-			return DocumentToGeoJsonMultiPointConverter.INSTANCE.convert(source);
-		}
+			Function<Document, GeoJson<?>> converter = converters.get(type);
 
-		if ("linestring".equalsIgnoreCase(type)) {
-			return DocumentToGeoJsonLineStringConverter.INSTANCE.convert(source);
-		}
-
-		if ("multilinestring".equalsIgnoreCase(type)) {
-			return DocumentToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
-		}
-
-		if ("polygon".equalsIgnoreCase(type)) {
-			return DocumentToGeoJsonPolygonConverter.INSTANCE.convert(source);
-		}
-
-		if ("multipolygon".equalsIgnoreCase(type)) {
-			return DocumentToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
-		}
-
-		if ("geometrycollection".equalsIgnoreCase(type)) {
-			return DocumentToGeoJsonGeometryCollectionConverter.INSTANCE.convert(source);
+			if(converter != null){
+				return converter.apply(source);
+			}
 		}
 
 		throw new IllegalArgumentException(
-				String.format("No converter found capable of converting GeoJson type " + "%s.", type));
+				String.format("No converter found capable of converting GeoJson type %s.", type));
 	}
 
 	private static double toPrimitiveDoubleValue(Object value) {
