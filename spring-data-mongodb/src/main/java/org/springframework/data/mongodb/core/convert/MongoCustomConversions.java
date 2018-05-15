@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +71,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	 *
 	 * @param converters must not be {@literal null}.
 	 */
-	public MongoCustomConversions(List<?> converters) {
+	public MongoCustomConversions(Collection<?> converters) {
 		super(STORE_CONVERSIONS, converters);
 	}
 
