@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.annotation.ElementType;
@@ -56,7 +54,7 @@ public class BasicMongoPersistentEntityUnitTests {
 
 		BasicMongoPersistentEntity<Person> entity = new BasicMongoPersistentEntity<Person>(
 				ClassTypeInformation.from(Person.class));
-		assertThat(entity.getCollection(), is("contacts"));
+		assertThat(entity.getCollection()).isEqualTo("contacts");
 	}
 
 	@Test
@@ -64,7 +62,7 @@ public class BasicMongoPersistentEntityUnitTests {
 
 		MongoPersistentEntity<Company> entity = new BasicMongoPersistentEntity<Company>(
 				ClassTypeInformation.from(Company.class));
-		assertThat(entity.getCollection(), is("35"));
+		assertThat(entity.getCollection()).isEqualTo("35");
 	}
 
 	@Test // DATAMONGO-65, DATAMONGO-1108
@@ -79,10 +77,10 @@ public class BasicMongoPersistentEntityUnitTests {
 				ClassTypeInformation.from(DynamicallyMapped.class));
 		entity.setEvaluationContextProvider(new ExtensionAwareEvaluationContextProvider(context));
 
-		assertThat(entity.getCollection(), is("reference"));
+		assertThat(entity.getCollection()).isEqualTo("reference");
 
 		provider.collectionName = "otherReference";
-		assertThat(entity.getCollection(), is("otherReference"));
+		assertThat(entity.getCollection()).isEqualTo("otherReference");
 	}
 
 	@Test // DATAMONGO-937
@@ -90,31 +88,31 @@ public class BasicMongoPersistentEntityUnitTests {
 
 		BasicMongoPersistentEntity<DocumentWithLanguage> entity = new BasicMongoPersistentEntity<DocumentWithLanguage>(
 				ClassTypeInformation.from(DocumentWithLanguage.class));
-		assertThat(entity.getLanguage(), is("spanish"));
+
+		assertThat(entity.getLanguage()).isEqualTo("spanish");
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test(expected = MappingException.class) // DATAMONGO-1053
+	@Test // DATAMONGO-1053
 	public void verifyShouldThrowExceptionForInvalidTypeOfExplicitLanguageProperty() {
+
+		doReturn(true).when(propertyMock).isExplicitLanguageProperty();
+		doReturn(Number.class).when(propertyMock).getActualType();
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
 				ClassTypeInformation.from(AnyDocument.class));
-
-		when(propertyMock.isExplicitLanguageProperty()).thenReturn(true);
-		when(propertyMock.getActualType()).thenReturn((Class) Number.class);
-
 		entity.addPersistentProperty(propertyMock);
-		entity.verify();
+
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> entity.verify());
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test // DATAMONGO-1053
 	public void verifyShouldPassForStringAsExplicitLanguageProperty() {
 
+		doReturn(true).when(propertyMock).isExplicitLanguageProperty();
+		doReturn(String.class).when(propertyMock).getActualType();
+
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
 				ClassTypeInformation.from(AnyDocument.class));
-		when(propertyMock.isExplicitLanguageProperty()).thenReturn(true);
-		when(propertyMock.getActualType()).thenReturn((Class) String.class);
 		entity.addPersistentProperty(propertyMock);
 
 		entity.verify();
@@ -123,7 +121,6 @@ public class BasicMongoPersistentEntityUnitTests {
 		verify(propertyMock, times(1)).getActualType();
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test // DATAMONGO-1053
 	public void verifyShouldIgnoreNonExplicitLanguageProperty() {
 
@@ -138,71 +135,74 @@ public class BasicMongoPersistentEntityUnitTests {
 		verify(propertyMock, never()).getActualType();
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test(expected = MappingException.class) // DATAMONGO-1157
+	@Test // DATAMONGO-1157
 	public void verifyShouldThrowErrorForLazyDBRefOnFinalClass() {
 
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
-				ClassTypeInformation.from(AnyDocument.class));
 		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
 				org.springframework.data.mongodb.core.mapping.DBRef.class);
-		when(propertyMock.isDbReference()).thenReturn(true);
-		when(propertyMock.getDBRef()).thenReturn(dbRefMock);
-		when(dbRefMock.lazy()).thenReturn(true);
-		when(propertyMock.getActualType()).thenReturn((Class) Class.class);
-		entity.addPersistentProperty(propertyMock);
 
-		entity.verify();
-	}
-
-	@Test(expected = MappingException.class) // DATAMONGO-1157
-	public void verifyShouldThrowErrorForLazyDBRefArray() {
+		doReturn(Class.class).when(propertyMock).getActualType();
+		doReturn(true).when(propertyMock).isDbReference();
+		doReturn(dbRefMock).when(propertyMock).getDBRef();
+		doReturn(true).when(dbRefMock).lazy();
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
 				ClassTypeInformation.from(AnyDocument.class));
-		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
-				org.springframework.data.mongodb.core.mapping.DBRef.class);
-		when(propertyMock.isDbReference()).thenReturn(true);
-		when(propertyMock.getDBRef()).thenReturn(dbRefMock);
-		when(dbRefMock.lazy()).thenReturn(true);
-		when(propertyMock.isArray()).thenReturn(true);
 		entity.addPersistentProperty(propertyMock);
 
-		entity.verify();
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> entity.verify());
 	}
 
 	@Test // DATAMONGO-1157
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void verifyShouldPassForLazyDBRefOnNonArrayNonFinalClass() {
+	public void verifyShouldThrowErrorForLazyDBRefArray() {
+
+		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
+				org.springframework.data.mongodb.core.mapping.DBRef.class);
+
+		doReturn(true).when(propertyMock).isDbReference();
+		doReturn(true).when(propertyMock).isArray();
+		doReturn(dbRefMock).when(propertyMock).getDBRef();
+		doReturn(true).when(dbRefMock).lazy();
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
 				ClassTypeInformation.from(AnyDocument.class));
-		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
-				org.springframework.data.mongodb.core.mapping.DBRef.class);
-		when(propertyMock.isDbReference()).thenReturn(true);
-		when(propertyMock.getDBRef()).thenReturn(dbRefMock);
-		when(dbRefMock.lazy()).thenReturn(true);
-		when(propertyMock.getActualType()).thenReturn((Class) Object.class);
 		entity.addPersistentProperty(propertyMock);
 
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> entity.verify());
+	}
+
+	@Test // DATAMONGO-1157
+	public void verifyShouldPassForLazyDBRefOnNonArrayNonFinalClass() {
+
+		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
+				org.springframework.data.mongodb.core.mapping.DBRef.class);
+
+		doReturn(true).when(propertyMock).isDbReference();
+		doReturn(Object.class).when(propertyMock).getActualType();
+		doReturn(dbRefMock).when(propertyMock).getDBRef();
+		doReturn(true).when(dbRefMock).lazy();
+
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+				ClassTypeInformation.from(AnyDocument.class));
+		entity.addPersistentProperty(propertyMock);
 		entity.verify();
 
 		verify(propertyMock, times(1)).isDbReference();
 	}
 
 	@Test // DATAMONGO-1157
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void verifyShouldPassForNonLazyDBRefOnFinalClass() {
+
+		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
+				org.springframework.data.mongodb.core.mapping.DBRef.class);
+
+		doReturn(true).when(propertyMock).isDbReference();
+		doReturn(dbRefMock).when(propertyMock).getDBRef();
+		doReturn(false).when(dbRefMock).lazy();
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
 				ClassTypeInformation.from(AnyDocument.class));
-		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
-				org.springframework.data.mongodb.core.mapping.DBRef.class);
-		when(propertyMock.isDbReference()).thenReturn(true);
-		when(propertyMock.getDBRef()).thenReturn(dbRefMock);
-		when(dbRefMock.lazy()).thenReturn(false);
 		entity.addPersistentProperty(propertyMock);
-
 		entity.verify();
 
 		verify(dbRefMock, times(1)).lazy();
@@ -214,7 +214,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		BasicMongoPersistentEntity<DocumentWithCustomAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithCustomAnnotation>(
 				ClassTypeInformation.from(DocumentWithCustomAnnotation.class));
 
-		assertThat(entity.getCollection(), is("collection-1"));
+		assertThat(entity.getCollection()).isEqualTo("collection-1");
 	}
 
 	@Test // DATAMONGO-1373
@@ -223,7 +223,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		BasicMongoPersistentEntity<DocumentWithComposedAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithComposedAnnotation>(
 				ClassTypeInformation.from(DocumentWithComposedAnnotation.class));
 
-		assertThat(entity.getCollection(), is("custom-collection"));
+		assertThat(entity.getCollection()).isEqualTo("custom-collection");
 	}
 
 	@Test // DATAMONGO-1874
