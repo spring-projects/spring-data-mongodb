@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thiago Diniz da Silveira
+ * @author Mark Paluch
  * @since 1.5
  */
 abstract class GeoConverters {
@@ -103,7 +104,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToPointConverter implements Converter<DBObject, Point> {
+	enum DbObjectToPointConverter implements Converter<DBObject, Point> {
 
 		INSTANCE;
 
@@ -134,7 +135,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum PointToDbObjectConverter implements Converter<Point, DBObject> {
+	enum PointToDbObjectConverter implements Converter<Point, DBObject> {
 
 		INSTANCE;
 
@@ -155,7 +156,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@WritingConverter
-	static enum BoxToDbObjectConverter implements Converter<Box, DBObject> {
+	enum BoxToDbObjectConverter implements Converter<Box, DBObject> {
 
 		INSTANCE;
 
@@ -184,7 +185,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToBoxConverter implements Converter<DBObject, Box> {
+	enum DbObjectToBoxConverter implements Converter<DBObject, Box> {
 
 		INSTANCE;
 
@@ -212,7 +213,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum CircleToDbObjectConverter implements Converter<Circle, DBObject> {
+	enum CircleToDbObjectConverter implements Converter<Circle, DBObject> {
 
 		INSTANCE;
 
@@ -242,7 +243,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToCircleConverter implements Converter<DBObject, Circle> {
+	enum DbObjectToCircleConverter implements Converter<DBObject, Circle> {
 
 		INSTANCE;
 
@@ -283,7 +284,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum SphereToDbObjectConverter implements Converter<Sphere, DBObject> {
+	enum SphereToDbObjectConverter implements Converter<Sphere, DBObject> {
 
 		INSTANCE;
 
@@ -313,7 +314,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToSphereConverter implements Converter<DBObject, Sphere> {
+	enum DbObjectToSphereConverter implements Converter<DBObject, Sphere> {
 
 		INSTANCE;
 
@@ -354,7 +355,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum PolygonToDbObjectConverter implements Converter<Polygon, DBObject> {
+	enum PolygonToDbObjectConverter implements Converter<Polygon, DBObject> {
 
 		INSTANCE;
 
@@ -389,7 +390,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DbObjectToPolygonConverter implements Converter<DBObject, Polygon> {
+	enum DbObjectToPolygonConverter implements Converter<DBObject, Polygon> {
 
 		INSTANCE;
 
@@ -424,7 +425,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum GeoCommandToDbObjectConverter implements Converter<GeoCommand, DBObject> {
+	enum GeoCommandToDbObjectConverter implements Converter<GeoCommand, DBObject> {
 
 		INSTANCE;
 
@@ -484,7 +485,7 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	@SuppressWarnings("rawtypes")
-	static enum GeoJsonToDbObjectConverter implements Converter<GeoJson, DBObject> {
+	enum GeoJsonToDbObjectConverter implements Converter<GeoJson, DBObject> {
 
 		INSTANCE;
 
@@ -547,7 +548,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum GeoJsonPointToDbObjectConverter implements Converter<GeoJsonPoint, DBObject> {
+	enum GeoJsonPointToDbObjectConverter implements Converter<GeoJsonPoint, DBObject> {
 
 		INSTANCE;
 
@@ -565,7 +566,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum GeoJsonPolygonToDbObjectConverter implements Converter<GeoJsonPolygon, DBObject> {
+	enum GeoJsonPolygonToDbObjectConverter implements Converter<GeoJsonPolygon, DBObject> {
 
 		INSTANCE;
 
@@ -583,7 +584,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonPointConverter implements Converter<DBObject, GeoJsonPoint> {
+	enum DbObjectToGeoJsonPointConverter implements Converter<DBObject, GeoJsonPoint> {
 
 		INSTANCE;
 
@@ -611,7 +612,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonPolygonConverter implements Converter<DBObject, GeoJsonPolygon> {
+	enum DbObjectToGeoJsonPolygonConverter implements Converter<DBObject, GeoJsonPolygon> {
 
 		INSTANCE;
 
@@ -637,7 +638,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonMultiPolygonConverter implements Converter<DBObject, GeoJsonMultiPolygon> {
+	enum DbObjectToGeoJsonMultiPolygonConverter implements Converter<DBObject, GeoJsonMultiPolygon> {
 
 		INSTANCE;
 
@@ -670,7 +671,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonLineStringConverter implements Converter<DBObject, GeoJsonLineString> {
+	enum DbObjectToGeoJsonLineStringConverter implements Converter<DBObject, GeoJsonLineString> {
 
 		INSTANCE;
 
@@ -698,7 +699,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonMultiPointConverter implements Converter<DBObject, GeoJsonMultiPoint> {
+	enum DbObjectToGeoJsonMultiPointConverter implements Converter<DBObject, GeoJsonMultiPoint> {
 
 		INSTANCE;
 
@@ -726,7 +727,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DbObjectToGeoJsonMultiLineStringConverter implements Converter<DBObject, GeoJsonMultiLineString> {
+	enum DbObjectToGeoJsonMultiLineStringConverter implements Converter<DBObject, GeoJsonMultiLineString> {
 
 		INSTANCE;
 
@@ -784,35 +785,6 @@ abstract class GeoConverters {
 
 			return new GeoJsonGeometryCollection(geometries);
 
-		}
-
-		private static GeoJson<?> convertGeometries(DBObject source) {
-
-			Object type = source.get("type");
-			if (ObjectUtils.nullSafeEquals(type, "Point")) {
-				return DbObjectToGeoJsonPointConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "MultiPoint")) {
-				return DbObjectToGeoJsonMultiPointConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "LineString")) {
-				return DbObjectToGeoJsonLineStringConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "MultiLineString")) {
-				return DbObjectToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "Polygon")) {
-				return DbObjectToGeoJsonPolygonConverter.INSTANCE.convert(source);
-			}
-			if (ObjectUtils.nullSafeEquals(type, "MultiPolygon")) {
-				return DbObjectToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
-			}
-
-			throw new IllegalArgumentException(String.format("Cannot convert unknown GeoJson type %s", type));
 		}
 	}
 

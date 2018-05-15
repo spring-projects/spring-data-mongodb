@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -144,7 +144,7 @@ public class GeoJsonTests {
 	}
 
 	@Test // DATAMONGO-1137
-	public void shouleSaveAndRetrieveDocumentWithGeoJsonPointTypeCorrectly() {
+	public void shouldSaveAndRetrieveDocumentWithGeoJsonPointTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonPoint";
@@ -159,7 +159,7 @@ public class GeoJsonTests {
 	}
 
 	@Test // DATAMONGO-1137
-	public void shouleSaveAndRetrieveDocumentWithGeoJsonPolygonTypeCorrectly() {
+	public void shouldSaveAndRetrieveDocumentWithGeoJsonPolygonTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonPolygon";
@@ -175,7 +175,7 @@ public class GeoJsonTests {
 	}
 
 	@Test // DATAMONGO-1137
-	public void shouleSaveAndRetrieveDocumentWithGeoJsonLineStringTypeCorrectly() {
+	public void shouldSaveAndRetrieveDocumentWithGeoJsonLineStringTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonLineString";
@@ -190,7 +190,7 @@ public class GeoJsonTests {
 	}
 
 	@Test // DATAMONGO-1137
-	public void shouleSaveAndRetrieveDocumentWithGeoJsonMultiLineStringTypeCorrectly() {
+	public void shouldSaveAndRetrieveDocumentWithGeoJsonMultiLineStringTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonMultiLineString";
@@ -207,7 +207,7 @@ public class GeoJsonTests {
 	}
 
 	@Test // DATAMONGO-1137
-	public void shouleSaveAndRetrieveDocumentWithGeoJsonMultiPointTypeCorrectly() {
+	public void shouldSaveAndRetrieveDocumentWithGeoJsonMultiPointTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonMultiPoint";
@@ -222,7 +222,7 @@ public class GeoJsonTests {
 	}
 
 	@Test // DATAMONGO-1137
-	public void shouleSaveAndRetrieveDocumentWithGeoJsonMultiPolygonTypeCorrectly() {
+	public void shouldSaveAndRetrieveDocumentWithGeoJsonMultiPolygonTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonMultiPolygon";
@@ -238,7 +238,7 @@ public class GeoJsonTests {
 	}
 
 	@Test // DATAMONGO-1137
-	public void shouleSaveAndRetrieveDocumentWithGeoJsonGeometryCollectionTypeCorrectly() {
+	public void shouldSaveAndRetrieveDocumentWithGeoJsonGeometryCollectionTypeCorrectly() {
 
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonGeometryCollection";
