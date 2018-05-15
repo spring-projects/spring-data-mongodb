@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -91,7 +92,8 @@ abstract class GeoConverters {
 				, DocumentToGeoJsonMultiLineStringConverter.INSTANCE //
 				, DocumentToGeoJsonMultiPointConverter.INSTANCE //
 				, DocumentToGeoJsonMultiPolygonConverter.INSTANCE //
-				, DocumentToGeoJsonGeometryCollectionConverter.INSTANCE);
+				, DocumentToGeoJsonGeometryCollectionConverter.INSTANCE //
+				, DocumentToGeoJsonConverter.INSTANCE);
 	}
 
 	/**
@@ -101,7 +103,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DocumentToPointConverter implements Converter<Document, Point> {
+	enum DocumentToPointConverter implements Converter<Document, Point> {
 
 		INSTANCE;
 
@@ -132,7 +134,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum PointToDocumentConverter implements Converter<Point, Document> {
+	enum PointToDocumentConverter implements Converter<Point, Document> {
 
 		INSTANCE;
 
@@ -147,13 +149,13 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link Box} into a {@link BasicDBList}.
+	 * Converts a {@link Box} into a {@link Document}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@WritingConverter
-	static enum BoxToDocumentConverter implements Converter<Box, Document> {
+	enum BoxToDocumentConverter implements Converter<Box, Document> {
 
 		INSTANCE;
 
@@ -176,13 +178,13 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link BasicDBList} into a {@link Box}.
+	 * Converts a {@link Document} into a {@link Box}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DocumentToBoxConverter implements Converter<Document, Box> {
+	enum DocumentToBoxConverter implements Converter<Document, Box> {
 
 		INSTANCE;
 
@@ -205,12 +207,12 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link Circle} into a {@link BasicDBList}.
+	 * Converts a {@link Circle} into a {@link Document}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum CircleToDocumentConverter implements Converter<Circle, Document> {
+	enum CircleToDocumentConverter implements Converter<Circle, Document> {
 
 		INSTANCE;
 
@@ -276,7 +278,7 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link Sphere} into a {@link BasicDBList}.
+	 * Converts a {@link Sphere} into a {@link Document}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
@@ -305,13 +307,13 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link BasicDBList} into a {@link Sphere}.
+	 * Converts a {@link Document} into a {@link Sphere}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DocumentToSphereConverter implements Converter<Document, Sphere> {
+	enum DocumentToSphereConverter implements Converter<Document, Sphere> {
 
 		INSTANCE;
 
@@ -347,12 +349,12 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link Polygon} into a {@link BasicDBList}.
+	 * Converts a {@link Polygon} into a {@link Document}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum PolygonToDocumentConverter implements Converter<Polygon, Document> {
+	enum PolygonToDocumentConverter implements Converter<Polygon, Document> {
 
 		INSTANCE;
 
@@ -368,7 +370,7 @@ abstract class GeoConverters {
 			}
 
 			List<Point> points = source.getPoints();
-			List<Document> pointTuples = new ArrayList<Document>(points.size());
+			List<Document> pointTuples = new ArrayList<>(points.size());
 
 			for (Point point : points) {
 				pointTuples.add(PointToDocumentConverter.INSTANCE.convert(point));
@@ -381,13 +383,13 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link BasicDBList} into a {@link Polygon}.
+	 * Converts a {@link Document} into a {@link Polygon}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DocumentToPolygonConverter implements Converter<Document, Polygon> {
+	enum DocumentToPolygonConverter implements Converter<Document, Polygon> {
 
 		INSTANCE;
 
@@ -404,7 +406,7 @@ abstract class GeoConverters {
 			}
 
 			List<Document> points = (List<Document>) source.get("points");
-			List<Point> newPoints = new ArrayList<Point>(points.size());
+			List<Point> newPoints = new ArrayList<>(points.size());
 
 			for (Document element : points) {
 
@@ -417,12 +419,12 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link Sphere} into a {@link BasicDBList}.
+	 * Converts a {@link Sphere} into a {@link Document}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum GeoCommandToDocumentConverter implements Converter<GeoCommand, Document> {
+	enum GeoCommandToDocumentConverter implements Converter<GeoCommand, Document> {
 
 		INSTANCE;
 
@@ -482,7 +484,7 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	@SuppressWarnings("rawtypes")
-	static enum GeoJsonToDocumentConverter implements Converter<GeoJson, Document> {
+	enum GeoJsonToDocumentConverter implements Converter<GeoJson, Document> {
 
 		INSTANCE;
 
@@ -545,7 +547,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum GeoJsonPointToDocumentConverter implements Converter<GeoJsonPoint, Document> {
+	enum GeoJsonPointToDocumentConverter implements Converter<GeoJsonPoint, Document> {
 
 		INSTANCE;
 
@@ -563,7 +565,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum GeoJsonPolygonToDocumentConverter implements Converter<GeoJsonPolygon, Document> {
+	enum GeoJsonPolygonToDocumentConverter implements Converter<GeoJsonPolygon, Document> {
 
 		INSTANCE;
 
@@ -581,7 +583,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DocumentToGeoJsonPointConverter implements Converter<Document, GeoJsonPoint> {
+	enum DocumentToGeoJsonPointConverter implements Converter<Document, GeoJsonPoint> {
 
 		INSTANCE;
 
@@ -609,7 +611,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DocumentToGeoJsonPolygonConverter implements Converter<Document, GeoJsonPolygon> {
+	enum DocumentToGeoJsonPolygonConverter implements Converter<Document, GeoJsonPolygon> {
 
 		INSTANCE;
 
@@ -654,7 +656,7 @@ abstract class GeoConverters {
 					String.format("Cannot convert type '%s' to MultiPolygon.", source.get("type")));
 
 			List dbl = (List) source.get("coordinates");
-			List<GeoJsonPolygon> polygones = new ArrayList<GeoJsonPolygon>();
+			List<GeoJsonPolygon> polygones = new ArrayList<>();
 
 			for (Object polygon : dbl) {
 				polygones.add(toGeoJsonPolygon((List) polygon));
@@ -668,7 +670,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DocumentToGeoJsonLineStringConverter implements Converter<Document, GeoJsonLineString> {
+	enum DocumentToGeoJsonLineStringConverter implements Converter<Document, GeoJsonLineString> {
 
 		INSTANCE;
 
@@ -696,7 +698,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DocumentToGeoJsonMultiPointConverter implements Converter<Document, GeoJsonMultiPoint> {
+	enum DocumentToGeoJsonMultiPointConverter implements Converter<Document, GeoJsonMultiPoint> {
 
 		INSTANCE;
 
@@ -724,7 +726,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DocumentToGeoJsonMultiLineStringConverter implements Converter<Document, GeoJsonMultiLineString> {
+	enum DocumentToGeoJsonMultiLineStringConverter implements Converter<Document, GeoJsonMultiLineString> {
 
 		INSTANCE;
 
@@ -756,7 +758,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DocumentToGeoJsonGeometryCollectionConverter implements Converter<Document, GeoJsonGeometryCollection> {
+	enum DocumentToGeoJsonGeometryCollectionConverter implements Converter<Document, GeoJsonGeometryCollection> {
 
 		INSTANCE;
 
@@ -775,41 +777,12 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "GeometryCollection"),
 					String.format("Cannot convert type '%s' to GeometryCollection.", source.get("type")));
 
-			List<GeoJson<?>> geometries = new ArrayList<GeoJson<?>>();
+			List<GeoJson<?>> geometries = new ArrayList<>();
 			for (Object o : (List) source.get("geometries")) {
-				geometries.add(convertGeometries((Document) o));
+				geometries.add(toGenericGeoJson((Document) o));
 			}
+
 			return new GeoJsonGeometryCollection(geometries);
-
-		}
-
-		private static GeoJson<?> convertGeometries(Document source) {
-
-			Object type = source.get("type");
-			if (ObjectUtils.nullSafeEquals(type, "Point")) {
-				return DocumentToGeoJsonPointConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "MultiPoint")) {
-				return DocumentToGeoJsonMultiPointConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "LineString")) {
-				return DocumentToGeoJsonLineStringConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "MultiLineString")) {
-				return DocumentToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
-			}
-
-			if (ObjectUtils.nullSafeEquals(type, "Polygon")) {
-				return DocumentToGeoJsonPolygonConverter.INSTANCE.convert(source);
-			}
-			if (ObjectUtils.nullSafeEquals(type, "MultiPolygon")) {
-				return DocumentToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
-			}
-
-			throw new IllegalArgumentException(String.format("Cannot convert unknown GeoJson type %s", type));
 		}
 	}
 
@@ -827,7 +800,7 @@ abstract class GeoConverters {
 	@SuppressWarnings("unchecked")
 	static List<Point> toListOfPoint(List listOfCoordinatePairs) {
 
-		List<Point> points = new ArrayList<Point>();
+		List<Point> points = new ArrayList<>();
 
 		for (Object point : listOfCoordinatePairs) {
 
@@ -850,6 +823,64 @@ abstract class GeoConverters {
 	 */
 	static GeoJsonPolygon toGeoJsonPolygon(List dbList) {
 		return new GeoJsonPolygon(toListOfPoint((List) dbList.get(0)));
+	}
+
+	/**
+	 * Converter implementation transforming a {@link Document} into a concrete {@link GeoJson} based on the embedded
+	 * {@literal type} information.
+	 *
+	 * @since 2.1
+	 * @author Christoph Strobl
+	 */
+	@ReadingConverter
+	enum DocumentToGeoJsonConverter implements Converter<Document, GeoJson> {
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		@Nullable
+		@Override
+		public GeoJson convert(Document source) {
+			return toGenericGeoJson(source);
+		}
+	}
+
+	private static GeoJson<?> toGenericGeoJson(Document source) {
+
+		String type = source.get("type", String.class);
+
+		if ("point".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonPointConverter.INSTANCE.convert(source);
+		}
+
+		if ("multipoint".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonMultiPointConverter.INSTANCE.convert(source);
+		}
+
+		if ("linestring".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonLineStringConverter.INSTANCE.convert(source);
+		}
+
+		if ("multilinestring".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
+		}
+
+		if ("polygon".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonPolygonConverter.INSTANCE.convert(source);
+		}
+
+		if ("multipolygon".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
+		}
+
+		if ("geometrycollection".equalsIgnoreCase(type)) {
+			return DocumentToGeoJsonGeometryCollectionConverter.INSTANCE.convert(source);
+		}
+
+		throw new IllegalArgumentException(
+				String.format("No converter found capable of converting GeoJson type " + "%s.", type));
 	}
 
 	private static double toPrimitiveDoubleValue(Object value) {
