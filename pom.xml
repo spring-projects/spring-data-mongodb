@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>2.1.0.BUILD-SNAPSHOT</version>
+		<version>2.1.0.M3</version>
 	</parent>
 
 	<modules>
@@ -27,7 +27,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>2.1.0.BUILD-SNAPSHOT</springdata.commons>
+		<springdata.commons>2.1.0.M3</springdata.commons>
 		<mongo>3.8.0-beta2</mongo>
 		<mongo.reactivestreams>1.9.0-beta1</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
@@ -151,8 +151,8 @@
 
 	<repositories>
 		<repository>
-			<id>spring-libs-snapshot</id>
-			<url>https://repo.spring.io/libs-snapshot</url>
+			<id>spring-libs-milestone</id>
+			<url>https://repo.spring.io/libs-milestone</url>
 		</repository>
 	</repositories>
 
