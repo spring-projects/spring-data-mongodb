@@ -1,6 +1,27 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.0.M3 (2018-05-17)
+----------------------------------------
+* DATAMONGO-1980 - Typo in CriteriaExtensions KDoc.
+* DATAMONGO-1978 - Typo in Field.positionKey.
+* DATAMONGO-1976 - Adapt to SpEL extension API changes in Spring Data Commons.
+* DATAMONGO-1974 - Full editing pass on reference documentation.
+* DATAMONGO-1971 - Install MongoDB on TravisCI ourselves.
+* DATAMONGO-1970 - Add support for transactions (reactive).
+* DATAMONGO-1968 - Add support for configuration using com.mongodb.client.MongoClient.
+* DATAMONGO-1943 - QueryDSL functionality defect while using NOT operator for negate operation.
+* DATAMONGO-1929 - Add fluent API for map/reduce.
+* DATAMONGO-1928 - Index creation through ReactiveMongoTemplate uses blocking methods.
+* DATAMONGO-1927 - Release 2.1 M3 (Lovelace).
+* DATAMONGO-1920 - Add support for transactions (sync).
+* DATAMONGO-1914 - GridFsOperations.getResource(...) returns null.
+* DATAMONGO-1890 - Add support for mapReduce to ReactiveMongoOperations.
+* DATAMONGO-1874 - Making EvaluationContextExtensions visible to SpEL feature in collection name of @Document.
+* DATAMONGO-1808 - Support bitwise query operators.
+* DATAMONGO-1466 - Add DbObject to GeoJson Converter.
+
+
 Changes in version 2.0.7.RELEASE (2018-05-08)
 ---------------------------------------------
 * DATAMONGO-1943 - QueryDSL functionality defect while using NOT operator for negate operation.
