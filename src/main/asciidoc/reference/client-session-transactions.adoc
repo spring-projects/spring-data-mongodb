@@ -33,7 +33,7 @@ template.withSession(() -> session)
         Person azoth = new Person("Kylar Stern");
         azoth.setMaster(durzo);
 
-        action.insert(azoth);                                <2>
+        action.insert(azoth);                                <3>
 
         return azoth;
     });
