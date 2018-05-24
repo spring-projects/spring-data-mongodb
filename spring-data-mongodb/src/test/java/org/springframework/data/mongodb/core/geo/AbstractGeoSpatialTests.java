@@ -38,13 +38,13 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.TestEntities;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
@@ -103,19 +103,7 @@ public abstract class AbstractGeoSpatialTests {
 	}
 
 	protected void addVenues() {
-
-		template.insert(new Venue("Penn Station", -73.99408, 40.75057));
-		template.insert(new Venue("10gen Office", -73.99171, 40.738868));
-		template.insert(new Venue("Flatiron Building", -73.988135, 40.741404));
-		template.insert(new Venue("Players Club", -73.997812, 40.739128));
-		template.insert(new Venue("City Bakery ", -73.992491, 40.738673));
-		template.insert(new Venue("Splash Bar", -73.992491, 40.738673));
-		template.insert(new Venue("Momofuku Milk Bar", -73.985839, 40.731698));
-		template.insert(new Venue("Shake Shack", -73.98820, 40.74164));
-		template.insert(new Venue("Penn Station", -73.99408, 40.75057));
-		template.insert(new Venue("Empire State Building", -73.98602, 40.74894));
-		template.insert(new Venue("Ulaanbaatar, Mongolia", 106.9154, 47.9245));
-		template.insert(new Venue("Maplewood, NJ", -74.2713, 40.73137));
+		template.insertAll(TestEntities.geolocation().newYork());
 	}
 
 	@Test

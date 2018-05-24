@@ -42,7 +42,7 @@ class AggregationOperationRenderer {
 	 * {@link DBObject} representation.
 	 *
 	 * @param operations must not be {@literal null}.
-	 * @param context must not be {@literal null}.
+	 * @param rootContext must not be {@literal null}.
 	 * @return the {@link List} of {@link DBObject}.
 	 */
 	static List<DBObject> toDBObject(List<AggregationOperation> operations, AggregationOperationContext rootContext) {
