@@ -29,7 +29,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.TestEntities;
+import org.springframework.data.mongodb.core.Venue;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -65,7 +70,8 @@ public class ReactiveAggregationTests {
 				.create(reactiveMongoTemplate.dropCollection(INPUT_COLLECTION) //
 						.then(reactiveMongoTemplate.dropCollection(OUTPUT_COLLECTION)) //
 						.then(reactiveMongoTemplate.dropCollection(Product.class)) //
-						.then(reactiveMongoTemplate.dropCollection(City.class))) //
+						.then(reactiveMongoTemplate.dropCollection(City.class)) //
+						.then(reactiveMongoTemplate.dropCollection(Venue.class))) //
 				.verifyComplete();
 	}
 
@@ -126,6 +132,36 @@ public class ReactiveAggregationTests {
 
 		StepVerifier.create(reactiveMongoTemplate.aggregate(agg, "city", City.class)).expectNextCount(4).verifyComplete();
 		StepVerifier.create(reactiveMongoTemplate.find(new Query(), City.class, OUTPUT_COLLECTION)).expectNextCount(4)
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1986
+	public void runMatchOperationCriteriaThroughQueryMapperForTypedAggregation() {
+
+		reactiveMongoTemplate.insertAll(TestEntities.geolocation().newYork()).as(StepVerifier::create).expectNextCount(12)
+				.verifyComplete();
+
+		Aggregation aggregation = newAggregation(Venue.class,
+				match(Criteria.where("location")
+						.within(new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404)))),
+				project("id", "location", "name"));
+
+		reactiveMongoTemplate.aggregate(aggregation, "newyork", Document.class).as(StepVerifier::create).expectNextCount(4)
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1986
+	public void runMatchOperationCriteriaThroughQueryMapperForUntypedAggregation() {
+
+		reactiveMongoTemplate.insertAll(TestEntities.geolocation().newYork()).as(StepVerifier::create).expectNextCount(12)
+				.verifyComplete();
+
+		Aggregation aggregation = newAggregation(
+				match(Criteria.where("location")
+						.within(new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404)))),
+				project("id", "location", "name"));
+
+		reactiveMongoTemplate.aggregate(aggregation, "newyork", Document.class).as(StepVerifier::create).expectNextCount(4)
 				.verifyComplete();
 	}
 }

@@ -53,10 +53,13 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.TestEntities;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
@@ -143,6 +146,8 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(Sales2.class);
 		mongoTemplate.dropCollection(Employee.class);
 		mongoTemplate.dropCollection(Art.class);
+		mongoTemplate.dropCollection("personQueryTemp");
+		mongoTemplate.dropCollection(Venue.class);
 	}
 
 	/**
@@ -1484,9 +1489,8 @@ public class AggregationTests {
 	@Test // DATAMONGO-1127
 	public void shouldSupportGeoNearQueriesForAggregationWithDistanceField() {
 
-		mongoTemplate.insert(new Venue("Penn Station", -73.99408, 40.75057));
-		mongoTemplate.insert(new Venue("10gen Office", -73.99171, 40.738868));
-		mongoTemplate.insert(new Venue("Flatiron Building", -73.988135, 40.741404));
+		mongoTemplate.insertAll(Arrays.asList(TestEntities.geolocation().pennStation(),
+				TestEntities.geolocation().tenGenOffice(), TestEntities.geolocation().flatironBuilding()));
 
 		mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));
 
@@ -1896,6 +1900,36 @@ public class AggregationTests {
 		// { "_id" : { "min" : 1925 , "max" : 1926} , "count" : 2}]
 		List<Object> categorizeByYear = (List<Object>) mappedResult.get("categorizeByYear");
 		assertThat(categorizeByYear, hasSize(3));
+	}
+
+	@Test // DATAMONGO-1986
+	public void runMatchOperationCriteriaThroughQueryMapperForTypedAggregation() {
+
+		mongoTemplate.insertAll(TestEntities.geolocation().newYork());
+
+		Aggregation aggregation = newAggregation(Venue.class,
+				match(Criteria.where("location")
+						.within(new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404)))),
+				project("id", "location", "name"));
+
+		AggregationResults<Document> groupResults = mongoTemplate.aggregate(aggregation, "newyork", Document.class);
+
+		assertThat(groupResults.getMappedResults().size(), is(4));
+	}
+
+	@Test // DATAMONGO-1986
+	public void runMatchOperationCriteriaThroughQueryMapperForUntypedAggregation() {
+
+		mongoTemplate.insertAll(TestEntities.geolocation().newYork());
+
+		Aggregation aggregation = newAggregation(
+				match(Criteria.where("location")
+						.within(new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404)))),
+				project("id", "location", "name"));
+
+		AggregationResults<Document> groupResults = mongoTemplate.aggregate(aggregation, "newyork", Document.class);
+
+		assertThat(groupResults.getMappedResults().size(), is(4));
 	}
 
 	private void createUsersWithReferencedPersons() {

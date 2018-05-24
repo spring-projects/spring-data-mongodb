@@ -41,7 +41,7 @@ class AggregationOperationRenderer {
 	 * {@link Document} representation.
 	 *
 	 * @param operations must not be {@literal null}.
-	 * @param context must not be {@literal null}.
+	 * @param rootContext must not be {@literal null}.
 	 * @return the {@link List} of {@link Document}.
 	 */
 	static List<Document> toDocument(List<AggregationOperation> operations, AggregationOperationContext rootContext) {

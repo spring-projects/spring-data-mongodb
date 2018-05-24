@@ -660,10 +660,10 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1444
 	public void geoNear() {
 
-		List<Venue> venues = Arrays.asList(new Venue("Penn Station", -73.99408, 40.75057), //
-				new Venue("10gen Office", -73.99171, 40.738868), //
-				new Venue("Flatiron Building", -73.988135, 40.741404), //
-				new Venue("Maplewood, NJ", -74.2713, 40.73137));
+		List<Venue> venues = Arrays.asList(TestEntities.geolocation().pennStation(), //
+				TestEntities.geolocation().tenGenOffice(), //
+				TestEntities.geolocation().flatironBuilding(), //
+				TestEntities.geolocation().maplewoodNJ());
 
 		StepVerifier.create(template.insertAll(venues)).expectNextCount(4).verifyComplete();
 

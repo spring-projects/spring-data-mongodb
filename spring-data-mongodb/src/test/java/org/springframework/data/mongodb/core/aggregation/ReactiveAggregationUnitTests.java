@@ -62,7 +62,6 @@ public class ReactiveAggregationUnitTests {
 		when(db.getCollection(INPUT_COLLECTION)).thenReturn(collection);
 		when(collection.aggregate(any())).thenReturn(publisher);
 		when(publisher.allowDiskUse(any())).thenReturn(publisher);
-		when(publisher.useCursor(any())).thenReturn(publisher);
 		when(publisher.collation(any())).thenReturn(publisher);
 	}
 

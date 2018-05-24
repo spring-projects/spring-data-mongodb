@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -204,7 +205,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param databaseName must not be {@literal null} or empty.
 	 */
 	public MongoTemplate(MongoClient mongoClient, String databaseName) {
-		this(new SimpleMongoDbFactory(mongoClient, databaseName), null);
+		this(new SimpleMongoDbFactory(mongoClient, databaseName),  null);
 	}
 
 	/**
@@ -2574,6 +2575,73 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return fields;
+	}
+
+	/**
+	 * Prepare the {@link AggregationOperationContext} for a given aggregation by either returning the context itself it
+	 * is not {@literal null}, create a {@link TypeBasedAggregationOperationContext} if the aggregation contains type
+	 * information (is a {@link TypedAggregation}) or use the {@link Aggregation#DEFAULT_CONTEXT}.
+	 *
+	 * @param aggregation must not be {@literal null}.
+	 * @param context can be {@literal null}.
+	 * @return the root {@link AggregationOperationContext} to use.
+	 */
+	private AggregationOperationContext prepareAggregationContext(Aggregation aggregation,
+			@Nullable AggregationOperationContext context) {
+
+		if (context != null) {
+			return context;
+		}
+
+		if (aggregation instanceof TypedAggregation) {
+			return new TypeBasedAggregationOperationContext(((TypedAggregation) aggregation).getInputType(), mappingContext,
+					queryMapper);
+		}
+
+		return Aggregation.DEFAULT_CONTEXT;
+	}
+
+	/**
+	 * Extract and map the aggregation pipeline.
+	 *
+	 * @param aggregation
+	 * @param context
+	 * @return
+	 */
+	private Document aggregationToPipeline(String inputCollectionName, Aggregation aggregation, AggregationOperationContext context) {
+
+		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
+			return aggregation.toDocument(inputCollectionName, context);
+		}
+
+		return queryMapper.getMappedObject(aggregation.toDocument(inputCollectionName, context), Optional.empty());
+	}
+
+	/**
+	 * Extract the command and map the aggregation pipeline.
+	 *
+	 * @param aggregation
+	 * @param context
+	 * @return
+	 */
+	private Document aggregationToCommand(String collection, Aggregation aggregation,
+			AggregationOperationContext context) {
+
+		Document command = aggregation.toDocument(collection, context);
+
+		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
+			return command;
+		}
+
+		command.put("pipeline", mapAggregationPipeline(command.get("pipeline", List.class)));
+
+		return command;
+	}
+
+	private List<Document> mapAggregationPipeline(List<Document> pipeline) {
+
+		return pipeline.stream().map(val -> queryMapper.getMappedObject(val, Optional.empty()))
+				.collect(Collectors.toList());
 	}
 
 	/**
