@@ -18,7 +18,7 @@ env:
   matrix:
     - PROFILE=ci
   global:
-    - MONGO_VERSION=3.7.9
+    - MONGO_VERSION=4.0.0-rc0
 
 addons:
   apt:

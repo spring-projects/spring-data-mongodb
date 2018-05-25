@@ -44,7 +44,8 @@ public class MongoTestUtils {
 	public static MongoCollection<Document> createOrReplaceCollection(String dbName, String collectionName,
 			com.mongodb.MongoClient client) {
 
-		MongoDatabase database = client.getDatabase(dbName);
+		MongoDatabase database = client.getDatabase(dbName).withWriteConcern(WriteConcern.MAJORITY)
+				.withReadPreference(ReadPreference.primary());
 
 		boolean collectionExists = database.listCollections().filter(new Document("name", collectionName)).first() != null;
 
