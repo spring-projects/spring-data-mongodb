@@ -758,13 +758,32 @@ public class QueryMapperUnitTests {
 		assertThat(dbo.get("legacyPoint.y"), Is.<Object> is(20D));
 	}
 
+	@Test // DATAMONGO-1988
+	public void mapsStringObjectIdRepresentationToObjectIdWhenReferencingIdProperty() {
+
+		Query query = query(where("sample.foo").is(new ObjectId().toHexString()));
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(ClassWithEmbedded.class));
+
+		assertThat(document.get("sample._id"), instanceOf(ObjectId.class));
+	}
+
+	@Test // DATAMONGO-1988
+	public void leavesNonObjectIdStringIdRepresentationUntouchedWhenReferencingIdProperty() {
+
+		Query query = query(where("sample.foo").is("id-1"));
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(ClassWithEmbedded.class));
+
+		assertThat(document.get("sample._id"), instanceOf(String.class));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
 		EmbeddedClass embedded;
 
-		@Field("my_items")
-		List<EmbeddedClass> listOfItems;
+		@Field("my_items") List<EmbeddedClass> listOfItems;
 	}
 
 	public class EmbeddedClass {

@@ -215,6 +215,7 @@ public class MongoTemplateTests {
 		template.dropCollection(Address.class);
 		template.dropCollection(DocumentWithCollectionOfSamples.class);
 		template.dropCollection(WithGeoJson.class);
+		template.dropCollection(DocumentWithNestedTypeHavingStringIdProperty.class);
 	}
 
 	@Test
@@ -3240,6 +3241,22 @@ public class MongoTemplateTests {
 		assertThat(template.count(query(where("field").is("stark")), Sample.class), is(0L));
 	}
 
+	@Test // DATAMONGO-1988
+	public void findByNestedDocumentWithStringIdMappingToObjectIdMatchesDocumentsCorrectly() {
+
+		DocumentWithNestedTypeHavingStringIdProperty source = new DocumentWithNestedTypeHavingStringIdProperty();
+		source.id = "id-1";
+		source.sample = new Sample();
+		source.sample.id = new ObjectId().toHexString();
+
+		template.save(source);
+
+		DocumentWithNestedTypeHavingStringIdProperty target = template.query(DocumentWithNestedTypeHavingStringIdProperty.class)
+				.matching(query(where("sample.id").is(source.sample.id))).firstValue();
+
+		assertThat(target).isEqualTo(source);
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;
@@ -3338,6 +3355,13 @@ public class MongoTemplateTests {
 	static class DocumentWithCollectionOfSamples {
 		@Id String id;
 		List<Sample> samples;
+	}
+
+	@EqualsAndHashCode
+	static class DocumentWithNestedTypeHavingStringIdProperty {
+
+		@Id String id;
+		Sample sample;
 	}
 
 	static class DocumentWithMultipleCollections {
