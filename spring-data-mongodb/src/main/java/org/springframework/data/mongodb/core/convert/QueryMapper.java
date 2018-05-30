@@ -312,7 +312,7 @@ public class QueryMapper {
 	@SuppressWarnings("unchecked")
 	protected Object getMappedValue(Field documentField, Object value) {
 
-		if (documentField.isIdField()) {
+		if (documentField.isIdField() && !documentField.isAssociation()) {
 
 			if (isDBObject(value)) {
 				DBObject valueDbo = (DBObject) value;
@@ -855,10 +855,11 @@ public class QueryMapper {
 		@Override
 		public boolean isIdField() {
 
-			MongoPersistentProperty idProperty = entity.getIdProperty();
+			MongoPersistentProperty idProperty = (property != null && property.isIdProperty()) ? property
+					: entity.getIdProperty();
 
 			if (idProperty != null) {
-				return idProperty.getName().equals(name) || idProperty.getFieldName().equals(name);
+				return name.endsWith(idProperty.getName()) || name.endsWith(idProperty.getFieldName());
 			}
 
 			return DEFAULT_ID_NAMES.contains(name);
