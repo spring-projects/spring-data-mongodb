@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.io.Serializable;
-import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,19 +42,13 @@ import org.springframework.data.repository.Repository;
 @RunWith(MockitoJUnitRunner.class)
 public class MongoRepositoryFactoryUnitTests {
 
-	@Mock
-	MongoTemplate template;
+	@Mock MongoTemplate template;
 
-	@Mock
-	MongoConverter converter;
+	@Mock MongoConverter converter;
 
-	@Mock
-	@SuppressWarnings("rawtypes")
-	MappingContext mappingContext;
+	@Mock @SuppressWarnings("rawtypes") MappingContext mappingContext;
 
-	@Mock
-	@SuppressWarnings("rawtypes")
-	MongoPersistentEntity entity;
+	@Mock @SuppressWarnings("rawtypes") MongoPersistentEntity entity;
 
 	@Before
 	@SuppressWarnings("unchecked")
@@ -69,7 +62,6 @@ public class MongoRepositoryFactoryUnitTests {
 	public void usesMappingMongoEntityInformationIfMappingContextSet() {
 
 		when(mappingContext.getRequiredPersistentEntity(Person.class)).thenReturn(entity);
-		when(entity.getType()).thenReturn(Person.class);
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
@@ -81,7 +73,6 @@ public class MongoRepositoryFactoryUnitTests {
 	public void createsRepositoryWithIdTypeLong() {
 
 		when(mappingContext.getRequiredPersistentEntity(Person.class)).thenReturn(entity);
-		when(entity.getType()).thenReturn(Person.class);
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);

@@ -15,12 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 
 /**
  * Support class responsible for creating {@link MongoEntityInformation} instances for a given
@@ -47,10 +45,6 @@ final class MongoEntityInformationSupport {
 
 		Assert.notNull(entity, "Entity must not be null!");
 
-		MappingMongoEntityInformation<T, ID> entityInformation = new MappingMongoEntityInformation<T, ID>(
-				(MongoPersistentEntity<T>) entity, (Class<ID>) idType);
-
-		return ClassUtils.isAssignable(Persistable.class, entity.getType())
-				? new PersistableMongoEntityInformation<T, ID>(entityInformation) : entityInformation;
+		return new MappingMongoEntityInformation<>((MongoPersistentEntity<T>) entity, (Class<ID>) idType);
 	}
 }
