@@ -927,7 +927,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
-	 * @return the saved object.
+	 * @return the inserted object.
 	 */
 	<T> Mono<T> insert(T objectToSave);
 
@@ -941,7 +941,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
-	 * @return the saved object.
+	 * @return the inserted object.
 	 */
 	<T> Mono<T> insert(T objectToSave, String collectionName);
 
@@ -950,7 +950,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param batchToSave the batch of objects to save. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
-	 * @return the saved objects.
+	 * @return the inserted objects .
 	 */
 	<T> Flux<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass);
 
@@ -959,7 +959,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param batchToSave the list of objects to save. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
-	 * @return the saved objects.
+	 * @return the inserted objects.
 	 */
 	<T> Flux<T> insert(Collection<? extends T> batchToSave, String collectionName);
 
@@ -987,7 +987,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
-	 * @return the saved object.
+	 * @return the inserted objects.
 	 */
 	<T> Mono<T> insert(Mono<? extends T> objectToSave);
 
@@ -996,7 +996,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param batchToSave the publisher which provides objects to save. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
-	 * @return the saved objects.
+	 * @return the inserted objects.
 	 */
 	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, Class<?> entityClass);
 
@@ -1005,7 +1005,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param batchToSave the publisher which provides objects to save. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
-	 * @return the saved objects.
+	 * @return the inserted objects.
 	 */
 	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName);
 
@@ -1014,7 +1014,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * class.
 	 *
 	 * @param objectsToSave the publisher which provides objects to save. Must not be {@literal null}.
-	 * @return the saved objects.
+	 * @return the inserted objects.
 	 */
 	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> objectsToSave);
 
