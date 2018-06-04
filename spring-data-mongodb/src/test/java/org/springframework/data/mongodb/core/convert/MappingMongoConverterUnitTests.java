@@ -32,22 +32,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.Matcher;
@@ -1886,6 +1871,17 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.nestedFloats).isEqualTo(new float[][][] { { { 1.0f, 2.0f } } });
 	}
 
+	@Test // DATAMONGO-1992
+	public void readsImmutableObjectCorrectly() {
+
+		org.bson.Document document = new org.bson.Document("_id", "foo");
+
+		ImmutableObject result = converter.read(ImmutableObject.class, document);
+
+		assertThat(result.id).isEqualTo("foo");
+		assertThat(result.witherUsed).isTrue();
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2265,5 +2261,45 @@ public class MappingMongoConverterUnitTests {
 
 	static class WithNestedLists {
 		float[][][] nestedFloats;
+	}
+
+	static class ImmutableObject {
+		final String id;
+		final String name;
+		final boolean witherUsed;
+
+		private ImmutableObject(String id) {
+			this.id = id;
+			this.name = null;
+			this.witherUsed = false;
+		}
+
+		private ImmutableObject(String id, String name, boolean witherUsed) {
+			this.id = id;
+			this.name = name;
+			this.witherUsed = witherUsed;
+		}
+
+		public ImmutableObject() {
+			this.id = null;
+			this.name = null;
+			witherUsed = false;
+		}
+
+		public ImmutableObject withId(String id) {
+			return new ImmutableObject(id, name, true);
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public boolean isWitherUsed() {
+			return witherUsed;
+		}
 	}
 }

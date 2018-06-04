@@ -296,7 +296,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				MappingMongoConverter.this);
 		readProperties(entity, accessor, idProperty, documentAccessor, valueProvider, callback);
 
-		return instance;
+		return (S) accessor.getBean();
 	}
 
 	private Object readIdValue(ObjectPath path, DefaultSpELExpressionEvaluator evaluator,
