@@ -20,11 +20,11 @@ package org.springframework.data.mongodb.core.aggregation;
  */
 public class LineItem {
 
-	final String id;
+	String id;
 
-	final String caption;
+	String caption;
 
-	final double price;
+	double price;
 
 	int quantity = 1;
 

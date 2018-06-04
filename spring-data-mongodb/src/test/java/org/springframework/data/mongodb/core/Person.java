@@ -19,7 +19,7 @@ import org.bson.types.ObjectId;
 
 public class Person {
 
-	private final ObjectId id;
+	private ObjectId id;
 
 	private String firstName;
 

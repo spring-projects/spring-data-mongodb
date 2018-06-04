@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.Arrays;
@@ -413,10 +414,11 @@ public class ApplicationContextEventTests {
 	}
 
 	@Data
+	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document
 	public static class Related {
 
-		final @Id Long id;
-		final String description;
+		@Id Long id;
+		String description;
 	}
 }

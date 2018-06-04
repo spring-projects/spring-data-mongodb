@@ -2079,7 +2079,7 @@ public class MappingMongoConverterUnitTests {
 	@Document
 	static class PrimitiveContainer {
 
-		@Field("property") private final int m_property;
+		@Field("property") private int m_property;
 
 		@PersistenceConstructor
 		public PrimitiveContainer(@Value("#root.property") int a_property) {
@@ -2094,7 +2094,7 @@ public class MappingMongoConverterUnitTests {
 	@Document
 	static class ObjectContainer {
 
-		@Field("property") private final PrimitiveContainer m_property;
+		@Field("property") private PrimitiveContainer m_property;
 
 		@PersistenceConstructor
 		public ObjectContainer(@Value("#root.property") PrimitiveContainer a_property) {
