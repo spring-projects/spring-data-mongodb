@@ -395,6 +395,36 @@ public interface PersonRepository extends MongoRepository<Person, String>
 
 The query in the preceding example returns only the `firstname`, `lastname` and `Id` properties of the `Person` objects. The `age` property, a `java.lang.Integer`, is not set and its value is therefore null.
 
+[[mongodb.repositories.queries.sort]]
+=== Sorting Query Method results
+
+When it comes to sorting MongoDB query results via the repository interface there are several options as listed below.
+
+.Sorting query results
+====
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  List<Person> findByFirstnameSortByAgeDesc(String firstname); <1>
+
+  List<Person> findByFirstname(String firstname, Sort sort);   <2>
+
+  @Query(sort = "{ age : -1 }")
+  List<Person> findByFirstname(String firstname);              <3>
+
+  @Query(sort = "{ age : -1 }")
+  List<Person> findByLastname(String lastname, Sort sort);     <4>
+}
+----
+<1> Fixed sorting derived from method name. `SortByAgeDesc` results in `{ age : -1 }` sort parameter.
+<2> Dynamic sorting via method argument. `Sort.by(DESC, "age")` creates a `{ age : -1 }` sort parameter.
+<3> Fixed sorting via `Query` annotation. Sort parameter applied as stated in the `sort` attribute.
+<4> Default sorting via `Query` annotation combined with dynamic one via method argument. `Sort.unsorted()`
+results in `{ age : -1 }`. Using `Sort.by(ASC, "age")` overrides the defaults and creates `{ age : 1 }`. `Sort.by
+(ASC, "firstname")` alters the default and results in `{ age : -1, firstname : 1 }`.
+====
+
 [[mongodb.repositories.queries.json-spel]]
 === JSON-based Queries with SpEL Expressions
 

@@ -347,4 +347,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	// DATAMONGO-1752
 	Iterable<PersonSummary> findClosedProjectionBy();
+
+	@Query(sort = "{ age : -1 }")
+	List<Person> findByAgeGreaterThan(int age);
+
+	@Query(sort = "{ age : -1 }")
+	List<Person> findByAgeGreaterThan(int age, Sort sort);
 }

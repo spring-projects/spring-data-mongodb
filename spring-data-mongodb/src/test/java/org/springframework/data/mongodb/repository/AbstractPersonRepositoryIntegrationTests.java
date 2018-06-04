@@ -1205,4 +1205,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void findOptionalSingleEntityThrowsErrorWhenNotUnique() {
 		repository.findOptionalPersonByLastnameLike(dave.getLastname());
 	}
+
+	@Test // DATAMONGO-1979
+	public void findAppliesAnnotatedSort() {
+		assertThat(repository.findByAgeGreaterThan(40)).containsExactly(carter, boyd, dave, leroi);
+	}
+
+	@Test // DATAMONGO-1979
+	public void findWithSortOverwritesAnnotatedSort() {
+		assertThat(repository.findByAgeGreaterThan(40, Sort.by(Direction.ASC, "age"))).containsExactly(leroi, dave, boyd,
+				carter);
+	}
 }

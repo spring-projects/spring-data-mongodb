@@ -16,9 +16,11 @@
 package org.springframework.data.mongodb.repository.query;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -40,6 +42,7 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -57,6 +60,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 	private final Method method;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final Map<Class<? extends Annotation>, Optional<Annotation>> annotationCache;
 
 	private @Nullable MongoEntityMetadata<?> metadata;
 
@@ -77,6 +81,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 		this.method = method;
 		this.mappingContext = mappingContext;
+		this.annotationCache = new ConcurrentReferenceHashMap();
 	}
 
 	/*
@@ -282,5 +287,36 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		return metaAttributes;
+	}
+
+	/**
+	 * Check if the query method is decorated with an non empty {@link Query#sort()}.
+	 *
+	 * @return true if method annotated with {@link Query} having an non empty sort attribute.
+	 * @since 2.1
+	 */
+	public boolean hasAnnotatedSort() {
+		return doFindAnnotation(Query.class).map(it -> !it.sort().isEmpty()).orElse(false);
+	}
+
+	/**
+	 * Get the sort value, used as default, extracted from the {@link Query} annotation.
+	 *
+	 * @return the {@link Query#sort()} value.
+	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
+	 *           {@link #hasAnnotatedQuery()} first.
+	 * @since 2.1
+	 */
+	public String getAnnotatedSort() {
+
+		return doFindAnnotation(Query.class).map(Query::sort).orElseThrow(() -> new IllegalStateException(
+				"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedSort() before."));
+	}
+
+	private <A extends Annotation> Optional<A> doFindAnnotation(Class<A> annotationType) {
+
+		return (Optional) this.annotationCache.computeIfAbsent(annotationType, (it) -> {
+			return Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, it));
+		});
 	}
 }
