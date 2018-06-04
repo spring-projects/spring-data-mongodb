@@ -1141,8 +1141,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
+	 * @return the inserted object.
 	 */
-	void insert(Object objectToSave);
+	<T> T insert(T objectToSave);
 
 	/**
 	 * Insert the object into the specified collection.
@@ -1154,32 +1155,36 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
+	 * @return the inserted object.
 	 */
-	void insert(Object objectToSave, String collectionName);
+	<T> T insert(T objectToSave, String collectionName);
 
 	/**
 	 * Insert a Collection of objects into a collection in a single batch write to the database.
 	 *
 	 * @param batchToSave the batch of objects to save. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
+	 * @return the inserted objects that.
 	 */
-	void insert(Collection<? extends Object> batchToSave, Class<?> entityClass);
+	<T> Collection<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass);
 
 	/**
 	 * Insert a batch of objects into the specified collection in a single batch write to the database.
 	 *
 	 * @param batchToSave the list of objects to save. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
+	 * @return the inserted objects that.
 	 */
-	void insert(Collection<? extends Object> batchToSave, String collectionName);
+	<T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName);
 
 	/**
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
 	 * class.
 	 *
 	 * @param objectsToSave the list of objects to save. Must not be {@literal null}.
+	 * @return the inserted objects.
 	 */
-	void insertAll(Collection<? extends Object> objectsToSave);
+	<T> Collection<T> insertAll(Collection<? extends T> objectsToSave);
 
 	/**
 	 * Save the object to the collection for the entity type of the object to save. This will perform an insert if the
@@ -1195,8 +1200,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
+	 * @return the saved object.
 	 */
-	void save(Object objectToSave);
+	<T> T save(T objectToSave);
 
 	/**
 	 * Save the object to the specified collection. This will perform an insert if the object is not already present, that
@@ -1213,8 +1219,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
+	 * @return the saved object.
 	 */
-	void save(Object objectToSave, String collectionName);
+	<T> T save(T objectToSave, String collectionName);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by

@@ -73,16 +73,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -1157,12 +1148,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.MongoOperations#insert(java.lang.Object)
 	 */
 	@Override
-	public void insert(Object objectToSave) {
+	public <T> T insert(T objectToSave) {
 
 		Assert.notNull(objectToSave, "ObjectToSave must not be null!");
 
 		ensureNotIterable(objectToSave);
-		insert(objectToSave, determineEntityCollectionName(objectToSave));
+		return insert(objectToSave, determineEntityCollectionName(objectToSave));
 	}
 
 	/*
@@ -1170,13 +1161,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.MongoOperations#insert(java.lang.Object, java.lang.String)
 	 */
 	@Override
-	public void insert(Object objectToSave, String collectionName) {
+	public <T> T insert(T objectToSave, String collectionName) {
 
 		Assert.notNull(objectToSave, "ObjectToSave must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 
 		ensureNotIterable(objectToSave);
-		doInsert(collectionName, objectToSave, this.mongoConverter);
+		return (T) doInsert(collectionName, objectToSave, this.mongoConverter);
 	}
 
 	protected void ensureNotIterable(@Nullable Object o) {
@@ -1230,19 +1221,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return wc;
 	}
 
-	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
+	protected <T> T doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
-		initializeVersionProperty(objectToSave);
-		maybeEmitEvent(new BeforeConvertEvent<>(objectToSave, collectionName));
-		assertUpdateableIdIfNotSet(objectToSave);
+		T toSave = (T) initializeVersionProperty(objectToSave);
+		maybeEmitEvent(new BeforeConvertEvent<>(toSave, collectionName));
+		assertUpdateableIdIfNotSet(toSave);
 
-		Document dbDoc = toDocument(objectToSave, writer);
+		Document dbDoc = toDocument(toSave, writer);
 
-		maybeEmitEvent(new BeforeSaveEvent<>(objectToSave, dbDoc, collectionName));
-		Object id = insertDocument(collectionName, dbDoc, objectToSave.getClass());
+		maybeEmitEvent(new BeforeSaveEvent<>(toSave, dbDoc, collectionName));
+		Object id = insertDocument(collectionName, dbDoc, toSave.getClass());
 
-		populateIdIfNecessary(objectToSave, id);
-		maybeEmitEvent(new AfterSaveEvent<>(objectToSave, dbDoc, collectionName));
+		T saved = (T) populateIdIfNecessary(toSave, id);
+		maybeEmitEvent(new AfterSaveEvent<>(saved, dbDoc, collectionName));
+
+		return saved;
 	}
 
 	/**
@@ -1275,7 +1268,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	private void initializeVersionProperty(Object entity) {
+	private Object initializeVersionProperty(Object entity) {
 
 		MongoPersistentEntity<?> persistentEntity = getPersistentEntity(entity.getClass());
 
@@ -1286,36 +1279,41 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(persistentEntity.getPropertyAccessor(entity),
 					mongoConverter.getConversionService());
 			accessor.setProperty(versionProperty, 0);
+
+			return accessor.getBean();
 		}
+
+		return entity;
 	}
 
 	@Override
-	public void insert(Collection<? extends Object> batchToSave, Class<?> entityClass) {
+	public <T> Collection<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass) {
 
 		Assert.notNull(batchToSave, "BatchToSave must not be null!");
 
-		doInsertBatch(determineCollectionName(entityClass), batchToSave, this.mongoConverter);
+		return (Collection) doInsertBatch(determineCollectionName(entityClass), batchToSave, this.mongoConverter);
 	}
 
 	@Override
-	public void insert(Collection<? extends Object> batchToSave, String collectionName) {
+	public <T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName) {
 
 		Assert.notNull(batchToSave, "BatchToSave must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 
-		doInsertBatch(collectionName, batchToSave, this.mongoConverter);
+		return (Collection) doInsertBatch(collectionName, batchToSave, this.mongoConverter);
 	}
 
 	@Override
-	public void insertAll(Collection<? extends Object> objectsToSave) {
+	public <T> Collection<T> insertAll(Collection<? extends T> objectsToSave) {
 
 		Assert.notNull(objectsToSave, "ObjectsToSave must not be null!");
-		doInsertAll(objectsToSave, this.mongoConverter);
+		return (Collection) doInsertAll(objectsToSave, this.mongoConverter);
 	}
 
-	protected <T> void doInsertAll(Collection<? extends T> listToSave, MongoWriter<T> writer) {
+	protected <T> Collection<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<T> writer) {
 
 		Map<String, List<T>> elementsByCollection = new HashMap<>();
+		List<T> savedObjects = new ArrayList<>(listToSave.size());
 
 		for (T element : listToSave) {
 
@@ -1337,47 +1335,59 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		for (Map.Entry<String, List<T>> entry : elementsByCollection.entrySet()) {
-			doInsertBatch(entry.getKey(), entry.getValue(), this.mongoConverter);
+			savedObjects.addAll((Collection) doInsertBatch(entry.getKey(), entry.getValue(), this.mongoConverter));
 		}
+
+		return savedObjects;
 	}
 
-	protected <T> void doInsertBatch(String collectionName, Collection<? extends T> batchToSave, MongoWriter<T> writer) {
+	protected <T> Collection<T> doInsertBatch(String collectionName, Collection<? extends T> batchToSave,
+			MongoWriter<T> writer) {
 
 		Assert.notNull(writer, "MongoWriter must not be null!");
 
 		List<Document> documentList = new ArrayList<>();
-		for (T o : batchToSave) {
+		List<T> initializedBatchToSave = new ArrayList<>(batchToSave.size());
+		for (T uninitialized : batchToSave) {
 
-			initializeVersionProperty(o);
-			maybeEmitEvent(new BeforeConvertEvent<>(o, collectionName));
+			T toSave = (T) initializeVersionProperty(uninitialized);
+			maybeEmitEvent(new BeforeConvertEvent<>(toSave, collectionName));
 
-			Document document = toDocument(o, writer);
+			Document document = toDocument(toSave, writer);
 
-			maybeEmitEvent(new BeforeSaveEvent<>(o, document, collectionName));
+			maybeEmitEvent(new BeforeSaveEvent<>(toSave, document, collectionName));
 			documentList.add(document);
+			initializedBatchToSave.add(toSave);
 		}
 
 		List<Object> ids = insertDocumentList(collectionName, documentList);
+		List<T> savedObjects = new ArrayList<>(documentList.size());
 
 		int i = 0;
-		for (T obj : batchToSave) {
+		for (T obj : initializedBatchToSave) {
+
 			if (i < ids.size()) {
-				populateIdIfNecessary(obj, ids.get(i));
-				maybeEmitEvent(new AfterSaveEvent<>(obj, documentList.get(i), collectionName));
+				T saved = (T) populateIdIfNecessary(obj, ids.get(i));
+				maybeEmitEvent(new AfterSaveEvent<>(saved, documentList.get(i), collectionName));
+				savedObjects.add(saved);
+			} else {
+				savedObjects.add(obj);
 			}
 			i++;
 		}
+
+		return savedObjects;
 	}
 
 	@Override
-	public void save(Object objectToSave) {
+	public <T> T save(T objectToSave) {
 
 		Assert.notNull(objectToSave, "Object to save must not be null!");
-		save(objectToSave, determineEntityCollectionName(objectToSave));
+		return save(objectToSave, determineEntityCollectionName(objectToSave));
 	}
 
 	@Override
-	public void save(Object objectToSave, String collectionName) {
+	public <T> T save(T objectToSave, String collectionName) {
 
 		Assert.notNull(objectToSave, "Object to save must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
@@ -1385,11 +1395,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = getPersistentEntity(objectToSave.getClass());
 
 		if (entity != null && entity.hasVersionProperty()) {
-			doSaveVersioned(objectToSave, entity, collectionName);
-			return;
+			return doSaveVersioned(objectToSave, entity, collectionName);
 		}
 
-		doSave(collectionName, objectToSave, this.mongoConverter);
+		return (T) doSave(collectionName, objectToSave, this.mongoConverter);
 	}
 
 	private <T> T doSaveVersioned(T objectToSave, MongoPersistentEntity<?> entity, String collectionName) {
@@ -1398,42 +1407,43 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				entity.getPropertyAccessor(objectToSave), mongoConverter.getConversionService());
 
 		MongoPersistentProperty property = entity.getRequiredVersionProperty();
-		Number number = convertingAccessor.getProperty(property, Number.class);
+		Number number = (Number) convertingAccessor.getProperty(property, Number.class);
 
 		if (number != null) {
 
 			// Bump version number
 			convertingAccessor.setProperty(property, number.longValue() + 1);
 
-			maybeEmitEvent(new BeforeConvertEvent<>(objectToSave, collectionName));
-			assertUpdateableIdIfNotSet(objectToSave);
+			T toSave = (T) convertingAccessor.getBean();
+
+			maybeEmitEvent(new BeforeConvertEvent<>(toSave, collectionName));
+			assertUpdateableIdIfNotSet(toSave);
 
 			Document document = new Document();
 
-			this.mongoConverter.write(objectToSave, document);
+			this.mongoConverter.write(toSave, document);
 
-			maybeEmitEvent(new BeforeSaveEvent<>(objectToSave, document, collectionName));
+			maybeEmitEvent(new BeforeSaveEvent<>(toSave, document, collectionName));
 			Update update = Update.fromDocument(document, ID_FIELD);
 
 			// Create query for entity with the id and old version
 			MongoPersistentProperty idProperty = entity.getRequiredIdProperty();
-			Object id = entity.getIdentifierAccessor(objectToSave).getRequiredIdentifier();
+			Object id = entity.getIdentifierAccessor(toSave).getRequiredIdentifier();
 			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(property.getName()).is(number));
 
-			UpdateResult result = doUpdate(collectionName, query, update, objectToSave.getClass(), false, false);
+			UpdateResult result = doUpdate(collectionName, query, update, toSave.getClass(), false, false);
 
 			if (result.getModifiedCount() == 0) {
 				throw new OptimisticLockingFailureException(
 						String.format("Cannot save entity %s with version %s to collection %s. Has it been modified meanwhile?", id,
 								number, collectionName));
 			}
-			maybeEmitEvent(new AfterSaveEvent<>(objectToSave, document, collectionName));
+			maybeEmitEvent(new AfterSaveEvent<>(toSave, document, collectionName));
 
-			return objectToSave;
+			return toSave;
 		}
 
-		doInsert(collectionName, objectToSave, this.mongoConverter);
-		return objectToSave;
+		return (T) doInsert(collectionName, objectToSave, this.mongoConverter);
 	}
 
 	protected <T> T doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
@@ -1446,10 +1456,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeEmitEvent(new BeforeSaveEvent<>(objectToSave, dbDoc, collectionName));
 		Object id = saveDocument(collectionName, dbDoc, objectToSave.getClass());
 
-		populateIdIfNecessary(objectToSave, id);
-		maybeEmitEvent(new AfterSaveEvent<>(objectToSave, dbDoc, collectionName));
+		T saved = (T) populateIdIfNecessary(objectToSave, id);
+		maybeEmitEvent(new AfterSaveEvent<>(saved, dbDoc, collectionName));
 
-		return objectToSave;
+		return saved;
 	}
 
 	protected Object insertDocument(final String collectionName, final Document document, final Class<?> entityClass) {
@@ -2674,10 +2684,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param id
 	 */
 	@SuppressWarnings("unchecked")
-	protected void populateIdIfNecessary(Object savedObject, Object id) {
+	protected Object populateIdIfNecessary(Object savedObject, Object id) {
 
 		if (id == null) {
-			return;
+			return null;
 		}
 
 		if (savedObject instanceof Map) {
@@ -2685,7 +2695,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Map<String, Object> map = (Map<String, Object>) savedObject;
 			map.put(ID_FIELD, id);
 
-			return;
+			return map;
 		}
 
 		MongoPersistentProperty idProperty = getIdPropertyFor(savedObject.getClass());
@@ -2700,7 +2710,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (value == null) {
 				new ConvertingPropertyAccessor(accessor, conversionService).setProperty(idProperty, id);
 			}
+
+			return accessor.getBean();
 		}
+
+		return savedObject;
 	}
 
 	private MongoCollection<Document> getAndPrepareCollection(MongoDatabase db, String collectionName) {

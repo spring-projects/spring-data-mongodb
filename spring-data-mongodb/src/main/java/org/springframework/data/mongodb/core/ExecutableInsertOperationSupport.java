@@ -72,11 +72,11 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation.TerminatingInsert#insert(java.lang.Class)
 		 */
 		@Override
-		public void one(T object) {
+		public T one(T object) {
 
 			Assert.notNull(object, "Object must not be null!");
 
-			template.insert(object, getCollectionName());
+			return template.insert(object, getCollectionName());
 		}
 
 		/*
@@ -84,11 +84,11 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation.TerminatingInsert#all(java.util.Collection)
 		 */
 		@Override
-		public void all(Collection<? extends T> objects) {
+		public Collection<T> all(Collection<? extends T> objects) {
 
 			Assert.notNull(objects, "Objects must not be null!");
 
-			template.insert(objects, getCollectionName());
+			return template.insert(objects, getCollectionName());
 		}
 
 		/*
