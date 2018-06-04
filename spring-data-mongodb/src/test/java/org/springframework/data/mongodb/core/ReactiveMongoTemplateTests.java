@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Wither;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -57,6 +58,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Metrics;
@@ -96,17 +98,16 @@ public class ReactiveMongoTemplateTests {
 	@Before
 	public void setUp() {
 
-		StepVerifier
-				.create(template.dropCollection("people") //
-						.mergeWith(template.dropCollection("personX")) //
-						.mergeWith(template.dropCollection("collection")) //
-						.mergeWith(template.dropCollection(Person.class)) //
-						.mergeWith(template.dropCollection(Venue.class)) //
-						.mergeWith(template.dropCollection(PersonWithAList.class)) //
-						.mergeWith(template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class)) //
-						.mergeWith(template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class)) //
-						.mergeWith(template.dropCollection(Sample.class)) //
-						.mergeWith(template.dropCollection(MyPerson.class))) //
+		StepVerifier.create(template.dropCollection("people") //
+				.mergeWith(template.dropCollection("personX")) //
+				.mergeWith(template.dropCollection("collection")) //
+				.mergeWith(template.dropCollection(Person.class)) //
+				.mergeWith(template.dropCollection(Venue.class)) //
+				.mergeWith(template.dropCollection(PersonWithAList.class)) //
+				.mergeWith(template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class)) //
+				.mergeWith(template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class)) //
+				.mergeWith(template.dropCollection(Sample.class)) //
+				.mergeWith(template.dropCollection(MyPerson.class))) //
 				.verifyComplete();
 	}
 
@@ -310,12 +311,9 @@ public class ReactiveMongoTemplateTests {
 	public void updateFirstByEntityTypeShouldUpdateObject() {
 
 		Person person = new Person("Oliver2", 25);
-		StepVerifier
-				.create(template.insert(person) //
-						.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"),
-								Person.class)) //
-						.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class)))
-				.consumeNextWith(actual -> {
+		StepVerifier.create(template.insert(person) //
+				.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), Person.class)) //
+				.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class))).consumeNextWith(actual -> {
 
 					assertThat(actual.getFirstName()).isEqualTo("Sven");
 				}).verifyComplete();
@@ -325,10 +323,9 @@ public class ReactiveMongoTemplateTests {
 	public void updateFirstByCollectionNameShouldUpdateObjects() {
 
 		Person person = new Person("Oliver2", 25);
-		StepVerifier
-				.create(template.insert(person, "people") //
-						.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), "people")) //
-						.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class, "people")))
+		StepVerifier.create(template.insert(person, "people") //
+				.then(template.updateFirst(new Query(where("age").is(25)), new Update().set("firstName", "Sven"), "people")) //
+				.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class, "people")))
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getFirstName()).isEqualTo("Sven");
@@ -741,9 +738,8 @@ public class ReactiveMongoTemplateTests {
 		Document dbObject = new Document();
 		dbObject.put("firstName", "Oliver");
 
-		StepVerifier
-				.create(template.insert(dbObject, //
-						template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class))) //
+		StepVerifier.create(template.insert(dbObject, //
+				template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class))) //
 				.expectNextCount(1) //
 				.verifyComplete();
 	}
@@ -884,6 +880,23 @@ public class ReactiveMongoTemplateTests {
 		assertThat(person.version).isZero();
 	}
 
+	@Test // DATAMONGO-1992
+	public void initializesIdAndVersionAndOfImmutableObject() {
+
+		ImmutableVersioned versioned = new ImmutableVersioned();
+
+		StepVerifier.create(template.insert(versioned)).consumeNextWith(actual -> {
+
+			assertThat(actual).isNotSameAs(versioned);
+			assertThat(versioned.id).isNull();
+			assertThat(versioned.version).isNull();
+
+			assertThat(actual.id).isNotNull();
+			assertThat(actual.version).isEqualTo(0);
+
+		}).verifyComplete();
+	}
+
 	@Test // DATAMONGO-1444
 	public void queryCanBeNull() {
 
@@ -920,9 +933,8 @@ public class ReactiveMongoTemplateTests {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-		StepVerifier
-				.create(template.indexOps(Person.class) //
-						.ensureIndex(new Index().on("firstName", Direction.DESC).unique())) //
+		StepVerifier.create(template.indexOps(Person.class) //
+				.ensureIndex(new Index().on("firstName", Direction.DESC).unique())) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
@@ -1040,9 +1052,8 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1444
 	public void tailStreamsData() throws InterruptedException {
 
-		StepVerifier.create(template.dropCollection("capped")
-				.then(template.createCollection("capped", //
-						CollectionOptions.empty().size(1000).maxDocuments(10).capped()))
+		StepVerifier.create(template.dropCollection("capped").then(template.createCollection("capped", //
+				CollectionOptions.empty().size(1000).maxDocuments(10).capped()))
 				.then(template.insert(new Document("random", Math.random()).append("key", "value"), //
 						"capped")))
 				.expectNextCount(1).verifyComplete();
@@ -1062,9 +1073,8 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1444
 	public void tailStreamsDataUntilCancellation() throws InterruptedException {
 
-		StepVerifier.create(template.dropCollection("capped")
-				.then(template.createCollection("capped", //
-						CollectionOptions.empty().size(1000).maxDocuments(10).capped()))
+		StepVerifier.create(template.dropCollection("capped").then(template.createCollection("capped", //
+				CollectionOptions.empty().size(1000).maxDocuments(10).capped()))
 				.then(template.insert(new Document("random", Math.random()).append("key", "value"), //
 						"capped")))
 				.expectNextCount(1).verifyComplete();
@@ -1395,6 +1405,19 @@ public class ReactiveMongoTemplateTests {
 		p.setAge(age);
 
 		return p;
+	}
+
+	@AllArgsConstructor
+	@Wither
+	static class ImmutableVersioned {
+
+		final @Id String id;
+		final @Version Long version;
+
+		public ImmutableVersioned() {
+			id = null;
+			version = null;
+		}
 	}
 
 	@Data
