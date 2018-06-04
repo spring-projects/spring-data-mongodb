@@ -63,17 +63,19 @@ public interface ExecutableInsertOperation {
 		 * Insert exactly one object.
 		 *
 		 * @param object must not be {@literal null}.
+		 * @return the inserted object.
 		 * @throws IllegalArgumentException if object is {@literal null}.
 		 */
-		void one(T object);
+		T one(T object);
 
 		/**
 		 * Insert a collection of objects.
 		 *
 		 * @param objects must not be {@literal null}.
+		 * @return the inserted objects.
 		 * @throws IllegalArgumentException if objects is {@literal null}.
 		 */
-		void all(Collection<? extends T> objects);
+		Collection<? extends T> all(Collection<? extends T> objects);
 	}
 
 	/**

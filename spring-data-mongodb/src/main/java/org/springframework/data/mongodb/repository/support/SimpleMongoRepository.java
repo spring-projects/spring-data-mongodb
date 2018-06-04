@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -77,12 +78,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(entity, "Entity must not be null!");
 
 		if (entityInformation.isNew(entity)) {
-			mongoOperations.insert(entity, entityInformation.getCollectionName());
-		} else {
-			mongoOperations.save(entity, entityInformation.getCollectionName());
+			return mongoOperations.insert(entity, entityInformation.getCollectionName());
 		}
 
-		return entity;
+		return mongoOperations.save(entity, entityInformation.getCollectionName());
 	}
 
 	/*
@@ -100,12 +99,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		if (allNew) {
 
 			List<S> result = source.stream().collect(Collectors.toList());
-			mongoOperations.insert(result, entityInformation.getCollectionName());
-			return result;
-
-		} else {
-			return source.stream().map(this::save).collect(Collectors.toList());
+			return new ArrayList<>(mongoOperations.insert(result, entityInformation.getCollectionName()));
 		}
+
+		return source.stream().map(this::save).collect(Collectors.toList());
 	}
 
 	/*
@@ -244,8 +241,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(entity, "Entity must not be null!");
 
-		mongoOperations.insert(entity, entityInformation.getCollectionName());
-		return entity;
+		return mongoOperations.insert(entity, entityInformation.getCollectionName());
 	}
 
 	/*
@@ -263,8 +259,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return list;
 		}
 
-		mongoOperations.insertAll(list);
-		return list;
+		return new ArrayList<>(mongoOperations.insertAll(list));
 	}
 
 	/*
