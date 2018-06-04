@@ -77,4 +77,22 @@ public @interface Query {
 	 * @return
 	 */
 	boolean delete() default false;
+
+	/**
+	 * Defines a default sort order for the given query.<br />
+	 * <strong>NOTE</strong> The so set defaults can be altered / overwritten via an explicit
+	 * {@link org.springframework.data.domain.Sort} argument of the query method.
+	 *
+	 * <pre>
+	 * <code>
+	 *     
+	 * 		&#64;Query(sort = "{ age : -1 }") // order by age descending
+	 * 		List<Person> findByFirstname(String firstname); 	 
+	 * </code>
+	 * </pre>
+	 *
+	 * @return
+	 * @since 2.1
+	 */
+	String sort() default "";
 }

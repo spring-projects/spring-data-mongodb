@@ -17,8 +17,9 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -39,6 +40,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
@@ -284,6 +286,28 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind).as(DynamicallyMapped.class);
 	}
 
+	@Test // DATAMONGO-1979
+	public void usesAnnotatedSortWhenPresent() {
+
+		createQueryForMethod("findByAge", Integer.class) //
+				.execute(new Object[] { 1000 });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getSortObject(), is(equalTo(new Document("age", 1))));
+	}
+
+	@Test // DATAMONGO-1979
+	public void usesExplicitSortOverridesAnnotatedSortWhenPresent() {
+
+		createQueryForMethod("findByAge", Integer.class, Sort.class) //
+				.execute(new Object[] { 1000, Sort.by(Direction.DESC, "age") });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getSortObject(), is(equalTo(new Document("age", -1))));
+	}
+
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 		return createQueryForMethod(Repo.class, methodName, paramTypes);
 	}
@@ -370,6 +394,12 @@ public class AbstractMongoQueryUnitTests {
 		Optional<Person> findByLastname(String lastname);
 
 		Person findFirstByLastname(String lastname);
+
+		@org.springframework.data.mongodb.repository.Query(sort = "{ age : 1 }")
+		List<Person> findByAge(Integer age);
+
+		@org.springframework.data.mongodb.repository.Query(sort = "{ age : 1 }")
+		List<Person> findByAge(Integer age, Sort page);
 	}
 
 	// DATAMONGO-1872
