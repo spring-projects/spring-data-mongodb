@@ -34,6 +34,7 @@ import lombok.NoArgsConstructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -85,7 +86,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -3658,26 +3658,19 @@ public class MongoTemplateTests {
 	}
 
 	@Data
+	@AllArgsConstructor
 	static class DocumentWithLazyDBRefsAndConstructorCreation {
 
-		@Id public final String id;
-
-		public DocumentWithLazyDBRefsAndConstructorCreation(String id, Sample lazyDbRefProperty,
-				List<Sample> lazyDbRefAnnotatedList, Map<String, Sample> lazyDbRefAnnotatedMap) {
-			this.id = id;
-			this.lazyDbRefProperty = lazyDbRefProperty;
-			this.lazyDbRefAnnotatedList = lazyDbRefAnnotatedList;
-			this.lazyDbRefAnnotatedMap = lazyDbRefAnnotatedMap;
-		}
+		@Id public String id;
 
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
-		public final Sample lazyDbRefProperty;
+		public Sample lazyDbRefProperty;
 
 		@Field("lazy_db_ref_list") @org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
-		public final List<Sample> lazyDbRefAnnotatedList;
+		public List<Sample> lazyDbRefAnnotatedList;
 
 		@Field("lazy_db_ref_map") @org.springframework.data.mongodb.core.mapping.DBRef(
-				lazy = true) public final Map<String, Sample> lazyDbRefAnnotatedMap;
+				lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
 	}
 
 	@EqualsAndHashCode

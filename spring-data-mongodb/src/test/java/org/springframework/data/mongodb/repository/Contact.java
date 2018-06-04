@@ -28,7 +28,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public abstract class Contact {
 
 	@Id
-	protected final String id;
+	protected String id;
 
 	public Contact() {
 		this.id = new ObjectId().toString();

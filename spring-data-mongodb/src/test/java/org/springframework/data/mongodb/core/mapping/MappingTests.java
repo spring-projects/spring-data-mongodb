@@ -519,7 +519,7 @@ public class MappingTests extends AbstractIntegrationTests {
 
 	static class Container {
 
-		@Id final String id;
+		@Id String id;
 
 		public Container() {
 			id = new ObjectId().toString();
@@ -535,7 +535,7 @@ public class MappingTests extends AbstractIntegrationTests {
 
 	static class Item {
 
-		@Id final String id;
+		@Id String id;
 		String value;
 
 		public Item() {
