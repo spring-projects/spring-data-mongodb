@@ -784,6 +784,16 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1988
+	public void matchesExactFieldNameToIdProperty() {
+
+		Query query = query(where("sample.iid").is(new ObjectId().toHexString()));
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(ClassWithEmbedded.class));
+
+		assertThat(document.get("sample.iid"), instanceOf(String.class));
+	}
+
+	@Test // DATAMONGO-1988
 	public void leavesNonObjectIdStringIdRepresentationUntouchedWhenReferencingIdProperty() {
 
 		Query query = query(where("sample.foo").is("id-1"));
