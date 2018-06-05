@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
@@ -115,9 +114,8 @@ public class MongoQueryMethod extends QueryMethod {
 
 	private Optional<String> findAnnotatedQuery() {
 
-		return Optional.ofNullable(getQueryAnnotation()) //
-				.map(AnnotationUtils::getValue) //
-				.map(it -> (String) it) //
+		return lookupQueryAnnotation() //
+				.map(Query::value) //
 				.filter(StringUtils::hasText);
 	}
 
@@ -128,8 +126,8 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	String getFieldSpecification() {
 
-		return Optional.ofNullable(getQueryAnnotation()) //
-				.map(it -> (String) AnnotationUtils.getValue(it, "fields")) //
+		return lookupQueryAnnotation() //
+				.map(Query::fields) //
 				.filter(StringUtils::hasText) //
 				.orElse(null);
 	}
@@ -212,7 +210,11 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	@Nullable
 	Query getQueryAnnotation() {
-		return AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
+		return lookupQueryAnnotation().orElse(null);
+	}
+
+	Optional<Query> lookupQueryAnnotation() {
+		return doFindAnnotation(Query.class);
 	}
 
 	TypeInformation<?> getReturnType() {
@@ -235,7 +237,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	@Nullable
 	Meta getMetaAnnotation() {
-		return AnnotatedElementUtils.findMergedAnnotation(method, Meta.class);
+		return doFindAnnotation(Meta.class).orElse(null);
 	}
 
 	/**
@@ -246,7 +248,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	@Nullable
 	Tailable getTailableAnnotation() {
-		return AnnotatedElementUtils.findMergedAnnotation(method, Tailable.class);
+		return doFindAnnotation(Tailable.class).orElse(null);
 	}
 
 	/**
@@ -296,7 +298,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 2.1
 	 */
 	public boolean hasAnnotatedSort() {
-		return doFindAnnotation(Query.class).map(it -> !it.sort().isEmpty()).orElse(false);
+		return lookupQueryAnnotation().map(it -> !it.sort().isEmpty()).orElse(false);
 	}
 
 	/**
@@ -309,14 +311,13 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	public String getAnnotatedSort() {
 
-		return doFindAnnotation(Query.class).map(Query::sort).orElseThrow(() -> new IllegalStateException(
+		return lookupQueryAnnotation().map(Query::sort).orElseThrow(() -> new IllegalStateException(
 				"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedSort() before."));
 	}
 
 	private <A extends Annotation> Optional<A> doFindAnnotation(Class<A> annotationType) {
 
-		return (Optional) this.annotationCache.computeIfAbsent(annotationType, (it) -> {
-			return Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, it));
-		});
+		return (Optional) this.annotationCache.computeIfAbsent(annotationType,
+				it -> Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, it)));
 	}
 }
