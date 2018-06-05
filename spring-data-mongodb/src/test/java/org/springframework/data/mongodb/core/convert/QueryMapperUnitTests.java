@@ -65,7 +65,7 @@ import com.mongodb.QueryBuilder;
 
 /**
  * Unit tests for {@link QueryMapper}.
- * 
+ *
  * @author Oliver Gierke
  * @author Patryk Wasik
  * @author Thomas Darimont
@@ -762,20 +762,30 @@ public class QueryMapperUnitTests {
 	public void mapsStringObjectIdRepresentationToObjectIdWhenReferencingIdProperty() {
 
 		Query query = query(where("sample.foo").is(new ObjectId().toHexString()));
-		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithEmbedded.class));
 
-		assertThat(document.get("sample._id"), instanceOf(ObjectId.class));
+		assertThat(dbo.get("sample._id"), instanceOf(ObjectId.class));
+	}
+
+	@Test // DATAMONGO-1988
+	public void matchesExactFieldNameToIdProperty() {
+
+		Query query = query(where("sample.iid").is(new ObjectId().toHexString()));
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(ClassWithEmbedded.class));
+
+		assertThat(dbo.get("sample.iid"), instanceOf(String.class));
 	}
 
 	@Test // DATAMONGO-1988
 	public void leavesNonObjectIdStringIdRepresentationUntouchedWhenReferencingIdProperty() {
 
 		Query query = query(where("sample.foo").is("id-1"));
-		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithEmbedded.class));
 
-		assertThat(document.get("sample._id"), instanceOf(String.class));
+		assertThat(dbo.get("sample._id"), instanceOf(String.class));
 	}
 
 	@Document

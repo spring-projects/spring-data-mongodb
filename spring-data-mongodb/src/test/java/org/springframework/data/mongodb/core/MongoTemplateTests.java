@@ -3251,10 +3251,10 @@ public class MongoTemplateTests {
 
 		template.save(source);
 
-		DocumentWithNestedTypeHavingStringIdProperty target = template.query(DocumentWithNestedTypeHavingStringIdProperty.class)
-				.matching(query(where("sample.id").is(source.sample.id))).firstValue();
+		DocumentWithNestedTypeHavingStringIdProperty target = template
+				.findOne(query(where("sample.id").is(source.sample.id)), DocumentWithNestedTypeHavingStringIdProperty.class);
 
-		assertThat(target).isEqualTo(source);
+		assertThat(target, is(source));
 	}
 
 	static class TypeWithNumbers {

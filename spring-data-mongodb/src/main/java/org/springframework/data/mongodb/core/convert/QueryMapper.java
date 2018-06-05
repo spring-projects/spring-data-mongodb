@@ -771,7 +771,7 @@ public class QueryMapper {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#isIdKey()
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#isIdField()
 		 */
 		@Override
 		public boolean isIdField() {
@@ -780,7 +780,9 @@ public class QueryMapper {
 					: entity.getIdProperty();
 
 			if (idProperty != null) {
-				return name.endsWith(idProperty.getName()) || name.endsWith(idProperty.getFieldName());
+
+				return name.equals(idProperty.getName()) || name.equals(idProperty.getFieldName())
+						|| name.endsWith("." + idProperty.getName()) || name.endsWith("." + idProperty.getFieldName());
 			}
 
 			return DEFAULT_ID_NAMES.contains(name);
