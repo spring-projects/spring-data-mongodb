@@ -218,7 +218,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public MongoTemplate(MongoClient mongoClient, String databaseName) {
 		this(new SimpleMongoDbFactory(mongoClient, databaseName), (MongoConverter) null);
 	}
-	
+
 	/**
 	 * Constructor used for a basic template configuration.
 	 *
@@ -2116,9 +2116,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-
-		return doAggregate(aggregation, collectionName, outputType, rootContext);
+		return doAggregate(aggregation, collectionName, outputType, prepareAggregationContext(aggregation, context));
 	}
 
 	@SuppressWarnings("ConstantConditions")
@@ -2128,9 +2126,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 
 		AggregationOptions options = aggregation.getOptions();
+
 		if (options.isExplain()) {
 
-			Document command = aggregation.toDocument(collectionName, context);
+			Document command = aggregationToCommand(collectionName, aggregation, context);
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
@@ -2141,7 +2140,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					.map(callback::doWith).collect(Collectors.toList()), commandResult);
 		}
 
-		List<Document> pipeline = aggregation.toPipeline(context);
+		List<Document> pipeline = aggregationToPipeline(aggregation, context);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Executing aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
@@ -2179,9 +2178,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(outputType, "Output type must not be null!");
 		Assert.isTrue(!aggregation.getOptions().isExplain(), "Can't use explain option with streaming!");
 
-		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+		AggregationOperationContext rootContext = prepareAggregationContext(aggregation, context);
+
 		AggregationOptions options = aggregation.getOptions();
-		List<Document> pipeline = aggregation.toPipeline(rootContext);
+		List<Document> pipeline = aggregationToPipeline(aggregation, rootContext);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
@@ -2842,6 +2842,73 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return fields;
+	}
+
+	/**
+	 * Prepare the {@link AggregationOperationContext} for a given aggregation by either returning the context itself it
+	 * is not {@literal null}, create a {@link TypeBasedAggregationOperationContext} if the aggregation contains type
+	 * information (is a {@link TypedAggregation}) or use the {@link Aggregation#DEFAULT_CONTEXT}.
+	 *
+	 * @param aggregation must not be {@literal null}.
+	 * @param context can be {@literal null}.
+	 * @return the root {@link AggregationOperationContext} to use.
+	 */
+	private AggregationOperationContext prepareAggregationContext(Aggregation aggregation,
+			@Nullable AggregationOperationContext context) {
+
+		if (context != null) {
+			return context;
+		}
+
+		if (aggregation instanceof TypedAggregation) {
+			return new TypeBasedAggregationOperationContext(((TypedAggregation) aggregation).getInputType(), mappingContext,
+					queryMapper);
+		}
+
+		return Aggregation.DEFAULT_CONTEXT;
+	}
+
+	/**
+	 * Extract and map the aggregation pipeline.
+	 *
+	 * @param aggregation
+	 * @param context
+	 * @return
+	 */
+	private List<Document> aggregationToPipeline(Aggregation aggregation, AggregationOperationContext context) {
+
+		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
+			return aggregation.toPipeline(context);
+		}
+
+		return mapAggregationPipeline(aggregation.toPipeline(context));
+	}
+
+	/**
+	 * Extract the command and map the aggregation pipeline.
+	 *
+	 * @param aggregation
+	 * @param context
+	 * @return
+	 */
+	private Document aggregationToCommand(String collection, Aggregation aggregation,
+			AggregationOperationContext context) {
+
+		Document command = aggregation.toDocument(collection, context);
+
+		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
+			return command;
+		}
+
+		command.put("pipeline", mapAggregationPipeline(command.get("pipeline", List.class)));
+
+		return command;
+	}
+
+	private List<Document> mapAggregationPipeline(List<Document> pipeline) {
+
+		return pipeline.stream().map(val -> queryMapper.getMappedObject(val, Optional.empty()))
+				.collect(Collectors.toList());
 	}
 
 	/**
