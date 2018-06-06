@@ -18,13 +18,18 @@ package org.springframework.data.mongodb.repository.support;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import lombok.Data;
+
 import java.util.Arrays;
 
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QPerson;
@@ -49,7 +54,9 @@ public class QuerydslRepositorySupportTests {
 	@Before
 	public void setUp() {
 
+		operations.remove(new Query(), Outer.class);
 		operations.remove(new Query(), Person.class);
+
 		person = new Person("Dave", "Matthews");
 		operations.save(person);
 
@@ -96,5 +103,55 @@ public class QuerydslRepositorySupportTests {
 
 		assertThat(queryUsingIdField.fetchOne(), equalTo(person));
 		assertThat(queryUsingIdField.fetchOne(), equalTo(queryUsingRefObject.fetchOne()));
+	}
+
+	@Test // DATAMONGO-1998
+	public void shouldLeaveStringIdThatIsNoValidObjectIdAsItIs() {
+
+		Outer outer = new Outer();
+		outer.id = "outer-1";
+		outer.inner = new Inner();
+		outer.inner.id = "inner-1";
+		outer.inner.value = "go climb a rock";
+
+		operations.save(outer);
+
+		QQuerydslRepositorySupportTests_Outer o = QQuerydslRepositorySupportTests_Outer.outer;
+		SpringDataMongodbQuery<Outer> query = repoSupport.from(o).where(o.inner.id.eq(outer.inner.id));
+
+		assertThat(query.fetchOne(), equalTo(outer));
+	}
+
+	@Test // DATAMONGO-1998
+	public void shouldConvertStringIdThatIsAValidObjectIdIntoTheSuch() {
+
+		Outer outer = new Outer();
+		outer.id = new ObjectId().toHexString();
+		outer.inner = new Inner();
+		outer.inner.id = new ObjectId().toHexString();
+		outer.inner.value = "eat sleep workout repeat";
+
+		operations.save(outer);
+
+		QQuerydslRepositorySupportTests_Outer o = QQuerydslRepositorySupportTests_Outer.outer;
+		SpringDataMongodbQuery<Outer> query = repoSupport.from(o).where(o.inner.id.eq(outer.inner.id));
+
+		assertThat(query.fetchOne(), equalTo(outer));
+	}
+
+	@Data
+	@Document
+	public static class Outer {
+
+		@Id String id;
+		Inner inner;
+	}
+
+	@Data
+	public static class Inner {
+
+		@Id String id;
+		String value;
+
 	}
 }

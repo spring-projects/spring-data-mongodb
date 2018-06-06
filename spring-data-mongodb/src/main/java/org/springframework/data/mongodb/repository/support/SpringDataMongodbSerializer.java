@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.mongodb.util.JSON;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -40,7 +41,7 @@ import com.querydsl.mongodb.MongodbSerializer;
 
 /**
  * Custom {@link MongodbSerializer} to take mapping information into account when building keys for constraints.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
@@ -64,7 +65,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	/**
 	 * Creates a new {@link SpringDataMongodbSerializer} for the given {@link MappingContext}.
-	 * 
+	 *
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	public SpringDataMongodbSerializer(MongoConverter converter) {
@@ -115,10 +116,27 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	@Override
 	protected DBObject asDBObject(String key, Object value) {
 
-		if (ID_KEY.equals(key)) {
-			return mapper.getMappedObject(super.asDBObject(key, value), null);
+		if (key.endsWith(ID_KEY)) {
+			return convertId(key, value);
 		}
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
+	}
+
+	/**
+	 * Convert a given, already known to be an {@literal id} or even a nested document id, value into the according id
+	 * representation following the conversion rules of {@link QueryMapper#convertId(Object)}.
+	 *
+	 * @param key the property path to the given value.
+	 * @param idValue the raw {@literal id} value.
+	 * @return the {@literal id} representation in the required format.
+	 */
+	private DBObject convertId(String key, Object idValue) {
+
+		Object convertedId = mapper.convertId(idValue);
+
+		DBObject mappedIdValue = mapper.getMappedObject(super.asDBObject(key, convertedId),
+				null);
+		return (DBObject) JSON.parse(JSON.serialize(mappedIdValue));
 	}
 
 	/*
