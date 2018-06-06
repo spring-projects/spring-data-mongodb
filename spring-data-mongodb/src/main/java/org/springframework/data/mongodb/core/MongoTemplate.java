@@ -1554,7 +1554,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		DBObject commandResult = new BatchAggregationLoader(this, readPreference, Integer.MAX_VALUE)
+		DBObject commandResult = new BatchAggregationLoader(this, queryMapper, mappingContext, readPreference,
+				Integer.MAX_VALUE)
 				.aggregate(collectionName, aggregation, context);
 
 		return new AggregationResults<O>(returnPotentiallyMappedResults(outputType, commandResult, collectionName),
@@ -2555,12 +2556,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		private static final String OK = "ok";
 
 		private final MongoTemplate template;
+		private final QueryMapper queryMapper;
+		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 		private final ReadPreference readPreference;
 		private final int batchSize;
 
-		BatchAggregationLoader(MongoTemplate template, ReadPreference readPreference, int batchSize) {
+		BatchAggregationLoader(MongoTemplate template, QueryMapper queryMapper,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+				ReadPreference readPreference, int batchSize) {
 
 			this.template = template;
+			this.queryMapper = queryMapper;
+			this.mappingContext = mappingContext;
 			this.readPreference = readPreference;
 			this.batchSize = batchSize;
 		}
@@ -2583,11 +2590,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		 * Pre process the aggregation command sent to the server by adding {@code cursor} options to match execution on
 		 * different server versions.
 		 */
-		private static DBObject prepareAggregationCommand(String collectionName, Aggregation aggregation,
-				AggregationOperationContext context, int batchSize) {
+		private DBObject prepareAggregationCommand(String collectionName, Aggregation aggregation,
+				 AggregationOperationContext context, int batchSize) {
 
-			AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-			DBObject command = aggregation.toDbObject(collectionName, rootContext);
+			AggregationUtil aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
+
+			AggregationOperationContext rootContext = aggregationUtil.prepareAggregationContext(aggregation, context);
+			DBObject command = aggregationUtil.createCommand(collectionName, aggregation, rootContext);
 
 			if (!aggregation.getOptions().isExplain()) {
 				command.put(CURSOR_FIELD, new BasicDBObject(BATCH_SIZE_FIELD, batchSize));

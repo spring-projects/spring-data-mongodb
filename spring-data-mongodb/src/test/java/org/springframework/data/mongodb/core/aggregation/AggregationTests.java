@@ -1741,7 +1741,7 @@ public class AggregationTests {
 						.within(new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404)))),
 				project("id", "location", "name"));
 
-		AggregationResults<Document> groupResults = mongoTemplate.aggregate(aggregation, "newyork", Document.class);
+		AggregationResults<DBObject> groupResults = mongoTemplate.aggregate(aggregation, "newyork", DBObject.class);
 
 		assertThat(groupResults.getMappedResults().size(), is(4));
 	}
@@ -1756,7 +1756,8 @@ public class AggregationTests {
 						.within(new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404)))),
 				project("id", "location", "name"));
 
-		AggregationResults<Document> groupResults = mongoTemplate.aggregate(aggregation, "newyork", Document.class);
+		AggregationResults<DBObject
+				> groupResults = mongoTemplate.aggregate(aggregation, "newyork", DBObject.class);
 
 		assertThat(groupResults.getMappedResults().size(), is(4));
 	}

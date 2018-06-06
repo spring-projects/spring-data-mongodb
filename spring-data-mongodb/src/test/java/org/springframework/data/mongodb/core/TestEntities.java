@@ -84,7 +84,7 @@ public class TestEntities {
 
 		public List<Venue> newYork() {
 
-			List<Venue> venues = new ArrayList<>();
+			List<Venue> venues = new ArrayList<Venue>();
 
 			venues.add(pennStation());
 			venues.add(tenGenOffice());

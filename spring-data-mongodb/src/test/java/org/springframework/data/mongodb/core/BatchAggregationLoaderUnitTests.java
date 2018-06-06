@@ -31,6 +31,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.core.MongoTemplate.BatchAggregationLoader;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
@@ -39,7 +43,7 @@ import com.mongodb.ReadPreference;
 
 /**
  * Unit tests for {@link BatchAggregationLoader}.
- * 
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  */
@@ -50,6 +54,7 @@ public class BatchAggregationLoaderUnitTests {
 			project().and("firstName").as("name"));
 
 	@Mock MongoTemplate template;
+	@Mock DbRefResolver dbRefResolver;
 	@Mock CommandResult aggregationResult;
 	@Mock CommandResult getMoreResult;
 
@@ -65,7 +70,9 @@ public class BatchAggregationLoaderUnitTests {
 
 	@Before
 	public void setUp() {
-		loader = new BatchAggregationLoader(template, ReadPreference.primary(), 10);
+		MongoMappingContext context = new MongoMappingContext();
+		loader = new BatchAggregationLoader(template, new QueryMapper(new MappingMongoConverter(dbRefResolver, context)),
+				context, ReadPreference.primary(), 10);
 	}
 
 	@Test // DATAMONGO-1824
@@ -89,6 +96,7 @@ public class BatchAggregationLoaderUnitTests {
 		when(aggregationResult.get("cursor")).thenReturn(cursorWithoutMore);
 
 		DBObject result = loader.aggregate("person", AGGREGATION, Aggregation.DEFAULT_CONTEXT);
+
 		assertThat((List<Object>) result.get("result"),
 				IsCollectionContaining.<Object> hasItem(luke));
 
