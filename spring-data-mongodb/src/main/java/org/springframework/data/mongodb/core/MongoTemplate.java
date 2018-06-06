@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -1934,7 +1933,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		Document commandResult = new BatchAggregationLoader(this, readPreference, Integer.MAX_VALUE)
+		Document commandResult = new BatchAggregationLoader(this, queryMapper, mappingContext, readPreference,
+				Integer.MAX_VALUE)
 				.aggregate(collectionName, aggregation, context);
 
 		return new AggregationResults<>(returnPotentiallyMappedResults(outputType, commandResult, collectionName),
@@ -1957,9 +1957,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			return Collections.emptyList();
 		}
 
-		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<O>(mongoConverter, outputType, collectionName);
+		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 
-		List<O> mappedResults = new ArrayList<O>();
+		List<O> mappedResults = new ArrayList<>();
 		for (Document document : resultSet) {
 			mappedResults.add(callback.doWith(document));
 		}
@@ -1974,9 +1974,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+		AggregationUtil aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
+		AggregationOperationContext rootContext = aggregationUtil.prepareAggregationContext(aggregation, context);
 
-		Document command = aggregation.toDocument(collectionName, rootContext);
+		Document command = aggregationUtil.createCommand(collectionName, aggregation, rootContext);
 
 		assertNotExplain(command);
 
@@ -1984,7 +1985,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			LOGGER.debug("Streaming aggregation: {}", serializeToJsonSafely(command));
 		}
 
-		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<O>(mongoConverter, outputType, collectionName);
+		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 
 		return execute(collectionName, new CollectionCallback<CloseableIterator<O>>() {
 
@@ -2008,7 +2009,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					cursor = cursor.collation(options.getCollation().map(Collation::toMongoCollation).get());
 				}
 
-				return new CloseableIterableCursorAdapter<O>(cursor.iterator(), exceptionTranslator, readCallback);
+				return new CloseableIterableCursorAdapter<>(cursor.iterator(), exceptionTranslator, readCallback);
 			}
 		});
 	}
@@ -2577,72 +2578,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return fields;
 	}
 
-	/**
-	 * Prepare the {@link AggregationOperationContext} for a given aggregation by either returning the context itself it
-	 * is not {@literal null}, create a {@link TypeBasedAggregationOperationContext} if the aggregation contains type
-	 * information (is a {@link TypedAggregation}) or use the {@link Aggregation#DEFAULT_CONTEXT}.
-	 *
-	 * @param aggregation must not be {@literal null}.
-	 * @param context can be {@literal null}.
-	 * @return the root {@link AggregationOperationContext} to use.
-	 */
-	private AggregationOperationContext prepareAggregationContext(Aggregation aggregation,
-			@Nullable AggregationOperationContext context) {
-
-		if (context != null) {
-			return context;
-		}
-
-		if (aggregation instanceof TypedAggregation) {
-			return new TypeBasedAggregationOperationContext(((TypedAggregation) aggregation).getInputType(), mappingContext,
-					queryMapper);
-		}
-
-		return Aggregation.DEFAULT_CONTEXT;
-	}
-
-	/**
-	 * Extract and map the aggregation pipeline.
-	 *
-	 * @param aggregation
-	 * @param context
-	 * @return
-	 */
-	private Document aggregationToPipeline(String inputCollectionName, Aggregation aggregation, AggregationOperationContext context) {
-
-		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
-			return aggregation.toDocument(inputCollectionName, context);
-		}
-
-		return queryMapper.getMappedObject(aggregation.toDocument(inputCollectionName, context), Optional.empty());
-	}
-
-	/**
-	 * Extract the command and map the aggregation pipeline.
-	 *
-	 * @param aggregation
-	 * @param context
-	 * @return
-	 */
-	private Document aggregationToCommand(String collection, Aggregation aggregation,
-			AggregationOperationContext context) {
-
-		Document command = aggregation.toDocument(collection, context);
-
-		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
-			return command;
-		}
-
-		command.put("pipeline", mapAggregationPipeline(command.get("pipeline", List.class)));
-
-		return command;
-	}
-
-	private List<Document> mapAggregationPipeline(List<Document> pipeline) {
-
-		return pipeline.stream().map(val -> queryMapper.getMappedObject(val, Optional.empty()))
-				.collect(Collectors.toList());
-	}
 
 	/**
 	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
@@ -3157,12 +3092,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private static final String OK = "ok";
 
 		private final MongoTemplate template;
+		private final QueryMapper queryMapper;
+		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 		private final ReadPreference readPreference;
 		private final int batchSize;
 
-		BatchAggregationLoader(MongoTemplate template, ReadPreference readPreference, int batchSize) {
+		BatchAggregationLoader(MongoTemplate template, QueryMapper queryMapper,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+				ReadPreference readPreference, int batchSize) {
 
 			this.template = template;
+			this.queryMapper = queryMapper;
+			this.mappingContext = mappingContext;
 			this.readPreference = readPreference;
 			this.batchSize = batchSize;
 		}
@@ -3185,11 +3126,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 * Pre process the aggregation command sent to the server by adding {@code cursor} options to match execution on
 		 * different server versions.
 		 */
-		private static Document prepareAggregationCommand(String collectionName, Aggregation aggregation,
+		private Document prepareAggregationCommand(String collectionName, Aggregation aggregation,
 				@Nullable AggregationOperationContext context, int batchSize) {
 
-			AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
-			Document command = aggregation.toDocument(collectionName, rootContext);
+			AggregationUtil aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
+
+			AggregationOperationContext rootContext = aggregationUtil.prepareAggregationContext(aggregation, context);
+			Document command = aggregationUtil.createCommand(collectionName, aggregation, rootContext);
 
 			if (!aggregation.getOptions().isExplain()) {
 				command.put(CURSOR_FIELD, new Document(BATCH_SIZE_FIELD, batchSize));

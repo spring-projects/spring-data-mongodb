@@ -733,8 +733,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AggregationOperationContext rootContext = prepareAggregationContext(aggregation, context);
-		Document command = aggregationToPipeline(collectionName, aggregation, rootContext);
+		AggregationUtil aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
+		AggregationOperationContext rootContext = aggregationUtil.prepareAggregationContext(aggregation, context);
+		Document command = aggregationUtil.createPipeline(collectionName, aggregation, rootContext);
 		AggregationOptions options = AggregationOptions.fromDocument(command);
 
 		Assert.isTrue(!options.isExplain(), "Cannot use explain option with streaming!");
@@ -2195,46 +2196,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			return throwable;
 		};
-	}
-
-	/**
-	 * Prepare the {@link AggregationOperationContext} for a given aggregation by either returning the context itself it
-	 * is not {@literal null}, create a {@link TypeBasedAggregationOperationContext} if the aggregation contains type
-	 * information (is a {@link TypedAggregation}) or use the {@link Aggregation#DEFAULT_CONTEXT}.
-	 *
-	 * @param aggregation must not be {@literal null}.
-	 * @param context can be {@literal null}.
-	 * @return the root {@link AggregationOperationContext} to use.
-	 */
-	private AggregationOperationContext prepareAggregationContext(Aggregation aggregation,
-			@Nullable AggregationOperationContext context) {
-
-		if (context != null) {
-			return context;
-		}
-
-		if (aggregation instanceof TypedAggregation) {
-			return new TypeBasedAggregationOperationContext(((TypedAggregation) aggregation).getInputType(), mappingContext,
-					queryMapper);
-		}
-
-		return Aggregation.DEFAULT_CONTEXT;
-	}
-
-	/**
-	 * Extract and map the aggregation pipeline.
-	 *
-	 * @param aggregation
-	 * @param context
-	 * @return
-	 */
-	private Document aggregationToPipeline(String inputCollectionName, Aggregation aggregation, AggregationOperationContext context) {
-
-		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
-			return aggregation.toDocument(inputCollectionName, context);
-		}
-
-		return queryMapper.getMappedObject(aggregation.toDocument(inputCollectionName, context), Optional.empty());
 	}
 
 	/**
