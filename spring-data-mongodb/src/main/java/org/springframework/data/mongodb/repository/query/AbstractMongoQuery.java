@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
@@ -84,6 +85,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Query query = createQuery(accessor);
 
 		applyQueryMetaAttributesWhenPresent(query);
+		query = applyAnnotatedDefaultSortIfPresent(query);
 
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
@@ -110,7 +112,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		} else if (method.isStreamQuery()) {
 			return q -> operation.matching(q).stream();
 		} else if (method.isCollectionQuery()) {
-			return q -> operation.matching(q.with(accessor.getPageable())).all();
+			return q -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort())).all();
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(operation, accessor.getPageable());
 		} else if (isCountQuery()) {
@@ -133,6 +135,23 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		}
 
 		return query;
+	}
+
+	/**
+	 * Add a default sort derived from {@link org.springframework.data.mongodb.repository.Query#sort()} to the given
+	 * {@link Query} if present.
+	 *
+	 * @param query the {@link Query} to potentially apply the sort to.
+	 * @return the query with potential default sort applied.
+	 * @since 2.1
+	 */
+	Query applyAnnotatedDefaultSortIfPresent(Query query) {
+
+		if (!method.hasAnnotatedSort()) {
+			return query;
+		}
+
+		return QueryUtils.sneakInDefaultSort(query, Document.parse(method.getAnnotatedSort()));
 	}
 
 	/**

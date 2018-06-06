@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.bson.Document;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -109,6 +110,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), parameterAccessor));
 
 		applyQueryMetaAttributesWhenPresent(query);
+		query = applyAnnotatedDefaultSortIfPresent(query);
 
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(parameterAccessor);
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
@@ -175,6 +177,23 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		}
 
 		return query;
+	}
+
+	/**
+	 * Add a default sort derived from {@link org.springframework.data.mongodb.repository.Query#sort()} to the given
+	 * {@link Query} if present.
+	 *
+	 * @param query the {@link Query} to potentially apply the sort to.
+	 * @return the query with potential default sort applied.
+	 * @since 2.1
+	 */
+	Query applyAnnotatedDefaultSortIfPresent(Query query) {
+
+		if (!method.hasAnnotatedSort()) {
+			return query;
+		}
+
+		return QueryUtils.sneakInDefaultSort(query, Document.parse(method.getAnnotatedSort()));
 	}
 
 	/**

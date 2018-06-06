@@ -20,6 +20,8 @@ import static org.junit.Assert.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 
 import lombok.NoArgsConstructor;
+import org.hamcrest.collection.IsIterableContainingInOrder;
+import org.springframework.data.domain.Sort.Direction;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -307,6 +309,23 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		StepVerifier.create(repository.findFirstByLastname(dave.getLastname())).expectNextCount(1).verifyComplete();
 	}
 
+	@Test // DATAMONGO-1979
+	public void findAppliesAnnotatedSort() {
+
+		repository.findByAgeGreaterThan(40).collectList().as(StepVerifier::create).consumeNextWith(result -> {
+			assertThat(result, IsIterableContainingInOrder.contains(carter, boyd, dave, leroi));
+		});
+	}
+
+	@Test // DATAMONGO-1979
+	public void findWithSortOverwritesAnnotatedSort() {
+
+		repository.findByAgeGreaterThan(40, Sort.by(Direction.ASC, "age")).collectList().as(StepVerifier::create)
+				.consumeNextWith(result -> {
+					assertThat(result, IsIterableContainingInOrder.contains(leroi, dave, boyd, carter));
+				});
+	}
+
 	interface ReactivePersonRepository extends ReactiveMongoRepository<Person, String> {
 
 		Flux<Person> findByLastname(String lastname);
@@ -335,6 +354,12 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		Flux<Person> findPersonByLocationNear(Point point, Distance maxDistance);
 
 		Mono<Person> findFirstByLastname(String lastname);
+
+		@Query(sort = "{ age : -1 }")
+		Flux<Person> findByAgeGreaterThan(int age);
+
+		@Query(sort = "{ age : -1 }")
+		Flux<Person> findByAgeGreaterThan(int age, Sort sort);
 	}
 
 	interface ReactiveCappedCollectionRepository extends Repository<Capped, String> {
