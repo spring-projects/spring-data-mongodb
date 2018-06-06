@@ -119,14 +119,14 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#asDocument(java.lang.String, java.lang.Object)
+	 * @see com.querydsl.mongodb.MongodbSerializer#asDBObject(java.lang.String, java.lang.Object)
 	 */
 	@Override
 	protected DBObject asDBObject(@Nullable String key, @Nullable Object value) {
 
 		value = value instanceof Optional ? ((Optional) value).orElse(null) : value;
 
-		if (key.endsWith(ID_KEY)) {
+		if (ID_KEY.equals(key) || (key != null && key.endsWith("." + ID_KEY))) {
 			return convertId(key, value);
 		}
 
