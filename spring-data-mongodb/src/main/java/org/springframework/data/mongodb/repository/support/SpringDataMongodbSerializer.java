@@ -126,13 +126,28 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 		value = value instanceof Optional ? ((Optional) value).orElse(null) : value;
 
-		if (ID_KEY.equals(key)) {
-			DBObject superIdValue = super.asDBObject(key, value);
-			Document mappedIdValue = mapper.getMappedObject((BasicDBObject) superIdValue, Optional.empty());
-			return (DBObject) JSON.parse(mappedIdValue.toJson());
+		if (key.endsWith(ID_KEY)) {
+			return convertId(key, value);
 		}
 
 		return super.asDBObject(key, value instanceof Pattern ? value : toQuerydslMongoType(value));
+	}
+
+	/**
+	 * Convert a given, already known to be an {@literal id} or even a nested document id, value into the according id
+	 * representation following the conversion rules of {@link QueryMapper#convertId(Object)}.
+	 *
+	 * @param key the property path to the given value.
+	 * @param idValue the raw {@literal id} value.
+	 * @return the {@literal id} representation in the required format.
+	 */
+	private DBObject convertId(String key, Object idValue) {
+
+		Object convertedId = mapper.convertId(idValue);
+
+		Document mappedIdValue = mapper.getMappedObject((BasicDBObject) super.asDBObject(key, convertedId),
+				Optional.empty());
+		return (DBObject) JSON.parse(mappedIdValue.toJson());
 	}
 
 	/*
