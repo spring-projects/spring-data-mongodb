@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.mongodb.util.JSON;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -31,6 +30,7 @@ import org.springframework.util.ClassUtils;
 
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.util.JSON;
 import com.querydsl.core.types.Constant;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Operation;
@@ -116,7 +116,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	@Override
 	protected DBObject asDBObject(String key, Object value) {
 
-		if (key.endsWith(ID_KEY)) {
+		if (ID_KEY.equals(key) || (key != null && key.endsWith("." + ID_KEY))) {
 			return convertId(key, value);
 		}
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
@@ -134,8 +134,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 		Object convertedId = mapper.convertId(idValue);
 
-		DBObject mappedIdValue = mapper.getMappedObject(super.asDBObject(key, convertedId),
-				null);
+		DBObject mappedIdValue = mapper.getMappedObject(super.asDBObject(key, convertedId), null);
 		return (DBObject) JSON.parse(JSON.serialize(mappedIdValue));
 	}
 

@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.Matchers;
@@ -50,7 +51,7 @@ import com.querydsl.core.types.dsl.StringPath;
 
 /**
  * Unit tests for {@link SpringDataMongodbSerializer}.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
@@ -158,9 +159,9 @@ public class SpringDataMongodbSerializerUnitTests {
 		DBObject serialized = serializer.asDBObject("_id", new BasicDBObject("$in", objectIds));
 
 		DBObject _id = getAsDBObject(serialized, "_id");
-		Object[] $in = getTypedValue(_id, "$in", Object[].class);
+		List<ObjectId> $in = getTypedValue(_id, "$in", List.class);
 
-		assertThat($in, Matchers.<Object> arrayContaining(firstId, secondId));
+		assertThat($in, contains(firstId, secondId));
 	}
 
 	@Test // DATAMONGO-1485
