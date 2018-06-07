@@ -70,8 +70,10 @@ import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.CountOperation;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -94,6 +96,7 @@ import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -2639,7 +2642,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * Exception translation {@link Function} intended for {@link Flux#mapError(Function)}} usage.
+	 * Exception translation {@link Function} intended for {@link Flux#onErrorMap(Function)} usage.
 	 *
 	 * @return the exception translation {@link Function}
 	 */
@@ -3231,6 +3234,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	static class ReactiveSessionBoundMongoTemplate extends ReactiveMongoTemplate {
 
 		private final ReactiveMongoTemplate delegate;
+		private final ClientSession session;
 
 		/**
 		 * @param session must not be {@literal null}.
@@ -3241,6 +3245,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			super(that.mongoDatabaseFactory.withSession(session), that);
 
 			this.delegate = that;
+			this.session = session;
 		}
 
 		/*
@@ -3263,6 +3268,57 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getMongoDatabase();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 */
+		@Override
+		public Mono<Long> count(@Nullable Query query, @Nullable Class<?> entityClass, String collectionName) {
+
+			if (!session.hasActiveTransaction()) {
+				return super.count(query, entityClass, collectionName);
+			}
+
+			List<AggregationOperation> pipeline = computeCountAggregationPipeline(query, entityClass);
+
+			Aggregation aggregation = entityClass != null ? Aggregation.newAggregation(entityClass, pipeline)
+					: Aggregation.newAggregation(pipeline);
+			aggregation.withOptions(AggregationOptions.builder().collation(query.getCollation().orElse(null)).build());
+
+			return aggregate(aggregation, collectionName, Document.class) //
+					.defaultIfEmpty(new Document("totalEntityCount", 0)) //
+					.next() //
+					.map(it -> it.get("totalEntityCount", Number.class).longValue());
+		}
+
+		private List<AggregationOperation> computeCountAggregationPipeline(@Nullable Query query,
+				@Nullable Class<?> entityType) {
+
+			CountOperation count = Aggregation.count().as("totalEntityCount");
+			if (query == null || query.getQueryObject().isEmpty()) {
+				return Arrays.asList(count);
+			}
+
+			Document mappedQuery = delegate.queryMapper.getMappedObject(query.getQueryObject(),
+					delegate.getPersistentEntity(entityType));
+
+			CriteriaDefinition criteria = new CriteriaDefinition() {
+
+				@Override
+				public Document getCriteriaObject() {
+					return mappedQuery;
+				}
+
+				@Nullable
+				@Override
+				public String getKey() {
+					return null;
+				}
+			};
+
+			return Arrays.asList(Aggregation.match(criteria), count);
 		}
 	}
 

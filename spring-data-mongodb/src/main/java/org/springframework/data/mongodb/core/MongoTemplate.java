@@ -67,9 +67,11 @@ import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.CountOperation;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -105,6 +107,7 @@ import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -2116,7 +2119,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AggregationOperationContext contextToUse = new AggregationUtil(queryMapper, mappingContext).prepareAggregationContext(aggregation, context);
+		AggregationOperationContext contextToUse = new AggregationUtil(queryMapper, mappingContext)
+				.prepareAggregationContext(aggregation, context);
 		return doAggregate(aggregation, collectionName, outputType, contextToUse);
 	}
 
@@ -2847,7 +2851,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return fields;
 	}
 
-
 	/**
 	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
 	 * exception if the conversation failed. Thus allows safe re-throwing of the return value.
@@ -3498,6 +3501,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	static class SessionBoundMongoTemplate extends MongoTemplate {
 
 		private final MongoTemplate delegate;
+		private final ClientSession session;
 
 		/**
 		 * @param session must not be {@literal null}.
@@ -3508,6 +3512,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			super(that.getMongoDbFactory().withSession(session), that);
 
 			this.delegate = that;
+			this.session = session;
 		}
 
 		/*
@@ -3530,6 +3535,56 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getDb();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.MongoTemplate#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 */
+		@Override
+		public long count(Query query, @Nullable Class<?> entityClass, String collection) {
+
+			if (!session.hasActiveTransaction()) {
+				return super.count(query, entityClass, collection);
+			}
+
+			List<AggregationOperation> pipeline = computeCountAggregationPipeline(query, entityClass);
+
+			Aggregation aggregation = entityClass != null ? Aggregation.newAggregation(entityClass, pipeline)
+					: Aggregation.newAggregation(pipeline);
+			aggregation.withOptions(AggregationOptions.builder().collation(query.getCollation().orElse(null)).build());
+
+			AggregationResults<Document> aggregationResults = aggregate(aggregation, collection, Document.class);
+			return ((List<Document>) aggregationResults.getRawResults().getOrDefault("results",
+					Collections.singletonList(new Document("totalEntityCount", 0)))).get(0).get("totalEntityCount", Number.class)
+							.longValue();
+		}
+
+		private List<AggregationOperation> computeCountAggregationPipeline(Query query, @Nullable Class<?> entityType) {
+
+			CountOperation count = Aggregation.count().as("totalEntityCount");
+			if (query.getQueryObject().isEmpty()) {
+				return Arrays.asList(count);
+			}
+
+			Document mappedQuery = delegate.queryMapper.getMappedObject(query.getQueryObject(),
+					delegate.getPersistentEntity(entityType));
+
+			CriteriaDefinition criteria = new CriteriaDefinition() {
+
+				@Override
+				public Document getCriteriaObject() {
+					return mappedQuery;
+				}
+
+				@Nullable
+				@Override
+				public String getKey() {
+					return null;
+				}
+			};
+
+			return Arrays.asList(Aggregation.match(criteria), count);
 		}
 	}
 }
