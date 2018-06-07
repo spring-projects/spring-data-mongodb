@@ -19,12 +19,12 @@ import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-
-import com.mongodb.client.result.UpdateResult;
 import org.springframework.lang.Nullable;
 
+import com.mongodb.client.result.UpdateResult;
+
 /**
- * {@link ExecutableUpdateOperation} allows creation and execution of MongoDB update / findAndModify operations in a
+ * {@link ExecutableUpdateOperation} allows creation and execution of MongoDB update / findAndModify / findAndReplace operations in a
  * fluent API style. <br />
  * The starting {@literal domainType} is used for mapping the {@link Query} provided via {@code matching}, as well as
  * the {@link Update} via {@code apply} into the MongoDB specific representations. The collection to operate on is by
@@ -73,6 +73,16 @@ public interface ExecutableUpdateOperation {
 		 * @throws IllegalArgumentException if update is {@literal null}.
 		 */
 		TerminatingUpdate<T> apply(Update update);
+
+		/**
+		 * Specify {@code replacement} object.
+		 *
+		 * @param replacement must not be {@literal null}.
+		 * @return new instance of {@link FindAndReplaceOptions}.
+		 * @throws IllegalArgumentException if options is {@literal null}.
+		 * 2.1
+		 */
+		FindAndReplaceWithOptions<T> replaceWith(T replacement);
 	}
 
 	/**
@@ -151,6 +161,47 @@ public interface ExecutableUpdateOperation {
 		 */
 		@Nullable
 		T findAndModifyValue();
+	}
+
+	/**
+	 * Define {@link FindAndReplaceOptions}.
+	 *
+	 * @author Mark Paluch
+	 * @since 2.1
+	 */
+	interface FindAndReplaceWithOptions<T> extends TerminatingFindAndReplace<T> {
+
+		/**
+		 * Explicitly define {@link FindAndReplaceOptions} for the {@link Update}.
+		 *
+		 * @param options must not be {@literal null}.
+		 * @return new instance of {@link FindAndReplaceOptions}.
+		 * @throws IllegalArgumentException if options is {@literal null}.
+		 */
+		TerminatingFindAndReplace<T> withOptions(FindAndReplaceOptions options);
+	}
+
+	/**
+	 * Trigger findAndReplace execution by calling one of the terminating methods.
+	 */
+	interface TerminatingFindAndReplace<T> {
+
+		/**
+		 * Find, replace and return the first matching document.
+		 *
+		 * @return {@link Optional#empty()} if nothing found.
+		 */
+		default Optional<T> findAndReplace() {
+			return Optional.ofNullable(findAndReplaceValue());
+		}
+
+		/**
+		 * Find, replace and return the first matching document.
+		 *
+		 * @return {@literal null} if nothing found.
+		 */
+		@Nullable
+		T findAndReplaceValue();
 	}
 
 	/**

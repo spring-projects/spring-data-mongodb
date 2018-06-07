@@ -78,6 +78,7 @@ import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventLis
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -197,6 +198,7 @@ public class MongoTemplateTests {
 		template.dropCollection(TypeWithDate.class);
 		template.dropCollection("collection");
 		template.dropCollection("personX");
+		template.dropCollection("findandreplace");
 		template.dropCollection(Document.class);
 		template.dropCollection(ObjectWith3AliasedFields.class);
 		template.dropCollection(ObjectWith3AliasedFieldsAndNestedAddress.class);
@@ -2374,6 +2376,54 @@ public class MongoTemplateTests {
 		assertThat(retrieved.models.get(0).get(1).value(), equalTo("value2"));
 	}
 
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldReplaceDocument() {
+
+		org.bson.Document doc = new org.bson.Document("foo", "bar");
+		template.save(doc, "findandreplace");
+
+		org.bson.Document replacement = new org.bson.Document("foo", "baz");
+		org.bson.Document previous = template.findAndReplace(query(where("foo").is("bar")), replacement,
+				FindAndReplaceOptions.options(), org.bson.Document.class, "findandreplace");
+
+		assertThat(previous).containsEntry("foo", "bar");
+		assertThat(template.findOne(query(where("foo").is("baz")), org.bson.Document.class, "findandreplace")).isNotNull();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldReplaceObject() {
+
+		MyPerson person = new MyPerson("Walter");
+		template.save(person);
+
+		MyPerson previous = template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"));
+
+		assertThat(previous.getName()).isEqualTo("Walter");
+		assertThat(template.findOne(query(where("name").is("Heisenberg")), MyPerson.class)).isNotNull();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldReplaceObjectReturingNew() {
+
+		MyPerson person = new MyPerson("Walter");
+		template.save(person);
+
+		MyPerson updated = template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"),
+				FindAndReplaceOptions.options().returnNew(true));
+
+		assertThat(updated.getName()).isEqualTo("Heisenberg");
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldFailWithTwoCollationObjects() {
+
+		thrown.expect(IllegalArgumentException.class);
+		thrown.expectMessage("Both Query and FindAndReplaceOptions");
+
+		template.findAndReplace(query(where("name").is("Walter")).collation(Collation.of("de")), new MyPerson("Heisenberg"),
+				FindAndReplaceOptions.options().collation(Collation.of("en")));
+	}
+
 	@Test // DATAMONGO-407
 	public void updatesShouldRetainTypeInformationEvenForCollections() {
 
@@ -3607,6 +3657,12 @@ public class MongoTemplateTests {
 		String id;
 		String name;
 		Address address;
+
+		public MyPerson() {}
+
+		public MyPerson(String name) {
+			this.name = name;
+		}
 
 		public String getName() {
 			return name;

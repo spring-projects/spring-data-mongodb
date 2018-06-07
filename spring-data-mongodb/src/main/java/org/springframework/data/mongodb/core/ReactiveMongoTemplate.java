@@ -129,6 +129,7 @@ import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.ReturnDocument;
@@ -1106,6 +1107,63 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(),
 				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions)
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options) {
+
+		Assert.notNull(replacement, "Replacement must not be null!");
+
+		Class<T> entityClass = (Class) ClassUtils.getUserClass(replacement);
+		String collectionName = determineCollectionName(entityClass);
+
+		return findAndReplace(query, replacement, options, collectionName);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions, java.lang.String)
+	 */
+	@Override
+	public <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName) {
+
+		Assert.notNull(replacement, "Replacement must not be null!");
+
+		Class<T> entityClass = (Class) ClassUtils.getUserClass(replacement);
+
+		return findAndReplace(query, replacement, options, entityClass, collectionName);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions, java.lang.Class, java.lang.String)
+	 */
+	@Override
+	public <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options, Class<T> entityClass,
+			String collectionName) {
+
+		Assert.notNull(query, "Query must not be null!");
+		Assert.notNull(replacement, "Replacement must not be null!");
+		Assert.notNull(options, "Options must not be null!");
+		Assert.notNull(entityClass, "Entity class must not be null!");
+		Assert.notNull(collectionName, "CollectionName must not be null!");
+
+		FindAndReplaceOptions optionsToUse = FindAndReplaceOptions.of(options);
+
+		Optionals.ifAllPresent(query.getCollation(), optionsToUse.getCollation(), (l, r) -> {
+			throw new IllegalArgumentException(
+					"Both Query and FindAndReplaceOptions define a collation. Please provide the collation only via one of the two.");
+		});
+
+		query.getCollation().ifPresent(optionsToUse::collation);
+
+		return doFindAndReplace(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(),
+				entityClass, replacement, options);
 	}
 
 	/*
@@ -2453,6 +2511,31 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		});
 	}
 
+	protected <T> Mono<T> doFindAndReplace(String collectionName, Document query, Document fields, Document sort,
+			Class<T> entityClass, Object replacement, @Nullable FindAndReplaceOptions options) {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+
+		return Mono.defer(() -> {
+
+			Document mappedQuery = queryMapper.getMappedObject(query, entity);
+			Document dbDoc = toDbObject(replacement, this.mongoConverter);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(
+						"findAndReplace using query: {} fields: {} sort: {} for class: {} and replacement: {} "
+								+ "in collection: {}",
+						serializeToJsonSafely(mappedQuery), fields, sort, entityClass, serializeToJsonSafely(dbDoc),
+						collectionName);
+			}
+
+			maybeEmitEvent(new BeforeSaveEvent<>(replacement, dbDoc, collectionName));
+
+			return executeFindOneInternal(new FindAndReplaceCallback(mappedQuery, fields, sort, dbDoc, options),
+					new ReadDocumentCallback<T>(this.mongoConverter, entityClass, collectionName), collectionName);
+		});
+	}
+
 	protected <T> void maybeEmitEvent(MongoMappingEvent<T> event) {
 		if (null != eventPublisher) {
 			eventPublisher.publishEvent(event);
@@ -2926,6 +3009,45 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				Document sort) {
 
 			FindOneAndUpdateOptions result = new FindOneAndUpdateOptions();
+
+			result = result.projection(fields).sort(sort).upsert(options.isUpsert());
+
+			if (options.isReturnNew()) {
+				result = result.returnDocument(ReturnDocument.AFTER);
+			} else {
+				result = result.returnDocument(ReturnDocument.BEFORE);
+			}
+
+			result = options.getCollation().map(Collation::toMongoCollation).map(result::collation).orElse(result);
+
+			return result;
+		}
+	}
+
+	/**
+	 * @author Mark Paluch
+	 */
+	@RequiredArgsConstructor
+	private static class FindAndReplaceCallback implements ReactiveCollectionCallback<Document> {
+
+		private final Document query;
+		private final Document fields;
+		private final Document sort;
+		private final Document update;
+		private final FindAndReplaceOptions options;
+
+		@Override
+		public Publisher<Document> doInCollection(MongoCollection<Document> collection)
+				throws MongoException, DataAccessException {
+
+			FindOneAndReplaceOptions findOneAndReplaceOptions = convertToFindOneAndReplaceOptions(options, fields, sort);
+			return collection.findOneAndReplace(query, update, findOneAndReplaceOptions);
+		}
+
+		private FindOneAndReplaceOptions convertToFindOneAndReplaceOptions(FindAndReplaceOptions options, Document fields,
+				Document sort) {
+
+			FindOneAndReplaceOptions result = new FindOneAndReplaceOptions();
 
 			result = result.projection(fields).sort(sort).upsert(options.isUpsert());
 

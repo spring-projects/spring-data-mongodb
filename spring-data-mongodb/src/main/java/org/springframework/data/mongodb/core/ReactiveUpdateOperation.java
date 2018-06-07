@@ -18,12 +18,13 @@ package org.springframework.data.mongodb.core;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.client.result.UpdateResult;
 
 /**
- * {@link ReactiveUpdateOperation} allows creation and execution of reactive MongoDB update / findAndModify operations
- * in a fluent API style. <br />
+ * {@link ReactiveUpdateOperation} allows creation and execution of reactive MongoDB update / findAndModify /
+ * findAndReplace operations in a fluent API style. <br />
  * The starting {@literal domainType} is used for mapping the {@link Query} provided via {@code matching}, as well as
  * the {@link org.springframework.data.mongodb.core.query.Update} via {@code apply} into the MongoDB specific
  * representations. The collection to operate on is by default derived from the initial {@literal domainType} and can be
@@ -69,6 +70,21 @@ public interface ReactiveUpdateOperation {
 	}
 
 	/**
+	 * Compose findAndReplace execution by calling one of the terminating methods.
+	 *
+	 * @since 2.1
+	 */
+	interface TerminatingFindAndReplace<T> {
+
+		/**
+		 * Find, replace and return the first matching document.
+		 *
+		 * @return {@link Mono#empty()} if nothing found. Never {@literal null}.
+		 */
+		Mono<T> findAndReplace();
+	}
+
+	/**
 	 * Compose update execution by calling one of the terminating methods.
 	 */
 	interface TerminatingUpdate<T> extends TerminatingFindAndModify<T>, FindAndModifyWithOptions<T> {
@@ -108,6 +124,16 @@ public interface ReactiveUpdateOperation {
 		 * @throws IllegalArgumentException if update is {@literal null}.
 		 */
 		TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.Update update);
+
+		/**
+		 * Specify {@code replacement} object.
+		 *
+		 * @param replacement must not be {@literal null}.
+		 * @return new instance of {@link FindAndReplaceOptions}.
+		 * @throws IllegalArgumentException if options is {@literal null}.
+		 * @since 2.1
+		 */
+		FindAndReplaceWithOptions<T> replaceWith(T replacement);
 	}
 
 	/**
@@ -155,6 +181,24 @@ public interface ReactiveUpdateOperation {
 		 * @throws IllegalArgumentException if options is {@literal null}.
 		 */
 		TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options);
+	}
+
+	/**
+	 * Define {@link FindAndReplaceOptions}.
+	 *
+	 * @author Mark Paluch
+	 * @since 2.1
+	 */
+	interface FindAndReplaceWithOptions<T> extends TerminatingFindAndReplace<T> {
+
+		/**
+		 * Explicitly define {@link FindAndReplaceOptions} for the {@link Update}.
+		 *
+		 * @param options must not be {@literal null}.
+		 * @return new instance of {@link FindAndReplaceOptions}.
+		 * @throws IllegalArgumentException if options is {@literal null}.
+		 */
+		TerminatingFindAndReplace<T> withOptions(FindAndReplaceOptions options);
 	}
 
 	interface ReactiveUpdate<T> extends UpdateWithCollection<T>, UpdateWithQuery<T>, UpdateWithUpdate<T> {}

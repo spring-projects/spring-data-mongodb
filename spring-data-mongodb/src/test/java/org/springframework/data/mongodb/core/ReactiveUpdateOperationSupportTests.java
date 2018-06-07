@@ -181,6 +181,52 @@ public class ReactiveUpdateOperationSupportTests {
 				}).verifyComplete();
 	}
 
+	@Test // DATAMONGO-1827
+	public void findAndReplace() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		template.update(Person.class).matching(queryHan()).replaceWith(luke).findAndReplace() //
+				.as(StepVerifier::create).expectNext(han).verifyComplete();
+
+		template.findOne(queryHan(), Person.class) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Luke");
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceWithCollection() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		template.update(Person.class).inCollection(STAR_WARS).matching(queryHan()).replaceWith(luke).findAndReplace() //
+				.as(StepVerifier::create).expectNext(han).verifyComplete();
+
+		template.findOne(queryHan(), Person.class) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Luke");
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceWithOptions() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		template.update(Person.class).matching(queryHan()).replaceWith(luke)
+				.withOptions(FindAndReplaceOptions.options().returnNew(true)).findAndReplace() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Luke");
+				}).verifyComplete();
+	}
+
 	private Query queryHan() {
 		return query(where("id").is(han.getId()));
 	}

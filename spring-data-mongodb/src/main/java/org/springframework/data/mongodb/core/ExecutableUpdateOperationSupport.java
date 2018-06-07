@@ -51,7 +51,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ExecutableUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null);
+		return new ExecutableUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null, null, null);
 	}
 
 	/**
@@ -60,15 +60,17 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	 */
 	@RequiredArgsConstructor
 	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-	static class ExecutableUpdateSupport<T>
-			implements ExecutableUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T> {
+	static class ExecutableUpdateSupport<T> implements ExecutableUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>,
+			TerminatingUpdate<T>, FindAndReplaceWithOptions<T>, TerminatingFindAndReplace<T> {
 
 		@NonNull MongoTemplate template;
 		@NonNull Class<T> domainType;
 		Query query;
 		@Nullable Update update;
 		@Nullable String collection;
-		@Nullable FindAndModifyOptions options;
+		@Nullable FindAndModifyOptions findAndModifyOptions;
+		@Nullable FindAndReplaceOptions findAndReplaceOptions;
+		@Nullable T replacement;
 
 		/*
 		 * (non-Javadoc)
@@ -79,7 +81,8 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 			Assert.notNull(update, "Update must not be null!");
 
-			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+					findAndReplaceOptions, replacement);
 		}
 
 		/*
@@ -91,7 +94,8 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 			Assert.hasText(collection, "Collection must not be null nor empty!");
 
-			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+					findAndReplaceOptions, replacement);
 		}
 
 		/*
@@ -103,7 +107,34 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 			Assert.notNull(options, "Options must not be null!");
 
-			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options,
+					findAndReplaceOptions, replacement);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithUpdate#replaceWith(Object)
+		 */
+		@Override
+		public FindAndReplaceWithOptions<T> replaceWith(T replacement) {
+
+			Assert.notNull(replacement, "Replacement must not be null!");
+
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+					findAndReplaceOptions, replacement);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.FindAndReplaceWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndReplaceOptions)
+		 */
+		@Override
+		public TerminatingFindAndReplace<T> withOptions(FindAndReplaceOptions options) {
+
+			Assert.notNull(options, "Options must not be null!");
+
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+					options, replacement);
 		}
 
 		/*
@@ -115,7 +146,8 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 			Assert.notNull(query, "Query must not be null!");
 
-			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options);
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+					findAndReplaceOptions, replacement);
 		}
 
 		/*
@@ -151,7 +183,20 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		 */
 		@Override
 		public @Nullable T findAndModifyValue() {
-			return template.findAndModify(query, update, options != null ? options : new FindAndModifyOptions(), domainType, getCollectionName());
+			return template.findAndModify(query, update,
+					findAndModifyOptions != null ? findAndModifyOptions : new FindAndModifyOptions(), domainType,
+					getCollectionName());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingFindAndReplace#findAndReplaceValue()
+		 */
+		@Override
+		public @Nullable T findAndReplaceValue() {
+			return template.findAndReplace(query, replacement,
+					findAndReplaceOptions != null ? findAndReplaceOptions : new FindAndReplaceOptions(), domainType,
+					getCollectionName());
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {
