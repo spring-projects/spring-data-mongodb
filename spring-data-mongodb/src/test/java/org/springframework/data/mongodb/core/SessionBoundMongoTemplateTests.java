@@ -16,7 +16,8 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import lombok.Data;
@@ -26,6 +27,9 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aopalliance.aop.Advice;
 import org.bson.Document;
@@ -55,6 +59,7 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.Version;
@@ -78,6 +83,7 @@ public class SessionBoundMongoTemplateTests {
 
 	public @Rule ExpectedException exception = ExpectedException.none();
 
+	MongoClient client;
 	MongoTemplate template;
 	SessionBoundMongoTemplate sessionBoundTemplate;
 	ClientSession session;
@@ -87,7 +93,7 @@ public class SessionBoundMongoTemplateTests {
 	@Before
 	public void setUp() {
 
-		MongoClient client = new MongoClient();
+		client = MongoTestUtils.replSetClient();
 
 		MongoDbFactory factory = new SimpleMongoDbFactory(client, "session-bound-mongo-template-tests") {
 
@@ -139,7 +145,9 @@ public class SessionBoundMongoTemplateTests {
 
 	@After
 	public void tearDown() {
+
 		session.close();
+		client.close();
 	}
 
 	@Test // DATAMONGO-1880
@@ -257,6 +265,55 @@ public class SessionBoundMongoTemplateTests {
 		session.close(); // now close the session
 
 		assertThat(result.getPersonRef()).isEqualTo(person); // resolve the lazy loading proxy
+	}
+
+	@Test // DATAMONGO-2001
+	public void countShouldOnlyReturnCorrectly() throws InterruptedException {
+
+		if (!template.collectionExists(Person.class)) {
+			template.createCollection(Person.class);
+		} else {
+			template.remove(Person.class).all();
+		}
+
+		List<Object> resultList = new CopyOnWriteArrayList<>();
+
+		int nrThreads = 2;
+		CountDownLatch countDownLatch = new CountDownLatch(nrThreads);
+
+		for (int i = 0; i < nrThreads; i++) {
+
+			new Thread(() -> {
+
+				ClientSession session = client.startSession();
+				session.startTransaction();
+
+				try {
+
+					MongoTemplate sessionBound = template.withSession(session);
+
+					try {
+						sessionBound.save(new Person("Kylar Stern"));
+					} finally {
+						countDownLatch.countDown();
+					}
+
+					countDownLatch.await(1, TimeUnit.SECONDS);
+
+					resultList.add(Long.valueOf(sessionBound.query(Person.class).count()));
+				} catch (Exception e) {
+					resultList.add(e);
+				}
+
+				session.commitTransaction();
+				session.close();
+			}).start();
+		}
+
+		countDownLatch.await();
+
+		assertThat(template.query(Person.class).count()).isEqualTo(2L);
+		assertThat(resultList).allMatch(it -> it.equals(1L));
 	}
 
 	@Data

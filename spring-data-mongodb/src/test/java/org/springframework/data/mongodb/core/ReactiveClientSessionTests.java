@@ -100,8 +100,7 @@ public class ReactiveClientSessionTests {
 
 		assertThat(session.getOperationTime()).isNull();
 
-		template.withSession(() -> session)
-						.execute(action -> action.findOne(new Query(), Document.class, COLLECTION_NAME)) //
+		template.withSession(() -> session).execute(action -> action.findOne(new Query(), Document.class, COLLECTION_NAME)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
@@ -135,6 +134,25 @@ public class ReactiveClientSessionTests {
 				.execute(action -> ReactiveMongoContext.getSession()) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2001
+	public void countShouldOnlyReturnCorrectly() {
+
+		ClientSession session = Mono
+				.from(client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build())).block();
+
+		template.withSession(() -> session).execute(action -> {
+
+			session.startTransaction();
+
+			return action.insert(new Document("_id", "id-2").append("value", "in transaction"), COLLECTION_NAME) //
+					.then(action.count(new Query(), Document.class, COLLECTION_NAME)) //
+					.flatMap(it -> Mono.from(session.commitTransaction()).then(Mono.just(it)));
+
+		}).as(StepVerifier::create) //
+				.expectNext(2L) //
 				.verifyComplete();
 	}
 

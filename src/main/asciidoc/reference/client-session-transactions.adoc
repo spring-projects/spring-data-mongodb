@@ -127,7 +127,6 @@ template.withSession(session)
             session.abortTransaction();                                 <4>
         }
     }, ClientSession::close)                                            <5>
-    .subscribe();
 ----
 <1> Obtain a new `ClientSession`.
 <2> Start the transaction.
@@ -155,16 +154,16 @@ TransactionTemplate txTemplate = new TransactionTemplate(anyTxManager);         
 
 txTemplate.execute(new TransactionCallbackWithoutResult() {
 
-	@Override
-	protected void doInTransactionWithoutResult(TransactionStatus status) {     <3>
+    @Override
+    protected void doInTransactionWithoutResult(TransactionStatus status) {     <3>
 
-		Step step = // ...;
-		template.insert(step);
+        Step step = // ...;
+        template.insert(step);
 
-		process(step);
+        process(step);
 
-		template.update(Step.class).apply(Update.set("state", // ...
-	};
+    template.update(Step.class).apply(Update.set("state", // ...
+    };
 });
 ----
 <1> Enable transaction synchronization during Template API configuration.
@@ -186,26 +185,26 @@ The `MongoTransactionManager` binds a `ClientSession` to the thread. `MongoTempl
 @Configuration
 static class Config extends AbstractMongoConfiguration {
 
-	@Bean
-	MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {  <1>
-		return new MongoTransactionManager(dbFactory);
-	}
+    @Bean
+    MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {  <1>
+        return new MongoTransactionManager(dbFactory);
+    }
 
-	// ...
+    // ...
 }
 
 @Component
 public class StateService {
 
-	@Transactional
-	void someBusinessFunction(Step step) {                                  <2>
+    @Transactional
+    void someBusinessFunction(Step step) {                                  <2>
 
-		template.insert(step);
+        template.insert(step);
 
-		process(step);
+        process(step);
 
-		template.update(Step.class).apply(Update.set("state", // ...
-	};
+        template.update(Step.class).apply(Update.set("state", // ...
+    };
 });
 
 ----
@@ -230,18 +229,18 @@ Using the plain MongoDB reactive driver API a `delete` within a transactional fl
 [source,java]
 ----
 Mono<DeleteResult> result = Mono
-      .from(client.startSession())                                                              <1>
+    .from(client.startSession())                                                             <1>
 
-      .flatMap(session -> {
-         session.startTransaction();                                                            <2>
+    .flatMap(session -> {
+        session.startTransaction();                                                          <2>
 
-         return Mono.from(collection.deleteMany(session, ...))                                  <3>
+        return Mono.from(collection.deleteMany(session, ...))                                <3>
 
-               .onErrorResume(e -> Mono.from(session.abortTransaction()).then(Mono.error(e)))   <4>
+            .onErrorResume(e -> Mono.from(session.abortTransaction()).then(Mono.error(e)))   <4>
 
-               .flatMap(val -> Mono.from(session.commitTransaction()).then(Mono.just(val)))     <5>
+            .flatMap(val -> Mono.from(session.commitTransaction()).then(Mono.just(val)))     <5>
 
-               .doFinally(signal -> session.close());                                           <6>
+            .doFinally(signal -> session.close());                                           <6>
       });
 ----
 <1> First we obviously need to initiate the session.
@@ -263,9 +262,9 @@ accordingly. This allows you to express the above flow simply as the following:
 ====
 [source,java]
 ----
-Mono<DeleteResult> result = template.inTransaction()                                        <1>
+Mono<DeleteResult> result = template.inTransaction()                                      <1>
 
-      .execute(action -> action.remove(query(where("id").is("step-1")), Step.class));       <2>
+    .execute(action -> action.remove(query(where("id").is("step-1")), Step.class));       <2>
 ----
 <1> Initiate the transaction.
 <2> Operate within the `ClientSession`. Each `execute(…)` unit of work callback initiates a new transaction in the scope of the same `ClientSession`.
@@ -280,20 +279,77 @@ reactive flow of `execute(…)` that are not propagated to outside of the callba
 ====
 [source,java]
 ----
-template.inTransaction()                                                                    <1>
+template.inTransaction()                                                            <1>
 
-	.execute(action -> action.find(query(where("state").is("active")), Step.class)
-	                     .flatMap(step -> action.update(Step.class)
-			                                    .matching(query(where("id").is(step.id)))
-			                                    .apply(update("state", "paused"))
-			                                    .all()))                                    <2>
+    .execute(action -> action.find(query(where("state").is("active")), Step.class)
+        .flatMap(step -> action.update(Step.class)
+            .matching(query(where("id").is(step.id)))
+            .apply(update("state", "paused"))
+            .all()))                                                                <2>
 
-	.flatMap(updated -> {
-		// Exception could happen here                                                      <3>
-	});
+    .flatMap(updated -> {
+        // Exception could happen here                                              <3>
+    });
 ----
 <1> Initiate the managed transaction.
 <2> Operate within the `ClientSession`. The transaction is committed after this is done or rolled back if an
 error occurs here.
 <3> An error outside the transaction flow has no affect on the previous transactional execution.
+====
+
+== Special behavior inside transactions
+
+Inside transactions MongoDB server has a slightly different behavior.
+
+*Connection Settings*
+
+The MongoDB drivers offer a dedicated replica set name configuration option turing the driver into an auto detection
+mode. This option helps identifying replica set master nodes and command routing during a transaction.
+
+INFO: Make sure to add `replicaSet` to the MongoDB Uri. Please refer to https://docs.mongodb.com/manual/reference/connection-string/#connections-connection-options[connection string options] for further details.
+
+*Collection Operations*
+
+MongoDB does *not* support collection operations, such as collection creation, within a transaction. This also
+affects the on the fly collection creation that happens on first usage. Therefore make sure to have all required
+structures in place.
+
+*Count*
+
+MongoDB `count` operates upon collection statistics which may not reflect the actual situation within a transaction.
+The server responds with _error 50851_ when issuing a `count` command inside of a multi-document transaction.
+Once `MongoTemplate` detects an active transaction, all exposed `count()` methods are converted and delegated to the
+aggregation framework using `$match` and `$count` operators, preserving `Query` settings, such as `collation`.
+
+====
+The following snippet of `count` inside the session bound closure
+
+[source,javascript]
+----
+session.startTransaction();
+
+template.withSession(session)
+    .execute(action -> {
+        action.count(query(where("state").is("active")), Step.class)
+        ...
+----
+
+runs:
+
+[source,javascript]
+----
+db.collection.aggregate(
+   [
+      { $match: { state: "active" } },
+      { $group: { _id: null, count: { $sum: 1 } } }
+   ]
+)
+----
+
+instead of:
+
+[source,javascript]
+----
+db.collection.find( { state: "active" } ).count()
+----
 ====
