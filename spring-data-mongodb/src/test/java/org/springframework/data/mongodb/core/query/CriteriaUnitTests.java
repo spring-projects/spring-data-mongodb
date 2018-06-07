@@ -15,8 +15,11 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.Arrays;
@@ -309,5 +312,14 @@ public class CriteriaUnitTests {
 
 		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject(),
 				is(equalTo(Document.parse("{ \"field\" : { \"$bitsAnySet\" : [ 0, 2 ]} }"))));
+	}
+
+	@Test // DATAMONGO-2002
+	public void shouldEqualForSamePattern() {
+
+		Criteria left = new Criteria("field").regex("foo", "iu");
+		Criteria right = new Criteria("field").regex("foo");
+
+		assertThat(left).isNotEqualTo(right);
 	}
 }

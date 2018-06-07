@@ -868,8 +868,17 @@ public class Criteria implements CriteriaDefinition {
 			return right == null;
 		}
 
-		if (left instanceof Pattern) {
-			return right instanceof Pattern ? ((Pattern) left).pattern().equals(((Pattern) right).pattern()) : false;
+		if (Pattern.class.isInstance(left)) {
+
+			if (!Pattern.class.isInstance(right)) {
+				return false;
+			}
+
+			Pattern leftPattern = (Pattern) left;
+			Pattern rightPattern = (Pattern) right;
+
+			return leftPattern.pattern().equals(rightPattern.pattern()) //
+					&& leftPattern.flags() == rightPattern.flags();
 		}
 
 		return ObjectUtils.nullSafeEquals(left, right);
