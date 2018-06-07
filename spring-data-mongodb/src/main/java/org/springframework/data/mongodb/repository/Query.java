@@ -80,14 +80,14 @@ public @interface Query {
 
 	/**
 	 * Defines a default sort order for the given query.<br />
-	 * <strong>NOTE</strong> The so set defaults can be altered / overwritten via an explicit
+	 * <strong>NOTE:</strong> The so set defaults can be altered / overwritten using an explicit
 	 * {@link org.springframework.data.domain.Sort} argument of the query method.
 	 *
 	 * <pre>
 	 * <code>
-	 *     
+	 *
 	 * 		&#64;Query(sort = "{ age : -1 }") // order by age descending
-	 * 		List<Person> findByFirstname(String firstname); 	 
+	 * 		List<Person> findByFirstname(String firstname);
 	 * </code>
 	 * </pre>
 	 *

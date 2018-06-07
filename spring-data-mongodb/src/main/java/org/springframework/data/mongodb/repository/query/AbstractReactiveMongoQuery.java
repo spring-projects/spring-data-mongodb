@@ -193,7 +193,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			return query;
 		}
 
-		return QueryUtils.sneakInDefaultSort(query, Document.parse(method.getAnnotatedSort()));
+		return QueryUtils.decorateSort(query, Document.parse(method.getAnnotatedSort()));
 	}
 
 	/**

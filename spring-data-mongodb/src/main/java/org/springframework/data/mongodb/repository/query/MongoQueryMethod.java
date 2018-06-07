@@ -80,7 +80,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 		this.method = method;
 		this.mappingContext = mappingContext;
-		this.annotationCache = new ConcurrentReferenceHashMap();
+		this.annotationCache = new ConcurrentReferenceHashMap<>();
 	}
 
 	/*
@@ -124,6 +124,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 *
 	 * @return
 	 */
+	@Nullable
 	String getFieldSpecification() {
 
 		return lookupQueryAnnotation() //
@@ -159,7 +160,7 @@ public class MongoQueryMethod extends QueryMethod {
 				MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity
 						: managedEntity;
 
-				this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.getType(),
+				this.metadata = new SimpleMongoEntityMetadata<>((Class<Object>) returnedEntity.getType(),
 						collectionEntity);
 			}
 		}
@@ -315,9 +316,10 @@ public class MongoQueryMethod extends QueryMethod {
 				"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedSort() before."));
 	}
 
+	@SuppressWarnings("unchecked")
 	private <A extends Annotation> Optional<A> doFindAnnotation(Class<A> annotationType) {
 
-		return (Optional) this.annotationCache.computeIfAbsent(annotationType,
+		return (Optional<A>) this.annotationCache.computeIfAbsent(annotationType,
 				it -> Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, it)));
 	}
 }

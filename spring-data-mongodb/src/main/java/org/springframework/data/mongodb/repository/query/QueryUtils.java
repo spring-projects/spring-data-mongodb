@@ -31,14 +31,14 @@ import org.springframework.data.mongodb.core.query.Query;
 class QueryUtils {
 
 	/**
-	 * Add a default sort expression to the given Query. Attributes of the given {@code sort} may be overwritten by the
-	 * sort explicitly defined by the {@link Query} itself.
+	 * Decorate {@link Query} and add a default sort expression to the given {@link Query}. Attributes of the given
+	 * {@code sort} may be overwritten by the sort explicitly defined by the {@link Query} itself.
 	 *
 	 * @param query the {@link Query} to decorate.
 	 * @param defaultSort the default sort expression to apply to the query.
 	 * @return the query having the given {@code sort} applied.
 	 */
-	static Query sneakInDefaultSort(Query query, Document defaultSort) {
+	static Query decorateSort(Query query, Document defaultSort) {
 
 		if (defaultSort.isEmpty()) {
 			return query;

@@ -398,9 +398,9 @@ The query in the preceding example returns only the `firstname`, `lastname` and 
 [[mongodb.repositories.queries.sort]]
 === Sorting Query Method results
 
-When it comes to sorting MongoDB query results via the repository interface there are several options as listed below.
+MongoDB repositories allow various approaches to define sorting order. Let's take a look at the following example:
 
-.Sorting query results
+.Sorting Query Results
 ====
 [source,java]
 ----
@@ -417,10 +417,10 @@ public interface PersonRepository extends MongoRepository<Person, String> {
   List<Person> findByLastname(String lastname, Sort sort);     <4>
 }
 ----
-<1> Fixed sorting derived from method name. `SortByAgeDesc` results in `{ age : -1 }` sort parameter.
-<2> Dynamic sorting via method argument. `Sort.by(DESC, "age")` creates a `{ age : -1 }` sort parameter.
-<3> Fixed sorting via `Query` annotation. Sort parameter applied as stated in the `sort` attribute.
-<4> Default sorting via `Query` annotation combined with dynamic one via method argument. `Sort.unsorted()`
+<1> Static sorting derived from method name. `SortByAgeDesc` results in `{ age : -1 }` for the sort parameter.
+<2> Dynamic sorting using a method argument. `Sort.by(DESC, "age")` creates `{ age : -1 }` for the sort parameter.
+<3> Static sorting via `Query` annotation. Sort parameter applied as stated in the `sort` attribute.
+<4> Default sorting via `Query` annotation combined with dynamic one via a method argument. `Sort.unsorted()`
 results in `{ age : -1 }`. Using `Sort.by(ASC, "age")` overrides the defaults and creates `{ age : 1 }`. `Sort.by
 (ASC, "firstname")` alters the default and results in `{ age : -1, firstname : 1 }`.
 ====
