@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.offset;
 import static org.springframework.data.domain.Sort.Direction.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import lombok.NoArgsConstructor;
 import reactor.core.Disposable;
@@ -128,12 +128,12 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 	@Test // DATAMONGO-1444
 	public void shouldFindOneByLastName() {
-		StepVerifier.create(repository.findOneByLastname(carter.getLastname())).expectNext(carter);
+		StepVerifier.create(repository.findOneByLastname(carter.getLastname())).expectNext(carter).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindOneByPublisherOfLastName() {
-		StepVerifier.create(repository.findByLastname(Mono.just(carter.getLastname()))).expectNext(carter);
+		StepVerifier.create(repository.findByLastname(Mono.just(carter.getLastname()))).expectNext(carter).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -162,6 +162,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 	@Test // DATAMONGO-1444
 	public void shouldFindByLastNameAndSort() {
+
 		StepVerifier.create(repository.findByLastname("Matthews", Sort.by(ASC, "age"))) //
 				.expectNext(oliver, dave) //
 				.verifyComplete();
@@ -187,11 +188,11 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		Disposable disposable = cappedRepository.findByKey("value").doOnNext(documents::add).subscribe();
 
-		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
+		assertThat(documents.poll(5, TimeUnit.SECONDS)).isNotNull();
 
 		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
-		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
-		assertThat(documents.isEmpty(), is(true));
+		assertThat(documents.poll(5, TimeUnit.SECONDS)).isNotNull();
+		assertThat(documents).isEmpty();
 
 		disposable.dispose();
 	}
@@ -213,16 +214,16 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		Disposable disposable = cappedRepository.findProjectionByKey("value").doOnNext(documents::add).subscribe();
 
 		CappedProjection projection1 = documents.poll(5, TimeUnit.SECONDS);
-		assertThat(projection1, is(notNullValue()));
-		assertThat(projection1.getRandom(), is(not(0)));
+		assertThat(projection1).isNotNull();
+		assertThat(projection1.getRandom()).isNotEqualTo(0);
 
 		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
 
 		CappedProjection projection2 = documents.poll(5, TimeUnit.SECONDS);
-		assertThat(projection2, is(notNullValue()));
-		assertThat(projection2.getRandom(), is(not(0)));
+		assertThat(projection2).isNotNull();
+		assertThat(projection2.getRandom()).isNotEqualTo(0);
 
-		assertThat(documents.isEmpty(), is(true));
+		assertThat(documents).isEmpty();
 
 		disposable.dispose();
 	}
@@ -264,8 +265,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 				new Distance(2000, Metrics.KILOMETERS)) //
 		).consumeNextWith(actual -> {
 
-			assertThat(actual.getDistance().getValue(), is(closeTo(1, 1)));
-			assertThat(actual.getContent(), is(equalTo(dave)));
+			assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
+			assertThat(actual.getContent()).isEqualTo(dave);
 		}).verifyComplete();
 	}
 
@@ -282,8 +283,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 						PageRequest.of(0, 10))) //
 				.consumeNextWith(actual -> {
 
-					assertThat(actual.getDistance().getValue(), is(closeTo(1, 1)));
-					assertThat(actual.getContent(), is(equalTo(dave)));
+					assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
+					assertThat(actual.getContent()).isEqualTo(dave);
 				}).verifyComplete();
 	}
 

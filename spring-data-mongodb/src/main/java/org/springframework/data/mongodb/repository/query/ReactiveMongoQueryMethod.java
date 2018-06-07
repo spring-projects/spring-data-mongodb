@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 								ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
 			}
 
-			if (!multiWrapper && !singleWrapperWithWrappedPageableResult) {
+			if (!multiWrapper) {
 				throw new IllegalStateException(String.format(
 						"Method has to use a either multi-item reactive wrapper return type or a wrapped Page/Slice type. Offending method: %s",
 						method.toString()));
