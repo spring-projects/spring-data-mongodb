@@ -213,4 +213,13 @@ public class CriteriaTests {
 
 		assertThat(document, isBsonObject().containing("foo.$geoIntersects.$geometry", lineString));
 	}
+
+	@Test // DATAMONGO-2002
+	public void shouldEqualForSamePattern() {
+
+		Criteria left = new Criteria("field").regex("foo", "iu");
+		Criteria right = new Criteria("field").regex("foo");
+
+		assertThat(left, is(not(right)));
+	}
 }
