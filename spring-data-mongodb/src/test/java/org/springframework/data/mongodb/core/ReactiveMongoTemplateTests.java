@@ -58,12 +58,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mongodb.core.MongoTemplateTests.Address;
 import org.springframework.data.mongodb.core.MongoTemplateTests.PersonWithConvertedId;
 import org.springframework.data.mongodb.core.MongoTemplateTests.VersionedPerson;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -101,7 +103,8 @@ public class ReactiveMongoTemplateTests {
 						.mergeWith(template.dropCollection(PersonWithAList.class)) //
 						.mergeWith(template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class)) //
 						.mergeWith(template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class)) //
-						.mergeWith(template.dropCollection(Sample.class))) //
+						.mergeWith(template.dropCollection(Sample.class)) //
+						.mergeWith(template.dropCollection(MyPerson.class))) //
 				.verifyComplete();
 	}
 
@@ -451,6 +454,68 @@ public class ReactiveMongoTemplateTests {
 				.block();
 		assertThat(p.getFirstName(), is("Mary"));
 		assertThat(p.getAge(), is(1));
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldReplaceDocument() {
+
+		org.bson.Document doc = new org.bson.Document("foo", "bar");
+		template.save(doc, "findandreplace").as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		org.bson.Document replacement = new org.bson.Document("foo", "baz");
+		template
+				.findAndReplace(query(where("foo").is("bar")), replacement, FindAndReplaceOptions.options(),
+						org.bson.Document.class, "findandreplace") //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual, hasEntry("foo", "bar"));
+				}).verifyComplete();
+
+		template.findOne(query(where("foo").is("baz")), org.bson.Document.class, "findandreplace") //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldReplaceObject() {
+
+		MyPerson person = new MyPerson("Walter");
+		template.save(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.getName(), is("Walter"));
+				}).verifyComplete();
+
+		template.findOne(query(where("name").is("Heisenberg")), MyPerson.class) //
+				.as(StepVerifier::create).expectNextCount(1).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldReplaceObjectReturingNew() {
+
+		MyPerson person = new MyPerson("Walter");
+		template.save(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		template
+				.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"),
+						FindAndReplaceOptions.options().returnNew(true))
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.getName(), is("Heisenberg"));
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldFailWithTwoCollationObjects() {
+
+		thrown.expect(IllegalArgumentException.class);
+		thrown.expectMessage("Both Query and FindAndReplaceOptions");
+
+		template.findAndReplace(query(where("name").is("Walter")).collation(Collation.of("de")), new MyPerson("Heisenberg"),
+				FindAndReplaceOptions.options().collation(Collation.of("en")));
 	}
 
 	@Test // DATAMONGO-1444
@@ -1176,6 +1241,23 @@ public class ReactiveMongoTemplateTests {
 		public Sample(String id, String field) {
 			this.id = id;
 			this.field = field;
+		}
+	}
+
+	public static class MyPerson {
+
+		String id;
+		String name;
+		Address address;
+
+		public MyPerson() {}
+
+		public MyPerson(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return name;
 		}
 	}
 }

@@ -179,6 +179,58 @@ public class ExecutableUpdateOperationSupportTests {
 		assertThat(result.getUpsertedId()).isEqualTo(new BsonString("id-3"));
 	}
 
+	@Test // DATAMONGO-1827
+	public void findAndReplaceValue() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		Person result = template.update(Person.class).matching(queryHan()).replaceWith(luke).findAndReplaceValue();
+
+		assertThat(result).isEqualTo(han);
+		assertThat(template.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
+				"Luke");
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplace() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		Optional<Person> result = template.update(Person.class).matching(queryHan()).replaceWith(luke).findAndReplace();
+
+		assertThat(result).contains(han);
+		assertThat(template.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
+				"Luke");
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceWithCollection() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		Optional<Person> result = template.update(Person.class).inCollection(STAR_WARS).matching(queryHan())
+				.replaceWith(luke).findAndReplace();
+
+		assertThat(result).contains(han);
+		assertThat(template.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
+				"Luke");
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceWithOptions() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		Person result = template.update(Person.class).matching(queryHan()).replaceWith(luke)
+				.withOptions(FindAndReplaceOptions.options().returnNew(true)).findAndReplaceValue();
+
+		assertThat(result).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Luke");
+	}
+
 	private Query queryHan() {
 		return query(where("id").is(han.getId()));
 	}
