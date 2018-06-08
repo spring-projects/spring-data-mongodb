@@ -15,11 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
 import reactor.core.Disposable;
@@ -119,7 +118,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.insert(person)).expectNextCount(1).verifyComplete();
 
-		assertThat(person.getId(), is(notNullValue()));
+		assertThat(person.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444
@@ -129,7 +128,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.insertAll(Collections.singleton(person))).expectNextCount(1).verifyComplete();
 
-		assertThat(person.getId(), is(notNullValue()));
+		assertThat(person.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444
@@ -140,7 +139,7 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.insert(Collections.singleton(person), PersonWithAList.class)).expectNextCount(1)
 				.verifyComplete();
 
-		assertThat(person.getId(), is(notNullValue()));
+		assertThat(person.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444
@@ -151,7 +150,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
-		assertThat(person.getId(), is(notNullValue()));
+		assertThat(person.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444
@@ -244,7 +243,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.findOne(query, PersonWithAList.class)).consumeNextWith(actual -> {
 
-			assertThat(actual.getWishList().size(), is(0));
+			assertThat(actual.getWishList()).isEmpty();
 		}).verifyComplete();
 
 		person.addToWishList("please work!");
@@ -253,7 +252,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.findOne(query, PersonWithAList.class)).consumeNextWith(actual -> {
 
-			assertThat(actual.getWishList().size(), is(1));
+			assertThat(actual.getWishList()).hasSize(1);
 		}).verifyComplete();
 
 		Friend friend = new Friend();
@@ -265,8 +264,8 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.findOne(query, PersonWithAList.class)).consumeNextWith(actual -> {
 
-			assertThat(actual.getWishList().size(), is(1));
-			assertThat(actual.getFriends().size(), is(1));
+			assertThat(actual.getWishList()).hasSize(1);
+			assertThat(actual.getFriends()).hasSize(1);
 		}).verifyComplete();
 	}
 
@@ -285,7 +284,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.findOne(query, PersonWithAList.class)).consumeNextWith(actual -> {
 
-			assertThat(actual.getFirstName(), is("Mark"));
+			assertThat(actual.getFirstName()).isEqualTo("Mark");
 		}).verifyComplete();
 	}
 
@@ -315,7 +314,7 @@ public class ReactiveMongoTemplateTests {
 						.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class)))
 				.consumeNextWith(actual -> {
 
-					assertThat(actual.getFirstName(), is(equalTo("Sven")));
+					assertThat(actual.getFirstName()).isEqualTo("Sven");
 				}).verifyComplete();
 	}
 
@@ -329,7 +328,7 @@ public class ReactiveMongoTemplateTests {
 						.flatMapMany(p -> template.find(new Query(where("age").is(25)), Person.class, "people")))
 				.consumeNextWith(actual -> {
 
-					assertThat(actual.getFirstName(), is(equalTo("Sven")));
+					assertThat(actual.getFirstName()).isEqualTo("Sven");
 				}).verifyComplete();
 	}
 
@@ -431,29 +430,29 @@ public class ReactiveMongoTemplateTests {
 		Update update = new Update().inc("age", 1);
 
 		Person p = template.findAndModify(query, update, Person.class).block(); // return old
-		assertThat(p.getFirstName(), is("Harry"));
-		assertThat(p.getAge(), is(23));
+		assertThat(p.getFirstName()).isEqualTo("Harry");
+		assertThat(p.getAge()).isEqualTo(23);
 		p = template.findOne(query, Person.class).block();
-		assertThat(p.getAge(), is(24));
+		assertThat(p.getAge()).isEqualTo(24);
 
 		p = template.findAndModify(query, update, Person.class, "person").block();
-		assertThat(p.getAge(), is(24));
+		assertThat(p.getAge()).isEqualTo(24);
 		p = template.findOne(query, Person.class).block();
-		assertThat(p.getAge(), is(25));
+		assertThat(p.getAge()).isEqualTo(25);
 
 		p = template.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Person.class).block();
-		assertThat(p.getAge(), is(26));
+		assertThat(p.getAge()).isEqualTo(26);
 
 		p = template.findAndModify(query, update, null, Person.class, "person").block();
-		assertThat(p.getAge(), is(26));
+		assertThat(p.getAge()).isEqualTo(26);
 		p = template.findOne(query, Person.class).block();
-		assertThat(p.getAge(), is(27));
+		assertThat(p.getAge()).isEqualTo(27);
 
 		Query query2 = new Query(where("firstName").is("Mary"));
 		p = template.findAndModify(query2, update, new FindAndModifyOptions().returnNew(true).upsert(true), Person.class)
 				.block();
-		assertThat(p.getFirstName(), is("Mary"));
-		assertThat(p.getAge(), is(1));
+		assertThat(p.getFirstName()).isEqualTo("Mary");
+		assertThat(p.getAge()).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1827
@@ -468,7 +467,7 @@ public class ReactiveMongoTemplateTests {
 						org.bson.Document.class, "findandreplace") //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
-					assertThat(actual, hasEntry("foo", "bar"));
+					assertThat(actual).containsEntry("foo", "bar");
 				}).verifyComplete();
 
 		template.findOne(query(where("foo").is("baz")), org.bson.Document.class, "findandreplace") //
@@ -486,7 +485,7 @@ public class ReactiveMongoTemplateTests {
 		template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg")) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
-					assertThat(actual.getName(), is("Walter"));
+					assertThat(actual.getName()).isEqualTo("Walter");
 				}).verifyComplete();
 
 		template.findOne(query(where("name").is("Heisenberg")), MyPerson.class) //
@@ -504,7 +503,7 @@ public class ReactiveMongoTemplateTests {
 						FindAndReplaceOptions.options().returnNew(true))
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
-					assertThat(actual.getName(), is("Heisenberg"));
+					assertThat(actual.getName()).isEqualTo("Heisenberg");
 				}).verifyComplete();
 	}
 
@@ -617,7 +616,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.findAll(PersonWithVersionPropertyOfTypeInteger.class)).consumeNextWith(actual -> {
 
-			assertThat(actual.version, is(0));
+			assertThat(actual.version).isZero();
 		}).verifyComplete();
 
 		StepVerifier.create(template.findAll(PersonWithVersionPropertyOfTypeInteger.class).flatMap(p -> {
@@ -627,11 +626,11 @@ public class ReactiveMongoTemplateTests {
 			return template.save(person);
 		})).expectNextCount(1).verifyComplete();
 
-		assertThat(person.version, is(1));
+		assertThat(person.version).isOne();
 
 		StepVerifier.create(template.findAll(PersonWithVersionPropertyOfTypeInteger.class)).consumeNextWith(actual -> {
 
-			assertThat(actual.version, is(1));
+			assertThat(actual.version).isOne();
 		}).verifyComplete();
 
 		// Optimistic lock exception
@@ -697,7 +696,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.save(dbObject, "collection")).expectNextCount(1).verifyComplete();
 
-		assertThat(dbObject.containsKey("_id"), is(true));
+		assertThat(dbObject.containsKey("_id")).isTrue();
 	}
 
 	@Test(expected = MappingException.class) // DATAMONGO-1444, DATAMONGO-1730
@@ -721,8 +720,8 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.findById(dbObject.get("_id"), Document.class, "collection")) //
 				.consumeNextWith(actual -> {
 
-					assertThat(actual.get("foo"), is(dbObject.get("foo")));
-					assertThat(actual.get("_id"), is(dbObject.get("_id")));
+					assertThat(actual.get("foo")).isEqualTo(dbObject.get("foo"));
+					assertThat(actual.get("_id")).isEqualTo(dbObject.get("_id"));
 				}).verifyComplete();
 	}
 
@@ -776,7 +775,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.insert(person)).expectNextCount(1).verifyComplete();
 
-		assertThat(person.version, is(0));
+		assertThat(person.version).isZero();
 	}
 
 	@Test // DATAMONGO-1444
@@ -787,7 +786,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.insertAll(Collections.singleton(person))).expectNextCount(1).verifyComplete();
 
-		assertThat(person.version, is(0));
+		assertThat(person.version).isZero();
 	}
 
 	@Test // DATAMONGO-1444
@@ -805,10 +804,10 @@ public class ReactiveMongoTemplateTests {
 		person.firstName = "Dave";
 
 		StepVerifier.create(template.save(person, "personX")).expectNextCount(1).verifyComplete();
-		assertThat(person.version, is(0));
+		assertThat(person.version).isZero();
 
 		StepVerifier.create(template.save(person, "personX")).expectNextCount(1).verifyComplete();
-		assertThat(person.version, is(1));
+		assertThat(person.version).isOne();
 	}
 
 	@Test // DATAMONGO-1444
@@ -818,7 +817,7 @@ public class ReactiveMongoTemplateTests {
 		person.firstName = "Dave";
 
 		StepVerifier.create(template.save(person, "personX")).expectNextCount(1).verifyComplete();
-		assertThat(person.version, is(0L));
+		assertThat(person.version).isZero();
 	}
 
 	@Test // DATAMONGO-1444
@@ -852,7 +851,7 @@ public class ReactiveMongoTemplateTests {
 		person.firstName = "Dave";
 
 		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
-		assertThat(person.version, is(0));
+		assertThat(person.version).isZero();
 
 		person.version = null;
 		StepVerifier.create(template.save(person)).expectError(DuplicateKeyException.class).verify();
@@ -881,7 +880,7 @@ public class ReactiveMongoTemplateTests {
 
 		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
 
-		assertThat(person.id, is(notNullValue()));
+		assertThat(person.id).isNotNull();
 
 		person.lastname = null;
 		StepVerifier.create(template.save(person)).expectNextCount(1).verifyComplete();
@@ -889,7 +888,7 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.findOne(query(where("id").is(person.id)), VersionedPerson.class)) //
 				.consumeNextWith(actual -> {
 
-					assertThat(actual.lastname, is(nullValue()));
+					assertThat(actual.lastname).isNull();
 				}) //
 				.verifyComplete();
 	}
@@ -906,7 +905,7 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.findOne(query(where("id").is(person.getId())), Person.class)) //
 				.consumeNextWith(actual -> {
 
-					assertThat(actual.getFirstName(), is(nullValue()));
+					assertThat(actual.getFirstName()).isNull();
 				}) //
 				.verifyComplete();
 	}
@@ -921,7 +920,7 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.findAll(Document.class, "collection")) //
 				.consumeNextWith(actual -> {
 
-					assertThat(actual.containsKey("first"), is(true));
+					assertThat(actual.containsKey("first")).isTrue();
 				}) //
 				.verifyComplete();
 	}
@@ -959,8 +958,8 @@ public class ReactiveMongoTemplateTests {
 
 		Disposable disposable = capped.doOnNext(documents::add).subscribe();
 
-		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
-		assertThat(documents.isEmpty(), is(true));
+		assertThat(documents.poll(5, TimeUnit.SECONDS)).isNotNull();
+		assertThat(documents).isEmpty();
 
 		disposable.dispose();
 	}
@@ -981,14 +980,14 @@ public class ReactiveMongoTemplateTests {
 
 		Disposable disposable = capped.doOnNext(documents::add).subscribe();
 
-		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
-		assertThat(documents.isEmpty(), is(true));
+		assertThat(documents.poll(5, TimeUnit.SECONDS)).isNotNull();
+		assertThat(documents).isEmpty();
 
 		StepVerifier.create(template.insert(new Document("random", Math.random()).append("key", "value"), "capped")) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		assertThat(documents.poll(5, TimeUnit.SECONDS), is(notNullValue()));
+		assertThat(documents.poll(5, TimeUnit.SECONDS)).isNotNull();
 
 		disposable.dispose();
 
@@ -996,7 +995,7 @@ public class ReactiveMongoTemplateTests {
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		assertThat(documents.poll(1, TimeUnit.SECONDS), is(nullValue()));
+		assertThat(documents.poll(1, TimeUnit.SECONDS)).isNull();
 	}
 
 	@Test // DATAMONGO-1761
