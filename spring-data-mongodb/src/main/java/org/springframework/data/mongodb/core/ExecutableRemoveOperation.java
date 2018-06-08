@@ -54,26 +54,6 @@ public interface ExecutableRemoveOperation {
 	<T> ExecutableRemove<T> remove(Class<T> domainType);
 
 	/**
-	 * Collection override (optional).
-	 *
-	 * @param <T>
-	 * @author Christoph Strobl
-	 * @since 2.0
-	 */
-	interface RemoveWithCollection<T> extends RemoveWithQuery<T> {
-
-		/**
-		 * Explicitly set the name of the collection to perform the query on. <br />
-		 * Skip this step to use the default collection derived from the domain type.
-		 *
-		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link RemoveWithCollection}.
-		 * @throws IllegalArgumentException if collection is {@literal null}.
-		 */
-		RemoveWithQuery<T> inCollection(String collection);
-	}
-
-	/**
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
@@ -103,6 +83,27 @@ public interface ExecutableRemoveOperation {
 		 */
 		List<T> findAndRemove();
 	}
+
+	/**
+	 * Collection override (optional).
+	 *
+	 * @param <T>
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
+	interface RemoveWithCollection<T> extends RemoveWithQuery<T> {
+
+		/**
+		 * Explicitly set the name of the collection to perform the query on. <br />
+		 * Skip this step to use the default collection derived from the domain type.
+		 *
+		 * @param collection must not be {@literal null} nor {@literal empty}.
+		 * @return new instance of {@link RemoveWithCollection}.
+		 * @throws IllegalArgumentException if collection is {@literal null}.
+		 */
+		RemoveWithQuery<T> inCollection(String collection);
+	}
+
 
 	/**
 	 * @author Christoph Strobl

@@ -58,6 +58,82 @@ public interface ExecutableUpdateOperation {
 	<T> ExecutableUpdate<T> update(Class<T> domainType);
 
 	/**
+	 * Trigger findAndModify execution by calling one of the terminating methods.
+	 */
+	interface TerminatingFindAndModify<T> {
+
+		/**
+		 * Find, modify and return the first matching document.
+		 *
+		 * @return {@link Optional#empty()} if nothing found.
+		 */
+		default Optional<T> findAndModify() {
+			return Optional.ofNullable(findAndModifyValue());
+		}
+
+		/**
+		 * Find, modify and return the first matching document.
+		 *
+		 * @return {@literal null} if nothing found.
+		 */
+		@Nullable
+		T findAndModifyValue();
+	}
+
+	/**
+	 * Trigger findAndReplace execution by calling one of the terminating methods.
+	 */
+	interface TerminatingFindAndReplace<T> {
+
+		/**
+		 * Find, replace and return the first matching document.
+		 *
+		 * @return {@link Optional#empty()} if nothing found.
+		 */
+		default Optional<T> findAndReplace() {
+			return Optional.ofNullable(findAndReplaceValue());
+		}
+
+		/**
+		 * Find, replace and return the first matching document.
+		 *
+		 * @return {@literal null} if nothing found.
+		 */
+		@Nullable
+		T findAndReplaceValue();
+	}
+
+	/**
+	 * Trigger update execution by calling one of the terminating methods.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.0
+	 */
+	interface TerminatingUpdate<T> extends TerminatingFindAndModify<T>, FindAndModifyWithOptions<T> {
+
+		/**
+		 * Update all matching documents in the collection.
+		 *
+		 * @return never {@literal null}.
+		 */
+		UpdateResult all();
+
+		/**
+		 * Update the first document in the collection.
+		 *
+		 * @return never {@literal null}.
+		 */
+		UpdateResult first();
+
+		/**
+		 * Creates a new document if no documents match the filter query or updates the matching ones.
+		 *
+		 * @return never {@literal null}.
+		 */
+		UpdateResult upsert();
+	}
+
+	/**
 	 * Declare the {@link Update} to apply.
 	 *
 	 * @author Christoph Strobl
@@ -80,7 +156,7 @@ public interface ExecutableUpdateOperation {
 		 * @param replacement must not be {@literal null}.
 		 * @return new instance of {@link FindAndReplaceOptions}.
 		 * @throws IllegalArgumentException if options is {@literal null}.
-		 * 2.1
+		 * @since 2.1
 		 */
 		FindAndReplaceWithOptions<T> replaceWith(T replacement);
 	}
@@ -141,29 +217,6 @@ public interface ExecutableUpdateOperation {
 	}
 
 	/**
-	 * Trigger findAndModify execution by calling one of the terminating methods.
-	 */
-	interface TerminatingFindAndModify<T> {
-
-		/**
-		 * Find, modify and return the first matching document.
-		 *
-		 * @return {@link Optional#empty()} if nothing found.
-		 */
-		default Optional<T> findAndModify() {
-			return Optional.ofNullable(findAndModifyValue());
-		}
-
-		/**
-		 * Find, modify and return the first matching document.
-		 *
-		 * @return {@literal null} if nothing found.
-		 */
-		@Nullable
-		T findAndModifyValue();
-	}
-
-	/**
 	 * Define {@link FindAndReplaceOptions}.
 	 *
 	 * @author Mark Paluch
@@ -179,59 +232,6 @@ public interface ExecutableUpdateOperation {
 		 * @throws IllegalArgumentException if options is {@literal null}.
 		 */
 		TerminatingFindAndReplace<T> withOptions(FindAndReplaceOptions options);
-	}
-
-	/**
-	 * Trigger findAndReplace execution by calling one of the terminating methods.
-	 */
-	interface TerminatingFindAndReplace<T> {
-
-		/**
-		 * Find, replace and return the first matching document.
-		 *
-		 * @return {@link Optional#empty()} if nothing found.
-		 */
-		default Optional<T> findAndReplace() {
-			return Optional.ofNullable(findAndReplaceValue());
-		}
-
-		/**
-		 * Find, replace and return the first matching document.
-		 *
-		 * @return {@literal null} if nothing found.
-		 */
-		@Nullable
-		T findAndReplaceValue();
-	}
-
-	/**
-	 * Trigger update execution by calling one of the terminating methods.
-	 *
-	 * @author Christoph Strobl
-	 * @since 2.0
-	 */
-	interface TerminatingUpdate<T> extends TerminatingFindAndModify<T>, FindAndModifyWithOptions<T> {
-
-		/**
-		 * Update all matching documents in the collection.
-		 *
-		 * @return never {@literal null}.
-		 */
-		UpdateResult all();
-
-		/**
-		 * Update the first document in the collection.
-		 *
-		 * @return never {@literal null}.
-		 */
-		UpdateResult first();
-
-		/**
-		 * Creates a new document if no documents match the filter query or updates the matching ones.
-		 *
-		 * @return never {@literal null}.
-		 */
-		UpdateResult upsert();
 	}
 
 	/**

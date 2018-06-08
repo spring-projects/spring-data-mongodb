@@ -182,7 +182,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	static {
 
-		Set<String> iterableClasses = new HashSet<String>();
+		Set<String> iterableClasses = new HashSet<>();
 		iterableClasses.add(List.class.getName());
 		iterableClasses.add(Collection.class.getName());
 		iterableClasses.add(Iterator.class.getName());
@@ -418,7 +418,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType)
 						.prepare(collection.find(mappedQuery, Document.class).projection(mappedFields));
 
-				return new CloseableIterableCursorAdapter<T>(cursor, exceptionTranslator,
+				return new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator,
 						new ProjectingReadCallback<>(mongoConverter, entityType, returnType, collectionName));
 			}
 		});
@@ -998,9 +998,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		List<Object> results = (List<Object>) commandResult.get("results");
 		results = results == null ? Collections.emptyList() : results;
 
-		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<T>(
+		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<>(
 				new ProjectingReadCallback<>(mongoConverter, domainType, returnType, collectionName), near.getMetric());
-		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
+		List<GeoResult<T>> result = new ArrayList<>(results.size());
 
 		int index = 0;
 		long elementsToSkip = near.getSkip() != null ? near.getSkip() : 0;
@@ -1021,11 +1021,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		if (elementsToSkip > 0) {
 			// as we skipped some elements we have to calculate the averageDistance ourselves:
-			return new GeoResults<T>(result, near.getMetric());
+			return new GeoResults<>(result, near.getMetric());
 		}
 
 		GeoCommandStatistics stats = GeoCommandStatistics.from(commandResult);
-		return new GeoResults<T>(result, new Distance(stats.getAverageDistance(), near.getMetric()));
+		return new GeoResults<>(result, new Distance(stats.getAverageDistance(), near.getMetric()));
 	}
 
 	@Nullable
@@ -1261,16 +1261,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
 		initializeVersionProperty(objectToSave);
-		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
+		maybeEmitEvent(new BeforeConvertEvent<>(objectToSave, collectionName));
 		assertUpdateableIdIfNotSet(objectToSave);
 
 		Document dbDoc = toDocument(objectToSave, writer);
 
-		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc, collectionName));
+		maybeEmitEvent(new BeforeSaveEvent<>(objectToSave, dbDoc, collectionName));
 		Object id = insertDocument(collectionName, dbDoc, objectToSave.getClass());
 
 		populateIdIfNecessary(objectToSave, id);
-		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc, collectionName));
+		maybeEmitEvent(new AfterSaveEvent<>(objectToSave, dbDoc, collectionName));
 	}
 
 	/**
@@ -1343,7 +1343,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> void doInsertAll(Collection<? extends T> listToSave, MongoWriter<T> writer) {
 
-		Map<String, List<T>> elementsByCollection = new HashMap<String, List<T>>();
+		Map<String, List<T>> elementsByCollection = new HashMap<>();
 
 		for (T element : listToSave) {
 
@@ -1357,7 +1357,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			List<T> collectionElements = elementsByCollection.get(collection);
 
 			if (null == collectionElements) {
-				collectionElements = new ArrayList<T>();
+				collectionElements = new ArrayList<>();
 				elementsByCollection.put(collection, collectionElements);
 			}
 
@@ -1373,15 +1373,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(writer, "MongoWriter must not be null!");
 
-		List<Document> documentList = new ArrayList<Document>();
+		List<Document> documentList = new ArrayList<>();
 		for (T o : batchToSave) {
 
 			initializeVersionProperty(o);
-			maybeEmitEvent(new BeforeConvertEvent<T>(o, collectionName));
+			maybeEmitEvent(new BeforeConvertEvent<>(o, collectionName));
 
 			Document document = toDocument(o, writer);
 
-			maybeEmitEvent(new BeforeSaveEvent<T>(o, document, collectionName));
+			maybeEmitEvent(new BeforeSaveEvent<>(o, document, collectionName));
 			documentList.add(document);
 		}
 
@@ -1391,7 +1391,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		for (T obj : batchToSave) {
 			if (i < ids.size()) {
 				populateIdIfNecessary(obj, ids.get(i));
-				maybeEmitEvent(new AfterSaveEvent<T>(obj, documentList.get(i), collectionName));
+				maybeEmitEvent(new AfterSaveEvent<>(obj, documentList.get(i), collectionName));
 			}
 			i++;
 		}
@@ -1433,14 +1433,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			// Bump version number
 			convertingAccessor.setProperty(property, number.longValue() + 1);
 
-			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
+			maybeEmitEvent(new BeforeConvertEvent<>(objectToSave, collectionName));
 			assertUpdateableIdIfNotSet(objectToSave);
 
 			Document document = new Document();
 
 			this.mongoConverter.write(objectToSave, document);
 
-			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, document, collectionName));
+			maybeEmitEvent(new BeforeSaveEvent<>(objectToSave, document, collectionName));
 			Update update = Update.fromDocument(document, ID_FIELD);
 
 			// Create query for entity with the id and old version
@@ -1455,7 +1455,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 						String.format("Cannot save entity %s with version %s to collection %s. Has it been modified meanwhile?", id,
 								number, collectionName));
 			}
-			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, document, collectionName));
+			maybeEmitEvent(new AfterSaveEvent<>(objectToSave, document, collectionName));
 
 			return objectToSave;
 		}
@@ -1466,16 +1466,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> T doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
-		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
+		maybeEmitEvent(new BeforeConvertEvent<>(objectToSave, collectionName));
 		assertUpdateableIdIfNotSet(objectToSave);
 
 		Document dbDoc = toDocument(objectToSave, writer);
 
-		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc, collectionName));
+		maybeEmitEvent(new BeforeSaveEvent<>(objectToSave, dbDoc, collectionName));
 		Object id = saveDocument(collectionName, dbDoc, objectToSave.getClass());
 
 		populateIdIfNecessary(objectToSave, id);
-		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc, collectionName));
+		maybeEmitEvent(new AfterSaveEvent<>(objectToSave, dbDoc, collectionName));
 
 		return objectToSave;
 	}
@@ -1757,7 +1757,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Iterator<?> it = objects.iterator();
 		Pair<String, Object> pair = extractIdPropertyAndValue(it.next());
 
-		ArrayList<Object> ids = new ArrayList<Object>(objects.size());
+		ArrayList<Object> ids = new ArrayList<>(objects.size());
 		ids.add(pair.getSecond());
 
 		while (it.hasNext()) {
@@ -1819,7 +1819,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			public DeleteResult doInCollection(MongoCollection<Document> collection)
 					throws MongoException, DataAccessException {
 
-				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass, collectionName));
+				maybeEmitEvent(new BeforeDeleteEvent<>(queryObject, entityClass, collectionName));
 
 				Document removeQuery = queryObject;
 
@@ -1855,7 +1855,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				DeleteResult result = multi ? collectionToUse.deleteMany(removeQuery, options)
 						: collection.deleteOne(removeQuery, options);
 
-				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass, collectionName));
+				maybeEmitEvent(new AfterDeleteEvent<>(queryObject, entityClass, collectionName));
 
 				return result;
 			}
@@ -1870,7 +1870,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <T> List<T> findAll(Class<T> entityClass, String collectionName) {
 		return executeFindMultiInternal(new FindCallback(new Document(), new Document()), null,
-				new ReadDocumentCallback<T>(mongoConverter, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName), collectionName);
 	}
 
 	@Override
@@ -2032,14 +2032,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		@SuppressWarnings("unchecked")
 		Iterable<Document> resultSet = (Iterable<Document>) commandResult.get("retval");
-		List<T> mappedResults = new ArrayList<T>();
-		DocumentCallback<T> callback = new ReadDocumentCallback<T>(mongoConverter, entityClass, inputCollectionName);
+		List<T> mappedResults = new ArrayList<>();
+		DocumentCallback<T> callback = new ReadDocumentCallback<>(mongoConverter, entityClass, inputCollectionName);
 
 		for (Document resultDocument : resultSet) {
 			mappedResults.add(callback.doWith(resultDocument));
 		}
 
-		return new GroupByResults<T>(mappedResults, commandResult);
+		return new GroupByResults<>(mappedResults, commandResult);
 	}
 
 	/* (non-Javadoc)
@@ -2359,7 +2359,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public Set<String> getCollectionNames() {
 		return execute(new DbCallback<Set<String>>() {
 			public Set<String> doInDB(MongoDatabase db) throws MongoException, DataAccessException {
-				Set<String> result = new LinkedHashSet<String>();
+				Set<String> result = new LinkedHashSet<>();
 				for (String name : db.listCollectionNames()) {
 					result.add(name);
 				}
@@ -2465,7 +2465,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields),
-				new ReadDocumentCallback<T>(this.mongoConverter, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
 	/**
@@ -2480,7 +2480,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	protected <T> List<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass) {
 		return doFind(collectionName, query, fields, entityClass, null,
-				new ReadDocumentCallback<T>(this.mongoConverter, entityClass, collectionName));
+				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName));
 	}
 
 	/**
@@ -2499,7 +2499,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <T> List<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass,
 			CursorPreparer preparer) {
 		return doFind(collectionName, query, fields, entityClass, preparer,
-				new ReadDocumentCallback<T>(mongoConverter, entityClass, collectionName));
+				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName));
 	}
 
 	protected <S, T> List<T> doFind(String collectionName, Document query, Document fields, Class<S> entityClass,
@@ -2631,7 +2631,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		return executeFindOneInternal(
 				new FindAndRemoveCallback(queryMapper.getMappedObject(query, entity), fields, sort, collation),
-				new ReadDocumentCallback<T>(readerToUse, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
 	protected <T> T doFindAndModify(String collectionName, Document query, Document fields, Document sort,
@@ -2658,7 +2658,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, options),
-				new ReadDocumentCallback<T>(readerToUse, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
 	protected <T> T doFindAndReplace(String collectionName, Document query, Document fields, Document sort,
@@ -2684,7 +2684,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeEmitEvent(new BeforeSaveEvent<>(replacement, dbDoc, collectionName));
 
 		return executeFindOneInternal(new FindAndReplaceCallback(mappedQuery, fields, sort, dbDoc, options),
-				new ReadDocumentCallback<T>(readerToUse, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
 	/**
@@ -2795,7 +2795,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 				cursor = iterable.iterator();
 
-				List<T> result = new ArrayList<T>();
+				List<T> result = new ArrayList<>();
 
 				while (cursor.hasNext()) {
 					Document object = cursor.next();
@@ -3168,13 +3168,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		public T doWith(@Nullable Document object) {
 
 			if (null != object) {
-				maybeEmitEvent(new AfterLoadEvent<T>(object, type, collectionName));
+				maybeEmitEvent(new AfterLoadEvent<>(object, type, collectionName));
 			}
 
 			T source = reader.read(type, object);
 
 			if (null != source) {
-				maybeEmitEvent(new AfterConvertEvent<T>(object, source, collectionName));
+				maybeEmitEvent(new AfterConvertEvent<>(object, source, collectionName));
 			}
 
 			return source;
@@ -3213,7 +3213,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					: targetType;
 
 			if (null != object) {
-				maybeEmitEvent(new AfterLoadEvent<T>(object, targetType, collectionName));
+				maybeEmitEvent(new AfterLoadEvent<>(object, targetType, collectionName));
 			}
 
 			Object source = reader.read(typeToRead, object);
