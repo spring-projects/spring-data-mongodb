@@ -255,7 +255,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
 			Bson source, DefaultSpELExpressionEvaluator evaluator, ObjectPath path) {
 
-		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(source, evaluator, path);
+		AssociationAwareMongoDbPropertyValueProvider provider = new AssociationAwareMongoDbPropertyValueProvider(source,
+				evaluator, path);
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<>(
 				entity, provider, path.getCurrentObject());
 
@@ -1273,9 +1274,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	class MongoDbPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
 
-		private final DocumentAccessor source;
-		private final SpELExpressionEvaluator evaluator;
-		private final ObjectPath path;
+		final DocumentAccessor source;
+		final SpELExpressionEvaluator evaluator;
+		final ObjectPath path;
 
 		/**
 		 * Creates a new {@link MongoDbPropertyValueProvider} for the given source, {@link SpELExpressionEvaluator} and
@@ -1320,6 +1321,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
 		 */
 		@Nullable
+		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
 
 			String expression = property.getSpelExpression();
@@ -1330,6 +1332,50 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			return readValue(value, property.getTypeInformation(), path);
+		}
+	}
+
+	/**
+	 * {@link PropertyValueProvider} that is aware of {@link MongoPersistentProperty#isAssociation()} and that delegates
+	 * resolution to {@link DbRefResolver}.
+	 *
+	 * @author Mark Paluch
+	 * @since 2.1
+	 */
+	class AssociationAwareMongoDbPropertyValueProvider extends MongoDbPropertyValueProvider {
+
+		/**
+		 * Creates a new {@link AssociationAwareMongoDbPropertyValueProvider} for the given source,
+		 * {@link SpELExpressionEvaluator} and {@link ObjectPath}.
+		 *
+		 * @param source must not be {@literal null}.
+		 * @param evaluator must not be {@literal null}.
+		 * @param path must not be {@literal null}.
+		 */
+		public AssociationAwareMongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator,
+				ObjectPath path) {
+			super(source, evaluator, path);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
+		 */
+		@Nullable
+		@SuppressWarnings("unchecked")
+		public <T> T getPropertyValue(MongoPersistentProperty property) {
+
+			T value = super.getPropertyValue(property);
+
+			if (value == null || !property.isAssociation()) {
+				return value;
+			}
+
+			DbRefResolverCallback callback = new DefaultDbRefResolverCallback(source.getDocument(), path, evaluator,
+					MappingMongoConverter.this);
+			DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
+
+			return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
 		}
 	}
 
