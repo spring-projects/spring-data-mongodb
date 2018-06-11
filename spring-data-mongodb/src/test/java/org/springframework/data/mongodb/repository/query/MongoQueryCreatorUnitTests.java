@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
@@ -79,7 +78,7 @@ public class MongoQueryCreatorUnitTests {
 	@Rule public ExpectedException expection = ExpectedException.none();
 
 	@Before
-	public void setUp() throws SecurityException, NoSuchMethodException {
+	public void setUp() {
 
 		context = new MongoMappingContext();
 
@@ -88,7 +87,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void createsQueryCorrectly() throws Exception {
+	public void createsQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstName", Person.class);
 
@@ -149,7 +148,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void createsLessThanEqualQueryCorrectly() throws Exception {
+	public void createsLessThanEqualQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByAgeLessThanEqual", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18), context);
@@ -159,7 +158,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void createsGreaterThanEqualQueryCorrectly() throws Exception {
+	public void createsGreaterThanEqualQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByAgeGreaterThanEqual", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18), context);
@@ -630,7 +629,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-2003
-	public void createsRegexQueryForPatternCorrectly() throws Exception {
+	public void createsRegexQueryForPatternCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, Pattern.compile(".*")), context);
@@ -639,7 +638,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-2003
-	public void createsRegexQueryForPatternWithOptionsCorrectly() throws Exception {
+	public void createsRegexQueryForPatternWithOptionsCorrectly() {
 
 		Pattern pattern = Pattern.compile(".*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 

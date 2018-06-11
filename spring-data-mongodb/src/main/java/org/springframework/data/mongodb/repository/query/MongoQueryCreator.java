@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2017 the original author or authors.
+ * Copyright 2010-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,9 +114,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
 		MongoPersistentProperty property = path.getLeafProperty();
-		Criteria criteria = from(part, property, where(path.toDotPath()), (PotentiallyConvertingIterator) iterator);
 
-		return criteria;
+		return from(part, property, where(path.toDotPath()), iterator);
 	}
 
 	/*
@@ -133,7 +132,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
 		MongoPersistentProperty property = path.getLeafProperty();
 
-		return from(part, property, base.and(path.toDotPath()), (PotentiallyConvertingIterator) iterator);
+		return from(part, property, base.and(path.toDotPath()), iterator);
 	}
 
 	/*
