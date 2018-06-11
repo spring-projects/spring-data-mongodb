@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.repository.query.StubParameterAccessor.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -77,7 +76,7 @@ public class MongoQueryCreatorUnitTests {
 	@Rule public ExpectedException expection = ExpectedException.none();
 
 	@Before
-	public void setUp() throws SecurityException, NoSuchMethodException {
+	public void setUp() {
 
 		context = new MongoMappingContext();
 
@@ -86,13 +85,13 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void createsQueryCorrectly() throws Exception {
+	public void createsQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstName", Person.class);
 
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Oliver"), context);
 		Query query = creator.createQuery();
-		assertThat(query, is(query(where("firstName").is("Oliver"))));
+		assertThat(query).isEqualTo(query(where("firstName").is("Oliver")));
 	}
 
 	@Test // DATAMONGO-469
@@ -103,7 +102,7 @@ public class MongoQueryCreatorUnitTests {
 				getAccessor(converter, "Oliver", person), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("firstName").is("Oliver").and("friend").is(person))));
+		assertThat(query).isEqualTo(query(where("firstName").is("Oliver").and("friend").is(person)));
 	}
 
 	@Test
@@ -112,7 +111,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByFirstNameNotNull", Person.class);
 		Query query = new MongoQueryCreator(tree, getAccessor(converter), context).createQuery();
 
-		assertThat(query, is(new Query(Criteria.where("firstName").ne(null))));
+		assertThat(query).isEqualTo(new Query(Criteria.where("firstName").ne(null)));
 	}
 
 	@Test
@@ -121,7 +120,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByFirstNameIsNull", Person.class);
 		Query query = new MongoQueryCreator(tree, getAccessor(converter), context).createQuery();
 
-		assertThat(query, is(new Query(Criteria.where("firstName").is(null))));
+		assertThat(query).isEqualTo(new Query(Criteria.where("firstName").is(null)));
 	}
 
 	@Test
@@ -147,23 +146,23 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void createsLessThanEqualQueryCorrectly() throws Exception {
+	public void createsLessThanEqualQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByAgeLessThanEqual", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18), context);
 
 		Query reference = query(where("age").lte(18));
-		assertThat(creator.createQuery(), is(reference));
+		assertThat(creator.createQuery()).isEqualTo(reference);
 	}
 
 	@Test
-	public void createsGreaterThanEqualQueryCorrectly() throws Exception {
+	public void createsGreaterThanEqualQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByAgeGreaterThanEqual", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18), context);
 
 		Query reference = query(where("age").gte(18));
-		assertThat(creator.createQuery(), is(reference));
+		assertThat(creator.createQuery()).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-338
@@ -172,7 +171,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByAgeExists", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, true), context);
 		Query query = query(where("age").exists(true));
-		assertThat(creator.createQuery(), is(query));
+		assertThat(creator.createQuery()).isEqualTo(query);
 	}
 
 	@Test // DATAMONGO-338
@@ -181,7 +180,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, ".*"), context);
 		Query query = query(where("firstName").regex(".*"));
-		assertThat(creator.createQuery(), is(query));
+		assertThat(creator.createQuery()).isEqualTo(query);
 	}
 
 	@Test // DATAMONGO-338
@@ -190,7 +189,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByActiveTrue", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 		Query query = query(where("active").is(true));
-		assertThat(creator.createQuery(), is(query));
+		assertThat(creator.createQuery()).isEqualTo(query);
 	}
 
 	@Test // DATAMONGO-338
@@ -199,7 +198,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByActiveFalse", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 		Query query = query(where("active").is(false));
-		assertThat(creator.createQuery(), is(query));
+		assertThat(creator.createQuery()).isEqualTo(query);
 	}
 
 	@Test // DATAMONGO-413
@@ -209,7 +208,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Dave", 42), context);
 
 		Query query = creator.createQuery();
-		assertThat(query, is(query(new Criteria().orOperator(where("firstName").is("Dave"), where("age").is(42)))));
+		assertThat(query).isEqualTo(query(new Criteria().orOperator(where("firstName").is("Dave"), where("age").is(42))));
 	}
 
 	@Test // DATAMONGO-347
@@ -222,7 +221,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, user), context);
 		Document queryObject = creator.createQuery().getQueryObject();
 
-		assertThat(queryObject.get("creator"), is((Object) user));
+		assertThat(queryObject.get("creator")).isEqualTo(user);
 	}
 
 	@Test // DATAMONGO-418
@@ -232,7 +231,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Matt"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("username").regex("^Matt"))));
+		assertThat(query).isEqualTo(query(where("username").regex("^Matt")));
 	}
 
 	@Test // DATAMONGO-418
@@ -242,7 +241,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "ews"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("username").regex("ews$"))));
+		assertThat(query).isEqualTo(query(where("username").regex("ews$")));
 	}
 
 	@Test // DATAMONGO-418
@@ -252,7 +251,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "thew"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("username").regex(".*thew.*"))));
+		assertThat(query).isEqualTo(query(where("username").regex(".*thew.*")));
 	}
 
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
@@ -268,7 +267,7 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = new MongoQueryCreator(tree, new ConvertingParameterAccessor(converter, accessor), context)
 				.createQuery();
-		assertThat(query, is(query));
+		assertThat(query).isEqualTo(query);
 	}
 
 	@Test // DATAMONGO-770
@@ -278,7 +277,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
 
 		Query query = creator.createQuery();
-		assertThat(query, is(query(where("firstName").regex("^dave$", "i"))));
+		assertThat(query).isEqualTo(query(where("firstName").regex("^dave$", "i")));
 	}
 
 	@Test // DATAMONGO-770
@@ -288,7 +287,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
 
 		Query query = creator.createQuery();
-		assertThat(query.toString(), is(query(where("firstName").not().regex("^dave$", "i")).toString()));
+		assertThat(query.toString()).isEqualTo(query(where("firstName").not().regex("^dave$", "i")).toString());
 	}
 
 	@Test // DATAMONGO-770
@@ -298,7 +297,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
 
 		Query query = creator.createQuery();
-		assertThat(query, is(query(where("firstName").regex("^dave", "i"))));
+		assertThat(query).isEqualTo(query(where("firstName").regex("^dave", "i")));
 	}
 
 	@Test // DATAMONGO-770
@@ -308,7 +307,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
 
 		Query query = creator.createQuery();
-		assertThat(query, is(query(where("firstName").regex("dave$", "i"))));
+		assertThat(query).isEqualTo(query(where("firstName").regex("dave$", "i")));
 	}
 
 	@Test // DATAMONGO-770
@@ -318,7 +317,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
 
 		Query query = creator.createQuery();
-		assertThat(query, is(query(where("firstName").regex(".*dave.*", "i"))));
+		assertThat(query).isEqualTo(query(where("firstName").regex(".*dave.*", "i")));
 	}
 
 	@Test // DATAMONGO-770
@@ -340,7 +339,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave", 42), context);
 
 		Query query = creator.createQuery();
-		assertThat(query, is(query(where("firstName").regex("^dave$", "i").and("age").is(42))));
+		assertThat(query).isEqualTo(query(where("firstName").regex("^dave$", "i").and("age").is(42)));
 	}
 
 	@Test // DATAMONGO-566
@@ -351,8 +350,8 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = creator.createQuery();
 
-		assertThat(tree.isDelete(), is(true));
-		assertThat(query, is(query(where("firstName").is("dave"))));
+		assertThat(tree.isDelete()).isTrue();
+		assertThat(query).isEqualTo(query(where("firstName").is("dave")));
 	}
 
 	@Test // DATAMONGO-566
@@ -363,8 +362,8 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = creator.createQuery();
 
-		assertThat(tree.isDelete(), is(true));
-		assertThat(query, is(query(where("firstName").regex("^dave$", "i").and("age").is(42))));
+		assertThat(tree.isDelete()).isTrue();
+		assertThat(query).isEqualTo(query(where("firstName").regex("^dave$", "i").and("age").is(42)));
 	}
 
 	@Test // DATAMONGO-1075
@@ -375,7 +374,7 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("emailAddresses").in("dave"))));
+		assertThat(query).isEqualTo(query(where("emailAddresses").in("dave")));
 	}
 
 	@Test // DATAMONGO-1075
@@ -386,7 +385,7 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("emailAddresses").not().in("dave"))));
+		assertThat(query).isEqualTo(query(where("emailAddresses").not().in("dave")));
 	}
 
 	@Test // DATAMONGO-1075, DATAMONGO-1425
@@ -396,7 +395,8 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "thew"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query.getQueryObject().toJson(), is(query(where("username").not().regex(".*thew.*")).getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson())
+				.isEqualTo(query(where("username").not().regex(".*thew.*")).getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1139
@@ -409,7 +409,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, distance), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("location").near(point).maxDistance(1.0))));
+		assertThat(query).isEqualTo(query(where("location").near(point).maxDistance(1.0)));
 	}
 
 	@Test // DATAMONGO-1136
@@ -424,7 +424,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, shape), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("address.geo").within(shape))));
+		assertThat(query).isEqualTo(query(where("address.geo").within(shape)));
 	}
 
 	@Test // DATAMONGO-1110
@@ -436,7 +436,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("address2dSphere.geo").nearSphere(point))));
+		assertThat(query).isEqualTo(query(where("address2dSphere.geo").nearSphere(point)));
 	}
 
 	@Test // DATAMONGO-1110
@@ -449,7 +449,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, distance), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("address2dSphere.geo").nearSphere(point).maxDistance(1.0))));
+		assertThat(query).isEqualTo(query(where("address2dSphere.geo").nearSphere(point).maxDistance(1.0)));
 	}
 
 	@Test // DATAMONGO-1110
@@ -462,7 +462,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, range), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("address.geo").near(point).minDistance(10D).maxDistance(20D))));
+		assertThat(query).isEqualTo(query(where("address.geo").near(point).minDistance(10D).maxDistance(20D)));
 	}
 
 	@Test // DATAMONGO-1229
@@ -471,7 +471,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByAddressStreetIgnoreCase", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "Street");
 
-		assertThat(new MongoQueryCreator(tree, accessor, context).createQuery(), is(notNullValue()));
+		assertThat(new MongoQueryCreator(tree, accessor, context).createQuery()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1232
@@ -482,7 +482,7 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
 
-		assertThat(query, is(query(where("username").regex("^\\Qcon.flux+\\E$", "i"))));
+		assertThat(query).isEqualTo(query(where("username").regex("^\\Qcon.flux+\\E$", "i")));
 	}
 
 	@Test // DATAMONGO-1232
@@ -493,7 +493,7 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
 
-		assertThat(query, is(query(where("username").regex("^\\Qdawns.light+\\E", "i"))));
+		assertThat(query).isEqualTo(query(where("username").regex("^\\Qdawns.light+\\E", "i")));
 	}
 
 	@Test // DATAMONGO-1232
@@ -504,7 +504,7 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
 
-		assertThat(query, is(query(where("username").regex("\\Qnew.ton+\\E$", "i"))));
+		assertThat(query).isEqualTo(query(where("username").regex("\\Qnew.ton+\\E$", "i")));
 	}
 
 	@Test // DATAMONGO-1232
@@ -515,7 +515,7 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
 
-		assertThat(query, is(query(where("username").regex(".*\\Qfire.fight+\\E.*"))));
+		assertThat(query).isEqualTo(query(where("username").regex(".*\\Qfire.fight+\\E.*")));
 	}
 
 	@Test // DATAMONGO-1232
@@ -526,7 +526,7 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
 
-		assertThat(query, is(query(where("username").regex(".*\\Qsteel.heart+\\E"))));
+		assertThat(query).isEqualTo(query(where("username").regex(".*\\Qsteel.heart+\\E")));
 	}
 
 	@Test // DATAMONGO-1232
@@ -536,7 +536,7 @@ public class MongoQueryCreatorUnitTests {
 		ConvertingParameterAccessor accessor = getAccessor(converter, "cala.mity+*");
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
-		assertThat(query, is(query(where("username").regex("\\Qcala.mity+\\E.*"))));
+		assertThat(query).isEqualTo(query(where("username").regex("\\Qcala.mity+\\E.*")));
 	}
 
 	@Test // DATAMONGO-1232
@@ -546,7 +546,7 @@ public class MongoQueryCreatorUnitTests {
 		ConvertingParameterAccessor accessor = getAccessor(converter, "*");
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
-		assertThat(query, is(query(where("username").regex(".*"))));
+		assertThat(query).isEqualTo(query(where("username").regex(".*")));
 	}
 
 	@Test // DATAMONGO-1342
@@ -557,7 +557,7 @@ public class MongoQueryCreatorUnitTests {
 		ConvertingParameterAccessor accessor = getAccessor(converter, new Object[] { null });
 		Query query = new MongoQueryCreator(partTree, accessor, context).createQuery();
 
-		assertThat(query, is(query(where("emailAddresses").in((Object) null))));
+		assertThat(query).isEqualTo(query(where("emailAddresses").in((Object) null)));
 	}
 
 	@Test // DATAMONGO-1424
@@ -568,8 +568,8 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
 
-		assertThat(query.getQueryObject().toJson(),
-				is(query(where("username").not().regex(".*\\Qfire.fight+\\E.*")).getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson())
+				.isEqualTo(query(where("username").not().regex(".*\\Qfire.fight+\\E.*")).getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1424
@@ -580,8 +580,8 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
 
-		assertThat(query.getQueryObject().toJson(),
-				is(query(where("username").not().regex(".*\\Qsteel.heart+\\E")).getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson())
+				.isEqualTo(query(where("username").not().regex(".*\\Qsteel.heart+\\E")).getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1424
@@ -591,7 +591,8 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "cala.mity+*"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query.getQueryObject().toJson(), is(query(where("username").not().regex("\\Qcala.mity+\\E.*")).getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson())
+				.isEqualTo(query(where("username").not().regex("\\Qcala.mity+\\E.*")).getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1424
@@ -601,7 +602,8 @@ public class MongoQueryCreatorUnitTests {
 		ConvertingParameterAccessor accessor = getAccessor(converter, "*");
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
-		assertThat(query.getQueryObject().toJson(), is(query(where("username").not().regex(".*")).getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson())
+				.isEqualTo(query(where("username").not().regex(".*")).getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1588
@@ -611,7 +613,7 @@ public class MongoQueryCreatorUnitTests {
 		ConvertingParameterAccessor accessor = getAccessor(converter, new GeoJsonPoint(-74.044502D, 40.689247D));
 
 		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
-		assertThat(query.getQueryObject().containsKey("location"), is(true));
+		assertThat(query.getQueryObject()).containsKey("location");
 	}
 
 	@Test // DATAMONGO-1588
@@ -628,22 +630,22 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-2003
-	public void createsRegexQueryForPatternCorrectly() throws Exception {
+	public void createsRegexQueryForPatternCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, Pattern.compile(".*")), context);
 
-		assertThat(creator.createQuery(), is(query(where("firstName").regex(".*"))));
+		assertThat(creator.createQuery()).isEqualTo(query(where("firstName").regex(".*")));
 	}
 
 	@Test // DATAMONGO-2003
-	public void createsRegexQueryForPatternWithOptionsCorrectly() throws Exception {
+	public void createsRegexQueryForPatternWithOptionsCorrectly() {
 
 		Pattern pattern = Pattern.compile(".*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
 		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, pattern), context);
-		assertThat(creator.createQuery(), is(query(where("firstName").regex(".*", "iu"))));
+		assertThat(creator.createQuery()).isEqualTo(query(where("firstName").regex(".*", "iu")));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
