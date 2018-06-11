@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,7 +64,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Base class for tests for {@link PersonRepository}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -1165,5 +1166,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		repository.deleteByThePersonsFirstname("Dave");
 
 		assertThat(repository.countByThePersonsFirstname("Dave"), is(0L));
+	}
+
+	@Test // DATAMONGO-2003
+	public void findByRegexWithPattern() {
+		assertThat(repository.findByFirstnameRegex(Pattern.compile(alicia.getFirstname())), hasSize(1));
+	}
+
+	@Test // DATAMONGO-2003
+	public void findByRegexWithPatternAndOptions() {
+
+		String fn = alicia.getFirstname().toUpperCase();
+
+		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn)), hasSize(0));
+		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn, Pattern.CASE_INSENSITIVE)), hasSize(1));
 	}
 }

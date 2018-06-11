@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.regex.Pattern;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,7 @@ import org.springframework.util.ClassUtils;
 
 /**
  * Custom query creator to create Mongo criterias.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -69,7 +70,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	/**
 	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}, {@link ConvertingParameterAccessor} and
 	 * {@link MappingContext}.
-	 * 
+	 *
 	 * @param tree
 	 * @param accessor
 	 * @param context
@@ -82,7 +83,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	/**
 	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}, {@link ConvertingParameterAccessor} and
 	 * {@link MappingContext}.
-	 * 
+	 *
 	 * @param tree
 	 * @param accessor
 	 * @param context
@@ -164,7 +165,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	/**
 	 * Populates the given {@link CriteriaDefinition} depending on the {@link Part} given.
-	 * 
+	 *
 	 * @param part
 	 * @param property
 	 * @param criteria
@@ -206,7 +207,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case NOT_CONTAINING:
 				return createContainingCriteria(part, property, criteria.not(), parameters);
 			case REGEX:
-				return criteria.regex(parameters.next().toString());
+
+				Object param = parameters.next();
+				return param instanceof Pattern ? criteria.regex((Pattern) param) : criteria.regex(param.toString());
 			case EXISTS:
 				return criteria.exists((Boolean) parameters.next());
 			case TRUE:
@@ -272,7 +275,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	/**
 	 * Creates and extends the given criteria with a like-regex if necessary.
-	 * 
+	 *
 	 * @param part
 	 * @param property
 	 * @param criteria
@@ -314,7 +317,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * If the target property of the comparison is of type String, then the operator checks for match using regular
 	 * expression. If the target property of the comparison is a {@link Collection} then the operator evaluates to true if
 	 * it finds an exact match within any member of the {@link Collection}.
-	 * 
+	 *
 	 * @param part
 	 * @param property
 	 * @param criteria
@@ -333,7 +336,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	/**
 	 * Creates an appropriate like-regex and appends it to the given criteria.
-	 * 
+	 *
 	 * @param criteria
 	 * @param part
 	 * @param value
@@ -368,7 +371,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	/**
 	 * Returns the next element from the given {@link Iterator} expecting it to be of a certain type.
-	 * 
+	 *
 	 * @param <T>
 	 * @param iterator
 	 * @param type
