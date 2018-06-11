@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1215,5 +1216,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void findWithSortOverwritesAnnotatedSort() {
 		assertThat(repository.findByAgeGreaterThan(40, Sort.by(Direction.ASC, "age"))).containsExactly(leroi, dave, boyd,
 				carter);
+	}
+
+	@Test // DATAMONGO-2003
+	public void findByRegexWithPattern() {
+		assertThat(repository.findByFirstnameRegex(Pattern.compile(alicia.getFirstname()))).hasSize(1);
+	}
+
+	@Test // DATAMONGO-2003
+	public void findByRegexWithPatternAndOptions() {
+
+		String fn = alicia.getFirstname().toUpperCase();
+
+		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn))).hasSize(0);
+		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn, Pattern.CASE_INSENSITIVE))).hasSize(1);
 	}
 }

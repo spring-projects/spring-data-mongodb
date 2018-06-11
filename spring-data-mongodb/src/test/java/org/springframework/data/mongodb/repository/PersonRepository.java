@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
@@ -353,4 +354,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	@Query(sort = "{ age : -1 }")
 	List<Person> findByAgeGreaterThan(int age, Sort sort);
+
+	List<Person> findByFirstnameRegex(Pattern pattern);
 }
