@@ -45,6 +45,7 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 *
 	 * @return
 	 */
+	@Nullable
 	Point getGeoNearLocation();
 
 	/**
