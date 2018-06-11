@@ -1149,8 +1149,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
-	public Mono<Long> count(@Nullable Query query, @Nullable Class<?> entityClass, String collectionName) {
+	public Mono<Long> count(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
+		Assert.notNull(query, "Query must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		return createMono(collectionName, collection -> {
@@ -3275,22 +3276,19 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
 		@Override
-		public Mono<Long> count(@Nullable Query query, @Nullable Class<?> entityClass, String collectionName) {
+		public Mono<Long> count(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 			if (!session.hasActiveTransaction()) {
 				return super.count(query, entityClass, collectionName);
 			}
 
-			List<AggregationOperation> pipeline = computeCountAggregationPipeline(query, entityClass);
-
-			Aggregation aggregation = entityClass != null ? Aggregation.newAggregation(entityClass, pipeline)
-					: Aggregation.newAggregation(pipeline);
-			aggregation.withOptions(AggregationOptions.builder().collation(query.getCollation().orElse(null)).build());
+			AggregationUtil aggregationUtil = new AggregationUtil(delegate.queryMapper, delegate.mappingContext);
+			Aggregation aggregation = aggregationUtil.createCountAggregation(query, entityClass);
 
 			return aggregate(aggregation, collectionName, Document.class) //
-					.defaultIfEmpty(new Document("totalEntityCount", 0)) //
 					.next() //
-					.map(it -> it.get("totalEntityCount", Number.class).longValue());
+					.map(it -> it.get("totalEntityCount", Number.class).longValue()) //
+					.defaultIfEmpty(0L);
 		}
 
 		private List<AggregationOperation> computeCountAggregationPipeline(@Nullable Query query,

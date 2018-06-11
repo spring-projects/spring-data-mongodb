@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
 
@@ -30,6 +32,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.aopalliance.aop.Advice;
 import org.bson.Document;
@@ -268,7 +272,7 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2001
-	public void countShouldOnlyReturnCorrectly() throws InterruptedException {
+	public void countShouldWorkInTransactions() {
 
 		if (!template.collectionExists(Person.class)) {
 			template.createCollection(Person.class);
@@ -276,44 +280,77 @@ public class SessionBoundMongoTemplateTests {
 			template.remove(Person.class).all();
 		}
 
-		List<Object> resultList = new CopyOnWriteArrayList<>();
+		ClientSession session = client.startSession();
+		session.startTransaction();
 
-		int nrThreads = 2;
-		CountDownLatch countDownLatch = new CountDownLatch(nrThreads);
+		MongoTemplate sessionBound = template.withSession(session);
 
-		for (int i = 0; i < nrThreads; i++) {
+		sessionBound.save(new Person("Kylar Stern"));
 
-			new Thread(() -> {
+		assertThat(sessionBound.query(Person.class).matching(query(where("firstName").is("foobar"))).count()).isZero();
+		assertThat(sessionBound.query(Person.class).matching(query(where("firstName").is("Kylar Stern"))).count()).isOne();
+		assertThat(sessionBound.query(Person.class).count()).isOne();
 
-				ClientSession session = client.startSession();
-				session.startTransaction();
+		session.commitTransaction();
+		session.close();
+	}
 
-				try {
+	@Test // DATAMONGO-2001
+	public void countShouldReturnIsolatedCount() throws InterruptedException {
 
-					MongoTemplate sessionBound = template.withSession(session);
-
-					try {
-						sessionBound.save(new Person("Kylar Stern"));
-					} finally {
-						countDownLatch.countDown();
-					}
-
-					countDownLatch.await(1, TimeUnit.SECONDS);
-
-					resultList.add(Long.valueOf(sessionBound.query(Person.class).count()));
-				} catch (Exception e) {
-					resultList.add(e);
-				}
-
-				session.commitTransaction();
-				session.close();
-			}).start();
+		if (!template.collectionExists(Person.class)) {
+			template.createCollection(Person.class);
+		} else {
+			template.remove(Person.class).all();
 		}
 
-		countDownLatch.await();
+		int nrThreads = 2;
+		CountDownLatch savedInTransaction = new CountDownLatch(nrThreads);
+		CountDownLatch beforeCommit = new CountDownLatch(nrThreads);
+		List<Object> resultList = new CopyOnWriteArrayList<>();
+
+		Runnable runnable = () -> {
+
+			ClientSession session = client.startSession();
+			session.startTransaction();
+
+			try {
+				MongoTemplate sessionBound = template.withSession(session);
+
+				try {
+					sessionBound.save(new Person("Kylar Stern"));
+				} finally {
+					savedInTransaction.countDown();
+				}
+
+				savedInTransaction.await(1, TimeUnit.SECONDS);
+
+				try {
+					resultList.add(sessionBound.query(Person.class).count());
+				} finally {
+					beforeCommit.countDown();
+				}
+
+				beforeCommit.await(1, TimeUnit.SECONDS);
+			} catch (Exception e) {
+				resultList.add(e);
+			}
+
+			session.commitTransaction();
+			session.close();
+		};
+
+		List<Thread> threads = IntStream.range(0, nrThreads) //
+				.mapToObj(i -> new Thread(runnable)) //
+				.peek(Thread::start) //
+				.collect(Collectors.toList());
+
+		for (Thread thread : threads) {
+			thread.join();
+		}
 
 		assertThat(template.query(Person.class).count()).isEqualTo(2L);
-		assertThat(resultList).allMatch(it -> it.equals(1L));
+		assertThat(resultList).hasSize(nrThreads).allMatch(it -> it.equals(1L));
 	}
 
 	@Data

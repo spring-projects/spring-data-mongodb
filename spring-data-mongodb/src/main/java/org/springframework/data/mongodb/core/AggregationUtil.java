@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import lombok.AllArgsConstructor;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,13 +26,19 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.CountOperation;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -105,6 +113,53 @@ class AggregationUtil {
 		command.put("pipeline", mapAggregationPipeline(command.get("pipeline", List.class)));
 
 		return command;
+	}
+
+	/**
+	 * Create a {@code $count} aggregation for {@link Query} and optionally a {@link Class entity class}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityClass can be {@literal null} if the {@link Query} object is empty.
+	 * @return the {@link Aggregation} pipeline definition to run a {@code $count} aggregation.
+	 */
+	Aggregation createCountAggregation(Query query, @Nullable Class<?> entityClass) {
+
+		List<AggregationOperation> pipeline = computeCountAggregationPipeline(query, entityClass);
+
+		Aggregation aggregation = entityClass != null ? Aggregation.newAggregation(entityClass, pipeline)
+				: Aggregation.newAggregation(pipeline);
+		aggregation.withOptions(AggregationOptions.builder().collation(query.getCollation().orElse(null)).build());
+
+		return aggregation;
+	}
+
+	private List<AggregationOperation> computeCountAggregationPipeline(Query query, @Nullable Class<?> entityType) {
+
+		CountOperation count = Aggregation.count().as("totalEntityCount");
+		if (query.getQueryObject().isEmpty()) {
+			return Collections.singletonList(count);
+		}
+
+		Assert.notNull(entityType, "Entity type must not be null!");
+
+		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(),
+				mappingContext.getPersistentEntity(entityType));
+
+		CriteriaDefinition criteria = new CriteriaDefinition() {
+
+			@Override
+			public Document getCriteriaObject() {
+				return mappedQuery;
+			}
+
+			@Nullable
+			@Override
+			public String getKey() {
+				return null;
+			}
+		};
+
+		return Arrays.asList(Aggregation.match(criteria), count);
 	}
 
 	private List<Document> mapAggregationPipeline(List<Document> pipeline) {

@@ -215,7 +215,7 @@ public class StateService {
 NOTE: `@Transactional(readOnly = true)` advises `MongoTransactionManager` to also start a transaction that adds the
  `ClientSession` to outgoing requests.
 
-== Reactive transactions
+== Reactive Transactions
 
 Same as with the reactive `ClientSession` support, the `ReactiveMongoTemplate` offers dedicated methods for operating
 within a transaction without having to worry about the commit/abort actions depending on the operations outcome.
@@ -299,14 +299,14 @@ error occurs here.
 
 == Special behavior inside transactions
 
-Inside transactions MongoDB server has a slightly different behavior.
+Inside transactions, MongoDB server has a slightly different behavior.
 
 *Connection Settings*
 
-The MongoDB drivers offer a dedicated replica set name configuration option turing the driver into an auto detection
+The MongoDB drivers offer a dedicated replica set name configuration option turing the driver into auto detection
 mode. This option helps identifying replica set master nodes and command routing during a transaction.
 
-INFO: Make sure to add `replicaSet` to the MongoDB Uri. Please refer to https://docs.mongodb.com/manual/reference/connection-string/#connections-connection-options[connection string options] for further details.
+NOTE: Make sure to add `replicaSet` to the MongoDB URI. Please refer to https://docs.mongodb.com/manual/reference/connection-string/#connections-connection-options[connection string options] for further details.
 
 *Collection Operations*
 
@@ -321,9 +321,9 @@ The server responds with _error 50851_ when issuing a `count` command inside of 
 Once `MongoTemplate` detects an active transaction, all exposed `count()` methods are converted and delegated to the
 aggregation framework using `$match` and `$count` operators, preserving `Query` settings, such as `collation`.
 
-====
-The following snippet of `count` inside the session bound closure
+The following snippet shows `count` usage inside the session-bound closure:
 
+====
 [source,javascript]
 ----
 session.startTransaction();
@@ -333,21 +333,25 @@ template.withSession(session)
         action.count(query(where("state").is("active")), Step.class)
         ...
 ----
+====
 
-runs:
+The snippet above materializes in the following command:
 
+====
 [source,javascript]
 ----
 db.collection.aggregate(
    [
       { $match: { state: "active" } },
-      { $group: { _id: null, count: { $sum: 1 } } }
+      { $count: "totalEntityCount" }
    ]
 )
 ----
+====
 
 instead of:
 
+====
 [source,javascript]
 ----
 db.collection.find( { state: "active" } ).count()
