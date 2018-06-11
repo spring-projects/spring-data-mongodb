@@ -13,12 +13,12 @@ before_install:
   - |-
     downloads/mongodb-linux-x86_64-ubuntu1604-${MONGO_VERSION}/bin/mongo --eval "rs.initiate({_id: 'rs0', members:[{_id: 0, host: '127.0.0.1:27017'}]});"
     sleep 15
-    
+
 env:
   matrix:
     - PROFILE=ci
   global:
-    - MONGO_VERSION=4.0.0-rc0
+    - MONGO_VERSION=4.0.0-rc4
 
 addons:
   apt:

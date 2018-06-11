@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -100,8 +102,7 @@ public class ReactiveClientSessionTests {
 
 		assertThat(session.getOperationTime()).isNull();
 
-		template.withSession(() -> session)
-						.execute(action -> action.findOne(new Query(), Document.class, COLLECTION_NAME)) //
+		template.withSession(() -> session).execute(action -> action.findOne(new Query(), Document.class, COLLECTION_NAME)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
@@ -135,6 +136,37 @@ public class ReactiveClientSessionTests {
 				.execute(action -> ReactiveMongoContext.getSession()) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2001
+	public void countInTransactionShouldReturnCount() {
+
+		ClientSession session = Mono
+				.from(client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build())).block();
+
+		template.withSession(() -> session).execute(action -> {
+
+			session.startTransaction();
+
+			return action.insert(new Document("_id", "id-2").append("value", "in transaction"), COLLECTION_NAME) //
+					.then(action.count(query(where("value").is("in transaction")), Document.class, COLLECTION_NAME)) //
+					.flatMap(it -> Mono.from(session.commitTransaction()).then(Mono.just(it)));
+
+		}).as(StepVerifier::create) //
+				.expectNext(1L) //
+				.verifyComplete();
+
+		template.withSession(() -> session).execute(action -> {
+
+			session.startTransaction();
+
+			return action.insert(new Document("value", "in transaction"), COLLECTION_NAME) //
+					.then(action.count(query(where("value").is("foo")), Document.class, COLLECTION_NAME)) //
+					.flatMap(it -> Mono.from(session.commitTransaction()).then(Mono.just(it)));
+
+		}).as(StepVerifier::create) //
+				.expectNext(0L) //
 				.verifyComplete();
 	}
 

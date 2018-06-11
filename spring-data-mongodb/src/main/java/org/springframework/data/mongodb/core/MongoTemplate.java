@@ -2116,7 +2116,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AggregationOperationContext contextToUse = new AggregationUtil(queryMapper, mappingContext).prepareAggregationContext(aggregation, context);
+		AggregationOperationContext contextToUse = new AggregationUtil(queryMapper, mappingContext)
+				.prepareAggregationContext(aggregation, context);
 		return doAggregate(aggregation, collectionName, outputType, contextToUse);
 	}
 
@@ -2847,7 +2848,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return fields;
 	}
 
-
 	/**
 	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
 	 * exception if the conversation failed. Thus allows safe re-throwing of the return value.
@@ -3498,6 +3498,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	static class SessionBoundMongoTemplate extends MongoTemplate {
 
 		private final MongoTemplate delegate;
+		private final ClientSession session;
 
 		/**
 		 * @param session must not be {@literal null}.
@@ -3508,6 +3509,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			super(that.getMongoDbFactory().withSession(session), that);
 
 			this.delegate = that;
+			this.session = session;
 		}
 
 		/*
@@ -3530,6 +3532,32 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getDb();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.MongoTemplate#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 */
+		@Override
+		@SuppressWarnings("unchecked")
+		public long count(Query query, @Nullable Class<?> entityClass, String collectionName) {
+
+			if (!session.hasActiveTransaction()) {
+				return super.count(query, entityClass, collectionName);
+			}
+
+			AggregationUtil aggregationUtil = new AggregationUtil(delegate.queryMapper, delegate.mappingContext);
+			Aggregation aggregation = aggregationUtil.createCountAggregation(query, entityClass);
+			AggregationResults<Document> aggregationResults = aggregate(aggregation, collectionName, Document.class);
+
+			List<Document> result = (List<Document>) aggregationResults.getRawResults().getOrDefault("results",
+					Collections.singletonList(new Document("totalEntityCount", 0)));
+
+			if (result.isEmpty()) {
+				return 0;
+			}
+
+			return result.get(0).get("totalEntityCount", Number.class).longValue();
 		}
 	}
 }
