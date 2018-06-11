@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1204,5 +1205,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1865
 	public void findOptionalSingleEntityThrowsErrorWhenNotUnique() {
 		repository.findOptionalPersonByLastnameLike(dave.getLastname());
+	}
+
+	@Test // DATAMONGO-2003
+	public void findByRegexWithPattern() {
+		assertThat(repository.findByFirstnameRegex(Pattern.compile(alicia.getFirstname()))).hasSize(1);
+	}
+
+	@Test // DATAMONGO-2003
+	public void findByRegexWithPatternAndOptions() {
+
+		String fn = alicia.getFirstname().toUpperCase();
+
+		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn))).hasSize(0);
+		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn, Pattern.CASE_INSENSITIVE))).hasSize(1);
 	}
 }

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,7 +207,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case NOT_CONTAINING:
 				return createContainingCriteria(part, property, criteria.not(), parameters);
 			case REGEX:
-				return criteria.regex(parameters.next().toString());
+
+				Object param = parameters.next();
+				return param instanceof Pattern ? criteria.regex((Pattern) param) : criteria.regex(param.toString());
 			case EXISTS:
 				return criteria.exists((Boolean) parameters.next());
 			case TRUE:

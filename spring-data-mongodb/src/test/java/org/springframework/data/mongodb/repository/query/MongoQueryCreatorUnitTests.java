@@ -24,7 +24,9 @@ import static org.springframework.data.mongodb.repository.query.StubParameterAcc
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.regex.Pattern;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
@@ -59,8 +61,6 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.parser.PartTree;
-
-import org.bson.Document;
 
 /**
  * Unit test for {@link MongoQueryCreator}.
@@ -625,6 +625,25 @@ public class MongoQueryCreatorUnitTests {
 				new GeoJsonLineString(new Point(-74.044502D, 40.689247D), new Point(-73.997330D, 40.730824D)));
 
 		new MongoQueryCreator(tree, accessor, context).createQuery();
+	}
+
+	@Test // DATAMONGO-2003
+	public void createsRegexQueryForPatternCorrectly() throws Exception {
+
+		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, Pattern.compile(".*")), context);
+
+		assertThat(creator.createQuery(), is(query(where("firstName").regex(".*"))));
+	}
+
+	@Test // DATAMONGO-2003
+	public void createsRegexQueryForPatternWithOptionsCorrectly() throws Exception {
+
+		Pattern pattern = Pattern.compile(".*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, pattern), context);
+		assertThat(creator.createQuery(), is(query(where("firstName").regex(".*", "iu"))));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
