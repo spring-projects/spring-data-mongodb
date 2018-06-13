@@ -1,6 +1,21 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.8.RELEASE (2018-06-13)
+---------------------------------------------
+* DATAMONGO-2003 - MongoQueryCreator will not create query correctly when passing Pattern Object with options.
+* DATAMONGO-2002 - Criteria instances using different regex Patterns are considered equal.
+* DATAMONGO-1998 - SpringDataMongodbSerializer cannot convert query on nested id.
+* DATAMONGO-1988 - String ID not working for embeded objects.
+* DATAMONGO-1986 - Aggregation MatchOperation fails to convert query.
+* DATAMONGO-1980 - Typo in CriteriaExtensions KDoc.
+* DATAMONGO-1978 - Typo in Field.positionKey.
+* DATAMONGO-1974 - Full editing pass on reference documentation.
+* DATAMONGO-1971 - Install MongoDB on TravisCI ourselves.
+* DATAMONGO-1969 - Release 2.0.8 (Kay SR8).
+* DATAMONGO-1466 - Add DbObject to GeoJson Converter.
+
+
 Changes in version 1.10.13.RELEASE (2018-06-13)
 -----------------------------------------------
 * DATAMONGO-2003 - MongoQueryCreator will not create query correctly when passing Pattern Object with options.
