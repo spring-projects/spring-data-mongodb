@@ -39,10 +39,10 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate.ReactiveSessionBoundMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -64,6 +64,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * Unit tests for {@link ReactiveSessionBoundMongoTemplate}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -124,7 +125,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		factory = new SimpleReactiveMongoDatabaseFactory(client, "foo");
 
 		this.mappingContext = new MongoMappingContext();
-		this.converter = new MappingMongoConverter(new NoOpDbRefResolver(), mappingContext);
+		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 		this.template = new ReactiveSessionBoundMongoTemplate(clientSession, new ReactiveMongoTemplate(factory, converter));
 	}
 

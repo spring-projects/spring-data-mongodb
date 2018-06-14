@@ -106,21 +106,6 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#created(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.mapping.MongoPersistentEntity, java.lang.Object)
-	 */
-	@Override
-	public DBRef createDbRef(@Nullable org.springframework.data.mongodb.core.mapping.DBRef annotation,
-			MongoPersistentEntity<?> entity, Object id) {
-
-		if (annotation != null && StringUtils.hasText(annotation.db())) {
-			return new DBRef(annotation.db(), entity.getCollection(), id);
-		}
-
-		return new DBRef(entity.getCollection(), id);
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#fetch(com.mongodb.DBRef)
 	 */
 	@Override

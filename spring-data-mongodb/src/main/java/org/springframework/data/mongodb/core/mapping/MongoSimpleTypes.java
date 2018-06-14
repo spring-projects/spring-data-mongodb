@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 
 import org.bson.BsonObjectId;
 import org.bson.types.Binary;
-import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.util.MongoClientVersion;
@@ -37,6 +36,7 @@ import com.mongodb.DBRef;
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public abstract class MongoSimpleTypes {
 
@@ -53,15 +53,21 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(DBRef.class);
 		simpleTypes.add(ObjectId.class);
 		simpleTypes.add(BsonObjectId.class);
-		simpleTypes.add(CodeWScope.class);
 		simpleTypes.add(org.bson.Document.class);
 		simpleTypes.add(Pattern.class);
 		simpleTypes.add(Binary.class);
 		simpleTypes.add(UUID.class);
 
+		if (ClassUtils.isPresent("org.bson.types.CodeWScope", MongoSimpleTypes.class.getClassLoader())) {
+			simpleTypes.add(resolveClassName("org.bson.types.CodeWScope"));
+		}
+
+		if (ClassUtils.isPresent("org.bson.types.CodeWithScope", MongoSimpleTypes.class.getClassLoader())) {
+			simpleTypes.add(resolveClassName("org.bson.types.CodeWithScope"));
+		}
+
 		if (MongoClientVersion.isMongo34Driver()) {
-			simpleTypes
-					.add(ClassUtils.resolveClassName("org.bson.types.Decimal128", MongoSimpleTypes.class.getClassLoader()));
+			simpleTypes.add(resolveClassName("org.bson.types.Decimal128"));
 		}
 
 		MONGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
@@ -71,4 +77,8 @@ public abstract class MongoSimpleTypes {
 	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(MONGO_SIMPLE_TYPES, true);
 
 	private MongoSimpleTypes() {}
+
+	private static Class<?> resolveClassName(String className) {
+		return ClassUtils.resolveClassName(className, MongoSimpleTypes.class.getClassLoader());
+	}
 }
