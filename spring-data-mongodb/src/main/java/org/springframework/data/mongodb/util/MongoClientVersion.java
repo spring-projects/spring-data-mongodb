@@ -51,7 +51,7 @@ public class MongoClientVersion {
 	}
 
 	/**
-	 * @return {lliteral true} if MongoDB Java driver is on classpath.
+	 * @return {@literal true} if MongoDB Java driver is on classpath.
 	 */
 	public static boolean isAsyncClient() {
 		return IS_ASYNC_CLIENT;
