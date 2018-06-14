@@ -22,6 +22,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
 
@@ -59,9 +60,15 @@ public interface DbRefResolver {
 	 * @param id will never be {@literal null}.
 	 * @return
 	 */
-	DBRef createDbRef(@Nullable org.springframework.data.mongodb.core.mapping.DBRef annotation,
-			MongoPersistentEntity<?> entity,
-			Object id);
+	default DBRef createDbRef(@Nullable org.springframework.data.mongodb.core.mapping.DBRef annotation,
+			MongoPersistentEntity<?> entity, Object id) {
+
+		if (annotation != null && StringUtils.hasText(annotation.db())) {
+			return new DBRef(annotation.db(), entity.getCollection(), id);
+		}
+
+		return new DBRef(entity.getCollection(), id);
+	}
 
 	/**
 	 * Actually loads the {@link DBRef} from the datasource.
