@@ -39,7 +39,6 @@ import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.PathBuilder;
-import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
  * MongoDB-specific {@link QuerydslPredicateExecutor} that allows execution {@link Predicate}s in various forms.
@@ -166,7 +165,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 		Assert.notNull(predicate, "Predicate must not be null!");
 		Assert.notNull(pageable, "Pageable must not be null!");
 
-		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQueryFor(predicate);
+		SimpleFetchableQuery<T> query = createQueryFor(predicate);
 
 		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetch(), pageable, query::fetchCount);
 	}
@@ -201,7 +200,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 * @param predicate
 	 * @return
 	 */
-	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> createQueryFor(Predicate predicate) {
+	private SimpleFetchableQuery<T> createQueryFor(Predicate predicate) {
 		return createQuery().where(predicate);
 	}
 
@@ -210,7 +209,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 *
 	 * @return
 	 */
-	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> createQuery() {
+	private SimpleFetchableQuery<T> createQuery() {
 		return new SpringDataMongodbQuery<>(mongoOperations, entityInformation.getJavaType());
 	}
 
@@ -221,8 +220,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 * @param pageable
 	 * @return
 	 */
-	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> applyPagination(
-			AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query, Pageable pageable) {
+	private SimpleFetchableQuery<T> applyPagination(SimpleFetchableQuery<T> query, Pageable pageable) {
 
 		query = query.offset(pageable.getOffset()).limit(pageable.getPageSize());
 		return applySorting(query, pageable.getSort());
@@ -235,8 +233,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 * @param sort
 	 * @return
 	 */
-	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> applySorting(
-			AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query, Sort sort) {
+	private SimpleFetchableQuery<T> applySorting(SimpleFetchableQuery<T> query, Sort sort) {
 
 		// TODO: find better solution than instanceof check
 		if (sort instanceof QSort) {

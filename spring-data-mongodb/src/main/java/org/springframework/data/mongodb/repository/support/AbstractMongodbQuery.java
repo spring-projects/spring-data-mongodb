@@ -146,7 +146,7 @@ abstract class AbstractMongodbQuery<Q extends AbstractMongodbQuery<Q>> implement
 			}
 			return obj;
 		}
-		return null;
+		return new Document();
 	}
 
 	protected Document createQuery(@Nullable Predicate predicate) {

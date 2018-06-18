@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -28,16 +27,11 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.util.JSON;
 import com.querydsl.core.types.Constant;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Operation;
@@ -53,7 +47,7 @@ import com.querydsl.mongodb.MongodbSerializer;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-class SpringDataMongodbSerializer extends MongodbSerializer {
+class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 	private static final String ID_KEY = "_id";
 	private static final Set<PathType> PATH_TYPES;
@@ -96,7 +90,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 			return super.visit(expr, context);
 		}
 
-		return toQuerydslMongoType(expr.getConstant());
+		return converter.convertToMongoType(expr.getConstant());
 	}
 
 	/*
@@ -119,10 +113,10 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#asDBObject(java.lang.String, java.lang.Object)
+	 * @see com.querydsl.mongodb.MongodbSerializer#asDocument(java.lang.String, java.lang.Object)
 	 */
 	@Override
-	protected DBObject asDBObject(@Nullable String key, @Nullable Object value) {
+	protected Document asDocument(@Nullable String key, @Nullable Object value) {
 
 		value = value instanceof Optional ? ((Optional) value).orElse(null) : value;
 
@@ -130,7 +124,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 			return convertId(key, value);
 		}
 
-		return super.asDBObject(key, value instanceof Pattern ? value : toQuerydslMongoType(value));
+		return super.asDocument(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
 	}
 
 	/**
@@ -141,13 +135,12 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 * @param idValue the raw {@literal id} value.
 	 * @return the {@literal id} representation in the required format.
 	 */
-	private DBObject convertId(String key, Object idValue) {
+	private Document convertId(String key, Object idValue) {
 
 		Object convertedId = mapper.convertId(idValue);
 
-		Document mappedIdValue = mapper.getMappedObject((BasicDBObject) super.asDBObject(key, convertedId),
+		return mapper.getMappedObject(super.asDocument(key, convertedId),
 				Optional.empty());
-		return (DBObject) JSON.parse(mappedIdValue.toJson());
 	}
 
 	/*
@@ -249,26 +242,5 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		}
 
 		return property;
-	}
-
-	private Object toQuerydslMongoType(Object source) {
-
-		Object target = converter.convertToMongoType(source);
-
-		if (target instanceof List) {
-
-			List<Object> newList = new BasicDBList();
-
-			for (Object item : (List) target) {
-				if (item instanceof Document) {
-					newList.add(new BasicDBObject(BsonUtils.asMap((Document) item)));
-				} else {
-					newList.add(item);
-				}
-			}
-			return newList;
-		}
-
-		return target;
 	}
 }

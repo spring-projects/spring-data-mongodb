@@ -47,7 +47,8 @@ import com.querydsl.core.types.Predicate;
  * @param <Q> concrete subtype
  * @author Mark Paluch
  */
-class FetchableMongodbQuery<K> extends AbstractMongodbQuery<FetchableMongodbQuery<K>> implements Fetchable<K> {
+abstract class FetchableMongodbQuery<K, Q extends FetchableMongodbQuery<K, Q>> extends AbstractMongodbQuery<Q>
+		implements Fetchable<K> {
 
 	private final Class<K> entityClass;
 	private final String collection;
