@@ -21,7 +21,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
 import com.querydsl.core.types.EntityPath;
-import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
  * Base class to create repository implementations based on Querydsl.
@@ -54,7 +53,7 @@ public abstract class QuerydslRepositorySupport {
 	 * @param path
 	 * @return
 	 */
-	protected <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path) {
+	protected <T> SpringDataMongodbQuery<T> from(final EntityPath<T> path) {
 
 		Assert.notNull(path, "EntityPath must not be null!");
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(path.getType());
@@ -68,7 +67,7 @@ public abstract class QuerydslRepositorySupport {
 	 * @param collection must not be blank or {@literal null}
 	 * @return
 	 */
-	protected <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path, String collection) {
+	protected <T> SpringDataMongodbQuery<T> from(final EntityPath<T> path, String collection) {
 
 		Assert.notNull(path, "EntityPath must not be null!");
 		Assert.hasText(collection, "Collection name must not be null or empty!");

@@ -62,7 +62,10 @@ public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvi
 	 * Get the legacy database entry point. Please consider {@link #getDb()} instead.
 	 *
 	 * @return
+	 * @deprecated since 2.1, use {@link #getDb()}. This method will be removed with a future version as it works only
+	 *             with the legacy MongoDB driver.
 	 */
+	@Deprecated
 	DB getLegacyDb();
 
 	/**

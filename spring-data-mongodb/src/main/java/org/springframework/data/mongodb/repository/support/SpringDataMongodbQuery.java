@@ -15,15 +15,17 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import org.bson.Document;
-import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.lang.Nullable;
+import java.util.List;
 
-import com.google.common.base.Function;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.springframework.data.mongodb.core.MongoOperations;
+
+import com.mysema.commons.lang.CloseableIterator;
+import com.querydsl.core.NonUniqueResultException;
+import com.querydsl.core.QueryModifiers;
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.ParamExpression;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
@@ -32,9 +34,9 @@ import com.querydsl.mongodb.AbstractMongodbQuery;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> {
+public class SpringDataMongodbQuery<T> implements SimpleFetchableQuery<T> {
 
-	private final MongoOperations operations;
+	private final OperationsMongodbQuery<T> query;
 
 	/**
 	 * Creates a new {@link SpringDataMongodbQuery}.
@@ -56,25 +58,144 @@ public class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDat
 	public SpringDataMongodbQuery(final MongoOperations operations, final Class<? extends T> type,
 			String collectionName) {
 
-		super(((MongoTemplate) operations).getMongoDbFactory().getLegacyDb().getCollection(collectionName),
-				new Function<DBObject, T>() {
+		query = new OperationsMongodbQuery<>(new SpringDataMongodbSerializer(operations.getConverter()), type,
+				collectionName, operations);
+	}
 
-					@Override
-					public T apply(@Nullable DBObject input) {
-						return operations.getConverter().read(type, new Document((BasicDBObject) input));
-					}
-				}, new SpringDataMongodbSerializer(operations.getConverter()));
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.Fetchable#fetch()
+	 */
+	@Override
+	public List<T> fetch() {
+		return query.fetch();
+	}
 
-		this.operations = operations;
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.Fetchable#fetchFirst()
+	 */
+	@Override
+	public T fetchFirst() {
+		return query.fetchFirst();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.Fetchable#fetchOne()
+	 */
+	@Override
+	public T fetchOne() throws NonUniqueResultException {
+		return query.fetchOne();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.Fetchable#iterate()
+	 */
+	@Override
+	public CloseableIterator<T> iterate() {
+		return query.iterate();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.Fetchable#fetchResults()
+	 */
+	@Override
+	public QueryResults<T> fetchResults() {
+		return query.fetchResults();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.Fetchable#fetchCount()
+	 */
+	@Override
+	public long fetchCount() {
+		return query.fetchCount();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.SimpleQuery#limit(long)
+	 */
+	@Override
+	public SpringDataMongodbQuery<T> limit(long limit) {
+		query.limit(limit);
+		return this;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.SimpleQuery#offset(long)
+	 */
+	@Override
+	public SpringDataMongodbQuery<T> offset(long offset) {
+		query.offset(offset);
+		return this;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.SimpleQuery#restrict(com.querydsl.core.QueryModifiers)
+	 */
+	@Override
+	public SpringDataMongodbQuery<T> restrict(QueryModifiers modifiers) {
+		query.restrict(modifiers);
+		return this;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.AbstractMongodbQuery#getCollection(java.lang.Class)
+	 * @see com.querydsl.core.SimpleQuery#orderBy(com.querydsl.core.types.OrderSpecifier[])
 	 */
 	@Override
-	protected DBCollection getCollection(Class<?> type) {
-		return ((MongoTemplate) operations).getMongoDbFactory().getLegacyDb()
-				.getCollection(operations.getCollectionName(type));
+	public SpringDataMongodbQuery<T> orderBy(OrderSpecifier<?>... o) {
+		query.orderBy(o);
+		return this;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.SimpleQuery#set(com.querydsl.core.types.ParamExpression, java.lang.Object)
+	 */
+	@Override
+	public <V> SpringDataMongodbQuery<T> set(ParamExpression<V> param, V value) {
+		query.set(param, value);
+		return this;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.SimpleQuery#distinct()
+	 */
+	@Override
+	public SpringDataMongodbQuery<T> distinct() {
+		query.distinct();
+		return this;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see com.querydsl.core.FilteredClause#where(com.querydsl.core.types.Predicate[])
+	 */
+	@Override
+	public SpringDataMongodbQuery<T> where(Predicate... o) {
+		query.where(o);
+		return this;
+	}
+
+	/**
+	 * Concrete implementation of {@link FetchableMongodbQuery}.
+	 *
+	 * @param <T>
+	 */
+	static class OperationsMongodbQuery<T> extends FetchableMongodbQuery<T, OperationsMongodbQuery<T>> {
+
+		public OperationsMongodbQuery(MongodbDocumentSerializer serializer, Class<? extends T> entityClass,
+				String collection, MongoOperations mongoOperations) {
+			super(serializer, entityClass, collection, mongoOperations);
+		}
 	}
 }
