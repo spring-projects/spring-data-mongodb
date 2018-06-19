@@ -30,5 +30,4 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 public interface ReactiveCollectionCallback<T> {
 
 	Publisher<T> doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException;
-
 }

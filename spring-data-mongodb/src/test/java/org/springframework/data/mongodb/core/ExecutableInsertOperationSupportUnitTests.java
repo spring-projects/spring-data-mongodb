@@ -16,10 +16,8 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.anyList;
 
 import lombok.Data;
 
@@ -56,7 +54,7 @@ public class ExecutableInsertOperationSupportUnitTests {
 	public void setUp() {
 
 		when(template.bulkOps(any(), any(), any())).thenReturn(bulkOperations);
-		when(template.determineCollectionName(any(Class.class))).thenReturn(STAR_WARS);
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
 		when(bulkOperations.insert(anyList())).thenReturn(bulkOperations);
 
 		ops = new ExecutableInsertOperationSupport(template);
@@ -88,7 +86,7 @@ public class ExecutableInsertOperationSupportUnitTests {
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(captor.capture());
+		verify(template).getCollectionName(captor.capture());
 		verify(template).insert(eq(luke), eq(STAR_WARS));
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class);
@@ -99,7 +97,7 @@ public class ExecutableInsertOperationSupportUnitTests {
 
 		ops.insert(Person.class).inCollection(STAR_WARS).one(luke);
 
-		verify(template, never()).determineCollectionName(any(Class.class));
+		verify(template, never()).getCollectionName(any(Class.class));
 		verify(template).insert(eq(luke), eq(STAR_WARS));
 	}
 
@@ -108,7 +106,7 @@ public class ExecutableInsertOperationSupportUnitTests {
 
 		ops.insert(Person.class).all(Arrays.asList(luke, han));
 
-		verify(template).determineCollectionName(any(Class.class));
+		verify(template).getCollectionName(any(Class.class));
 		verify(template).insert(anyList(), eq(STAR_WARS));
 	}
 
@@ -119,7 +117,7 @@ public class ExecutableInsertOperationSupportUnitTests {
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(any(Class.class));
+		verify(template).getCollectionName(any(Class.class));
 		verify(template).bulkOps(eq(BulkMode.ORDERED), captor.capture(), eq(STAR_WARS));
 		verify(bulkOperations).insert(anyList());
 		verify(bulkOperations).execute();
@@ -132,7 +130,7 @@ public class ExecutableInsertOperationSupportUnitTests {
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(any(Class.class));
+		verify(template).getCollectionName(any(Class.class));
 		verify(template).bulkOps(eq(BulkMode.UNORDERED), captor.capture(), eq(STAR_WARS));
 		verify(bulkOperations).insert(anyList());
 		verify(bulkOperations).execute();

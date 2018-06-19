@@ -16,8 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
@@ -78,13 +77,13 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	@Test // DATAMONGO-1563
 	public void aggregateWithUntypedAggregation() {
 
-		when(template.determineCollectionName(any(Class.class))).thenReturn("person");
+		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
 		opSupport.aggregateAndReturn(Person.class).by(newAggregation(project("foo"))).all();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(captor.capture());
+		verify(template).getCollectionName(captor.capture());
 		verify(template).aggregate(any(Aggregation.class), eq("person"), captor.capture());
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Person.class);
@@ -93,13 +92,13 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	@Test // DATAMONGO-1563
 	public void aggregateWithTypeAggregation() {
 
-		when(template.determineCollectionName(any(Class.class))).thenReturn("person");
+		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
 		opSupport.aggregateAndReturn(Jedi.class).by(newAggregation(Person.class, project("foo"))).all();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(captor.capture());
+		verify(template).getCollectionName(captor.capture());
 		verify(template).aggregate(any(Aggregation.class), eq("person"), captor.capture());
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Jedi.class);
@@ -118,13 +117,13 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	@Test // DATAMONGO-1563
 	public void aggregateStreamWithUntypedAggregation() {
 
-		when(template.determineCollectionName(any(Class.class))).thenReturn("person");
+		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
 		opSupport.aggregateAndReturn(Person.class).by(newAggregation(project("foo"))).stream();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(captor.capture());
+		verify(template).getCollectionName(captor.capture());
 		verify(template).aggregateStream(any(Aggregation.class), eq("person"), captor.capture());
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Person.class);
@@ -133,13 +132,13 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	@Test // DATAMONGO-1563
 	public void aggregateStreamWithTypeAggregation() {
 
-		when(template.determineCollectionName(any(Class.class))).thenReturn("person");
+		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
 		opSupport.aggregateAndReturn(Jedi.class).by(newAggregation(Person.class, project("foo"))).stream();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(captor.capture());
+		verify(template).getCollectionName(captor.capture());
 		verify(template).aggregateStream(any(Aggregation.class), eq("person"), captor.capture());
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Jedi.class);

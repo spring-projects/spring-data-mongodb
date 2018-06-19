@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import lombok.AllArgsConstructor;
@@ -55,7 +53,7 @@ public class ExecutableMapReduceOperationSupportUnitTests {
 	@Before
 	public void setUp() {
 
-		when(template.determineCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
+		when(template.getCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
 
 		mapReduceOpsSupport = new ExecutableMapReduceOperationSupport(template);
 	}
