@@ -15,10 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.List;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -67,8 +68,9 @@ class ExecutableMapReduceOperationSupport implements ExecutableMapReduceOperatio
 		private final @Nullable String reduceFunction;
 		private final @Nullable MapReduceOptions options;
 
-		ExecutableMapReduceSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType, @Nullable String collection,
-				Query query, @Nullable String mapFunction, @Nullable String reduceFunction, @Nullable MapReduceOptions options) {
+		ExecutableMapReduceSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType,
+				@Nullable String collection, Query query, @Nullable String mapFunction, @Nullable String reduceFunction,
+				@Nullable MapReduceOptions options) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -169,7 +171,7 @@ class ExecutableMapReduceOperationSupport implements ExecutableMapReduceOperatio
 		}
 
 		private String getCollectionName() {
-			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
+			return StringUtils.hasText(collection) ? collection : template.getCollectionName(domainType);
 		}
 	}
 }

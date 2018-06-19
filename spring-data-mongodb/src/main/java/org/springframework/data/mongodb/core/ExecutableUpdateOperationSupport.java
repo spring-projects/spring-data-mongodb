@@ -221,7 +221,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		private String getCollectionName() {
-			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
+			return StringUtils.hasText(collection) ? collection : template.getCollectionName(domainType);
 		}
 	}
 }
