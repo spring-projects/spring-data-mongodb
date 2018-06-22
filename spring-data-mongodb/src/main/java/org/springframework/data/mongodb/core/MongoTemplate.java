@@ -3663,18 +3663,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				return super.count(query, entityClass, collectionName);
 			}
 
-			AggregationUtil aggregationUtil = new AggregationUtil(delegate.queryMapper, delegate.mappingContext);
-			Aggregation aggregation = aggregationUtil.createCountAggregation(query, entityClass);
-			AggregationResults<Document> aggregationResults = aggregate(aggregation, collectionName, Document.class);
+			CountOptions options = new CountOptions();
+			query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 
-			List<Document> result = (List<Document>) aggregationResults.getRawResults().getOrDefault("results",
-					Collections.emptyList());
+			Document document = delegate.queryMapper.getMappedObject(query.getQueryObject(),
+					Optional.ofNullable(entityClass).map(it -> delegate.mappingContext.getPersistentEntity(entityClass)));
 
-			if (result.isEmpty()) {
-				return 0;
-			}
-
-			return result.get(0).get("totalEntityCount", Number.class).longValue();
+			return execute(collectionName, collection -> collection.countDocuments(document, options));
 		}
 	}
 }

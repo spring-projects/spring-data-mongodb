@@ -71,10 +71,8 @@ import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
-import org.springframework.data.mongodb.core.aggregation.CountOperation;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -97,7 +95,6 @@ import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -3379,41 +3376,19 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				return super.count(query, entityClass, collectionName);
 			}
 
-			AggregationUtil aggregationUtil = new AggregationUtil(delegate.queryMapper, delegate.mappingContext);
-			Aggregation aggregation = aggregationUtil.createCountAggregation(query, entityClass);
+			return createMono(collectionName, collection -> {
 
-			return aggregate(aggregation, collectionName, Document.class) //
-					.next() //
-					.map(it -> it.get("totalEntityCount", Number.class).longValue()) //
-					.defaultIfEmpty(0L);
-		}
+				final Document Document = query == null ? null
+						: delegate.queryMapper.getMappedObject(query.getQueryObject(),
+								entityClass == null ? null : delegate.mappingContext.getPersistentEntity(entityClass));
 
-		private List<AggregationOperation> computeCountAggregationPipeline(@Nullable Query query,
-				@Nullable Class<?> entityType) {
-
-			CountOperation count = Aggregation.count().as("totalEntityCount");
-			if (query == null || query.getQueryObject().isEmpty()) {
-				return Arrays.asList(count);
-			}
-
-			Document mappedQuery = delegate.queryMapper.getMappedObject(query.getQueryObject(),
-					delegate.getPersistentEntity(entityType));
-
-			CriteriaDefinition criteria = new CriteriaDefinition() {
-
-				@Override
-				public Document getCriteriaObject() {
-					return mappedQuery;
+				CountOptions options = new CountOptions();
+				if (query != null) {
+					query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 				}
 
-				@Nullable
-				@Override
-				public String getKey() {
-					return null;
-				}
-			};
-
-			return Arrays.asList(Aggregation.match(criteria), count);
+				return collection.countDocuments(Document, options);
+			});
 		}
 	}
 
