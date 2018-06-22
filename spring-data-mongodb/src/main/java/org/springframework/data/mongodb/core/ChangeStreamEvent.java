@@ -17,8 +17,10 @@ package org.springframework.data.mongodb.core;
 
 import lombok.EqualsAndHashCode;
 
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.messaging.Message;
@@ -26,6 +28,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
+import com.mongodb.client.model.changestream.OperationType;
 
 /**
  * {@link Message} implementation specific to MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change
@@ -65,6 +68,56 @@ public class ChangeStreamEvent<T> {
 	@Nullable
 	public ChangeStreamDocument<Document> getRaw() {
 		return raw;
+	}
+
+	/**
+	 * Get the {@link ChangeStreamDocument#getClusterTime() cluster time} as {@link Instant} the event was emitted at.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public Instant getTimestamp() {
+		return raw != null ? Instant.ofEpochMilli(raw.getClusterTime().getValue()) : null;
+	}
+
+	/**
+	 * Get the {@link ChangeStreamDocument#getResumeToken() resume token} for this event.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public BsonValue getResumeToken() {
+		return raw != null ? raw.getResumeToken() : null;
+	}
+
+	/**
+	 * Get the {@link ChangeStreamDocument#getOperationType() operation type} for this event.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public OperationType getOperationType() {
+		return raw != null ? raw.getOperationType() : null;
+	}
+
+	/**
+	 * Get the database name the event was originated at.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public String getDatabaseName() {
+		return raw != null ? raw.getNamespace().getDatabaseName() : null;
+	}
+
+	/**
+	 * Get the collection name the event was originated at.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public String getCollectionName() {
+		return raw != null ? raw.getNamespace().getCollectionName() : null;
 	}
 
 	/**

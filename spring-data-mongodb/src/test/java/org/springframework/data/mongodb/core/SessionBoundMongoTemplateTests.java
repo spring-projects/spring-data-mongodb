@@ -40,6 +40,7 @@ import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,6 +50,7 @@ import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.Advised;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -60,6 +62,7 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
@@ -290,6 +293,31 @@ public class SessionBoundMongoTemplateTests {
 		assertThat(sessionBound.query(Person.class).matching(query(where("firstName").is("foobar"))).count()).isZero();
 		assertThat(sessionBound.query(Person.class).matching(query(where("firstName").is("Kylar Stern"))).count()).isOne();
 		assertThat(sessionBound.query(Person.class).count()).isOne();
+
+		session.commitTransaction();
+		session.close();
+	}
+
+	@Test // DATAMONGO-2012
+	@Ignore("error 2 (BadValue): $match does not support $geoNear, $near, and $nearSphere")
+	public void countWithGeoInTransaction() {
+
+		if (!template.collectionExists(Person.class)) {
+			template.createCollection(Person.class);
+			template.indexOps(Person.class).ensureIndex(new GeospatialIndex("location"));
+		} else {
+			template.remove(Person.class).all();
+		}
+
+		ClientSession session = client.startSession();
+		session.startTransaction();
+
+		MongoTemplate sessionBound = template.withSession(session);
+
+		sessionBound.save(new Person("Kylar Stern"));
+
+		assertThat(sessionBound.query(Person.class).matching(query(where("location").near(new Point(1, 0)))).count())
+				.isZero();
 
 		session.commitTransaction();
 		session.close();
