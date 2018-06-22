@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
@@ -1992,56 +1993,57 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				new TailingQueryFindPublisherPreparer(query, entityClass));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.Class, org.springframework.data.mongodb.core.ChangeStreamOptions, java.lang.String)
-	 */
 	@Override
-	public <T> Flux<ChangeStreamEvent<T>> changeStream(@Nullable Aggregation filter, Class<T> resultType,
-			ChangeStreamOptions options, String collectionName) {
+	public <T> Flux<ChangeStreamEvent<T>> changeStream(@Nullable String database, @Nullable String collectionName,
+			ChangeStreamOptions options, Class<T> targetType) {
 
-		Assert.notNull(resultType, "Result type must not be null!");
-		Assert.notNull(options, "ChangeStreamOptions must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		List<Document> filter = prepareFilter(options);
+		FullDocument fullDocument = ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
+				: FullDocument.UPDATE_LOOKUP;
 
-		if (filter == null) {
-			return changeStream(Collections.emptyList(), resultType, options, collectionName);
+		MongoDatabase db = StringUtils.hasText(database) ? mongoDatabaseFactory.getMongoDatabase(database)
+				: getMongoDatabase();
+
+		ChangeStreamPublisher<Document> publisher;
+		if (StringUtils.hasText(collectionName)) {
+			publisher = filter.isEmpty() ? db.getCollection(collectionName).watch(Document.class)
+					: db.getCollection(collectionName).watch(filter, Document.class);
+
+		} else {
+			publisher = filter.isEmpty() ? db.watch(Document.class) : db.watch(filter, Document.class);
 		}
-
-		AggregationOperationContext context = filter instanceof TypedAggregation ? new TypeBasedAggregationOperationContext(
-				((TypedAggregation) filter).getInputType(), mappingContext, queryMapper) : Aggregation.DEFAULT_CONTEXT;
-
-		return changeStream(
-				filter.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
-						Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns"))),
-				resultType, options, collectionName);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(java.util.List, java.lang.Class, org.springframework.data.mongodb.core.ChangeStreamOptions, java.lang.String)
-	 */
-	@Override
-	public <T> Flux<ChangeStreamEvent<T>> changeStream(List<Document> filter, Class<T> resultType,
-			ChangeStreamOptions options, String collectionName) {
-
-		Assert.notNull(filter, "Filter must not be null!");
-		Assert.notNull(resultType, "Result type must not be null!");
-		Assert.notNull(options, "ChangeStreamOptions must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-
-		ChangeStreamPublisher<Document> publisher = filter.isEmpty() ? getCollection(collectionName).watch()
-				: getCollection(collectionName).watch(filter);
 
 		publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
 		publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
+		publisher = options.getResumeTimestamp().map(it -> new BsonTimestamp(it.toEpochMilli()))
+				.map(publisher::startAtOperationTime).orElse(publisher);
+		publisher = publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
 
-		if (options.getFullDocumentLookup().isPresent() || resultType != Document.class) {
-			publisher = publisher.fullDocument(options.getFullDocumentLookup().isPresent()
-					? options.getFullDocumentLookup().get() : FullDocument.UPDATE_LOOKUP);
+		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, targetType, getConverter()));
+	}
+
+	List<Document> prepareFilter(ChangeStreamOptions options) {
+
+		if (!options.getFilter().isPresent()) {
+			return Collections.emptyList();
 		}
 
-		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, resultType, getConverter()));
+		Object filter = options.getFilter().get();
+		if (filter instanceof Aggregation) {
+			Aggregation agg = (Aggregation) filter;
+			AggregationOperationContext context = agg instanceof TypedAggregation
+					? new TypeBasedAggregationOperationContext(((TypedAggregation<?>) agg).getInputType(),
+							getConverter().getMappingContext(), queryMapper)
+					: Aggregation.DEFAULT_CONTEXT;
+
+			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
+					Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns")));
+		} else if (filter instanceof List) {
+			return (List<Document>) filter;
+		} else {
+			throw new IllegalArgumentException(
+					"ChangeStreamRequestOptions.filter mut be either an Aggregation or a plain list of Documents");
+		}
 	}
 
 	/*
