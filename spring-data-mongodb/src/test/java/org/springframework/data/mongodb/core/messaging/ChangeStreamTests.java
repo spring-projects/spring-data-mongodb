@@ -21,7 +21,9 @@ import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
@@ -441,11 +443,85 @@ public class ChangeStreamTests {
 		assertThat(messageBodies).hasSize(2).doesNotContain(jellyBelly);
 	}
 
+	@Test // DATAMONGO-1996
+	public void filterOnNestedElementWorksCorrectly() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
+				.collection("user") //
+				.filter(newAggregation(User.class, match(where("address.street").is("flower street")))) //
+				.build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		jellyBelly.address = new Address();
+		jellyBelly.address.street = "candy ave";
+
+		huffyFluffy.address = new Address();
+		huffyFluffy.address.street = "flower street";
+
+		template.save(jellyBelly);
+		template.save(sugarSplashy);
+		template.save(huffyFluffy);
+
+		awaitMessages(messageListener);
+
+		List<User> messageBodies = messageListener.getMessages().stream().map(Message::getBody)
+				.collect(Collectors.toList());
+
+		assertThat(messageBodies).hasSize(1).contains(huffyFluffy);
+	}
+
+	@Test // DATAMONGO-1996
+	public void filterOnUpdateDescriptionElement() throws InterruptedException {
+
+		template.save(jellyBelly);
+		template.save(sugarSplashy);
+		template.save(huffyFluffy);
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
+				.collection("user") //
+				.filter(newAggregation(User.class, match(where("updateDescription.updatedFields.address").exists(true)))) //
+				.fullDocumentLookup(FullDocument.UPDATE_LOOKUP).build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.update(User.class).matching(query(where("id").is(jellyBelly.id)))
+				.apply(Update.update("address", new Address("candy ave"))).first();
+
+		template.update(User.class).matching(query(where("id").is(sugarSplashy.id))).apply(new Update().inc("age", 1))
+				.first();
+
+		template.update(User.class).matching(query(where("id").is(huffyFluffy.id)))
+				.apply(Update.update("address", new Address("flower street"))).first();
+
+		awaitMessages(messageListener);
+
+		List<User> messageBodies = messageListener.getMessages().stream().map(Message::getBody)
+				.collect(Collectors.toList());
+
+		assertThat(messageBodies).hasSize(2);
+	}
+
 	@Data
 	static class User {
 
 		@Id String id;
 		@Field("user_name") String userName;
 		int age;
+
+		Address address;
 	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	static class Address {
+
+		@Field("s") String street;
+	}
+
 }

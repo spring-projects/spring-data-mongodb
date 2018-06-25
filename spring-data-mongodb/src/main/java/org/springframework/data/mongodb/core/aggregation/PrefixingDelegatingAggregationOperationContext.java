@@ -102,7 +102,7 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 	}
 
 	private String prefixKey(String key) {
-		return (key.startsWith("$") || blacklist.contains(key)) ? key : (prefix + "." + key);
+		return (key.startsWith("$") || isBlacklisted(key)) ? key : (prefix + "." + key);
 	}
 
 	private Object prefixCollection(Collection<Object> sourceCollection) {
@@ -118,5 +118,24 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 		}
 
 		return prefixed;
+	}
+
+	private boolean isBlacklisted(String key) {
+
+		if (blacklist.contains(key)) {
+			return true;
+		}
+
+		if (!key.contains(".")) {
+			return false;
+		}
+
+		for (String blacklisted : blacklist) {
+			if (key.startsWith(blacklisted + ".")) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
