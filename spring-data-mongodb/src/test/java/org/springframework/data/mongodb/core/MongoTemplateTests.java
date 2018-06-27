@@ -2392,6 +2392,7 @@ public class MongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
+	@MongoVersion(asOf = "3.6")
 	public void findAndReplaceShouldErrorOnIdPresent() {
 
 		thrown.expect(InvalidDataAccessApiUsageException.class);
