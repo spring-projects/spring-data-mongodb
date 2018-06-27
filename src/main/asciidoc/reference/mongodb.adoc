@@ -437,7 +437,7 @@ NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across m
 
 The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface. Spring provides `MappingMongoConverter`, but you can also write your own converter. See "`<<mongo.custom-converters>>`" for more detailed information.
 
-The `MongoTemplate` class implements the interface `MongoOperations`. In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you can find methods such as `find`, `findAndModify`, `findOne`, `insert`, `remove`, `save`, `update`, and `updateMulti`. The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`. A major difference between the two APIs is that `MongoOperations` can be passed domain objects instead of `Document`. Also, `MongoOperations` has fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
+The `MongoTemplate` class implements the interface `MongoOperations`. In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you can find methods such as `find`, `findAndModify`, `findAndReplace`, `findOne`, `insert`, `remove`, `save`, `update`, and `updateMulti`. The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`. A major difference between the two APIs is that `MongoOperations` can be passed domain objects instead of `Document`. Also, `MongoOperations` has fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
 
 NOTE: The preferred way to reference the operations on `MongoTemplate` instance is through its interface, `MongoOperations`.
 
@@ -966,6 +966,35 @@ p = mongoTemplate.findAndModify(query2, update, new FindAndModifyOptions().retur
 assertThat(p.getFirstName(), is("Mary"));
 assertThat(p.getAge(), is(1));
 ----
+
+[[mongo-template.find-and-replace]]
+=== Finding and Replacing Documents
+
+The most straight forward method of replacing an entire `Document` is via its `id` using the `save` method. However this
+might not always be feasible. `findAndReplace` offers an alternative that allows to identify the document to replace via
+a simple query.
+
+.Find and Replace Documents
+====
+[source,java]
+----
+Optional<User> result = template.update(Person.class)      <1>
+    .matching(query(where("firstame").is("Tom")))          <2>
+    .replaceWith(new Person("Dick"))
+    .withOptions(FindAndReplaceOptions.options().upsert()) <3>
+    .as(User.class)                                        <4>
+    .findAndReplace();                                     <5>
+----
+<1> Use the fluent update API with the domain type given for mapping the query and deriving the collection name or just use `MongoOperations#findAndReplace`.
+<2> The actual match query mapped against the given domain type. Provide `sort`, `fields` and `collation` settings via the query.
+<3> Additional optional hook to provide options other than the defaults, like `upsert`.
+<4> An optional projection type used for mapping the operation result. If none given the initial domain type is used.
+<5> Trigger the actual execution. Use `findAndReplaceValue` to obtain the nullable result instead of an `Optional`.
+====
+
+IMPORTANT: Please note that the replacement must not hold an `id` itself as the `id` of the existing `Document` will be
+carried over to the replacement by the store itself. Also keep in mind that `findAndReplace` will only replace the first
+document matching the query criteria depending on a potentially given sort order.
 
 [[mongo-template.delete]]
 === Methods for Removing Documents

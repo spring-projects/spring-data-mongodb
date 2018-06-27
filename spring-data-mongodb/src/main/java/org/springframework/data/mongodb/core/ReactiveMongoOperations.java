@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ReadPreference;
@@ -692,7 +693,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Triggers
 	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement}
-	 * document.
+	 * document. <br />
+	 * Options are defaulted to {@link FindAndReplaceOptions#empty()}. <br />
+	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -701,14 +704,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @since 2.1
 	 */
 	default <T> Mono<T> findAndReplace(Query query, T replacement) {
-		return findAndReplace(query, replacement, FindAndReplaceOptions.options());
+		return findAndReplace(query, replacement, FindAndReplaceOptions.empty());
 	}
 
 	/**
 	 * Triggers
 	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement}
-	 * document.
+	 * document. <br />
+	 * Options are defaulted to {@link FindAndReplaceOptions#empty()}. <br />
+	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -718,14 +723,15 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @since 2.1
 	 */
 	default <T> Mono<T> findAndReplace(Query query, T replacement, String collectionName) {
-		return findAndReplace(query, replacement, FindAndReplaceOptions.options(), collectionName);
+		return findAndReplace(query, replacement, FindAndReplaceOptions.empty(), collectionName);
 	}
 
 	/**
 	 * Triggers
 	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
-	 * taking {@link FindAndReplaceOptions} into account.
+	 * taking {@link FindAndReplaceOptions} into account. <br />
+	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -736,13 +742,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *         as it is after the update.
 	 * @since 2.1
 	 */
-	<T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options);
+	default <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options) {
+		return findAndReplace(query, replacement, options, getCollectionName(ClassUtils.getUserClass(replacement)));
+	}
 
 	/**
 	 * Triggers
 	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
-	 * taking {@link FindAndReplaceOptions} into account.
+	 * taking {@link FindAndReplaceOptions} into account. <br />
+	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -753,27 +762,86 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *         as it is after the update.
 	 * @since 2.1
 	 */
-	<T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName);
+	default <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName) {
+
+		Assert.notNull(replacement, "Replacement must not be null!");
+		return findAndReplace(query, replacement, options, (Class<T>) ClassUtils.getUserClass(replacement), collectionName);
+	}
 
 	/**
 	 * Triggers
 	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
-	 * taking {@link FindAndReplaceOptions} into account.
+	 * taking {@link FindAndReplaceOptions} into account. <br />
+	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
-	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @param entityType the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated or {@link Mono#empty()}, if not found. Depending on the value of
 	 *         {@link FindAndReplaceOptions#isReturnNew()} this will either be the object as it was before the update or
 	 *         as it is after the update.
 	 * @since 2.1
 	 */
-	<T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options, Class<T> entityClass,
-			String collectionName);
+	default <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options, Class<T> entityType,
+			String collectionName) {
+
+		return findAndReplace(query, replacement, options, entityType, collectionName, entityType);
+	}
+
+	/**
+	 * Triggers
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
+	 * taking {@link FindAndReplaceOptions} into account. <br />
+	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification. Must not be {@literal null}.
+	 * @param replacement the replacement document. Must not be {@literal null}.
+	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @param entityType the type used for mapping the {@link Query} to domain type fields and deriving the collection
+	 *          from. Must not be {@literal null}.
+	 * @param resultType the parametrized type projection return type. Must not be {@literal null}, use the domain type of
+	 *          {@code Object.class} instead.
+	 * @return the converted object that was updated or {@link Mono#empty()}, if not found. Depending on the value of
+	 *         {@link FindAndReplaceOptions#isReturnNew()} this will either be the object as it was before the update or
+	 *         as it is after the update.
+	 * @since 2.1
+	 */
+	default <S, T> Mono<T> findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
+			Class<T> resultType) {
+
+		return findAndReplace(query, replacement, options, entityType,
+				getCollectionName(ClassUtils.getUserClass(entityType)), resultType);
+	}
+
+	/**
+	 * Triggers
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
+	 * taking {@link FindAndReplaceOptions} into account. <br />
+	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification. Must not be {@literal null}.
+	 * @param replacement the replacement document. Must not be {@literal null}.
+	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @param entityType the type used for mapping the {@link Query} to domain type fields and deriving the collection
+	 *          from. Must not be {@literal null}.
+	 * @param collectionName the collection to query. Must not be {@literal null}.
+	 * @param resultType resultType the parametrized type projection return type. Must not be {@literal null}, use the
+	 *          domain type of {@code Object.class} instead.
+	 * @return the converted object that was updated or {@link Mono#empty()}, if not found. Depending on the value of
+	 *         {@link FindAndReplaceOptions#isReturnNew()} this will either be the object as it was before the update or
+	 *         as it is after the update.
+	 * @since 2.1
+	 */
+	<S, T> Mono<T> findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
+			String collectionName, Class<T> resultType);
 
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an object of the
@@ -1374,5 +1442,14 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @return
 	 */
 	MongoConverter getConverter();
+
+	/**
+	 * The collection name used for the specified class by this template.
+	 *
+	 * @param entityClass must not be {@literal null}.
+	 * @return
+	 * @since 2.1
+	 */
+	String getCollectionName(Class<?> entityClass);
 
 }

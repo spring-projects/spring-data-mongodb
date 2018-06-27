@@ -1072,60 +1072,33 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions, java.lang.Class, java.lang.String, java.lang.Class)
 	 */
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> T findAndReplace(Query query, T replacement, FindAndReplaceOptions options) {
-
-		Assert.notNull(replacement, "Replacement must not be null!");
-
-		Class<T> entityClass = (Class) ClassUtils.getUserClass(replacement);
-		String collectionName = determineCollectionName(entityClass);
-
-		return findAndReplace(query, replacement, options, collectionName);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions, java.lang.String)
-	 */
-	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> T findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName) {
-
-		Assert.notNull(replacement, "Replacement must not be null!");
-
-		Class<T> entityClass = (Class) ClassUtils.getUserClass(replacement);
-
-		return findAndReplace(query, replacement, options, entityClass, collectionName);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions, java.lang.Class, java.lang.String)
-	 */
-	@Override
-	public <T> T findAndReplace(Query query, T replacement, FindAndReplaceOptions options, Class<T> entityClass,
-			String collectionName) {
+	public <S, T> T findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
+			String collectionName, Class<T> resultType) {
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(replacement, "Replacement must not be null!");
-		Assert.notNull(options, "Options must not be null!");
-		Assert.notNull(entityClass, "Entity class must not be null!");
+		Assert.notNull(options, "Options must not be null! Use FindAndReplaceOptions#empty() instead.");
+		Assert.notNull(entityType, "EntityType must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
+		Assert.notNull(resultType, "ResultType must not be null! Use Object.class instead.");
 
-		FindAndReplaceOptions optionsToUse = FindAndReplaceOptions.of(options);
+		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none!");
+		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip.");
 
-		Optionals.ifAllPresent(query.getCollation(), optionsToUse.getCollation(), (l, r) -> {
-			throw new IllegalArgumentException(
-					"Both Query and FindAndReplaceOptions define a collation. Please provide the collation only via one of the two.");
-		});
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 
-		query.getCollation().ifPresent(optionsToUse::collation);
+		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entity);
+		Document mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), entity);
+		Document mappedSort = queryMapper.getMappedSort(query.getSortObject(), entity);
 
-		return doFindAndReplace(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(),
-				entityClass, replacement, options);
+		Document mappedReplacement = toDocument(replacement, this.mongoConverter);
+
+		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
+				query.getCollation().map(Collation::toMongoCollation).orElse(null), entityType, mappedReplacement, options,
+				resultType);
 	}
 
 	// Find methods that take a Query to express the query and that return a single object that is also removed from the
@@ -2661,30 +2634,38 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
-	protected <T> T doFindAndReplace(String collectionName, Document query, Document fields, Document sort,
-			Class<T> entityClass, Object replacement, @Nullable FindAndReplaceOptions options) {
-
-		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
-
-		if (options == null) {
-			options = new FindAndReplaceOptions();
-		}
-
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
-
-		Document mappedQuery = queryMapper.getMappedObject(query, entity);
-		Document dbDoc = toDocument(replacement, this.mongoConverter);
+	/**
+	 * Customize this part for findAndReplace.
+	 *
+	 * @param collectionName The name of the collection to perform the operation in.
+	 * @param mappedQuery the query to look up documents.
+	 * @param mappedFields the fields to project the result to.
+	 * @param mappedSort the sort to be applied when executing the query.
+	 * @param collation collation settings for the query. Can be {@literal null}.
+	 * @param entityType the source domain type.
+	 * @param replacement the replacement {@link Document}.
+	 * @param options applicable options.
+	 * @param resultType the target domain type.
+	 * @return {@literal null} if object does not exist, {@link FindAndReplaceOptions#isReturnNew() return new} is
+	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
+	 */
+	@Nullable
+	protected <T> T doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
+			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
+			Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(
 					"findAndReplace using query: {} fields: {} sort: {} for class: {} and replacement: {} " + "in collection: {}",
-					serializeToJsonSafely(mappedQuery), fields, sort, entityClass, serializeToJsonSafely(dbDoc), collectionName);
+					serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields), serializeToJsonSafely(mappedSort),
+					entityType, serializeToJsonSafely(replacement), collectionName);
 		}
 
-		maybeEmitEvent(new BeforeSaveEvent<>(replacement, dbDoc, collectionName));
+		maybeEmitEvent(new BeforeSaveEvent<>(replacement, replacement, collectionName));
 
-		return executeFindOneInternal(new FindAndReplaceCallback(mappedQuery, fields, sort, dbDoc, options),
-				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
+		return executeFindOneInternal(
+				new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, replacement, collation, options),
+				new ProjectingReadCallback<>(mongoConverter, entityType, resultType, collectionName), collectionName);
 	}
 
 	/**
@@ -2747,6 +2728,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param collectionName the collection to be queried
 	 * @return
 	 */
+	@Nullable
 	private <T> T executeFindOneInternal(CollectionCallback<Document> collectionCallback,
 			DocumentCallback<T> objectCallback, String collectionName) {
 
@@ -3102,36 +3084,52 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
+	/**
+	 * {@link CollectionCallback} specific for find and remove operation.
+	 *
+	 * @author Mark Paluch
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
 	private static class FindAndReplaceCallback implements CollectionCallback<Document> {
 
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
 		private final Document update;
+		private final @Nullable com.mongodb.client.model.Collation collation;
 		private final FindAndReplaceOptions options;
 
-		public FindAndReplaceCallback(Document query, Document fields, Document sort, Document update,
-				FindAndReplaceOptions options) {
+		FindAndReplaceCallback(Document query, Document fields, Document sort, Document update,
+				com.mongodb.client.model.Collation collation, FindAndReplaceOptions options) {
+
 			this.query = query;
 			this.fields = fields;
 			this.sort = sort;
 			this.update = update;
 			this.options = options;
+			this.collation = collation;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.CollectionCallback#doInCollection(com.mongodb.client.MongoCollection)
+		 */
+		@Override
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
 			FindOneAndReplaceOptions opts = new FindOneAndReplaceOptions();
 			opts.sort(sort);
+			opts.collation(collation);
+			opts.projection(fields);
+
 			if (options.isUpsert()) {
 				opts.upsert(true);
 			}
-			opts.projection(fields);
+
 			if (options.isReturnNew()) {
 				opts.returnDocument(ReturnDocument.AFTER);
 			}
-
-			options.getCollation().map(Collation::toMongoCollation).ifPresent(opts::collation);
 
 			return collection.findOneAndReplace(query, update, opts);
 		}

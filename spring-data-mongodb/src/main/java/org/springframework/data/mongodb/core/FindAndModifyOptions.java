@@ -36,15 +36,17 @@ public class FindAndModifyOptions {
 	/**
 	 * Static factory method to create a FindAndModifyOptions instance
 	 *
-	 * @return a new instance
+	 * @return new instance of {@link FindAndModifyOptions}.
 	 */
 	public static FindAndModifyOptions options() {
 		return new FindAndModifyOptions();
 	}
 
 	/**
-	 * @param options
-	 * @return
+	 * Create new {@link FindAndModifyOptions} based on option of given {@litearl source}.
+	 * 
+	 * @param source can be {@literal null}.
+	 * @return new instance of {@link FindAndModifyOptions}.
 	 * @since 2.0
 	 */
 	public static FindAndModifyOptions of(@Nullable FindAndModifyOptions source) {

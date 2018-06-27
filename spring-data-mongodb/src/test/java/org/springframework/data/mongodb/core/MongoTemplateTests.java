@@ -26,6 +26,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -52,6 +53,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -78,7 +80,6 @@ import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventLis
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
-import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -2391,6 +2392,51 @@ public class MongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldErrorOnIdPresent() {
+
+		thrown.expect(InvalidDataAccessApiUsageException.class);
+
+		template.save(new MyPerson("Walter"));
+
+		MyPerson replacement = new MyPerson("Heisenberg");
+		replacement.id = "invalid-id";
+
+		template.findAndReplace(query(where("name").is("Walter")), replacement);
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldErrorOnSkip() {
+
+		thrown.expect(IllegalArgumentException.class);
+
+		template.findAndReplace(query(where("name").is("Walter")).skip(10), new MyPerson("Heisenberg"));
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldErrorOnLimit() {
+
+		thrown.expect(IllegalArgumentException.class);
+
+		template.findAndReplace(query(where("name").is("Walter")).limit(10), new MyPerson("Heisenberg"));
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldConsiderSortAndUpdateFirstIfMultipleFound() {
+
+		MyPerson walter1 = new MyPerson("Walter 1");
+		MyPerson walter2 = new MyPerson("Walter 2");
+
+		template.save(walter1);
+		template.save(walter2);
+
+		MyPerson replacement = new MyPerson("Heisenberg");
+
+		template.findAndReplace(query(where("name").regex("Walter.*")).with(Sort.by(Direction.DESC, "name")), replacement);
+
+		assertThat(template.findAll(MyPerson.class)).hasSize(2).contains(walter1).doesNotContain(walter2);
+	}
+
+	@Test // DATAMONGO-1827
 	public void findAndReplaceShouldReplaceObject() {
 
 		MyPerson person = new MyPerson("Walter");
@@ -2399,7 +2445,43 @@ public class MongoTemplateTests {
 		MyPerson previous = template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"));
 
 		assertThat(previous.getName()).isEqualTo("Walter");
-		assertThat(template.findOne(query(where("name").is("Heisenberg")), MyPerson.class)).isNotNull();
+		assertThat(template.findOne(query(where("id").is(person.id)), MyPerson.class)).hasFieldOrPropertyWithValue("name",
+				"Heisenberg");
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldConsiderFields() {
+
+		MyPerson person = new MyPerson("Walter");
+		person.address = new Address("TX", "Austin");
+		template.save(person);
+
+		Query query = query(where("name").is("Walter"));
+		query.fields().include("address");
+
+		MyPerson previous = template.findAndReplace(query, new MyPerson("Heisenberg"));
+
+		assertThat(previous.getName()).isNull();
+		assertThat(previous.getAddress()).isEqualTo(person.address);
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceNonExistingWithUpsertFalse() {
+
+		MyPerson previous = template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"));
+
+		assertThat(previous).isNull();
+		assertThat(template.findAll(MyPerson.class)).isEmpty();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceNonExistingWithUpsertTrue() {
+
+		MyPerson previous = template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"),
+				FindAndReplaceOptions.options().upsert());
+
+		assertThat(previous).isNull();
+		assertThat(template.findAll(MyPerson.class)).hasSize(1);
 	}
 
 	@Test // DATAMONGO-1827
@@ -2409,19 +2491,20 @@ public class MongoTemplateTests {
 		template.save(person);
 
 		MyPerson updated = template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"),
-				FindAndReplaceOptions.options().returnNew(true));
+				FindAndReplaceOptions.options().returnNew());
 
 		assertThat(updated.getName()).isEqualTo("Heisenberg");
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldFailWithTwoCollationObjects() {
+	public void findAndReplaceShouldProjectReturnedObjectCorrectly() {
 
-		thrown.expect(IllegalArgumentException.class);
-		thrown.expectMessage("Both Query and FindAndReplaceOptions");
+		template.save(new MyPerson("Walter"));
 
-		template.findAndReplace(query(where("name").is("Walter")).collation(Collation.of("de")), new MyPerson("Heisenberg"),
-				FindAndReplaceOptions.options().collation(Collation.of("en")));
+		MyPersonProjection projection = template.findAndReplace(query(where("name").is("Walter")),
+				new MyPerson("Heisenberg"), FindAndReplaceOptions.empty(), MyPerson.class, MyPersonProjection.class);
+
+		assertThat(projection.getName()).isEqualTo("Walter");
 	}
 
 	@Test // DATAMONGO-407
@@ -3422,7 +3505,8 @@ public class MongoTemplateTests {
 
 		template.save(source);
 
-		DocumentWithNestedTypeHavingStringIdProperty target = template.query(DocumentWithNestedTypeHavingStringIdProperty.class)
+		DocumentWithNestedTypeHavingStringIdProperty target = template
+				.query(DocumentWithNestedTypeHavingStringIdProperty.class)
 				.matching(query(where("sample.id").is(source.sample.id))).firstValue();
 
 		assertThat(target).isEqualTo(source);
@@ -3652,21 +3736,23 @@ public class MongoTemplateTests {
 		}
 	}
 
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
 	public static class MyPerson {
 
 		String id;
 		String name;
 		Address address;
 
-		public MyPerson() {}
-
 		public MyPerson(String name) {
 			this.name = name;
 		}
+	}
 
-		public String getName() {
-			return name;
-		}
+	interface MyPersonProjection {
+
+		String getName();
 	}
 
 	static class Address {

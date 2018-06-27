@@ -51,22 +51,24 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null!");
 
-		return new ReactiveUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null, null, null);
+		return new ReactiveUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null, null, null, domainType);
 	}
 
 	@RequiredArgsConstructor
 	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-	static class ReactiveUpdateSupport<T> implements ReactiveUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>,
-			TerminatingUpdate<T>, FindAndReplaceWithOptions<T>, TerminatingFindAndReplace<T> {
+	static class ReactiveUpdateSupport<T>
+			implements ReactiveUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T>,
+			FindAndReplaceWithOptions<T>, FindAndReplaceWithProjection<T>, TerminatingFindAndReplace<T> {
 
 		@NonNull ReactiveMongoTemplate template;
-		@NonNull Class<T> domainType;
+		@NonNull Class<?> domainType;
 		Query query;
 		org.springframework.data.mongodb.core.query.Update update;
 		@Nullable String collection;
 		@Nullable FindAndModifyOptions findAndModifyOptions;
 		@Nullable FindAndReplaceOptions findAndReplaceOptions;
-		@Nullable T replacement;
+		@Nullable Object replacement;
+		@NonNull Class<T> targetType;
 
 		/*
 		 * (non-Javadoc)
@@ -78,7 +80,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.notNull(update, "Update must not be null!");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement);
+					findAndReplaceOptions, replacement, targetType);
 		}
 
 		/*
@@ -91,7 +93,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.hasText(collection, "Collection must not be null nor empty!");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement);
+					findAndReplaceOptions, replacement, targetType);
 		}
 
 		/*
@@ -121,7 +123,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 
 			String collectionName = getCollectionName();
 
-			return template.findAndModify(query, update, findAndModifyOptions, domainType, collectionName);
+			return template.findAndModify(query, update, findAndModifyOptions, targetType, collectionName);
 		}
 
 		/* 
@@ -131,8 +133,8 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@Override
 		public Mono<T> findAndReplace() {
 			return template.findAndReplace(query, replacement,
-					findAndReplaceOptions != null ? findAndReplaceOptions : new FindAndReplaceOptions(), domainType,
-					getCollectionName());
+					findAndReplaceOptions != null ? findAndReplaceOptions : new FindAndReplaceOptions(), (Class) domainType,
+					getCollectionName(), targetType);
 		}
 
 		/*
@@ -145,7 +147,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.notNull(query, "Query must not be null!");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement);
+					findAndReplaceOptions, replacement, targetType);
 		}
 
 		/*
@@ -167,7 +169,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.notNull(options, "Options must not be null!");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, options,
-					findAndReplaceOptions, replacement);
+					findAndReplaceOptions, replacement, targetType);
 		}
 
 		/* 
@@ -175,12 +177,12 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#replaceWith(java.lang.Object)
 		 */
 		@Override
-		public FindAndReplaceWithOptions<T> replaceWith(T replacement) {
+		public FindAndReplaceWithProjection<T> replaceWith(T replacement) {
 
 			Assert.notNull(replacement, "Replacement must not be null!");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement);
+					findAndReplaceOptions, replacement, targetType);
 		}
 
 		/* 
@@ -188,12 +190,25 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.FindAndReplaceWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndReplaceOptions)
 		 */
 		@Override
-		public TerminatingFindAndReplace<T> withOptions(FindAndReplaceOptions options) {
+		public FindAndReplaceWithProjection<T> withOptions(FindAndReplaceOptions options) {
 
 			Assert.notNull(options, "Options must not be null!");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions, options,
-					replacement);
+					replacement, targetType);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.FindAndReplaceWithProjection#as(java.lang.Class)
+		 */
+		@Override
+		public <R> FindAndReplaceWithOptions<R> as(Class<R> resultType) {
+
+			Assert.notNull(resultType, "ResultType must not be null!");
+
+			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+					findAndReplaceOptions, replacement, resultType);
 		}
 
 		private Mono<UpdateResult> doUpdate(boolean multi, boolean upsert) {
