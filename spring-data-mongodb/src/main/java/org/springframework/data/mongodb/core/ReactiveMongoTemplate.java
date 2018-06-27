@@ -98,6 +98,7 @@ import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
+import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -971,7 +972,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		List<Document> pipeline = aggregationUtil.createPipeline(aggregation, rootContext);
 
 		Assert.isTrue(!options.isExplain(), "Cannot use explain option with streaming!");
-		Assert.isNull(options.getCursorBatchSize(), "Cannot use batchSize cursor option with streaming!");
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
@@ -986,6 +986,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		AggregatePublisher<Document> cursor = collection.aggregate(pipeline, Document.class)
 				.allowDiskUse(options.isAllowDiskUse());
+
+		if (options.getCursorBatchSize() != null) {
+			cursor = cursor.batchSize(options.getCursorBatchSize());
+		}
 
 		if (options.getCollation().isPresent()) {
 			cursor = cursor.collation(options.getCollation().map(Collation::toMongoCollation).get());
@@ -3216,8 +3220,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			findPublisherToUse = query.getCollation().map(Collation::toMongoCollation).map(findPublisher::collation)
 					.orElse(findPublisher);
 
+			Meta meta = query.getMeta();
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
-					&& !StringUtils.hasText(query.getHint()) && !query.getMeta().hasValues()) {
+					&& !StringUtils.hasText(query.getHint()) && !meta.hasValues()) {
 				return findPublisherToUse;
 			}
 
@@ -3238,9 +3243,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					modifiers.append("$hint", query.getHint());
 				}
 
-				if (query.getMeta().hasValues()) {
-					for (Entry<String, Object> entry : query.getMeta().values()) {
+				if (meta.hasValues()) {
+					for (Entry<String, Object> entry : meta.values()) {
 						modifiers.append(entry.getKey(), entry.getValue());
+					}
+
+					if (meta.getCursorBatchSize() != null) {
+						findPublisherToUse = findPublisherToUse.batchSize(meta.getCursorBatchSize());
 					}
 				}
 

@@ -50,6 +50,7 @@ public class Meta {
 
 	private final Map<String, Object> values = new LinkedHashMap<String, Object>(2);
 	private final Set<CursorOption> flags = new LinkedHashSet<CursorOption>();
+	private Integer cursorBatchSize;
 
 	/**
 	 * @return {@literal null} if not set.
@@ -129,6 +130,25 @@ public class Meta {
 	}
 
 	/**
+	 * @return {@literal null} if not set.
+	 * @since 2.1
+	 */
+	@Nullable
+	public Integer getCursorBatchSize() {
+		return cursorBatchSize;
+	}
+
+	/**
+	 * Apply the batch size for a query.
+	 *
+	 * @param cursorBatchSize
+	 * @since 2.1
+	 */
+	public void setCursorBatchSize(int cursorBatchSize) {
+		this.cursorBatchSize = cursorBatchSize;
+	}
+
+	/**
 	 * Add {@link CursorOption} influencing behavior of the {@link com.mongodb.DBCursor}.
 	 *
 	 * @param option must not be {@literal null}.
@@ -153,7 +173,7 @@ public class Meta {
 	 * @return
 	 */
 	public boolean hasValues() {
-		return !this.values.isEmpty() || !this.flags.isEmpty();
+		return !this.values.isEmpty() || !this.flags.isEmpty() || this.cursorBatchSize != null;
 	}
 
 	/**

@@ -22,7 +22,6 @@ import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
-import com.mongodb.client.model.ReplaceOptions;
 import lombok.Data;
 
 import java.math.BigInteger;
@@ -93,6 +92,7 @@ import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 
@@ -161,7 +161,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		new MongoTemplate(mongo, null);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1968 
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1968
 	public void rejectsNullMongo() {
 		new MongoTemplate((MongoClient) null, "database");
 	}
@@ -653,6 +653,17 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(updateCaptor.getValue(), isBsonObject().containing("$set.jon", "snow").notContaining("$isolated"));
 	}
 
+	@Test // DATAMONGO-1311
+	public void executeQueryShouldUseBatchSizeWhenPresent() {
+
+		when(findIterable.batchSize(anyInt())).thenReturn(findIterable);
+
+		Query query = new Query().cursorBatchSize(1234);
+		template.find(query, Person.class);
+
+		verify(findIterable).batchSize(1234);
+	}
+
 	@Test // DATAMONGO-1518
 	public void executeQueryShouldUseCollationWhenPresent() {
 
@@ -969,7 +980,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		return template;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.core.MongoOperationsUnitTests#getOperations()
 	 */
