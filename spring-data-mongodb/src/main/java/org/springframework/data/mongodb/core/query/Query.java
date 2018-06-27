@@ -348,6 +348,18 @@ public class Query {
 	}
 
 	/**
+	 * @param batchSize
+	 * @return
+	 * @see Meta#setCursorBatchSize(int)
+	 * @since 2.1
+	 */
+	public Query cursorBatchSize(int batchSize) {
+
+		meta.setCursorBatchSize(batchSize);
+		return this;
+	}
+
+	/**
 	 * @return
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#NO_TIMEOUT
 	 * @since 1.10

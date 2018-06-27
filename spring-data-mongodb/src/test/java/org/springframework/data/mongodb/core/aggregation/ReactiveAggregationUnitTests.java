@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyList;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.bson.Document;
@@ -81,16 +83,6 @@ public class ReactiveAggregationUnitTests {
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1646
-	public void errorsOnCursorBatchSizeUsage() {
-
-		template.aggregate(
-				newAggregation(Product.class, //
-						project("name", "netPrice")) //
-								.withOptions(AggregationOptions.builder().cursorBatchSize(10).build()),
-				INPUT_COLLECTION, TagCount.class).subscribe();
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1646
 	public void errorsOnExplainUsage() {
 
 		template
@@ -99,6 +91,20 @@ public class ReactiveAggregationUnitTests {
 								.withOptions(AggregationOptions.builder().explain(true).build()),
 						INPUT_COLLECTION, TagCount.class)
 				.subscribe();
+	}
+
+	@Test // DATAMONGO-1646, DATAMONGO-1311
+	public void appliesBatchSizeWhenPresent() {
+
+		when(publisher.batchSize(anyInt())).thenReturn(publisher);
+
+		AggregationOptions options = AggregationOptions.builder().cursorBatchSize(1234).build();
+		template.aggregate(newAggregation(Product.class, //
+				project("name", "netPrice")) //
+						.withOptions(options),
+				INPUT_COLLECTION, TagCount.class).subscribe();
+
+		verify(publisher).batchSize(1234);
 	}
 
 	@Test // DATAMONGO-1646

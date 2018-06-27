@@ -3279,8 +3279,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				return cursor;
 			}
 
+			Meta meta = query.getMeta();
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
-					&& !StringUtils.hasText(query.getHint()) && !query.getMeta().hasValues()
+					&& !StringUtils.hasText(query.getHint()) && !meta.hasValues()
 					&& !query.getCollation().isPresent()) {
 				return cursor;
 			}
@@ -3301,18 +3302,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					cursorToUse = cursorToUse.sort(sort);
 				}
 
-				Document meta = new Document();
+				Document metaDocument = new Document();
 				if (StringUtils.hasText(query.getHint())) {
-					meta.put("$hint", query.getHint());
+					metaDocument.put("$hint", query.getHint());
 				}
 
-				if (query.getMeta().hasValues()) {
+				if (meta.hasValues()) {
 
-					for (Entry<String, Object> entry : query.getMeta().values()) {
-						meta.put(entry.getKey(), entry.getValue());
+					for (Entry<String, Object> entry : meta.values()) {
+						metaDocument.put(entry.getKey(), entry.getValue());
 					}
 
-					for (Meta.CursorOption option : query.getMeta().getFlags()) {
+					for (Meta.CursorOption option : meta.getFlags()) {
 
 						switch (option) {
 
@@ -3326,9 +3327,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 								throw new IllegalArgumentException(String.format("%s is no supported flag.", option));
 						}
 					}
+
+					if (meta.getCursorBatchSize() != null) {
+						cursorToUse = cursorToUse.batchSize(meta.getCursorBatchSize());
+					}
 				}
 
-				cursorToUse = cursorToUse.modifiers(meta);
+				cursorToUse = cursorToUse.modifiers(metaDocument);
 			} catch (RuntimeException e) {
 				throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 			}

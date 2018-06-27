@@ -146,6 +146,15 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
 	}
 
+	@Test // DATAMONGO-1311
+	public void createsMongoQueryMethodWithBatchSizeCorrectly() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "batchSize");
+
+		assertThat(method.hasQueryMetaAttributes(), is(true));
+		assertThat(method.getQueryMetaAttributes().getCursorBatchSize(), is(100));
+	}
+
 	@Test // DATAMONGO-1403
 	public void createsMongoQueryMethodWithSpellFixedMaxExecutionTimeCorrectly() throws Exception {
 
@@ -232,6 +241,9 @@ public class MongoQueryMethodUnitTests {
 
 		@Meta
 		List<User> emptyMetaAnnotation();
+
+		@Meta(cursorBatchSize = 100)
+		List<User> batchSize();
 
 		@Meta(maxExecutionTimeMs = 100)
 		List<User> metaWithMaxExecutionTime();

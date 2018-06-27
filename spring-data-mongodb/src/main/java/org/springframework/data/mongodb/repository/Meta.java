@@ -51,6 +51,14 @@ public @interface Meta {
 	long maxScanDocuments() default -1;
 
 	/**
+	 * Sets the number of documents to return per batch.
+	 *
+	 * @return
+	 * @since 2.1
+	 */
+	int cursorBatchSize() default -1;
+
+	/**
 	 * Add a comment to the query.
 	 *
 	 * @return

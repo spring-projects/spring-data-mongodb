@@ -22,7 +22,9 @@ import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.reactivestreams.client.AggregatePublisher;
 import lombok.Data;
+import org.springframework.data.mongodb.core.query.Query;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -79,6 +81,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Mock MongoDatabase db;
 	@Mock MongoCollection collection;
 	@Mock FindPublisher findPublisher;
+	@Mock AggregatePublisher aggregatePublisher;
 	@Mock Publisher runCommandPublisher;
 
 	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
@@ -95,10 +98,15 @@ public class ReactiveMongoTemplateUnitTests {
 		when(db.runCommand(any(), any(Class.class))).thenReturn(runCommandPublisher);
 		when(collection.find(any(Class.class))).thenReturn(findPublisher);
 		when(collection.find(any(Document.class), any(Class.class))).thenReturn(findPublisher);
+		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
+		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
 		when(findPublisher.projection(any())).thenReturn(findPublisher);
 		when(findPublisher.limit(anyInt())).thenReturn(findPublisher);
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
 		when(findPublisher.first()).thenReturn(findPublisher);
+		when(aggregatePublisher.allowDiskUse(anyBoolean())).thenReturn(aggregatePublisher);
+		when(aggregatePublisher.collation(any())).thenReturn(aggregatePublisher);
+		when(aggregatePublisher.first()).thenReturn(findPublisher);
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new NoOpDbRefResolver(), mappingContext);
@@ -134,6 +142,17 @@ public class ReactiveMongoTemplateUnitTests {
 
 			assertThat(entity, hasKey("_id"));
 		}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1311
+	public void executeQueryShouldUseBatchSizeWhenPresent() {
+
+		when(findPublisher.batchSize(anyInt())).thenReturn(findPublisher);
+
+		Query query = new Query().cursorBatchSize(1234);
+		template.find(query, Person.class).subscribe();
+
+		verify(findPublisher).batchSize(1234);
 	}
 
 	@Test // DATAMONGO-1518
