@@ -20,7 +20,9 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -51,6 +53,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
@@ -64,7 +67,6 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
-import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -477,6 +479,52 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldErrorOnIdPresent() {
+
+		template.save(new MyPerson("Walter")).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		MyPerson replacement = new MyPerson("Heisenberg");
+		replacement.id = "invalid-id";
+
+		template.findAndReplace(query(where("name").is("Walter")), replacement) //
+				.as(StepVerifier::create) //
+				.expectError(InvalidDataAccessApiUsageException.class);
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldErrorOnSkip() {
+
+		thrown.expect(IllegalArgumentException.class);
+
+		template.findAndReplace(query(where("name").is("Walter")).skip(10), new MyPerson("Heisenberg")).subscribe();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldErrorOnLimit() {
+
+		thrown.expect(IllegalArgumentException.class);
+
+		template.findAndReplace(query(where("name").is("Walter")).limit(10), new MyPerson("Heisenberg")).subscribe();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldConsiderSortAndUpdateFirstIfMultipleFound() {
+
+		MyPerson walter1 = new MyPerson("Walter 1");
+		MyPerson walter2 = new MyPerson("Walter 2");
+
+		template.save(walter1).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		template.save(walter2).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		MyPerson replacement = new MyPerson("Heisenberg");
+
+		template.findAndReplace(query(where("name").regex("Walter.*")).with(Sort.by(Direction.DESC, "name")), replacement)
+				.as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		template.findAll(MyPerson.class).buffer(10).as(StepVerifier::create)
+				.consumeNextWith(it -> assertThat(it).hasSize(2).contains(walter1).doesNotContain(walter2)).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
 	public void findAndReplaceShouldReplaceObject() {
 
 		MyPerson person = new MyPerson("Walter");
@@ -493,6 +541,62 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldConsiderFields() {
+
+		MyPerson person = new MyPerson("Walter");
+		person.address = new Address("TX", "Austin");
+		template.save(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		Query query = query(where("name").is("Walter"));
+		query.fields().include("address");
+
+		template.findAndReplace(query, new MyPerson("Heisenberg")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+
+					assertThat(it.getName()).isNull();
+					assertThat(it.getAddress()).isEqualTo(person.address);
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceNonExistingWithUpsertFalse() {
+
+		template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg")) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		StepVerifier.create(template.findAll(MyPerson.class)).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceNonExistingWithUpsertTrue() {
+
+		template
+				.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"),
+						FindAndReplaceOptions.options().upsert()) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		StepVerifier.create(template.findAll(MyPerson.class)).expectNextCount(1).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceShouldProjectReturnedObjectCorrectly() {
+
+		MyPerson person = new MyPerson("Walter");
+		template.save(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		template
+				.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"), FindAndReplaceOptions.empty(),
+						MyPerson.class, MyPersonProjection.class) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.getName()).isEqualTo("Walter");
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
 	public void findAndReplaceShouldReplaceObjectReturingNew() {
 
 		MyPerson person = new MyPerson("Walter");
@@ -500,21 +604,11 @@ public class ReactiveMongoTemplateTests {
 
 		template
 				.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"),
-						FindAndReplaceOptions.options().returnNew(true))
+						FindAndReplaceOptions.options().returnNew())
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 					assertThat(actual.getName()).isEqualTo("Heisenberg");
 				}).verifyComplete();
-	}
-
-	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldFailWithTwoCollationObjects() {
-
-		thrown.expect(IllegalArgumentException.class);
-		thrown.expectMessage("Both Query and FindAndReplaceOptions");
-
-		template.findAndReplace(query(where("name").is("Walter")).collation(Collation.of("de")), new MyPerson("Heisenberg"),
-				FindAndReplaceOptions.options().collation(Collation.of("en")));
 	}
 
 	@Test // DATAMONGO-1444
@@ -1243,20 +1337,21 @@ public class ReactiveMongoTemplateTests {
 		}
 	}
 
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
 	public static class MyPerson {
 
 		String id;
 		String name;
 		Address address;
 
-		public MyPerson() {}
-
 		public MyPerson(String name) {
 			this.name = name;
 		}
+	}
 
-		public String getName() {
-			return name;
-		}
+	interface MyPersonProjection {
+		String getName();
 	}
 }

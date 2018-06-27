@@ -15,16 +15,20 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.Optional;
-
-import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.lang.Nullable;
-
 /**
  * Options for
  * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>.
+ * <br />
+ * Defaults to
+ * <dl>
+ * <dt>returnNew</dt>
+ * <dd>false</dd>
+ * <dt>upsert</dt>
+ * <dd>false</dd>
+ * </dl>
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.1
  */
 public class FindAndReplaceOptions {
@@ -32,73 +36,74 @@ public class FindAndReplaceOptions {
 	private boolean returnNew;
 	private boolean upsert;
 
-	private @Nullable Collation collation;
-
 	/**
 	 * Static factory method to create a {@link FindAndReplaceOptions} instance.
+	 * <dl>
+	 * <dt>returnNew</dt>
+	 * <dd>false</dd>
+	 * <dt>upsert</dt>
+	 * <dd>false</dd>
+	 * </dl>
 	 *
-	 * @return a new instance
+	 * @return new instance of {@link FindAndReplaceOptions}.
 	 */
 	public static FindAndReplaceOptions options() {
 		return new FindAndReplaceOptions();
 	}
 
 	/**
-	 * @param options
-	 * @return
+	 * Static factory method to create a {@link FindAndReplaceOptions} instance with
+	 * <dl>
+	 * <dt>returnNew</dt>
+	 * <dd>false</dd>
+	 * <dt>upsert</dt>
+	 * <dd>false</dd>
+	 * </dl>
+	 *
+	 * @return new instance of {@link FindAndReplaceOptions}.
 	 */
-	public static FindAndReplaceOptions of(@Nullable FindAndReplaceOptions source) {
-
-		FindAndReplaceOptions options = new FindAndReplaceOptions();
-
-		if (source == null) {
-			return options;
-		}
-
-		options.returnNew = source.returnNew;
-		options.upsert = source.upsert;
-		options.collation = source.collation;
-
-		return options;
+	public static FindAndReplaceOptions empty() {
+		return new FindAndReplaceOptions();
 	}
 
-	public FindAndReplaceOptions returnNew(boolean returnNew) {
-		this.returnNew = returnNew;
-		return this;
-	}
+	/**
+	 * Return the replacement document.
+	 *
+	 * @return this.
+	 */
+	public FindAndReplaceOptions returnNew() {
 
-	public FindAndReplaceOptions upsert(boolean upsert) {
-		this.upsert = upsert;
+		this.returnNew = true;
 		return this;
 	}
 
 	/**
-	 * Define the {@link Collation} specifying language-specific rules for string comparison.
+	 * Insert a new document if not exists.
 	 *
-	 * @param collation
-	 * @return
+	 * @return this.
 	 */
-	public FindAndReplaceOptions collation(@Nullable Collation collation) {
+	public FindAndReplaceOptions upsert() {
 
-		this.collation = collation;
+		this.upsert = true;
 		return this;
 	}
 
+	/**
+	 * Get the bit indicating to return the replacement document.
+	 *
+	 * @return
+	 */
 	public boolean isReturnNew() {
 		return returnNew;
 	}
 
-	public boolean isUpsert() {
-		return upsert;
-	}
-
 	/**
-	 * Get the {@link Collation} specifying language-specific rules for string comparison.
+	 * Get the bit indicating if to create a new document if not exists.
 	 *
 	 * @return
 	 */
-	public Optional<Collation> getCollation() {
-		return Optional.ofNullable(collation);
+	public boolean isUpsert() {
+		return upsert;
 	}
 
 }

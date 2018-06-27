@@ -72,6 +72,7 @@ public interface ReactiveUpdateOperation {
 	/**
 	 * Compose findAndReplace execution by calling one of the terminating methods.
 	 *
+	 * @author Mark Paluch
 	 * @since 2.1
 	 */
 	interface TerminatingFindAndReplace<T> {
@@ -133,7 +134,7 @@ public interface ReactiveUpdateOperation {
 		 * @throws IllegalArgumentException if options is {@literal null}.
 		 * @since 2.1
 		 */
-		FindAndReplaceWithOptions<T> replaceWith(T replacement);
+		FindAndReplaceWithProjection<T> replaceWith(T replacement);
 	}
 
 	/**
@@ -187,6 +188,7 @@ public interface ReactiveUpdateOperation {
 	 * Define {@link FindAndReplaceOptions}.
 	 *
 	 * @author Mark Paluch
+	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
 	interface FindAndReplaceWithOptions<T> extends TerminatingFindAndReplace<T> {
@@ -198,7 +200,28 @@ public interface ReactiveUpdateOperation {
 		 * @return new instance of {@link FindAndReplaceOptions}.
 		 * @throws IllegalArgumentException if options is {@literal null}.
 		 */
-		TerminatingFindAndReplace<T> withOptions(FindAndReplaceOptions options);
+		FindAndReplaceWithProjection<T> withOptions(FindAndReplaceOptions options);
+	}
+
+	/**
+	 * Result type override (Optional).
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	interface FindAndReplaceWithProjection<T> extends FindAndReplaceWithOptions<T> {
+
+		/**
+		 * Define the target type fields should be mapped to. <br />
+		 * Skip this step if you are anyway only interested in the original domain type.
+		 *
+		 * @param resultType must not be {@literal null}.
+		 * @param <R> result type.
+		 * @return new instance of {@link FindAndReplaceWithProjection}.
+		 * @throws IllegalArgumentException if resultType is {@literal null}.
+		 */
+		<R> FindAndReplaceWithOptions<R> as(Class<R> resultType);
+
 	}
 
 	interface ReactiveUpdate<T> extends UpdateWithCollection<T>, UpdateWithQuery<T>, UpdateWithUpdate<T> {}

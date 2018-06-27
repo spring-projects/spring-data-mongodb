@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -114,13 +115,30 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.*;
+import com.mongodb.BasicDBObject;
+import com.mongodb.ClientSessionOptions;
+import com.mongodb.CursorType;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBRef;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.model.*;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import com.mongodb.reactivestreams.client.*;
+import com.mongodb.reactivestreams.client.AggregatePublisher;
+import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
+import com.mongodb.reactivestreams.client.ClientSession;
+import com.mongodb.reactivestreams.client.DistinctPublisher;
+import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.reactivestreams.client.Success;
 import com.mongodb.util.JSONParseException;
 
 /**
@@ -1084,59 +1102,33 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions, java.lang.Class, java.lang.String, java.lang.Class)
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options) {
-
-		Assert.notNull(replacement, "Replacement must not be null!");
-
-		Class<T> entityClass = (Class) ClassUtils.getUserClass(replacement);
-		String collectionName = determineCollectionName(entityClass);
-
-		return findAndReplace(query, replacement, options, collectionName);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions, java.lang.String)
-	 */
-	@Override
-	public <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName) {
-
-		Assert.notNull(replacement, "Replacement must not be null!");
-
-		Class<T> entityClass = (Class) ClassUtils.getUserClass(replacement);
-
-		return findAndReplace(query, replacement, options, entityClass, collectionName);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions, java.lang.Class, java.lang.String)
-	 */
-	@Override
-	public <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options, Class<T> entityClass,
-			String collectionName) {
+	public <S, T> Mono<T> findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
+			String collectionName, Class<T> resultType) {
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(replacement, "Replacement must not be null!");
-		Assert.notNull(options, "Options must not be null!");
-		Assert.notNull(entityClass, "Entity class must not be null!");
+		Assert.notNull(options, "Options must not be null! Use FindAndReplaceOptions#empty() instead.");
+		Assert.notNull(entityType, "Entity class must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
+		Assert.notNull(resultType, "ResultType must not be null! Use Object.class instead.");
 
-		FindAndReplaceOptions optionsToUse = FindAndReplaceOptions.of(options);
+		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none!");
+		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip.");
 
-		Optionals.ifAllPresent(query.getCollation(), optionsToUse.getCollation(), (l, r) -> {
-			throw new IllegalArgumentException(
-					"Both Query and FindAndReplaceOptions define a collation. Please provide the collation only via one of the two.");
-		});
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 
-		query.getCollation().ifPresent(optionsToUse::collation);
+		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entity);
+		Document mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), entity);
+		Document mappedSort = queryMapper.getMappedSort(query.getSortObject(), entity);
 
-		return doFindAndReplace(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(),
-				entityClass, replacement, options);
+		Document mappedReplacement = toDocument(replacement, this.mongoConverter);
+
+		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
+				query.getCollation().map(Collation::toMongoCollation).orElse(null), entityType, mappedReplacement, options,
+				resultType);
 	}
 
 	/*
@@ -2481,28 +2473,41 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		});
 	}
 
-	protected <T> Mono<T> doFindAndReplace(String collectionName, Document query, Document fields, Document sort,
-			Class<T> entityClass, Object replacement, @Nullable FindAndReplaceOptions options) {
-
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+	/**
+	 * Customize this part for findAndReplace.
+	 *
+	 * @param collectionName The name of the collection to perform the operation in.
+	 * @param mappedQuery the query to look up documents.
+	 * @param mappedFields the fields to project the result to.
+	 * @param mappedSort the sort to be applied when executing the query.
+	 * @param collation collation settings for the query. Can be {@literal null}.
+	 * @param entityType the source domain type.
+	 * @param replacement the replacement {@link Document}.
+	 * @param options applicable options.
+	 * @param resultType the target domain type.
+	 * @return {@link Mono#empty()} if object does not exist, {@link FindAndReplaceOptions#isReturnNew() return new} is
+	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
+	 * @since 2.1
+	 */
+	protected <T> Mono<T> doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
+			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
+			FindAndReplaceOptions options, Class<T> resultType) {
 
 		return Mono.defer(() -> {
-
-			Document mappedQuery = queryMapper.getMappedObject(query, entity);
-			Document dbDoc = toDocument(replacement, this.mongoConverter);
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug(
 						"findAndReplace using query: {} fields: {} sort: {} for class: {} and replacement: {} "
 								+ "in collection: {}",
-						serializeToJsonSafely(mappedQuery), fields, sort, entityClass, serializeToJsonSafely(dbDoc),
-						collectionName);
+						serializeToJsonSafely(mappedQuery), mappedFields, mappedSort, entityType,
+						serializeToJsonSafely(replacement), collectionName);
 			}
 
-			maybeEmitEvent(new BeforeSaveEvent<>(replacement, dbDoc, collectionName));
+			maybeEmitEvent(new BeforeSaveEvent<>(replacement, replacement, collectionName));
 
-			return executeFindOneInternal(new FindAndReplaceCallback(mappedQuery, fields, sort, dbDoc, options),
-					new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
+			return executeFindOneInternal(
+					new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, replacement, collation, options),
+					new ProjectingReadCallback<>(this.mongoConverter, entityType, resultType, collectionName), collectionName);
 		});
 	}
 
@@ -2988,17 +2993,26 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
+	 * {@link ReactiveCollectionCallback} specific for find and remove operation.
+	 *
 	 * @author Mark Paluch
+	 * @author Christoph Strobl
+	 * @since 2.1
 	 */
-	@RequiredArgsConstructor
+	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class FindAndReplaceCallback implements ReactiveCollectionCallback<Document> {
 
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
 		private final Document update;
+		private final @Nullable com.mongodb.client.model.Collation collation;
 		private final FindAndReplaceOptions options;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveCollectionCallback#doInCollection(com.mongodb.reactivestreams.client.MongoCollection)
+		 */
 		@Override
 		public Publisher<Document> doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
@@ -3010,7 +3024,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private FindOneAndReplaceOptions convertToFindOneAndReplaceOptions(FindAndReplaceOptions options, Document fields,
 				Document sort) {
 
-			FindOneAndReplaceOptions result = new FindOneAndReplaceOptions();
+			FindOneAndReplaceOptions result = new FindOneAndReplaceOptions().collation(collation);
 
 			result = result.projection(fields).sort(sort).upsert(options.isUpsert());
 
@@ -3019,8 +3033,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			} else {
 				result = result.returnDocument(ReturnDocument.BEFORE);
 			}
-
-			result = options.getCollation().map(Collation::toMongoCollation).map(result::collation).orElse(result);
 
 			return result;
 		}

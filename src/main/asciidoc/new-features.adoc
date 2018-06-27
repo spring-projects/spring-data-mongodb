@@ -14,7 +14,7 @@
 * <<mongo.sessions, MongoDB 3.6 Session>> support for the imperative and reactive Template APIs.
 * <<mongo.transactions, MongoDB 4.0 Transaction>> support and a MongoDB-specific transaction manager implementation.
 * <<mongodb.repositories.queries.sort,Default sort specifications for repository query methods>> using `@Query(sort=…)`.
-* `findAndReplace` support through imperative and reactive Template APIs.
+* <<mongo-template.find-and-replace,findAndReplace>> support through imperative and reactive Template APIs.
 
 [[new-features.2-0-0]]
 == What's New in Spring Data MongoDB 2.0

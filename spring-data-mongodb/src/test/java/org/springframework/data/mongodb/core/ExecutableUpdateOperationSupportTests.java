@@ -226,9 +226,21 @@ public class ExecutableUpdateOperationSupportTests {
 		luke.firstname = "Luke";
 
 		Person result = template.update(Person.class).matching(queryHan()).replaceWith(luke)
-				.withOptions(FindAndReplaceOptions.options().returnNew(true)).findAndReplaceValue();
+				.withOptions(FindAndReplaceOptions.options().returnNew()).findAndReplaceValue();
 
 		assertThat(result).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Luke");
+	}
+
+	@Test // DATAMONGO-1827
+	public void findAndReplaceWithProjection() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		Jedi result = template.update(Person.class).matching(queryHan()).replaceWith(luke).as(Jedi.class)
+				.findAndReplaceValue();
+
+		assertThat(result.getName()).isEqualTo(han.firstname);
 	}
 
 	private Query queryHan() {

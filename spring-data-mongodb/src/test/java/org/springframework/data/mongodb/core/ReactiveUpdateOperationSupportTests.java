@@ -198,6 +198,18 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
+	public void findAndReplaceWithProjection() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		template.update(Person.class).matching(queryHan()).replaceWith(luke).as(Jedi.class).findAndReplace() //
+				.as(StepVerifier::create).consumeNextWith(it -> {
+					assertThat(it.getName()).isEqualTo(han.firstname);
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-1827
 	public void findAndReplaceWithCollection() {
 
 		Person luke = new Person();
@@ -220,7 +232,7 @@ public class ReactiveUpdateOperationSupportTests {
 		luke.firstname = "Luke";
 
 		template.update(Person.class).matching(queryHan()).replaceWith(luke)
-				.withOptions(FindAndReplaceOptions.options().returnNew(true)).findAndReplace() //
+				.withOptions(FindAndReplaceOptions.options().returnNew()).findAndReplace() //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 					assertThat(actual).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Luke");
