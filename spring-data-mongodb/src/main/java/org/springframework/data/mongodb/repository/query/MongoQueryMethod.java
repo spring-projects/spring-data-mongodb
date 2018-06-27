@@ -274,6 +274,10 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setMaxScan(meta.maxScanDocuments());
 		}
 
+		if (meta.cursorBatchSize() > 0) {
+			metaAttributes.setCursorBatchSize(meta.cursorBatchSize());
+		}
+
 		if (StringUtils.hasText(meta.comment())) {
 			metaAttributes.setComment(meta.comment());
 		}
