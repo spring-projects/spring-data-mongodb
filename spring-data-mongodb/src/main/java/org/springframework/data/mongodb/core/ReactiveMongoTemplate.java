@@ -2024,11 +2024,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	List<Document> prepareFilter(ChangeStreamOptions options) {
 
-		if (!options.getFilter().isPresent()) {
-			return Collections.emptyList();
-		}
+		Object filter = options.getFilter().orElse(Collections.emptyList());
 
-		Object filter = options.getFilter().get();
 		if (filter instanceof Aggregation) {
 			Aggregation agg = (Aggregation) filter;
 			AggregationOperationContext context = agg instanceof TypedAggregation
@@ -2038,12 +2035,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
 					Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns")));
-		} else if (filter instanceof List) {
-			return (List<Document>) filter;
-		} else {
-			throw new IllegalArgumentException(
-					"ChangeStreamRequestOptions.filter mut be either an Aggregation or a plain list of Documents");
 		}
+
+		if (filter instanceof List) {
+			return (List<Document>) filter;
+		}
+
+		throw new IllegalArgumentException(
+				"ChangeStreamRequestOptions.filter mut be either an Aggregation or a plain list of Documents");
 	}
 
 	/*
