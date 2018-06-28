@@ -58,6 +58,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  * {@link Task} implementation for obtaining {@link ChangeStreamDocument ChangeStreamDocuments} from MongoDB.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>, Object> {
@@ -77,7 +78,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		mongoConverter = template.getConverter();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.messaging.CursorReadingTask#initCursor(org.springframework.data.mongodb.core.MongoTemplate, org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions, java.lang.Class)
 	 */
@@ -114,9 +115,8 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 					.orElseGet(() -> ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
 							: FullDocument.UPDATE_LOOKUP);
 
-			if (changeStreamOptions.getResumeTimestamp().isPresent()) {
-				startAt = new BsonTimestamp(changeStreamOptions.getResumeTimestamp().get().toEpochMilli());
-			}
+			startAt = changeStreamOptions.getResumeTimestamp().map(Instant::toEpochMilli).map(BsonTimestamp::new)
+					.orElse(null);
 		}
 
 		MongoDatabase db = StringUtils.hasText(options.getDatabaseName())
@@ -149,13 +149,15 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		return iterable.iterator();
 	}
 
+	@SuppressWarnings("unchecked")
 	List<Document> prepareFilter(MongoTemplate template, ChangeStreamOptions options) {
 
 		if (!options.getFilter().isPresent()) {
 			return Collections.emptyList();
 		}
 
-		Object filter = options.getFilter().get();
+		Object filter = options.getFilter().orElse(null);
+
 		if (filter instanceof Aggregation) {
 			Aggregation agg = (Aggregation) filter;
 			AggregationOperationContext context = agg instanceof TypedAggregation
@@ -164,14 +166,20 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 					: Aggregation.DEFAULT_CONTEXT;
 
 			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", blacklist));
-		} else if (filter instanceof List) {
-			return (List<Document>) filter;
-		} else {
-			throw new IllegalArgumentException(
-					"ChangeStreamRequestOptions.filter mut be either an Aggregation or a plain list of Documents");
 		}
+
+		if (filter instanceof List) {
+			return (List<Document>) filter;
+		}
+
+		throw new IllegalArgumentException(
+				"ChangeStreamRequestOptions.filter mut be either an Aggregation or a plain list of Documents");
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.messaging.CursorReadingTask#createMessage(java.lang.Object, java.lang.Class, org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions)
+	 */
 	@Override
 	protected Message<ChangeStreamDocument<Document>, Object> createMessage(ChangeStreamDocument<Document> source,
 			Class<Object> targetType, RequestOptions options) {
@@ -202,7 +210,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		private final ChangeStreamEvent<T> delegate;
 		private final MessageProperties messageProperties;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.messaging.Message#getRaw()
 		 */
@@ -212,7 +220,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 			return delegate.getRaw();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.messaging.Message#getBody()
 		 */
@@ -222,7 +230,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 			return delegate.getBody();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.messaging.Message#getProperties()
 		 */
@@ -232,7 +240,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		}
 
 		/**
-		 * @return the resume token or {@litearl null} if not set.
+		 * @return the resume token or {@literal null} if not set.
 		 * @see ChangeStreamEvent#getResumeToken()
 		 */
 		@Nullable

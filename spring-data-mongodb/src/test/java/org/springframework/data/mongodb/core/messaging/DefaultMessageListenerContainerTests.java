@@ -56,15 +56,15 @@ public class DefaultMessageListenerContainerTests {
 	public static final String DATABASE_NAME = "change-stream-events";
 	public static final String COLLECTION_NAME = "collection-1";
 	public static final String COLLECTION_2_NAME = "collection-2";
-	MongoDbFactory dbFactory;
 
+	public @Rule TestRule replSet = ReplicaSet.none();
+
+	MongoDbFactory dbFactory;
 	MongoCollection<Document> collection;
-	private MongoCollection<Document> collection2;
+	MongoCollection<Document> collection2;
 
 	private CollectingMessageListener<Object, Object> messageListener;
 	private MongoTemplate template;
-
-	public @Rule TestRule replSet = ReplicaSet.none();
 
 	@Before
 	public void setUp() {

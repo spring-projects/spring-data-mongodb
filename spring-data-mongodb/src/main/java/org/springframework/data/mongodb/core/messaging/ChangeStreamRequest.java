@@ -46,13 +46,13 @@ import com.mongodb.client.model.changestream.FullDocument;
  *
  * or {@link com.mongodb.client.MongoDatabase} which receives events from all {@link com.mongodb.client.MongoCollection
  * collections} in that database.
- * 
+ *
  * <pre>
  * <code>
  *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(System.out::println, RequestOptions.justDatabase("test"));
  * </code>
  * </pre>
- * 
+ *
  * For more advanced scenarios {@link ChangeStreamOptions} offers abstractions for options like filtering, resuming,...
  *
  * <pre>
