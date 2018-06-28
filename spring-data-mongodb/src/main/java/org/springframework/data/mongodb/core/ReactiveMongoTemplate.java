@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
@@ -71,10 +72,8 @@ import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
-import org.springframework.data.mongodb.core.aggregation.CountOperation;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -97,7 +96,6 @@ import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -1995,56 +1993,56 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				new TailingQueryFindPublisherPreparer(query, entityClass));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.Class, org.springframework.data.mongodb.core.ChangeStreamOptions, java.lang.String)
-	 */
 	@Override
-	public <T> Flux<ChangeStreamEvent<T>> changeStream(@Nullable Aggregation filter, Class<T> resultType,
-			ChangeStreamOptions options, String collectionName) {
+	public <T> Flux<ChangeStreamEvent<T>> changeStream(@Nullable String database, @Nullable String collectionName,
+			ChangeStreamOptions options, Class<T> targetType) {
 
-		Assert.notNull(resultType, "Result type must not be null!");
-		Assert.notNull(options, "ChangeStreamOptions must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		List<Document> filter = prepareFilter(options);
+		FullDocument fullDocument = ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
+				: FullDocument.UPDATE_LOOKUP;
 
-		if (filter == null) {
-			return changeStream(Collections.emptyList(), resultType, options, collectionName);
+		MongoDatabase db = StringUtils.hasText(database) ? mongoDatabaseFactory.getMongoDatabase(database)
+				: getMongoDatabase();
+
+		ChangeStreamPublisher<Document> publisher;
+		if (StringUtils.hasText(collectionName)) {
+			publisher = filter.isEmpty() ? db.getCollection(collectionName).watch(Document.class)
+					: db.getCollection(collectionName).watch(filter, Document.class);
+
+		} else {
+			publisher = filter.isEmpty() ? db.watch(Document.class) : db.watch(filter, Document.class);
 		}
-
-		AggregationOperationContext context = filter instanceof TypedAggregation ? new TypeBasedAggregationOperationContext(
-				((TypedAggregation) filter).getInputType(), mappingContext, queryMapper) : Aggregation.DEFAULT_CONTEXT;
-
-		return changeStream(
-				filter.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
-						Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns"))),
-				resultType, options, collectionName);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(java.util.List, java.lang.Class, org.springframework.data.mongodb.core.ChangeStreamOptions, java.lang.String)
-	 */
-	@Override
-	public <T> Flux<ChangeStreamEvent<T>> changeStream(List<Document> filter, Class<T> resultType,
-			ChangeStreamOptions options, String collectionName) {
-
-		Assert.notNull(filter, "Filter must not be null!");
-		Assert.notNull(resultType, "Result type must not be null!");
-		Assert.notNull(options, "ChangeStreamOptions must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-
-		ChangeStreamPublisher<Document> publisher = filter.isEmpty() ? getCollection(collectionName).watch()
-				: getCollection(collectionName).watch(filter);
 
 		publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
 		publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
+		publisher = options.getResumeTimestamp().map(it -> new BsonTimestamp(it.toEpochMilli()))
+				.map(publisher::startAtOperationTime).orElse(publisher);
+		publisher = publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
 
-		if (options.getFullDocumentLookup().isPresent() || resultType != Document.class) {
-			publisher = publisher.fullDocument(options.getFullDocumentLookup().isPresent()
-					? options.getFullDocumentLookup().get() : FullDocument.UPDATE_LOOKUP);
+		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, targetType, getConverter()));
+	}
+
+	List<Document> prepareFilter(ChangeStreamOptions options) {
+
+		Object filter = options.getFilter().orElse(Collections.emptyList());
+
+		if (filter instanceof Aggregation) {
+			Aggregation agg = (Aggregation) filter;
+			AggregationOperationContext context = agg instanceof TypedAggregation
+					? new TypeBasedAggregationOperationContext(((TypedAggregation<?>) agg).getInputType(),
+							getConverter().getMappingContext(), queryMapper)
+					: Aggregation.DEFAULT_CONTEXT;
+
+			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
+					Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns")));
 		}
 
-		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, resultType, getConverter()));
+		if (filter instanceof List) {
+			return (List<Document>) filter;
+		}
+
+		throw new IllegalArgumentException(
+				"ChangeStreamRequestOptions.filter mut be either an Aggregation or a plain list of Documents");
 	}
 
 	/*
@@ -3379,41 +3377,19 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				return super.count(query, entityClass, collectionName);
 			}
 
-			AggregationUtil aggregationUtil = new AggregationUtil(delegate.queryMapper, delegate.mappingContext);
-			Aggregation aggregation = aggregationUtil.createCountAggregation(query, entityClass);
+			return createMono(collectionName, collection -> {
 
-			return aggregate(aggregation, collectionName, Document.class) //
-					.next() //
-					.map(it -> it.get("totalEntityCount", Number.class).longValue()) //
-					.defaultIfEmpty(0L);
-		}
+				final Document Document = query == null ? null
+						: delegate.queryMapper.getMappedObject(query.getQueryObject(),
+								entityClass == null ? null : delegate.mappingContext.getPersistentEntity(entityClass));
 
-		private List<AggregationOperation> computeCountAggregationPipeline(@Nullable Query query,
-				@Nullable Class<?> entityType) {
-
-			CountOperation count = Aggregation.count().as("totalEntityCount");
-			if (query == null || query.getQueryObject().isEmpty()) {
-				return Arrays.asList(count);
-			}
-
-			Document mappedQuery = delegate.queryMapper.getMappedObject(query.getQueryObject(),
-					delegate.getPersistentEntity(entityType));
-
-			CriteriaDefinition criteria = new CriteriaDefinition() {
-
-				@Override
-				public Document getCriteriaObject() {
-					return mappedQuery;
+				CountOptions options = new CountOptions();
+				if (query != null) {
+					query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 				}
 
-				@Nullable
-				@Override
-				public String getKey() {
-					return null;
-				}
-			};
-
-			return Arrays.asList(Aggregation.match(criteria), count);
+				return collection.countDocuments(Document, options);
+			});
 		}
 	}
 

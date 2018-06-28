@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * The actual {@link SubscriptionRequest} sent to the {@link MessageListenerContainer}. This wrapper type allows passing
@@ -51,8 +54,93 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 	interface RequestOptions {
 
 		/**
-		 * @return the name of the collection to subscribe to. Never {@literal null}.
+		 * Get the database name of the db.
+		 *
+		 * @return the name of the database to subscribe to. Can be {@literal null} in which case the default
+		 *         {@link MongoDbFactory#getDb()} is used.
 		 */
+		@Nullable
+		default String getDatabaseName() {
+			return null;
+		}
+
+		/**
+		 * Get the collection name.
+		 *
+		 * @return the name of the collection to subscribe to. Can be {@literal null}.
+		 */
+		@Nullable
 		String getCollectionName();
+
+		/**
+		 * Create empty options.
+		 *
+		 * @return new instance of empty {@link RequestOptions}.
+		 */
+		static RequestOptions none() {
+			return () -> null;
+		}
+
+		/**
+		 * Create options with the provided database.
+		 *
+		 * @param database must not be {@literal null}.
+		 * @return new instance of empty {@link RequestOptions}.
+		 */
+		static RequestOptions justDatabase(String database) {
+
+			Assert.notNull(database, "Database must not be null!");
+
+			return new RequestOptions() {
+
+				@Override
+				public String getCollectionName() {
+					return null;
+				}
+
+				@Override
+				public String getDatabaseName() {
+					return database;
+				}
+			};
+		}
+
+		/**
+		 * Create options with the provided collection.
+		 *
+		 * @param collection must not be {@literal null}.
+		 * @return new instance of empty {@link RequestOptions}.
+		 */
+		static RequestOptions justCollection(String collection) {
+
+			Assert.notNull(collection, "Collection must not be null!");
+			return () -> collection;
+		}
+
+		/**
+		 * Create options with the provided database and collection.
+		 *
+		 * @param database must not be {@literal null}.
+		 * @param collection must not be {@literal null}.
+		 * @return new instance of empty {@link RequestOptions}.
+		 */
+		static RequestOptions of(String database, String collection) {
+
+			Assert.notNull(database, "Database must not be null!");
+			Assert.notNull(collection, "Collection must not be null!");
+
+			return new RequestOptions() {
+
+				@Override
+				public String getCollectionName() {
+					return collection;
+				}
+
+				@Override
+				public String getDatabaseName() {
+					return database;
+				}
+			};
+		}
 	}
 }

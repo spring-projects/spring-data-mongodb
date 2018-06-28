@@ -1,0 +1,83 @@
+[[change-streams]]
+== Change Streams
+
+As of MongoDB 3.6, https://docs.mongodb.com/manual/changeStreams/[Change Streams] let applications get notified about changes without having to tail the oplog.
+
+NOTE: Change Stream support is only possible for replica sets or for a sharded cluster.
+
+Change Streams can be consumed with both, the imperative and the reactive MongoDB Java driver. It is highly recommended to use the reactive variant, as it is less resource-intensive. However, if you cannot use the reactive API, you can still obtain change events by using the messaging concept that is already prevalent in the Spring ecosystem.
+
+It is possible to watch both on a collection as well as database level, whereas the database level variant publishes
+changes from all collections within the database. When subscribing to a database change stream, make sure to use a
+ suitable type for the event type as conversion might not apply correctly across different entity types.
+In doubt, use `Document`.
+
+=== Change Streams with `MessageListener`
+
+Listening to a https://docs.mongodb.com/manual/tutorial/change-streams-example/[Change Stream by using a Sync Driver] creates a long running, blocking task that needs to be delegated to a separate component.
+In this case, we need to first create a `MessageListenerContainer`, which will be the main entry point for running the specific `SubscriptionRequest` tasks.
+Spring Data MongoDB already ships with a default implementation that operates on `MongoTemplate` and is capable of creating and executing `Task` instances for a `ChangeStreamRequest`.
+
+The following example shows how to use Change Streams with `MessageListener` instances:
+
+.Change Streams with `MessageListener` instances
+====
+[source,java]
+----
+MessageListenerContainer container = new DefaultMessageListenerContainer(template);
+container.start();                                                                                        <1>
+
+MessageListener<ChangeStreamDocument<Document>, User> listener = System.out::println;                     <2>
+ChangeStreamRequestOptions options = new ChangeStreamRequestOptions("user", ChangeStreamOptions.empty()); <3>
+
+Subscription subscription = container.register(new ChangeStreamRequest<>(listener, options), User.class); <4>
+
+// ...
+
+container.stop();                                                                                         <5>
+----
+<1> Starting the container intializes the resources and starts `Task` instances for already registered `SubscriptionRequest` instances. Requests added after startup are ran immediately.
+<2> Define the listener called when a `Message` is received. The `Message#getBody()` is converted to the requested domain type. Use `Document` to receive raw results without conversion.
+<3> Set the collection to listen to and provide additional options through `ChangeStreamOptions`.
+<4> Register the request. The returned `Subscription` can be used to check the current `Task` state and cancel its execution to free resources.
+<5> Do not forget to stop the container once you are sure you no longer need it. Doing so stops all running `Task` instances within the container.
+====
+
+=== Reactive Change Streams
+
+Subscribing to Change Streams with the reactive API is a more natural approach to work with streams. Still, the essential building blocks, such as `ChangeStreamOptions`, remain the same. The following example shows how to use Change Streams emitting ``ChangeStreamEvent``s:
+
+.Change Streams emitting `ChangeStreamEvent`
+====
+[source,java]
+----
+ChangeStreamOptions options = ChangeStreamOptions.builder()
+    .filter(newAggregation(User.class, match(where("age").gte(38)))                              <1>
+    .build();
+
+Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream("user", options, User.class); <2>
+----
+<1> Use an aggregation pipeline to filter events.
+<2> Obtain a `Flux` of change stream events. The `ChangeStreamEvent#getBody()` is converted to the requested domain type. Use `Document` to receive raw results without conversion.
+====
+
+=== Resuming Change Streams
+
+Change Streams can be resumed and resume emitting events where you left. To resume the stream, you need to supply either a resume
+token or the last known server time (in UTC). Use `ChangeStreamOptions` to set the value accordingly.
+
+The following example shows how to set the resume offset using server time:
+
+.Resume a Change Stream
+====
+[source,java]
+----
+ChangeStreamOptions = ChangeStreamOptions.builder()
+    .resumeAt(Instant.now().minusSeconds(1))        <1>
+    .build()
+
+Flux<ChangeStreamEvent<Person>> resumed = template.changeStream("person", options, User.class)
+----
+<1> You may obtain the server time of an `ChangeStreamEvent` through the `getTimestamp` method or use the `resumeToken`
+exposed through `getResumeToken`.
+====
