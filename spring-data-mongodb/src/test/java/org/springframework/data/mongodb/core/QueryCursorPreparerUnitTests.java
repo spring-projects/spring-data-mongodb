@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.core.IsEqual.*;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -27,13 +25,12 @@ import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
-import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -53,13 +50,16 @@ public class QueryCursorPreparerUnitTests {
 	@Mock MongoExceptionTranslator exceptionTranslatorMock;
 	@Mock FindIterable<Document> cursor;
 
-	@Mock FindIterable<Document> cursorToUse;
-
 	@Before
 	public void setUp() {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslatorMock);
-		when(cursor.modifiers(any(Document.class))).thenReturn(cursor);
+		when(cursor.batchSize(anyInt())).thenReturn(cursor);
+		when(cursor.comment(anyString())).thenReturn(cursor);
+		when(cursor.maxTime(anyLong(), any())).thenReturn(cursor);
+		when(cursor.maxScan(anyLong())).thenReturn(cursor);
+		when(cursor.hint(any())).thenReturn(cursor);
+		when(cursor.snapshot(anyBoolean())).thenReturn(cursor);
 		when(cursor.noCursorTimeout(anyBoolean())).thenReturn(cursor);
 		when(cursor.collation(any())).thenReturn(cursor);
 	}
@@ -67,13 +67,10 @@ public class QueryCursorPreparerUnitTests {
 	@Test // DATAMONGO-185
 	public void appliesHintsCorrectly() {
 
-		Query query = query(where("foo").is("bar")).withHint("hint");
-
+		Query query = query(where("foo").is("bar")).withHint("{ age: 1 }");
 		prepare(query);
 
-		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
-		verify(cursor).modifiers(captor.capture());
-		assertThat(captor.getValue(), equalTo(new Document("$hint", "hint")));
+		verify(cursor).hint(new Document("age", 1));
 	}
 
 	@Test // DATAMONGO-957
@@ -84,55 +81,43 @@ public class QueryCursorPreparerUnitTests {
 
 		prepare(query);
 
-		verify(cursorToUse, never()).modifiers(any(Document.class));
+		verify(cursor, never()).modifiers(any(Document.class));
 	}
 
 	@Test // DATAMONGO-957
 	public void appliesMaxScanCorrectly() {
 
 		Query query = query(where("foo").is("bar")).maxScan(100);
-
 		prepare(query);
 
-		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
-		verify(cursor).modifiers(captor.capture());
-		assertThat(captor.getValue(), equalTo(new Document("$maxScan", 100L)));
+		verify(cursor).maxScan(100);
 	}
 
 	@Test // DATAMONGO-957
 	public void appliesMaxTimeCorrectly() {
 
 		Query query = query(where("foo").is("bar")).maxTime(1, TimeUnit.SECONDS);
-
 		prepare(query);
 
-		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
-		verify(cursor).modifiers(captor.capture());
-		assertThat(captor.getValue(), equalTo(new Document("$maxTimeMS", 1000L)));
+		verify(cursor).maxTime(1000, TimeUnit.MILLISECONDS);
 	}
 
 	@Test // DATAMONGO-957
 	public void appliesCommentCorrectly() {
 
 		Query query = query(where("foo").is("bar")).comment("spring data");
-
 		prepare(query);
 
-		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
-		verify(cursor).modifiers(captor.capture());
-		assertThat(captor.getValue(), equalTo(new Document("$comment", "spring data")));
+		verify(cursor).comment("spring data");
 	}
 
 	@Test // DATAMONGO-957
 	public void appliesSnapshotCorrectly() {
 
 		Query query = query(where("foo").is("bar")).useSnapshot();
-
 		prepare(query);
 
-		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
-		verify(cursor).modifiers(captor.capture());
-		assertThat(captor.getValue(), equalTo(new Document("$snapshot", true)));
+		verify(cursor).snapshot(true);
 	}
 
 	@Test // DATAMONGO-1480
@@ -151,6 +136,14 @@ public class QueryCursorPreparerUnitTests {
 		prepare(new BasicQuery("{}").collation(Collation.of("fr")));
 
 		verify(cursor).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1311
+	public void appliesBatchSizeCorrectly() {
+
+		prepare(new BasicQuery("{}").cursorBatchSize(100));
+
+		verify(cursor).batchSize(100);
 	}
 
 	private FindIterable<Document> prepare(Query query) {

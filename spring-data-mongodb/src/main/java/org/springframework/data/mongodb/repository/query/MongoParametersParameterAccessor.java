@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Term;
@@ -66,9 +67,9 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		}
 
 		int maxDistanceIndex = mongoParameters.getMaxDistanceIndex();
-		Distance maxDistance = maxDistanceIndex == -1 ? null : (Distance) getValue(maxDistanceIndex);
+		Bound<Distance> maxDistance = maxDistanceIndex == -1 ? Bound.unbounded() : Bound.inclusive((Distance) getValue(maxDistanceIndex));
 
-		return new Range<Distance>(null, maxDistance);
+		return Range.of(Bound.unbounded(), maxDistance);
 	}
 
 	/*

@@ -1761,6 +1761,35 @@ GeoResults<Jedi> results = mongoOps.query(SWCharacter.class)
 ----
 ====
 
+[[mongo.query.additional-query-options]]
+=== Additional Query Options
+
+MongoDB offers various ways of applying meta information, like a comment or a batch size, to a query. Using the `Query` API
+directly there are several methods for those options.
+
+====
+[source,java]
+----
+Query query = query(where("firstname").is("luke"))
+    .comment("find luke")         <1>
+    .batchSize(100)                                 <2>
+    .slaveOk();                                     <3>
+----
+<1> The comment propagated to the MongoDB profile log.
+<2> The number of documents to return in each response batch.
+<3> Allows querying a replica slave.
+====
+
+On the repository level the `@Meta` annotation provides means to add query options in a declarative way.
+
+====
+[source,java]
+----
+@Meta(comment = "find luke", batchSize = 100, flags = { SLAVE_OK })
+List<Person> findByFirstname(String firstname);
+----
+====
+
 include::../{spring-data-commons-docs}/query-by-example.adoc[leveloffset=+1]
 include::query-by-example.adoc[leveloffset=+1]
 

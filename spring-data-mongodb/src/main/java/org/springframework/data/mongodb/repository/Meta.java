@@ -21,7 +21,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.QueryAnnotation;
 
 /**
@@ -51,12 +50,14 @@ public @interface Meta {
 	long maxScanDocuments() default -1;
 
 	/**
-	 * Sets the number of documents to return per batch.
-	 *
-	 * @return
+	 * Sets the number of documents to return per batch. <br />
+	 * Use {@literal 0 (zero)} for no limit. A <strong>negative limit</strong> closes the cursor after returning a single
+	 * batch indicating to the server that the client will not ask for a subsequent one.
+	 * 
+	 * @return {@literal 0 (zero)} by default.
 	 * @since 2.1
 	 */
-	int cursorBatchSize() default -1;
+	int cursorBatchSize() default 0;
 
 	/**
 	 * Add a comment to the query.

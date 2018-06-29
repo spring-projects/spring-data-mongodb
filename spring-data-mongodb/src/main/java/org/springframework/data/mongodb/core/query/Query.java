@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.util.ObjectUtils.*;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -289,7 +290,7 @@ public class Query {
 
 	/**
 	 * @param maxTimeMsec
-	 * @return
+	 * @return this.
 	 * @see Meta#setMaxTimeMsec(long)
 	 * @since 1.6
 	 */
@@ -302,10 +303,12 @@ public class Query {
 	/**
 	 * @param timeout
 	 * @param timeUnit
-	 * @return
+	 * @return this.
 	 * @see Meta#setMaxTime(long, TimeUnit)
 	 * @since 1.6
+	 * @deprecated since 2.1. Use {@link #maxTime(Duration)} instead.
 	 */
+	@Deprecated
 	public Query maxTime(long timeout, TimeUnit timeUnit) {
 
 		meta.setMaxTime(timeout, timeUnit);
@@ -313,11 +316,25 @@ public class Query {
 	}
 
 	/**
+	 * @param timeout
+	 * @return this.
+	 * @see Meta#setMaxTime(Duration)
+	 * @since 2.1
+	 */
+	public Query maxTime(Duration timeout) {
+
+		meta.setMaxTime(timeout);
+		return this;
+	}
+
+	/**
 	 * @param maxScan
-	 * @return
+	 * @return this.
 	 * @see Meta#setMaxScan(long)
 	 * @since 1.6
+	 * @deprecated since 2.1 due to deprecation in MongoDB 4.0.
 	 */
+	@Deprecated
 	public Query maxScan(long maxScan) {
 
 		meta.setMaxScan(maxScan);
@@ -325,8 +342,10 @@ public class Query {
 	}
 
 	/**
+	 * Add a comment to the query that is propagated to the profile log.
+	 *
 	 * @param comment
-	 * @return
+	 * @return this.
 	 * @see Meta#setComment(String)
 	 * @since 1.6
 	 */
@@ -337,10 +356,12 @@ public class Query {
 	}
 
 	/**
-	 * @return
+	 * @return this.
 	 * @see Meta#setSnapshot(boolean)
 	 * @since 1.6
+	 * @deprecated since 2.1 due to deprecation as of MongoDB 3.6
 	 */
+	@Deprecated
 	public Query useSnapshot() {
 
 		meta.setSnapshot(true);
@@ -348,8 +369,12 @@ public class Query {
 	}
 
 	/**
-	 * @param batchSize
-	 * @return
+	 * Set the number of documents to return in each response batch. <br />
+	 * Use {@literal 0 (zero)} for no limit. A <strong>negative limit</strong> closes the cursor after returning a single
+	 * batch indicating to the server that the client will not ask for a subsequent one.
+	 * 
+	 * @param batchSize The number of documents to return per batch.
+	 * @return this.
 	 * @see Meta#setCursorBatchSize(int)
 	 * @since 2.1
 	 */
@@ -360,7 +385,7 @@ public class Query {
 	}
 
 	/**
-	 * @return
+	 * @return this.
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#NO_TIMEOUT
 	 * @since 1.10
 	 */
@@ -371,7 +396,7 @@ public class Query {
 	}
 
 	/**
-	 * @return
+	 * @return this.
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#EXHAUST
 	 * @since 1.10
 	 */
@@ -382,7 +407,9 @@ public class Query {
 	}
 
 	/**
-	 * @return
+	 * Allows querying of a replica slave.
+	 *
+	 * @return this.
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#SLAVE_OK
 	 * @since 1.10
 	 */
@@ -393,7 +420,7 @@ public class Query {
 	}
 
 	/**
-	 * @return
+	 * @return this.
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#PARTIAL
 	 * @since 1.10
 	 */
@@ -404,7 +431,7 @@ public class Query {
 	}
 
 	/**
-	 * @return never {@literal null}.
+	 * @return never {@literal null}.ø
 	 * @since 1.6
 	 */
 	public Meta getMeta() {

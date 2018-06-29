@@ -160,8 +160,7 @@ public class MongoQueryMethod extends QueryMethod {
 				MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity
 						: managedEntity;
 
-				this.metadata = new SimpleMongoEntityMetadata<>((Class<Object>) returnedEntity.getType(),
-						collectionEntity);
+				this.metadata = new SimpleMongoEntityMetadata<>((Class<Object>) returnedEntity.getType(), collectionEntity);
 			}
 		}
 
@@ -274,7 +273,7 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setMaxScan(meta.maxScanDocuments());
 		}
 
-		if (meta.cursorBatchSize() > 0) {
+		if (meta.cursorBatchSize() != 0) {
 			metaAttributes.setCursorBatchSize(meta.cursorBatchSize());
 		}
 
