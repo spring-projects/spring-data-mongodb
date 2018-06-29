@@ -164,13 +164,14 @@ public class MongoExampleMapper {
 			if (exampleSpecAccessor.hasPropertySpecifier(mappedPropertyPath)) {
 
 				PropertyValueTransformer valueTransformer = exampleSpecAccessor.getValueTransformerForPath(mappedPropertyPath);
-				value = valueTransformer.convert(value);
-				if (value == null) {
+				Optional converted = valueTransformer.apply(Optional.ofNullable(value));
+
+				if(!converted.isPresent()) {
 					iter.remove();
 					continue;
 				}
 
-				entry.setValue(value);
+				entry.setValue(converted.get());
 			}
 
 			if (entry.getValue() instanceof String) {

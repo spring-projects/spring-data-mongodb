@@ -19,12 +19,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.reactivestreams.client.AggregatePublisher;
 import lombok.Data;
-import org.springframework.data.mongodb.core.query.Query;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -46,20 +42,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplateUnitTests.AutogenerateableId;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate.NoOpDbRefResolver;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
@@ -262,20 +260,6 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
-	}
-
-	@Ignore("currently no aggregation")
-	@Test // DATAMONGO-1518
-	public void aggregateShouldUseCollationWhenPresent() {
-
-		Aggregation aggregation = newAggregation(project("id"))
-				.withOptions(newAggregationOptions().collation(Collation.of("fr")).build());
-		// template.aggregate(aggregation, AutogenerateableId.class, Document.class).subscribe();
-
-		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		verify(db).runCommand(cmd.capture(), any(Class.class));
-
-		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
 	}
 
 	@Ignore("currently no mapReduce")

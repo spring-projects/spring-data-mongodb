@@ -155,6 +155,15 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getCursorBatchSize(), is(100));
 	}
 
+	@Test // DATAMONGO-1311
+	public void createsMongoQueryMethodWithNegativeBatchSizeCorrectly() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "negativeBatchSize");
+
+		assertThat(method.hasQueryMetaAttributes(), is(true));
+		assertThat(method.getQueryMetaAttributes().getCursorBatchSize(), is(-200));
+	}
+
 	@Test // DATAMONGO-1403
 	public void createsMongoQueryMethodWithSpellFixedMaxExecutionTimeCorrectly() throws Exception {
 
@@ -244,6 +253,9 @@ public class MongoQueryMethodUnitTests {
 
 		@Meta(cursorBatchSize = 100)
 		List<User> batchSize();
+
+		@Meta(cursorBatchSize = -200)
+		List<User> negativeBatchSize();
 
 		@Meta(maxExecutionTimeMs = 100)
 		List<User> metaWithMaxExecutionTime();

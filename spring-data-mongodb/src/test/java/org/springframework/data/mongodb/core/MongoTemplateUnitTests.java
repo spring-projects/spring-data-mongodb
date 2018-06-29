@@ -138,7 +138,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.withReadPreference(any())).thenReturn(collection);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 		when(findIterable.sort(any(org.bson.Document.class))).thenReturn(findIterable);
-		when(findIterable.modifiers(any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.collation(any())).thenReturn(findIterable);
 		when(findIterable.limit(anyInt())).thenReturn(findIterable);
 		when(mapReduceIterable.collation(any())).thenReturn(mapReduceIterable);
@@ -733,7 +732,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1518
 	public void findAndRemoveManyShouldUseCollationWhenPresent() {
 
-		template.doRemove("collection-1", new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class, true);
+		template.doRemove("collection-1", new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class,
+				true);
 
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
 		verify(collection).deleteMany(any(), options.capture());

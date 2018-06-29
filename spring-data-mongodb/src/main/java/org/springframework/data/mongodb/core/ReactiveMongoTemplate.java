@@ -116,7 +116,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.CursorType;
 import com.mongodb.DBCollection;
@@ -3237,15 +3236,27 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					Document sort = type != null ? getMappedSortObject(query, type) : query.getSortObject();
 					findPublisherToUse = findPublisherToUse.sort(sort);
 				}
-				BasicDBObject modifiers = new BasicDBObject();
 
 				if (StringUtils.hasText(query.getHint())) {
-					modifiers.append("$hint", query.getHint());
+					findPublisherToUse = findPublisherToUse.hint(Document.parse(query.getHint()));
 				}
 
 				if (meta.hasValues()) {
-					for (Entry<String, Object> entry : meta.values()) {
-						modifiers.append(entry.getKey(), entry.getValue());
+
+					if (StringUtils.hasText(meta.getComment())) {
+						findPublisherToUse = findPublisherToUse.comment(meta.getComment());
+					}
+
+					if (meta.getSnapshot()) {
+						findPublisherToUse = findPublisherToUse.snapshot(meta.getSnapshot());
+					}
+
+					if (meta.getMaxScan() != null) {
+						findPublisherToUse = findPublisherToUse.maxScan(meta.getMaxScan());
+					}
+
+					if (meta.getMaxTimeMsec() != null) {
+						findPublisherToUse = findPublisherToUse.maxTime(meta.getMaxTimeMsec(), TimeUnit.MILLISECONDS);
 					}
 
 					if (meta.getCursorBatchSize() != null) {
@@ -3253,9 +3264,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					}
 				}
 
-				if (!modifiers.isEmpty()) {
-					findPublisherToUse = findPublisherToUse.modifiers(modifiers);
-				}
 			} catch (RuntimeException e) {
 				throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 			}

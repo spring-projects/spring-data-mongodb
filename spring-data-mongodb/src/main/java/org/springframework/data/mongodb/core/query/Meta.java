@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -66,7 +67,7 @@ public class Meta {
 	 * @param maxTimeMsec
 	 */
 	public void setMaxTimeMsec(long maxTimeMsec) {
-		setMaxTime(maxTimeMsec, TimeUnit.MILLISECONDS);
+		setMaxTime(Duration.ofMillis(maxTimeMsec));
 	}
 
 	/**
@@ -74,9 +75,23 @@ public class Meta {
 	 *
 	 * @param timeout
 	 * @param timeUnit
+	 * @deprecated since 2.1. Use {@link #setMaxTime(Duration)} instead.
 	 */
+	@Deprecated
 	public void setMaxTime(long timeout, @Nullable TimeUnit timeUnit) {
 		setValue(MetaKey.MAX_TIME_MS.key, (timeUnit != null ? timeUnit : TimeUnit.MILLISECONDS).toMillis(timeout));
+	}
+
+	/**
+	 * Set the maximum time limit for processing operations.
+	 *
+	 * @param timeout must not be {@literal null}.
+	 * @since 2.1
+	 */
+	public void setMaxTime(Duration timeout) {
+
+		Assert.notNull(timeout, "Timeout must not be null!");
+		setValue(MetaKey.MAX_TIME_MS.key, timeout.toMillis());
 	}
 
 	/**
@@ -91,13 +106,15 @@ public class Meta {
 	 * Only scan the specified number of documents.
 	 *
 	 * @param maxScan
+	 * @deprecated since 2.1 due to deprecation in MongoDB 4.0.
 	 */
+	@Deprecated
 	public void setMaxScan(long maxScan) {
 		setValue(MetaKey.MAX_SCAN.key, maxScan);
 	}
 
 	/**
-	 * Add a comment to the query.
+	 * Add a comment to the query that is propagated to the profile log.
 	 *
 	 * @param comment
 	 */
@@ -117,7 +134,9 @@ public class Meta {
 	 * Using snapshot prevents the cursor from returning a document more than once.
 	 *
 	 * @param useSnapshot
+	 * @deprecated since 2.1 due to deprecation as of MongoDB 3.6
 	 */
+	@Deprecated
 	public void setSnapshot(boolean useSnapshot) {
 		setValue(MetaKey.SNAPSHOT.key, useSnapshot);
 	}
@@ -139,9 +158,11 @@ public class Meta {
 	}
 
 	/**
-	 * Apply the batch size for a query.
+	 * Apply the batch size (number of documents to return in each response) for a query. <br />
+	 * Use {@literal 0 (zero)} for no limit. A <strong>negative limit</strong> closes the cursor after returning a single
+	 * batch indicating to the server that the client will not ask for a subsequent one.
 	 *
-	 * @param cursorBatchSize
+	 * @param cursorBatchSize The number of documents to return per batch.
 	 * @since 2.1
 	 */
 	public void setCursorBatchSize(int cursorBatchSize) {
