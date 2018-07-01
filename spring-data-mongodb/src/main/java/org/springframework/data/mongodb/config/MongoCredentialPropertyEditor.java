@@ -35,6 +35,7 @@ import com.mongodb.MongoCredential;
  *
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Stephen Tyler Conrad
  * @since 1.7
  */
 public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
@@ -164,7 +165,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 	private static Properties extractOptions(String text) {
 
 		int optionsSeparationIndex = text.lastIndexOf(OPTIONS_DELIMITER);
-		int dbSeparationIndex = text.lastIndexOf(OPTIONS_DELIMITER);
+		int dbSeparationIndex = text.lastIndexOf(DATABASE_DELIMITER);
 
 		if (optionsSeparationIndex == -1 || dbSeparationIndex > optionsSeparationIndex) {
 			return new Properties();
