@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 the original author or authors.
+^ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,9 @@ import com.mongodb.MongoCredential;
 
 /**
  * Unit tests for {@link MongoCredentialPropertyEditor}.
- * 
+ *
  * @author Christoph Strobl
+ * @author Stephen Tyler Conrad
  */
 public class MongoCredentialPropertyEditorUnitTests {
 
@@ -56,6 +57,13 @@ public class MongoCredentialPropertyEditorUnitTests {
 	static final String USER_3_AUTH_STRING_WITH_X509_AUTH_MECHANISM = "'" + USER_3_NAME + "@" + USER_3_DB
 			+ "?uri.authMechanism=MONGODB-X509'";
 
+	static final String USER_5_NAME = "lyanna";
+	static final String USER_5_PWD = "random?password";
+	static final String USER_5_DB = "mormont";
+
+	static final String USER_5_AUTH_STRING = USER_5_NAME + ":" + USER_5_PWD + "@" + USER_5_DB;
+	static final String USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN";
+
 	static final MongoCredential USER_1_CREDENTIALS = MongoCredential.createCredential(USER_1_NAME, USER_1_DB,
 			USER_1_PWD.toCharArray());
 	static final MongoCredential USER_1_CREDENTIALS_PLAIN_AUTH = MongoCredential.createPlainCredential(USER_1_NAME,
@@ -67,6 +75,11 @@ public class MongoCredentialPropertyEditorUnitTests {
 			USER_2_DB, USER_2_PWD.toCharArray());
 
 	static final MongoCredential USER_3_CREDENTIALS_X509_AUTH = MongoCredential.createMongoX509Credential(USER_3_NAME);
+
+	static final MongoCredential USER_5_CREDENTIALS = MongoCredential.createCredential(USER_5_NAME, USER_5_DB,
+			USER_5_PWD.toCharArray());
+	static final MongoCredential USER_5_CREDENTIALS_PLAIN_AUTH = MongoCredential.createPlainCredential(USER_5_NAME, USER_5_DB,
+			USER_5_PWD.toCharArray());
 
 	MongoCredentialPropertyEditor editor;
 
@@ -201,5 +214,23 @@ public class MongoCredentialPropertyEditorUnitTests {
 		editor.setAsText("tyrion@?uri.authMechanism=MONGODB-CR");
 
 		editor.getValue();
+	}
+
+	@Test //DATAMONGO-2016
+	@SuppressWarnings("unchecked")
+	public void passwordWithQuestionMarkShouldNotBeInterpretedAsOptionString() {
+
+		editor.setAsText(USER_5_AUTH_STRING);
+
+		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS));
+	}
+
+	@Test //DATAMONGO-2016
+	@SuppressWarnings("unchecked")
+	public void passwordWithQuestionMarkShouldNotBreakParsingOfOptionString() {
+
+		editor.setAsText(USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM);
+
+		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS_PLAIN_AUTH));
 	}
 }
