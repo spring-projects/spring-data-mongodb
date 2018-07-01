@@ -34,6 +34,7 @@ import com.mongodb.MongoCredential;
  * Unit tests for {@link MongoCredentialPropertyEditor}.
  * 
  * @author Christoph Strobl
+ * @author Stephen Tyler Conrad
  */
 public class MongoCredentialPropertyEditorUnitTests {
 
@@ -54,6 +55,10 @@ public class MongoCredentialPropertyEditorUnitTests {
 	static final String USER_4_ENCODED_PWD;
 	static final String USER_4_DB = "targaryen";
 
+	static final String USER_5_NAME = "lyanna";
+	static final String USER_5_PWD = "random?password";
+	static final String USER_5_DB = "mormont";
+
 	static final String USER_1_AUTH_STRING = USER_1_NAME + ":" + USER_1_PWD + "@" + USER_1_DB;
 	static final String USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_1_AUTH_STRING + "?uri.authMechanism=PLAIN";
 
@@ -65,6 +70,9 @@ public class MongoCredentialPropertyEditorUnitTests {
 			+ "?uri.authMechanism=MONGODB-X509'";
 
 	static final String USER_4_AUTH_STRING;
+
+	static final String USER_5_AUTH_STRING = USER_5_NAME + ":" + USER_5_PWD + "@" + USER_5_DB;
+	static final String USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN";
 
 	static final MongoCredential USER_1_CREDENTIALS = MongoCredential.createCredential(USER_1_NAME, USER_1_DB,
 			USER_1_PWD.toCharArray());
@@ -80,6 +88,11 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 	static final MongoCredential USER_4_CREDENTIALS = MongoCredential.createCredential(USER_4_PLAIN_NAME, USER_4_DB,
 			USER_4_PLAIN_PWD.toCharArray());
+
+	static final MongoCredential USER_5_CREDENTIALS = MongoCredential.createCredential(USER_5_NAME, USER_5_DB,
+			USER_5_PWD.toCharArray());
+	static final MongoCredential USER_5_CREDENTIALS_PLAIN_AUTH = MongoCredential.createPlainCredential(USER_5_NAME, USER_5_DB,
+			USER_5_PWD.toCharArray());
 
 	MongoCredentialPropertyEditor editor;
 
@@ -238,5 +251,23 @@ public class MongoCredentialPropertyEditorUnitTests {
 		editor.setAsText(USER_4_AUTH_STRING);
 
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_4_CREDENTIALS));
+	}
+
+	@Test //DATAMONGO-2016
+	@SuppressWarnings("unchecked")
+	public void passwordWithQuestionMarkShouldNotBeInterpretedAsOptionString() {
+
+		editor.setAsText(USER_5_AUTH_STRING);
+
+		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS));
+	}
+
+	@Test //DATAMONGO-2016
+	@SuppressWarnings("unchecked")
+	public void passwordWithQuestionMarkShouldNotBreakParsingOfOptionString() {
+
+		editor.setAsText(USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM);
+
+		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS_PLAIN_AUTH));
 	}
 }
