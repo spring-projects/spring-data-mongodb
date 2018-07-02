@@ -81,8 +81,7 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 	@Bean
 	public MappingMongoConverter mappingMongoConverter() throws Exception {
 
-		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE,
-				mongoMappingContext());
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mongoMappingContext());
 		converter.setCustomConversions(customConversions());
 
 		return converter;

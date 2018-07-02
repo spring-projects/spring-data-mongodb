@@ -1221,8 +1221,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Nullable
 	private WriteConcern potentiallyForceAcknowledgedWrite(@Nullable WriteConcern wc) {
 
-		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)
-				&& MongoClientVersion.isMongo3Driver()) {
+		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
 					|| (wc.getWObject() instanceof Number && ((Number) wc.getWObject()).intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;

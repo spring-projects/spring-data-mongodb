@@ -111,18 +111,14 @@ public class DbRefMappingMongoConverterUnitTests {
 		when(dbRef.getId()).thenReturn(BigInteger.ONE);
 		when(dbRef.getCollectionName()).thenReturn("collection-1");
 
-		if (MongoClientVersion.isMongo3Driver()) {
-			MongoDatabase dbMock = mock(MongoDatabase.class);
-			MongoCollection collectionMock = mock(MongoCollection.class);
-			when(dbFactory.getDb()).thenReturn(dbMock);
-			when(dbMock.getCollection(anyString(), eq(Document.class))).thenReturn(collectionMock);
+		MongoDatabase dbMock = mock(MongoDatabase.class);
+		MongoCollection collectionMock = mock(MongoCollection.class);
+		when(dbFactory.getDb()).thenReturn(dbMock);
+		when(dbMock.getCollection(anyString(), eq(Document.class))).thenReturn(collectionMock);
 
-			FindIterable fi = mock(FindIterable.class);
-			when(fi.first()).thenReturn(mapValDocument);
-			when(collectionMock.find(Mockito.any(Bson.class))).thenReturn(fi);
-		} else {
-			when(dbRefResolver.fetch(dbRef)).thenReturn(mapValDocument);
-		}
+		FindIterable fi = mock(FindIterable.class);
+		when(fi.first()).thenReturn(mapValDocument);
+		when(collectionMock.find(Mockito.any(Bson.class))).thenReturn(fi);
 
 		MapDBRef mapDBRef = new MapDBRef();
 

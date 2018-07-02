@@ -17,13 +17,9 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
 import org.bson.Document;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
 
@@ -32,6 +28,7 @@ import com.mongodb.DBRef;
  * {@link UnsupportedOperationException} when attempting to resolve database references.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.1
  */
 public enum NoOpDbRefResolver implements DbRefResolver {
@@ -40,13 +37,14 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
+	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback, org.springframework.data.mongodb.core.convert.DbRefProxyHandler)
 	 */
 	@Override
 	@Nullable
-	public Object resolveDbRef(@Nonnull MongoPersistentProperty property, @Nonnull DBRef dbref,
-			@Nonnull DbRefResolverCallback callback, @Nonnull DbRefProxyHandler proxyHandler) {
-		throw new UnsupportedOperationException("DBRef resolution not supported!");
+	public Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
+			DbRefProxyHandler proxyHandler) {
+
+		return handle();
 	}
 
 	/*
@@ -54,8 +52,9 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#fetch(com.mongodb.DBRef)
 	 */
 	@Override
+	@Nullable
 	public Document fetch(DBRef dbRef) {
-		throw new UnsupportedOperationException("DBRef resolution not supported!");
+		return handle();
 	}
 
 	/*
@@ -64,6 +63,10 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 	 */
 	@Override
 	public List<Document> bulkFetch(List<DBRef> dbRefs) {
-		throw new UnsupportedOperationException("DBRef resolution not supported!");
+		return handle();
+	}
+
+	private <T> T handle() throws UnsupportedOperationException {
+		throw new UnsupportedOperationException("DBRef resolution is not supported!");
 	}
 }

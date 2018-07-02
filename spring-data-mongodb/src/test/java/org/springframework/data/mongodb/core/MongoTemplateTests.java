@@ -3420,8 +3420,6 @@ public class MongoTemplateTests {
 	public void decimal128TypeShouldBeSavedAndLoadedCorrectly()
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
-		assumeThat(MongoClientVersion.isMongo34Driver(), is(true));
-
 		Class<?> decimal128Type = ClassUtils.resolveClassName("org.bson.types.Decimal128", null);
 
 		WithObjectTypeProperty source = new WithObjectTypeProperty();
