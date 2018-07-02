@@ -253,7 +253,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_4_CREDENTIALS));
 	}
 
-	@Test
+	@Test //DATAMONGO-2016
 	@SuppressWarnings("unchecked")
 	public void passwordWithQuestionMarkShouldNotBeInterpretedAsOptionString() {
 
@@ -262,7 +262,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS));
 	}
 
-	@Test
+	@Test //DATAMONGO-2016
 	@SuppressWarnings("unchecked")
 	public void passwordWithQuestionMarkShouldNotBreakParsingOfOptionString() {
 
