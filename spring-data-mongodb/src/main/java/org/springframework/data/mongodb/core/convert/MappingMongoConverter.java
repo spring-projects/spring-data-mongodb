@@ -660,7 +660,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param sink the {@link Collection} to write to.
 	 * @return
 	 */
-	private List<Object> writeCollectionInternal(Collection<?> source, @Nullable TypeInformation<?> type, Collection<?> sink) {
+	private List<Object> writeCollectionInternal(Collection<?> source, @Nullable TypeInformation<?> type,
+			Collection<?> sink) {
 
 		TypeInformation<?> componentType = null;
 
@@ -868,7 +869,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	@Nullable
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Object getPotentiallyConvertedSimpleRead(@Nullable Object value, @Nullable  Class<?> target) {
+	private Object getPotentiallyConvertedSimpleRead(@Nullable Object value, @Nullable Class<?> target) {
 
 		if (value == null || target == null || ClassUtils.isAssignableValue(target, value)) {
 			return value;
@@ -1271,6 +1272,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * of the configured source {@link Document}.
 	 *
 	 * @author Oliver Gierke
+	 * @author Mark Paluch
+	 * @author Christoph Strobl
 	 */
 	class MongoDbPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
 
@@ -1286,15 +1289,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param evaluator must not be {@literal null}.
 		 * @param path must not be {@literal null}.
 		 */
-		public MongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
-
-			Assert.notNull(source, "Source document must no be null!");
-			Assert.notNull(evaluator, "SpELExpressionEvaluator must not be null!");
-			Assert.notNull(path, "ObjectPath must not be null!");
-
-			this.source = new DocumentAccessor(source);
-			this.evaluator = evaluator;
-			this.path = path;
+		MongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
+			this(new DocumentAccessor(source), evaluator, path);
 		}
 
 		/**
@@ -1305,7 +1301,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param evaluator must not be {@literal null}.
 		 * @param path must not be {@literal null}.
 		 */
-		public MongoDbPropertyValueProvider(DocumentAccessor accessor, SpELExpressionEvaluator evaluator, ObjectPath path) {
+		MongoDbPropertyValueProvider(DocumentAccessor accessor, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
 			Assert.notNull(accessor, "DocumentAccessor must no be null!");
 			Assert.notNull(evaluator, "SpELExpressionEvaluator must not be null!");
@@ -1340,6 +1336,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * resolution to {@link DbRefResolver}.
 	 *
 	 * @author Mark Paluch
+	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
 	class AssociationAwareMongoDbPropertyValueProvider extends MongoDbPropertyValueProvider {
@@ -1352,8 +1349,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param evaluator must not be {@literal null}.
 		 * @param path must not be {@literal null}.
 		 */
-		public AssociationAwareMongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator,
-				ObjectPath path) {
+		AssociationAwareMongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
 			super(source, evaluator, path);
 		}
 
@@ -1365,17 +1361,21 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
 
-			T value = super.getPropertyValue(property);
+			if (property.isDbReference() && property.getDBRef().lazy()) {
 
-			if (value == null || !property.isAssociation()) {
-				return value;
+				Object rawRefValue = source.get(property);
+				if (rawRefValue == null) {
+					return null;
+				}
+
+				DbRefResolverCallback callback = new DefaultDbRefResolverCallback(source.getDocument(), path, evaluator,
+						MappingMongoConverter.this);
+
+				DBRef dbref = rawRefValue instanceof DBRef ? (DBRef) rawRefValue : null;
+				return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
 			}
 
-			DbRefResolverCallback callback = new DefaultDbRefResolverCallback(source.getDocument(), path, evaluator,
-					MappingMongoConverter.this);
-			DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
-
-			return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
+			return super.getPropertyValue(property);
 		}
 	}
 

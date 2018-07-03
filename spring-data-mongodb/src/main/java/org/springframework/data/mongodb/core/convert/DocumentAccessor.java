@@ -62,7 +62,7 @@ class DocumentAccessor {
 	 * @return the underlying {@link Bson document}.
 	 * @since 2.1
 	 */
-	public Bson getDocument() {
+	Bson getDocument() {
 		return this.document;
 	}
 
