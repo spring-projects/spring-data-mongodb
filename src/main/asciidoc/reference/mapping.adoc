@@ -584,8 +584,12 @@ public class Person {
 ====
 
 You need not use `@OneToMany` or similar mechanisms because the List of objects tells the mapping framework that you want a one-to-many relationship. When the object is stored in MongoDB, there is a list of DBRefs rather than the `Account` objects themselves.
+When it comes to loading collections of ``DBRef``s it is advisable to restrict references held in collection types to a specific MongoDB collection. This allows bulk loading of all references, whereas references pointing to different MongoDB collections need to be resolved one by one.
 
 IMPORTANT: The mapping framework does not handle cascading saves. If you change an `Account` object that is referenced by a `Person` object, you must save the `Account` object separately. Calling `save` on the `Person` object does not automatically save the `Account` objects in the `accounts` property.
+
+``DBRef``s can also be resolved lazily. In this case the actual `Object` or `Collection` of references is resolved on first access of the property. Use the `lazy` attribute of `@DBRef` to specify this.
+Required properties that are also defined as lazy loading ``DBRef`` and used as constructor arguments are also decorated with the lazy loading proxy making sure to put as little pressure on the database and network as possible.
 
 [[mapping-usage-events]]
 === Mapping Framework Events

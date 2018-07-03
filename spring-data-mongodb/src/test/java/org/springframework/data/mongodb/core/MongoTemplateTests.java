@@ -3448,7 +3448,7 @@ public class MongoTemplateTests {
 				DocumentWithLazyDBRefsAndConstructorCreation.class);
 
 		assertThat(target.lazyDbRefAnnotatedList, instanceOf(LazyLoadingProxy.class));
-		assertThat(target.lazyDbRefAnnotatedList, contains(two, one));
+		assertThat(target.getLazyDbRefAnnotatedList(), contains(two, one));
 	}
 
 	@Test // DATAMONGO-1513
