@@ -63,6 +63,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 	static final String USER_5_AUTH_STRING = USER_5_NAME + ":" + USER_5_PWD + "@" + USER_5_DB;
 	static final String USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN";
+	static final String USER_5_AUTH_STRING_WITH_QUERY_ARGS = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN&foo=&bar";
 
 	static final MongoCredential USER_1_CREDENTIALS = MongoCredential.createCredential(USER_1_NAME, USER_1_DB,
 			USER_1_PWD.toCharArray());
@@ -78,8 +79,8 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 	static final MongoCredential USER_5_CREDENTIALS = MongoCredential.createCredential(USER_5_NAME, USER_5_DB,
 			USER_5_PWD.toCharArray());
-	static final MongoCredential USER_5_CREDENTIALS_PLAIN_AUTH = MongoCredential.createPlainCredential(USER_5_NAME, USER_5_DB,
-			USER_5_PWD.toCharArray());
+	static final MongoCredential USER_5_CREDENTIALS_PLAIN_AUTH = MongoCredential.createPlainCredential(USER_5_NAME,
+			USER_5_DB, USER_5_PWD.toCharArray());
 
 	MongoCredentialPropertyEditor editor;
 
@@ -146,8 +147,8 @@ public class MongoCredentialPropertyEditorUnitTests {
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleUserNamePasswordStringWithDatabaseAndAuthOptions() {
 
-		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList(
-				USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING_WITH_MONGODB_CR_AUTH_MECHANISM)));
+		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays
+				.asList(USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING_WITH_MONGODB_CR_AUTH_MECHANISM)));
 
 		assertThat((List<MongoCredential>) editor.getValue(),
 				contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS_CR_AUTH));
@@ -157,8 +158,8 @@ public class MongoCredentialPropertyEditorUnitTests {
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleUserNamePasswordStringWithDatabaseAndMixedOptions() {
 
-		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList(
-				USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING)));
+		editor.setAsText(StringUtils.collectionToCommaDelimitedString(
+				Arrays.asList(USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING)));
 
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS));
 	}
@@ -167,8 +168,8 @@ public class MongoCredentialPropertyEditorUnitTests {
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleQuotedUserNamePasswordStringWithDatabaseAndNoOptions() {
 
-		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList("'" + USER_1_AUTH_STRING + "'", "'"
-				+ USER_2_AUTH_STRING + "'")));
+		editor.setAsText(StringUtils.collectionToCommaDelimitedString(
+				Arrays.asList("'" + USER_1_AUTH_STRING + "'", "'" + USER_2_AUTH_STRING + "'")));
 
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS));
 	}
@@ -197,7 +198,8 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText("tyrion?uri.authMechanism=MONGODB-X509");
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(MongoCredential.createMongoX509Credential("tyrion")));
+		assertThat((List<MongoCredential>) editor.getValue(),
+				contains(MongoCredential.createMongoX509Credential("tyrion")));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1257
@@ -225,12 +227,18 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS));
 	}
 
-	@Test //DATAMONGO-2016
+	@Test // DATAMONGO-2016
 	@SuppressWarnings("unchecked")
 	public void passwordWithQuestionMarkShouldNotBreakParsingOfOptionString() {
 
 		editor.setAsText(USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM);
 
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS_PLAIN_AUTH));
+	}
+
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-2016
+	@SuppressWarnings("unchecked")
+	public void failsGracefullyOnEmptyQueryArgument() {
+		editor.setAsText(USER_5_AUTH_STRING_WITH_QUERY_ARGS);
 	}
 }

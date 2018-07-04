@@ -33,6 +33,7 @@ import com.mongodb.MongoCredential;
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @author Stephen Tyler Conrad
+ * @author Mark Paluch
  * @since 1.7
  */
 public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
@@ -167,6 +168,11 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 
 		for (String option : text.substring(optionsSeperationIndex + 1).split(OPTION_VALUE_DELIMINATOR)) {
 			String[] optionArgs = option.split("=");
+
+			if (optionArgs.length == 1) {
+				throw new IllegalArgumentException(String.format("Query parameter '%s' has no value!", optionArgs[0]));
+			}
+
 			properties.put(optionArgs[0], optionArgs[1]);
 		}
 
