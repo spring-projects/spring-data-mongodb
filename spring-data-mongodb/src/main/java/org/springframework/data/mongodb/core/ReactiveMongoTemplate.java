@@ -519,10 +519,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						session.startTransaction();
 					}
 
-					return Flux.usingWhen(Mono.just(session), s -> ReactiveMongoTemplate.this.withSession(action, s),
-							ClientSession::commitTransaction, ClientSession::abortTransaction).doFinally(signalType -> {
-								doFinally.accept(session);
-							});
+					return Flux.usingWhen(Mono.just(session), //
+							s -> ReactiveMongoTemplate.this.withSession(action, s), //
+							ClientSession::commitTransaction, //
+							ClientSession::abortTransaction) //
+							.doFinally(signalType -> doFinally.accept(session));
 				});
 			}
 		};
@@ -530,7 +531,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	private <T> Flux<T> withSession(ReactiveSessionCallback<T> action, ClientSession session) {
 
-		return Flux.from(action.doInSession(new ReactiveSessionBoundMongoTemplate(session, ReactiveMongoTemplate.this))) //
+		ReactiveSessionBoundMongoTemplate operations = new ReactiveSessionBoundMongoTemplate(session,
+				ReactiveMongoTemplate.this);
+
+		return Flux.from(action.doInSession(operations)) //
 				.subscriberContext(ctx -> ReactiveMongoContext.setSession(ctx, Mono.just(session)));
 	}
 
