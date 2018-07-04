@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import java.util.function.Function;
+
 import org.bson.Document;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.lang.Nullable;
@@ -71,5 +73,20 @@ public class MongoMappingEvent<T> extends ApplicationEvent {
 	@Override
 	public T getSource() {
 		return (T) super.getSource();
+	}
+
+	/**
+	 * Allows client code to change the underlying source instance by applying the given {@link Function}.
+	 * 
+	 * @param mapper the {@link Function} to apply, will only be applied if the source is not {@literal null}.
+	 * @since 2.1
+	 */
+	final void mapSource(Function<T, T> mapper) {
+
+		if (source == null) {
+			return;
+		}
+
+		this.source = mapper.apply(getSource());
 	}
 }

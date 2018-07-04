@@ -25,18 +25,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -81,27 +70,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.DbRefProxyHandler;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DbRefResolverCallback;
-import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.index.ReactiveMongoPersistentEntityIndexCreator;
@@ -119,13 +88,11 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.validation.Validator;
-import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.projection.ProjectionInformation;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.Optionals;
@@ -145,29 +112,11 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.client.model.*;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import com.mongodb.reactivestreams.client.AggregatePublisher;
-import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
-import com.mongodb.reactivestreams.client.ClientSession;
-import com.mongodb.reactivestreams.client.DistinctPublisher;
-import com.mongodb.reactivestreams.client.FindPublisher;
-import com.mongodb.reactivestreams.client.MapReducePublisher;
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.reactivestreams.client.Success;
+import com.mongodb.reactivestreams.client.*;
 
 /**
  * Primary implementation of {@link ReactiveMongoOperations}. It simplifies the use of Reactive MongoDB usage and helps
@@ -1967,9 +1916,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.map(publisher::startAtOperationTime).orElse(publisher);
 		publisher = publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
 
-		return Flux.from(
-			publisher ).map(document -> new ChangeStreamEvent<>(document, targetType, getConverter()));
-		}
+		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, targetType, getConverter()));
+	}
 
 	List<Document> prepareFilter(ChangeStreamOptions options) {
 
