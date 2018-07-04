@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.collection.IsIterableContainingInOrder.*;
-import static org.hamcrest.core.IsNull.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -73,6 +71,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 	static final String USER_5_AUTH_STRING = USER_5_NAME + ":" + USER_5_PWD + "@" + USER_5_DB;
 	static final String USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN";
+	static final String USER_5_AUTH_STRING_WITH_QUERY_ARGS = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN&foo=&bar";
 
 	static final MongoCredential USER_1_CREDENTIALS = MongoCredential.createCredential(USER_1_NAME, USER_1_DB,
 			USER_1_PWD.toCharArray());
@@ -91,8 +90,8 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 	static final MongoCredential USER_5_CREDENTIALS = MongoCredential.createCredential(USER_5_NAME, USER_5_DB,
 			USER_5_PWD.toCharArray());
-	static final MongoCredential USER_5_CREDENTIALS_PLAIN_AUTH = MongoCredential.createPlainCredential(USER_5_NAME, USER_5_DB,
-			USER_5_PWD.toCharArray());
+	static final MongoCredential USER_5_CREDENTIALS_PLAIN_AUTH = MongoCredential.createPlainCredential(USER_5_NAME,
+			USER_5_DB, USER_5_PWD.toCharArray());
 
 	MongoCredentialPropertyEditor editor;
 
@@ -121,7 +120,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText(null);
 
-		assertThat(editor.getValue(), nullValue());
+		assertThat(getValue()).isNull();
 	}
 
 	@Test // DATAMONGO-1158
@@ -129,7 +128,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText(" ");
 
-		assertThat(editor.getValue(), nullValue());
+		assertThat(getValue()).isNull();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1158
@@ -148,7 +147,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText(USER_1_AUTH_STRING);
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS));
+		assertThat(getValue()).contains(USER_1_CREDENTIALS);
 	}
 
 	@Test // DATAMONGO-1158
@@ -157,7 +156,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText(USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM);
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS_PLAIN_AUTH));
+		assertThat(getValue()).contains(USER_1_CREDENTIALS_PLAIN_AUTH);
 	}
 
 	@Test // DATAMONGO-1158
@@ -167,38 +166,37 @@ public class MongoCredentialPropertyEditorUnitTests {
 		editor
 				.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList(USER_1_AUTH_STRING, USER_2_AUTH_STRING)));
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS));
+		assertThat(getValue()).contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS);
 	}
 
 	@Test // DATAMONGO-1158
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleUserNamePasswordStringWithDatabaseAndAuthOptions() {
 
-		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList(
-				USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING_WITH_MONGODB_CR_AUTH_MECHANISM)));
+		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays
+				.asList(USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING_WITH_MONGODB_CR_AUTH_MECHANISM)));
 
-		assertThat((List<MongoCredential>) editor.getValue(),
-				contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS_CR_AUTH));
+		assertThat(getValue()).contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS_CR_AUTH);
 	}
 
 	@Test // DATAMONGO-1158
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleUserNamePasswordStringWithDatabaseAndMixedOptions() {
 
-		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList(
-				USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING)));
+		editor.setAsText(StringUtils.collectionToCommaDelimitedString(
+				Arrays.asList(USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING)));
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS));
+		assertThat(getValue()).contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS);
 	}
 
 	@Test // DATAMONGO-1257
 	@SuppressWarnings("unchecked")
 	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleQuotedUserNamePasswordStringWithDatabaseAndNoOptions() {
 
-		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList("'" + USER_1_AUTH_STRING + "'", "'"
-				+ USER_2_AUTH_STRING + "'")));
+		editor.setAsText(StringUtils.collectionToCommaDelimitedString(
+				Arrays.asList("'" + USER_1_AUTH_STRING + "'", "'" + USER_2_AUTH_STRING + "'")));
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS));
+		assertThat(getValue()).contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS);
 	}
 
 	@Test // DATAMONGO-1257
@@ -207,7 +205,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText("'" + USER_1_AUTH_STRING + "'");
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS));
+		assertThat(getValue()).contains(USER_1_CREDENTIALS);
 	}
 
 	@Test // DATAMONGO-1257
@@ -216,7 +214,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText(USER_3_AUTH_STRING_WITH_X509_AUTH_MECHANISM);
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_3_CREDENTIALS_X509_AUTH));
+		assertThat(getValue()).contains(USER_3_CREDENTIALS_X509_AUTH);
 	}
 
 	@Test // DATAMONGO-1257
@@ -225,7 +223,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText("tyrion?uri.authMechanism=MONGODB-X509");
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(MongoCredential.createMongoX509Credential("tyrion")));
+		assertThat(getValue()). contains(MongoCredential.createMongoX509Credential("tyrion"));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1257
@@ -233,7 +231,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText("tyrion?uri.authMechanism=MONGODB-CR");
 
-		editor.getValue();
+		getValue();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1257
@@ -241,33 +239,44 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText("tyrion@?uri.authMechanism=MONGODB-CR");
 
-		editor.getValue();
+		getValue();
 	}
 
 	@Test // DATAMONGO-1317
 	@SuppressWarnings("unchecked")
-	public void encodedUserNameAndPasswrodShouldBeDecoded() throws UnsupportedEncodingException {
+	public void encodedUserNameAndPasswordShouldBeDecoded() {
 
 		editor.setAsText(USER_4_AUTH_STRING);
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_4_CREDENTIALS));
+		assertThat(getValue()).contains(USER_4_CREDENTIALS);
 	}
 
-	@Test //DATAMONGO-2016
+	@Test // DATAMONGO-2016
 	@SuppressWarnings("unchecked")
 	public void passwordWithQuestionMarkShouldNotBeInterpretedAsOptionString() {
 
 		editor.setAsText(USER_5_AUTH_STRING);
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS));
+		assertThat(getValue()).contains(USER_5_CREDENTIALS);
 	}
 
-	@Test //DATAMONGO-2016
+	@Test // DATAMONGO-2016
 	@SuppressWarnings("unchecked")
 	public void passwordWithQuestionMarkShouldNotBreakParsingOfOptionString() {
 
 		editor.setAsText(USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM);
 
-		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS_PLAIN_AUTH));
+		assertThat(getValue()).contains(USER_5_CREDENTIALS_PLAIN_AUTH);
+	}
+
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-2016
+	@SuppressWarnings("unchecked")
+	public void failsGracefullyOnEmptyQueryArgument() {
+		editor.setAsText(USER_5_AUTH_STRING_WITH_QUERY_ARGS);
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<MongoCredential> getValue() {
+		return (List<MongoCredential>) editor.getValue();
 	}
 }
