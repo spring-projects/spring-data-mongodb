@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.gridfs;
 
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -166,6 +167,17 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @return the resource for the file.
 	 * @since 2.1
 	 */
+
+	Optional<GridFsResource> getResource(org.springframework.data.mongodb.core.query.Query query);
+
+	/**
+	 * Returns the {@link GridFsResource} for a {@link org.springframework.data.mongodb.core.query.Query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return the resource for the queried file.
+	 * @since 2.1
+	 */
+
 	GridFsResource getResource(com.mongodb.client.gridfs.model.GridFSFile file);
 
 	/**
