@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.gridfs;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
@@ -23,6 +25,7 @@ import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.bson.BsonObjectId;
 import org.bson.Document;
@@ -238,6 +241,19 @@ public class GridFsTemplateIntegrationTests {
 		assertThat(result.contentLength()).isEqualTo(resource.contentLength());
 		assertThat(((BsonObjectId) result.getId()).getValue()).isEqualTo(reference);
 	}
+
+    @Test // DATAMONGO-2020
+    public void getResource() throws IOException {
+
+        Document metadata = new Document("key", "value");
+        ObjectId reference = operations.store(resource.getInputStream(), "foobar", metadata);
+
+        Optional<GridFsResource> resource = operations.getResource(new Query(where("_id").is(reference)));
+
+        assertTrue(resource.isPresent());
+        assertThat("foobar".equals(resource.get().getFilename()));
+
+    }
 
 	class Metadata {
 		String version;

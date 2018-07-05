@@ -52,6 +52,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Hartmut Lang
+ * @author Niklas Helge Hanft
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -241,6 +242,21 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		Assert.notNull(file, "GridFSFile must not be null!");
 
 		return new GridFsResource(file, getGridFs().openDownloadStream(file.getFilename()));
+	}
+
+	public Optional<GridFsResource> getResource(Query query) {
+
+        Assert.notNull(query, "Query must not be null!");
+
+        GridFSFile file = findOne(query);
+
+        if (file == null) {
+            return Optional.empty();
+        }
+
+        GridFsResource resource = new GridFsResource(file, getGridFs().openDownloadStream(file.getObjectId()));
+
+		return Optional.of(resource);
 	}
 
 	/*
