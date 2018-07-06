@@ -15,14 +15,12 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
-import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.GridFSFindIterable;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -35,12 +33,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.GridFSBuckets;
-import com.mongodb.client.gridfs.GridFSFindIterable;
-import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
+import java.io.InputStream;
+import java.util.Optional;
+import java.util.stream.StreamSupport;
+
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
 
 /**
  * {@link GridFsOperations} implementation to store content into MongoDB GridFS.
@@ -244,9 +242,9 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	}
 
 	/*
-     * (non-Javadoc)
-     * @see org.springframework.core.io.support.ResourcePatternResolver#getResources(java.lang.String)
-     */
+	 * (non-Javadoc)
+	 * @see org.springframework.core.io.support.ResourcePatternResolver#getResources(java.lang.String)
+	 */
 	public GridFsResource[] getResources(String locationPattern) {
 
 		if (!StringUtils.hasText(locationPattern)) {
@@ -255,20 +253,17 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 		AntPath path = new AntPath(locationPattern);
 
-		if (path.isPattern()) {
-
-			GridFSFindIterable files = find(query(whereFilename().regex(path.toRegex())));
-			List<GridFsResource> resources = new ArrayList<>();
-
-			for (GridFSFile file : files) {
-				resources.add(new GridFsResource(file, getGridFs().openDownloadStream(file.getFilename())));
-			}
-
-			return resources.toArray(new GridFsResource[0]);
+		if (!path.isPattern()) {
+			return new GridFsResource[0];
 		}
 
-		return new GridFsResource[] { getResource(locationPattern) };
+		return StreamSupport
+				.stream(find(query(whereFilename().regex(path.toRegex()))).spliterator(), false)
+				.map(this::getResource)
+				.toArray(GridFsResource[]::new);
+
 	}
+
 
 	private Document getMappedQuery(Document query) {
 		return queryMapper.getMappedObject(query, Optional.empty());
