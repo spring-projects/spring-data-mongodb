@@ -240,7 +240,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 		Assert.notNull(file, "GridFSFile must not be null!");
 
-		return new GridFsResource(file, getGridFs().openDownloadStream(file.getFilename()));
+		return new GridFsResource(file, getGridFs().openDownloadStream(file.getObjectId()));
 	}
 
 	/*
