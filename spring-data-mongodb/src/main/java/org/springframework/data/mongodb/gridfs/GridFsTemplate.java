@@ -51,6 +51,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  * @author Martin Baumgartner
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Niklas Helge Hanft
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -228,7 +229,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	public GridFsResource getResource(String location) {
 
 		GridFSFile file = findOne(query(whereFilename().is(location)));
-		return file != null ? new GridFsResource(file, getGridFs().openDownloadStream(location)) : null;
+		return file != null ? new GridFsResource(file, getGridFs().openDownloadStream(file.getObjectId())) : null;
 	}
 
 	/*
@@ -246,13 +247,13 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		if (path.isPattern()) {
 
 			GridFSFindIterable files = find(query(whereFilename().regex(path.toRegex())));
-			List<GridFsResource> resources = new ArrayList<GridFsResource>();
+			List<GridFsResource> resources = new ArrayList<>();
 
 			for (GridFSFile file : files) {
-				resources.add(new GridFsResource(file, getGridFs().openDownloadStream(file.getFilename())));
+				resources.add(new GridFsResource(file, getGridFs().openDownloadStream(file.getObjectId())));
 			}
 
-			return resources.toArray(new GridFsResource[resources.size()]);
+			return resources.toArray(new GridFsResource[0]);
 		}
 
 		return new GridFsResource[] { getResource(locationPattern) };
