@@ -15,16 +15,6 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import org.bson.Document;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
@@ -34,6 +24,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+
+import java.util.*;
 
 /**
  * Class to easily construct MongoDB update clauses.
@@ -49,10 +41,6 @@ import org.springframework.util.StringUtils;
  * @author Pavel Vodrazka
  */
 public class Update {
-
-	public enum Position {
-		LAST, FIRST
-	}
 
 	private boolean isolated = false;
 	private Set<String> keysToUpdate = new HashSet<>();
@@ -76,7 +64,7 @@ public class Update {
 	 * create an only-updating {@link Update} instance of a {@link Document}, call {@link #set(String, Object)} for each
 	 * value in it.
 	 *
-	 * @param object the source {@link Document} to create the update from.
+	 * @param object  the source {@link Document} to create the update from.
 	 * @param exclude the fields to exclude.
 	 * @return
 	 */
@@ -104,6 +92,16 @@ public class Update {
 	}
 
 	/**
+	 * Inspects given {@code key} for '$'.
+	 *
+	 * @param key
+	 * @return
+	 */
+	private static boolean isKeyword(String key) {
+		return StringUtils.startsWithIgnoreCase(key, "$");
+	}
+
+	/**
 	 * Update using the {@literal $set} update modifier
 	 *
 	 * @param key
@@ -123,7 +121,7 @@ public class Update {
 	 * @param value
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/setOnInsert/">MongoDB Update operator:
-	 *      $setOnInsert</a>
+	 * $setOnInsert</a>
 	 */
 	public Update setOnInsert(String key, Object value) {
 		addMultiFieldOperation("$setOnInsert", key, value);
@@ -196,7 +194,7 @@ public class Update {
 	 * @param values
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pushAll/">MongoDB Update operator:
-	 *      $pushAll</a>
+	 * $pushAll</a>
 	 * @deprecated as of MongoDB 2.4. Removed in MongoDB 3.6. Use {@link #push(String) $push $each} instead.
 	 */
 	@Deprecated
@@ -224,7 +222,7 @@ public class Update {
 	 * @param value
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/addToSet/">MongoDB Update operator:
-	 *      $addToSet</a>
+	 * $addToSet</a>
 	 */
 	public Update addToSet(String key, Object value) {
 		addMultiFieldOperation("$addToSet", key, value);
@@ -264,7 +262,7 @@ public class Update {
 	 * @param values
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pullAll/">MongoDB Update operator:
-	 *      $pullAll</a>
+	 * $pullAll</a>
 	 */
 	public Update pullAll(String key, Object[] values) {
 		addMultiFieldOperation("$pullAll", key, Arrays.asList(values));
@@ -278,7 +276,7 @@ public class Update {
 	 * @param newName
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/rename/">MongoDB Update operator:
-	 *      $rename</a>
+	 * $rename</a>
 	 */
 	public Update rename(String oldName, String newName) {
 		addMultiFieldOperation("$rename", oldName, newName);
@@ -290,9 +288,9 @@ public class Update {
 	 *
 	 * @param key
 	 * @return
-	 * @since 1.6
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
-	 *      $currentDate</a>
+	 * $currentDate</a>
+	 * @since 1.6
 	 */
 	public Update currentDate(String key) {
 
@@ -305,9 +303,9 @@ public class Update {
 	 *
 	 * @param key
 	 * @return
-	 * @since 1.6
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
-	 *      $currentDate</a>
+	 * $currentDate</a>
+	 * @since 1.6
 	 */
 	public Update currentTimestamp(String key) {
 
@@ -318,11 +316,11 @@ public class Update {
 	/**
 	 * Multiply the value of given key by the given number.
 	 *
-	 * @param key must not be {@literal null}.
+	 * @param key        must not be {@literal null}.
 	 * @param multiplier must not be {@literal null}.
 	 * @return
-	 * @since 1.7
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/mul/">MongoDB Update operator: $mul</a>
+	 * @since 1.7
 	 */
 	public Update multiply(String key, Number multiplier) {
 
@@ -334,12 +332,12 @@ public class Update {
 	/**
 	 * Update given key to the {@code value} if the {@code value} is greater than the current value of the field.
 	 *
-	 * @param key must not be {@literal null}.
+	 * @param key   must not be {@literal null}.
 	 * @param value must not be {@literal null}.
 	 * @return
-	 * @since 1.10
 	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/max/">MongoDB Update operator: $max</a>
+	 * @since 1.10
 	 */
 	public Update max(String key, Object value) {
 
@@ -351,12 +349,12 @@ public class Update {
 	/**
 	 * Update given key to the {@code value} if the {@code value} is less than the current value of the field.
 	 *
-	 * @param key must not be {@literal null}.
+	 * @param key   must not be {@literal null}.
 	 * @param value must not be {@literal null}.
 	 * @return
-	 * @since 1.10
 	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/min/">MongoDB Update operator: $min</a>
+	 * @since 1.10
 	 */
 	public Update min(String key, Object value) {
 
@@ -451,16 +449,6 @@ public class Update {
 		return this.keysToUpdate.contains(key);
 	}
 
-	/**
-	 * Inspects given {@code key} for '$'.
-	 *
-	 * @param key
-	 * @return
-	 */
-	private static boolean isKeyword(String key) {
-		return StringUtils.startsWithIgnoreCase(key, "$");
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
@@ -507,6 +495,36 @@ public class Update {
 		}
 
 		return SerializationUtils.serializeToJsonSafely(doc);
+	}
+
+	public enum Position {
+		LAST, FIRST
+	}
+
+	/**
+	 * Marker interface of nested commands.
+	 *
+	 * @author Christoph Strobl
+	 */
+	public interface Modifier {
+
+		/**
+		 * @return the command to send eg. {@code $push}
+		 */
+		String getKey();
+
+		/**
+		 * @return value to be sent with command
+		 */
+		Object getValue();
+
+		/**
+		 * @return a safely serialized JSON representation.
+		 * @since 2.0
+		 */
+		default String toJsonString() {
+			return SerializationUtils.serializeToJsonSafely(Collections.singletonMap(getKey(), getValue()));
+		}
 	}
 
 	/**
@@ -574,32 +592,6 @@ public class Update {
 	}
 
 	/**
-	 * Marker interface of nested commands.
-	 *
-	 * @author Christoph Strobl
-	 */
-	public interface Modifier {
-
-		/**
-		 * @return the command to send eg. {@code $push}
-		 */
-		String getKey();
-
-		/**
-		 * @return value to be sent with command
-		 */
-		Object getValue();
-
-		/**
-		 * @return a safely serialized JSON representation.
-		 * @since 2.0
-		 */
-		default String toJsonString() {
-			return SerializationUtils.serializeToJsonSafely(Collections.singletonMap(getKey(), getValue()));
-		}
-	}
-
-	/**
 	 * Abstract {@link Modifier} implementation with defaults for {@link Object#equals(Object)}, {@link Object#hashCode()}
 	 * and {@link Object#toString()}.
 	 *
@@ -663,17 +655,20 @@ public class Update {
 			this.values = extractValues(values);
 		}
 
-		private Object[] extractValues(Object[] values) {
+		Each(Collection<Object> values) {
+			this.values = extractValues(values);
+		}
 
-			if (values == null || values.length == 0) {
+		private Object[] extractValues(Object... values) {
+			if (values == null || values.length == 0)
 				return values;
-			}
-
-			if (values.length == 1 && values[0] instanceof Collection) {
-				return ((Collection<?>) values[0]).toArray();
-			}
-
 			return Arrays.copyOf(values, values.length);
+		}
+
+		private Object[] extractValues(Collection<Object> values) {
+			if (values == null || values.size() == 0)
+				return values.toArray();
+			return Arrays.copyOf(values.toArray(), values.size());
 		}
 
 		/*
@@ -811,6 +806,82 @@ public class Update {
 		@Override
 		public Object getValue() {
 			return this.sort;
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static class BitwiseOperatorBuilder {
+
+		private static final String BIT_OPERATOR = "$bit";
+		private final String key;
+		private final Update reference;
+
+		/**
+		 * Creates a new {@link BitwiseOperatorBuilder}.
+		 *
+		 * @param reference must not be {@literal null}
+		 * @param key       must not be {@literal null}
+		 */
+		protected BitwiseOperatorBuilder(Update reference, String key) {
+
+			Assert.notNull(reference, "Reference must not be null!");
+			Assert.notNull(key, "Key must not be null!");
+
+			this.reference = reference;
+			this.key = key;
+		}
+
+		/**
+		 * Updates to the result of a bitwise and operation between the current value and the given one.
+		 *
+		 * @param value
+		 * @return
+		 */
+		public Update and(long value) {
+
+			addFieldOperation(BitwiseOperator.AND, value);
+			return reference;
+		}
+
+		/**
+		 * Updates to the result of a bitwise or operation between the current value and the given one.
+		 *
+		 * @param value
+		 * @return
+		 */
+		public Update or(long value) {
+
+			addFieldOperation(BitwiseOperator.OR, value);
+			return reference;
+		}
+
+		/**
+		 * Updates to the result of a bitwise xor operation between the current value and the given one.
+		 *
+		 * @param value
+		 * @return
+		 */
+		public Update xor(long value) {
+
+			addFieldOperation(BitwiseOperator.XOR, value);
+			return reference;
+		}
+
+		private void addFieldOperation(BitwiseOperator operator, Number value) {
+			reference.addMultiFieldOperation(BIT_OPERATOR, key, new Document(operator.toString(), value));
+		}
+
+		private enum BitwiseOperator {
+			AND, OR, XOR;
+
+			@Override
+			public String toString() {
+				return super.toString().toLowerCase();
+			}
+
 		}
 	}
 
@@ -1005,88 +1076,23 @@ public class Update {
 		}
 
 		/**
-		 * Propagates {@link #value(Object)} to {@code $addToSet}
+		 * Propagates {@code $each} to {@code $addToSet}
 		 *
 		 * @param values
 		 * @return
 		 */
+		public Update each(Collection<Object> values) {
+			return Update.this.addToSet(this.key, new Each(values));
+		}
+
+		/**
+		 * Propagates {@link #value(Object)} to {@code $addToSet}
+		 *
+		 * @param value
+		 * @return
+		 */
 		public Update value(Object value) {
 			return Update.this.addToSet(this.key, value);
-		}
-	}
-
-	/**
-	 * @author Christoph Strobl
-	 * @since 1.7
-	 */
-	public static class BitwiseOperatorBuilder {
-
-		private final String key;
-		private final Update reference;
-		private static final String BIT_OPERATOR = "$bit";
-
-		private enum BitwiseOperator {
-			AND, OR, XOR;
-
-			@Override
-			public String toString() {
-				return super.toString().toLowerCase();
-			};
-		}
-
-		/**
-		 * Creates a new {@link BitwiseOperatorBuilder}.
-		 *
-		 * @param reference must not be {@literal null}
-		 * @param key must not be {@literal null}
-		 */
-		protected BitwiseOperatorBuilder(Update reference, String key) {
-
-			Assert.notNull(reference, "Reference must not be null!");
-			Assert.notNull(key, "Key must not be null!");
-
-			this.reference = reference;
-			this.key = key;
-		}
-
-		/**
-		 * Updates to the result of a bitwise and operation between the current value and the given one.
-		 *
-		 * @param value
-		 * @return
-		 */
-		public Update and(long value) {
-
-			addFieldOperation(BitwiseOperator.AND, value);
-			return reference;
-		}
-
-		/**
-		 * Updates to the result of a bitwise or operation between the current value and the given one.
-		 *
-		 * @param value
-		 * @return
-		 */
-		public Update or(long value) {
-
-			addFieldOperation(BitwiseOperator.OR, value);
-			return reference;
-		}
-
-		/**
-		 * Updates to the result of a bitwise xor operation between the current value and the given one.
-		 *
-		 * @param value
-		 * @return
-		 */
-		public Update xor(long value) {
-
-			addFieldOperation(BitwiseOperator.XOR, value);
-			return reference;
-		}
-
-		private void addFieldOperation(BitwiseOperator operator, Number value) {
-			reference.addMultiFieldOperation(BIT_OPERATOR, key, new Document(operator.toString(), value));
 		}
 	}
 }
