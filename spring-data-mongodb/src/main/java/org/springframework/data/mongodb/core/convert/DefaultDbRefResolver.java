@@ -43,7 +43,6 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
@@ -102,21 +101,6 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		}
 
 		return callback.resolve(property);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#created(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.mapping.MongoPersistentEntity, java.lang.Object)
-	 */
-	@Override
-	public DBRef createDbRef(@Nullable org.springframework.data.mongodb.core.mapping.DBRef annotation,
-			MongoPersistentEntity<?> entity, Object id) {
-
-		if (annotation != null && StringUtils.hasText(annotation.db())) {
-			return new DBRef(annotation.db(), entity.getCollection(), id);
-		}
-
-		return new DBRef(entity.getCollection(), id);
 	}
 
 	/*

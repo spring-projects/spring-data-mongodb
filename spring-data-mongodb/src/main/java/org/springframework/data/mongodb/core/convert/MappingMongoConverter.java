@@ -255,7 +255,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
 			Bson source, DefaultSpELExpressionEvaluator evaluator, ObjectPath path) {
 
-		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(source, evaluator, path);
+		AssociationAwareMongoDbPropertyValueProvider provider = new AssociationAwareMongoDbPropertyValueProvider(source,
+				evaluator, path);
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<>(
 				entity, provider, path.getCurrentObject());
 
@@ -659,7 +660,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param sink the {@link Collection} to write to.
 	 * @return
 	 */
-	private List<Object> writeCollectionInternal(Collection<?> source, @Nullable TypeInformation<?> type, Collection<?> sink) {
+	private List<Object> writeCollectionInternal(Collection<?> source, @Nullable TypeInformation<?> type,
+			Collection<?> sink) {
 
 		TypeInformation<?> componentType = null;
 
@@ -867,7 +869,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	@Nullable
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Object getPotentiallyConvertedSimpleRead(@Nullable Object value, @Nullable  Class<?> target) {
+	private Object getPotentiallyConvertedSimpleRead(@Nullable Object value, @Nullable Class<?> target) {
 
 		if (value == null || target == null || ClassUtils.isAssignableValue(target, value)) {
 			return value;
@@ -1270,12 +1272,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * of the configured source {@link Document}.
 	 *
 	 * @author Oliver Gierke
+	 * @author Mark Paluch
+	 * @author Christoph Strobl
 	 */
 	class MongoDbPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
 
-		private final DocumentAccessor source;
-		private final SpELExpressionEvaluator evaluator;
-		private final ObjectPath path;
+		final DocumentAccessor source;
+		final SpELExpressionEvaluator evaluator;
+		final ObjectPath path;
 
 		/**
 		 * Creates a new {@link MongoDbPropertyValueProvider} for the given source, {@link SpELExpressionEvaluator} and
@@ -1285,15 +1289,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param evaluator must not be {@literal null}.
 		 * @param path must not be {@literal null}.
 		 */
-		public MongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
-
-			Assert.notNull(source, "Source document must no be null!");
-			Assert.notNull(evaluator, "SpELExpressionEvaluator must not be null!");
-			Assert.notNull(path, "ObjectPath must not be null!");
-
-			this.source = new DocumentAccessor(source);
-			this.evaluator = evaluator;
-			this.path = path;
+		MongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
+			this(new DocumentAccessor(source), evaluator, path);
 		}
 
 		/**
@@ -1304,7 +1301,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param evaluator must not be {@literal null}.
 		 * @param path must not be {@literal null}.
 		 */
-		public MongoDbPropertyValueProvider(DocumentAccessor accessor, SpELExpressionEvaluator evaluator, ObjectPath path) {
+		MongoDbPropertyValueProvider(DocumentAccessor accessor, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
 			Assert.notNull(accessor, "DocumentAccessor must no be null!");
 			Assert.notNull(evaluator, "SpELExpressionEvaluator must not be null!");
@@ -1320,6 +1317,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
 		 */
 		@Nullable
+		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
 
 			String expression = property.getSpelExpression();
@@ -1330,6 +1328,54 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			return readValue(value, property.getTypeInformation(), path);
+		}
+	}
+
+	/**
+	 * {@link PropertyValueProvider} that is aware of {@link MongoPersistentProperty#isAssociation()} and that delegates
+	 * resolution to {@link DbRefResolver}.
+	 *
+	 * @author Mark Paluch
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	class AssociationAwareMongoDbPropertyValueProvider extends MongoDbPropertyValueProvider {
+
+		/**
+		 * Creates a new {@link AssociationAwareMongoDbPropertyValueProvider} for the given source,
+		 * {@link SpELExpressionEvaluator} and {@link ObjectPath}.
+		 *
+		 * @param source must not be {@literal null}.
+		 * @param evaluator must not be {@literal null}.
+		 * @param path must not be {@literal null}.
+		 */
+		AssociationAwareMongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
+			super(source, evaluator, path);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
+		 */
+		@Nullable
+		@SuppressWarnings("unchecked")
+		public <T> T getPropertyValue(MongoPersistentProperty property) {
+
+			if (property.isDbReference() && property.getDBRef().lazy()) {
+
+				Object rawRefValue = source.get(property);
+				if (rawRefValue == null) {
+					return null;
+				}
+
+				DbRefResolverCallback callback = new DefaultDbRefResolverCallback(source.getDocument(), path, evaluator,
+						MappingMongoConverter.this);
+
+				DBRef dbref = rawRefValue instanceof DBRef ? (DBRef) rawRefValue : null;
+				return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
+			}
+
+			return super.getPropertyValue(property);
 		}
 	}
 

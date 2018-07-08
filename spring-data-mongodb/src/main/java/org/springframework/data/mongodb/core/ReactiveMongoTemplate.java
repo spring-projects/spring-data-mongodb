@@ -32,8 +32,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-
+import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
@@ -71,14 +70,21 @@ import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
-import org.springframework.data.mongodb.core.aggregation.CountOperation;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.*;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.index.ReactiveMongoPersistentEntityIndexCreator;
@@ -97,7 +103,6 @@ import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -120,7 +125,6 @@ import com.mongodb.ClientSessionOptions;
 import com.mongodb.CursorType;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
-import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
@@ -157,7 +161,7 @@ import com.mongodb.util.JSONParseException;
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
 
-	public static final DbRefResolver NO_OP_REF_RESOLVER = new NoOpDbRefResolver();
+	public static final DbRefResolver NO_OP_REF_RESOLVER = NoOpDbRefResolver.INSTANCE;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveMongoTemplate.class);
 	private static final String ID_FIELD = "_id";
@@ -515,24 +519,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						session.startTransaction();
 					}
 
-					return ReactiveMongoTemplate.this.withSession(action, session) //
-							.materialize() //
-							.flatMap(signal -> {
-
-								if (session.hasActiveTransaction()) {
-									if (signal.isOnComplete()) {
-										return Mono.from(session.commitTransaction()).thenReturn(signal);
-									}
-									if (signal.isOnError()) {
-										return Mono.from(session.abortTransaction()).thenReturn(signal);
-									}
-								}
-								return Mono.just(signal);
-							}) //
-							.<T> dematerialize() //
-							.doFinally(signalType -> {
-								doFinally.accept(session);
-							});
+					return Flux.usingWhen(Mono.just(session), //
+							s -> ReactiveMongoTemplate.this.withSession(action, s), //
+							ClientSession::commitTransaction, //
+							ClientSession::abortTransaction) //
+							.doFinally(signalType -> doFinally.accept(session));
 				});
 			}
 		};
@@ -540,7 +531,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	private <T> Flux<T> withSession(ReactiveSessionCallback<T> action, ClientSession session) {
 
-		return Flux.from(action.doInSession(new ReactiveSessionBoundMongoTemplate(session, ReactiveMongoTemplate.this))) //
+		ReactiveSessionBoundMongoTemplate operations = new ReactiveSessionBoundMongoTemplate(session,
+				ReactiveMongoTemplate.this);
+
+		return Flux.from(action.doInSession(operations)) //
 				.subscriberContext(ctx -> ReactiveMongoContext.setSession(ctx, Mono.just(session)));
 	}
 
@@ -1998,56 +1992,56 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				new TailingQueryFindPublisherPreparer(query, entityClass));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.Class, org.springframework.data.mongodb.core.ChangeStreamOptions, java.lang.String)
-	 */
 	@Override
-	public <T> Flux<ChangeStreamEvent<T>> changeStream(@Nullable Aggregation filter, Class<T> resultType,
-			ChangeStreamOptions options, String collectionName) {
+	public <T> Flux<ChangeStreamEvent<T>> changeStream(@Nullable String database, @Nullable String collectionName,
+			ChangeStreamOptions options, Class<T> targetType) {
 
-		Assert.notNull(resultType, "Result type must not be null!");
-		Assert.notNull(options, "ChangeStreamOptions must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		List<Document> filter = prepareFilter(options);
+		FullDocument fullDocument = ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
+				: FullDocument.UPDATE_LOOKUP;
 
-		if (filter == null) {
-			return changeStream(Collections.emptyList(), resultType, options, collectionName);
+		MongoDatabase db = StringUtils.hasText(database) ? mongoDatabaseFactory.getMongoDatabase(database)
+				: getMongoDatabase();
+
+		ChangeStreamPublisher<Document> publisher;
+		if (StringUtils.hasText(collectionName)) {
+			publisher = filter.isEmpty() ? db.getCollection(collectionName).watch(Document.class)
+					: db.getCollection(collectionName).watch(filter, Document.class);
+
+		} else {
+			publisher = filter.isEmpty() ? db.watch(Document.class) : db.watch(filter, Document.class);
 		}
-
-		AggregationOperationContext context = filter instanceof TypedAggregation ? new TypeBasedAggregationOperationContext(
-				((TypedAggregation) filter).getInputType(), mappingContext, queryMapper) : Aggregation.DEFAULT_CONTEXT;
-
-		return changeStream(
-				filter.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
-						Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns"))),
-				resultType, options, collectionName);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#tail(java.util.List, java.lang.Class, org.springframework.data.mongodb.core.ChangeStreamOptions, java.lang.String)
-	 */
-	@Override
-	public <T> Flux<ChangeStreamEvent<T>> changeStream(List<Document> filter, Class<T> resultType,
-			ChangeStreamOptions options, String collectionName) {
-
-		Assert.notNull(filter, "Filter must not be null!");
-		Assert.notNull(resultType, "Result type must not be null!");
-		Assert.notNull(options, "ChangeStreamOptions must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-
-		ChangeStreamPublisher<Document> publisher = filter.isEmpty() ? getCollection(collectionName).watch()
-				: getCollection(collectionName).watch(filter);
 
 		publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
 		publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
+		publisher = options.getResumeTimestamp().map(it -> new BsonTimestamp(it.toEpochMilli()))
+				.map(publisher::startAtOperationTime).orElse(publisher);
+		publisher = publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
 
-		if (options.getFullDocumentLookup().isPresent() || resultType != Document.class) {
-			publisher = publisher.fullDocument(options.getFullDocumentLookup().isPresent()
-					? options.getFullDocumentLookup().get() : FullDocument.UPDATE_LOOKUP);
+		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, targetType, getConverter()));
+	}
+
+	List<Document> prepareFilter(ChangeStreamOptions options) {
+
+		Object filter = options.getFilter().orElse(Collections.emptyList());
+
+		if (filter instanceof Aggregation) {
+			Aggregation agg = (Aggregation) filter;
+			AggregationOperationContext context = agg instanceof TypedAggregation
+					? new TypeBasedAggregationOperationContext(((TypedAggregation<?>) agg).getInputType(),
+							getConverter().getMappingContext(), queryMapper)
+					: Aggregation.DEFAULT_CONTEXT;
+
+			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
+					Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns")));
 		}
 
-		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, resultType, getConverter()));
+		if (filter instanceof List) {
+			return (List<Document>) filter;
+		}
+
+		throw new IllegalArgumentException(
+				"ChangeStreamRequestOptions.filter mut be either an Aggregation or a plain list of Documents");
 	}
 
 	/*
@@ -2622,8 +2616,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Nullable
 	private WriteConcern potentiallyForceAcknowledgedWrite(@Nullable WriteConcern wc) {
 
-		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)
-				&& MongoClientVersion.isMongo3Driver()) {
+		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
 					|| (wc.getWObject() instanceof Number && ((Number) wc.getWObject()).intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
@@ -3289,54 +3282,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * No-Operation {@link org.springframework.data.mongodb.core.mapping.DBRef} resolver.
-	 *
-	 * @author Mark Paluch
-	 */
-	static class NoOpDbRefResolver implements DbRefResolver {
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
-		 */
-		@Override
-		@Nullable
-		public Object resolveDbRef(@Nonnull MongoPersistentProperty property, @Nonnull DBRef dbref,
-				@Nonnull DbRefResolverCallback callback, @Nonnull DbRefProxyHandler proxyHandler) {
-			return null;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#created(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.mapping.MongoPersistentEntity, java.lang.Object)
-		 */
-		@Override
-		@Nullable
-		public DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation,
-				MongoPersistentEntity<?> entity, Object id) {
-			return null;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#fetch(com.mongodb.DBRef)
-		 */
-		@Override
-		public Document fetch(DBRef dbRef) {
-			return null;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#bulkFetch(java.util.List)
-		 */
-		@Override
-		public List<Document> bulkFetch(List<DBRef> dbRefs) {
-			return Collections.emptyList();
-		}
-	}
-
-	/**
 	 * {@link MongoTemplate} extension bound to a specific {@link ClientSession} that is applied when interacting with the
 	 * server through the driver API.
 	 * <p />
@@ -3396,41 +3341,19 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				return super.count(query, entityClass, collectionName);
 			}
 
-			AggregationUtil aggregationUtil = new AggregationUtil(delegate.queryMapper, delegate.mappingContext);
-			Aggregation aggregation = aggregationUtil.createCountAggregation(query, entityClass);
+			return createMono(collectionName, collection -> {
 
-			return aggregate(aggregation, collectionName, Document.class) //
-					.next() //
-					.map(it -> it.get("totalEntityCount", Number.class).longValue()) //
-					.defaultIfEmpty(0L);
-		}
+				final Document Document = query == null ? null
+						: delegate.queryMapper.getMappedObject(query.getQueryObject(),
+								entityClass == null ? null : delegate.mappingContext.getPersistentEntity(entityClass));
 
-		private List<AggregationOperation> computeCountAggregationPipeline(@Nullable Query query,
-				@Nullable Class<?> entityType) {
-
-			CountOperation count = Aggregation.count().as("totalEntityCount");
-			if (query == null || query.getQueryObject().isEmpty()) {
-				return Arrays.asList(count);
-			}
-
-			Document mappedQuery = delegate.queryMapper.getMappedObject(query.getQueryObject(),
-					delegate.getPersistentEntity(entityType));
-
-			CriteriaDefinition criteria = new CriteriaDefinition() {
-
-				@Override
-				public Document getCriteriaObject() {
-					return mappedQuery;
+				CountOptions options = new CountOptions();
+				if (query != null) {
+					query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 				}
 
-				@Nullable
-				@Override
-				public String getKey() {
-					return null;
-				}
-			};
-
-			return Arrays.asList(Aggregation.match(criteria), count);
+				return collection.countDocuments(Document, options);
+			});
 		}
 	}
 

@@ -21,8 +21,11 @@ import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -39,17 +42,16 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
+import org.springframework.data.mongodb.core.messaging.ChangeStreamTask.ChangeStreamEventMessage;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 
@@ -80,7 +82,7 @@ public class ChangeStreamTests {
 	@Before
 	public void setUp() {
 
-		template = new MongoTemplate(new MongoClient(), "change-stream-tests");
+		template = new MongoTemplate(MongoTestUtils.replSetClient(), "change-stream-tests");
 		template.dropCollection(User.class);
 
 		container = new DefaultMessageListenerContainer(template, executor);
@@ -361,8 +363,10 @@ public class ChangeStreamTests {
 	public void readsOnlyDiffForUpdateWhenOptionsDeclareDefaultExplicitly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener, new ChangeStreamRequestOptions(
-				"user", ChangeStreamOptions.builder().fullDocumentLookup(FullDocument.DEFAULT).build()));
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+				.collection("user") //
+				.fullDocumentLookup(FullDocument.DEFAULT) //
+				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -381,8 +385,10 @@ public class ChangeStreamTests {
 	public void readsFullDocumentForUpdateWhenNotMappedToDomainTypeButLookupSpecified() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener,
-				new ChangeStreamRequestOptions("user", ChangeStreamOptions.builder().returnFullDocumentOnUpdate().build()));
+		ChangeStreamRequest<Document> request = ChangeStreamRequest.builder() //
+				.collection("user") //
+				.fullDocumentLookup(FullDocument.UPDATE_LOOKUP) //
+				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, Document.class);
 		awaitSubscription(subscription);
@@ -399,11 +405,123 @@ public class ChangeStreamTests {
 				.append("user_name", "jellyBelly").append("age", 8).append("_class", User.class.getName()));
 	}
 
+	@Test // DATAMONGO-2012
+	public void resumeAtTimestampCorrectly() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener1 = new CollectingMessageListener<>();
+		Subscription subscription1 = container.register(new ChangeStreamRequest<>(messageListener1, () -> "user"),
+				User.class);
+
+		awaitSubscription(subscription1);
+
+		template.save(jellyBelly);
+		template.save(sugarSplashy);
+
+		awaitMessages(messageListener1, 12);
+
+		Instant resumeAt = ((ChangeStreamEventMessage) messageListener1.getLastMessage()).getTimestamp();
+
+		template.save(huffyFluffy);
+
+		awaitMessages(messageListener1, 3);
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener2 = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> subSequentRequest = ChangeStreamRequest.builder() //
+				.collection("user") //
+				.resumeAt(resumeAt) //
+				.publishTo(messageListener2) //
+				.build();
+
+		Subscription subscription2 = container.register(subSequentRequest, User.class);
+		awaitSubscription(subscription2);
+
+		awaitMessages(messageListener2);
+
+		List<User> messageBodies = messageListener2.getMessages().stream().map(Message::getBody)
+				.collect(Collectors.toList());
+
+		assertThat(messageBodies).hasSize(2).doesNotContain(jellyBelly);
+	}
+
+	@Test // DATAMONGO-1996
+	public void filterOnNestedElementWorksCorrectly() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
+				.collection("user") //
+				.filter(newAggregation(User.class, match(where("address.street").is("flower street")))) //
+				.build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		jellyBelly.address = new Address();
+		jellyBelly.address.street = "candy ave";
+
+		huffyFluffy.address = new Address();
+		huffyFluffy.address.street = "flower street";
+
+		template.save(jellyBelly);
+		template.save(sugarSplashy);
+		template.save(huffyFluffy);
+
+		awaitMessages(messageListener);
+
+		List<User> messageBodies = messageListener.getMessages().stream().map(Message::getBody)
+				.collect(Collectors.toList());
+
+		assertThat(messageBodies).hasSize(1).contains(huffyFluffy);
+	}
+
+	@Test // DATAMONGO-1996
+	public void filterOnUpdateDescriptionElement() throws InterruptedException {
+
+		template.save(jellyBelly);
+		template.save(sugarSplashy);
+		template.save(huffyFluffy);
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
+				.collection("user") //
+				.filter(newAggregation(User.class, match(where("updateDescription.updatedFields.address").exists(true)))) //
+				.fullDocumentLookup(FullDocument.UPDATE_LOOKUP).build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.update(User.class).matching(query(where("id").is(jellyBelly.id)))
+				.apply(Update.update("address", new Address("candy ave"))).first();
+
+		template.update(User.class).matching(query(where("id").is(sugarSplashy.id))).apply(new Update().inc("age", 1))
+				.first();
+
+		template.update(User.class).matching(query(where("id").is(huffyFluffy.id)))
+				.apply(Update.update("address", new Address("flower street"))).first();
+
+		awaitMessages(messageListener);
+
+		List<User> messageBodies = messageListener.getMessages().stream().map(Message::getBody)
+				.collect(Collectors.toList());
+
+		assertThat(messageBodies).hasSize(2);
+	}
+
 	@Data
 	static class User {
 
 		@Id String id;
 		@Field("user_name") String userName;
 		int age;
+
+		Address address;
 	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	static class Address {
+
+		@Field("s") String street;
+	}
+
 }

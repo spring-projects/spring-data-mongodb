@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import lombok.EqualsAndHashCode;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -46,6 +47,7 @@ public class ChangeStreamOptions {
 	private @Nullable BsonValue resumeToken;
 	private @Nullable FullDocument fullDocumentLookup;
 	private @Nullable Collation collation;
+	private @Nullable Instant resumeTimestamp;
 
 	protected ChangeStreamOptions() {}
 
@@ -78,6 +80,13 @@ public class ChangeStreamOptions {
 	}
 
 	/**
+	 * @return {@link Optional#empty()} if not set.
+	 */
+	public Optional<Instant> getResumeTimestamp() {
+		return Optional.ofNullable(resumeTimestamp);
+	}
+
+	/**
 	 * @return empty {@link ChangeStreamOptions}.
 	 */
 	public static ChangeStreamOptions empty() {
@@ -106,6 +115,7 @@ public class ChangeStreamOptions {
 		private @Nullable BsonValue resumeToken;
 		private @Nullable FullDocument fullDocumentLookup;
 		private @Nullable Collation collation;
+		private @Nullable Instant resumeTimestamp;
 
 		private ChangeStreamOptionsBuilder() {}
 
@@ -201,6 +211,20 @@ public class ChangeStreamOptions {
 		}
 
 		/**
+		 * Set the cluster time to resume from.
+		 *
+		 * @param resumeTimestamp must not be {@literal null}.
+		 * @return this.
+		 */
+		public ChangeStreamOptionsBuilder resumeAt(Instant resumeTimestamp) {
+
+			Assert.notNull(resumeTimestamp, "ResumeTimestamp must not be null!");
+
+			this.resumeTimestamp = resumeTimestamp;
+			return this;
+		}
+
+		/**
 		 * @return the built {@link ChangeStreamOptions}
 		 */
 		public ChangeStreamOptions build() {
@@ -211,6 +235,7 @@ public class ChangeStreamOptions {
 			options.resumeToken = resumeToken;
 			options.fullDocumentLookup = fullDocumentLookup;
 			options.collation = collation;
+			options.resumeTimestamp = resumeTimestamp;
 
 			return options;
 		}

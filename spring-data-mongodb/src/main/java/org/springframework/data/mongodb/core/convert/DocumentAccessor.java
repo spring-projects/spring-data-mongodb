@@ -59,6 +59,14 @@ class DocumentAccessor {
 	}
 
 	/**
+	 * @return the underlying {@link Bson document}.
+	 * @since 2.1
+	 */
+	Bson getDocument() {
+		return this.document;
+	}
+
+	/**
 	 * Puts the given value into the backing {@link Document} based on the coordinates defined through the given
 	 * {@link MongoPersistentProperty}. By default this will be the plain field name. But field names might also consist
 	 * of path traversals so we might need to create intermediate {@link BasicDocument}s.

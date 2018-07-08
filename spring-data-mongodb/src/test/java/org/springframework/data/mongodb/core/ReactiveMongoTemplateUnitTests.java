@@ -41,8 +41,8 @@ import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplateUnitTests.AutogenerateableId;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -107,7 +107,7 @@ public class ReactiveMongoTemplateUnitTests {
 		when(aggregatePublisher.first()).thenReturn(findPublisher);
 
 		this.mappingContext = new MongoMappingContext();
-		this.converter = new MappingMongoConverter(new NoOpDbRefResolver(), mappingContext);
+		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 		this.template = new ReactiveMongoTemplate(factory, converter);
 
 	}

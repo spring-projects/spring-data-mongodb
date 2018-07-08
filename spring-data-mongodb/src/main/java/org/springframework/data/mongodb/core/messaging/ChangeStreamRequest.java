@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
+import java.time.Instant;
+
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
@@ -34,11 +36,20 @@ import com.mongodb.client.model.changestream.FullDocument;
  * using the synchronous MongoDB Java driver.
  * <p/>
  * The most trivial use case is subscribing to all events of a specific {@link com.mongodb.client.MongoCollection
- * collection}.
+ * collection}
  *
  * <pre>
  * <code>
  *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(System.out::println, () -> "collection-name");
+ * </code>
+ * </pre>
+ *
+ * or {@link com.mongodb.client.MongoDatabase} which receives events from all {@link com.mongodb.client.MongoCollection
+ * collections} in that database.
+ *
+ * <pre>
+ * <code>
+ *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(System.out::println, RequestOptions.justDatabase("test"));
  * </code>
  * </pre>
  *
@@ -154,21 +165,23 @@ public class ChangeStreamRequest<T>
 	 */
 	public static class ChangeStreamRequestOptions implements SubscriptionRequest.RequestOptions {
 
-		private final String collectionName;
+		private final @Nullable String databaseName;
+		private final @Nullable String collectionName;
 		private final ChangeStreamOptions options;
 
 		/**
 		 * Create new {@link ChangeStreamRequestOptions}.
 		 *
-		 * @param collectionName must not be {@literal null}.
+		 * @param collectionName can be {@literal null}.
 		 * @param options must not be {@literal null}.
 		 */
-		public ChangeStreamRequestOptions(String collectionName, ChangeStreamOptions options) {
+		public ChangeStreamRequestOptions(@Nullable String databaseName, @Nullable String collectionName,
+				ChangeStreamOptions options) {
 
-			Assert.notNull(collectionName, "CollectionName must not be null!");
 			Assert.notNull(options, "Options must not be null!");
 
 			this.collectionName = collectionName;
+			this.databaseName = databaseName;
 			this.options = options;
 		}
 
@@ -176,7 +189,8 @@ public class ChangeStreamRequest<T>
 
 			Assert.notNull(options, "Options must not be null!");
 
-			return new ChangeStreamRequestOptions(options.getCollectionName(), ChangeStreamOptions.builder().build());
+			return new ChangeStreamRequestOptions(options.getDatabaseName(), options.getCollectionName(),
+					ChangeStreamOptions.builder().build());
 		}
 
 		/**
@@ -196,6 +210,15 @@ public class ChangeStreamRequest<T>
 		public String getCollectionName() {
 			return collectionName;
 		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest.RequestOptions#getDatabaseName()
+		 */
+		@Override
+		public String getDatabaseName() {
+			return databaseName;
+		}
 	}
 
 	/**
@@ -207,11 +230,26 @@ public class ChangeStreamRequest<T>
 	 */
 	public static class ChangeStreamRequestBuilder<T> {
 
+		private @Nullable String databaseName;
 		private @Nullable String collectionName;
 		private @Nullable MessageListener<ChangeStreamDocument<Document>, ? super T> listener;
 		private ChangeStreamOptionsBuilder delegate = ChangeStreamOptions.builder();
 
 		private ChangeStreamRequestBuilder() {}
+
+		/**
+		 * Set the name of the {@link com.mongodb.client.MongoDatabase} to listen to.
+		 *
+		 * @param databaseName must not be {@literal null} nor empty.
+		 * @return this.
+		 */
+		public ChangeStreamRequestBuilder<T> database(String databaseName) {
+
+			Assert.hasText(databaseName, "DatabaseName must not be null!");
+
+			this.databaseName = databaseName;
+			return this;
+		}
 
 		/**
 		 * Set the name of the {@link com.mongodb.client.MongoCollection} to listen to.
@@ -318,6 +356,22 @@ public class ChangeStreamRequest<T>
 		}
 
 		/**
+		 * Set the cluster time at which to resume listening.
+		 *
+		 * @param clusterTime must not be {@literal null}.
+		 * @return this.
+		 * @see ChangeStreamOptions#getResumeTimestamp()
+		 * @see ChangeStreamOptionsBuilder#resumeAt(java.time.Instant)
+		 */
+		public ChangeStreamRequestBuilder<T> resumeAt(Instant clusterTime) {
+
+			Assert.notNull(clusterTime, "ClusterTime must not be null!");
+
+			this.delegate.resumeAt(clusterTime);
+			return this;
+		}
+
+		/**
 		 * Set the {@link FullDocument} lookup to {@link FullDocument#UPDATE_LOOKUP}.
 		 *
 		 * @return this.
@@ -339,9 +393,9 @@ public class ChangeStreamRequest<T>
 		public ChangeStreamRequest<T> build() {
 
 			Assert.notNull(listener, "MessageListener must not be null!");
-			Assert.hasText(collectionName, "CollectionName must not be null!");
 
-			return new ChangeStreamRequest<>(listener, new ChangeStreamRequestOptions(collectionName, delegate.build()));
+			return new ChangeStreamRequest<>(listener,
+					new ChangeStreamRequestOptions(databaseName, collectionName, delegate.build()));
 		}
 	}
 }

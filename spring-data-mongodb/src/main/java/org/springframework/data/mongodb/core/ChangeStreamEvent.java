@@ -17,8 +17,10 @@ package org.springframework.data.mongodb.core;
 
 import lombok.EqualsAndHashCode;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.time.Instant;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.messaging.Message;
@@ -26,6 +28,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
+import com.mongodb.client.model.changestream.OperationType;
 
 /**
  * {@link Message} implementation specific to MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change
@@ -38,11 +41,17 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
 @EqualsAndHashCode
 public class ChangeStreamEvent<T> {
 
+	@SuppressWarnings("rawtypes") //
+	private static final AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> CONVERTED_UPDATER = AtomicReferenceFieldUpdater
+			.newUpdater(ChangeStreamEvent.class, Object.class, "converted");
+
 	private final @Nullable ChangeStreamDocument<Document> raw;
 
 	private final Class<T> targetType;
 	private final MongoConverter converter;
-	private final AtomicReference<T> converted = new AtomicReference<>();
+
+	// accessed through CONVERTED_UPDATER.
+	private volatile @Nullable T converted;
 
 	/**
 	 * @param raw can be {@literal null}.
@@ -68,6 +77,56 @@ public class ChangeStreamEvent<T> {
 	}
 
 	/**
+	 * Get the {@link ChangeStreamDocument#getClusterTime() cluster time} as {@link Instant} the event was emitted at.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public Instant getTimestamp() {
+		return raw != null && raw.getClusterTime() != null ? Instant.ofEpochMilli(raw.getClusterTime().getValue()) : null;
+	}
+
+	/**
+	 * Get the {@link ChangeStreamDocument#getResumeToken() resume token} for this event.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public BsonValue getResumeToken() {
+		return raw != null ? raw.getResumeToken() : null;
+	}
+
+	/**
+	 * Get the {@link ChangeStreamDocument#getOperationType() operation type} for this event.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public OperationType getOperationType() {
+		return raw != null ? raw.getOperationType() : null;
+	}
+
+	/**
+	 * Get the database name the event was originated at.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public String getDatabaseName() {
+		return raw != null ? raw.getNamespace().getDatabaseName() : null;
+	}
+
+	/**
+	 * Get the collection name the event was originated at.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public String getCollectionName() {
+		return raw != null ? raw.getNamespace().getCollectionName() : null;
+	}
+
+	/**
 	 * Get the potentially converted {@link ChangeStreamDocument#getFullDocument()}.
 	 *
 	 * @return {@literal null} when {@link #getRaw()} or {@link ChangeStreamDocument#getFullDocument()} is
@@ -80,36 +139,48 @@ public class ChangeStreamEvent<T> {
 			return null;
 		}
 
-		if (raw.getFullDocument() == null) {
-			return targetType.cast(raw.getFullDocument());
+		Document fullDocument = raw.getFullDocument();
+
+		if (fullDocument == null) {
+			return targetType.cast(fullDocument);
 		}
 
-		return getConverted();
+		return getConverted(fullDocument);
 	}
 
-	private T getConverted() {
+	@SuppressWarnings("unchecked")
+	private T getConverted(Document fullDocument) {
+		return (T) doGetConverted(fullDocument);
+	}
 
-		T result = converted.get();
+	private Object doGetConverted(Document fullDocument) {
+
+		Object result = CONVERTED_UPDATER.get(this);
+
 		if (result != null) {
 			return result;
 		}
 
-		if (ClassUtils.isAssignable(Document.class, raw.getFullDocument().getClass())) {
+		if (ClassUtils.isAssignable(Document.class, fullDocument.getClass())) {
 
-			result = converter.read(targetType, raw.getFullDocument());
-			return converted.compareAndSet(null, result) ? result : converted.get();
+			result = converter.read(targetType, fullDocument);
+			return CONVERTED_UPDATER.compareAndSet(this, null, result) ? result : CONVERTED_UPDATER.get(this);
 		}
 
-		if (converter.getConversionService().canConvert(raw.getFullDocument().getClass(), targetType)) {
+		if (converter.getConversionService().canConvert(fullDocument.getClass(), targetType)) {
 
-			result = converter.getConversionService().convert(raw.getFullDocument(), targetType);
-			return converted.compareAndSet(null, result) ? result : converted.get();
+			result = converter.getConversionService().convert(fullDocument, targetType);
+			return CONVERTED_UPDATER.compareAndSet(this, null, result) ? result : CONVERTED_UPDATER.get(this);
 		}
 
 		throw new IllegalArgumentException(String.format("No converter found capable of converting %s to %s",
-				raw.getFullDocument().getClass(), targetType));
+				fullDocument.getClass(), targetType));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
 		return "ChangeStreamEvent {" + "raw=" + raw + ", targetType=" + targetType + '}';

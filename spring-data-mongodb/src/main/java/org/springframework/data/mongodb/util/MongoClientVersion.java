@@ -26,34 +26,54 @@ import org.springframework.util.ClassUtils;
  */
 public class MongoClientVersion {
 
-	private static final boolean IS_MONGO_30 = ClassUtils.isPresent("com.mongodb.binding.SingleServerBinding",
+	private static final boolean SYNC_CLIENT_PRESENT = ClassUtils.isPresent("com.mongodb.MongoClient",
 			MongoClientVersion.class.getClassLoader());
 
-	private static final boolean IS_MONGO_34 = ClassUtils.isPresent("org.bson.types.Decimal128",
+	private static final boolean ASYNC_CLIENT_PRESENT = ClassUtils.isPresent("com.mongodb.async.client.MongoClient",
 			MongoClientVersion.class.getClassLoader());
 
-	private static final boolean IS_ASYNC_CLIENT = ClassUtils.isPresent("com.mongodb.async.client.MongoClient",
-			MongoClientVersion.class.getClassLoader());
+	private static final boolean REACTIVE_CLIENT_PRESENT = ClassUtils
+			.isPresent("com.mongodb.reactivestreams.client.MongoClient", MongoClientVersion.class.getClassLoader());
 
 	/**
 	 * @return {@literal true} if MongoDB Java driver version 3.0 or later is on classpath.
+	 * @deprecated since 2.1, which requires MongoDB Java driver 3.8. Returns {@literal true} by default.
 	 */
+	@Deprecated
 	public static boolean isMongo3Driver() {
-		return IS_MONGO_30;
+		return true;
 	}
 
 	/**
 	 * @return {@literal true} if MongoDB Java driver version 3.4 or later is on classpath.
 	 * @since 1.10
+	 * @deprecated since 2.1, which requires MongoDB Java driver 3.8. Returns {@literal true} by default.
 	 */
+	@Deprecated
 	public static boolean isMongo34Driver() {
-		return IS_MONGO_34;
+		return true;
 	}
 
 	/**
-	 * @return {lliteral true} if MongoDB Java driver is on classpath.
+	 * @return {@literal true} if the async MongoDB Java driver is on classpath.
 	 */
 	public static boolean isAsyncClient() {
-		return IS_ASYNC_CLIENT;
+		return ASYNC_CLIENT_PRESENT;
+	}
+
+	/**
+	 * @return {@literal true} if the sync MongoDB Java driver is on classpath.
+	 * @since 2.1
+	 */
+	public static boolean isSyncClientPresent() {
+		return SYNC_CLIENT_PRESENT;
+	}
+
+	/**
+	 * @return {@literal true} if the reactive MongoDB Java driver is on classpath.
+	 * @since 2.1
+	 */
+	public static boolean isReactiveClientPresent() {
+		return REACTIVE_CLIENT_PRESENT;
 	}
 }

@@ -36,6 +36,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.ErrorHandler;
@@ -54,13 +55,16 @@ public class DefaultMessageListenerContainerTests {
 
 	public static final String DATABASE_NAME = "change-stream-events";
 	public static final String COLLECTION_NAME = "collection-1";
-	MongoDbFactory dbFactory;
-
-	MongoCollection<Document> collection;
-	private CollectingMessageListener<Object, Object> messageListener;
-	private MongoTemplate template;
+	public static final String COLLECTION_2_NAME = "collection-2";
 
 	public @Rule TestRule replSet = ReplicaSet.none();
+
+	MongoDbFactory dbFactory;
+	MongoCollection<Document> collection;
+	MongoCollection<Document> collection2;
+
+	private CollectingMessageListener<Object, Object> messageListener;
+	private MongoTemplate template;
 
 	@Before
 	public void setUp() {
@@ -69,7 +73,10 @@ public class DefaultMessageListenerContainerTests {
 		template = new MongoTemplate(dbFactory);
 
 		template.dropCollection(COLLECTION_NAME);
+		template.dropCollection(COLLECTION_2_NAME);
+
 		collection = template.getCollection(COLLECTION_NAME);
+		collection2 = template.getCollection(COLLECTION_2_NAME);
 
 		messageListener = new CollectingMessageListener<>();
 	}
@@ -306,6 +313,31 @@ public class DefaultMessageListenerContainerTests {
 
 		assertThat(changeStreamListener.getTotalNumberMessagesReceived()).isEqualTo(1);
 		assertThat(changeStreamListener.getFirstMessage().getRaw()).isInstanceOf(ChangeStreamDocument.class);
+	}
+
+	@Test // DATAMONGO-2012
+	@IfProfileValue(name = "replSet", value = "true")
+	public void databaseLevelWatch() throws InterruptedException {
+
+		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
+		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, RequestOptions.none()),
+				Person.class);
+
+		container.start();
+
+		awaitSubscription(subscription, Duration.ofMillis(500));
+
+		collection.insertOne(new Document("_id", "col-1-id-1").append("firstname", "foo"));
+		collection.insertOne(new Document("_id", "col-1-id-2").append("firstname", "bar"));
+
+		collection2.insertOne(new Document("_id", "col-2-id-1").append("firstname", "bar"));
+		collection2.insertOne(new Document("_id", "col-2-id-2").append("firstname", "foo"));
+
+		awaitMessages(messageListener, 4, Duration.ofMillis(500));
+
+		assertThat(messageListener.getMessages().stream().map(Message::getBody).collect(Collectors.toList()))
+				.containsExactly(new Person("col-1-id-1", "foo"), new Person("col-1-id-2", "bar"),
+						new Person("col-2-id-1", "bar"), new Person("col-2-id-2", "foo"));
 	}
 
 	@Data

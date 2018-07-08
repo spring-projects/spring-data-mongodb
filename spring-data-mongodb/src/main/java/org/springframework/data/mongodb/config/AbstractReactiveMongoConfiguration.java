@@ -22,6 +22,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 
@@ -80,8 +81,7 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 	@Bean
 	public MappingMongoConverter mappingMongoConverter() throws Exception {
 
-		MappingMongoConverter converter = new MappingMongoConverter(ReactiveMongoTemplate.NO_OP_REF_RESOLVER,
-				mongoMappingContext());
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mongoMappingContext());
 		converter.setCustomConversions(customConversions());
 
 		return converter;
