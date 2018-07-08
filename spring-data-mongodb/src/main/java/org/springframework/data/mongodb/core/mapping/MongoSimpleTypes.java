@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 import org.bson.BsonObjectId;
 import org.bson.types.Binary;
 import org.bson.types.CodeWScope;
+import org.bson.types.CodeWithScope;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.util.MongoClientVersion;
@@ -54,16 +56,12 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(ObjectId.class);
 		simpleTypes.add(BsonObjectId.class);
 		simpleTypes.add(CodeWScope.class);
+		simpleTypes.add(CodeWithScope.class);
 		simpleTypes.add(org.bson.Document.class);
 		simpleTypes.add(Pattern.class);
 		simpleTypes.add(Binary.class);
 		simpleTypes.add(UUID.class);
-
-		if (MongoClientVersion.isMongo34Driver()) {
-			simpleTypes
-					.add(ClassUtils.resolveClassName("org.bson.types.Decimal128", MongoSimpleTypes.class.getClassLoader()));
-		}
-
+		simpleTypes.add(Decimal128.class);
 		MONGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
 

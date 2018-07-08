@@ -1221,8 +1221,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Nullable
 	private WriteConcern potentiallyForceAcknowledgedWrite(@Nullable WriteConcern wc) {
 
-		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)
-				&& MongoClientVersion.isMongo3Driver()) {
+		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
 					|| (wc.getWObject() instanceof Number && ((Number) wc.getWObject()).intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
@@ -3534,18 +3533,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				return super.count(query, entityClass, collectionName);
 			}
 
-			AggregationUtil aggregationUtil = new AggregationUtil(delegate.queryMapper, delegate.mappingContext);
-			Aggregation aggregation = aggregationUtil.createCountAggregation(query, entityClass);
-			AggregationResults<Document> aggregationResults = aggregate(aggregation, collectionName, Document.class);
+			CountOptions options = new CountOptions();
+			query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 
-			List<Document> result = (List<Document>) aggregationResults.getRawResults().getOrDefault("results",
-					Collections.emptyList());
+			Document document = delegate.queryMapper.getMappedObject(query.getQueryObject(),
+					Optional.ofNullable(entityClass).map(it -> delegate.mappingContext.getPersistentEntity(entityClass)));
 
-			if (result.isEmpty()) {
-				return 0;
-			}
-
-			return result.get(0).get("totalEntityCount", Number.class).longValue();
+			return execute(collectionName, collection -> collection.countDocuments(document, options));
 		}
 	}
 }

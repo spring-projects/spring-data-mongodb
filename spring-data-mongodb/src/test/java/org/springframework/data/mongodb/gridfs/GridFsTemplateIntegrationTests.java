@@ -22,7 +22,10 @@ import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.bson.BsonObjectId;
 import org.bson.Document;
@@ -38,6 +41,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.StreamUtils;
 
 import com.mongodb.MongoGridFSException;
 import com.mongodb.client.gridfs.GridFSFindIterable;
@@ -51,6 +55,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * @author Thomas Darimont
  * @author Martin Baumgartner
  * @author Hartmut Lang
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:gridfs/gridfs.xml")
@@ -237,6 +242,27 @@ public class GridFsTemplateIntegrationTests {
 
 		assertThat(result.contentLength()).isEqualTo(resource.contentLength());
 		assertThat(((BsonObjectId) result.getId()).getValue()).isEqualTo(reference);
+	}
+
+	@Test // DATAMONGO-2021
+	public void getResourceShouldRetrieveContentByIdentity() throws IOException {
+
+		ClassPathResource secondResource = new ClassPathResource("gridfs/another-resource.xml");
+
+		ObjectId reference1 = operations.store(resource.getInputStream(), "foo.xml");
+		ObjectId reference2 = operations.store(secondResource.getInputStream(), "foo.xml");
+
+		Map<ObjectId, Resource> fixture = new LinkedHashMap<>();
+		fixture.put(reference1, resource);
+		fixture.put(reference2, secondResource);
+
+		for (Entry<ObjectId, Resource> entry : fixture.entrySet()) {
+
+			GridFsResource fsFile = operations.getResource(operations.findOne(query(where("_id").is(entry.getKey()))));
+			byte[] content = StreamUtils.copyToByteArray(fsFile.getInputStream());
+
+			assertThat(content).isEqualTo(StreamUtils.copyToByteArray(entry.getValue().getInputStream()));
+		}
 	}
 
 	class Metadata {

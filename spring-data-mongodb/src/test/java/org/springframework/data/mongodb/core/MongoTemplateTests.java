@@ -3069,8 +3069,8 @@ public class MongoTemplateTests {
 		assertThat(contentLoaded.dbrefMessage.id, is(messageLoaded.id));
 	}
 
-	@Test // DATAMONGO-1287
-	public void shouldReuseAlreadyResolvedLazyLoadedDBRefWhenUsedAsPersistenceConstrcutorArgument() {
+	@Test // DATAMONGO-1287, DATAMONGO-2004
+	public void shouldReuseAlreadyResolvedLazyLoadedDBRefWhenUsedAsPersistenceConstructorArgument() {
 
 		Document docInCtor = new Document();
 		docInCtor.id = "doc-in-ctor";
@@ -3083,7 +3083,7 @@ public class MongoTemplateTests {
 
 		DocumentWithLazyDBrefUsedInPresistenceConstructor loaded = template.findOne(query(where("id").is(source.id)),
 				DocumentWithLazyDBrefUsedInPresistenceConstructor.class);
-		assertThat(loaded.refToDocUsedInCtor, not(instanceOf(LazyLoadingProxy.class)));
+		assertThat(loaded.refToDocUsedInCtor, instanceOf(LazyLoadingProxy.class));
 		assertThat(loaded.refToDocNotUsedInCtor, nullValue());
 	}
 
@@ -3106,8 +3106,8 @@ public class MongoTemplateTests {
 		assertThat(loaded.refToDocUsedInCtor, nullValue());
 	}
 
-	@Test // DATAMONGO-1287
-	public void shouldRespectParamterValueWhenAttemptingToReuseLazyLoadedDBRefUsedInPersistenceConstrcutor() {
+	@Test // DATAMONGO-1287, DATAMONGO-2004
+	public void shouldRespectParameterValueWhenAttemptingToReuseLazyLoadedDBRefUsedInPersistenceConstructor() {
 
 		Document docInCtor = new Document();
 		docInCtor.id = "doc-in-ctor";
@@ -3125,7 +3125,7 @@ public class MongoTemplateTests {
 
 		DocumentWithLazyDBrefUsedInPresistenceConstructor loaded = template.findOne(query(where("id").is(source.id)),
 				DocumentWithLazyDBrefUsedInPresistenceConstructor.class);
-		assertThat(loaded.refToDocUsedInCtor, not(instanceOf(LazyLoadingProxy.class)));
+		assertThat(loaded.refToDocUsedInCtor, instanceOf(LazyLoadingProxy.class));
 		assertThat(loaded.refToDocNotUsedInCtor, instanceOf(LazyLoadingProxy.class));
 	}
 
@@ -3384,6 +3384,73 @@ public class MongoTemplateTests {
 		assertThat(target.lazyDbRefAnnotatedMap.values(), contains(two, one));
 	}
 
+	@Test // DATAMONGO-2004
+	public void shouldFetchLazyReferenceWithConstructorCreationCorrectly() {
+
+		Sample one = new Sample("1", "jon snow");
+
+		template.save(one);
+
+		DocumentWithLazyDBRefsAndConstructorCreation source = new DocumentWithLazyDBRefsAndConstructorCreation(null, one,
+				null, null);
+
+		template.save(source);
+
+		DocumentWithLazyDBRefsAndConstructorCreation target = template.findOne(query(where("id").is(source.id)),
+				DocumentWithLazyDBRefsAndConstructorCreation.class);
+
+		assertThat(target.lazyDbRefProperty, instanceOf(LazyLoadingProxy.class));
+		assertThat(target.lazyDbRefProperty, is(one));
+	}
+
+	@Test // DATAMONGO-2004
+	public void shouldFetchMapOfLazyReferencesWithConstructorCreationCorrectly() {
+
+		Sample one = new Sample("1", "jon snow");
+		Sample two = new Sample("2", "tyrion lannister");
+
+		template.save(one);
+		template.save(two);
+
+		Map<String, Sample> map = new LinkedHashMap<>();
+		map.put("tyrion", two);
+		map.put("jon", one);
+
+		DocumentWithLazyDBRefsAndConstructorCreation source = new DocumentWithLazyDBRefsAndConstructorCreation(null, null,
+				null, map);
+
+		template.save(source);
+
+		DocumentWithLazyDBRefsAndConstructorCreation target = template.findOne(query(where("id").is(source.id)),
+				DocumentWithLazyDBRefsAndConstructorCreation.class);
+
+		assertThat(target.lazyDbRefAnnotatedMap, instanceOf(LazyLoadingProxy.class));
+		assertThat(target.lazyDbRefAnnotatedMap.values(), contains(two, one));
+	}
+
+	@Test // DATAMONGO-2004
+	public void shouldFetchListOfLazyReferencesWithConstructorCreationCorrectly() {
+
+		Sample one = new Sample("1", "jon snow");
+		Sample two = new Sample("2", "tyrion lannister");
+
+		template.save(one);
+		template.save(two);
+
+		List<Sample> list = Arrays.asList(two, one);
+
+		DocumentWithLazyDBRefsAndConstructorCreation source = new DocumentWithLazyDBRefsAndConstructorCreation(null, null,
+				list, null);
+
+		template.save(source);
+
+		DocumentWithLazyDBRefsAndConstructorCreation target = template.findOne(query(where("id").is(source.id)),
+				DocumentWithLazyDBRefsAndConstructorCreation.class);
+
+		assertThat(target.lazyDbRefAnnotatedList, instanceOf(LazyLoadingProxy.class));
+		assertThat(target.getLazyDbRefAnnotatedList(), contains(two, one));
+	}
+
 	@Test // DATAMONGO-1513
 	@DirtiesContext
 	public void populatesIdsAddedByEventListener() {
@@ -3419,8 +3486,6 @@ public class MongoTemplateTests {
 	@MongoVersion(asOf = "3.4")
 	public void decimal128TypeShouldBeSavedAndLoadedCorrectly()
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-
-		assumeThat(MongoClientVersion.isMongo34Driver(), is(true));
 
 		Class<?> decimal128Type = ClassUtils.resolveClassName("org.bson.types.Decimal128", null);
 
@@ -3590,6 +3655,29 @@ public class MongoTemplateTests {
 
 		@Field("lazy_db_ref_map") // DATAMONGO-1194
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
+	}
+
+	@Data
+	static class DocumentWithLazyDBRefsAndConstructorCreation {
+
+		@Id public final String id;
+
+		public DocumentWithLazyDBRefsAndConstructorCreation(String id, Sample lazyDbRefProperty,
+				List<Sample> lazyDbRefAnnotatedList, Map<String, Sample> lazyDbRefAnnotatedMap) {
+			this.id = id;
+			this.lazyDbRefProperty = lazyDbRefProperty;
+			this.lazyDbRefAnnotatedList = lazyDbRefAnnotatedList;
+			this.lazyDbRefAnnotatedMap = lazyDbRefAnnotatedMap;
+		}
+
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
+		public final Sample lazyDbRefProperty;
+
+		@Field("lazy_db_ref_list") @org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
+		public final List<Sample> lazyDbRefAnnotatedList;
+
+		@Field("lazy_db_ref_map") @org.springframework.data.mongodb.core.mapping.DBRef(
+				lazy = true) public final Map<String, Sample> lazyDbRefAnnotatedMap;
 	}
 
 	@EqualsAndHashCode

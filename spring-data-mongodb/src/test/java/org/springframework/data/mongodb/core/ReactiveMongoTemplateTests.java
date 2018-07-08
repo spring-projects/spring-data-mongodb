@@ -28,6 +28,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1115,8 +1116,7 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<ChangeStreamEvent<Document>> documents = new LinkedBlockingQueue<>(100);
-		Disposable disposable = template
-				.changeStream(Collections.emptyList(), Document.class, ChangeStreamOptions.empty(), "person")
+		Disposable disposable = template.changeStream("person", ChangeStreamOptions.empty(), Document.class)
 				.doOnNext(documents::add).subscribe();
 
 		Thread.sleep(500); // just give it some time to link to the collection.
@@ -1147,8 +1147,7 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
-		Disposable disposable = template
-				.changeStream(Collections.emptyList(), Person.class, ChangeStreamOptions.empty(), "person")
+		Disposable disposable = template.changeStream("person", ChangeStreamOptions.empty(), Person.class)
 				.doOnNext(documents::add).subscribe();
 
 		Thread.sleep(500); // just give it some time to link to the collection.
@@ -1179,8 +1178,9 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
-		Disposable disposable = template.changeStream(newAggregation(Person.class, match(where("age").gte(38))),
-				Person.class, ChangeStreamOptions.empty(), "person").doOnNext(documents::add).subscribe();
+		Disposable disposable = template.changeStream("person",
+				ChangeStreamOptions.builder().filter(newAggregation(Person.class, match(where("age").gte(38)))).build(),
+				Person.class).doOnNext(documents::add).subscribe();
 
 		Thread.sleep(500); // just give it some time to link to the collection.
 
@@ -1211,8 +1211,10 @@ public class ReactiveMongoTemplateTests {
 
 		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
 		Disposable disposable = template
-				.changeStream(newAggregation(Person.class, match(where("operationType").is("replace"))), Person.class,
-						ChangeStreamOptions.empty(), "person")
+				.changeStream("person",
+						ChangeStreamOptions.builder()
+								.filter(newAggregation(Person.class, match(where("operationType").is("replace")))).build(),
+						Person.class)
 				.doOnNext(documents::add).subscribe();
 
 		Thread.sleep(500); // just give it some time to link to the collection.
@@ -1246,8 +1248,7 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
-		Disposable disposable = template
-				.changeStream(Collections.emptyList(), Person.class, ChangeStreamOptions.empty(), "person")
+		Disposable disposable = template.changeStream("person", ChangeStreamOptions.empty(), Person.class)
 				.doOnNext(documents::add).subscribe();
 
 		Thread.sleep(500); // just give it some time to link to the collection.
@@ -1267,9 +1268,7 @@ public class ReactiveMongoTemplateTests {
 		BsonDocument resumeToken = documents.take().getRaw().getResumeToken();
 
 		BlockingQueue<ChangeStreamEvent<Person>> resumeDocuments = new LinkedBlockingQueue<>(100);
-		template
-				.changeStream(Collections.emptyList(), Person.class,
-						ChangeStreamOptions.builder().resumeToken(resumeToken).build(), "person")
+		template.changeStream("person", ChangeStreamOptions.builder().resumeToken(resumeToken).build(), Person.class)
 				.doOnNext(resumeDocuments::add).subscribe();
 
 		Thread.sleep(500); // just give it some time to link receive all events
@@ -1312,6 +1311,81 @@ public class ReactiveMongoTemplateTests {
 				.verifyComplete();
 		StepVerifier.create(template.count(query(where("field").is("stark")), Sample.class)).expectNext(0L)
 				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2012
+	public void watchesDatabaseCorrectly() throws InterruptedException {
+
+		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.createCollection("personX")).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
+		Disposable disposable = template.changeStream(ChangeStreamOptions.empty(), Person.class).doOnNext(documents::add)
+				.subscribe();
+
+		Thread.sleep(500); // just give it some time to link to the collection.
+
+		Person person1 = new Person("Spring", 38);
+		Person person2 = new Person("Data", 37);
+		Person person3 = new Person("MongoDB", 39);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person3, "personX")).expectNextCount(1).verifyComplete();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		try {
+			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+					.containsExactly(person1, person2, person3);
+		} finally {
+			disposable.dispose();
+		}
+	}
+
+	@Test // DATAMONGO-2012
+	public void resumesAtTimestampCorrectly() throws InterruptedException {
+
+		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
+		Disposable disposable = template.changeStream("person", ChangeStreamOptions.empty(), Person.class)
+				.doOnNext(documents::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link to the collection.
+
+		Person person1 = new Person("Spring", 38);
+		Person person2 = new Person("Data", 37);
+		Person person3 = new Person("MongoDB", 39);
+
+		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		disposable.dispose();
+
+		documents.take(); // skip first
+		Instant resumeAt = documents.take().getTimestamp(); // take 2nd
+
+		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> resumeDocuments = new LinkedBlockingQueue<>(100);
+		template.changeStream("person", ChangeStreamOptions.builder().resumeAt(resumeAt).build(), Person.class)
+				.doOnNext(resumeDocuments::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		try {
+			Assertions.assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+					.containsExactly(person2, person3);
+		} finally {
+			disposable.dispose();
+		}
 	}
 
 	private PersonWithAList createPersonWithAList(String firstname, int age) {
