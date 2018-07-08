@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
+import com.mongodb.management.JMXConnectionPoolListener;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.lang.Nullable;
@@ -35,6 +36,7 @@ import com.mongodb.WriteConcern;
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Stephen Tyler Conrad
  * @since 1.7
  */
 public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClientOptions> {
@@ -68,6 +70,8 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	private boolean ssl;
 	private @Nullable SSLSocketFactory sslSocketFactory;
+
+	private boolean enableJmxConnectionPoolListener = false;
 
 	/**
 	 * Set the {@link MongoClient} description.
@@ -266,6 +270,14 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 		this.serverSelectionTimeout = serverSelectionTimeout;
 	}
 
+	/**
+	 * Set to true to enable a JmxConnectionPoolListener for the mongo client
+	 * @param enableJmxConnectionPoolListener
+     */
+	public void setEnableJmxConnectionPoolListener(boolean enableJmxConnectionPoolListener) {
+		this.enableJmxConnectionPoolListener = enableJmxConnectionPoolListener;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
@@ -278,7 +290,13 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 				? (sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault())
 				: this.socketFactory;
 
-		return MongoClientOptions.builder() //
+		MongoClientOptions.Builder builder = MongoClientOptions.builder();
+
+		if(enableJmxConnectionPoolListener) {
+			builder.addConnectionPoolListener(new JMXConnectionPoolListener());
+		}
+
+		return builder //
 				.alwaysUseMBeans(this.alwaysUseMBeans) //
 				.connectionsPerHost(this.connectionsPerHost) //
 				.connectTimeout(connectTimeout) //
