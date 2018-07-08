@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Stephen Tyler Conrad
  */
 @SuppressWarnings("deprecation")
 abstract class MongoParsingUtils {
@@ -93,6 +94,7 @@ abstract class MongoParsingUtils {
 		setPropertyValue(clientOptionsDefBuilder, optionsElement, "ssl", "ssl");
 		setPropertyReference(clientOptionsDefBuilder, optionsElement, "ssl-socket-factory-ref", "sslSocketFactory");
 		setPropertyValue(clientOptionsDefBuilder, optionsElement, "server-selection-timeout", "serverSelectionTimeout");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "enable-jmx-connection-pool-listener", "enableJmxConnectionPoolListener");
 
 		mongoClientBuilder.addPropertyValue("mongoClientOptions", clientOptionsDefBuilder.getBeanDefinition());
 

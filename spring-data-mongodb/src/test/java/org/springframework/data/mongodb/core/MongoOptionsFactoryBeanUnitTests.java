@@ -16,12 +16,10 @@
 package org.springframework.data.mongodb.core;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.*;
-import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 
 import javax.net.ssl.SSLSocketFactory;
 
-import org.junit.BeforeClass;
+import com.mongodb.management.JMXConnectionPoolListener;
 import org.junit.Test;
 
 import com.mongodb.MongoClientOptions;
@@ -32,14 +30,10 @@ import com.mongodb.MongoClientOptions;
  * @author Oliver Gierke
  * @author Mike Saavedra
  * @author Christoph Strobl
+ * @author Stephen Tyler Conrad
  */
 @SuppressWarnings("deprecation")
 public class MongoOptionsFactoryBeanUnitTests {
-
-	@BeforeClass
-	public static void validateMongoDriver() {
-		assumeFalse(isMongo3Driver());
-	}
 
 	@Test // DATAMONGO-764
 	public void testSslConnection() throws Exception {
@@ -51,5 +45,27 @@ public class MongoOptionsFactoryBeanUnitTests {
 		MongoClientOptions options = bean.getObject();
 		assertNotNull(options.getSocketFactory());
 		assertTrue(options.getSocketFactory() instanceof SSLSocketFactory);
+	}
+
+	@Test // DATAMONGO-2024
+	public void testEnablingJmxConnectionListener() throws Exception {
+
+		MongoClientOptionsFactoryBean bean = new MongoClientOptionsFactoryBean();
+		bean.setEnableJmxConnectionPoolListener(true);
+		bean.afterPropertiesSet();
+
+		MongoClientOptions options = bean.getObject();
+		assertFalse(options.getConnectionPoolListeners().isEmpty());
+		assertTrue(options.getConnectionPoolListeners().get(0) instanceof JMXConnectionPoolListener);
+	}
+
+	@Test // DATAMONGO-2024
+	public void testJmxConnectionListenerDisabledByDefault() throws Exception {
+
+		MongoClientOptionsFactoryBean bean = new MongoClientOptionsFactoryBean();
+		bean.afterPropertiesSet();
+
+		MongoClientOptions options = bean.getObject();
+		assertTrue(options.getConnectionPoolListeners().isEmpty());
 	}
 }
