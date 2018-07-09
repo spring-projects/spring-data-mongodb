@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -589,6 +589,22 @@ public class AggregationUnitTests {
 				"$project");
 
 		assertThat($project.containsField("plts.ests"), is(true));
+	}
+
+	@Test // DATAMONGO-2023
+	public void mapsNativeKeywordsCorrectly() {
+
+		Aggregation agg = Aggregation.newAggregation(new AggregationOperation() {
+			@Override
+			public DBObject toDBObject(AggregationOperationContext context) {
+				return new BasicDBObject("$sample", new BasicDBObject("size", "my-custom-value"));
+			}
+		});
+
+		DBObject $sample = extractPipelineElement(agg.toDbObject("collection-1", Aggregation.DEFAULT_CONTEXT), 0,
+				"$sample");
+
+		assertThat($sample, is(equalTo(BasicDBObjectBuilder.start("size", "my-custom-value").get())));
 	}
 
 	private DBObject extractPipelineElement(DBObject agg, int index, String operation) {

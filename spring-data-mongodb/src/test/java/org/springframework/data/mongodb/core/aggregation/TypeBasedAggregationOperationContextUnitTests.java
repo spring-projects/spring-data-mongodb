@@ -52,6 +52,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
@@ -365,6 +366,23 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		BasicDBObject project = (BasicDBObject) getPipelineElementFromAggregationAt(agg, 0).get("$project");
 		assertThat(project, is(equalTo(new BasicDBObject("val", new BasicDBObject("$add",
 				new BasicDbListBuilder().add("$nested1.value1").add("$field2.nestedValue2").get())))));
+	}
+
+	@Test // DATAMONGO-2023
+	public void mapsNativeKeywordsForTypedAggregationCorrectly() {
+
+		AggregationOperationContext context = getContext(FooPerson.class);
+
+		DBObject agg = Aggregation.newAggregation(new AggregationOperation() {
+
+			@Override
+			public DBObject toDBObject(AggregationOperationContext context) {
+				return new BasicDBObject("$sample", new BasicDBObject("name", "foo"));
+			}
+		}).toDbObject("collection", context);
+
+		BasicDBObject $sample = (BasicDBObject) getPipelineElementFromAggregationAt(agg, 0).get("$sample");
+		assertThat($sample, is(equalTo(BasicDBObjectBuilder.start("name", "foo").get())));
 	}
 
 	@Document(collection = "person")
