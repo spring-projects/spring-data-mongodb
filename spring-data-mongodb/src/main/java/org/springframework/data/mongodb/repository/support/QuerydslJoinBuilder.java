@@ -22,28 +22,44 @@ import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
 
 /**
- * {@code JoinBuilder} is a builder for join constraints
+ * {@code QuerydslJoinBuilder} is a builder for join constraints.
+ * <p>
+ * Original implementation source {@link com.querydsl.mongodb.JoinBuilder} by {@literal The Querydsl Team}
+ * (<a href="http://www.querydsl.com/team">http://www.querydsl.com/team</a>) licensed under the Apache License, Version
+ * 2.0.
+ * </p>
+ * Modified for usage with {@link QuerydslAbstractMongodbQuery}.
  *
- * @author Mark Paluch
  * @param <Q>
  * @param <T>
+ * @author tiwe
+ * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.1
  */
-class JoinBuilder<Q extends AbstractMongodbQuery<Q>, T> {
+public class QuerydslJoinBuilder<Q extends QuerydslAbstractMongodbQuery<K, Q>, K, T> {
 
 	private final QueryMixin<Q> queryMixin;
-
 	private final Path<?> ref;
-
 	private final Path<T> target;
 
-	public JoinBuilder(QueryMixin<Q> queryMixin, Path<?> ref, Path<T> target) {
+	QuerydslJoinBuilder(QueryMixin<Q> queryMixin, Path<?> ref, Path<T> target) {
+
 		this.queryMixin = queryMixin;
 		this.ref = ref;
 		this.target = target;
 	}
 
+	/**
+	 * Add the given join conditions.
+	 *
+	 * @param conditions must not be {@literal null}.
+	 * @return the target {@link QueryMixin}.
+	 * @see QueryMixin#on(Predicate)
+	 */
 	@SuppressWarnings("unchecked")
 	public Q on(Predicate... conditions) {
+
 		queryMixin.addJoin(JoinType.JOIN, ExpressionUtils.as((Path) ref, target));
 		queryMixin.on(conditions);
 		return queryMixin.getSelf();

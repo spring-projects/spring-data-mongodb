@@ -24,23 +24,40 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.mongodb.MongodbOps;
 
 /**
- * {@code AnyEmbeddedBuilder} is a builder for constraints on embedded objects
- *
+ * {@code QuerydslAnyEmbeddedBuilder} is a builder for constraints on embedded objects.
+ * <p>
+ * Original implementation source {@link com.querydsl.mongodb.AnyEmbeddedBuilder} by {@literal The Querydsl Team}
+ * (<a href="http://www.querydsl.com/team">http://www.querydsl.com/team</a>) licensed under the Apache License, Version
+ * 2.0.
+ * </p>
+ * Modified for usage with {@link QuerydslAbstractMongodbQuery}.
+ * 
  * @param <Q> query type
+ * @author tiwe
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 2.1
  */
-class AnyEmbeddedBuilder<Q extends AbstractMongodbQuery<Q>> {
+public class QuerydslAnyEmbeddedBuilder<Q extends QuerydslAbstractMongodbQuery<K, Q>, K> {
 
 	private final QueryMixin<Q> queryMixin;
-
 	private final Path<? extends Collection<?>> collection;
 
-	public AnyEmbeddedBuilder(QueryMixin<Q> queryMixin, Path<? extends Collection<?>> collection) {
+	QuerydslAnyEmbeddedBuilder(QueryMixin<Q> queryMixin, Path<? extends Collection<?>> collection) {
+
 		this.queryMixin = queryMixin;
 		this.collection = collection;
 	}
 
+	/**
+	 * Add the given where conditions.
+	 *
+	 * @param conditions must not be {@literal null}.
+	 * @return the target {@link QueryMixin}.
+	 * @see QueryMixin#where(Predicate)
+	 */
 	public Q on(Predicate... conditions) {
+
 		return queryMixin
 				.where(ExpressionUtils.predicate(MongodbOps.ELEM_MATCH, collection, ExpressionUtils.allOf(conditions)));
 	}
