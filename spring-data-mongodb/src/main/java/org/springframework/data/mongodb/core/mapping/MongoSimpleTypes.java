@@ -22,15 +22,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import org.bson.BsonObjectId;
+import org.bson.*;
 import org.bson.types.Binary;
 import org.bson.types.CodeWScope;
 import org.bson.types.CodeWithScope;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.mongodb.util.MongoClientVersion;
-import org.springframework.util.ClassUtils;
 
 import com.mongodb.DBRef;
 
@@ -62,6 +60,24 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(Binary.class);
 		simpleTypes.add(UUID.class);
 		simpleTypes.add(Decimal128.class);
+
+		simpleTypes.add(BsonBinary.class);
+		simpleTypes.add(BsonBoolean.class);
+		simpleTypes.add(BsonDateTime.class);
+		simpleTypes.add(BsonDbPointer.class);
+		simpleTypes.add(BsonDecimal128.class);
+		simpleTypes.add(BsonDocument.class);
+		simpleTypes.add(BsonDocument.class);
+		simpleTypes.add(BsonDouble.class);
+		simpleTypes.add(BsonInt32.class);
+		simpleTypes.add(BsonInt64.class);
+		simpleTypes.add(BsonJavaScript.class);
+		simpleTypes.add(BsonJavaScriptWithScope.class);
+		simpleTypes.add(BsonObjectId.class);
+		simpleTypes.add(BsonRegularExpression.class);
+		simpleTypes.add(BsonString.class);
+		simpleTypes.add(BsonTimestamp.class);
+
 		MONGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
 

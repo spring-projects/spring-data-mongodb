@@ -15,13 +15,29 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import com.querydsl.core.Fetchable;
-import com.querydsl.core.SimpleQuery;
+import com.querydsl.core.types.Operator;
 
 /**
- * Interface that combines {@link Fetchable} and {@link SimpleQuery}.
+ * Spring Data specific {@link Operator operators} for usage with Querydsl and MongoDB.
  *
- * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.1
  */
-public interface SimpleFetchableQuery<K> extends Fetchable<K>, SimpleQuery<SimpleFetchableQuery<K>> {}
+enum QuerydslMongoOps implements Operator {
+
+	/**
+	 * {@link Operator} always evaluating to {@literal false}.
+	 */
+	NO_MATCH(Boolean.class);
+
+	private final Class<?> type;
+
+	QuerydslMongoOps(Class<?> type) {
+		this.type = type;
+	}
+
+	@Override
+	public Class<?> getType() {
+		return type;
+	}
+}

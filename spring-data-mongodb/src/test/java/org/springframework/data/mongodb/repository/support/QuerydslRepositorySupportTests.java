@@ -26,6 +26,7 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -139,6 +140,79 @@ public class QuerydslRepositorySupportTests {
 		assertThat(query.fetchOne(), equalTo(outer));
 	}
 
+	@Test // DATAMONGO-1810, DATAMONGO-1848
+	public void shouldFetchObjectsViaStringWhenUsingInOnDbRef() {
+
+		User bart = new User();
+		DirectFieldAccessor dfa = new DirectFieldAccessor(bart);
+		dfa.setPropertyValue("id", "bart");
+
+		bart.setUsername("bart@simpson.com");
+		operations.save(bart);
+
+		User lisa = new User();
+		dfa = new DirectFieldAccessor(lisa);
+		dfa.setPropertyValue("id", "lisa");
+
+		lisa.setUsername("lisa@simposon.com");
+		operations.save(lisa);
+
+		person.setCoworker(bart);
+		operations.save(person);
+
+		QPerson p = QPerson.person;
+
+		SpringDataMongodbQuery<Person> queryUsingIdFieldWithinInClause = repoSupport.from(p)
+				.where(p.coworker.id.in(Arrays.asList(bart.getId(), lisa.getId())));
+
+		SpringDataMongodbQuery<Person> queryUsingRefObject = repoSupport.from(p).where(p.coworker.eq(bart));
+
+		assertThat(queryUsingIdFieldWithinInClause.fetchOne(), equalTo(person));
+		assertThat(queryUsingIdFieldWithinInClause.fetchOne(), equalTo(queryUsingRefObject.fetchOne()));
+	}
+
+	@Test // DATAMONGO-1810, DATAMONGO-1848
+	public void shouldFetchObjectsViaStringStoredAsObjectIdWhenUsingInOnDbRef() {
+
+		User bart = new User();
+		bart.setUsername("bart@simpson.com");
+		operations.save(bart);
+
+		User lisa = new User();
+		lisa.setUsername("lisa@simposon.com");
+		operations.save(lisa);
+
+		person.setCoworker(bart);
+		operations.save(person);
+
+		QPerson p = QPerson.person;
+
+		SpringDataMongodbQuery<Person> queryUsingIdFieldWithinInClause = repoSupport.from(p)
+				.where(p.coworker.id.in(Arrays.asList(bart.getId(), lisa.getId())));
+
+		SpringDataMongodbQuery<Person> queryUsingRefObject = repoSupport.from(p).where(p.coworker.eq(bart));
+
+		assertThat(queryUsingIdFieldWithinInClause.fetchOne(), equalTo(person));
+		assertThat(queryUsingIdFieldWithinInClause.fetchOne(), equalTo(queryUsingRefObject.fetchOne()));
+	}
+
+	@Test // DATAMONGO-1848, DATAMONGO-2010
+	public void shouldConvertStringIdThatIsAValidObjectIdWhenUsedInInPredicateIntoTheSuch() {
+
+		Outer outer = new Outer();
+		outer.id = new ObjectId().toHexString();
+		outer.inner = new Inner();
+		outer.inner.id = new ObjectId().toHexString();
+		outer.inner.value = "eat sleep workout repeat";
+
+		operations.save(outer);
+
+		QQuerydslRepositorySupportTests_Outer o = QQuerydslRepositorySupportTests_Outer.outer;
+		SpringDataMongodbQuery<Outer> query = repoSupport.from(o).where(o.inner.id.in(outer.inner.id, outer.inner.id));
+
+		assertThat(query.fetchOne(), equalTo(outer));
+	}
+
 	@Data
 	@Document
 	public static class Outer {
@@ -152,6 +226,5 @@ public class QuerydslRepositorySupportTests {
 
 		@Id String id;
 		String value;
-
 	}
 }

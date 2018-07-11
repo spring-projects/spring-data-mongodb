@@ -54,7 +54,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 	static {
 
-		Set<PathType> pathTypes = new HashSet<PathType>();
+		Set<PathType> pathTypes = new HashSet<>();
 		pathTypes.add(PathType.VARIABLE);
 		pathTypes.add(PathType.PROPERTY);
 
@@ -66,9 +66,9 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 	private final QueryMapper mapper;
 
 	/**
-	 * Creates a new {@link SpringDataMongodbSerializer} for the given {@link MappingContext}.
+	 * Creates a new {@link SpringDataMongodbSerializer} for the given {@link MongoConverter}.
 	 *
-	 * @param mappingContext must not be {@literal null}.
+	 * @param converter must not be {@literal null}.
 	 */
 	public SpringDataMongodbSerializer(MongoConverter converter) {
 
@@ -113,7 +113,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#asDocument(java.lang.String, java.lang.Object)
+	 * @see  org.springframework.data.mongodb.repository.support.MongodbSerializer#asDocument(java.lang.String, java.lang.Object)
 	 */
 	@Override
 	protected Document asDocument(@Nullable String key, @Nullable Object value) {
@@ -139,8 +139,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 		Object convertedId = mapper.convertId(idValue);
 
-		return mapper.getMappedObject(super.asDocument(key, convertedId),
-				Optional.empty());
+		return mapper.getMappedObject(super.asDocument(key, convertedId), Optional.empty());
 	}
 
 	/*
@@ -208,6 +207,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 				: asReference(constant.getConstant(), path);
 	}
 
+	@Nullable
 	private MongoPersistentProperty getPropertyFor(Path<?> path) {
 
 		Path<?> parent = path.getMetadata().getParent();
@@ -217,7 +217,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		}
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
-		return entity != null ? entity.getRequiredPersistentProperty(path.getMetadata().getName()) : null;
+		return entity != null ? entity.getPersistentProperty(path.getMetadata().getName()) : null;
 	}
 
 	/**

@@ -27,7 +27,6 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -182,16 +181,15 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat(((Document) mappedPredicate).get("sex"), is("f"));
 	}
 
-	@Test // DATAMONGO-1943
-	@Ignore("FIXME mp911de")
+	@Test // DATAMONGO-1848, DATAMONGO-1943
 	public void shouldRemarshallListsAndDocuments() {
 
-		BooleanExpression criteria = QPerson.person.firstname.isNotEmpty()
+		BooleanExpression criteria = QPerson.person.lastname.isNotEmpty()
 				.and(QPerson.person.firstname.containsIgnoreCase("foo")).not();
 
 		assertThat(this.serializer.handle(criteria),
-				is(equalTo(Document.parse("{ \"$or\" : [ { \"firstname\" : { \"$not\" : { "
-				+ "\"$ne\" : \"\"}}} , { \"firstname\" : { \"$not\" : { \"$regex\" : \".*\\\\Qfoo\\\\E.*\" , \"$options\" : \"i\"}}}]}"))));
+				is(equalTo(Document.parse("{ \"$or\" : [ { \"lastname\" : { \"$not\" : { "
+						+ "\"$ne\" : \"\"}}} , { \"firstname\" : { \"$not\" : { \"$regex\" : \".*\\\\Qfoo\\\\E.*\" , \"$options\" : \"i\"}}}]}"))));
 	}
 
 	class Address {

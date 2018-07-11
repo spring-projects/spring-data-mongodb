@@ -165,7 +165,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 		Assert.notNull(predicate, "Predicate must not be null!");
 		Assert.notNull(pageable, "Pageable must not be null!");
 
-		SimpleFetchableQuery<T> query = createQueryFor(predicate);
+		SpringDataMongodbQuery<T> query = createQueryFor(predicate);
 
 		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetch(), pageable, query::fetchCount);
 	}
@@ -195,45 +195,45 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	}
 
 	/**
-	 * Creates a {@link AbstractMongodbQuery} for the given {@link Predicate}.
+	 * Creates a {@link SpringDataMongodbQuery} for the given {@link Predicate}.
 	 *
 	 * @param predicate
 	 * @return
 	 */
-	private SimpleFetchableQuery<T> createQueryFor(Predicate predicate) {
+	private SpringDataMongodbQuery<T> createQueryFor(Predicate predicate) {
 		return createQuery().where(predicate);
 	}
 
 	/**
-	 * Creates a {@link AbstractMongodbQuery}.
+	 * Creates a {@link SpringDataMongodbQuery}.
 	 *
 	 * @return
 	 */
-	private SimpleFetchableQuery<T> createQuery() {
+	private SpringDataMongodbQuery<T> createQuery() {
 		return new SpringDataMongodbQuery<>(mongoOperations, entityInformation.getJavaType());
 	}
 
 	/**
-	 * Applies the given {@link Pageable} to the given {@link MongodbQuery}.
+	 * Applies the given {@link Pageable} to the given {@link SpringDataMongodbQuery}.
 	 *
 	 * @param query
 	 * @param pageable
 	 * @return
 	 */
-	private SimpleFetchableQuery<T> applyPagination(SimpleFetchableQuery<T> query, Pageable pageable) {
+	private SpringDataMongodbQuery<T> applyPagination(SpringDataMongodbQuery<T> query, Pageable pageable) {
 
 		query = query.offset(pageable.getOffset()).limit(pageable.getPageSize());
 		return applySorting(query, pageable.getSort());
 	}
 
 	/**
-	 * Applies the given {@link Sort} to the given {@link MongodbQuery}.
+	 * Applies the given {@link Sort} to the given {@link SpringDataMongodbQuery}.
 	 *
 	 * @param query
 	 * @param sort
 	 * @return
 	 */
-	private SimpleFetchableQuery<T> applySorting(SimpleFetchableQuery<T> query, Sort sort) {
+	private SpringDataMongodbQuery<T> applySorting(SpringDataMongodbQuery<T> query, Sort sort) {
 
 		// TODO: find better solution than instanceof check
 		if (sort instanceof QSort) {

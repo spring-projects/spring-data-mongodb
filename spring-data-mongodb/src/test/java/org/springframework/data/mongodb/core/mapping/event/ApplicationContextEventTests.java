@@ -40,6 +40,11 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
+import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.QPerson;
+import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
+import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
 
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
@@ -384,6 +389,29 @@ public class ApplicationContextEventTests {
 
 		assertThat(listener.onAfterConvertEvents).hasSize(1);
 		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
+	}
+
+	@Test // DATAMONGO-700, DATAMONGO-1185, DATAMONGO-1848
+	public void publishesEventsForQuerydslFindQueries() {
+
+		template.dropCollection(Person.class);
+
+		template.save(new Person("Boba", "Fett", 40));
+
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
+		QuerydslMongoPredicateExecutor executor = new QuerydslMongoPredicateExecutor<>(entityInformation, template);
+
+		executor.findOne(QPerson.person.lastname.startsWith("Fe"));
+
+		assertThat(listener.onAfterLoadEvents).hasSize(1);
+		assertThat(listener.onAfterLoadEvents.get(0).getCollectionName()).isEqualTo("person");
+
+		assertThat(listener.onBeforeConvertEvents).hasSize(1);
+		assertThat(listener.onBeforeConvertEvents.get(0).getCollectionName()).isEqualTo("person");
+
+		assertThat(listener.onAfterConvertEvents).hasSize(1);
+		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo("person");
 	}
 
 	private void comparePersonAndDocument(PersonPojoStringId p, PersonPojoStringId p2, org.bson.Document document) {

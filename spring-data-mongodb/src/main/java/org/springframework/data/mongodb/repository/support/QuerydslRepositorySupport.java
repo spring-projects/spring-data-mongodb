@@ -47,7 +47,7 @@ public abstract class QuerydslRepositorySupport {
 	}
 
 	/**
-	 * Returns a {@link MongodbQuery} for the given {@link EntityPath}. The collection being queried is derived from the
+	 * Returns a {@link SpringDataMongodbQuery} for the given {@link EntityPath}. The collection being queried is derived from the
 	 * entity metadata.
 	 *
 	 * @param path
@@ -61,7 +61,7 @@ public abstract class QuerydslRepositorySupport {
 	}
 
 	/**
-	 * Returns a {@link MongodbQuery} for the given {@link EntityPath} querying the given collection.
+	 * Returns a {@link SpringDataMongodbQuery} for the given {@link EntityPath} querying the given collection.
 	 *
 	 * @param path must not be {@literal null}
 	 * @param collection must not be blank or {@literal null}
