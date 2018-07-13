@@ -1882,12 +1882,15 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.id).isEqualTo("foo");
 		assertThat(result.witherUsed).isTrue();
 	}
+
 	@Test // DATAMONGO-2026
 	public void readsImmutableObjectWithConstructorIdPropertyCorrectly() {
 
 		org.bson.Document source = new org.bson.Document("_id", "spring").append("value", "data");
 
-		ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod target = converter.read(ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod.class, source);
+		ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod target = converter
+				.read(ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod.class, source);
+
 		assertThat(target.id).isEqualTo("spring");
 		assertThat(target.value).isEqualTo("data");
 	}

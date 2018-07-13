@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
@@ -111,13 +112,14 @@ class DocumentAccessor {
 	public Object get(MongoPersistentProperty property) {
 
 		String fieldName = property.getFieldName();
+		Map<String, Object> map = BsonUtils.asMap(document);
 
 		if (!fieldName.contains(".")) {
-			return BsonUtils.asMap(this.document).get(fieldName);
+			return map.get(fieldName);
 		}
 
 		Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
-		Map<String, Object> source = BsonUtils.asMap(this.document);
+		Map<String, Object> source = map;
 		Object result = null;
 
 		while (source != null && parts.hasNext()) {
@@ -133,12 +135,24 @@ class DocumentAccessor {
 	}
 
 	/**
+	 * Returns the raw identifier for the given {@link MongoPersistentEntity} or the value of the default identifier
+	 * field.
+	 * 
+	 * @param entity must not be {@literal null}.
+	 * @return
+	 */
+	public Object getRawId(MongoPersistentEntity<?> entity) {
+		return entity.hasIdProperty() ? get(entity.getRequiredIdProperty()) : BsonUtils.asMap(document).get("_id");
+	}
+
+	/**
 	 * Returns whether the underlying {@link Document} has a value ({@literal null} or non-{@literal null}) for the given
 	 * {@link MongoPersistentProperty}.
 	 *
 	 * @param property must not be {@literal null}.
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public boolean hasValue(MongoPersistentProperty property) {
 
 		Assert.notNull(property, "Property must not be null!");

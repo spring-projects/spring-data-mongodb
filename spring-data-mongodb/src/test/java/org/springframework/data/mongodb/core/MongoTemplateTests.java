@@ -37,18 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -79,6 +68,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -155,8 +145,10 @@ public class MongoTemplateTests {
 		this.context = context;
 
 		context.addApplicationListener(new PersonWithIdPropertyOfTypeUUIDListener());
-		context.addApplicationListener(
-				new AuditingEventListener(() -> new IsNewAwareAuditingHandler(template.getConverter().getMappingContext())));
+
+		PersistentEntities entities = PersistentEntities.of(template.getConverter().getMappingContext());
+
+		context.addApplicationListener(new AuditingEventListener(() -> new IsNewAwareAuditingHandler(entities)));
 	}
 
 	@Autowired
