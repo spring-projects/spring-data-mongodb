@@ -980,13 +980,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				items.add(read(componentType, (BasicDBObject) element, path));
 			} else {
 
-				if (element instanceof Collection) {
+				if (!Object.class.equals(rawComponentType) && element instanceof Collection) {
 					if (!rawComponentType.isArray() && !ClassUtils.isAssignable(Iterable.class, rawComponentType)) {
 						throw new MappingException(
 								String.format(INCOMPATIBLE_TYPES, element, element.getClass(), rawComponentType, path));
 					}
 				}
-
 				if (element instanceof List) {
 					items.add(readCollectionOrArray(componentType, (Collection<Object>) element, path));
 				} else {

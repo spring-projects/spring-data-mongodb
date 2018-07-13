@@ -1886,6 +1886,15 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.nestedFloats).isEqualTo(new float[][][] { { { 1.0f, 2.0f } } });
 	}
 
+	@Test // DATAMONGO-2011
+	public void readsNestedListsToObjectCorrectly() {
+
+		List<String> values = Arrays.asList("ONE", "TWO");
+		org.bson.Document source = new org.bson.Document("value", Collections.singletonList(values));
+
+		assertThat(converter.read(Attribute.class, source).value).isInstanceOf(List.class);
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
