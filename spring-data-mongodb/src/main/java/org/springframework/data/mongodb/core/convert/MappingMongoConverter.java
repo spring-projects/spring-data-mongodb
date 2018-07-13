@@ -282,10 +282,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// make sure id property is set before all other properties
 		Object idValue = null;
 
-		if (idProperty != null && documentAccessor.hasValue(idProperty)) {
+		if (idProperty != null) {
 
-			idValue = readIdValue(path, evaluator, idProperty, documentAccessor);
-			accessor.setProperty(idProperty, idValue);
+			if (idProperty.isImmutable() && entity.isConstructorArgument(idProperty)) {
+				idValue = accessor.getProperty(idProperty);
+			} else if (documentAccessor.hasValue(idProperty)) {
+
+				idValue = readIdValue(path, evaluator, idProperty, documentAccessor);
+				accessor.setProperty(idProperty, idValue);
+			}
 		}
 
 		ObjectPath currentPath = path.push(instance, entity, idValue != null ? bson.get(idProperty.getFieldName()) : null);

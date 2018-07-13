@@ -1882,6 +1882,15 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.id).isEqualTo("foo");
 		assertThat(result.witherUsed).isTrue();
 	}
+	@Test // DATAMONGO-2026
+	public void readsImmutableObjectWithConstructorIdPropertyCorrectly() {
+
+		org.bson.Document source = new org.bson.Document("_id", "spring").append("value", "data");
+
+		ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod target = converter.read(ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod.class, source);
+		assertThat(target.id).isEqualTo("spring");
+		assertThat(target.value).isEqualTo("data");
+	}
 
 	static class GenericType<T> {
 		T content;
@@ -2265,6 +2274,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	static class ImmutableObject {
+
 		final String id;
 		final String name;
 		final boolean witherUsed;
@@ -2302,5 +2312,12 @@ public class MappingMongoConverterUnitTests {
 		public boolean isWitherUsed() {
 			return witherUsed;
 		}
+	}
+
+	@RequiredArgsConstructor
+	static class ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod {
+
+		final @Id String id;
+		String value;
 	}
 }
