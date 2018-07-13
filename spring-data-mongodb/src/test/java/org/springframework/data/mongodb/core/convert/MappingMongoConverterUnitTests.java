@@ -1883,6 +1883,15 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.witherUsed).isTrue();
 	}
 
+	@Test // DATAMONGO-2011
+	public void readsNestedListsToObjectCorrectly() {
+
+		List<String> values = Arrays.asList("ONE", "TWO");
+		org.bson.Document source = new org.bson.Document("value", Collections.singletonList(values));
+
+		assertThat(converter.read(Attribute.class, source).value).isInstanceOf(List.class);
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
