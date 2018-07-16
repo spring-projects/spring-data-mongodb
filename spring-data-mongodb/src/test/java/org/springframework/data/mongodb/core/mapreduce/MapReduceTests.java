@@ -45,6 +45,7 @@ import com.mongodb.client.MongoCollection;
  *
  * @author Mark Pollack
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -73,6 +74,7 @@ public class MapReduceTests {
 		template.dropCollection("jmr1_out");
 		template.dropCollection("jmr1");
 		template.dropCollection("jmrWithGeo");
+		template.dropCollection("mapreduceout");
 	}
 
 	@Test
@@ -240,6 +242,26 @@ public class MapReduceTests {
 		assertEquals(1, m.get("d").intValue());
 	}
 
+	@Test // DATAMONGO-2027
+	public void shouldStoreResultInCollection() {
+
+		createMapReduceData();
+
+		String mapWithExcludeFunction = "function(){ for ( var i=0; i<this.x.length; i++ ){ emit( this.x[i] , 1 ); } }";
+
+		mongoTemplate.mapReduce("jmr1", mapWithExcludeFunction, reduceFunction,
+				new MapReduceOptions().outputCollection("mapreduceout"), ValueObject.class);
+
+		List<ValueObject> results = mongoTemplate.find(new Query(), ValueObject.class, "mapreduceout");
+
+		Map<String, Float> m = copyToMap(results);
+		assertEquals(4, m.size());
+		assertEquals(1, m.get("a").intValue());
+		assertEquals(2, m.get("b").intValue());
+		assertEquals(2, m.get("c").intValue());
+		assertEquals(1, m.get("d").intValue());
+	}
+
 	@Test
 	public void testMapReduceExcludeQuery() {
 		createMapReduceData();
@@ -308,7 +330,7 @@ public class MapReduceTests {
 		c.insertOne(new Document("x", Arrays.asList("c", "d")));
 	}
 
-	private Map<String, Float> copyToMap(MapReduceResults<ValueObject> results) {
+	private Map<String, Float> copyToMap(Iterable<ValueObject> results) {
 		List<ValueObject> valueObjects = new ArrayList<ValueObject>();
 		for (ValueObject valueObject : results) {
 			valueObjects.add(valueObject);

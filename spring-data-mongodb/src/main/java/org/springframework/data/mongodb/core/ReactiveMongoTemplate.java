@@ -2031,6 +2031,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				publisher = publisher.sharded(options.getOutputSharded().get());
 			}
 
+			MapReduceAction action = options.getMapReduceAction();
+
+			if (action != null && options.getOutputCollection() != null) {
+				publisher = publisher.action(action).collectionName(options.getOutputCollection());
+			}
+
 			publisher = collation.map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
 
 			return Flux.from(publisher)
