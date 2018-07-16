@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.MapReduceCommand;
+import com.mongodb.client.model.MapReduceAction;
 
 /**
  * @author Mark Pollack
@@ -295,6 +296,27 @@ public class MapReduceOptions {
 		return collation;
 	}
 
+	/**
+	 * Return the {@link MapReduceAction} derived from {@link com.mongodb.MapReduceCommand.OutputType}.
+	 *
+	 * @return the mapped action or {@literal null} if the action maps to inline output.
+	 * @since 2.0.9
+	 */
+	@Nullable
+	public MapReduceAction getMapReduceAction() {
+
+		switch (outputType) {
+			case MERGE:
+				return MapReduceAction.MERGE;
+			case REDUCE:
+				return MapReduceAction.REDUCE;
+			case REPLACE:
+				return MapReduceAction.REPLACE;
+		}
+
+		return null;
+	}
+
 	public Document getOptionsObject() {
 
 		Document cmd = new Document();
@@ -328,7 +350,7 @@ public class MapReduceOptions {
 
 		Document out = new Document();
 
-		switch (outputType) {
+		switch (getOutputType()) {
 			case INLINE:
 				out.put("inline", 1);
 				break;

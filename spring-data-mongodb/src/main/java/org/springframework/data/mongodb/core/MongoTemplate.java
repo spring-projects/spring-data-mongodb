@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import com.mongodb.client.model.MapReduceAction;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -1726,6 +1727,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 			if (mapReduceOptions.getOutputSharded().isPresent()) {
 				result = result.sharded(mapReduceOptions.getOutputSharded().get());
+			}
+
+			MapReduceAction action = mapReduceOptions.getMapReduceAction();
+
+			if(action != null && mapReduceOptions.getOutputCollection() != null){
+				result = result.action(action).collectionName(mapReduceOptions.getOutputCollection());
 			}
 		}
 
