@@ -1809,6 +1809,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (mapReduceOptions.getOutputSharded().isPresent()) {
 				mapReduce = mapReduce.sharded(mapReduceOptions.getOutputSharded().get());
 			}
+
+			MapReduceAction action = mapReduceOptions.getMapReduceAction();
+
+			if(action != null && mapReduceOptions.getOutputCollection() != null){
+				mapReduce = mapReduce.action(action).collectionName(mapReduceOptions.getOutputCollection());
+			}
 		}
 
 		mapReduce = collation.map(Collation::toMongoCollation).map(mapReduce::collation).orElse(mapReduce);

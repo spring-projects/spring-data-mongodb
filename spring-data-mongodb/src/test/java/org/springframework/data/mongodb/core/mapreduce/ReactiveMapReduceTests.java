@@ -42,6 +42,7 @@ import com.mongodb.reactivestreams.client.Success;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Beyond the Shadows - Brent Weeks
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -60,7 +61,8 @@ public class ReactiveMapReduceTests {
 		StepVerifier
 				.create(template.dropCollection(ValueObject.class) //
 						.mergeWith(template.dropCollection("jmr1")) //
-						.mergeWith(template.dropCollection("jmr1_out"))) //
+						.mergeWith(template.dropCollection("jmr1_out")) //
+						.mergeWith(template.dropCollection("mapreduceout"))) //
 				.verifyComplete();
 	}
 
@@ -72,6 +74,25 @@ public class ReactiveMapReduceTests {
 		StepVerifier
 				.create(template.mapReduce(new Query(), Person.class, "jmr1", ValueObject.class, mapFunction, reduceFunction,
 						MapReduceOptions.options()).buffer(4)) //
+				.consumeNextWith(result -> {
+					assertThat(result).containsExactlyInAnyOrder(new ValueObject("a", 1), new ValueObject("b", 2),
+							new ValueObject("c", 2), new ValueObject("d", 1));
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2027
+	public void shouldStoreResultInCollection() {
+
+		createMapReduceData();
+
+		StepVerifier
+				.create(template.mapReduce(new Query(), Person.class, "jmr1", ValueObject.class, mapFunction, reduceFunction, //
+						MapReduceOptions.options().outputCollection("mapreduceout"))) //
+				.expectNextCount(4) //
+				.verifyComplete();
+
+		StepVerifier.create(template.find(new Query(), ValueObject.class, "mapreduceout").buffer(4)) //
 				.consumeNextWith(result -> {
 					assertThat(result).containsExactlyInAnyOrder(new ValueObject("a", 1), new ValueObject("b", 2),
 							new ValueObject("c", 2), new ValueObject("d", 1));
