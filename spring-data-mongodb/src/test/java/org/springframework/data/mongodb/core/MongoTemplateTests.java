@@ -26,6 +26,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,11 +38,13 @@ import lombok.experimental.Wither;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
@@ -2059,6 +2063,18 @@ public class MongoTemplateTests {
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0).id, is(id));
 		assertThat(result.get(0).field, is(value));
+	}
+
+	@Test // DATAMONGO-2028
+	public void allowInsertOfDbObjectWithMappedTypes() {
+
+		DBObject dbObject = new BasicDBObject("_id", "foo").append("duration", Duration.ofSeconds(100));
+		template.insert(dbObject, "sample");
+		List<org.bson.Document> result = template.findAll(org.bson.Document.class, "sample");
+
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0).getString("_id"), is("foo"));
+		assertThat(result.get(0).getString("duration"), is("PT1M40S"));
 	}
 
 	@Test // DATAMONGO-816

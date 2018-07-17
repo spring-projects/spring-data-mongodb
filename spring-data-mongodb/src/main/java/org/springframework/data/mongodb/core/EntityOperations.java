@@ -47,6 +47,7 @@ import com.mongodb.util.JSONParseException;
  * Common operations performed on an entity in the context of it's mapping metadata.
  * 
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @since 2.1
  * @see MongoTemplate
  * @see ReactiveMongoTemplate
@@ -70,11 +71,11 @@ class EntityOperations {
 		Assert.notNull(entity, "Bean must not be null!");
 
 		if (entity instanceof String) {
-			return new SimpleEntity(parse(entity.toString()));
+			return new UnmappedEntity(parse(entity.toString()));
 		}
 
 		if (entity instanceof Map) {
-			return new SimpleEntity((Map<String, Object>) entity);
+			return new SimpleMappedEntity((Map<String, Object>) entity);
 		}
 
 		return MappedEntity.of(entity, context);
@@ -94,11 +95,11 @@ class EntityOperations {
 		Assert.notNull(conversionService, "ConversionService must not be null!");
 
 		if (entity instanceof String) {
-			return new SimpleEntity(parse(entity.toString()));
+			return new UnmappedEntity(parse(entity.toString()));
 		}
 
 		if (entity instanceof Map) {
-			return new SimpleEntity((Map<String, Object>) entity);
+			return new SimpleMappedEntity((Map<String, Object>) entity);
 		}
 
 		return AdaptibleMappedEntity.of(entity, context, conversionService);
@@ -286,7 +287,7 @@ class EntityOperations {
 	}
 
 	@RequiredArgsConstructor
-	private static class SimpleEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
+	private static class UnmappedEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
 
 		private final T map;
 
@@ -385,6 +386,31 @@ class EntityOperations {
 		@Override
 		public T getBean() {
 			return map;
+		}
+	}
+
+	private static class SimpleMappedEntity<T extends Map<String, Object>> extends UnmappedEntity<T> {
+
+		public SimpleMappedEntity(T map) {
+			super(map);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#toMappedDocument(org.springframework.data.mongodb.core.convert.MongoWriter)
+		 */
+		@Override
+		@SuppressWarnings("unchecked")
+		public MappedDocument toMappedDocument(MongoWriter<? super T> writer) {
+
+			T bean = getBean();
+			bean = (T) (bean instanceof Document //
+					? (Document) bean //
+					: new Document(bean));
+			Document document = new Document();
+			writer.write(bean, document);
+
+			return MappedDocument.of(document);
 		}
 	}
 
