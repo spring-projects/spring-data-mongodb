@@ -31,7 +31,7 @@ import com.mongodb.client.model.Filters;
 /**
  * A MongoDB document in its mapped state. I.e. after a source document has been mapped using mapping information of the
  * entity the source document was supposed to represent.
- * 
+ *
  * @author Oliver Gierke
  * @since 2.1
  */

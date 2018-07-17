@@ -45,7 +45,7 @@ import com.mongodb.util.JSONParseException;
 
 /**
  * Common operations performed on an entity in the context of it's mapping metadata.
- * 
+ *
  * @author Oliver Gierke
  * @author Mark Paluch
  * @since 2.1
@@ -61,7 +61,7 @@ class EntityOperations {
 
 	/**
 	 * Creates a new {@link Entity} for the given bean.
-	 * 
+	 *
 	 * @param entity must not be {@literal null}.
 	 * @return
 	 */
@@ -83,7 +83,7 @@ class EntityOperations {
 
 	/**
 	 * Creates a new {@link AdaptibleEntity} for the given bean and {@link ConversionService}.
-	 * 
+	 *
 	 * @param entity must not be {@literal null}.
 	 * @param conversionService must not be {@literal null}.
 	 * @return
@@ -117,7 +117,7 @@ class EntityOperations {
 
 	/**
 	 * Returns the collection name to be used for the given entity.
-	 * 
+	 *
 	 * @param obj can be {@literal null}.
 	 * @return
 	 */
@@ -144,7 +144,7 @@ class EntityOperations {
 	/**
 	 * Returns the name of the identifier property. Considers mapping information but falls back to the MongoDB default of
 	 * {@code _id} if no identifier property can be found.
-	 * 
+	 *
 	 * @param type must not be {@literal null}.
 	 * @return
 	 */
@@ -180,35 +180,35 @@ class EntityOperations {
 
 		/**
 		 * Returns the field name of the identifier of the entity.
-		 * 
+		 *
 		 * @return
 		 */
 		String getIdFieldName();
 
 		/**
 		 * Returns the identifier of the entity.
-		 * 
+		 *
 		 * @return
 		 */
 		Object getId();
 
 		/**
 		 * Returns the {@link Query} to find the entity by its identifier.
-		 * 
+		 *
 		 * @return
 		 */
 		Query getByIdQuery();
 
 		/**
 		 * Returns the {@link Query} to find the entity in its current version.
-		 * 
+		 *
 		 * @return
 		 */
 		Query getQueryForVersion();
 
 		/**
 		 * Maps the backing entity into a {@link MappedDocument} using the given {@link MongoWriter}.
-		 * 
+		 *
 		 * @param writer must not be {@literal null}.
 		 * @return
 		 */
@@ -221,7 +221,7 @@ class EntityOperations {
 
 		/**
 		 * Returns whether the entity is versioned, i.e. if it contains a version property.
-		 * 
+		 *
 		 * @return
 		 */
 		default boolean isVersionedEntity() {
@@ -230,7 +230,7 @@ class EntityOperations {
 
 		/**
 		 * Returns the value of the version if the entity has a version property, {@literal null} otherwise.
-		 * 
+		 *
 		 * @return
 		 */
 		@Nullable
@@ -238,7 +238,7 @@ class EntityOperations {
 
 		/**
 		 * Returns the underlying bean.
-		 * 
+		 *
 		 * @return
 		 */
 		T getBean();
@@ -255,7 +255,7 @@ class EntityOperations {
 		/**
 		 * Populates the identifier of the backing entity if it has an identifier property and there's no identifier
 		 * currently present.
-		 * 
+		 *
 		 * @param id must not be {@literal null}.
 		 * @return
 		 */
@@ -264,21 +264,21 @@ class EntityOperations {
 
 		/**
 		 * Initializes the version property of the of the current entity if available.
-		 * 
+		 *
 		 * @return the entity with the version property updated if available.
 		 */
 		T initializeVersionProperty();
 
 		/**
 		 * Increments the value of the version property if available.
-		 * 
+		 *
 		 * @return the entity with the version property incremented if available.
 		 */
 		T incrementVersion();
 
 		/**
 		 * Returns the current version value if the entity has a version property.
-		 * 
+		 *
 		 * @return the current version or {@literal null} in case it's uninitialized or the entity doesn't expose a version
 		 *         property.
 		 */
@@ -291,7 +291,7 @@ class EntityOperations {
 
 		private final T map;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getIdPropertyName()
 		 */
@@ -300,7 +300,7 @@ class EntityOperations {
 			return ID_FIELD;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getId()
 		 */
@@ -309,7 +309,7 @@ class EntityOperations {
 			return map.get(ID_FIELD);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getByIdQuery()
 		 */
@@ -340,7 +340,7 @@ class EntityOperations {
 			throw new MappingException("Cannot query for version on plain Documents!");
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#toMappedDocument(org.springframework.data.mongodb.core.convert.MongoWriter)
 		 */
@@ -370,7 +370,7 @@ class EntityOperations {
 			return null;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.MutablePersistableSource#incrementVersion()
 		 */
@@ -379,7 +379,7 @@ class EntityOperations {
 			return map;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getBean()
 		 */
@@ -391,7 +391,7 @@ class EntityOperations {
 
 	private static class SimpleMappedEntity<T extends Map<String, Object>> extends UnmappedEntity<T> {
 
-		public SimpleMappedEntity(T map) {
+		SimpleMappedEntity(T map) {
 			super(map);
 		}
 
@@ -431,7 +431,7 @@ class EntityOperations {
 			return new MappedEntity<>(entity, identifierAccessor, propertyAccessor);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getIdPropertyName()
 		 */
@@ -465,7 +465,7 @@ class EntityOperations {
 			return Query.query(Criteria.where(idProperty.getName()).is(getId()));
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getQueryForVersion(java.lang.Object)
 		 */
@@ -522,7 +522,7 @@ class EntityOperations {
 			}
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#isVersionedEntity()
 		 */
@@ -531,7 +531,7 @@ class EntityOperations {
 			return entity.hasVersionProperty();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getVersion()
 		 */
@@ -541,7 +541,7 @@ class EntityOperations {
 			return propertyAccessor.getProperty(entity.getRequiredVersionProperty());
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getBean()
 		 */
