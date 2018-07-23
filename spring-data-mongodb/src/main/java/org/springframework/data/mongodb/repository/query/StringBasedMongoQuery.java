@@ -170,11 +170,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return this.isDeleteQuery;
 	}
 
-	private static boolean hasAmbiguousProjectionFlags(boolean isCountQuery, boolean isExistsQuery,
-			boolean isDeleteQuery) {
-		return countBooleanValues(isCountQuery, isExistsQuery, isDeleteQuery) > 1;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isLimiting()
@@ -184,18 +179,9 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return false;
 	}
 
-	private static int countBooleanValues(boolean... values) {
-
-		int count = 0;
-
-		for (boolean value : values) {
-
-			if (value) {
-				count++;
-			}
-		}
-
-		return count;
+	private static boolean hasAmbiguousProjectionFlags(boolean isCountQuery, boolean isExistsQuery,
+			boolean isDeleteQuery) {
+		return BooleanUtil.countBooleanTrueValues(isCountQuery, isExistsQuery, isDeleteQuery) > 1;
 	}
 
 	/**

@@ -136,6 +136,15 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isExistsQuery()
+	 */
+	@Override
+	protected boolean isExistsQuery() {
+		return tree.isExistsProjection();
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isDeleteQuery()
 	 */
 	@Override

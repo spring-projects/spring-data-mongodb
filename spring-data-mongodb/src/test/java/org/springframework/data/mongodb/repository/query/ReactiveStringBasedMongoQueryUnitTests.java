@@ -122,6 +122,14 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		createQueryForMethod("invalidMethod", String.class);
 	}
 
+	@Test // DATAMONGO-2030
+	public void shouldSupportExistsProjection() throws Exception {
+
+		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("existsByLastname", String.class);
+
+		assertThat(mongoQuery.isExistsQuery(), is(true));
+	}
+
 	@Test // DATAMONGO-1444
 	public void shouldSupportFindByParameterizedCriteriaAndFields() throws Exception {
 
@@ -260,5 +268,8 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 		@Query("{'id':?#{ [0] ? { $exists :true} : [1] }, 'foo':42, 'bar': ?#{ [0] ? { $exists :false} : [1] }}")
 		Flux<Person> findByQueryWithExpressionAndMultipleNestedObjects(boolean param0, String param1, String param2);
+
+		@Query(value = "{ 'lastname' : ?0 }", exists = true)
+		Mono<Boolean> existsByLastname(String lastname);
 	}
 }

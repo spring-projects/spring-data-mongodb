@@ -309,6 +309,11 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		StepVerifier.create(repository.findFirstByLastname(dave.getLastname())).expectNextCount(1).verifyComplete();
 	}
 
+	@Test // DATAMONGO-2030
+	public void shouldReturnExistsBy() {
+		StepVerifier.create(repository.existsByLastname(dave.getLastname())).expectNext(true).verifyComplete();
+	}
+
 	@Test // DATAMONGO-1979
 	public void findAppliesAnnotatedSort() {
 
@@ -352,6 +357,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		Flux<GeoResult<Person>> findByLocationNear(Point point, Distance maxDistance, Pageable pageable);
 
 		Flux<Person> findPersonByLocationNear(Point point, Distance maxDistance);
+
+		Mono<Boolean> existsByLastname(String lastname);
 
 		Mono<Person> findFirstByLastname(String lastname);
 
