@@ -35,7 +35,6 @@ import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecu
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.util.Assert;
 
 /**
@@ -150,6 +149,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).all();
 		} else if (isCountQuery()) {
 			return (q, t, c) -> operation.matching(q).count();
+		} else if (isExistsQuery()) {
+			return (q, t, c) -> operation.matching(q).exists();
 		} else {
 			return (q, t, c) -> {
 
@@ -203,6 +204,14 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @return
 	 */
 	protected abstract boolean isCountQuery();
+
+	/**
+	 * Returns whether the query should get an exists projection applied.
+	 *
+	 * @return
+	 * @since 2.0.9
+	 */
+	protected abstract boolean isExistsQuery();
 
 	/**
 	 * Return weather the query should delete matching documents.

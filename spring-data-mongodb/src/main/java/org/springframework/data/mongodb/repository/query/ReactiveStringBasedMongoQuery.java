@@ -40,13 +40,14 @@ import org.springframework.util.Assert;
  */
 public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
-	private static final String COUND_AND_DELETE = "Manually defined query for %s cannot be both a count and delete query at the same time!";
+	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time!";
 	private static final Logger LOG = LoggerFactory.getLogger(ReactiveStringBasedMongoQuery.class);
 	private static final ParameterBindingParser BINDING_PARSER = ParameterBindingParser.INSTANCE;
 
 	private final String query;
 	private final String fieldSpec;
 	private final boolean isCountQuery;
+	private final boolean isExistsQuery;
 	private final boolean isDeleteQuery;
 	private final List<ParameterBinding> queryParameterBindings;
 	private final List<ParameterBinding> fieldSpecParameterBindings;
@@ -92,11 +93,23 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 		this.fieldSpec = BINDING_PARSER.parseAndCollectParameterBindingsFromQueryIntoBindings(
 				method.getFieldSpecification(), this.fieldSpecParameterBindings);
 
-		this.isCountQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().count() : false;
-		this.isDeleteQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().delete() : false;
+		if (method.hasAnnotatedQuery()) {
 
-		if (isCountQuery && isDeleteQuery) {
-			throw new IllegalArgumentException(String.format(COUND_AND_DELETE, method));
+			org.springframework.data.mongodb.repository.Query queryAnnotation = method.getQueryAnnotation();
+
+			this.isCountQuery = queryAnnotation.count();
+			this.isExistsQuery = queryAnnotation.exists();
+			this.isDeleteQuery = queryAnnotation.delete();
+
+			if (hasAmbiguousProjectionFlags(this.isCountQuery, this.isExistsQuery, this.isDeleteQuery)) {
+				throw new IllegalArgumentException(String.format(COUNT_EXISTS_AND_DELETE, method));
+			}
+
+		} else {
+
+			this.isCountQuery = false;
+			this.isExistsQuery = false;
+			this.isDeleteQuery = false;
 		}
 
 		this.parameterBinder = new ExpressionEvaluatingParameterBinder(expressionParser, evaluationContextProvider);
@@ -134,6 +147,15 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isExistsQuery()
+	 */
+	@Override
+	protected boolean isExistsQuery() {
+		return isExistsQuery;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isDeleteQuery()
 	 */
 	@Override
@@ -148,6 +170,11 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	@Override
 	protected boolean isLimiting() {
 		return false;
+	}
+
+	private static boolean hasAmbiguousProjectionFlags(boolean isCountQuery, boolean isExistsQuery,
+			boolean isDeleteQuery) {
+		return BooleanUtil.countBooleanTrueValues(isCountQuery, isExistsQuery, isDeleteQuery) > 1;
 	}
 
 }
