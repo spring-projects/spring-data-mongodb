@@ -16,16 +16,19 @@
 package org.springframework.data.mongodb.repository.query;
 
 import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -206,6 +209,7 @@ class ExpressionEvaluatingParameterBinder {
 	 * @param binding must not be {@literal null}.
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private String getParameterValueForBinding(MongoParameterAccessor accessor, MongoParameters parameters,
 			ParameterBinding binding) {
 
@@ -222,43 +226,7 @@ class ExpressionEvaluatingParameterBinder {
 			return binding.isExpression() ? JSON.serialize(value) : QuotedString.unquote(JSON.serialize(value));
 		}
 
-		if (value instanceof byte[]) {
-
-			if (binding.isQuoted()) {
-				return DatatypeConverter.printBase64Binary((byte[]) value);
-			}
-
-			return encode(new Binary((byte[]) value), BinaryCodec::new);
-		}
-
-		if (value instanceof UUID) {
-
-			if (binding.isQuoted()) {
-				return value.toString();
-			}
-
-			return encode((UUID) value, UuidCodec::new);
-		}
-
-		return JSON.serialize(value);
-	}
-
-	private <T> String encode(T value, Supplier<Codec<T>> defaultCodec) {
-
-		Codec<T> codec;
-
-		try {
-			codec = codecRegistry.get((Class<T>) value.getClass());
-		} catch (CodecConfigurationException exception) {
-			codec = defaultCodec.get();
-		}
-
-		StringWriter writer = new StringWriter();
-
-		codec.encode(new JsonWriter(writer), value, null);
-		writer.flush();
-
-		return writer.toString();
+		return EncodableValue.create(value).encode(codecRegistry, binding.isQuoted());
 	}
 
 	/**
@@ -478,6 +446,232 @@ class ExpressionEvaluatingParameterBinder {
 		 */
 		public static String unquote(String quoted) {
 			return quoted.substring(1, quoted.length() - 1);
+		}
+	}
+
+	/**
+	 * Value object encapsulating a bindable value, that can be encoded to be represented as JSON (BSON).
+	 *
+	 * @author Mark Paluch
+	 */
+	abstract static class EncodableValue {
+
+		/**
+		 * Obtain a {@link EncodableValue} given {@code value}.
+		 *
+		 * @param value the value to encode, may be {@literal null}.
+		 * @return the {@link EncodableValue} for {@code value}.
+		 */
+		@SuppressWarnings("unchecked")
+		public static EncodableValue create(@Nullable Object value) {
+
+			if (value instanceof byte[]) {
+				return new BinaryValue((byte[]) value);
+			}
+
+			if (value instanceof UUID) {
+				return new UuidValue((UUID) value);
+			}
+
+			if (value instanceof Collection) {
+
+				Collection<?> collection = (Collection<?>) value;
+				Class<?> commonElement = CollectionUtils.findCommonElementType(collection);
+
+				if (commonElement != null) {
+
+					if (UUID.class.isAssignableFrom(commonElement)) {
+						return new UuidCollection((Collection<UUID>) value);
+					}
+
+					if (byte[].class.isAssignableFrom(commonElement)) {
+						return new BinaryCollectionValue((Collection<byte[]>) value);
+					}
+				}
+			}
+
+			return new ObjectValue(value);
+		}
+
+		/**
+		 * Encode the encapsulated value.
+		 *
+		 * @param provider
+		 * @param quoted
+		 * @return
+		 */
+		public abstract String encode(CodecRegistry codecRegistry, boolean quoted);
+
+		/**
+		 * Encode a {@code value} to JSON.
+		 *
+		 * @param provider
+		 * @param value
+		 * @param defaultCodec
+		 * @param <V>
+		 * @return
+		 */
+		protected <V> String encode(CodecRegistry codecRegistry, V value, Supplier<Codec<V>> defaultCodec) {
+
+			StringWriter writer = new StringWriter();
+
+			doEncode(codecRegistry, writer, value, defaultCodec);
+
+			return writer.toString();
+		}
+
+		/**
+		 * Encode a {@link Collection} to JSON and potentially apply a {@link Function mapping function} before encoding.
+		 *
+		 * @param provider
+		 * @param value
+		 * @param mappingFunction
+		 * @param defaultCodec
+		 * @param <I> Input value type.
+		 * @param <V> Target type.
+		 * @return
+		 */
+		protected <I, V> String encodeCollection(CodecRegistry codecRegistry, Iterable<I> value,
+				Function<I, V> mappingFunction, Supplier<Codec<V>> defaultCodec) {
+
+			StringWriter writer = new StringWriter();
+
+			writer.append("[");
+			value.forEach(it -> {
+
+				if (writer.getBuffer().length() > 1) {
+					writer.append(", ");
+				}
+
+				doEncode(codecRegistry, writer, mappingFunction.apply(it), defaultCodec);
+			});
+
+			writer.append("]");
+			writer.flush();
+
+			return writer.toString();
+		}
+
+		@SuppressWarnings("unchecked")
+		private <V> void doEncode(CodecRegistry codecRegistry, StringWriter writer, V value,
+				Supplier<Codec<V>> defaultCodec) {
+
+			Codec<V> codec = getCodec(codecRegistry, (Class<V>) value.getClass(), defaultCodec);
+
+			JsonWriter jsonWriter = new JsonWriter(writer);
+			codec.encode(jsonWriter, value, null);
+			jsonWriter.flush();
+		}
+
+		private <T> Codec<T> getCodec(CodecRegistry codecRegistry, Class<T> type, Supplier<Codec<T>> defaultCodec) {
+
+			try {
+				return codecRegistry.get(type);
+			} catch (CodecConfigurationException exception) {
+				return defaultCodec.get();
+			}
+		}
+	}
+
+	/**
+	 * {@link EncodableValue} for {@code byte[]} to render to {@literal $binary}.
+	 */
+	@RequiredArgsConstructor
+	static class BinaryValue extends EncodableValue {
+
+		private final byte[] value;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.bson.codecs.configuration.CodecRegistry, boolean)
+		 */
+		@Override
+		public String encode(CodecRegistry codecRegistry, boolean quoted) {
+
+			if (quoted) {
+				return DatatypeConverter.printBase64Binary(this.value);
+			}
+
+			return encode(codecRegistry, new Binary(this.value), BinaryCodec::new);
+		}
+	}
+
+	/**
+	 * {@link EncodableValue} for {@link Collection} containing only {@code byte[]} items to render to a BSON list
+	 * containing {@literal $binary}.
+	 */
+	@RequiredArgsConstructor
+	static class BinaryCollectionValue extends EncodableValue {
+
+		private final Collection<byte[]> value;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.bson.codecs.configuration.CodecRegistry, boolean)
+		 */
+		@Override
+		public String encode(CodecRegistry codecRegistry, boolean quoted) {
+			return encodeCollection(codecRegistry, this.value, Binary::new, BinaryCodec::new);
+		}
+	}
+
+	/**
+	 * {@link EncodableValue} for {@link UUID} to render to {@literal $binary}.
+	 */
+	@RequiredArgsConstructor
+	static class UuidValue extends EncodableValue {
+
+		private final UUID value;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.bson.codecs.configuration.CodecRegistry, boolean)
+		 */
+		@Override
+		public String encode(CodecRegistry codecRegistry, boolean quoted) {
+
+			if (quoted) {
+				return this.value.toString();
+			}
+
+			return encode(codecRegistry, this.value, UuidCodec::new);
+		}
+	}
+
+	/**
+	 * {@link EncodableValue} for {@link Collection} containing only {@link UUID} items to render to a BSON list
+	 * containing {@literal $binary}.
+	 */
+	@RequiredArgsConstructor
+	static class UuidCollection extends EncodableValue {
+
+		private final Collection<UUID> value;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.bson.codecs.configuration.CodecRegistry, boolean)
+		 */
+		@Override
+		public String encode(CodecRegistry codecRegistry, boolean quoted) {
+			return encodeCollection(codecRegistry, this.value, Function.identity(), UuidCodec::new);
+		}
+	}
+
+	/**
+	 * Fallback-{@link EncodableValue} for {@link Object}-typed values.
+	 */
+	@RequiredArgsConstructor
+	static class ObjectValue extends EncodableValue {
+
+		private final @Nullable Object value;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.bson.codecs.configuration.CodecRegistry, boolean)
+		 */
+		@Override
+		public String encode(CodecRegistry codecRegistry, boolean quoted) {
+			return JSON.serialize(this.value);
 		}
 	}
 }
