@@ -23,6 +23,7 @@ import static org.mockito.Mockito.*;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -322,6 +323,21 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
 
+	@Test // DATAMONGO-2029
+	public void shouldSupportNonQuotedBinaryCollectionDataReplacement() {
+
+		byte[] binaryData = "Matthews".getBytes(StandardCharsets.UTF_8);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
+				(Object) Arrays.asList(binaryData));
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsBinaryIn", List.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { $in: [{'$binary' : '"
+				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}] }}");
+
+		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+	}
+
 	@Test // DATAMONGO-1911
 	public void shouldSupportNonQuotedUUIDReplacement() {
 
@@ -332,6 +348,23 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{'lastname' : { $binary:\"5PHq4zvkTYa5WbZAgvtjNg==\", $type: \"03\"}}");
+
+		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+	}
+
+	@Test // DATAMONGO-2029
+	public void shouldSupportNonQuotedUUIDCollectionReplacement() {
+
+		UUID uuid1 = UUID.fromString("864de43b-e3ea-f1e4-3663-fb8240b659b9");
+		UUID uuid2 = UUID.fromString("864de43b-cafe-f1e4-3663-fb8240b659b9");
+
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
+				(Object) Arrays.asList(uuid1, uuid2));
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsUUIDIn", List.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
+				"{'lastname' : { $in: [{ $binary : \"5PHq4zvkTYa5WbZAgvtjNg==\", $type : \"03\" }, { $binary : \"5PH+yjvkTYa5WbZAgvtjNg==\", $type : \"03\" }]}}");
 
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
@@ -580,8 +613,14 @@ public class StringBasedMongoQueryUnitTests {
 		@Query("{ 'lastname' : ?0 }")
 		Person findByLastnameAsBinary(byte[] lastname);
 
+		@Query("{ 'lastname' : { $in: ?0} }")
+		Person findByLastnameAsBinaryIn(List<byte[]> lastname);
+
 		@Query("{ 'lastname' : ?0 }")
 		Person findByLastnameAsUUID(UUID lastname);
+
+		@Query("{ 'lastname' : { $in : ?0} }")
+		Person findByLastnameAsUUIDIn(List<UUID> lastname);
 
 		@Query("{ 'lastname' : '?0' }")
 		Person findByLastnameAsStringUUID(UUID lastname);
