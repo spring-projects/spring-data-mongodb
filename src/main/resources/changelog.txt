@@ -1,6 +1,46 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.0.RC1 (2018-07-26)
+-----------------------------------------
+* DATAMONGO-2030 - Reactive repositories don't handle existsByProperty properly.
+* DATAMONGO-2029 - String query methods do not convert List<UUID> and List<byte[]> to their correct representation.
+* DATAMONGO-2028 - EntityOperations does not apply conversion to Mongo types.
+* DATAMONGO-2026 - Final id field causes UnsupportedOperationException when reading object.
+* DATAMONGO-2021 - Use correct document identifier on GridFsOperations getResource method.
+* DATAMONGO-2016 - MongoCredentialPropertyEditor throws ArrayIndexOutOfBoundsException when password contains a questionmark.
+* DATAMONGO-2012 - Upgrade to MongoDB java driver 3.8 and reactive streams 1.9.
+* DATAMONGO-2011 - Getting exception in MappingMongoConverter while trying to map array of arrays into Object.
+* DATAMONGO-2010 - SpringDataMongodbSerializer does not convert 'in' predicate for nested String id properties mapping to ObjectId.
+* DATAMONGO-2005 - Switch reactive transactions API over to Flux.usingWhen.
+* DATAMONGO-2004 - Lazily resolve DBRefs during constructor creation of the enclosing entity.
+* DATAMONGO-2003 - MongoQueryCreator will not create query correctly when passing Pattern Object with options.
+* DATAMONGO-2002 - Criteria instances using different regex Patterns are considered equal.
+* DATAMONGO-2001 - Count within session should return only the total count of documents visible to the specific session.
+* DATAMONGO-1998 - SpringDataMongodbSerializer cannot convert query on nested id.
+* DATAMONGO-1996 - ChangeStreamEvent Aggregator filter doesn't work for nested fields.
+* DATAMONGO-1993 - Change default fullDocumentLookup in ReactiveMongoTemplate.changeStream.
+* DATAMONGO-1992 - Add support for immutable objects.
+* DATAMONGO-1990 - Adapt build to changes in is-new-handling.
+* DATAMONGO-1988 - String ID not working for embeded objects.
+* DATAMONGO-1987 - Upgarde test infrastructure to MongoDB 4.0-rc0.
+* DATAMONGO-1986 - Aggregation MatchOperation fails to convert query.
+* DATAMONGO-1983 - Reference documentation does not include Transaction and sessions.
+* DATAMONGO-1982 - Release 2.1 RC1 (Lovelace).
+* DATAMONGO-1979 - Adding Support For Sorting in @Query Annotation and Creating an alias for value.
+* DATAMONGO-1919 - Decouple reactive mongo bits from blocking MongoClient.
+* DATAMONGO-1848 - Migrate to Document API-based Querydsl implementation.
+* DATAMONGO-1842 - Optimistic locking allows ReactiveMongoTemplate to modify immutable objects.
+* DATAMONGO-1827 - Allow document replacements via MongoCollection.findOneAndReplace(…).
+* DATAMONGO-1810 - Querydsl predicate using IN operator fails for DBRef.
+* DATAMONGO-1434 - Convert Exceptions into Spring Exception hierarchy when going through Querydsl.
+* DATAMONGO-1311 - Add an option to specify the cursor.batchSize() for repository methods returning streams.
+* DATAMONGO-1185 - Provide lifecycle events when using QueryDSL.
+* DATAMONGO-700 - Events not triggered during Querydsl repository usage.
+* DATAMONGO-595 - Expose new QueryDSL elemMatch feature.
+* DATAMONGO-362 - QueryDSL does not work with DBRef.
+
+
 Changes in version 2.0.8.RELEASE (2018-06-13)
 ---------------------------------------------
 * DATAMONGO-2003 - MongoQueryCreator will not create query correctly when passing Pattern Object with options.
