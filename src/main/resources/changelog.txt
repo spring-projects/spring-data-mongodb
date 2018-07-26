@@ -1,6 +1,15 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.9.RELEASE (2018-07-26)
+---------------------------------------------
+* DATAMONGO-2030 - Reactive repositories don't handle existsByProperty properly.
+* DATAMONGO-2029 - String query methods do not convert List<UUID> and List<byte[]> to their correct representation.
+* DATAMONGO-2016 - MongoCredentialPropertyEditor throws ArrayIndexOutOfBoundsException when password contains a questionmark.
+* DATAMONGO-2011 - Getting exception in MappingMongoConverter while trying to map array of arrays into Object.
+* DATAMONGO-2007 - Release 2.0.9 (Kay SR9).
+
+
 Changes in version 2.1.0.RC1 (2018-07-26)
 -----------------------------------------
 * DATAMONGO-2030 - Reactive repositories don't handle existsByProperty properly.
