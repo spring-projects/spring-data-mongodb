@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.14.RELEASE (2018-07-27)
+-----------------------------------------------
+* DATAMONGO-2023 - ClassCastException for $sample aggregation operation.
+* DATAMONGO-2021 - Use correct document identifier on GridFsOperations getResource method.
+* DATAMONGO-2016 - MongoCredentialPropertyEditor throws ArrayIndexOutOfBoundsException when password contains a questionmark.
+* DATAMONGO-2006 - Release 1.10.14 (Ingalls SR14).
+
+
 Changes in version 2.0.9.RELEASE (2018-07-26)
 ---------------------------------------------
 * DATAMONGO-2030 - Reactive repositories don't handle existsByProperty properly.
