@@ -351,16 +351,27 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		Class<?> entityType = obj.getClass();
-		boolean handledByCustomConverter = conversions.getCustomWriteTarget(entityType, DBObject.class) != null;
 		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
 
-		if (!handledByCustomConverter && !(dbo instanceof BasicDBList)) {
+		if (requiresTypeHint(entityType)) {
 			typeMapper.writeType(type, dbo);
 		}
 
 		Object target = obj instanceof LazyLoadingProxy ? ((LazyLoadingProxy) obj).getTarget() : obj;
 
 		writeInternal(target, dbo, type);
+	}
+
+	/**
+	 * Check if a given type requires a type hint {@literal aka _class attribute} when writing to the document.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @return true if not a simple type, collection or type with custom write target.
+	 */
+	private boolean requiresTypeHint(Class<?> type) {
+
+		return !conversions.isSimpleType(type) && !ClassUtils.isAssignable(Collection.class, type)
+				&& !conversions.hasCustomWriteTarget(type, DBObject.class);
 	}
 
 	/**

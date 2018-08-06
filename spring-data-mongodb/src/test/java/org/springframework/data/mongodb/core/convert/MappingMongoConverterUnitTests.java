@@ -1853,6 +1853,15 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(Attribute.class, source).value, is(instanceOf(List.class)));
 	}
 
+	@Test // DATAMONGO-2043
+	public void omitsTypeHintWhenWritingSimpleTypes() {
+
+		DBObject target = new BasicDBObject();
+		converter.write(new BasicDBObject("value", "FitzChivalry"), target);
+
+		assertThat(target.get("_class"), is(nullValue()));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
