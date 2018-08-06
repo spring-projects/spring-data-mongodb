@@ -393,10 +393,21 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			removeFromMap(bson, "_id");
 		}
 
-		boolean handledByCustomConverter = conversions.hasCustomWriteTarget(entityType, Document.class);
-		if (!handledByCustomConverter && !(bson instanceof Collection)) {
+		if (requiresTypeHint(entityType)) {
 			typeMapper.writeType(type, bson);
 		}
+	}
+
+	/**
+	 * Check if a given type requires a type hint {@literal aka _class attribute} when writing to the document.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @return true if not a simple type, collection or type with custom write target.
+	 */
+	private boolean requiresTypeHint(Class<?> type) {
+
+		return !conversions.isSimpleType(type) && !ClassUtils.isAssignable(Collection.class, type)
+				&& !conversions.hasCustomWriteTarget(type, Document.class);
 	}
 
 	/**

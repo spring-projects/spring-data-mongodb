@@ -1895,6 +1895,15 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(Attribute.class, source).value).isInstanceOf(List.class);
 	}
 
+	@Test // DATAMONGO-2043
+	public void omitsTypeHintWhenWritingSimpleTypes() {
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(new org.bson.Document("value", "FitzChivalry"), target);
+
+		assertThat(target).doesNotContainKeys("_class");
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
