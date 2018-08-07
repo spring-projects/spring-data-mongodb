@@ -1797,23 +1797,31 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (!CollectionUtils.isEmpty(mapReduceOptions.getScopeVariables())) {
 				mapReduce = mapReduce.scope(new Document(mapReduceOptions.getScopeVariables()));
 			}
+
 			if (mapReduceOptions.getLimit() != null && mapReduceOptions.getLimit() > 0) {
 				mapReduce = mapReduce.limit(mapReduceOptions.getLimit());
 			}
+
 			if (mapReduceOptions.getFinalizeFunction().filter(StringUtils::hasText).isPresent()) {
 				mapReduce = mapReduce.finalizeFunction(mapReduceOptions.getFinalizeFunction().get());
 			}
+
 			if (mapReduceOptions.getJavaScriptMode() != null) {
 				mapReduce = mapReduce.jsMode(mapReduceOptions.getJavaScriptMode());
 			}
+
 			if (mapReduceOptions.getOutputSharded().isPresent()) {
 				mapReduce = mapReduce.sharded(mapReduceOptions.getOutputSharded().get());
 			}
 
-			MapReduceAction action = mapReduceOptions.getMapReduceAction();
+			if (StringUtils.hasText(mapReduceOptions.getOutputCollection()) && !mapReduceOptions.usesInlineOutput()) {
 
-			if(action != null && mapReduceOptions.getOutputCollection() != null){
-				mapReduce = mapReduce.action(action).collectionName(mapReduceOptions.getOutputCollection());
+				mapReduce = mapReduce.collectionName(mapReduceOptions.getOutputCollection())
+						.action(mapReduceOptions.getMapReduceAction());
+
+				if (mapReduceOptions.getOutputDatabase().isPresent()) {
+					mapReduce = mapReduce.databaseName(mapReduceOptions.getOutputDatabase().get());
+				}
 			}
 		}
 

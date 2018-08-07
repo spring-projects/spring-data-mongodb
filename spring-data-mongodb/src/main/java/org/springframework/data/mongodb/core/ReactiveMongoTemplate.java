@@ -1977,10 +1977,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			MapReducePublisher<Document> publisher = collection.mapReduce(mapFunction, reduceFunction, Document.class);
 
-			if (StringUtils.hasText(options.getOutputCollection())) {
-				publisher = publisher.collectionName(options.getOutputCollection());
-			}
-
 			publisher.filter(mappedQuery);
 			publisher.sort(getMappedSortObject(filterQuery, domainType));
 
@@ -2018,23 +2014,29 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (!CollectionUtils.isEmpty(options.getScopeVariables())) {
 				publisher = publisher.scope(new Document(options.getScopeVariables()));
 			}
+
 			if (options.getLimit() != null && options.getLimit() > 0) {
 				publisher = publisher.limit(options.getLimit());
 			}
+
 			if (options.getFinalizeFunction().filter(StringUtils::hasText).isPresent()) {
 				publisher = publisher.finalizeFunction(options.getFinalizeFunction().get());
 			}
+
 			if (options.getJavaScriptMode() != null) {
 				publisher = publisher.jsMode(options.getJavaScriptMode());
 			}
+
 			if (options.getOutputSharded().isPresent()) {
 				publisher = publisher.sharded(options.getOutputSharded().get());
 			}
 
-			MapReduceAction action = options.getMapReduceAction();
+			if (StringUtils.hasText(options.getOutputCollection()) && !options.usesInlineOutput()) {
+				publisher = publisher.collectionName(options.getOutputCollection()).action(options.getMapReduceAction());
 
-			if (action != null && options.getOutputCollection() != null) {
-				publisher = publisher.action(action).collectionName(options.getOutputCollection());
+				if (options.getOutputDatabase().isPresent()) {
+					publisher = publisher.databaseName(options.getOutputDatabase().get());
+				}
 			}
 
 			publisher = collation.map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);

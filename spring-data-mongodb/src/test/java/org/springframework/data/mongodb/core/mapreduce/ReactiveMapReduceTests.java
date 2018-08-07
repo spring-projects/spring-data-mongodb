@@ -20,6 +20,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
@@ -62,7 +64,7 @@ public class ReactiveMapReduceTests {
 				.create(template.dropCollection(ValueObject.class) //
 						.mergeWith(template.dropCollection("jmr1")) //
 						.mergeWith(template.dropCollection("jmr1_out")) //
-						.mergeWith(template.dropCollection("mapreduceout"))) //
+						.mergeWith(Mono.from(factory.getMongoDatabase("reactive-jrm1-out-db").drop()).then())) //
 				.verifyComplete();
 	}
 
@@ -115,7 +117,7 @@ public class ReactiveMapReduceTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-1890
+	@Test // DATAMONGO-1890, DATAMONGO-2027
 	public void mapReduceWithOutputCollection() {
 
 		createMapReduceData();
@@ -131,7 +133,20 @@ public class ReactiveMapReduceTests {
 							new ValueObject("c", 2), new ValueObject("d", 1));
 				}) //
 				.verifyComplete();
+	}
 
+	@Test // DATAMONGO-2027
+	public void mapReduceWithOutputDatabase() {
+
+		createMapReduceData();
+
+		StepVerifier
+				.create(template.mapReduce(new Query(), ValueObject.class, "jmr1", ValueObject.class, mapFunction,
+						reduceFunction, MapReduceOptions.options().outputDatabase("reactive-jrm1-out-db").outputCollection("jmr1_out")))
+				.expectNextCount(4).verifyComplete();
+
+		Flux.from(factory.getMongoDatabase("reactive-jrm1-out-db").listCollectionNames()).buffer(10)
+				.map(list -> list.contains("jmr1_out")).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1890
