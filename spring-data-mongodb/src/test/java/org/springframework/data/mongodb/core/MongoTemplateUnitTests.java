@@ -90,6 +90,7 @@ import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.MapReduceAction;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 
@@ -139,6 +140,9 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(mapReduceIterable.sort(Mockito.any())).thenReturn(mapReduceIterable);
 		when(mapReduceIterable.iterator()).thenReturn(cursor);
 		when(mapReduceIterable.filter(any())).thenReturn(mapReduceIterable);
+		when(mapReduceIterable.collectionName(any())).thenReturn(mapReduceIterable);
+		when(mapReduceIterable.databaseName(any())).thenReturn(mapReduceIterable);
+		when(mapReduceIterable.action(any())).thenReturn(mapReduceIterable);
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
@@ -772,6 +776,52 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.mapReduce("", "", "", MapReduceOptions.options().collation(Collation.of("fr")), AutogenerateableId.class);
 
 		verify(mapReduceIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-2027
+	public void mapReduceShouldUseOutputCollectionWhenPresent() {
+
+		template.mapReduce("", "", "", MapReduceOptions.options().outputCollection("out-collection"),
+				AutogenerateableId.class);
+
+		verify(mapReduceIterable).collectionName(eq("out-collection"));
+	}
+
+	@Test // DATAMONGO-2027
+	public void mapReduceShouldNotUseOutputCollectionForInline() {
+
+		template.mapReduce("", "", "", MapReduceOptions.options().outputCollection("out-collection").outputTypeInline(),
+				AutogenerateableId.class);
+
+		verify(mapReduceIterable, never()).collectionName(any());
+	}
+
+	@Test // DATAMONGO-2027
+	public void mapReduceShouldUseOutputActionWhenPresent() {
+
+		template.mapReduce("", "", "", MapReduceOptions.options().outputCollection("out-collection").outputTypeMerge(),
+				AutogenerateableId.class);
+
+		verify(mapReduceIterable).action(eq(MapReduceAction.MERGE));
+	}
+
+	@Test // DATAMONGO-2027
+	public void mapReduceShouldUseOutputDatabaseWhenPresent() {
+
+		template.mapReduce("", "", "",
+				MapReduceOptions.options().outputDatabase("out-database").outputCollection("out-collection").outputTypeMerge(),
+				AutogenerateableId.class);
+
+		verify(mapReduceIterable).databaseName(eq("out-database"));
+	}
+
+	@Test // DATAMONGO-2027
+	public void mapReduceShouldNotUseOutputDatabaseForInline() {
+
+		template.mapReduce("", "", "", MapReduceOptions.options().outputDatabase("out-database").outputTypeInline(),
+				AutogenerateableId.class);
+
+		verify(mapReduceIterable, never()).databaseName(any());
 	}
 
 	@Test // DATAMONGO-1518
