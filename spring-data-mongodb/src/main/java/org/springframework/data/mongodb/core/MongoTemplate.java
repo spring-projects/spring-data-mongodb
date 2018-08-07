@@ -157,22 +157,12 @@ import com.mongodb.client.result.UpdateResult;
  * @author Roman Puchkovskiy
  * @author Yadhukrishna S Pai
  * @author Anton Barkan
+ * @author Bartłomiej Mazur
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
-	private static final Collection<String> ITERABLE_CLASSES;
-
-	static {
-
-		Set<String> iterableClasses = new HashSet<>();
-		iterableClasses.add(List.class.getName());
-		iterableClasses.add(Collection.class.getName());
-		iterableClasses.add(Iterator.class.getName());
-
-		ITERABLE_CLASSES = Collections.unmodifiableCollection(iterableClasses);
-	}
 
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -1164,7 +1154,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(objectToSave, "ObjectToSave must not be null!");
 
-		ensureNotIterable(objectToSave);
+		ensureNotAnArrayOrCollection(objectToSave);
 		return insert(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
@@ -1179,13 +1169,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(objectToSave, "ObjectToSave must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 
-		ensureNotIterable(objectToSave);
+		ensureNotAnArrayOrCollection(objectToSave);
 		return (T) doInsert(collectionName, objectToSave, this.mongoConverter);
 	}
 
-	protected void ensureNotIterable(@Nullable Object o) {
-		if (o != null) {
-			if (o.getClass().isArray() || ITERABLE_CLASSES.contains(o.getClass().getName())) {
+	protected void ensureNotAnArrayOrCollection(@Nullable Object o) {
+		if (null != o) {
+			if (o.getClass().isArray() || (o instanceof Collection) || (o instanceof Iterator)) {
 				throw new IllegalArgumentException("Cannot use a collection here.");
 			}
 		}
