@@ -93,7 +93,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.validation.Validator;
-import org.springframework.data.projection.ProjectionInformation;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
@@ -161,6 +160,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private final SpelAwareProxyProjectionFactory projectionFactory;
 	private final ApplicationListener<MappingContextEvent<?, ?>> indexCreatorListener;
 	private final EntityOperations operations;
+	private final PropertyOperations propertyOperations;
 
 	private @Nullable WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
@@ -226,6 +226,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		this.mappingContext = this.mongoConverter.getMappingContext();
 		this.operations = new EntityOperations(this.mappingContext);
+		this.propertyOperations = new PropertyOperations(this.mappingContext);
 
 		// We create indexes based on mapping events
 		if (this.mappingContext instanceof MongoMappingContext) {
@@ -253,6 +254,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.indexCreatorListener = that.indexCreatorListener;
 		this.mappingContext = that.mappingContext;
 		this.operations = that.operations;
+		this.propertyOperations = that.propertyOperations;
 	}
 
 	private void onCheckForIndexes(MongoPersistentEntity<?> entity, Consumer<Throwable> subscriptionExceptionHandler) {
@@ -494,10 +496,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						session.startTransaction();
 					}
 
-					return Flux.usingWhen(Mono.just(session), //
-							s -> ReactiveMongoTemplate.this.withSession(action, s), //
-							ClientSession::commitTransaction, //
-							ClientSession::abortTransaction) //
+					return Flux
+							.usingWhen(Mono.just(session), //
+									s -> ReactiveMongoTemplate.this.withSession(action, s), //
+									ClientSession::commitTransaction, //
+									ClientSession::abortTransaction) //
 							.doFinally(signalType -> doFinally.accept(session));
 				});
 			}
@@ -2254,31 +2257,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	private Document getMappedFieldsObject(Document fields, MongoPersistentEntity<?> entity, Class<?> targetType) {
-		return queryMapper.getMappedFields(addFieldsForProjection(fields, entity.getType(), targetType), entity);
-	}
 
-	/**
-	 * For cases where {@code fields} is {@literal null} or {@literal empty} add fields required for creating the
-	 * projection (target) type if the {@code targetType} is a {@literal closed interface projection}.
-	 *
-	 * @param fields must not be {@literal null}.
-	 * @param domainType must not be {@literal null}.
-	 * @param targetType must not be {@literal null}.
-	 * @return {@link Document} with fields to be included.
-	 */
-	private Document addFieldsForProjection(Document fields, Class<?> domainType, Class<?> targetType) {
+		Document projectedFields = propertyOperations.computeFieldsForProjection(projectionFactory, fields,
+				entity.getType(), targetType);
 
-		if (!fields.isEmpty() || !targetType.isInterface() || ClassUtils.isAssignable(domainType, targetType)) {
-			return fields;
+		if (ObjectUtils.nullSafeEquals(fields, projectedFields)) {
+			return queryMapper.getMappedFields(projectedFields, entity);
 		}
 
-		ProjectionInformation projectionInformation = projectionFactory.getProjectionInformation(targetType);
-
-		if (projectionInformation.isClosed()) {
-			projectionInformation.getInputProperties().forEach(it -> fields.append(it.getName(), 1));
-		}
-
-		return fields;
+		return queryMapper.getMappedFields(projectedFields, mappingContext.getPersistentEntity(targetType));
 	}
 
 	protected CreateCollectionOptions convertToCreateCollectionOptions(@Nullable CollectionOptions collectionOptions) {

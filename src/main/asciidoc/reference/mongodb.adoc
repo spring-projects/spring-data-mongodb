@@ -1745,7 +1745,11 @@ List<Jedi> all = ops.find(SWCharacter.class)    <1>
 <2> Resulting documents are mapped into `Jedi`.
 ====
 
-TIP: You can directly apply <<projections>> to result documents by providing the `interface` type with `as(Class<?>)`.
+TIP: You can directly apply <<projections>> to result documents by providing the target type via `as(Class<?>)`.
+
+NOTE: Using projections allows `MongoTemplate` to optimize result mapping by limiting the actual response to fields required
+by the projection target type. This applies as long as the `Query` itself does not contain any field restriction and the
+target type is a closed interface or DTO projection.
 
 You can switch between retrieving a single entity and retrieving multiple entities as a `List` or a `Stream` through the terminating methods: `first()`, `one()`, `all()`, or `stream()`.
 
