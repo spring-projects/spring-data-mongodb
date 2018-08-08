@@ -363,10 +363,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Check if a given type requires a type hint {@literal aka _class attribute} when writing to the document.
+	 * Check if a given type requires a type hint (aka {@literal _class} attribute) when writing to the document.
 	 *
 	 * @param type must not be {@literal null}.
-	 * @return true if not a simple type, collection or type with custom write target.
+	 * @return {@literal true} if not a simple type, {@link Collection} or type with custom write target.
 	 */
 	private boolean requiresTypeHint(Class<?> type) {
 
