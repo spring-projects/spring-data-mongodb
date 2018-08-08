@@ -22,6 +22,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -178,6 +179,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private final JsonSchemaMapper schemaMapper;
 	private final SpelAwareProxyProjectionFactory projectionFactory;
 	private final EntityOperations operations;
+	private final PropertyOperations propertyOperations;
 
 	private @Nullable WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
@@ -237,6 +239,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.schemaMapper = new MongoJsonSchemaMapper(this.mongoConverter);
 		this.projectionFactory = new SpelAwareProxyProjectionFactory();
 		this.operations = new EntityOperations(this.mongoConverter.getMappingContext());
+		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
@@ -263,6 +266,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.projectionFactory = that.projectionFactory;
 		this.mappingContext = that.mappingContext;
 		this.operations = that.operations;
+		this.propertyOperations = that.propertyOperations;
 	}
 
 	/**
@@ -2724,31 +2728,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	private Document getMappedFieldsObject(Document fields, MongoPersistentEntity<?> entity, Class<?> targetType) {
-		return queryMapper.getMappedFields(addFieldsForProjection(fields, entity.getType(), targetType), entity);
-	}
 
-	/**
-	 * For cases where {@code fields} is {@literal null} or {@literal empty} add fields required for creating the
-	 * projection (target) type if the {@code targetType} is a {@literal closed interface projection}.
-	 *
-	 * @param fields can be {@literal null}.
-	 * @param domainType must not be {@literal null}.
-	 * @param targetType must not be {@literal null}.
-	 * @return {@link Document} with fields to be included.
-	 */
-	private Document addFieldsForProjection(Document fields, Class<?> domainType, Class<?> targetType) {
+		Document projectedFields = propertyOperations.computeFieldsForProjection(projectionFactory, fields,
+				entity.getType(), targetType);
 
-		if (!fields.isEmpty() || !targetType.isInterface() || ClassUtils.isAssignable(domainType, targetType)) {
-			return fields;
+		if (ObjectUtils.nullSafeEquals(fields, projectedFields)) {
+			return queryMapper.getMappedFields(projectedFields, entity);
 		}
 
-		ProjectionInformation projectionInformation = projectionFactory.getProjectionInformation(targetType);
-
-		if (projectionInformation.isClosed()) {
-			projectionInformation.getInputProperties().forEach(it -> fields.append(it.getName(), 1));
-		}
-
-		return fields;
+		return queryMapper.getMappedFields(projectedFields, mappingContext.getPersistentEntity(targetType));
 	}
 
 	/**
@@ -3014,7 +3002,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * {@link DocumentCallback} transforming {@link Document} into the given {@code targetType} or decorating the
-	 * {@code sourceType} with a {@literal projection} in case the {@code targetType} is an {@litera interface}.
+	 * {@code sourceType} with a {@literal projection} in case the {@code targetType} is an {@literal interface}.
 	 *
 	 * @param <S>
 	 * @param <T>

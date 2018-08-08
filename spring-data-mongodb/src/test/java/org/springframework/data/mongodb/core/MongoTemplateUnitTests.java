@@ -917,12 +917,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(findIterable).projection(eq(new Document()));
 	}
 
-	@Test // DATAMONGO-1733
-	public void doesNotApplyFieldsToDtoProjection() {
+	@Test // DATAMONGO-1733, DATAMONGO-2041
+	public void appliesFieldsToDtoProjection() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class, null);
 
-		verify(findIterable).projection(eq(new Document()));
+		verify(findIterable).projection(eq(new Document("firstname", 1)));
 	}
 
 	@Test // DATAMONGO-1733

@@ -108,6 +108,18 @@ public class ExecutableFindOperationSupportTests {
 		assertThat(template.query(Person.class).as(Jedi.class).all()).hasOnlyElementsOfType(Jedi.class).hasSize(2);
 	}
 
+	@Test // DATAMONGO-2041
+	public void findAllWithProjectionOnEmbeddedType() {
+
+		luke.father = new Person();
+		luke.father.firstname = "anakin";
+
+		template.save(luke);
+
+		assertThat(template.query(Person.class).as(PersonDtoProjection.class).matching(query(where("id").is(luke.id)))
+				.firstValue()).hasFieldOrPropertyWithValue("father", luke.father);
+	}
+
 	@Test // DATAMONGO-1733
 	public void findByReturningAllValuesAsClosedInterfaceProjection() {
 
@@ -527,6 +539,12 @@ public class ExecutableFindOperationSupportTests {
 
 		@Value("#{target.firstname}")
 		String getName();
+	}
+
+	static class PersonDtoProjection {
+
+		@Field("firstname") String name;
+		Person father;
 	}
 
 	@Data

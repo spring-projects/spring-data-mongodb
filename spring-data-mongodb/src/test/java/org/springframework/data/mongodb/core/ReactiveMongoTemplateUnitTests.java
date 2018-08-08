@@ -311,12 +311,12 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(findPublisher, never()).projection(any());
 	}
 
-	@Test // DATAMONGO-1719
-	public void doesNotApplyFieldsToDtoProjection() {
+	@Test // DATAMONGO-1719, DATAMONGO-2041
+	public void appliesFieldsToDtoProjection() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class, null).subscribe();
 
-		verify(findPublisher, never()).projection(any());
+		verify(findPublisher).projection(eq(new Document("firstname", 1)));
 	}
 
 	@Test // DATAMONGO-1719
