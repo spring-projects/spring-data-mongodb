@@ -289,7 +289,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Reads the identifier from either the bean backing the {@link PersistentPropertyAccessor} or the source document in
 	 * case the identifier has not be populated yet. In this case the identifier is set on the bean for further reference.
-	 * 
+	 *
 	 * @param accessor must not be {@literal null}.
 	 * @param document must not be {@literal null}.
 	 * @param entity must not be {@literal null}.
@@ -418,10 +418,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Check if a given type requires a type hint {@literal aka _class attribute} when writing to the document.
+	 * Check if a given type requires a type hint (aka {@literal _class} attribute) when writing to the document.
 	 *
 	 * @param type must not be {@literal null}.
-	 * @return true if not a simple type, collection or type with custom write target.
+	 * @return {@literal true} if not a simple type, {@link Collection} or type with custom write target.
 	 */
 	private boolean requiresTypeHint(Class<?> type) {
 
