@@ -294,10 +294,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(documentAccessor, evaluator,
 				currentPath);
 
-		DbRefResolverCallback callback = new DefaultDbRefResolverCallback(documentAccessor.getDocument(), currentPath,
-				evaluator,
-				MappingMongoConverter.this);
-		readProperties(entity, accessor, documentAccessor, valueProvider, callback);
+		readProperties(entity, accessor, documentAccessor, valueProvider, currentPath, evaluator);
 
 		return accessor.getBean();
 	}
@@ -343,11 +340,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	private void readProperties(MongoPersistentEntity<?> entity, PersistentPropertyAccessor<?> accessor,
-			DocumentAccessor documentAccessor, MongoDbPropertyValueProvider valueProvider, DbRefResolverCallback callback) {
+			DocumentAccessor documentAccessor, MongoDbPropertyValueProvider valueProvider, ObjectPath currentPath,
+			SpELExpressionEvaluator evaluator) {
+
+		DbRefResolverCallback callback = null;
 
 		for (MongoPersistentProperty prop : entity) {
 
 			if (prop.isAssociation() && !entity.isConstructorArgument(prop)) {
+
+				if (callback == null) {
+					callback = getDbRefResolverCallback(documentAccessor, currentPath, evaluator);
+				}
+
 				readAssociation(prop.getRequiredAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback);
 				continue;
 			}
@@ -363,12 +368,24 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			if (prop.isAssociation()) {
+
+				if (callback == null) {
+					callback = getDbRefResolverCallback(documentAccessor, currentPath, evaluator);
+				}
+
 				readAssociation(prop.getRequiredAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback);
 				continue;
 			}
 
 			accessor.setProperty(prop, valueProvider.getPropertyValue(prop));
 		}
+	}
+
+	private DbRefResolverCallback getDbRefResolverCallback(DocumentAccessor documentAccessor, ObjectPath currentPath,
+			SpELExpressionEvaluator evaluator) {
+
+		return new DefaultDbRefResolverCallback(documentAccessor.getDocument(), currentPath, evaluator,
+				MappingMongoConverter.this);
 	}
 
 	private void readAssociation(Association<MongoPersistentProperty> association, PersistentPropertyAccessor<?> accessor,
