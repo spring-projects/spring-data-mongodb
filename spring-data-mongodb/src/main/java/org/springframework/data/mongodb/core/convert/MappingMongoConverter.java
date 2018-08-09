@@ -272,6 +272,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
+		if (entity.requiresPropertyPopulation()) {
+			return populateProperties(entity, bson, path, evaluator, instance);
+		}
+
+		return instance;
+	}
+
+	private <S> S populateProperties(MongoPersistentEntity<S> entity, Document bson, ObjectPath path,
+			SpELExpressionEvaluator evaluator, S instance) {
+
 		PersistentPropertyAccessor<S> accessor = new ConvertingPropertyAccessor<>(entity.getPropertyAccessor(instance),
 				conversionService);
 
