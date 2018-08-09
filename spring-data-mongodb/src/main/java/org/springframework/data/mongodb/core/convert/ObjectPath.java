@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import lombok.Value;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,26 +43,33 @@ class ObjectPath {
 
 	static final ObjectPath ROOT = new ObjectPath();
 
-	private final ObjectPathItem[] items;
+	private final @Nullable ObjectPath parent;
+	private final @Nullable Object object;
+	private final @Nullable Object idValue;
+	private final String collection;
 
 	private ObjectPath() {
-		this.items = new ObjectPathItem[0];
+
+		this.parent = null;
+		this.object = null;
+		this.idValue = null;
+		this.collection = "";
 	}
 
 	/**
-	 * Creates a new {@link ObjectPath} from the given parent {@link ObjectPath} by adding the provided
-	 * {@link ObjectPathItem} to it.
+	 * Creates a new {@link ObjectPath} from the given parent {@link ObjectPath} and adding the provided path values.
 	 *
 	 * @param parent must not be {@literal null}.
-	 * @param item
+	 * @param collection
+	 * @param idValue
+	 * @param collection
 	 */
-	private ObjectPath(ObjectPath parent, ObjectPath.ObjectPathItem item) {
+	private ObjectPath(ObjectPath parent, Object object, @Nullable Object idValue, String collection) {
 
-		ObjectPathItem[] items = new ObjectPathItem[parent.items.length + 1];
-		System.arraycopy(parent.items, 0, items, 0, parent.items.length);
-		items[parent.items.length] = item;
-
-		this.items = items;
+		this.parent = parent;
+		this.object = object;
+		this.idValue = idValue;
+		this.collection = collection;
 	}
 
 	/**
@@ -80,8 +85,7 @@ class ObjectPath {
 		Assert.notNull(object, "Object must not be null!");
 		Assert.notNull(entity, "MongoPersistentEntity must not be null!");
 
-		ObjectPathItem item = new ObjectPathItem(object, id, entity.getCollection());
-		return new ObjectPath(this, item);
+		return new ObjectPath(this, object, id, entity.getCollection());
 	}
 
 	/**
@@ -100,15 +104,15 @@ class ObjectPath {
 		Assert.notNull(id, "Id must not be null!");
 		Assert.hasText(collection, "Collection name must not be null!");
 
-		for (ObjectPathItem item : items) {
+		for (ObjectPath current = this; current != null; current = current.parent) {
 
-			Object object = item.getObject();
+			Object object = current.getObject();
 
-			if (object == null || item.getIdValue() == null) {
+			if (object == null || current.getIdValue() == null) {
 				continue;
 			}
 
-			if (collection.equals(item.getCollection()) && id.equals(item.getIdValue())) {
+			if (collection.equals(current.getCollection()) && id.equals(current.getIdValue())) {
 				return object;
 			}
 		}
@@ -133,15 +137,15 @@ class ObjectPath {
 		Assert.hasText(collection, "Collection name must not be null!");
 		Assert.notNull(type, "Type must not be null!");
 
-		for (ObjectPathItem item : items) {
+		for (ObjectPath current = this; current != null; current = current.parent) {
 
-			Object object = item.getObject();
+			Object object = current.getObject();
 
-			if (object == null || item.getIdValue() == null) {
+			if (object == null || current.getIdValue() == null) {
 				continue;
 			}
 
-			if (collection.equals(item.getCollection()) && id.equals(item.getIdValue())
+			if (collection.equals(current.getCollection()) && id.equals(current.getIdValue())
 					&& ClassUtils.isAssignable(type, object.getClass())) {
 				return type.cast(object);
 			}
@@ -157,7 +161,21 @@ class ObjectPath {
 	 */
 	@Nullable
 	Object getCurrentObject() {
-		return items.length == 0 ? null : items[items.length - 1].getObject();
+		return getObject();
+	}
+
+	@Nullable
+	private Object getObject() {
+		return object;
+	}
+
+	@Nullable
+	private Object getIdValue() {
+		return idValue;
+	}
+
+	private String getCollection() {
+		return collection;
 	}
 
 	/*
@@ -167,31 +185,16 @@ class ObjectPath {
 	@Override
 	public String toString() {
 
-		if (items.length == 0) {
+		if (parent == null) {
 			return "[empty]";
 		}
 
-		List<String> strings = new ArrayList<>(items.length);
+		List<String> strings = new ArrayList<>();
 
-		for (ObjectPathItem item : items) {
-			strings.add(ObjectUtils.nullSafeToString(item.object));
+		for (ObjectPath current = this; current != null; current = current.parent) {
+			strings.add(ObjectUtils.nullSafeToString(current.getObject()));
 		}
 
 		return StringUtils.collectionToDelimitedString(strings, " -> ");
-	}
-
-	/**
-	 * An item in an {@link ObjectPath}.
-	 *
-	 * @author Thomas Darimont
-	 * @author Oliver Gierke
-	 * @author Mark Paluch
-	 */
-	@Value
-	private static class ObjectPathItem {
-
-		Object object;
-		@Nullable Object idValue;
-		String collection;
 	}
 }
