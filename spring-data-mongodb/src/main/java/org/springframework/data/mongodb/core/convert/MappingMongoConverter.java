@@ -247,7 +247,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
-			Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
+			DocumentAccessor source, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
 
 		AssociationAwareMongoDbPropertyValueProvider provider = new AssociationAwareMongoDbPropertyValueProvider(source,
@@ -262,30 +262,29 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private <S extends Object> S read(final MongoPersistentEntity<S> entity, final Document bson, final ObjectPath path) {
 
 		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(bson, spELContext);
+		DocumentAccessor documentAccessor = new DocumentAccessor(bson);
 
 		PreferredConstructor<S, MongoPersistentProperty> persistenceConstructor = entity.getPersistenceConstructor();
 
 		ParameterValueProvider<MongoPersistentProperty> provider = persistenceConstructor != null
-				&& persistenceConstructor.hasParameters() ? getParameterProvider(entity, bson, evaluator, path)
+				&& persistenceConstructor.hasParameters() ? getParameterProvider(entity, documentAccessor, evaluator, path)
 						: NoOpParameterValueProvider.INSTANCE;
 
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
 		if (entity.requiresPropertyPopulation()) {
-			return populateProperties(entity, bson, path, evaluator, instance);
+			return populateProperties(entity, documentAccessor, path, evaluator, instance);
 		}
 
 		return instance;
 	}
 
-	private <S> S populateProperties(MongoPersistentEntity<S> entity, Document bson, ObjectPath path,
+	private <S> S populateProperties(MongoPersistentEntity<S> entity, DocumentAccessor documentAccessor, ObjectPath path,
 			SpELExpressionEvaluator evaluator, S instance) {
 
 		PersistentPropertyAccessor<S> accessor = new ConvertingPropertyAccessor<>(entity.getPropertyAccessor(instance),
 				conversionService);
-
-		DocumentAccessor documentAccessor = new DocumentAccessor(bson);
 
 		// Make sure id property is set before all other properties
 
@@ -296,7 +295,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(documentAccessor, evaluator,
 				currentPath);
 
-		DbRefResolverCallback callback = new DefaultDbRefResolverCallback(bson, currentPath, evaluator,
+		DbRefResolverCallback callback = new DefaultDbRefResolverCallback(documentAccessor.getDocument(), currentPath,
+				evaluator,
 				MappingMongoConverter.this);
 		readProperties(entity, accessor, documentAccessor, valueProvider, callback);
 
@@ -1398,7 +1398,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param evaluator must not be {@literal null}.
 		 * @param path must not be {@literal null}.
 		 */
-		AssociationAwareMongoDbPropertyValueProvider(Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
+		AssociationAwareMongoDbPropertyValueProvider(DocumentAccessor source, SpELExpressionEvaluator evaluator,
+				ObjectPath path) {
 			super(source, evaluator, path);
 		}
 
