@@ -24,11 +24,14 @@ import org.springframework.lang.Nullable;
  * {@link MongoPersistentProperty} caching access to {@link #isIdProperty()} and {@link #getFieldName()}.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty {
 
 	private @Nullable Boolean isIdProperty;
 	private @Nullable Boolean isAssociation;
+	private @Nullable boolean dbRefResolved;
+	private @Nullable DBRef dbref;
 	private @Nullable String fieldName;
 	private @Nullable Boolean usePropertyAccess;
 	private @Nullable Boolean isTransient;
@@ -36,8 +39,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	/**
 	 * Creates a new {@link CachingMongoPersistentProperty}.
 	 *
-	 * @param field
-	 * @param propertyDescriptor
+	 * @param property
 	 * @param owner
 	 * @param simpleTypeHolder
 	 * @param fieldNamingStrategy
@@ -113,5 +115,29 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		}
 
 		return this.isTransient;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#isDbReference()
+	 */
+	@Override
+	public boolean isDbReference() {
+		return getDBRef() != null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#getDBRef()
+	 */
+	@Override
+	public DBRef getDBRef() {
+
+		if (!dbRefResolved) {
+			this.dbref = super.getDBRef();
+			this.dbRefResolved = true;
+		}
+
+		return this.dbref;
 	}
 }
