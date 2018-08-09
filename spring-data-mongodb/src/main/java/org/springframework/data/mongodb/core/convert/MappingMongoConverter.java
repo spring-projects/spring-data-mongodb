@@ -34,6 +34,7 @@ import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -248,6 +249,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
 			Bson source, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
+
 		AssociationAwareMongoDbPropertyValueProvider provider = new AssociationAwareMongoDbPropertyValueProvider(source,
 				evaluator, path);
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<>(
@@ -261,7 +263,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(bson, spELContext);
 
-		ParameterValueProvider<MongoPersistentProperty> provider = getParameterProvider(entity, bson, evaluator, path);
+		PreferredConstructor<S, MongoPersistentProperty> persistenceConstructor = entity.getPersistenceConstructor();
+
+		ParameterValueProvider<MongoPersistentProperty> provider = persistenceConstructor != null
+				&& persistenceConstructor.hasParameters() ? getParameterProvider(entity, bson, evaluator, path)
+						: NoOpParameterValueProvider.INSTANCE;
+
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
@@ -1605,5 +1612,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	static class NestedDocument {
 
+	}
+
+	enum NoOpParameterValueProvider implements ParameterValueProvider<MongoPersistentProperty> {
+
+		INSTANCE;
+
+		@Override
+		public <T> T getParameterValue(Parameter<T, MongoPersistentProperty> parameter) {
+			return null;
+		}
 	}
 }
