@@ -1710,7 +1710,7 @@ At the time of this writing, we provide support for the following Aggregation Op
 | `abs`, `add` (*via `plus`), `ceil`, `divide`, `exp`, `floor`, `ln`, `log`, `log10`, `mod`, `multiply`, `pow`, `sqrt`, `subtract` (*via `minus`), `trunc`
 
 | String Aggregation Operators
-| `concat`, `substr`, `toLower`, `toUpper`, `stcasecmp`, `indexOfBytes`, `indexOfCP`, `split`, `strLenBytes`, `strLenCP`, `substrCP`
+| `concat`, `substr`, `toLower`, `toUpper`, `stcasecmp`, `indexOfBytes`, `indexOfCP`, `split`, `strLenBytes`, `strLenCP`, `substrCP`, `trim`, `ltrim`, `rtim`
 
 | Comparison Aggregation Operators
 | `eq` (*via: `is`), `gt`, `gte`, `lt`, `lte`, `ne`
