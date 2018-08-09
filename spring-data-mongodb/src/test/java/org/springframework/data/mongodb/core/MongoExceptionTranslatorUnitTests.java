@@ -17,25 +17,20 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
-import java.io.IOException;
 import java.net.UnknownHostException;
 
-import com.mongodb.WriteConcern;
 import org.bson.BsonDocument;
-import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.data.mongodb.ClientSessionException;
+import org.springframework.data.mongodb.MongoTransactionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 
 import com.mongodb.MongoCursorNotFoundException;
@@ -133,6 +128,28 @@ public class MongoExceptionTranslatorUnitTests {
 
 		RuntimeException exception = new RuntimeException();
 		assertThat(translator.translateExceptionIfPossible(exception), is(nullValue()));
+	}
+
+	@Test // DATAMONGO-2045
+	public void translateSessionExceptions() {
+
+		checkTranslatedMongoException(ClientSessionException.class, 206);
+		checkTranslatedMongoException(ClientSessionException.class, 213);
+		checkTranslatedMongoException(ClientSessionException.class, 228);
+		checkTranslatedMongoException(ClientSessionException.class, 264);
+	}
+
+	@Test // DATAMONGO-2045
+	public void translateTransactionExceptions() {
+
+		checkTranslatedMongoException(MongoTransactionException.class, 217);
+		checkTranslatedMongoException(MongoTransactionException.class, 225);
+		checkTranslatedMongoException(MongoTransactionException.class, 244);
+		checkTranslatedMongoException(MongoTransactionException.class, 251);
+		checkTranslatedMongoException(MongoTransactionException.class, 256);
+		checkTranslatedMongoException(MongoTransactionException.class, 257);
+		checkTranslatedMongoException(MongoTransactionException.class, 263);
+		checkTranslatedMongoException(MongoTransactionException.class, 267);
 	}
 
 	private void checkTranslatedMongoException(Class<? extends Exception> clazz, int code) {
