@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.BiFunction;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -289,7 +288,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// Make sure id property is set before all other properties
 
 		Object rawId = readAndPopulateIdentifier(accessor, documentAccessor, entity,
-				(property, id) -> readIdValue(path, evaluator, property, id));
+				path, evaluator);
 		ObjectPath currentPath = path.push(accessor.getBean(), entity, rawId);
 
 		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(documentAccessor, evaluator,
@@ -310,12 +309,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param accessor must not be {@literal null}.
 	 * @param document must not be {@literal null}.
 	 * @param entity must not be {@literal null}.
-	 * @param callback the callback to actually resolve the value for the identifier property, must not be
-	 *          {@literal null}.
+	 * @param path
+	 * @param evaluator
 	 * @return
 	 */
 	private Object readAndPopulateIdentifier(PersistentPropertyAccessor<?> accessor, DocumentAccessor document,
-			MongoPersistentEntity<?> entity, BiFunction<MongoPersistentProperty, Object, Object> callback) {
+			MongoPersistentEntity<?> entity, ObjectPath path, SpELExpressionEvaluator evaluator) {
 
 		Object rawId = document.getRawId(entity);
 
@@ -329,7 +328,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return rawId;
 		}
 
-		accessor.setProperty(idProperty, callback.apply(idProperty, rawId));
+		accessor.setProperty(idProperty, readIdValue(path, evaluator, idProperty, rawId));
 
 		return rawId;
 	}
