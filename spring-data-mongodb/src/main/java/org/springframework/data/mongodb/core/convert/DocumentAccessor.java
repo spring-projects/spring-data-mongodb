@@ -137,7 +137,7 @@ class DocumentAccessor {
 	/**
 	 * Returns the raw identifier for the given {@link MongoPersistentEntity} or the value of the default identifier
 	 * field.
-	 * 
+	 *
 	 * @param entity must not be {@literal null}.
 	 * @return
 	 */
@@ -159,15 +159,20 @@ class DocumentAccessor {
 
 		String fieldName = property.getFieldName();
 
+
+		if (this.document instanceof Document) {
+
+			if (((Document) this.document).containsKey(fieldName)) {
+				return true;
+			}
+		} else if (this.document instanceof DBObject) {
+			if (((DBObject) this.document).containsField(fieldName)) {
+				return true;
+			}
+		}
+
 		if (!fieldName.contains(".")) {
-
-			if (this.document instanceof Document) {
-				return ((Document) this.document).containsKey(fieldName);
-			}
-
-			if (this.document instanceof DBObject) {
-				return ((DBObject) this.document).containsField(fieldName);
-			}
+			return false;
 		}
 
 		String[] parts = fieldName.split("\\.");
