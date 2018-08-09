@@ -43,7 +43,6 @@ public class Index implements IndexDefinition {
 	private final Map<String, Direction> fieldSpec = new LinkedHashMap<String, Direction>();
 	private @Nullable String name;
 	private boolean unique = false;
-	private boolean dropDuplicates = false;
 	private boolean sparse = false;
 	private boolean background = false;
 	private long expire = -1;
@@ -182,9 +181,6 @@ public class Index implements IndexDefinition {
 		}
 		if (unique) {
 			document.put("unique", true);
-		}
-		if (dropDuplicates) {
-			document.put("dropDups", true);
 		}
 		if (sparse) {
 			document.put("sparse", true);
