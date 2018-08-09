@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Gateway to {@literal Date} aggregation operations.
@@ -175,7 +176,7 @@ public class DateOperators {
 		 * Create a {@link Timezone} for the {@link AggregationExpression} resulting in the Olson Timezone Identifier or UTC
 		 * Offset.
 		 *
-		 * @param value the {@link AggregationExpression} resulting in the timezone.
+		 * @param expression the {@link AggregationExpression} resulting in the timezone.
 		 * @return new instance of {@link Timezone}.
 		 */
 		public static Timezone ofExpression(AggregationExpression expression) {
@@ -373,6 +374,17 @@ public class DateOperators {
 		 */
 		public DateToString toString(String format) {
 			return applyTimezone(DateToString.dateToString(dateReference()).toString(format), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that converts a date object to a string according to the server default
+		 * format.
+		 *
+		 * @return new instance of {@link DateToString}.
+		 * @since 1.10.15
+		 */
+		public DateToString toStringWithDefaultFormat() {
+			return applyTimezone(DateToString.dateToString(dateReference()).defaultFormat(), timezone);
 		}
 
 		/**
@@ -1344,6 +1356,11 @@ public class DateOperators {
 					Assert.notNull(format, "Format must not be null!");
 					return new DateToString(argumentMap(value, format, Timezone.none()));
 				}
+
+				@Override
+				public DateToString defaultFormat() {
+					return new DateToString(argumentMap(value, null, Timezone.none()));
+				}
 			};
 		}
 
@@ -1387,6 +1404,42 @@ public class DateOperators {
 			return new DateToString(argumentMap(get("date"), (String) get("format"), timezone));
 		}
 
+		/**
+		 * Optionally specify the value to return when the date is {@literal null} or missing. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link DateToString}.
+		 * @since 1.10.15
+		 */
+		public DateToString onNullReturn(Object value) {
+			return new DateToString(append("onNull", value));
+		}
+
+		/**
+		 * Optionally specify the field holding the value to return when the date is {@literal null} or missing. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link DateToString}.
+		 * @since 1.10.15
+		 */
+		public DateToString onNullReturnValueOf(String fieldReference) {
+			return onNullReturn(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Optionally specify the expression to evaluate and return when the date is {@literal null} or missing. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DateToString}.
+		 * @since 1.10.15
+		 */
+		public DateToString onNullReturnValueOf(AggregationExpression expression) {
+			return onNullReturn(expression);
+		}
+
 		@Override
 		protected String getMongoMethod() {
 			return "$dateToString";
@@ -1395,7 +1448,11 @@ public class DateOperators {
 		private static java.util.Map<String, Object> argumentMap(Object date, String format, Timezone timezone) {
 
 			java.util.Map<String, Object> args = new LinkedHashMap<String, Object>(2);
-			args.put("format", format);
+
+			if (StringUtils.hasText(format)) {
+				args.put("format", format);
+			}
+
 			args.put("date", date);
 
 			if (!ObjectUtils.nullSafeEquals(timezone, Timezone.none())) {
@@ -1413,6 +1470,16 @@ public class DateOperators {
 			 * @return
 			 */
 			DateToString toString(String format);
+
+			/**
+			 * Creates new {@link DateToString} using the server default string format ({@code %Y-%m-%dT%H:%M:%S.%LZ}) for
+			 * dates. <br />
+			 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+			 *
+			 * @return new instance of {@link DateToString}.
+			 * @since 1.10.15
+			 */
+			DateToString defaultFormat();
 		}
 	}
 
@@ -2276,6 +2343,21 @@ public class DateOperators {
 		@Override
 		public DateFromString withTimezone(Timezone timezone) {
 			return new DateFromString(appendTimezone(argumentMap(), timezone));
+		}
+
+		/**
+		 * Optionally set the date format to use. If not specified {@code %Y-%m-%dT%H:%M:%S.%LZ} is used.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param format must not be {@literal null}.
+		 * @return new instance of {@link DateFromString}.
+		 * @throws IllegalArgumentException if given {@literal format} is {@literal null}.
+		 * @since 1.10.15
+		 */
+		public DateFromString withFormat(String format) {
+
+			Assert.notNull(format, "Format must not be null!");
+			return new DateFromString(append("format", format));
 		}
 
 		@Override
