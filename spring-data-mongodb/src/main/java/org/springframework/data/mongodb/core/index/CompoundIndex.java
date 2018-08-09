@@ -70,7 +70,9 @@ public @interface CompoundIndex {
 	/**
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping">https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping</a>
+	 * @deprecated since 2.1. No longer supported by MongoDB as of server version 3.0.
 	 */
+	@Deprecated
 	boolean dropDups() default false;
 
 	/**

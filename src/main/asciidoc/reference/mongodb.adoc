@@ -2828,13 +2828,13 @@ The `IndexOperations` interface has the `getIndexInfo` method that returns a lis
 
 [source,java]
 ----
-template.indexOps(Person.class).ensureIndex(new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
+template.indexOps(Person.class).ensureIndex(new Index().on("age", Order.DESCENDING).unique());
 
 List<IndexInfo> indexInfoList = template.indexOps(Person.class).getIndexInfo();
 
 // Contains
-// [IndexInfo [fieldSpec={_id=ASCENDING}, name=_id_, unique=false, dropDuplicates=false, sparse=false],
-//  IndexInfo [fieldSpec={age=DESCENDING}, name=age_-1, unique=true, dropDuplicates=true, sparse=false]]
+// [IndexInfo [fieldSpec={_id=ASCENDING}, name=_id_, unique=false, sparse=false],
+//  IndexInfo [fieldSpec={age=DESCENDING}, name=age_-1, unique=true, sparse=false]]
 ----
 
 [[mongo-template.index-and-collections.collection]]
