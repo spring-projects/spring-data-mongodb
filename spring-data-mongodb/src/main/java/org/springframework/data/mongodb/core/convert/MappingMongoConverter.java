@@ -242,7 +242,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException(String.format(INVALID_TYPE_TO_READ, target, typeToUse.getType()));
 		}
 
-		return read((MongoPersistentEntity<S>) mappingContext.getRequiredPersistentEntity(typeToUse), target, path);
+		return read((MongoPersistentEntity<S>) entity, target, path);
 	}
 
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
