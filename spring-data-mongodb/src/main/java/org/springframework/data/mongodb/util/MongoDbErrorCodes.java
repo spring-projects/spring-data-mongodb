@@ -33,12 +33,14 @@ public final class MongoDbErrorCodes {
 	static HashMap<Integer, String> duplicateKeyCodes;
 	static HashMap<Integer, String> invalidDataAccessApiUsageExeption;
 	static HashMap<Integer, String> permissionDeniedCodes;
+	static HashMap<Integer, String> clientSessionCodes;
+	static HashMap<Integer, String> transactionCodes;
 
 	static HashMap<Integer, String> errorCodes;
 
 	static {
 
-		dataAccessResourceFailureCodes = new HashMap<Integer, String>(10);
+		dataAccessResourceFailureCodes = new HashMap<>(10);
 		dataAccessResourceFailureCodes.put(6, "HostUnreachable");
 		dataAccessResourceFailureCodes.put(7, "HostNotFound");
 		dataAccessResourceFailureCodes.put(89, "NetworkTimeout");
@@ -52,7 +54,7 @@ public final class MongoDbErrorCodes {
 		dataAccessResourceFailureCodes.put(13441, "BadOffsetInFile");
 		dataAccessResourceFailureCodes.put(13640, "DataFileHeaderCorrupt");
 
-		dataIntegrityViolationCodes = new HashMap<Integer, String>(6);
+		dataIntegrityViolationCodes = new HashMap<>(6);
 		dataIntegrityViolationCodes.put(67, "CannotCreateIndex");
 		dataIntegrityViolationCodes.put(68, "IndexAlreadyExists");
 		dataIntegrityViolationCodes.put(85, "IndexOptionsConflict");
@@ -60,13 +62,13 @@ public final class MongoDbErrorCodes {
 		dataIntegrityViolationCodes.put(112, "WriteConflict");
 		dataIntegrityViolationCodes.put(117, "ConflictingOperationInProgress");
 
-		duplicateKeyCodes = new HashMap<Integer, String>(3);
+		duplicateKeyCodes = new HashMap<>(3);
 		duplicateKeyCodes.put(3, "OBSOLETE_DuplicateKey");
 		duplicateKeyCodes.put(84, "DuplicateKeyValue");
 		duplicateKeyCodes.put(11000, "DuplicateKey");
 		duplicateKeyCodes.put(11001, "DuplicateKey");
 
-		invalidDataAccessApiUsageExeption = new HashMap<Integer, String>();
+		invalidDataAccessApiUsageExeption = new HashMap<>();
 		invalidDataAccessApiUsageExeption.put(5, "GraphContainsCycle");
 		invalidDataAccessApiUsageExeption.put(9, "FailedToParse");
 		invalidDataAccessApiUsageExeption.put(14, "TypeMismatch");
@@ -99,7 +101,7 @@ public final class MongoDbErrorCodes {
 		invalidDataAccessApiUsageExeption.put(17280, "KeyTooLong");
 		invalidDataAccessApiUsageExeption.put(13334, "ShardKeyTooBig");
 
-		permissionDeniedCodes = new HashMap<Integer, String>();
+		permissionDeniedCodes = new HashMap<>();
 		permissionDeniedCodes.put(11, "UserNotFound");
 		permissionDeniedCodes.put(18, "AuthenticationFailed");
 		permissionDeniedCodes.put(31, "RoleNotFound");
@@ -109,12 +111,29 @@ public final class MongoDbErrorCodes {
 		permissionDeniedCodes.put(16704, "CannotAuthenticateToAdminDB");
 		permissionDeniedCodes.put(16705, "CannotAuthenticateToAdminDB");
 
-		errorCodes = new HashMap<Integer, String>();
+		clientSessionCodes = new HashMap<>();
+		clientSessionCodes.put(206, "NoSuchSession");
+		clientSessionCodes.put(213, "DuplicateSession");
+		clientSessionCodes.put(228, "SessionTransferIncomplete");
+		clientSessionCodes.put(264, "TooManyLogicalSessions");
+
+		transactionCodes = new HashMap<>();
+		transactionCodes.put(217, "IncompleteTransactionHistory");
+		transactionCodes.put(225, "TransactionTooOld");
+		transactionCodes.put(244, "TransactionAborted");
+		transactionCodes.put(251, "NoSuchTransaction");
+		transactionCodes.put(256, "TransactionCommitted");
+		transactionCodes.put(257, "TransactionToLarge");
+		transactionCodes.put(263, "OperationNotSupportedInTransaction");
+		transactionCodes.put(267, "PreparedTransactionInProgress");
+
+		errorCodes = new HashMap<>();
 		errorCodes.putAll(dataAccessResourceFailureCodes);
 		errorCodes.putAll(dataIntegrityViolationCodes);
 		errorCodes.putAll(duplicateKeyCodes);
 		errorCodes.putAll(invalidDataAccessApiUsageExeption);
 		errorCodes.putAll(permissionDeniedCodes);
+		errorCodes.putAll(clientSessionCodes);
 	}
 
 	public static boolean isDataIntegrityViolationCode(@Nullable Integer errorCode) {
@@ -139,5 +158,27 @@ public final class MongoDbErrorCodes {
 
 	public static String getErrorDescription(@Nullable Integer errorCode) {
 		return errorCode == null ? null : errorCodes.get(errorCode);
+	}
+
+	/**
+	 * Check if the given error code matches a know session related error.
+	 *
+	 * @param errorCode the error code to check.
+	 * @return {@literal true} if error matches.
+	 * @since 2.1
+	 */
+	public static boolean isClientSessionFailureCode(@Nullable Integer errorCode) {
+		return errorCode == null ? null : clientSessionCodes.containsKey(errorCode);
+	}
+
+	/**
+	 * Check if the given error code matches a know transaction related error.
+	 *
+	 * @param errorCode the error code to check.
+	 * @return {@literal true} if error matches.
+	 * @since 2.1
+	 */
+	public static boolean isTransactionFailureCode(@Nullable Integer errorCode) {
+		return errorCode == null ? null : transactionCodes.containsKey(errorCode);
 	}
 }

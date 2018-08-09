@@ -30,6 +30,7 @@ import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.ClientSessionException;
+import org.springframework.data.mongodb.MongoTransactionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.util.MongoDbErrorCodes;
 import org.springframework.lang.Nullable;
@@ -128,6 +129,10 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 				return new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
 			} else if (MongoDbErrorCodes.isPermissionDeniedCode(code)) {
 				return new PermissionDeniedDataAccessException(ex.getMessage(), ex);
+			} else if (MongoDbErrorCodes.isClientSessionFailureCode(code)) {
+				return new ClientSessionException(ex.getMessage(), ex);
+			} else if (MongoDbErrorCodes.isTransactionFailureCode(code)) {
+				return new MongoTransactionException(ex.getMessage(), ex);
 			}
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);
 		}
