@@ -350,8 +350,7 @@ public class StringOperators {
 		 * @return
 		 */
 		public StrLenBytes length() {
-			return usesFieldRef() ? StrLenBytes.stringLengthOf(fieldReference)
-					: StrLenBytes.stringLengthOf(expression);
+			return usesFieldRef() ? StrLenBytes.stringLengthOf(fieldReference) : StrLenBytes.stringLengthOf(expression);
 		}
 
 		/**
@@ -389,6 +388,132 @@ public class StringOperators {
 
 		private SubstrCP createSubstrCP() {
 			return usesFieldRef() ? SubstrCP.valueOf(fieldReference) : SubstrCP.valueOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims whitespaces
+		 * from the beginning and end. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link Trim}.
+		 * @since 2.1
+		 */
+		public Trim trim() {
+			return createTrim();
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims the given
+		 * character sequence from the beginning and end. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param chars must not be {@literal null}.
+		 * @return new instance of {@link Trim}.
+		 * @since 2.1
+		 */
+		public Trim trim(String chars) {
+			return trim().chars(chars);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims the character
+		 * sequence resulting from the given {@link AggregationExpression} from the beginning and end. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Trim}.
+		 * @since 2.1
+		 */
+		public Trim trim(AggregationExpression expression) {
+			return trim().charsOf(expression);
+		}
+
+		private Trim createTrim() {
+			return usesFieldRef() ? Trim.valueOf(fieldReference) : Trim.valueOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims whitespaces
+		 * from the beginning. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link LTrim}.
+		 * @since 2.1
+		 */
+		public LTrim ltrim() {
+			return createLTrim();
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims the given
+		 * character sequence from the beginning. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param chars must not be {@literal null}.
+		 * @return new instance of {@link LTrim}.
+		 * @since 2.1
+		 */
+		public LTrim ltrim(String chars) {
+			return ltrim().chars(chars);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims the character
+		 * sequence resulting from the given {@link AggregationExpression} from the beginning. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link LTrim}.
+		 * @since 2.1
+		 */
+		public LTrim ltrim(AggregationExpression expression) {
+			return ltrim().charsOf(expression);
+		}
+
+		private LTrim createLTrim() {
+			return usesFieldRef() ? LTrim.valueOf(fieldReference) : LTrim.valueOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims whitespaces
+		 * from the end. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link RTrim}.
+		 * @since 2.1
+		 */
+		public RTrim rtrim() {
+			return createRTrim();
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims the given
+		 * character sequence from the end. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param chars must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 * @since 2.1
+		 */
+		public RTrim rtrim(String chars) {
+			return rtrim().chars(chars);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims the character
+		 * sequence resulting from the given {@link AggregationExpression} from the end. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 * @since 2.1
+		 */
+		public RTrim rtrim(AggregationExpression expression) {
+			return rtrim().charsOf(expression);
+		}
+
+		private RTrim createRTrim() {
+			return usesFieldRef() ? RTrim.valueOf(fieldReference) : RTrim.valueOf(expression);
 		}
 
 		private boolean usesFieldRef() {
@@ -1070,6 +1195,259 @@ public class StringOperators {
 
 		public SubstrCP substringCP(int start, int nrOfChars) {
 			return new SubstrCP(append(Arrays.asList(start, nrOfChars)));
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $trim} which removes whitespace or the specified characters from the
+	 * beginning and end of a string. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	public static class Trim extends AbstractAggregationExpression {
+
+		private Trim(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link Trim} using the value of the provided {@link Field fieldReference} as {@literal input} value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link LTrim}.
+		 */
+		public static Trim valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Trim(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link Trim} using the result of the provided {@link AggregationExpression} as {@literal input}
+		 * value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Trim}.
+		 */
+		public static Trim valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new Trim(Collections.singletonMap("input", expression));
+		}
+
+		/**
+		 * Optional specify the character(s) to trim from the beginning.
+		 *
+		 * @param chars must not be {@literal null}.
+		 * @return new instance of {@link Trim}.
+		 */
+		public Trim chars(String chars) {
+
+			Assert.notNull(chars, "Chars must not be null!");
+			return new Trim(append("chars", chars));
+		}
+
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the character values to trim from the
+		 * beginning.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Trim}.
+		 */
+		public Trim charsOf(String fieldReference) {
+			return new Trim(append("chars", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the character sequence to trim from the
+		 * beginning.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Trim}.
+		 */
+		public Trim charsOf(AggregationExpression expression) {
+			return new Trim(append("chars", expression));
+		}
+
+		/**
+		 * Remove whitespace or the specified characters from the beginning of a string.<br />
+		 *
+		 * @return new instance of {@link LTrim}.
+		 */
+		public LTrim left() {
+			return new LTrim(argumentMap());
+		}
+
+		/**
+		 * Remove whitespace or the specified characters from the end of a string.<br />
+		 *
+		 * @return new instance of {@link RTrim}.
+		 */
+		public RTrim right() {
+			return new RTrim(argumentMap());
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$trim";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $ltrim} which removes whitespace or the specified characters from the
+	 * beginning of a string. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	public static class LTrim extends AbstractAggregationExpression {
+
+		private LTrim(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link LTrim} using the value of the provided {@link Field fieldReference} as {@literal input} value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link LTrim}.
+		 */
+		public static LTrim valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new LTrim(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link LTrim} using the result of the provided {@link AggregationExpression} as {@literal input}
+		 * value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link LTrim}.
+		 */
+		public static LTrim valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new LTrim(Collections.singletonMap("input", expression));
+		}
+
+		/**
+		 * Optional specify the character(s) to trim from the beginning.
+		 *
+		 * @param chars must not be {@literal null}.
+		 * @return new instance of {@link LTrim}.
+		 */
+		public LTrim chars(String chars) {
+
+			Assert.notNull(chars, "Chars must not be null!");
+			return new LTrim(append("chars", chars));
+		}
+
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the character values to trim from the
+		 * beginning.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link LTrim}.
+		 */
+		public LTrim charsOf(String fieldReference) {
+			return new LTrim(append("chars", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the character sequence to trim from the
+		 * beginning.
+		 * 
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link LTrim}.
+		 */
+		public LTrim charsOf(AggregationExpression expression) {
+			return new LTrim(append("chars", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$ltrim";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $rtrim} which removes whitespace or the specified characters from the end
+	 * of a string. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	public static class RTrim extends AbstractAggregationExpression {
+
+		private RTrim(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link RTrim} using the value of the provided {@link Field fieldReference} as {@literal input} value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public static RTrim valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new RTrim(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link RTrim} using the result of the provided {@link AggregationExpression} as {@literal input}
+		 * value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public static RTrim valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RTrim(Collections.singletonMap("input", expression));
+		}
+
+		/**
+		 * Optional specify the character(s) to trim from the end.
+		 *
+		 * @param chars must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public RTrim chars(String chars) {
+
+			Assert.notNull(chars, "Chars must not be null!");
+			return new RTrim(append("chars", chars));
+		}
+
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the character values to trim from the end.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public RTrim charsOf(String fieldReference) {
+			return new RTrim(append("chars", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the character sequence to trim from the end.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public RTrim charsOf(AggregationExpression expression) {
+			return new RTrim(append("chars", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$rtrim";
 		}
 	}
 }
