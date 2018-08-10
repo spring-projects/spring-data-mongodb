@@ -152,6 +152,17 @@ public class ConvertOperators {
 			return ToBool.toBoolean(valueObject());
 		}
 
+		/**
+		 * Creates new {@link ToDate aggregation expression} for {@code $toDate} that converts a value to a date. Shorthand
+		 * for {@link #convertTo(String) #convertTo("date")}. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link ToDate}.
+		 */
+		public ToDate convertToDate() {
+			return ToDate.toDate(valueObject());
+		}
+
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
@@ -387,6 +398,38 @@ public class ConvertOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$toBool";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toDate} that converts a value to boolean. Shorthand for
+	 * {@link Convert#to(String) Convert#to("date")}. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/toDate/">https://docs.mongodb.com/manual/reference/operator/aggregation/toDate/</a>
+	 * @since 2.1
+	 */
+	public static class ToDate extends AbstractAggregationExpression {
+
+		private ToDate(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ToDate} using the given value as input.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ToDate}.
+		 */
+		public static ToDate toDate(Object value) {
+			return new ToDate(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$toDate";
 		}
 	}
 }

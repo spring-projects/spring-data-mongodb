@@ -124,4 +124,18 @@ public class ConvertOperatorsUnitTests {
 		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToBoolean().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $toBool: " + EXPRESSION_STRING + " } "));
 	}
+
+	@Test // DATAMONGO-2048
+	public void toDateUsingFieldReference() {
+
+		assertThat(ConvertOperators.valueOf("shrewd").convertToDate().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toDate: \"$shrewd\" } "));
+	}
+
+	@Test // DATAMONGO-2048
+	public void toDateUsingExpression() {
+
+		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToDate().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toDate: " + EXPRESSION_STRING + " } "));
+	}
 }
