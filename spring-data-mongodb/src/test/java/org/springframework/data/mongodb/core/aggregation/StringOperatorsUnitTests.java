@@ -32,6 +32,62 @@ public class StringOperatorsUnitTests {
 	static final AggregationExpression EXPRESSION = context -> EXPRESSION_DOC;
 
 	@Test // DATAMONGO-2049
+	public void shouldRenderTrim() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").trim().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $trim: { \"input\" : \"$shrewd\" } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderTrimForExpression() {
+
+		Assertions.assertThat(StringOperators.valueOf(EXPRESSION).trim().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $trim: { \"input\" : " + EXPRESSION_STRING + " } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderTrimWithChars() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").trim("sh").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $trim: { \"input\" : \"$shrewd\", \"chars\" : \"sh\" } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderTrimWithCharsExpression() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").trim(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $trim: { \"input\" : \"$shrewd\", \"chars\" : " + EXPRESSION_STRING + " } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderTrimLeft() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").trim().left().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $ltrim: { \"input\" : \"$shrewd\" } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderTrimLeftWithChars() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").trim("sh").left().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $ltrim: { \"input\" : \"$shrewd\", \"chars\" : \"sh\" } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderTrimRight() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").trim().right().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\" } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderTrimRightWithChars() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").trim("sh").right().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\", \"chars\" : \"sh\" } } "));
+	}
+	
+	@Test // DATAMONGO-2049
 	public void shouldRenderLTrim() {
 
 		Assertions.assertThat(StringOperators.valueOf("shrewd").ltrim().toDocument(Aggregation.DEFAULT_CONTEXT))
