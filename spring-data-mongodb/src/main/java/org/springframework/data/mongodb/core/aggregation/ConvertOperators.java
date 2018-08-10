@@ -218,6 +218,17 @@ public class ConvertOperators {
 			return ToObjectId.toObjectId(valueObject());
 		}
 
+		/**
+		 * Creates new {@link ToInt aggregation expression} for {@code $toString} that converts a value to a string. Shorthand
+		 * for {@link #convertTo(String) #convertTo("string")}. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link ToInt}.
+		 */
+		public ToString convertToString() {
+			return ToString.toString(valueObject());
+		}
+
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
@@ -645,6 +656,38 @@ public class ConvertOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$toObjectId";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toString} that converts a value to string. Shorthand for
+	 * {@link Convert#to(String) Convert#to("string")}. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/toString/">https://docs.mongodb.com/manual/reference/operator/aggregation/toString/</a>
+	 * @since 2.1
+	 */
+	public static class ToString extends AbstractAggregationExpression {
+
+		private ToString(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ToString} using the given value as input.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ToString}.
+		 */
+		public static ToString toString(Object value) {
+			return new ToString(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$toString";
 		}
 	}
 }

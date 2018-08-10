@@ -208,4 +208,18 @@ public class ConvertOperatorsUnitTests {
 		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToObjectId().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $toObjectId: " + EXPRESSION_STRING + " } "));
 	}
+
+	@Test // DATAMONGO-2048
+	public void toStringUsingFieldReference() {
+
+		assertThat(ConvertOperators.valueOf("shrewd").convertToString().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toString: \"$shrewd\" } "));
+	}
+
+	@Test // DATAMONGO-2048
+	public void toStringUsingExpression() {
+
+		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToString().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toString: " + EXPRESSION_STRING + " } "));
+	}
 }
