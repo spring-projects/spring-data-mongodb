@@ -110,4 +110,18 @@ public class ConvertOperatorsUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(Document.parse(
 						"{ $convert: { \"input\" : \"$shrewd\", \"to\" : \"double\", \"onNull\" : " + EXPRESSION_STRING + " } } "));
 	}
+
+	@Test // DATAMONGO-2048
+	public void toBoolUsingFieldReference() {
+
+		assertThat(ConvertOperators.valueOf("shrewd").convertToBoolean().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toBool: \"$shrewd\" } "));
+	}
+
+	@Test // DATAMONGO-2048
+	public void toBoolUsingExpression() {
+
+		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToBoolean().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toBool: " + EXPRESSION_STRING + " } "));
+	}
 }

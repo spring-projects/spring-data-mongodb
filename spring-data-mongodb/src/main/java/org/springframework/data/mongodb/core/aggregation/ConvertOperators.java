@@ -141,8 +141,23 @@ public class ConvertOperators {
 			return createConvert().toTypeOf(expression);
 		}
 
+		/**
+		 * Creates new {@link ToBool aggregation expression} for {@code $toBool} that converts a value to boolean. Shorthand
+		 * for {@link #convertTo(String) #convertTo("bool")}. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link ToBool}.
+		 */
+		public ToBool convertToBoolean() {
+			return ToBool.toBoolean(valueObject());
+		}
+
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
+		}
+
+		private Object valueObject() {
+			return usesFieldRef() ? Fields.field(fieldReference) : expression;
 		}
 
 		private boolean usesFieldRef() {
@@ -340,6 +355,38 @@ public class ConvertOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$convert";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toBool} that converts a value to boolean. Shorthand for
+	 * {@link Convert#to(String) Convert#to("bool")}. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/toBool/">https://docs.mongodb.com/manual/reference/operator/aggregation/toBool/</a>
+	 * @since 2.1
+	 */
+	public static class ToBool extends AbstractAggregationExpression {
+
+		private ToBool(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ToBool} using the given value as input.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ToBool}.
+		 */
+		public static ToBool toBoolean(Object value) {
+			return new ToBool(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$toBool";
 		}
 	}
 }
