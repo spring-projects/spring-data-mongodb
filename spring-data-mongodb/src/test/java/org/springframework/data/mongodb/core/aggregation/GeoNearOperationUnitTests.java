@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
  *
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class GeoNearOperationUnitTests {
 
@@ -41,6 +42,19 @@ public class GeoNearOperationUnitTests {
 		Document nearClause = DocumentTestUtils.getAsDocument(document, "$geoNear");
 
 		Document expected = new Document(query.toDocument()).append("distanceField", "distance");
+		assertThat(nearClause, is(expected));
+	}
+
+	@Test // DATAMONGO-2050
+	public void rendersNearQueryWithKeyCorrectly() {
+
+		NearQuery query = NearQuery.near(10.0, 10.0);
+		GeoNearOperation operation = new GeoNearOperation(query, "distance").useIndex("geo-index-1");
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		Document nearClause = DocumentTestUtils.getAsDocument(document, "$geoNear");
+
+		Document expected = new Document(query.toDocument()).append("distanceField", "distance").append("key", "geo-index-1");
 		assertThat(nearClause, is(expected));
 	}
 }
