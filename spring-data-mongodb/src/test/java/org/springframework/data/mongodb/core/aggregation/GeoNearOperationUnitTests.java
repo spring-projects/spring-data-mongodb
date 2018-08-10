@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,10 @@ import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link GeoNearOperation}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class GeoNearOperationUnitTests {
 
@@ -42,7 +43,21 @@ public class GeoNearOperationUnitTests {
 
 		DBObject nearClause = DBObjectTestUtils.getAsDBObject(dbObject, "$geoNear");
 
-		DBObject expected = (DBObject) new BasicDBObject(query.toDBObject().toMap()).append("distanceField", "distance");
+		DBObject expected = new BasicDBObject(query.toDBObject().toMap()).append("distanceField", "distance");
+		assertThat(nearClause, is(expected));
+	}
+
+	@Test // DATAMONGO-2050
+	public void rendersNearQueryWithKeyCorrectly() {
+
+		NearQuery query = NearQuery.near(10.0, 10.0);
+		GeoNearOperation operation = new GeoNearOperation(query, "distance").useIndex("geo-index-1");
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		DBObject nearClause = DBObjectTestUtils.getAsDBObject(dbObject, "$geoNear");
+
+		DBObject expected = new BasicDBObject(query.toDBObject().toMap()).append("distanceField", "distance").append("key",
+				"geo-index-1");
 		assertThat(nearClause, is(expected));
 	}
 }
