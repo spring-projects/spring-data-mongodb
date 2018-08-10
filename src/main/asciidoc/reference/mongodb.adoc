@@ -1690,6 +1690,7 @@ The MongoDB Aggregation Framework provides the following types of aggregation op
 * Array Aggregation Operators
 * Conditional Aggregation Operators
 * Lookup Aggregation Operators
+* Convert Aggregation Operators
 
 At the time of this writing, we provide support for the following Aggregation Operations in Spring Data MongoDB:
 
@@ -1732,6 +1733,8 @@ At the time of this writing, we provide support for the following Aggregation Op
 | Type Aggregation Operators
 | `type`
 
+| Convert Aggregation Operators
+| `convert`, `toBool`, `toDate`, `toDecimal`, `toDouble`, `toInt`, `toLong`, `toObjectId`, `toString`
 |===
 
 * The operation is mapped or added by Spring Data MongoDB.
