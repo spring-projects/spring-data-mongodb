@@ -152,4 +152,18 @@ public class ConvertOperatorsUnitTests {
 		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToDecimal().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $toDecimal: " + EXPRESSION_STRING + " } "));
 	}
+
+	@Test // DATAMONGO-2048
+	public void toDoubleUsingFieldReference() {
+
+		assertThat(ConvertOperators.valueOf("shrewd").convertToDouble().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toDouble: \"$shrewd\" } "));
+	}
+
+	@Test // DATAMONGO-2048
+	public void toDoubleUsingExpression() {
+
+		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToDouble().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toDouble: " + EXPRESSION_STRING + " } "));
+	}
 }

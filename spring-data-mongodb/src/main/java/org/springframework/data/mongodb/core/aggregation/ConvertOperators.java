@@ -174,6 +174,17 @@ public class ConvertOperators {
 			return ToDecimal.toDecimal(valueObject());
 		}
 
+		/**
+		 * Creates new {@link ToDouble aggregation expression} for {@code $toDouble} that converts a value to a decimal.
+		 * Shorthand for {@link #convertTo(String) #convertTo("double")}. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link ToDouble}.
+		 */
+		public ToDouble convertToDouble() {
+			return ToDouble.toDouble(valueObject());
+		}
+
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
@@ -473,6 +484,38 @@ public class ConvertOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$toDecimal";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toDouble} that converts a value to double. Shorthand for
+	 * {@link Convert#to(String) Convert#to("double")}. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/toDouble/">https://docs.mongodb.com/manual/reference/operator/aggregation/toDouble/</a>
+	 * @since 2.1
+	 */
+	public static class ToDouble extends AbstractAggregationExpression {
+
+		private ToDouble(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ToDouble} using the given value as input.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ToDouble}.
+		 */
+		public static ToDouble toDouble(Object value) {
+			return new ToDouble(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$toDouble";
 		}
 	}
 }
