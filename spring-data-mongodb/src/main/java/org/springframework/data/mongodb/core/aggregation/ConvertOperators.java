@@ -196,6 +196,17 @@ public class ConvertOperators {
 			return ToInt.toInt(valueObject());
 		}
 
+		/**
+		 * Creates new {@link ToInt aggregation expression} for {@code $toLong} that converts a value to a long. Shorthand
+		 * for {@link #convertTo(String) #convertTo("long")}. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link ToInt}.
+		 */
+		public ToLong convertToLong() {
+			return ToLong.toLong(valueObject());
+		}
+
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
@@ -559,6 +570,38 @@ public class ConvertOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$toInt";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toLong} that converts a value to long. Shorthand for
+	 * {@link Convert#to(String) Convert#to("long")}. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/toLong/">https://docs.mongodb.com/manual/reference/operator/aggregation/toLong/</a>
+	 * @since 2.1
+	 */
+	public static class ToLong extends AbstractAggregationExpression {
+
+		private ToLong(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ToLong} using the given value as input.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ToLong}.
+		 */
+		public static ToLong toLong(Object value) {
+			return new ToLong(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$toLong";
 		}
 	}
 }

@@ -180,4 +180,18 @@ public class ConvertOperatorsUnitTests {
 		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToInt().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $toInt: " + EXPRESSION_STRING + " } "));
 	}
+
+	@Test // DATAMONGO-2048
+	public void toLongUsingFieldReference() {
+
+		assertThat(ConvertOperators.valueOf("shrewd").convertToLong().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toLong: \"$shrewd\" } "));
+	}
+
+	@Test // DATAMONGO-2048
+	public void toLongUsingExpression() {
+
+		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToLong().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toLong: " + EXPRESSION_STRING + " } "));
+	}
 }
