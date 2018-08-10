@@ -207,6 +207,17 @@ public class ConvertOperators {
 			return ToLong.toLong(valueObject());
 		}
 
+		/**
+		 * Creates new {@link ToInt aggregation expression} for {@code $toObjectId} that converts a value to a objectId. Shorthand
+		 * for {@link #convertTo(String) #convertTo("objectId")}. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link ToInt}.
+		 */
+		public ToObjectId convertToObjectId() {
+			return ToObjectId.toObjectId(valueObject());
+		}
+
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
@@ -602,6 +613,38 @@ public class ConvertOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$toLong";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toObjectId} that converts a value to objectId. Shorthand for
+	 * {@link Convert#to(String) Convert#to("objectId")}. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/toObjectId/">https://docs.mongodb.com/manual/reference/operator/aggregation/toObjectId/</a>
+	 * @since 2.1
+	 */
+	public static class ToObjectId extends AbstractAggregationExpression {
+
+		private ToObjectId(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ToObjectId} using the given value as input.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ToObjectId}.
+		 */
+		public static ToObjectId toObjectId(Object value) {
+			return new ToObjectId(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$toObjectId";
 		}
 	}
 }

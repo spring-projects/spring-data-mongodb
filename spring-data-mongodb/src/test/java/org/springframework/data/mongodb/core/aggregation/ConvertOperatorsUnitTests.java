@@ -194,4 +194,18 @@ public class ConvertOperatorsUnitTests {
 		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToLong().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $toLong: " + EXPRESSION_STRING + " } "));
 	}
+
+	@Test // DATAMONGO-2048
+	public void toObjectIdUsingFieldReference() {
+
+		assertThat(ConvertOperators.valueOf("shrewd").convertToObjectId().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toObjectId: \"$shrewd\" } "));
+	}
+
+	@Test // DATAMONGO-2048
+	public void toObjectIdUsingExpression() {
+
+		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToObjectId().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toObjectId: " + EXPRESSION_STRING + " } "));
+	}
 }
