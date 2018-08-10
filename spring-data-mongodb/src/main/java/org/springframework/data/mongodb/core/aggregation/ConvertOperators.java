@@ -185,6 +185,17 @@ public class ConvertOperators {
 			return ToDouble.toDouble(valueObject());
 		}
 
+		/**
+		 * Creates new {@link ToInt aggregation expression} for {@code $toInt} that converts a value to an int. Shorthand
+		 * for {@link #convertTo(String) #convertTo("int")}. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link ToInt}.
+		 */
+		public ToInt convertToInt() {
+			return ToInt.toInt(valueObject());
+		}
+
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
@@ -516,6 +527,38 @@ public class ConvertOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$toDouble";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toInt} that converts a value to integer. Shorthand for
+	 * {@link Convert#to(String) Convert#to("int")}. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/toInt/">https://docs.mongodb.com/manual/reference/operator/aggregation/toInt/</a>
+	 * @since 2.1
+	 */
+	public static class ToInt extends AbstractAggregationExpression {
+
+		private ToInt(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ToInt} using the given value as input.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ToInt}.
+		 */
+		public static ToInt toInt(Object value) {
+			return new ToInt(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$toInt";
 		}
 	}
 }
