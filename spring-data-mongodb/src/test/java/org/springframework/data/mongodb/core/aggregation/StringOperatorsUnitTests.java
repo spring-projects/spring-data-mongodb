@@ -59,4 +59,32 @@ public class StringOperatorsUnitTests {
 				.isEqualTo(Document.parse("{ $ltrim: { \"input\" : \"$shrewd\", \"chars\" : " + EXPRESSION_STRING + " } } "));
 	}
 
+	@Test // DATAMONGO-2049
+	public void shouldRenderRTrim() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").rtrim().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\" } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderRTrimForExpression() {
+
+		Assertions.assertThat(StringOperators.valueOf(EXPRESSION).rtrim().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : " + EXPRESSION_STRING + " } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderRTrimWithChars() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").rtrim("sh").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\", \"chars\" : \"sh\" } } "));
+	}
+
+	@Test // DATAMONGO-2049
+	public void shouldRenderRTrimWithCharsExpression() {
+
+		Assertions.assertThat(StringOperators.valueOf("shrewd").rtrim(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\", \"chars\" : " + EXPRESSION_STRING + " } } "));
+	}
+
 }

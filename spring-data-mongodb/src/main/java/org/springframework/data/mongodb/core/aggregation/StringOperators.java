@@ -432,6 +432,48 @@ public class StringOperators {
 			return usesFieldRef() ? LTrim.valueOf(fieldReference) : LTrim.valueOf(expression);
 		}
 
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims whitespaces
+		 * from the end. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link RTrim}.
+		 * @since 2.1
+		 */
+		public RTrim rtrim() {
+			return createRTrim();
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims the given
+		 * character sequence from the end. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param chars must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 * @since 2.1
+		 */
+		public RTrim rtrim(String chars) {
+			return rtrim().chars(chars);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and trims the character
+		 * sequence resulting from the given {@link AggregationExpression} from the end. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 * @since 2.1
+		 */
+		public RTrim rtrim(AggregationExpression expression) {
+			return rtrim().charsOf(expression);
+		}
+
+		private RTrim createRTrim() {
+			return usesFieldRef() ? RTrim.valueOf(fieldReference) : RTrim.valueOf(expression);
+		}
+
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
@@ -1190,6 +1232,83 @@ public class StringOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$ltrim";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $rtrim} which removes whitespace or the specified characters from the end
+	 * of a string. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1
+	 */
+	public static class RTrim extends AbstractAggregationExpression {
+
+		private RTrim(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link RTrim} using the value of the provided {@link Field fieldReference} as {@literal input} value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public static RTrim valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new RTrim(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link RTrim} using the result of the provided {@link AggregationExpression} as {@literal input}
+		 * value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public static RTrim valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RTrim(Collections.singletonMap("input", expression));
+		}
+
+		/**
+		 * Optional specify the character(s) to trim from the end.
+		 *
+		 * @param chars must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public RTrim chars(String chars) {
+
+			Assert.notNull(chars, "Chars must not be null!");
+			return new RTrim(append("chars", chars));
+		}
+
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the character values to trim from the end.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public RTrim charsOf(String fieldReference) {
+			return new RTrim(append("chars", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the character sequence to trim from the end.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RTrim}.
+		 */
+		public RTrim charsOf(AggregationExpression expression) {
+			return new RTrim(append("chars", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$rtrim";
 		}
 	}
 }
