@@ -138,4 +138,18 @@ public class ConvertOperatorsUnitTests {
 		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToDate().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $toDate: " + EXPRESSION_STRING + " } "));
 	}
+
+	@Test // DATAMONGO-2048
+	public void toDecimalUsingFieldReference() {
+
+		assertThat(ConvertOperators.valueOf("shrewd").convertToDecimal().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toDecimal: \"$shrewd\" } "));
+	}
+
+	@Test // DATAMONGO-2048
+	public void toDecimalUsingExpression() {
+
+		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToDecimal().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $toDecimal: " + EXPRESSION_STRING + " } "));
+	}
 }

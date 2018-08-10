@@ -163,6 +163,17 @@ public class ConvertOperators {
 			return ToDate.toDate(valueObject());
 		}
 
+		/**
+		 * Creates new {@link ToDecimal aggregation expression} for {@code $toDecimal} that converts a value to a decimal.
+		 * Shorthand for {@link #convertTo(String) #convertTo("decimal")}. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link ToDecimal}.
+		 */
+		public ToDecimal convertToDecimal() {
+			return ToDecimal.toDecimal(valueObject());
+		}
+
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
@@ -430,6 +441,38 @@ public class ConvertOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$toDate";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $toDecimal} that converts a value to decimal. Shorthand for
+	 * {@link Convert#to(String) Convert#to("decimal")}. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/toDecimal/">https://docs.mongodb.com/manual/reference/operator/aggregation/toDecimal/</a>
+	 * @since 2.1
+	 */
+	public static class ToDecimal extends AbstractAggregationExpression {
+
+		private ToDecimal(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ToDecimal} using the given value as input.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ToDecimal}.
+		 */
+		public static ToDecimal toDecimal(Object value) {
+			return new ToDecimal(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$toDecimal";
 		}
 	}
 }
