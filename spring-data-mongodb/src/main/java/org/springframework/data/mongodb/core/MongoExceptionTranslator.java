@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -51,17 +52,17 @@ import com.mongodb.bulk.BulkWriteError;
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
-	private static final Set<String> DULICATE_KEY_EXCEPTIONS = new HashSet<String>(
+	private static final Set<String> DUPLICATE_KEY_EXCEPTIONS = new HashSet<>(
 			Arrays.asList("MongoException.DuplicateKey", "DuplicateKeyException"));
 
-	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = new HashSet<String>(
+	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = new HashSet<>(
 			Arrays.asList("MongoException.Network", "MongoSocketException", "MongoException.CursorNotFound",
 					"MongoCursorNotFoundException", "MongoServerSelectionException", "MongoTimeoutException"));
 
-	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = new HashSet<String>(
-			Arrays.asList("MongoInternalException"));
+	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = new HashSet<>(
+			Collections.singletonList("MongoInternalException"));
 
-	private static final Set<String> DATA_INTEGRETY_EXCEPTIONS = new HashSet<String>(
+	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = new HashSet<>(
 			Arrays.asList("WriteConcernException", "MongoWriteException", "MongoBulkWriteException"));
 
 	/*
@@ -79,7 +80,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 
 		String exception = ClassUtils.getShortName(ClassUtils.getUserClass(ex.getClass()));
 
-		if (DULICATE_KEY_EXCEPTIONS.contains(exception)) {
+		if (DUPLICATE_KEY_EXCEPTIONS.contains(exception)) {
 			return new DuplicateKeyException(ex.getMessage(), ex);
 		}
 
@@ -91,7 +92,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
 		}
 
-		if (DATA_INTEGRETY_EXCEPTIONS.contains(exception)) {
+		if (DATA_INTEGRITY_EXCEPTIONS.contains(exception)) {
 
 			if (ex instanceof MongoServerException) {
 				if (((MongoServerException) ex).getCode() == 11000) {

@@ -38,7 +38,7 @@ public final class MongoDbErrorCodes {
 
 	static {
 
-		dataAccessResourceFailureCodes = new HashMap<Integer, String>(10);
+		dataAccessResourceFailureCodes = new HashMap<>(12, 1f);
 		dataAccessResourceFailureCodes.put(6, "HostUnreachable");
 		dataAccessResourceFailureCodes.put(7, "HostNotFound");
 		dataAccessResourceFailureCodes.put(89, "NetworkTimeout");
@@ -52,7 +52,7 @@ public final class MongoDbErrorCodes {
 		dataAccessResourceFailureCodes.put(13441, "BadOffsetInFile");
 		dataAccessResourceFailureCodes.put(13640, "DataFileHeaderCorrupt");
 
-		dataIntegrityViolationCodes = new HashMap<Integer, String>(6);
+		dataIntegrityViolationCodes = new HashMap<>(6, 1f);
 		dataIntegrityViolationCodes.put(67, "CannotCreateIndex");
 		dataIntegrityViolationCodes.put(68, "IndexAlreadyExists");
 		dataIntegrityViolationCodes.put(85, "IndexOptionsConflict");
@@ -60,13 +60,13 @@ public final class MongoDbErrorCodes {
 		dataIntegrityViolationCodes.put(112, "WriteConflict");
 		dataIntegrityViolationCodes.put(117, "ConflictingOperationInProgress");
 
-		duplicateKeyCodes = new HashMap<Integer, String>(3);
+		duplicateKeyCodes = new HashMap<>(4, 1f);
 		duplicateKeyCodes.put(3, "OBSOLETE_DuplicateKey");
 		duplicateKeyCodes.put(84, "DuplicateKeyValue");
 		duplicateKeyCodes.put(11000, "DuplicateKey");
 		duplicateKeyCodes.put(11001, "DuplicateKey");
 
-		invalidDataAccessApiUsageExeption = new HashMap<Integer, String>();
+		invalidDataAccessApiUsageExeption = new HashMap<>(31, 1f);
 		invalidDataAccessApiUsageExeption.put(5, "GraphContainsCycle");
 		invalidDataAccessApiUsageExeption.put(9, "FailedToParse");
 		invalidDataAccessApiUsageExeption.put(14, "TypeMismatch");
@@ -80,8 +80,7 @@ public final class MongoDbErrorCodes {
 		invalidDataAccessApiUsageExeption.put(30, "InvalidPath");
 		invalidDataAccessApiUsageExeption.put(40, "ConflictingUpdateOperators");
 		invalidDataAccessApiUsageExeption.put(45, "UserDataInconsistent");
-		invalidDataAccessApiUsageExeption.put(30, "DollarPrefixedFieldName");
-		invalidDataAccessApiUsageExeption.put(52, "InvalidPath");
+		invalidDataAccessApiUsageExeption.put(52, "DollarPrefixedFieldName");
 		invalidDataAccessApiUsageExeption.put(53, "InvalidIdField");
 		invalidDataAccessApiUsageExeption.put(54, "NotSingleValueField");
 		invalidDataAccessApiUsageExeption.put(55, "InvalidDBRef");
@@ -99,17 +98,17 @@ public final class MongoDbErrorCodes {
 		invalidDataAccessApiUsageExeption.put(17280, "KeyTooLong");
 		invalidDataAccessApiUsageExeption.put(13334, "ShardKeyTooBig");
 
-		permissionDeniedCodes = new HashMap<Integer, String>();
+		permissionDeniedCodes = new HashMap<>(8, 1f);
 		permissionDeniedCodes.put(11, "UserNotFound");
 		permissionDeniedCodes.put(18, "AuthenticationFailed");
 		permissionDeniedCodes.put(31, "RoleNotFound");
 		permissionDeniedCodes.put(32, "RolesNotRelated");
-		permissionDeniedCodes.put(33, "PrvilegeNotFound");
+		permissionDeniedCodes.put(33, "PrivilegeNotFound");
 		permissionDeniedCodes.put(15847, "CannotAuthenticate");
 		permissionDeniedCodes.put(16704, "CannotAuthenticateToAdminDB");
 		permissionDeniedCodes.put(16705, "CannotAuthenticateToAdminDB");
 
-		errorCodes = new HashMap<Integer, String>();
+		errorCodes = new HashMap<>();
 		errorCodes.putAll(dataAccessResourceFailureCodes);
 		errorCodes.putAll(dataIntegrityViolationCodes);
 		errorCodes.putAll(duplicateKeyCodes);
