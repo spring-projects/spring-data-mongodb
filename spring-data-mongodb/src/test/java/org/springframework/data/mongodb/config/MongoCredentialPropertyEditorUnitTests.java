@@ -73,6 +73,9 @@ public class MongoCredentialPropertyEditorUnitTests {
 	static final String USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN";
 	static final String USER_5_AUTH_STRING_WITH_QUERY_ARGS = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN&foo=&bar";
 
+	static final String SCRAM_SHA_256_AUTH_STRING = USER_1_NAME + ":" + USER_1_PWD + "@" + USER_1_DB
+			+ "?uri.authMechanism=SCRAM-SHA-256";
+
 	static final MongoCredential USER_1_CREDENTIALS = MongoCredential.createCredential(USER_1_NAME, USER_1_DB,
 			USER_1_PWD.toCharArray());
 	static final MongoCredential USER_1_CREDENTIALS_PLAIN_AUTH = MongoCredential.createPlainCredential(USER_1_NAME,
@@ -92,6 +95,9 @@ public class MongoCredentialPropertyEditorUnitTests {
 			USER_5_PWD.toCharArray());
 	static final MongoCredential USER_5_CREDENTIALS_PLAIN_AUTH = MongoCredential.createPlainCredential(USER_5_NAME,
 			USER_5_DB, USER_5_PWD.toCharArray());
+
+	static final MongoCredential SCRAM_SHA_256_CREDENTIALS = MongoCredential.createScramSha256Credential(USER_1_NAME,
+			USER_1_DB, USER_1_PWD.toCharArray());
 
 	MongoCredentialPropertyEditor editor;
 
@@ -223,7 +229,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText("tyrion?uri.authMechanism=MONGODB-X509");
 
-		assertThat(getValue()). contains(MongoCredential.createMongoX509Credential("tyrion"));
+		assertThat(getValue()).contains(MongoCredential.createMongoX509Credential("tyrion"));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1257
@@ -267,6 +273,14 @@ public class MongoCredentialPropertyEditorUnitTests {
 		editor.setAsText(USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM);
 
 		assertThat(getValue()).contains(USER_5_CREDENTIALS_PLAIN_AUTH);
+	}
+
+	@Test // DATAMONGO-2051
+	public void shouldReturnScramSha256Credentials() {
+
+		editor.setAsText(SCRAM_SHA_256_AUTH_STRING);
+
+		assertThat(getValue()).contains(SCRAM_SHA_256_CREDENTIALS);
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-2016
