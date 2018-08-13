@@ -30,7 +30,7 @@ import org.springframework.util.Assert;
 public class ConvertOperators {
 
 	/**
-	 * Take the value referenced by given {@literal fieldReference}.
+	 * Take the field referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
 	 * @return
@@ -40,7 +40,7 @@ public class ConvertOperators {
 	}
 
 	/**
-	 * Take the value provided by the given {@link AggregationExpression}.
+	 * Take the value resulting from the given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
 	 * @return
@@ -65,6 +65,7 @@ public class ConvertOperators {
 		public ConvertOperatorFactory(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
+
 			this.fieldReference = fieldReference;
 			this.expression = null;
 		}
@@ -77,13 +78,14 @@ public class ConvertOperators {
 		public ConvertOperatorFactory(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
+
 			this.fieldReference = null;
 			this.expression = expression;
 		}
 
 		/**
 		 * Creates new {@link Convert aggregation expression} that takes the associated value and converts it into the type
-		 * specified by the given identifier. <br />
+		 * specified by the given {@code stringTypeIdentifier}. <br />
 		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 		 *
 		 * @param stringTypeIdentifier must not be {@literal null}.
@@ -95,7 +97,7 @@ public class ConvertOperators {
 
 		/**
 		 * Creates new {@link Convert aggregation expression} that takes the associated value and converts it into the type
-		 * specified by the given identifier. <br />
+		 * specified by the given {@code numericTypeIdentifier}. <br />
 		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 		 *
 		 * @param numericTypeIdentifier must not be {@literal null}.
@@ -107,7 +109,7 @@ public class ConvertOperators {
 
 		/**
 		 * Creates new {@link Convert aggregation expression} that takes the associated value and converts it into the type
-		 * specified by the given type. <br />
+		 * specified by the given {@link Type}. <br />
 		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 		 *
 		 * @param type must not be {@literal null}.
@@ -436,13 +438,13 @@ public class ConvertOperators {
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $toBool} that converts a value to boolean. Shorthand for
+	 * {@link AggregationExpression} for {@code $toBool} that converts a value to {@literal boolean}. Shorthand for
 	 * {@link Convert#to(String) Convert#to("bool")}. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 	 *
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/toBool/">https://docs.mongodb.com/manual/reference/operator/aggregation/toBool/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/toBool/">https://docs.mongodb.com/manual/reference/operator/aggregation/toBool/</a>
 	 * @since 2.1
 	 */
 	public static class ToBool extends AbstractAggregationExpression {
@@ -468,7 +470,7 @@ public class ConvertOperators {
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $toDate} that converts a value to boolean. Shorthand for
+	 * {@link AggregationExpression} for {@code $toDate} that converts a value to {@literal date}. Shorthand for
 	 * {@link Convert#to(String) Convert#to("date")}. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 	 *
@@ -500,7 +502,7 @@ public class ConvertOperators {
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $toDecimal} that converts a value to decimal. Shorthand for
+	 * {@link AggregationExpression} for {@code $toDecimal} that converts a value to {@literal decimal}. Shorthand for
 	 * {@link Convert#to(String) Convert#to("decimal")}. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 	 *
@@ -532,7 +534,7 @@ public class ConvertOperators {
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $toDouble} that converts a value to double. Shorthand for
+	 * {@link AggregationExpression} for {@code $toDouble} that converts a value to {@literal double}. Shorthand for
 	 * {@link Convert#to(String) Convert#to("double")}. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 	 *
@@ -564,7 +566,7 @@ public class ConvertOperators {
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $toInt} that converts a value to integer. Shorthand for
+	 * {@link AggregationExpression} for {@code $toInt} that converts a value to {@literal integer}. Shorthand for
 	 * {@link Convert#to(String) Convert#to("int")}. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 	 *
@@ -596,7 +598,7 @@ public class ConvertOperators {
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $toLong} that converts a value to long. Shorthand for
+	 * {@link AggregationExpression} for {@code $toLong} that converts a value to {@literal long}. Shorthand for
 	 * {@link Convert#to(String) Convert#to("long")}. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 	 *
@@ -628,7 +630,7 @@ public class ConvertOperators {
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $toObjectId} that converts a value to objectId. Shorthand for
+	 * {@link AggregationExpression} for {@code $toObjectId} that converts a value to {@literal objectId}. Shorthand for
 	 * {@link Convert#to(String) Convert#to("objectId")}. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 	 *
@@ -660,7 +662,7 @@ public class ConvertOperators {
 	}
 
 	/**
-	 * {@link AggregationExpression} for {@code $toString} that converts a value to string. Shorthand for
+	 * {@link AggregationExpression} for {@code $toString} that converts a value to {@literal string}. Shorthand for
 	 * {@link Convert#to(String) Convert#to("string")}. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 	 *
