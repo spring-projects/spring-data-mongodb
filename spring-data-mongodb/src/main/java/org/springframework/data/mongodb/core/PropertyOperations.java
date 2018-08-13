@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+
 import org.bson.Document;
 import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
@@ -30,17 +33,15 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @since 2.1
  */
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class PropertyOperations {
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-	PropertyOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		this.mappingContext = mappingContext;
-	}
-
 	/**
-	 * For cases where {@code fields} is {@literal null} or {@literal empty} add fields required for creating the
-	 * projection (target) type if the {@code targetType} is a {@literal closed interface projection}.
+	 * For cases where {@code fields} is {@link Document#isEmpty() empty} include only fields that are required for
+	 * creating the projection (target) type if the {@code targetType} is a {@literal DTO projection} or a
+	 * {@literal closed interface projection}.
 	 *
 	 * @param projectionFactory must not be {@literal null}.
 	 * @param fields must not be {@literal null}.
@@ -65,7 +66,7 @@ class PropertyOperations {
 				projectionInformation.getInputProperties().forEach(it -> projectedFields.append(it.getName(), 1));
 			}
 		} else {
-			mappingContext.getPersistentEntity(targetType).doWithProperties(
+			mappingContext.getRequiredPersistentEntity(targetType).doWithProperties(
 					(SimplePropertyHandler) persistentProperty -> projectedFields.append(persistentProperty.getName(), 1));
 		}
 

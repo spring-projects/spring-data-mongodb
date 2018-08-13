@@ -2736,7 +2736,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			return queryMapper.getMappedFields(projectedFields, entity);
 		}
 
-		return queryMapper.getMappedFields(projectedFields, mappingContext.getPersistentEntity(targetType));
+		return queryMapper.getMappedFields(projectedFields, mappingContext.getRequiredPersistentEntity(targetType));
 	}
 
 	/**

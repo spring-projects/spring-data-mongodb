@@ -2265,7 +2265,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return queryMapper.getMappedFields(projectedFields, entity);
 		}
 
-		return queryMapper.getMappedFields(projectedFields, mappingContext.getPersistentEntity(targetType));
+		return queryMapper.getMappedFields(projectedFields, mappingContext.getRequiredPersistentEntity(targetType));
 	}
 
 	protected CreateCollectionOptions convertToCreateCollectionOptions(@Nullable CollectionOptions collectionOptions) {
