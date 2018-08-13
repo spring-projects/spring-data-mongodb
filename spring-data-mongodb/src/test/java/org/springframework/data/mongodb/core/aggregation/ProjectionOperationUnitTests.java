@@ -1335,7 +1335,7 @@ public class ProjectionOperationUnitTests {
 				Document.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } }"));
 	}
 
-	@Test // DATAMONGO-1834
+	@Test // DATAMONGO-1834, DATAMONGO-2047
 	public void shouldRenderDateToStringAggregationExpressionWithTimezone() {
 
 		Document agg = project()
@@ -1344,6 +1344,13 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(agg).isEqualTo(Document.parse(
 				"{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\", \"timezone\" : \"America/Chicago\" } } } } } }"));
+
+		Document removedTimezone = project().and(DateOperators.dateOf("date")
+				.withTimezone(Timezone.valueOf("America/Chicago")).toString("%H:%M:%S:%L").withTimezone(Timezone.none()))
+				.as("time").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(removedTimezone).isEqualTo(
+				Document.parse("{ $project: { time: { $dateToString: { format: \"%H:%M:%S:%L\", date: \"$date\" } } } } } }"));
 	}
 
 	@Test // DATAMONGO-2047
@@ -1355,6 +1362,29 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(agg).isEqualTo(Document
 				.parse("{ $project: { time: { $dateToString: { date: \"$date\", \"onNull\" : \"$fallback-field\" } } } }"));
+	}
+
+	@Test // DATAMONGO-2047
+	public void shouldRenderDateToStringWithOnNullExpression() {
+
+		Document agg = project()
+				.and(DateOperators.dateOf("date").toStringWithDefaultFormat()
+						.onNullReturnValueOf(LiteralOperators.valueOf("my-literal").asLiteral()))
+				.as("time").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { time: { $dateToString: { date: \"$date\", \"onNull\" : { \"$literal\": \"my-literal\"} } } } }"));
+	}
+
+	@Test // DATAMONGO-2047
+	public void shouldRenderDateToStringWithOnNullAndTimezone() {
+
+		Document agg = project().and(DateOperators.dateOf("date").toStringWithDefaultFormat()
+				.onNullReturnValueOf("fallback-field").withTimezone(Timezone.ofField("foo"))).as("time")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { time: { $dateToString: { date: \"$date\", \"onNull\" : \"$fallback-field\", \"timezone\": \"$foo\" } } } }"));
 	}
 
 	@Test // DATAMONGO-1536
