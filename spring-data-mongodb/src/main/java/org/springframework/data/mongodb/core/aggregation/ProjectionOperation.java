@@ -1205,6 +1205,18 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
+		 * Generates a {@code $dateToString} expression that takes the date representation of the previously mentioned field
+		 * using the server default format. <br />
+		 * strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return
+		 * @since 2.1
+		 */
+		public ProjectionOperationBuilder dateAsFormattedString() {
+			return this.operation.and(DateOperators.DateToString.dateOf(getRequiredName()).defaultFormat());
+		}
+
+		/**
 		 * Generates a {@code $let} expression that binds variables for use in the specified expression, and returns the
 		 * result of the expression.
 		 *
