@@ -805,18 +805,14 @@ public class Update {
 		/**
 		 * Forces values to be added at the given {@literal position}.
 		 *
-		 * @param position needs to be greater than or equal to zero.
+		 * @param position the position offset. As of MongoDB 3.6 use a negative value to indicate starting from the end,
+		 *          counting (but not including) the last element of the array.
 		 * @return never {@literal null}.
 		 * @since 1.7
 		 */
 		public PushOperatorBuilder atPosition(int position) {
 
-			if (position < 0) {
-				throw new IllegalArgumentException("Position must be greater than or equal to zero.");
-			}
-
 			this.modifiers.addModifier(new PositionModifier(position));
-
 			return this;
 		}
 

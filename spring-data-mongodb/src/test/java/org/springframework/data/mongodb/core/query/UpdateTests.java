@@ -399,9 +399,11 @@ public class UpdateTests {
 				equalTo(new BasicDBObjectBuilder().add("$bit", new BasicDBObject("key", new BasicDBObject("xor", 10L))).get()));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-943
-	public void pushShouldThrowExceptionWhenGivenNegativePosition() {
-		new Update().push("foo").atPosition(-1).each("booh");
+	@Test // DATAMONGO-943, // DATAMONGO-2055
+	public void pushShouldAllowNegativePosition() {
+
+		assertThat(new Update().push("foo").atPosition(-1).each("booh").toString()).isEqualTo(
+				"{ \"$push\" : { \"foo\" : { \"$java\" : { \"$position\" : { \"$java\" : { \"$position\" : -1} }, \"$each\" : { \"$java\" : { \"$each\" : [ \"booh\"]} } } } } }");
 	}
 
 	@Test // DATAMONGO-1346
