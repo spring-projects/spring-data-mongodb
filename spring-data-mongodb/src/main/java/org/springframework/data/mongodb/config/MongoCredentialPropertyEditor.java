@@ -100,6 +100,12 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 						verifyDatabasePresent(database);
 						credentials.add(MongoCredential.createScramSha1Credential(userNameAndPassword[0], database,
 								userNameAndPassword[1].toCharArray()));
+					} else if (MongoCredential.SCRAM_SHA_256_MECHANISM.equals(authMechanism)) {
+
+						verifyUsernameAndPasswordPresent(userNameAndPassword);
+						verifyDatabasePresent(database);
+						credentials.add(MongoCredential.createScramSha256Credential(userNameAndPassword[0], database,
+								userNameAndPassword[1].toCharArray()));
 					} else {
 						throw new IllegalArgumentException(
 								String.format("Cannot create MongoCredentials for unknown auth mechanism '%s'!", authMechanism));
