@@ -1213,7 +1213,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates a {@code $dateToString} expression that takes the date representation of the previously mentioned field
 		 * using the server default format. <br />
-		 * strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 		 *
 		 * @return
 		 * @since 1.10.15

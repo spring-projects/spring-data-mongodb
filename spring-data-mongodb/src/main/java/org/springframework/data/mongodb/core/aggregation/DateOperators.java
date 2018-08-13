@@ -1401,7 +1401,7 @@ public class DateOperators {
 		public DateToString withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null.");
-			return new DateToString(argumentMap(get("date"), (String) get("format"), timezone));
+			return new DateToString(append("timezone", timezone));
 		}
 
 		/**
@@ -1459,6 +1459,25 @@ public class DateOperators {
 				args.put("timezone", timezone.value);
 			}
 			return args;
+		}
+
+		protected java.util.Map<String, Object> append(String key, Object value) {
+
+			java.util.Map<String, Object> clone = new LinkedHashMap<String, Object>(argumentMap());
+
+			if (value instanceof Timezone) {
+
+				if (ObjectUtils.nullSafeEquals(value, Timezone.none())) {
+					clone.remove("timezone");
+				} else {
+					clone.put("timezone", ((Timezone) value).value);
+				}
+
+			} else {
+				clone.put(key, value);
+			}
+
+			return clone;
 		}
 
 		public interface FormatBuilder {
