@@ -15,15 +15,16 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.collection.IsIterableContainingInOrder.*;
-import static org.hamcrest.core.IsNull.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoCredential;
@@ -64,6 +65,9 @@ public class MongoCredentialPropertyEditorUnitTests {
 	static final String USER_5_AUTH_STRING = USER_5_NAME + ":" + USER_5_PWD + "@" + USER_5_DB;
 	static final String USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN";
 	static final String USER_5_AUTH_STRING_WITH_QUERY_ARGS = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN&foo=&bar";
+
+	static final String SCRAM_SHA_256_AUTH_STRING = USER_1_NAME + ":" + USER_1_PWD + "@" + USER_1_DB
+			+ "?uri.authMechanism=SCRAM-SHA-256";
 
 	static final MongoCredential USER_1_CREDENTIALS = MongoCredential.createCredential(USER_1_NAME, USER_1_DB,
 			USER_1_PWD.toCharArray());
@@ -234,6 +238,16 @@ public class MongoCredentialPropertyEditorUnitTests {
 		editor.setAsText(USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM);
 
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_5_CREDENTIALS_PLAIN_AUTH));
+	}
+
+	@Test // DATAMONGO-2051
+	public void shouldReturnScramSha256Credentials() {
+
+		assumeTrue(MongoClientVersion.isMongo38Driver());
+
+		editor.setAsText(SCRAM_SHA_256_AUTH_STRING);
+
+		assertThat((List<MongoCredential>) editor.getValue(), is(not(empty())));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-2016
