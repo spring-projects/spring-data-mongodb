@@ -32,6 +32,9 @@ public class MongoClientVersion {
 	private static final boolean IS_MONGO_34 = ClassUtils.isPresent("org.bson.types.Decimal128",
 			MongoClientVersion.class.getClassLoader());
 
+	private static final boolean IS_MONGO_38 = ClassUtils.isPresent("com.mongodb.TransactionOptions",
+			MongoClientVersion.class.getClassLoader());
+
 	private static final boolean IS_ASYNC_CLIENT = ClassUtils.isPresent("com.mongodb.async.client.MongoClient",
 			MongoClientVersion.class.getClassLoader());
 
@@ -51,9 +54,17 @@ public class MongoClientVersion {
 	}
 
 	/**
-	 * @return {lliteral true} if MongoDB Java driver is on classpath.
+	 * @return {@literal true} if MongoDB Java driver is on classpath.
 	 */
 	public static boolean isAsyncClient() {
 		return IS_ASYNC_CLIENT;
+	}
+
+	/**
+	 * @return {@literal true} if MongoDB Java driver version 3.8 or later is on classpath.
+	 * @since 2.10
+	 */
+	public static boolean isMongo38Driver() {
+		return IS_MONGO_38;
 	}
 }
