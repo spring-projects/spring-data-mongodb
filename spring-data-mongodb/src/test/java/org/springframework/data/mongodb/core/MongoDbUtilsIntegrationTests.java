@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,13 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
+import com.mongodb.CommandResult;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.util.Version;
 import org.springframework.scheduling.concurrent.ThreadPoolExecutorFactoryBean;
 
 import com.mongodb.DB;
@@ -39,10 +41,11 @@ import com.mongodb.MongoException;
 
 /**
  * Integration tests for {@link MongoDbUtils}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MongoDbUtilsIntegrationTests {
 
@@ -54,6 +57,7 @@ public class MongoDbUtilsIntegrationTests {
 	static MongoTemplate template;
 	static ThreadPoolExecutorFactoryBean factory;
 	static ExecutorService service;
+	static Version mongoVersion;
 
 	Exception exception;
 
@@ -71,7 +75,15 @@ public class MongoDbUtilsIntegrationTests {
 
 		service = factory.getObject();
 
+		CommandResult result = template.executeCommand("{ buildInfo: 1 }");
+		mongoVersion = Version.parse(result.get("version").toString());
+
 		assumeFalse(isMongo3Driver());
+		assumeFalse(isMongo4Server(mongoVersion));
+	}
+
+	private static boolean isMongo4Server(Version mongoVersion) {
+		return mongoVersion.isGreaterThanOrEqualTo(Version.parse("4.0.0"));
 	}
 
 	@AfterClass
