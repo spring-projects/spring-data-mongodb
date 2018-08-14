@@ -105,7 +105,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 					} else if ("SCRAM-SHA-256".equals(authMechanism)) {
 
 						Method createScramSha256Credential = ReflectionUtils.findMethod(MongoCredential.class,
-								"createScramSha256Credential");
+								"createScramSha256Credential", String.class, String.class, char[].class);
 
 						if (createScramSha256Credential == null) {
 							throw new IllegalArgumentException(

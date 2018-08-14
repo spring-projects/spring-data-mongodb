@@ -20,7 +20,7 @@ import org.springframework.util.ClassUtils;
 /**
  * {@link MongoClientVersion} holds information about the used mongo-java client and is used to distinguish between
  * different versions.
- * 
+ *
  * @author Christoph Strobl
  * @since 1.7
  */
@@ -62,7 +62,7 @@ public class MongoClientVersion {
 
 	/**
 	 * @return {@literal true} if MongoDB Java driver version 3.8 or later is on classpath.
-	 * @since 2.10
+	 * @since 2.0.10
 	 */
 	public static boolean isMongo38Driver() {
 		return IS_MONGO_38;
