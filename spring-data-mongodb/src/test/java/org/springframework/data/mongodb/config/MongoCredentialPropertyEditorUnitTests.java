@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assumptions.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -24,6 +25,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoCredential;
@@ -72,6 +74,9 @@ public class MongoCredentialPropertyEditorUnitTests {
 	static final String USER_5_AUTH_STRING = USER_5_NAME + ":" + USER_5_PWD + "@" + USER_5_DB;
 	static final String USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN";
 	static final String USER_5_AUTH_STRING_WITH_QUERY_ARGS = USER_5_AUTH_STRING + "?uri.authMechanism=PLAIN&foo=&bar";
+
+	static final String SCRAM_SHA_256_AUTH_STRING = USER_1_NAME + ":" + USER_1_PWD + "@" + USER_1_DB
+			+ "?uri.authMechanism=SCRAM-SHA-256";
 
 	static final MongoCredential USER_1_CREDENTIALS = MongoCredential.createCredential(USER_1_NAME, USER_1_DB,
 			USER_1_PWD.toCharArray());
@@ -223,7 +228,7 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 		editor.setAsText("tyrion?uri.authMechanism=MONGODB-X509");
 
-		assertThat(getValue()). contains(MongoCredential.createMongoX509Credential("tyrion"));
+		assertThat(getValue()).contains(MongoCredential.createMongoX509Credential("tyrion"));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1257
@@ -267,6 +272,16 @@ public class MongoCredentialPropertyEditorUnitTests {
 		editor.setAsText(USER_5_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM);
 
 		assertThat(getValue()).contains(USER_5_CREDENTIALS_PLAIN_AUTH);
+	}
+
+	@Test // DATAMONGO-2051
+	public void shouldReturnScramSha256Credentials() {
+
+		assumeThat(MongoClientVersion.isMongo38Driver()).isTrue();
+
+		editor.setAsText(SCRAM_SHA_256_AUTH_STRING);
+
+		assertThat(getValue()).isNotEmpty();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-2016

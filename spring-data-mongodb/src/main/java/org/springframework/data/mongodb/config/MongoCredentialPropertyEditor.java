@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.lang.Nullable;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoCredential;
@@ -100,6 +102,20 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 						verifyDatabasePresent(database);
 						credentials.add(MongoCredential.createScramSha1Credential(userNameAndPassword[0], database,
 								userNameAndPassword[1].toCharArray()));
+					} else if ("SCRAM-SHA-256".equals(authMechanism)) {
+
+						Method createScramSha256Credential = ReflectionUtils.findMethod(MongoCredential.class,
+								"createScramSha256Credential");
+
+						if (createScramSha256Credential == null) {
+							throw new IllegalArgumentException(
+									"SCRAM-SHA-256 auth mechanism is available as of MongoDB 4 and MongoDB Java Driver 3.8! Please make sure to use at least those versions.");
+						}
+
+						verifyUsernameAndPasswordPresent(userNameAndPassword);
+						verifyDatabasePresent(database);
+						credentials.add(MongoCredential.class.cast(ReflectionUtils.invokeMethod(createScramSha256Credential, null,
+								userNameAndPassword[0], database, userNameAndPassword[1].toCharArray())));
 					} else {
 						throw new IllegalArgumentException(
 								String.format("Cannot create MongoCredentials for unknown auth mechanism '%s'!", authMechanism));
