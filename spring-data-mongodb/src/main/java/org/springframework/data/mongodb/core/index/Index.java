@@ -36,6 +36,10 @@ import org.springframework.util.StringUtils;
 @SuppressWarnings("deprecation")
 public class Index implements IndexDefinition {
 
+	/**
+	 * @deprecated since 2.1. No longer supported by MongoDB as of server version 3.0.
+	 */
+	@Deprecated
 	public enum Duplicates {
 		RETAIN
 	}

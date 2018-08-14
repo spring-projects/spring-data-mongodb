@@ -24,7 +24,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.index.Index.Duplicates;
 
 /**
  * Unit tests for {@link Index}.

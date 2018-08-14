@@ -15,6 +15,7 @@
 * <<mongo.transactions, MongoDB 4.0 Transaction>> support and a MongoDB-specific transaction manager implementation.
 * <<mongodb.repositories.queries.sort,Default sort specifications for repository query methods>> using `@Query(sort=…)`.
 * <<mongo-template.find-and-replace,findAndReplace>> support through imperative and reactive Template APIs.
+* Deprecation of `dropDups` in `@Indexed` and `@CompoundIndex` as MongoDB server 3.0 and newer do not support `dropDups` anymore.
 
 [[new-features.2-0-0]]
 == What's New in Spring Data MongoDB 2.0
