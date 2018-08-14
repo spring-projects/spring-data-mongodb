@@ -15,7 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import org.assertj.core.api.Assertions;
+import static org.assertj.core.api.Assertions.*;
+
 import org.bson.Document;
 import org.junit.Test;
 
@@ -23,6 +24,7 @@ import org.junit.Test;
  * Unit test for {@link StringOperators}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Royal Assassin - Robin Hobb
  */
 public class StringOperatorsUnitTests {
@@ -34,112 +36,112 @@ public class StringOperatorsUnitTests {
 	@Test // DATAMONGO-2049
 	public void shouldRenderTrim() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").trim().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").trim().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $trim: { \"input\" : \"$shrewd\" } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderTrimForExpression() {
 
-		Assertions.assertThat(StringOperators.valueOf(EXPRESSION).trim().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf(EXPRESSION).trim().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $trim: { \"input\" : " + EXPRESSION_STRING + " } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderTrimWithChars() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").trim("sh").toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").trim("sh").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $trim: { \"input\" : \"$shrewd\", \"chars\" : \"sh\" } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderTrimWithCharsExpression() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").trim(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").trim(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $trim: { \"input\" : \"$shrewd\", \"chars\" : " + EXPRESSION_STRING + " } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderTrimLeft() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").trim().left().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").trim().left().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $ltrim: { \"input\" : \"$shrewd\" } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderTrimLeftWithChars() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").trim("sh").left().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").trim("sh").left().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $ltrim: { \"input\" : \"$shrewd\", \"chars\" : \"sh\" } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderTrimRight() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").trim().right().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").trim().right().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\" } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderTrimRightWithChars() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").trim("sh").right().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").trim("sh").right().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\", \"chars\" : \"sh\" } } "));
 	}
-	
+
 	@Test // DATAMONGO-2049
 	public void shouldRenderLTrim() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").ltrim().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").ltrim().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $ltrim: { \"input\" : \"$shrewd\" } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderLTrimForExpression() {
 
-		Assertions.assertThat(StringOperators.valueOf(EXPRESSION).ltrim().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf(EXPRESSION).ltrim().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $ltrim: { \"input\" : " + EXPRESSION_STRING + " } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderLTrimWithChars() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").ltrim("sh").toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").ltrim("sh").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $ltrim: { \"input\" : \"$shrewd\", \"chars\" : \"sh\" } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderLTrimWithCharsExpression() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").ltrim(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").ltrim(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $ltrim: { \"input\" : \"$shrewd\", \"chars\" : " + EXPRESSION_STRING + " } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderRTrim() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").rtrim().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").rtrim().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\" } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderRTrimForExpression() {
 
-		Assertions.assertThat(StringOperators.valueOf(EXPRESSION).rtrim().toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf(EXPRESSION).rtrim().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : " + EXPRESSION_STRING + " } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderRTrimWithChars() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").rtrim("sh").toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").rtrim("sh").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\", \"chars\" : \"sh\" } } "));
 	}
 
 	@Test // DATAMONGO-2049
 	public void shouldRenderRTrimWithCharsExpression() {
 
-		Assertions.assertThat(StringOperators.valueOf("shrewd").rtrim(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(StringOperators.valueOf("shrewd").rtrim(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\", \"chars\" : " + EXPRESSION_STRING + " } } "));
 	}
 
