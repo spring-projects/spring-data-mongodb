@@ -22,6 +22,7 @@ import org.springframework.util.ClassUtils;
  * different versions.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.7
  */
 public class MongoClientVersion {
@@ -51,6 +52,14 @@ public class MongoClientVersion {
 	 */
 	@Deprecated
 	public static boolean isMongo34Driver() {
+		return true;
+	}
+
+	/**
+	 * @return {@literal true} if MongoDB Java driver version 3.8 or later is on classpath.
+	 * @since 2.1
+	 */
+	public static boolean isMongo38Driver() {
 		return true;
 	}
 
