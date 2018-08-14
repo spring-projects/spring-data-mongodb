@@ -268,6 +268,19 @@ public class ArrayOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that converts the associated expression into an object.
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 *
+		 * @return new instance of {@link ArrayToObject}.
+		 * @since 2.1
+		 */
+		public ArrayToObject toObject() {
+
+			return usesFieldRef() ? ArrayToObject.arrayValueOfToObject(fieldReference)
+					: ArrayToObject.arrayValueOfToObject(expression);
+		}
+
+		/**
 		 * @author Christoph Strobl
 		 */
 		public interface ReduceInitialValueBuilder {
@@ -1495,6 +1508,61 @@ public class ArrayOperators {
 			 * @return
 			 */
 			In containsValue(Object value);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $arrayToObject} that transforms an array into a single document. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/">https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/</a>
+	 * @since 2.1
+	 */
+	public static class ArrayToObject extends AbstractAggregationExpression {
+
+		private ArrayToObject(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Converts the given array (e.g. an array of two-element arrays, a field reference to an array,...) to an object.
+		 *
+		 * @param array must not be {@literal null}.
+		 * @return new instance of {@link ArrayToObject}.
+		 */
+		public static ArrayToObject arrayToObject(Object array) {
+			return new ArrayToObject(array);
+		}
+
+		/**
+		 * Converts the array pointed to by the given {@link Field field reference} to an object.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link ArrayToObject}.
+		 */
+		public static ArrayToObject arrayValueOfToObject(String fieldReference) {
+			return new ArrayToObject(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Converts the result array of the given {@link AggregationExpression expression} to an object.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ArrayToObject}.
+		 */
+		public static ArrayToObject arrayValueOfToObject(AggregationExpression expression) {
+			return new ArrayToObject(expression);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
+		 */
+		@Override
+		protected String getMongoMethod() {
+			return "$arrayToObject";
 		}
 	}
 }

@@ -90,4 +90,18 @@ public class ObjectOperatorsUnitTests {
 								"{ $mergeObjects: [ \"$kettricken\", " + EXPRESSION_STRING + ", { \"fitz\" : \"chivalry\" } ] } "));
 	}
 
+	@Test // DATAMONGO-2052
+	public void toArrayWithFieldReference() {
+
+		assertThat(ObjectOperators.valueOf("verity").toArray().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $objectToArray : \"$verity\" }"));
+	}
+
+	@Test // DATAMONGO-2052
+	public void toArrayWithExpression() {
+
+		assertThat(ObjectOperators.valueOf(EXPRESSION).toArray().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $objectToArray : " + EXPRESSION_STRING + " }"));
+	}
+
 }
