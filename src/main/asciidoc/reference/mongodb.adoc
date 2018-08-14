@@ -2126,7 +2126,7 @@ At the time of this writing, we provide support for the following Aggregation Op
 | `eq` (*via: `is`), `gt`, `gte`, `lt`, `lte`, `ne`
 
 | Array Aggregation Operators
-| `arrayElementAt`, `concatArrays`, `filter`, `in`, `indexOfArray`, `isArray`, `range`, `reverseArray`, `reduce`, `size`, `slice`, `zip`
+| `arrayElementAt`, `arrayToObject`, `concatArrays`, `filter`, `in`, `indexOfArray`, `isArray`, `range`, `reverseArray`, `reduce`, `size`, `slice`, `zip`
 
 | Literal Operators
 | `literal`
