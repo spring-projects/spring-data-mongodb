@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.aggregation.Aggregation.SystemVariable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -90,6 +91,10 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 			sourceMap.forEach((k, v) -> targetDocument.append(k, unpack(v, context)));
 
 			return targetDocument;
+		}
+
+		if(value instanceof SystemVariable) {
+			return value.toString();
 		}
 
 		return value;
