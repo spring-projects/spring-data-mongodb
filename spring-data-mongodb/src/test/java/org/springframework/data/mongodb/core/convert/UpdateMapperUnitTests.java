@@ -289,6 +289,20 @@ public class UpdateMapperUnitTests {
 		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
 	}
 
+	@Test // DATAMONGO-943, DATAMONGO-2055
+	public void updatePushEachAtNegativePositionWorksCorrectly() {
+
+		Update update = new Update().push("key").atPosition(-2).each(Arrays.asList("Arya", "Arry", "Weasel"));
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key = getAsDBObject(push, "key");
+
+		assertThat(key.containsField("$position"), is(true));
+		assertThat((Integer) key.get("$position"), is(-2));
+	}
+
 	@Test // DATAMONGO-943
 	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionFirst() {
 
