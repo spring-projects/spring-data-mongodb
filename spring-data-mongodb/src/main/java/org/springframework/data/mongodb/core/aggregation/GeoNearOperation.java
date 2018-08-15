@@ -30,6 +30,8 @@ import com.mongodb.DBObject;
  *
  * @author Thomas Darimont
  * @since 1.3
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/geoNear/">MongoDB Aggregation Framework:
+ *      $geoNear</a>
  */
 public class GeoNearOperation implements AggregationOperation {
 
@@ -55,6 +57,7 @@ public class GeoNearOperation implements AggregationOperation {
 	 * @param nearQuery must not be {@literal null}.
 	 * @param distanceField must not be {@literal null}.
 	 * @param indexKey can be {@literal null};
+	 * @since 2.1
 	 */
 	private GeoNearOperation(NearQuery nearQuery, String distanceField, String indexKey) {
 
