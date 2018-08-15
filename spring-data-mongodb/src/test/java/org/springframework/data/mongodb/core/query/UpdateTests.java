@@ -390,13 +390,6 @@ public class UpdateTests {
 				.isEqualTo(new Document().append("$bit", new Document("key", new Document("xor", 10L))));
 	}
 
-	@Test // DATAMONGO-943, // DATAMONGO-2055
-	public void pushShouldAllowNegativePosition() {
-
-		assertThat(new Update().push("foo").atPosition(-1).each("booh").toString()).isEqualTo(
-				"{ \"$push\" : { \"foo\" : { \"$java\" : { \"$position\" : { \"$java\" : { \"$position\" : -1} }, \"$each\" : { \"$java\" : { \"$each\" : [ \"booh\"]} } } } } }");
-	}
-
 	@Test // DATAMONGO-1346
 	public void registersMultiplePullAllClauses() {
 
