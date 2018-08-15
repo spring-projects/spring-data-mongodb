@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import lombok.Getter;
+
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -40,7 +42,7 @@ import com.mongodb.DBObject;
  */
 class DocumentAccessor {
 
-	private final Bson document;
+	private final @Getter Bson document;
 
 	/**
 	 * Creates a new {@link DocumentAccessor} for the given {@link Document}.
@@ -137,15 +139,21 @@ class DocumentAccessor {
 
 		String fieldName = property.getFieldName();
 
+		if (this.document instanceof Document) {
+
+			if (((Document) this.document).containsKey(fieldName)) {
+				return true;
+			}
+
+		} else if (this.document instanceof DBObject) {
+
+			if (((DBObject) this.document).containsField(fieldName)) {
+				return true;
+			}
+		}
+
 		if (!fieldName.contains(".")) {
-
-			if (this.document instanceof Document) {
-				return ((Document) this.document).containsKey(fieldName);
-			}
-
-			if (this.document instanceof DBObject) {
-				return ((DBObject) this.document).containsField(fieldName);
-			}
+			return false;
 		}
 
 		String[] parts = fieldName.split("\\.");
