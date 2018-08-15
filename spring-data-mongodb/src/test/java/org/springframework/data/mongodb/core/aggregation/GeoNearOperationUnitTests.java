@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -28,6 +27,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
  *
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class GeoNearOperationUnitTests {
 
@@ -41,6 +41,16 @@ public class GeoNearOperationUnitTests {
 		Document nearClause = DocumentTestUtils.getAsDocument(document, "$geoNear");
 
 		Document expected = new Document(query.toDocument()).append("distanceField", "distance");
-		assertThat(nearClause, is(expected));
+		assertThat(nearClause).isEqualTo(expected);
+	}
+
+	@Test // DATAMONGO-2050
+	public void rendersNearQueryWithKeyCorrectly() {
+
+		NearQuery query = NearQuery.near(10.0, 10.0);
+		GeoNearOperation operation = new GeoNearOperation(query, "distance").useIndex("geo-index-1");
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(DocumentTestUtils.getAsDocument(document, "$geoNear")).containsEntry("key", "geo-index-1");
 	}
 }
