@@ -30,6 +30,8 @@ import org.springframework.util.StringUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @since 1.3
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/geoNear/">MongoDB Aggregation Framework:
+ *      $geoNear</a>
  */
 public class GeoNearOperation implements AggregationOperation {
 
@@ -55,6 +57,7 @@ public class GeoNearOperation implements AggregationOperation {
 	 * @param nearQuery must not be {@literal null}.
 	 * @param distanceField must not be {@literal null}.
 	 * @param indexKey can be {@literal null};
+	 * @since 2.0.10
 	 */
 	private GeoNearOperation(NearQuery nearQuery, String distanceField, @Nullable String indexKey) {
 
@@ -72,7 +75,7 @@ public class GeoNearOperation implements AggregationOperation {
 	 *
 	 * @param key the geospatial index field to use when calculating the distance.
 	 * @return new instance of {@link GeoNearOperation}.
-	 * @since 2.1
+	 * @since 2.0.10
 	 */
 	public GeoNearOperation useIndex(String key) {
 		return new GeoNearOperation(nearQuery, distanceField, key);
