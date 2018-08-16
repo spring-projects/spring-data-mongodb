@@ -19,11 +19,10 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * Abstraction for
+ * Gateway for
  * <a href="https://docs.mongodb.com/manual/meta/aggregation-quick-reference/#object-expression-operators">object
  * expression operators</a>.
  *
@@ -57,7 +56,7 @@ public class ObjectOperators {
 	 */
 	public static class ObjectOperatorFactory {
 
-		@Nullable private final Object value;
+		private final Object value;
 
 		/**
 		 * Creates new {@link ObjectOperatorFactory} for given {@literal value}.
@@ -67,6 +66,7 @@ public class ObjectOperators {
 		public ObjectOperatorFactory(Object value) {
 
 			Assert.notNull(value, "Value must not be null!");
+
 			this.value = value;
 		}
 
@@ -83,7 +83,7 @@ public class ObjectOperators {
 
 		/**
 		 * Creates new {@link MergeObjects aggregation expression} that takes the associated value and combines it with the
-		 * given values into a single document. <br />
+		 * given values (documents or mapped objects) into a single document. <br />
 		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
 		 *
 		 * @return new instance of {@link MergeObjects}.
@@ -186,7 +186,7 @@ public class ObjectOperators {
 		}
 
 		/**
-		 * Creates new {@link MergeObjects aggregation expression} by adding the given values.
+		 * Creates new {@link MergeObjects aggregation expression} by adding the given values (documents or mapped objects).
 		 *
 		 * @param values must not be {@literal null}.
 		 * @return new instance of {@link MergeObjects}.
@@ -204,11 +204,12 @@ public class ObjectOperators {
 			return super.toDocument(potentiallyExtractSingleValue(value), context);
 		}
 
+		@SuppressWarnings("unchecked")
 		private Object potentiallyExtractSingleValue(Object value) {
 
 			if (value instanceof Collection) {
 
-				Collection<Object> collection = ((Collection) value);
+				Collection<Object> collection = ((Collection<Object>) value);
 				if (collection.size() == 1) {
 					return collection.iterator().next();
 				}

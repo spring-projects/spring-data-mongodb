@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.aggregation.ObjectOperators.MergeOb
  * Unit tests for {@link ObjectOperators}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Royal Assassin - Robin Hobb
  */
 public class ObjectOperatorsUnitTests {
@@ -67,8 +68,9 @@ public class ObjectOperatorsUnitTests {
 	public void mergeMixed() {
 
 		assertThat(
-				ObjectOperators.valueOf("kettricken").mergeWithValuesOf(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
-						.isEqualTo(Document.parse("{ $mergeObjects: [ \"$kettricken\", " + EXPRESSION_STRING + " ] } "));
+				ObjectOperators.valueOf("kettricken").mergeWithValuesOf(EXPRESSION).mergeWithValuesOf("verity")
+						.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
+								Document.parse("{ $mergeObjects: [ \"$kettricken\", " + EXPRESSION_STRING + ", \"$verity\" ] } "));
 	}
 
 	@Test // DATAMONGO-2053

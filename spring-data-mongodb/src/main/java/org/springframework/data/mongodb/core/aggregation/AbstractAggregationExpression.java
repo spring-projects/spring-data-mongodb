@@ -93,7 +93,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 			return targetDocument;
 		}
 
-		if(value instanceof SystemVariable) {
+		if (value instanceof SystemVariable) {
 			return value.toString();
 		}
 
