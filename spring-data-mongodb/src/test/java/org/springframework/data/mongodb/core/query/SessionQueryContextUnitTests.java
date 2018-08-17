@@ -17,10 +17,10 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
 
-import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -28,43 +28,53 @@ import org.springframework.data.geo.Point;
 
 /**
  * Unit tests for {@link SessionQueryContext}.
- * 
+ *
  * @author Christoph Strobl
+ * @see <a href="https://jira.mongodb.org/browse/DRIVERS-518">MongoDB: DRIVERS-518</a>
  */
 public class SessionQueryContextUnitTests {
 
 	@Test // DATAMONGO-2059
-	public void rendersNearQueryAsGeoWithin /* https://jira.mongodb.org/browse/DRIVERS-518 */ () {
+	public void rendersNearQueryAsGeoWithin() {
 
 		Document queryObject = query(where("location").near(new Point(-73D, 40D)))
 				.getQueryObject(SessionQueryContext.sessionContext());
 
-		Assertions.assertThat(queryObject.get("location", Document.class)).containsEntry("$geoWithin",
-				new Document("$center", Arrays.asList(Arrays.asList(-73D, 40D), Double.MAX_VALUE)));
+		assertThat(queryObject).containsEntry("location.$geoWithin.$center",
+				Arrays.asList(Arrays.asList(-73D, 40D), Double.MAX_VALUE));
 	}
 
 	@Test // DATAMONGO-2059
-	public void rendersNearSphereQueryAsGeoWithin /* https://jira.mongodb.org/browse/DRIVERS-518 */ () {
+	public void rendersNearQueryAsGeoWithin1() {
+
+		Document queryObject = query(where("location").near(new Point(-73D, 40D)))
+				.getQueryObject(SessionQueryContext.sessionContext());
+
+		assertThat(queryObject).containsEntry("location.$geoWithin.$center",
+				Arrays.asList(Arrays.asList(-73D, 40D), Double.MAX_VALUE));
+	}
+
+	@Test // DATAMONGO-2059
+	public void rendersNearSphereQueryAsGeoWithin() {
 
 		Document queryObject = query(where("location").nearSphere(new Point(-73D, 40D)))
 				.getQueryObject(SessionQueryContext.sessionContext());
 
-		Assertions.assertThat(queryObject.get("location", Document.class)).containsEntry("$geoWithin",
-				new Document("$centerSphere", Arrays.asList(Arrays.asList(-73D, 40D), Double.MAX_VALUE)));
+		assertThat(queryObject).containsEntry("location.$geoWithin.$centerSphere",
+				Arrays.asList(Arrays.asList(-73D, 40D), Double.MAX_VALUE));
 	}
 
 	@Test // DATAMONGO-2059
-	public void rendersNearQueryAsGeoWithinWithMaxDistance /* https://jira.mongodb.org/browse/DRIVERS-518 */ () {
+	public void rendersNearQueryAsGeoWithinWithMaxDistance() {
 
 		Document queryObject = query(where("location").near(new Point(-73D, 40D)).maxDistance(10D))
 				.getQueryObject(SessionQueryContext.sessionContext());
 
-		Assertions.assertThat(queryObject.get("location", Document.class)).containsEntry("$geoWithin",
-				new Document("$center", Arrays.asList(Arrays.asList(-73D, 40D), 10D)));
+		assertThat(queryObject).containsEntry("location.$geoWithin.$center", Arrays.asList(Arrays.asList(-73D, 40D), 10D));
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-2059
-	public void rendersNearQueryAsGeoWithinWithMinDistance /* https://jira.mongodb.org/browse/DRIVERS-518 */ () {
+	public void rendersNearQueryAsGeoWithinWithMinDistance() {
 
 		query(where("location").near(new Point(-73D, 40D)).minDistance(10D))
 				.getQueryObject(SessionQueryContext.sessionContext());

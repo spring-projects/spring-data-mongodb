@@ -16,14 +16,14 @@
 package org.springframework.data.mongodb.core.query;
 
 /**
- * Default {@link QueryContext} implmentation.
- * 
+ * Default {@link QueryContext} implementation.
+ *
  * @author Christoph Strobl
  * @since 2.1
  */
-class DefaultQueryContext implements QueryContext {
+enum DefaultQueryContext implements QueryContext {
 
-	private static final DefaultQueryContext INSTANCE = new DefaultQueryContext();
+	INSTANCE;
 
 	/**
 	 * @return singleton instance of {@link DefaultQueryContext}.

@@ -716,20 +716,24 @@ public class Criteria implements CriteriaDefinition {
 	@Override
 	public Document getCriteriaObject(QueryContext context) {
 
+		Assert.notNull(context, "QueryContext must not be null!");
+
 		if (this.criteriaChain.size() == 1) {
 			return criteriaChain.get(0).getSingleCriteriaObject(context);
-		} else if (CollectionUtils.isEmpty(this.criteriaChain) && !CollectionUtils.isEmpty(this.criteria)) {
-			return getSingleCriteriaObject(context);
-		} else {
-			Document criteriaObject = new Document();
-			for (Criteria c : this.criteriaChain) {
-				Document document = c.getSingleCriteriaObject(context);
-				for (String k : document.keySet()) {
-					setValue(criteriaObject, k, document.get(k));
-				}
-			}
-			return criteriaObject;
 		}
+
+		if (CollectionUtils.isEmpty(this.criteriaChain) && !CollectionUtils.isEmpty(this.criteria)) {
+			return getSingleCriteriaObject(context);
+		}
+
+		Document criteriaObject = new Document();
+		for (Criteria c : this.criteriaChain) {
+			Document document = c.getSingleCriteriaObject(context);
+			for (String k : document.keySet()) {
+				setValue(criteriaObject, k, document.get(k));
+			}
+		}
+		return criteriaObject;
 	}
 
 	/**
@@ -751,6 +755,8 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 2.1
 	 */
 	protected Document getSingleCriteriaObject(QueryContext context) {
+
+		Assert.notNull(context, "QueryContext must not be null!");
 
 		Document document = new Document();
 		boolean not = false;
@@ -787,10 +793,7 @@ public class Criteria implements CriteriaDefinition {
 		}
 
 		if (!StringUtils.hasText(this.key)) {
-			if (not) {
-				return new Document("$not", document);
-			}
-			return document;
+			return not ? new Document("$not", document) : document;
 		}
 
 		Document queryCriteria = new Document();
@@ -805,7 +808,8 @@ public class Criteria implements CriteriaDefinition {
 		return queryCriteria;
 	}
 
-	private BasicDBList createCriteriaList(Criteria[] criteria) {
+	private static BasicDBList createCriteriaList(Criteria[] criteria) {
+
 		BasicDBList bsonList = new BasicDBList();
 		for (Criteria c : criteria) {
 			bsonList.add(c.getCriteriaObject());
@@ -813,7 +817,8 @@ public class Criteria implements CriteriaDefinition {
 		return bsonList;
 	}
 
-	private void setValue(Document document, String key, Object value) {
+	private static void setValue(Document document, String key, Object value) {
+
 		Object existing = document.get(key);
 		if (existing == null) {
 			document.put(key, value);
@@ -937,7 +942,7 @@ public class Criteria implements CriteriaDefinition {
 		return result;
 	}
 
-	private static boolean requiresGeoJsonFormat(Object value) {
+	private static boolean requiresGeoJsonFormat(@Nullable Object value) {
 		return value instanceof GeoJson
 				|| (value instanceof GeoCommand && ((GeoCommand) value).getShape() instanceof GeoJson);
 	}
@@ -1118,7 +1123,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Default implementation of {@link BitwiseCriteriaOperators}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @currentRead Beyond the Shadows - Brent Weeks
 	 */

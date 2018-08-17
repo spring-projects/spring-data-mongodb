@@ -24,7 +24,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * The context a {@link Query} is run in with potential influence to how the query should be rendered. <br />
- * 
+ *
  * @author Christoph Strobl
  * @since 2.1
  */
@@ -35,7 +35,7 @@ public interface QueryContext {
 	 * {@literal operator} suitable for in the given {@link QueryContext}.
 	 *
 	 * @param criteria the {@link RawCriteria} object.
-	 * @param operator the MongoDB operator (eg. {@literal $near}) to process
+	 * @param operator the MongoDB operator (eg. {@literal $near}) to process.
 	 * @return never {@literal null}.
 	 */
 	default MongoCriteriaOperator getMongoOperator(RawCriteria criteria, String operator) {
@@ -92,7 +92,7 @@ public interface QueryContext {
 			processed.add(operator);
 		}
 
-		MongoCriteriaOperator markProcessed(String operator, Object value) {
+		MongoCriteriaOperator markProcessed(String operator, @Nullable Object value) {
 
 			markProcessed(operator);
 			return new MongoCriteriaOperator(operator, value);

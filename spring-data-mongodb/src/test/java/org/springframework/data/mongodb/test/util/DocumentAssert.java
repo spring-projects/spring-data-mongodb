@@ -274,7 +274,7 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 			Document document = (Document) source;
 			String pathToUse = path.replace("\\.", ".");
 
-			if (document.containsKey(pathToUse)) {
+			if (document != null && document.containsKey(pathToUse)) {
 				return Lookup.found((T) document.get(pathToUse));
 			}
 

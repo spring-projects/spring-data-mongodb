@@ -29,9 +29,9 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @since 2.1
  */
-class SessionQueryContext implements QueryContext {
+enum SessionQueryContext implements QueryContext {
 
-	private static final SessionQueryContext INSTANCE = new SessionQueryContext();
+	INSTANCE;
 
 	/**
 	 * @return singleton instance of {@link SessionQueryContext}.
