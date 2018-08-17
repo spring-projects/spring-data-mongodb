@@ -37,6 +37,8 @@ import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
+import org.springframework.data.mongodb.core.query.QueryContext.MongoCriteriaOperator;
+import org.springframework.data.mongodb.core.query.QueryContext.RawCriteria;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -704,15 +706,24 @@ public class Criteria implements CriteriaDefinition {
 	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getCriteriaObject()
 	 */
 	public Document getCriteriaObject() {
+		return getCriteriaObject(QueryContext.defaultContext());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getCriteriaObject(org.springframework.data.mongodb.core.query.QueryContext)
+	 */
+	@Override
+	public Document getCriteriaObject(QueryContext context) {
 
 		if (this.criteriaChain.size() == 1) {
-			return criteriaChain.get(0).getSingleCriteriaObject();
+			return criteriaChain.get(0).getSingleCriteriaObject(context);
 		} else if (CollectionUtils.isEmpty(this.criteriaChain) && !CollectionUtils.isEmpty(this.criteria)) {
-			return getSingleCriteriaObject();
+			return getSingleCriteriaObject(context);
 		} else {
 			Document criteriaObject = new Document();
 			for (Criteria c : this.criteriaChain) {
-				Document document = c.getSingleCriteriaObject();
+				Document document = c.getSingleCriteriaObject(context);
 				for (String k : document.keySet()) {
 					setValue(criteriaObject, k, document.get(k));
 				}
@@ -721,15 +732,41 @@ public class Criteria implements CriteriaDefinition {
 		}
 	}
 
+	/**
+	 * Get the MongoDB operation chain executable in the default context.
+	 *
+	 * @return never {@literal null}.
+	 * @deprecated since 2.1. Please use {@link #getSingleCriteriaObject(QueryContext)} instead.
+	 */
+	@Deprecated
 	protected Document getSingleCriteriaObject() {
+		return getSingleCriteriaObject(QueryContext.defaultContext());
+	}
+
+	/**
+	 * Get the MongoDB operation chain executable in the given context.
+	 *
+	 * @param context must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	protected Document getSingleCriteriaObject(QueryContext context) {
 
 		Document document = new Document();
 		boolean not = false;
 
+		RawCriteria rawCriteria = new RawCriteria(criteria);
+
 		for (Entry<String, Object> entry : criteria.entrySet()) {
 
-			String key = entry.getKey();
-			Object value = entry.getValue();
+			if (rawCriteria.alreadyProcessed(entry.getKey())) {
+				continue;
+			}
+
+			MongoCriteriaOperator c = context.getMongoOperator(rawCriteria, entry.getKey());
+
+			String key = c.getOperator();
+			Object value = c.getValue();
 
 			if (requiresGeoJsonFormat(value)) {
 				value = new Document("$geometry", value);

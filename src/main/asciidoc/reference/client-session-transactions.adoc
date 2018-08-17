@@ -357,3 +357,6 @@ instead of:
 db.collection.find( { state: "active" } ).count()
 ----
 ====
+
+WARNING: Not all operators are supported by the `$match` aggregation state. We highly recommend to check the
+https://docs.mongodb.com/manual/reference/operator/aggregation/match/#restrictions[restrictions].

@@ -222,13 +222,28 @@ public class Query {
 
 	/**
 	 * @return the query {@link Document}.
+	 * @deprecated since 2.1. Please use {@link #getQueryObject(QueryContext)}.
 	 */
+	@Deprecated
 	public Document getQueryObject() {
+		return getQueryObject(QueryContext.defaultContext());
+	}
+
+	/**
+	 * Get the MongoDB representation suitable in the given context.
+	 *
+	 * @param context must not be {@literal null}. Use {@link QueryContext#defaultContext()} instead.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	public Document getQueryObject(QueryContext context) {
+
+		Assert.notNull(context, "Context must not be null!");
 
 		Document document = new Document();
 
 		for (CriteriaDefinition definition : criteria.values()) {
-			document.putAll(definition.getCriteriaObject());
+			document.putAll(definition.getCriteriaObject(context));
 		}
 
 		if (!restrictedTypes.isEmpty()) {

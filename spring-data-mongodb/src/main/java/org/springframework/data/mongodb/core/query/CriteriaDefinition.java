@@ -28,8 +28,22 @@ public interface CriteriaDefinition {
 	 * Get {@link Document} representation.
 	 *
 	 * @return never {@literal null}.
+	 * @deprecated since 2.1. Please use/implement {@link #getCriteriaObject(QueryContext)}.
 	 */
+	@Deprecated
 	Document getCriteriaObject();
+
+	/**
+	 * Get {@link Document} representation suitable in the given {@link QueryContext}.
+	 *
+	 * @param context must not be {@literal null}. Use {@link QueryContext#defaultContext()} instead.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	@SuppressWarnings("deprecation")
+	default Document getCriteriaObject(QueryContext context) {
+		return getCriteriaObject(); // use deprecated api in default method for easy upgrade.
+	}
 
 	/**
 	 * Get the identifying {@literal key}.

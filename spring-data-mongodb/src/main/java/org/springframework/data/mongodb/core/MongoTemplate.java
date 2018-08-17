@@ -22,7 +22,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +67,16 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.*;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -93,9 +101,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.QueryContext;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.validation.Validator;
-import org.springframework.data.projection.ProjectionInformation;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
@@ -1694,8 +1702,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				}
 
 				MongoCollection<Document> collectionToUse = writeConcernToUse != null
-						? collection.withWriteConcern(writeConcernToUse)
-						: collection;
+						? collection.withWriteConcern(writeConcernToUse) : collection;
 
 				DeleteResult result = multi ? collectionToUse.deleteMany(removeQuery, options)
 						: collection.deleteOne(removeQuery, options);
@@ -3358,7 +3365,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			CountOptions options = new CountOptions();
 			query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 
-			Document document = delegate.queryMapper.getMappedObject(query.getQueryObject(),
+			Document document = delegate.queryMapper.getMappedObject(query.getQueryObject(QueryContext.sessionContext()),
 					Optional.ofNullable(entityClass).map(it -> delegate.mappingContext.getPersistentEntity(entityClass)));
 
 			return execute(collectionName, collection -> collection.countDocuments(document, options));

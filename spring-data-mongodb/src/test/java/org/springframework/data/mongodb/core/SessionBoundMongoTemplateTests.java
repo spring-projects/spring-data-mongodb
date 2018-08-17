@@ -37,10 +37,10 @@ import java.util.stream.IntStream;
 
 import org.aopalliance.aop.Advice;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -298,8 +298,7 @@ public class SessionBoundMongoTemplateTests {
 		session.close();
 	}
 
-	@Test // DATAMONGO-2012
-	@Ignore("error 2 (BadValue): $match does not support $geoNear, $near, and $nearSphere")
+	@Test // DATAMONGO-2012, DATAMONGO-2059
 	public void countWithGeoInTransaction() {
 
 		if (!template.collectionExists(Person.class)) {
@@ -314,10 +313,10 @@ public class SessionBoundMongoTemplateTests {
 
 		MongoTemplate sessionBound = template.withSession(session);
 
-		sessionBound.save(new Person("Kylar Stern"));
+		sessionBound.save(new Document("_id", new ObjectId()).append("location", new double[] { -73D, 40D }), "person");
 
-		assertThat(sessionBound.query(Person.class).matching(query(where("location").near(new Point(1, 0)))).count())
-				.isZero();
+		assertThat(sessionBound.query(Person.class)
+				.matching(query(where("location").near(new Point(-73D, 40D)).maxDistance(30))).count()).isOne();
 
 		session.commitTransaction();
 		session.close();

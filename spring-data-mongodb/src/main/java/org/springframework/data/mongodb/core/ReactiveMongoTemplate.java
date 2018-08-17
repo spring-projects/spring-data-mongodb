@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.query.QueryContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -3166,7 +3167,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return createMono(collectionName, collection -> {
 
 				final Document Document = query == null ? null
-						: delegate.queryMapper.getMappedObject(query.getQueryObject(),
+						: delegate.queryMapper.getMappedObject(query.getQueryObject(QueryContext.sessionContext()),
 								entityClass == null ? null : delegate.mappingContext.getPersistentEntity(entityClass));
 
 				CountOptions options = new CountOptions();
