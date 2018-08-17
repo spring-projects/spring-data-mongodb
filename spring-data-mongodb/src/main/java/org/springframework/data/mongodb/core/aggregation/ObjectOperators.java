@@ -113,6 +113,17 @@ public class ObjectOperators {
 		public MergeObjects mergeWithValuesOf(AggregationExpression... expression) {
 			return merge().mergeWithValuesOf(expression);
 		}
+
+		/**
+		 * Creates new {@link ObjectToArray aggregation expression} that takes the associated value and converts it to an
+		 * array of {@link Document documents} that contain two fields {@literal k} and {@literal v} each. <br />
+		 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+		 * 
+		 * @since 2.1
+		 */
+		public ObjectToArray toArray() {
+			return ObjectToArray.toArray(value);
+		}
 	}
 
 	/**
@@ -224,6 +235,64 @@ public class ObjectOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$mergeObjects";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $objectToArray} that converts a document to an array of {@link Document
+	 * documents} that each contains two fields {@literal k} and {@literal v}. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 3.6 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/objectToArray/">https://docs.mongodb.com/manual/reference/operator/aggregation/objectToArray/</a>
+	 * @since 2.1
+	 */
+	public static class ObjectToArray extends AbstractAggregationExpression {
+
+		private ObjectToArray(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ObjectToArray aggregation expression} that takes the value pointed to by given {@link Field
+		 * fieldReference} and converts it to an array.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link ObjectToArray}.
+		 */
+		public static ObjectToArray valueOfToArray(String fieldReference) {
+			return toArray(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link ObjectToArray aggregation expression} that takes the result value of the given
+		 * {@link AggregationExpression expression} and converts it to an array.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ObjectToArray}.
+		 */
+		public static ObjectToArray valueOfToArray(AggregationExpression expression) {
+			return toArray(expression);
+		}
+
+		/**
+		 * Creates new {@link ObjectToArray aggregation expression} that takes the given value and converts it to an array.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ObjectToArray}.
+		 */
+		public static ObjectToArray toArray(Object value) {
+			return new ObjectToArray(value);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
+		 */
+		@Override
+		protected String getMongoMethod() {
+			return "$objectToArray";
 		}
 	}
 }
