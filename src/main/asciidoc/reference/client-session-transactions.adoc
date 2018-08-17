@@ -297,6 +297,7 @@ error occurs here.
 <3> An error outside the transaction flow has no affect on the previous transactional execution.
 ====
 
+[[mongo.transactions.behavior]]
 == Special behavior inside transactions
 
 Inside transactions, MongoDB server has a slightly different behavior.
@@ -320,6 +321,14 @@ MongoDB `count` operates upon collection statistics which may not reflect the ac
 The server responds with _error 50851_ when issuing a `count` command inside of a multi-document transaction.
 Once `MongoTemplate` detects an active transaction, all exposed `count()` methods are converted and delegated to the
 aggregation framework using `$match` and `$count` operators, preserving `Query` settings, such as `collation`.
+
+Restrictions apply when using geo commands inside of the aggregation count helper. The following operators cannot be used and must be replaced with a different operator:
+
+* `$where` -> `$expr`
+* `$near` -> `$geoWithin` with `$center`
+* `$nearSphere` -> `$geoWithin` with `$centerSphere`
+
+Queries using `Criteria.near(…)` and `Criteria.nearSphere(…)` must be rewritten to `Criteria.within(…)` respective `Criteria.withinSphere(…)`. Same applies for the `near` query keyword in repository query methods that must be changed to `within`. See also MongoDB JIRA ticket https://jira.mongodb.org/browse/DRIVERS-518[DRIVERS-518] for further reference.
 
 The following snippet shows `count` usage inside the session-bound closure:
 

@@ -1201,6 +1201,8 @@ template.query(Person.class)  <1>
 
 MongoDB supports GeoSpatial queries through the use of operators such as `$near`, `$within`, `geoWithin`, and `$nearSphere`. Methods specific to geospatial queries are available on the `Criteria` class. There are also a few shape classes (`Box`, `Circle`, and `Point`) that are used in conjunction with geospatial related `Criteria` methods.
 
+NOTE: Using GeoSpatial queries requires attention when used within MongoDB transactions, see <<mongo.transactions.behavior>>.
+
 To understand how to perform GeoSpatial queries, consider the following `Venue` class (taken from the integration tests and relying on the rich `MappingMongoConverter`):
 
 [source,java]
