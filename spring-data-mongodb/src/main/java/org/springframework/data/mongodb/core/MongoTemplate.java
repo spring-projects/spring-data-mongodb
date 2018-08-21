@@ -1397,7 +1397,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeEmitEvent(new BeforeSaveEvent<>(objectToSave, dbDoc, collectionName));
 		Object id = saveDocument(collectionName, dbDoc, objectToSave.getClass());
 
-		T saved = entity.populateIdIfNecessary(id);
+		T saved = populateIdIfNecessary(entity.getBean(), id);
 		maybeEmitEvent(new AfterSaveEvent<>(saved, dbDoc, collectionName));
 
 		return saved;
