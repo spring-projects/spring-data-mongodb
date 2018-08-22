@@ -363,6 +363,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
+			if (prop.isImmutable() && prop.getWither() == null) {
+				continue;
+			}
+
 			if (entity.isConstructorArgument(prop) || !documentAccessor.hasValue(prop)) {
 				continue;
 			}

@@ -26,7 +26,9 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Wither;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -1913,6 +1915,20 @@ public class MappingMongoConverterUnitTests {
 		assertThat(target).doesNotContainKeys("_class");
 	}
 
+	@Test // DATAMONGO-2066
+	public void doesNotPopulateImmutableFieldEvenIfInDocument() {
+
+		org.bson.Document source = new org.bson.Document("first", "foo").append("second", "bar");
+
+		SampleWithImmutableField result = converter.read(SampleWithImmutableField.class, source);
+
+		// No wither, no change… think Bob Marley.
+		assertThat(result.first).isEqualTo("first");
+
+		// Wither used
+		assertThat(result.second).isEqualTo("bar");
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2340,5 +2356,19 @@ public class MappingMongoConverterUnitTests {
 
 		final @Id String id;
 		String value;
+	}
+
+	// DATAMONGO-2066
+
+	@AllArgsConstructor
+	static class SampleWithImmutableField {
+
+		final String first;
+		final @Wither String second;
+
+		public SampleWithImmutableField() {
+			this.first = "first";
+			this.second = "second";
+		}
 	}
 }
