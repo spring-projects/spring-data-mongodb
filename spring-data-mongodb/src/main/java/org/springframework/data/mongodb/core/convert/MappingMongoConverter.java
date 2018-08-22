@@ -248,7 +248,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
 			DocumentAccessor source, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
-
 		AssociationAwareMongoDbPropertyValueProvider provider = new AssociationAwareMongoDbPropertyValueProvider(source,
 				evaluator, path);
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<>(
@@ -272,11 +271,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
-		if (entity.requiresPropertyPopulation()) {
-			return populateProperties(entity, documentAccessor, path, evaluator, instance);
-		}
-
-		return instance;
+		return entity.requiresPropertyPopulation() //
+				? populateProperties(entity, documentAccessor, path, evaluator, instance) //
+				: instance;
 	}
 
 	private <S> S populateProperties(MongoPersistentEntity<S> entity, DocumentAccessor documentAccessor, ObjectPath path,
@@ -287,8 +284,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		// Make sure id property is set before all other properties
 
-		Object rawId = readAndPopulateIdentifier(accessor, documentAccessor, entity,
-				path, evaluator);
+		Object rawId = readAndPopulateIdentifier(accessor, documentAccessor, entity, path, evaluator);
 		ObjectPath currentPath = path.push(accessor.getBean(), entity, rawId);
 
 		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(documentAccessor, evaluator,
