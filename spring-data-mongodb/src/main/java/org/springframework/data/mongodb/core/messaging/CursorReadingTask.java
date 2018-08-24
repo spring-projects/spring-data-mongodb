@@ -24,10 +24,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
 
 import com.mongodb.client.MongoCursor;
-import com.mysema.commons.lang.Assert;
 
 /**
  * @author Christoph Strobl
@@ -202,7 +202,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	public boolean awaitStart(Duration timeout) throws InterruptedException {
 
 		Assert.notNull(timeout, "Timeout must not be null!");
-		Assert.isFalse(timeout.isNegative(), "Timeout must not be negative!");
+		Assert.isTrue(!timeout.isNegative(), "Timeout must not be negative!");
 
 		return awaitStart.await(timeout.toNanos(), TimeUnit.NANOSECONDS);
 	}
