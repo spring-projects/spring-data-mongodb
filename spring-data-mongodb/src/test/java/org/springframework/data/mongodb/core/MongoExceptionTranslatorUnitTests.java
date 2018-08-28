@@ -18,19 +18,27 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import java.beans.Transient;
 import java.net.UnknownHostException;
 
+import com.mongodb.MongoCommandException;
+import com.mongodb.MongoWriteException;
+import com.mongodb.WriteError;
 import org.bson.BsonDocument;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.MongoTransactionException;
+import org.springframework.data.mongodb.TransientMongoDbException;
+import org.springframework.data.mongodb.TransientMongoDbTransactionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 
 import com.mongodb.MongoCursorNotFoundException;
@@ -150,6 +158,38 @@ public class MongoExceptionTranslatorUnitTests {
 		checkTranslatedMongoException(MongoTransactionException.class, 257);
 		checkTranslatedMongoException(MongoTransactionException.class, 263);
 		checkTranslatedMongoException(MongoTransactionException.class, 267);
+	}
+
+	@Test // DATAMONGO-2073
+	public void translateTransientTransactionExceptions() {
+
+		MongoException source = new MongoException(267, "PreparedTransactionInProgress");
+		source.addLabel(MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL);
+
+		expectExceptionWithCauseMessage(translator.translateExceptionIfPossible(source),
+				TransientMongoDbTransactionException.class, "PreparedTransactionInProgress");
+	}
+
+	@Test  // DATAMONGO-2073
+	public void translateMongoExceptionWithTransientLabelToTransientMongoDbException() {
+
+		MongoException exception = new MongoException(0, "");
+		exception.addLabel(MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL);
+		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
+
+		expectExceptionWithCauseMessage(translatedException, TransientMongoDbException.class);
+	}
+
+	@Test  // DATAMONGO-2073
+	public void wrapsTranslatedExceptionsWhenTransientLabelPresent() {
+
+		MongoException exception = new MongoWriteException(new WriteError(112, "WriteConflict", new BsonDocument()), null);
+		exception.addLabel(MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL);
+
+		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
+
+		assertThat(translatedException, is(instanceOf(TransientMongoDbException.class)));
+		assertThat(translatedException.getCause(), is(instanceOf(DataIntegrityViolationException.class)));
 	}
 
 	private void checkTranslatedMongoException(Class<? extends Exception> clazz, int code) {
