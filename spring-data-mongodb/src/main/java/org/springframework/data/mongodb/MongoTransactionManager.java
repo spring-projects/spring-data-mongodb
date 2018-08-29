@@ -47,13 +47,18 @@ import com.mongodb.client.ClientSession;
  * Application code is required to retrieve the {@link com.mongodb.client.MongoDatabase} via
  * {@link MongoDatabaseUtils#getDatabase(MongoDbFactory)} instead of a standard {@link MongoDbFactory#getDb()} call.
  * Spring classes such as {@link org.springframework.data.mongodb.core.MongoTemplate} use this strategy implicitly.
+ * <p />
+ * By default failure of a {@literal commit} operation raises a {@link TransactionSystemException}. One may override
+ * {@link #doCommit(MongoTransactionObject)} to implement the
+ * <a href="https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation">Retry Commit Operation</a>
+ * behaviour as outlined in the MongoDB reference manual.
  * 
  * @author Christoph Strobl
  * @author Mark Paluch
  * @currentRead Shadow's Edge - Brent Weeks
  * @since 2.1
  * @see <a href="https://www.mongodb.com/transactions">MongoDB Transaction Documentation</a>
- * @see MongoDatabaseUtils#getDatabase(MongoDbFactory, SessionSynchronization) 
+ * @see MongoDatabaseUtils#getDatabase(MongoDbFactory, SessionSynchronization)
  */
 public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		implements ResourceTransactionManager, InitializingBean {
@@ -181,7 +186,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#doCommit(org.springframework.transaction.support.DefaultTransactionStatus)
 	 */
 	@Override
-	protected void doCommit(DefaultTransactionStatus status) throws TransactionException {
+	protected final void doCommit(DefaultTransactionStatus status) throws TransactionException {
 
 		MongoTransactionObject mongoTransactionObject = extractMongoTransaction(status);
 
@@ -191,12 +196,42 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		}
 
 		try {
-			mongoTransactionObject.commitTransaction();
-		} catch (MongoException ex) {
+			doCommit(mongoTransactionObject);
+		} catch (Exception ex) {
 
 			throw new TransactionSystemException(String.format("Could not commit Mongo transaction for session %s.",
 					debugString(mongoTransactionObject.getSession())), ex);
 		}
+	}
+
+	/**
+	 * Customization hook to perform an actual commit of the given transaction.<br />
+	 * If a commit operation encounters an error, the MongoDB driver throws a {@link MongoException} holding
+	 * {@literal error labels}. <br />
+	 * By default those labels are ignored, nevertheless one might check for
+	 * {@link MongoException#UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL transient commit errors labels} and retry the the
+	 * commit. <br />
+	 * <code>
+	 *     <pre>
+	 * int retries = 3;
+	 * do {
+	 *     try {
+	 *         transactionObject.commitTransaction();
+	 *         break;
+	 *     } catch (MongoException ex) {
+	 *         if (!ex.hasErrorLabel(MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL)) {
+	 *             throw ex;
+	 *         }
+	 *     }
+	 *     Thread.sleep(500);
+	 * } while (--retries > 0);
+	 *     </pre>
+	 * </code>
+	 * 
+	 * @param transactionObject never {@literal null}.
+	 */
+	protected void doCommit(MongoTransactionObject transactionObject) throws Exception {
+		transactionObject.commitTransaction();
 	}
 
 	/*
@@ -386,7 +421,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * @since 2.1
 	 * @see MongoResourceHolder
 	 */
-	static class MongoTransactionObject implements SmartTransactionObject {
+	protected static class MongoTransactionObject implements SmartTransactionObject {
 
 		private @Nullable MongoResourceHolder resourceHolder;
 
@@ -406,7 +441,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		/**
 		 * @return {@literal true} if a {@link MongoResourceHolder} is set.
 		 */
-		boolean hasResourceHolder() {
+		final boolean hasResourceHolder() {
 			return resourceHolder != null;
 		}
 
@@ -428,14 +463,14 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		/**
 		 * Commit the transaction.
 		 */
-		void commitTransaction() {
+		public void commitTransaction() {
 			getRequiredSession().commitTransaction();
 		}
 
 		/**
 		 * Rollback (abort) the transaction.
 		 */
-		void abortTransaction() {
+		public void abortTransaction() {
 			getRequiredSession().abortTransaction();
 		}
 
@@ -451,7 +486,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		}
 
 		@Nullable
-		ClientSession getSession() {
+		public ClientSession getSession() {
 			return resourceHolder != null ? resourceHolder.getSession() : null;
 		}
 
