@@ -3085,4 +3085,5 @@ class GridFsClient {
 
 `GridFsOperations` extends `ResourcePatternResolver` and lets the `GridFsTemplate` (for example) to be plugged into an `ApplicationContext` to read Spring Config files from MongoDB database.
 
+include::tailable-cursors.adoc[]
 include::change-streams.adoc[]
