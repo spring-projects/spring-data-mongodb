@@ -25,7 +25,7 @@ To create a Spring project in STS, go to File -> New -> Spring Template Project 
 
 Then add the following to the pom.xml dependencies section.
 
-[source,xml]
+[source,xml,subs="+attributes"]
 ----
 <dependencies>
 
@@ -40,7 +40,7 @@ Then add the following to the pom.xml dependencies section.
   <dependency>
     <groupId>org.mongodb</groupId>
     <artifactId>mongodb-driver-reactivestreams</artifactId>
-    <version>{mongo.reactivestreams}</version>
+    <version>{mongo-reactivestreams}</version>
   </dependency>
 
   <dependency>

@@ -138,6 +138,24 @@
 			</modules>
 		</profile>
 
+		<profile>
+			<id>distribute</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.asciidoctor</groupId>
+						<artifactId>asciidoctor-maven-plugin</artifactId>
+						<configuration>
+							<attributes>
+								<mongo-reactivestreams>${mongo.reactivestreams}</mongo-reactivestreams>
+								<reactor>${reactor}</reactor>
+							</attributes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
 	</profiles>
 
 	<dependencies>
