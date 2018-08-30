@@ -165,7 +165,7 @@ There is a https://github.com/spring-projects/spring-data-examples[GitHub reposi
 [[mongodb-connectors]]
 == Connecting to MongoDB with Spring
 
-One of the first tasks when using MongoDB and Spring is to create a `com.mongodb.MongoClient` object using the IoC container. There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata. Both are discussed in the following sections.
+One of the first tasks when using MongoDB and Spring is to create a `com.mongodb.MongoClient` or `com.mongodb.client.MongoClient` object using the IoC container. There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata. Both are discussed in the following sections.
 
 NOTE: For those not familiar with how to configure the Spring container using Java-based bean metadata instead of XML-based metadata, see the high-level introduction in the reference docs http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration[here] as well as the detailed documentation http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#beans-java-instantiating-container[here].
 
@@ -322,6 +322,8 @@ public class MongoApp {
 
 The code in bold highlights the use of `SimpleMongoDbFactory` and is the only difference between the listing shown in the <<mongodb-getting-started,getting started section>>.
 
+NOTE: Use `SimpleMongoClientDbFactory` when choosing `com.mongodb.client.MongoClient` as the entrypoint of choice.
+
 [[mongo.mongo-db-factory-java]]
 === Registering a `MongoDbFactory` Instance by Using Java-based Metadata
 
@@ -363,9 +365,7 @@ In order to use authentication with XML-based configuration, use the `credential
 
 NOTE: Username and password credentials used in XML-based configuration must be URL-encoded when these contain reserved characters, such as `:`, `%`, `@`, or `,`.
 The following example shows encoded credentials:
-
 `m0ng0@dmin:mo_res:bw6},Qsdxx@admin@database` -> `m0ng0%40dmin:mo_res%3Abw6%7D%2CQsdxx%40admin@database`
-
 See https://tools.ietf.org/html/rfc3986#section-2.2[section 2.2 of RFC 3986] for further details.
 
 As of MongoDB java driver 3.7.0 there is an alternative entry point to `MongoClient` via the https://search.maven.org/beta/search?q=a:mongodb-driver-sync[mongodb-driver-sync] artifact.
@@ -3085,4 +3085,5 @@ class GridFsClient {
 
 `GridFsOperations` extends `ResourcePatternResolver` and lets the `GridFsTemplate` (for example) to be plugged into an `ApplicationContext` to read Spring Config files from MongoDB database.
 
+include::tailable-cursors.adoc[]
 include::change-streams.adoc[]

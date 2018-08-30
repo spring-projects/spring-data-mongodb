@@ -10,7 +10,7 @@
 * <<mongo.mongo-3.validation,`validator` support for collections>>.
 * <<mongo.jsonSchema,`$jsonSchema` support>> for queries and collection creation.
 * <<change-streams, Change Stream support>> for imperative and reactive drivers.
-* Tailable cursors for imperative driver.
+* <<tailable-cursors.sync, Tailable cursors>> for imperative driver.
 * <<mongo.sessions, MongoDB 3.6 Session>> support for the imperative and reactive Template APIs.
 * <<mongo.transactions, MongoDB 4.0 Transaction>> support and a MongoDB-specific transaction manager implementation.
 * <<mongodb.repositories.queries.sort,Default sort specifications for repository query methods>> using `@Query(sort=…)`.
