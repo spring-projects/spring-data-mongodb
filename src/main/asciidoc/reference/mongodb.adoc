@@ -29,7 +29,7 @@ To create a Spring project in STS:
 . Go to File -> New -> Spring Template Project -> Simple Spring Utility Project, and press Yes when prompted. Then enter a project and a package name, such as `org.spring.mongodb.example`.
 .Add the following to the pom.xml files `dependencies` element:
 +
-[source,xml]
+[source,xml,subs="+attributes"]
 ----
 <dependencies>
 
@@ -45,7 +45,7 @@ To create a Spring project in STS:
 ----
 . Change the version of Spring in the pom.xml to be
 +
-[source,xml]
+[source,xml,subs="+attributes"]
 ----
 <spring.framework.version>{springVersion}</spring.framework.version>
 ----
