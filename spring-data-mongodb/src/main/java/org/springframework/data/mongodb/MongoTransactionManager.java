@@ -51,8 +51,8 @@ import com.mongodb.client.ClientSession;
  * By default failure of a {@literal commit} operation raises a {@link TransactionSystemException}. One may override
  * {@link #doCommit(MongoTransactionObject)} to implement the
  * <a href="https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation">Retry Commit Operation</a>
- * behaviour as outlined in the MongoDB reference manual.
- * 
+ * behavior as outlined in the MongoDB reference manual.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @currentRead Shadow's Edge - Brent Weeks
@@ -75,7 +75,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * <p />
 	 * Optionally it is possible to set default {@link TransactionOptions transaction options} defining
 	 * {@link com.mongodb.ReadConcern} and {@link com.mongodb.WriteConcern}.
-	 * 
+	 *
 	 * @see #setDbFactory(MongoDbFactory)
 	 * @see #setTransactionSynchronization(int)
 	 */
@@ -227,8 +227,9 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * } while (--retries > 0);
 	 *     </pre>
 	 * </code>
-	 * 
+	 *
 	 * @param transactionObject never {@literal null}.
+	 * @throws Exception in case of transaction errors.
 	 */
 	protected void doCommit(MongoTransactionObject transactionObject) throws Exception {
 		transactionObject.commitTransaction();

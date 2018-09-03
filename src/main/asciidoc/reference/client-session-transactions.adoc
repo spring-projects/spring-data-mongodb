@@ -317,11 +317,11 @@ structures in place.
 
 *Transient Errors*
 
-MongoDB can add special labels to errors raised during a transactional execution. Those may indicate transient failures
-that might vanish by simply retrying the operation.
+MongoDB can add special labels to errors raised during transactional execution. Those may indicate transient failures
+that might vanish by merely retrying the operation.
 We highly recommend https://github.com/spring-projects/spring-retry[Spring Retry] for those purposes. Nevertheless
 one may override `MongoTransactionManager#doCommit(MongoTransactionObject)` to implement a https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation[Retry Commit Operation]
-behaviour as outlined in the MongoDB reference manual.
+behavior as outlined in the MongoDB reference manual.
 
 *Count*
 
