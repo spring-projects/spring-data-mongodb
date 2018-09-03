@@ -315,6 +315,14 @@ MongoDB does *not* support collection operations, such as collection creation, w
 affects the on the fly collection creation that happens on first usage. Therefore make sure to have all required
 structures in place.
 
+*Transient Errors*
+
+MongoDB can add special labels to errors raised during a transactional execution. Those may indicate transient failures
+that might vanish by simply retrying the operation.
+We highly recommend https://github.com/spring-projects/spring-retry[Spring Retry] for those purposes. Nevertheless
+one may override `MongoTransactionManager#doCommit(MongoTransactionObject)` to implement a https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation[Retry Commit Operation]
+behaviour as outlined in the MongoDB reference manual.
+
 *Count*
 
 MongoDB `count` operates upon collection statistics which may not reflect the actual situation within a transaction.
