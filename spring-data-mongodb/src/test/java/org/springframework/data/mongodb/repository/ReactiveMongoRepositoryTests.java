@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.offset;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -227,6 +228,19 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		disposable.dispose();
 	}
 
+	@Test // DATAMONGO-2080
+	public void shouldUseTailableCursorWithDtoProjection() {
+
+		StepVerifier.create(template.dropCollection(Capped.class) //
+				.then(template.createCollection(Capped.class, //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
+		StepVerifier.create(cappedRepository.findDtoProjectionByKey("value")).expectNextCount(1).thenCancel().verify();
+	}
+
 	@Test // DATAMONGO-1444
 	public void findsPeopleByLocationWithinCircle() {
 
@@ -337,6 +351,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		Mono<Person> findOneByLastname(String lastname);
 
+		Mono<DtoProjection> findOneProjectedByLastname(String lastname);
+
 		Mono<Person> findByLastname(Publisher<String> lastname);
 
 		Flux<Person> findByLastnameIn(Publisher<String> lastname);
@@ -376,6 +392,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		@Tailable
 		Flux<CappedProjection> findProjectionByKey(String key);
+
+		@Tailable
+		Flux<DtoProjection> findDtoProjectionByKey(String key);
 	}
 
 	@Document
@@ -394,5 +413,11 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 	interface CappedProjection {
 		double getRandom();
+	}
+
+	@Data
+	static class DtoProjection {
+		String id;
+		double unknown;
 	}
 }

@@ -32,7 +32,6 @@ import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecu
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.GeoNearExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingConverter;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingExecution;
-import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.TailExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
@@ -146,7 +145,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(operations, accessor, method.getReturnType());
 		} else if (isTailable(method)) {
-			return new TailExecution(operations, accessor.getPageable());
+			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).tail();
 		} else if (method.isCollectionQuery()) {
 			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).all();
 		} else if (isCountQuery()) {
