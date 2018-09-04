@@ -171,6 +171,15 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 		/*
 		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.TerminatingFind#tail()
+		 */
+		@Override
+		public Flux<T> tail() {
+			return doFind(template.new TailingQueryFindPublisherPreparer(query, domainType));
+		}
+
+		/*
+		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery#near(org.springframework.data.mongodb.core.query.NearQuery)
 		 */
 		@Override

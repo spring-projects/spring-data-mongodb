@@ -86,6 +86,21 @@ public interface ReactiveFindOperation {
 		Flux<T> all();
 
 		/**
+		 * Get all matching elements using a tailable cursor.
+		 * <p />
+		 * The stream may become dead, or invalid, if either the query returns no match or the cursor returns the document
+		 * at the "end" of the collection and then the application deletes that document.
+		 * <p/>
+		 * A stream that is no longer in use must be {@link reactor.core.Disposable#dispose()} disposed} otherwise the
+		 * streams will linger and exhaust resources. <br/>
+		 * <strong>NOTE:</strong> Requires a capped collection.
+		 *
+		 * @return never {@literal null}.
+		 * @since 2.1
+		 */
+		Flux<T> tail();
+
+		/**
 		 * Get the number of matching elements.
 		 *
 		 * @return {@link Mono} emitting total number of matching elements. Never {@literal null}.
