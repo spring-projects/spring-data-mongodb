@@ -119,7 +119,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		String collection = method.getEntityInformation().getCollectionName();
 
-		ReactiveMongoQueryExecution execution = getExecution(query, parameterAccessor,
+		ReactiveMongoQueryExecution execution = getExecution(parameterAccessor,
 				new ResultProcessingConverter(processor, operations, instantiators), find);
 
 		return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
@@ -128,12 +128,11 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	/**
 	 * Returns the execution instance to use.
 	 *
-	 * @param query must not be {@literal null}.
 	 * @param accessor must not be {@literal null}.
 	 * @param resultProcessing must not be {@literal null}.
 	 * @return
 	 */
-	private ReactiveMongoQueryExecution getExecution(Query query, MongoParameterAccessor accessor,
+	private ReactiveMongoQueryExecution getExecution(MongoParameterAccessor accessor,
 			Converter<Object, Object> resultProcessing, FindWithQuery<?> operation) {
 		return new ResultProcessingExecution(getExecutionToWrap(accessor, operation), resultProcessing);
 	}
