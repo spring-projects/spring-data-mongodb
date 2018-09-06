@@ -86,16 +86,18 @@ public interface ReactiveFindOperation {
 		Flux<T> all();
 
 		/**
-		 * Get all matching elements using a tailable cursor.
+		 * Get all matching elements using a {@link com.mongodb.CursorType#TailableAwait tailable cursor}. The stream will
+		 * not be completed unless the {@link org.reactivestreams.Subscription} is
+		 * {@link org.reactivestreams.Subscription#cancel() canceled}.
 		 * <p />
-		 * The stream may become dead, or invalid, if either the query returns no match or the cursor returns the document
-		 * at the "end" of the collection and then the application deletes that document.
-		 * <p/>
+		 * However, the stream may become dead, or invalid, if either the query returns no match or the cursor returns the
+		 * document at the "end" of the collection and then the application deletes that document.
+		 * <p />
 		 * A stream that is no longer in use must be {@link reactor.core.Disposable#dispose()} disposed} otherwise the
 		 * streams will linger and exhaust resources. <br/>
 		 * <strong>NOTE:</strong> Requires a capped collection.
 		 *
-		 * @return never {@literal null}.
+		 * @return the {@link Flux} emitting converted objects.
 		 * @since 2.1
 		 */
 		Flux<T> tail();

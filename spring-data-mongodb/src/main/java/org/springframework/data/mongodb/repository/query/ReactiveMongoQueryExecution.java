@@ -52,23 +52,6 @@ interface ReactiveMongoQueryExecution {
 	Object execute(Query query, Class<?> type, String collection);
 
 	/**
-	 * {@link ReactiveMongoQueryExecution} for collection returning queries using tailable cursors.
-	 *
-	 * @author Mark Paluch
-	 */
-	@RequiredArgsConstructor
-	final class TailExecution implements ReactiveMongoQueryExecution {
-
-		private final @NonNull ReactiveMongoOperations operations;
-		private final Pageable pageable;
-
-		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return operations.tail(query.with(pageable), type, collection);
-		}
-	}
-
-	/**
 	 * {@link MongoQueryExecution} to execute geo-near queries.
 	 *
 	 * @author Mark Paluch

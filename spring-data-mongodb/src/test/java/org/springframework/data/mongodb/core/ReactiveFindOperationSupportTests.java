@@ -71,7 +71,7 @@ public class ReactiveFindOperationSupportTests {
 	public void setUp() {
 
 		blocking = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableFindOperationSupportTests"));
-		blocking.dropCollection(STAR_WARS);
+		recreateCollection(STAR_WARS, false);
 
 		insertObjects();
 
@@ -79,6 +79,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	void insertObjects() {
+
 		han = new Person();
 		han.firstname = "han";
 		han.lastname = "solo";
@@ -91,6 +92,18 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.save(han);
 		blocking.save(luke);
+	}
+
+	void recreateCollection(String collectionName, boolean capped) {
+
+		blocking.dropCollection(STAR_WARS);
+
+		CollectionOptions options = CollectionOptions.empty();
+		if (capped) {
+			options = options.capped().size(1024 * 1024);
+		}
+
+		blocking.createCollection(STAR_WARS, options);
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
@@ -304,8 +317,7 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-2080
 	public void tail() throws InterruptedException {
 
-		blocking.dropCollection(STAR_WARS);
-		blocking.createCollection(STAR_WARS, CollectionOptions.empty().capped().size(1024 * 1024));
+		recreateCollection(STAR_WARS, true);
 		insertObjects();
 
 		BlockingQueue<Person> collector = new LinkedBlockingQueue<>();
@@ -325,7 +337,7 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.save(chewbacca);
 
-		assertThat(collector.poll(10, TimeUnit.SECONDS)).isEqualTo(chewbacca);
+		assertThat(collector.poll(1, TimeUnit.SECONDS)).isEqualTo(chewbacca);
 
 		subscription.dispose();
 	}
@@ -333,12 +345,11 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-2080
 	public void tailWithProjection() {
 
-		blocking.dropCollection(STAR_WARS);
-		blocking.createCollection(STAR_WARS, CollectionOptions.empty().capped().size(1024 * 1024));
+		recreateCollection(STAR_WARS, true);
 		insertObjects();
 
-		StepVerifier
-				.create(template.query(Person.class).as(Jedi.class).matching(query(where("firstname").is("luke"))).tail())
+		template.query(Person.class).as(Jedi.class).matching(query(where("firstname").is("luke"))).tail()
+				.as(StepVerifier::create) //
 				.consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
 				.thenCancel() //
 				.verify();
@@ -347,12 +358,11 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-2080
 	public void tailWithClosedInterfaceProjection() {
 
-		blocking.dropCollection(STAR_WARS);
-		blocking.createCollection(STAR_WARS, CollectionOptions.empty().capped().size(1024 * 1024));
+		recreateCollection(STAR_WARS, true);
 		insertObjects();
 
-		StepVerifier.create(
-				template.query(Person.class).as(PersonProjection.class).matching(query(where("firstname").is("luke"))).all())
+		template.query(Person.class).as(PersonProjection.class).matching(query(where("firstname").is("luke"))).tail()
+				.as(StepVerifier::create) //
 				.consumeNextWith(it -> {
 
 					assertThat(it).isInstanceOf(PersonProjection.class);
@@ -365,12 +375,12 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-2080
 	public void tailWithOpenInterfaceProjection() {
 
-		blocking.dropCollection(STAR_WARS);
-		blocking.createCollection(STAR_WARS, CollectionOptions.empty().capped().size(1024 * 1024));
+		recreateCollection(STAR_WARS, true);
 		insertObjects();
 
-		StepVerifier.create(template.query(Person.class).as(PersonSpELProjection.class)
-				.matching(query(where("firstname").is("luke"))).tail()).consumeNextWith(it -> {
+		template.query(Person.class).as(PersonSpELProjection.class).matching(query(where("firstname").is("luke"))).tail()
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
 
 					assertThat(it).isInstanceOf(PersonSpELProjection.class);
 					assertThat(it.getName()).isEqualTo("luke");

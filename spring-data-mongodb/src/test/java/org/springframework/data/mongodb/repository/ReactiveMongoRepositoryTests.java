@@ -231,14 +231,14 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	@Test // DATAMONGO-2080
 	public void shouldUseTailableCursorWithDtoProjection() {
 
-		StepVerifier.create(template.dropCollection(Capped.class) //
+		template.dropCollection(Capped.class) //
 				.then(template.createCollection(Capped.class, //
-						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
-				.expectNextCount(1) //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped())) //
+				.as(StepVerifier::create).expectNextCount(1) //
 				.verifyComplete();
 
-		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
-		StepVerifier.create(cappedRepository.findDtoProjectionByKey("value")).expectNextCount(1).thenCancel().verify();
+		template.insert(new Capped("value", Math.random())).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		cappedRepository.findDtoProjectionByKey("value").as(StepVerifier::create).expectNextCount(1).thenCancel().verify();
 	}
 
 	@Test // DATAMONGO-1444
