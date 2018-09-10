@@ -1,6 +1,20 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.15.RELEASE (2018-09-10)
+-----------------------------------------------
+* DATAMONGO-2076 - Fix property substitution in getting started section of reference docs.
+* DATAMONGO-2057 - Guard MongoDbUtils integration tests against MongoDB 4.0 changes.
+* DATAMONGO-2055 - Allow position modifier to be negative using push at position on Update.
+* DATAMONGO-2051 - Add support for SCRAM-SHA-256 authentication mechanism to MongoCredentialPropertyEditor.
+* DATAMONGO-2050 - Add support for index selection via key attribute for $geoNear aggregation.
+* DATAMONGO-2049 - Add support for MongoDB 4.0 string aggregation operators.
+* DATAMONGO-2048 - Add support for MongoDB 4.0 type conversion aggregation operators.
+* DATAMONGO-2047 - Update $dateToString and $dateFromString aggregation operators to match MongoDB 4.0 changes.
+* DATAMONGO-2043 - MappingMongoConverter.write(…) does not consider Document a native type and adds _class attribute.
+* DATAMONGO-2035 - Release 1.10.15 (Ingalls SR15).
+
+
 Changes in version 2.1.0.RC2 (2018-08-20)
 -----------------------------------------
 * DATAMONGO-2055 - Allow position modifier to be negative using push at position on Update.
