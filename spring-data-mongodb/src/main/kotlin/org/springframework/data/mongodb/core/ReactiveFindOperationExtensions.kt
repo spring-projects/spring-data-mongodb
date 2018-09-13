@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ inline fun <reified T : Any> ReactiveFindOperation.query(): ReactiveFindOperatio
  * @author Mark Paluch
  * @since 2.0
  */
-fun <T : Any> ReactiveFindOperation.FindWithProjection<T>.asType(resultType: KClass<T>): ReactiveFindOperation.FindWithQuery<T> =
+fun <T : Any> ReactiveFindOperation.FindWithProjection<*>.asType(resultType: KClass<T>): ReactiveFindOperation.FindWithQuery<T> =
 		`as`(resultType.java)
 
 /**
@@ -50,7 +50,7 @@ fun <T : Any> ReactiveFindOperation.FindWithProjection<T>.asType(resultType: KCl
  * @author Mark Paluch
  * @since 2.0
  */
-inline fun <reified T : Any> ReactiveFindOperation.FindWithProjection<T>.asType(): ReactiveFindOperation.FindWithQuery<T> =
+inline fun <reified T : Any> ReactiveFindOperation.FindWithProjection<*>.asType(): ReactiveFindOperation.FindWithQuery<T> =
 		`as`(T::class.java)
 
 

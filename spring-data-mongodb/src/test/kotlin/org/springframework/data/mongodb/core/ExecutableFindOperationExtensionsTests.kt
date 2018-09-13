@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,18 +50,17 @@ class ExecutableFindOperationExtensionsTests {
         verify(operation).query(First::class.java)
     }
 
-    @Test // DATAMONGO-1689
+    @Test // DATAMONGO-1689, DATAMONGO-2086
     fun `ExecutableFindOperation#FindOperationWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
-        operationWithProjection.asType(First::class)
-        verify(operationWithProjection).`as`(First::class.java)
+        operationWithProjection.asType(User::class)
+        verify(operationWithProjection).`as`(User::class.java)
     }
 
-    @Test // DATAMONGO-1689
+    @Test // DATAMONGO-1689, DATAMONGO-2086
     fun `ExecutableFindOperation#FindOperationWithProjection#asType() with reified type parameter extension should call its Java counterpart`() {
 
-        operationWithProjection.asType()
-        verify(operationWithProjection).`as`(First::class.java)
+        operationWithProjection.asType<User>()
+        verify(operationWithProjection).`as`(User::class.java)
     }
-
 }
