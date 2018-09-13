@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,6 @@ fun <T : Any> ExecutableFindOperation.query(entityClass: KClass<T>): ExecutableF
 inline fun <reified T : Any> ExecutableFindOperation.query(): ExecutableFindOperation.ExecutableFind<T> =
 		query(T::class.java)
 
-
 /**
  * Extension for [ExecutableFindOperation.FindWithProjection. as] providing a [KClass] based variant.
  *
@@ -45,7 +44,7 @@ inline fun <reified T : Any> ExecutableFindOperation.query(): ExecutableFindOper
  * @author Mark Paluch
  * @since 2.0
  */
-fun <T : Any> ExecutableFindOperation.FindWithProjection<T>.asType(resultType: KClass<T>): ExecutableFindOperation.FindWithQuery<T> =
+fun <T : Any> ExecutableFindOperation.FindWithProjection<*>.asType(resultType: KClass<T>): ExecutableFindOperation.FindWithQuery<T> =
 		`as`(resultType.java)
 
 /**
@@ -55,7 +54,7 @@ fun <T : Any> ExecutableFindOperation.FindWithProjection<T>.asType(resultType: K
  * @author Mark Paluch
  * @since 2.0
  */
-inline fun <reified T : Any> ExecutableFindOperation.FindWithProjection<T>.asType(): ExecutableFindOperation.FindWithQuery<T> =
+inline fun <reified T : Any> ExecutableFindOperation.FindWithProjection<*>.asType(): ExecutableFindOperation.FindWithQuery<T> =
 		`as`(T::class.java)
 
 /**
