@@ -30,6 +30,7 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Khaled Baklouti
  */
 @NoRepositoryBean
 public interface MongoRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
@@ -39,7 +40,7 @@ public interface MongoRepository<T, ID> extends PagingAndSortingRepository<T, ID
 	 * @see org.springframework.data.repository.CrudRepository#saveAll(java.lang.Iterable)
 	 */
 	@Override
-	<S extends T> List<S> saveAll(Iterable<S> entites);
+	<S extends T> List<S> saveAll(Iterable<S> entities);
 
 	/*
 	 * (non-Javadoc)
