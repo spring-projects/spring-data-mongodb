@@ -72,4 +72,11 @@ class ReactiveFindOperationExtensionsTests {
 		distinctWithProjection.asType(User::class)
 		verify(distinctWithProjection).`as`(User::class.java)
 	}
+
+	@Test // DATAMONGO-2086
+	fun `ReactiveFind#DistinctWithProjection#asType() with reified type parameter extension should call its Java counterpart`() {
+
+		distinctWithProjection.asType<User>()
+		verify(distinctWithProjection).`as`(User::class.java)
+	}
 }

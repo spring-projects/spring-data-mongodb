@@ -65,3 +65,12 @@ inline fun <reified T : Any> ExecutableFindOperation.FindWithProjection<*>.asTyp
  */
 fun <T : Any> ExecutableFindOperation.DistinctWithProjection.asType(resultType: KClass<T>): ExecutableFindOperation.TerminatingDistinct<T> =
 		`as`(resultType.java);
+
+/**
+ * Extension for [ExecutableFindOperation.DistinctWithProjection. as] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+inline fun <reified T : Any> ExecutableFindOperation.DistinctWithProjection.asType(): ExecutableFindOperation.DistinctWithProjection =
+		`as`(T::class.java)

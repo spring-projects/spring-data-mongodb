@@ -61,3 +61,12 @@ inline fun <reified T : Any> ReactiveFindOperation.FindWithProjection<*>.asType(
  */
 fun <T : Any> ReactiveFindOperation.DistinctWithProjection.asType(resultType: KClass<T>): ReactiveFindOperation.TerminatingDistinct<T> =
 		`as`(resultType.java);
+
+/**
+ * Extension for [ReactiveFindOperation.DistinctWithProjection. as] leveraging reified type parameters.
+ *
+ * @author Christoph Strobl
+ * @since 2.1
+ */
+inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType(): ReactiveFindOperation.DistinctWithProjection =
+		`as`(T::class.java)

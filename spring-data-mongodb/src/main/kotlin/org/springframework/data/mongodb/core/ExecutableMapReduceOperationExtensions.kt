@@ -41,7 +41,7 @@ inline fun <reified T : Any> ExecutableMapReduceOperation.mapReduce(): Executabl
  * @author Christoph Strobl
  * @since 2.1
  */
-fun <T : Any> ExecutableMapReduceOperation.MapReduceWithProjection<T>.asType(resultType: KClass<T>): ExecutableMapReduceOperation.MapReduceWithQuery<T> =
+fun <T : Any> ExecutableMapReduceOperation.MapReduceWithProjection<*>.asType(resultType: KClass<T>): ExecutableMapReduceOperation.MapReduceWithQuery<T> =
 		`as`(resultType.java)
 
 /**
@@ -50,5 +50,5 @@ fun <T : Any> ExecutableMapReduceOperation.MapReduceWithProjection<T>.asType(res
  * @author Christoph Strobl
  * @since 2.1
  */
-inline fun <reified T : Any> ExecutableMapReduceOperation.MapReduceWithProjection<T>.asType(): ExecutableMapReduceOperation.MapReduceWithQuery<T> =
+inline fun <reified T : Any> ExecutableMapReduceOperation.MapReduceWithProjection<*>.asType(): ExecutableMapReduceOperation.MapReduceWithQuery<T> =
 		`as`(T::class.java)
