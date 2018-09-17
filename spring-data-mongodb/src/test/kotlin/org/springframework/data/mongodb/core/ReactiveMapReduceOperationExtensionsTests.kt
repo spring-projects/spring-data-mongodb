@@ -49,17 +49,17 @@ class ReactiveMapReduceOperationExtensionsTests {
 		verify(operation).mapReduce(First::class.java)
 	}
 
-	@Test // DATAMONGO-1929
+	@Test // DATAMONGO-1929, DATAMONGO-2086
 	fun `ReactiveMapReduceOperation#MapReduceWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
-		operationWithProjection.asType(First::class)
-		verify(operationWithProjection).`as`(First::class.java)
+		operationWithProjection.asType(User::class)
+		verify(operationWithProjection).`as`(User::class.java)
 	}
 
-	@Test // DATAMONGO-1929
+	@Test // DATAMONGO-1929, DATAMONGO-2086
 	fun `ReactiveMapReduceOperation#MapReduceWithProjection#asType() with reified type parameter extension should call its Java counterpart`() {
 
-		operationWithProjection.asType()
-		verify(operationWithProjection).`as`(First::class.java)
+		operationWithProjection.asType<User>()
+		verify(operationWithProjection).`as`(User::class.java)
 	}
 }

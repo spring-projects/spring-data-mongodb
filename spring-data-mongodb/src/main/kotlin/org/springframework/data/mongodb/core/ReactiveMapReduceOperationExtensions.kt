@@ -41,7 +41,7 @@ inline fun <reified T : Any> ReactiveMapReduceOperation.mapReduce(): ReactiveMap
  * @author Christoph Strobl
  * @since 2.1
  */
-fun <T : Any> ReactiveMapReduceOperation.MapReduceWithProjection<T>.asType(resultType: KClass<T>): ReactiveMapReduceOperation.MapReduceWithQuery<T> =
+fun <T : Any> ReactiveMapReduceOperation.MapReduceWithProjection<*>.asType(resultType: KClass<T>): ReactiveMapReduceOperation.MapReduceWithQuery<T> =
 		`as`(resultType.java)
 
 /**
@@ -50,5 +50,5 @@ fun <T : Any> ReactiveMapReduceOperation.MapReduceWithProjection<T>.asType(resul
  * @author Christoph Strobl
  * @since 2.1
  */
-inline fun <reified T : Any> ReactiveMapReduceOperation.MapReduceWithProjection<T>.asType(): ReactiveMapReduceOperation.MapReduceWithQuery<T> =
+inline fun <reified T : Any> ReactiveMapReduceOperation.MapReduceWithProjection<*>.asType(): ReactiveMapReduceOperation.MapReduceWithQuery<T> =
 		`as`(T::class.java)
