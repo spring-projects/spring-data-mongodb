@@ -1,6 +1,22 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.0.RELEASE (2018-09-21)
+---------------------------------------------
+* DATAMONGO-2091 - Upgrade to MongoDB Java Driver 3.8.2 and Reactive Streams Driver 1.9.2.
+* DATAMONGO-2090 - Include documentation about Object Mapping Fundamentals.
+* DATAMONGO-2087 - Typo in MongoRepository.
+* DATAMONGO-2086 - Kotlin Fluent API extensions do not allow projections with find queries.
+* DATAMONGO-2080 - DTO projections with reactive @Tailable query methods fail with IllegalArgumentException: Property must not be null.
+* DATAMONGO-2078 - Update reference documentation on tailable cursors with the sync MongoDB Java driver.
+* DATAMONGO-2076 - Fix property substitution in getting started section of reference docs.
+* DATAMONGO-2075 - Open up MongoTransaction manager to allow transaction commit retry..
+* DATAMONGO-2069 - Required dependency 'mysema-commons-lang'.
+* DATAMONGO-2065 - Make sure that MongoTemplate.doSave(…) calls local populateIdIfNecessary(…) to allow customization.
+* DATAMONGO-2064 - Upgrade to MongoDB Java Driver 3.8.1.
+* DATAMONGO-2061 - Release 2.1 GA (Lovelace).
+
+
 Changes in version 2.0.10.RELEASE (2018-09-10)
 ----------------------------------------------
 * DATAMONGO-2076 - Fix property substitution in getting started section of reference docs.
