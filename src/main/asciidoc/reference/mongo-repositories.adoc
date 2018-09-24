@@ -34,7 +34,7 @@ Note that the domain type shown in the preceding example has a property named `i
 ====
 [source]
 ----
-public interface PersonRepository extends PagingAndSortingRepository<Person, Long> {
+public interface PersonRepository extends PagingAndSortingRepository<Person, String> {
 
   // additional custom query methods go here
 }
