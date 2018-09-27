@@ -75,6 +75,7 @@ import org.w3c.dom.Element;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Zied Yaich
  */
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
@@ -211,7 +212,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder
 				.genericBeanDefinition(MongoMappingContext.class);
 
-		Set<String> classesToAdd = getInititalEntityClasses(element);
+		Set<String> classesToAdd = getInitialEntityClasses(element);
 
 		if (classesToAdd != null) {
 			mappingContextBuilder.addPropertyValue("initialEntitySet", classesToAdd);
@@ -304,7 +305,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return null;
 	}
 
-	private static Set<String> getInititalEntityClasses(Element element) {
+	private static Set<String> getInitialEntityClasses(Element element) {
 
 		String basePackage = element.getAttribute(BASE_PACKAGE);
 
