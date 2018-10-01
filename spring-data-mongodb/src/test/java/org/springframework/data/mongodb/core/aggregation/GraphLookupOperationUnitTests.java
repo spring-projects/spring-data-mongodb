@@ -133,4 +133,40 @@ public class GraphLookupOperationUnitTests {
 		assertThat(dbObject, is(JSON.parse("{ $graphLookup : { from: \"employees\", startWith: { $literal: \"hello\"}, "
 				+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
 	}
+
+	@Test // DATAMONGO-2096
+	public void connectFromShouldUseTargetFieldInsteadOfAlias() {
+
+		AggregationOperation graphLookupOperation = Aggregation.graphLookup("user").startWith("contacts.userId")
+				.connectFrom("contacts.userId").connectTo("_id").depthField("numConnections").as("connections");
+
+		DBObject document = graphLookupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(document, is(JSON.parse(
+				"{ \"$graphLookup\" : { \"from\" : \"user\", \"startWith\" : \"$contacts.userId\", \"connectFromField\" : \"contacts.userId\", \"connectToField\" : \"_id\", \"as\" : \"connections\", \"depthField\" : \"numConnections\" } }")));
+	}
+
+	@Test // DATAMONGO-2096
+	public void connectToShouldUseTargetFieldInsteadOfAlias() {
+
+		AggregationOperation graphLookupOperation = Aggregation.graphLookup("user").startWith("contacts.userId")
+				.connectFrom("userId").connectTo("connectto.field").depthField("numConnections").as("connections");
+
+		DBObject document = graphLookupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(document, is(JSON.parse(
+				"{ \"$graphLookup\" : { \"from\" : \"user\", \"startWith\" : \"$contacts.userId\", \"connectFromField\" : \"userId\", \"connectToField\" : \"connectto.field\", \"as\" : \"connections\", \"depthField\" : \"numConnections\" } }")));
+	}
+
+	@Test // DATAMONGO-2096
+	public void depthFieldShouldUseTargetFieldInsteadOfAlias() {
+
+		AggregationOperation graphLookupOperation = Aggregation.graphLookup("user").startWith("contacts.userId")
+				.connectFrom("contacts.userId").connectTo("_id").depthField("foo.bar").as("connections");
+
+		DBObject document = graphLookupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(document, is(JSON.parse(
+				"{ \"$graphLookup\" : { \"from\" : \"user\", \"startWith\" : \"$contacts.userId\", \"connectFromField\" : \"contacts.userId\", \"connectToField\" : \"_id\", \"as\" : \"connections\", \"depthField\" : \"foo.bar\" } }")));
+	}
 }

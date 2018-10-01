@@ -104,8 +104,8 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 		graphLookup.put("startWith", mappedStartWith.size() == 1 ? mappedStartWith.iterator().next() : mappedStartWith);
 
-		graphLookup.put("connectFromField", connectFrom.getName());
-		graphLookup.put("connectToField", connectTo.getName());
+		graphLookup.put("connectFromField", connectFrom.getTarget());
+		graphLookup.put("connectToField", connectTo.getTarget());
 		graphLookup.put("as", as.getName());
 
 		if (maxDepth != null) {
@@ -113,7 +113,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		}
 
 		if (depthField != null) {
-			graphLookup.put("depthField", depthField.getName());
+			graphLookup.put("depthField", depthField.getTarget());
 		}
 
 		if (restrictSearchWithMatch != null) {
