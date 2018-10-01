@@ -24,10 +24,6 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
-
 /**
  * Unit tests for {@link GraphLookupOperation}.
  *
@@ -104,8 +100,9 @@ public class GraphLookupOperationUnitTests {
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(document,
-				is(Document.parse("{ $graphLookup : { from: \"employees\", startWith: [\"$reportsTo\", { $literal: \"$boss\"}], "
-						+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
+				is(Document
+						.parse("{ $graphLookup : { from: \"employees\", startWith: [\"$reportsTo\", { $literal: \"$boss\"}], "
+								+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1551
@@ -133,5 +130,41 @@ public class GraphLookupOperationUnitTests {
 
 		assertThat(document, is(Document.parse("{ $graphLookup : { from: \"employees\", startWith: { $literal: \"hello\"}, "
 				+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
+	}
+
+	@Test // DATAMONGO-2096
+	public void connectFromShouldUseTargetFieldInsteadOfAlias() {
+
+		AggregationOperation graphLookupOperation = Aggregation.graphLookup("user").startWith("contacts.userId")
+				.connectFrom("contacts.userId").connectTo("_id").depthField("numConnections").as("connections");
+
+		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(document, is(Document.parse(
+				"{ \"$graphLookup\" : { \"from\" : \"user\", \"startWith\" : \"$contacts.userId\", \"connectFromField\" : \"contacts.userId\", \"connectToField\" : \"_id\", \"as\" : \"connections\", \"depthField\" : \"numConnections\" } }")));
+	}
+
+	@Test // DATAMONGO-2096
+	public void connectToShouldUseTargetFieldInsteadOfAlias() {
+
+		AggregationOperation graphLookupOperation = Aggregation.graphLookup("user").startWith("contacts.userId")
+				.connectFrom("userId").connectTo("connectto.field").depthField("numConnections").as("connections");
+
+		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(document, is(Document.parse(
+				"{ \"$graphLookup\" : { \"from\" : \"user\", \"startWith\" : \"$contacts.userId\", \"connectFromField\" : \"userId\", \"connectToField\" : \"connectto.field\", \"as\" : \"connections\", \"depthField\" : \"numConnections\" } }")));
+	}
+
+	@Test // DATAMONGO-2096
+	public void depthFieldShouldUseTargetFieldInsteadOfAlias() {
+
+		AggregationOperation graphLookupOperation = Aggregation.graphLookup("user").startWith("contacts.userId")
+				.connectFrom("contacts.userId").connectTo("_id").depthField("foo.bar").as("connections");
+
+		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(document, is(Document.parse(
+				"{ \"$graphLookup\" : { \"from\" : \"user\", \"startWith\" : \"$contacts.userId\", \"connectFromField\" : \"contacts.userId\", \"connectToField\" : \"_id\", \"as\" : \"connections\", \"depthField\" : \"foo.bar\" } }")));
 	}
 }
