@@ -50,6 +50,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -207,6 +208,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (conversions.hasCustomReadTarget(bson.getClass(), rawType)) {
 			return conversionService.convert(bson, rawType);
+		} else if (bson instanceof DBObject && conversions.hasCustomReadTarget(Document.class, rawType)) {
+			return conversionService.convert(new Document(BsonUtils.asMap(bson)), rawType);
 		}
 
 		if (DBObject.class.isAssignableFrom(rawType)) {

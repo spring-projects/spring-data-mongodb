@@ -28,6 +28,8 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -98,5 +100,22 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1690
 	public void findOneWithPredicateThrowsExceptionForNonUniqueResults() {
 		repository.findOne(person.firstname.contains("e"));
+	}
+
+	@Test // DATAMONGO-2101
+	public void readEntityWithGeoJsonValue() {
+
+		Address adr1 = new Address("Hauptplatz", "4020", "Linz");
+		adr1.setLocation(new GeoJsonPoint(48.3063548, 14.2851337));
+
+		Person person1 = new Person("Max", "The Mighty");
+		person1.setAddress(adr1);
+
+		operations.save(person1);
+
+		List<Person> result = new SpringDataMongodbQuery<>(operations, Person.class).where(person.firstname.eq("Max"))
+				.fetch();
+
+		assertThat(result).containsExactly(person1);
 	}
 }
