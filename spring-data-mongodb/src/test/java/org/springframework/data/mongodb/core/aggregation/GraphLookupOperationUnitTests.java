@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.core.Is.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
+
+import java.util.Arrays;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -50,8 +50,7 @@ public class GraphLookupOperationUnitTests {
 				.as("reportingHierarchy");
 
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(document,
-				isBsonObject().containing("$graphLookup.depthField", "depth").containing("$graphLookup.maxDepth", 42L));
+		assertThat(document).containsEntry("$graphLookup.depthField", "depth").containsEntry("$graphLookup.maxDepth", 42L);
 	}
 
 	@Test // DATAMONGO-1551
@@ -66,8 +65,7 @@ public class GraphLookupOperationUnitTests {
 				.as("reportingHierarchy");
 
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(document,
-				isBsonObject().containing("$graphLookup.restrictSearchWithMatch", new Document("key", "value")));
+		assertThat(document).containsEntry("$graphLookup.restrictSearchWithMatch", new Document("key", "value"));
 	}
 
 	@Test // DATAMONGO-1551
@@ -82,9 +80,9 @@ public class GraphLookupOperationUnitTests {
 
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(document,
-				is(Document.parse("{ $graphLookup : { from: \"employees\", startWith: [\"$reportsTo\", \"$boss\"], "
-						+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
+		assertThat(document)
+				.isEqualTo(Document.parse("{ $graphLookup : { from: \"employees\", startWith: [\"$reportsTo\", \"$boss\"], "
+						+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }"));
 	}
 
 	@Test // DATAMONGO-1551
@@ -99,10 +97,8 @@ public class GraphLookupOperationUnitTests {
 
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(document,
-				is(Document
-						.parse("{ $graphLookup : { from: \"employees\", startWith: [\"$reportsTo\", { $literal: \"$boss\"}], "
-								+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
+		assertThat(document).containsEntry("$graphLookup.startWith",
+				Arrays.asList("$reportsTo", new Document("$literal", "$boss")));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1551
@@ -128,8 +124,7 @@ public class GraphLookupOperationUnitTests {
 
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(document, is(Document.parse("{ $graphLookup : { from: \"employees\", startWith: { $literal: \"hello\"}, "
-				+ "connectFromField: \"reportsTo\", connectToField: \"name\", as: \"reportingHierarchy\" } }")));
+		assertThat(document).containsEntry("$graphLookup.startWith", new Document("$literal", "hello"));
 	}
 
 	@Test // DATAMONGO-2096
@@ -140,8 +135,7 @@ public class GraphLookupOperationUnitTests {
 
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(document, is(Document.parse(
-				"{ \"$graphLookup\" : { \"from\" : \"user\", \"startWith\" : \"$contacts.userId\", \"connectFromField\" : \"contacts.userId\", \"connectToField\" : \"_id\", \"as\" : \"connections\", \"depthField\" : \"numConnections\" } }")));
+		assertThat(document).containsEntry("$graphLookup.startWith", "$contacts.userId");
 	}
 
 	@Test // DATAMONGO-2096
@@ -152,8 +146,7 @@ public class GraphLookupOperationUnitTests {
 
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(document, is(Document.parse(
-				"{ \"$graphLookup\" : { \"from\" : \"user\", \"startWith\" : \"$contacts.userId\", \"connectFromField\" : \"userId\", \"connectToField\" : \"connectto.field\", \"as\" : \"connections\", \"depthField\" : \"numConnections\" } }")));
+		assertThat(document).containsEntry("$graphLookup.connectToField", "connectto.field");
 	}
 
 	@Test // DATAMONGO-2096
@@ -164,7 +157,6 @@ public class GraphLookupOperationUnitTests {
 
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(document, is(Document.parse(
-				"{ \"$graphLookup\" : { \"from\" : \"user\", \"startWith\" : \"$contacts.userId\", \"connectFromField\" : \"contacts.userId\", \"connectToField\" : \"_id\", \"as\" : \"connections\", \"depthField\" : \"foo.bar\" } }")));
+		assertThat(document).containsEntry("$graphLookup.depthField", "foo.bar");
 	}
 }
