@@ -1,6 +1,15 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.11.RELEASE (2018-10-15)
+----------------------------------------------
+* DATAMONGO-2101 - NoSuchMethodException: org.springframework.data.mongodb.core.geo.GeoJsonPoint.<init>().
+* DATAMONGO-2096 - Aggregation.graphLookup.**.connectFrom(String) does not handle nested field.
+* DATAMONGO-2087 - Typo in MongoRepository.
+* DATAMONGO-2086 - Kotlin Fluent API extensions do not allow projections with find queries.
+* DATAMONGO-2084 - Release 2.0.11 (Kay SR11).
+
+
 Changes in version 2.1.1.RELEASE (2018-10-15)
 ---------------------------------------------
 * DATAMONGO-2096 - Aggregation.graphLookup.**.connectFrom(String) does not handle nested field.
