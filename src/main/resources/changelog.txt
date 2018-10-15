@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.16.RELEASE (2018-10-15)
+-----------------------------------------------
+* DATAMONGO-2096 - Aggregation.graphLookup.**.connectFrom(String) does not handle nested field.
+* DATAMONGO-2083 - Release 1.10.16 (Ingalls SR16).
+
+
 Changes in version 2.0.11.RELEASE (2018-10-15)
 ----------------------------------------------
 * DATAMONGO-2101 - NoSuchMethodException: org.springframework.data.mongodb.core.geo.GeoJsonPoint.<init>().
