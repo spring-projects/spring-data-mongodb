@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.1.RELEASE (2018-10-15)
+---------------------------------------------
+* DATAMONGO-2096 - Aggregation.graphLookup.**.connectFrom(String) does not handle nested field.
+* DATAMONGO-2094 - Release 2.1.1 (Lovelace SR1).
+
+
 Changes in version 2.1.0.RELEASE (2018-09-21)
 ---------------------------------------------
 * DATAMONGO-2091 - Upgrade to MongoDB Java Driver 3.8.2 and Reactive Streams Driver 1.9.2.
