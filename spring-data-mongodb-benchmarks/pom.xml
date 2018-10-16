@@ -87,6 +87,7 @@
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
+					<useSystemClassLoader>false</useSystemClassLoader>
 					<testSourceDirectory>${project.build.sourceDirectory}</testSourceDirectory>
 					<testClassesDirectory>${project.build.outputDirectory}</testClassesDirectory>
 					<excludes>
