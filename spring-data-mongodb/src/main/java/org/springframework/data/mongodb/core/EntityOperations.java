@@ -242,6 +242,14 @@ class EntityOperations {
 		 * @return
 		 */
 		T getBean();
+
+		/**
+		 * Returns whether the entity is considered to be new.
+		 * 
+		 * @return
+		 * @since 2.1.2
+		 */
+		boolean isNew();
 	}
 
 	/**
@@ -386,6 +394,15 @@ class EntityOperations {
 		@Override
 		public T getBean() {
 			return map;
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.EntityOperations.Entity#isNew()
+		 */
+		@Override
+		public boolean isNew() {
+			return map.get(ID_FIELD) != null;
 		}
 	}
 
@@ -549,6 +566,15 @@ class EntityOperations {
 		public T getBean() {
 			return propertyAccessor.getBean();
 		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.EntityOperations.Entity#isNew()
+		 */
+		@Override
+		public boolean isNew() {
+			return entity.isNew(propertyAccessor.getBean());
+		}
 	}
 
 	private static class AdaptibleMappedEntity<T> extends MappedEntity<T> implements AdaptibleEntity<T> {
@@ -631,7 +657,9 @@ class EntityOperations {
 				return propertyAccessor.getBean();
 			}
 
-			propertyAccessor.setProperty(entity.getRequiredVersionProperty(), 0);
+			MongoPersistentProperty versionProperty = entity.getRequiredVersionProperty();
+
+			propertyAccessor.setProperty(versionProperty, versionProperty.getType().isPrimitive() ? 1 : 0);
 
 			return propertyAccessor.getBean();
 		}

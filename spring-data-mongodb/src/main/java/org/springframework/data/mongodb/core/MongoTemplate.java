@@ -1212,20 +1212,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> T doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
-		AdaptibleEntity<T> entity = operations.forEntity(objectToSave, mongoConverter.getConversionService());
-		T toSave = entity.initializeVersionProperty();
+		BeforeConvertEvent<T> event = new BeforeConvertEvent<>(objectToSave, collectionName);
+		T toConvert = maybeEmitEvent(event).getSource();
 
-		BeforeConvertEvent<T> event = new BeforeConvertEvent<>(toSave, collectionName);
-		toSave = maybeEmitEvent(event).getSource();
-
+		AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
 		entity.assertUpdateableIdIfNotSet();
 
+		T initialized = entity.initializeVersionProperty();
 		Document dbDoc = entity.toMappedDocument(writer).getDocument();
 
-		maybeEmitEvent(new BeforeSaveEvent<>(toSave, dbDoc, collectionName));
-		Object id = insertDocument(collectionName, dbDoc, toSave.getClass());
+		maybeEmitEvent(new BeforeSaveEvent<>(initialized, dbDoc, collectionName));
+		Object id = insertDocument(collectionName, dbDoc, initialized.getClass());
 
-		T saved = populateIdIfNecessary(toSave, id);
+		T saved = populateIdIfNecessary(initialized, id);
 		maybeEmitEvent(new AfterSaveEvent<>(saved, dbDoc, collectionName));
 
 		return saved;
@@ -1357,38 +1356,36 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@SuppressWarnings("unchecked")
 	private <T> T doSaveVersioned(AdaptibleEntity<T> source, String collectionName) {
 
-		Number number = source.getVersion();
-
-		if (number != null) {
-
-			// Create query for entity with the id and old version
-			Query query = source.getQueryForVersion();
-
-			// Bump version number
-			T toSave = source.incrementVersion();
-
-			toSave = maybeEmitEvent(new BeforeConvertEvent<T>(toSave, collectionName)).getSource();
-
-			source.assertUpdateableIdIfNotSet();
-
-			MappedDocument mapped = source.toMappedDocument(mongoConverter);
-
-			maybeEmitEvent(new BeforeSaveEvent<>(toSave, mapped.getDocument(), collectionName));
-			Update update = mapped.updateWithoutId();
-
-			UpdateResult result = doUpdate(collectionName, query, update, toSave.getClass(), false, false);
-
-			if (result.getModifiedCount() == 0) {
-				throw new OptimisticLockingFailureException(
-						String.format("Cannot save entity %s with version %s to collection %s. Has it been modified meanwhile?",
-								source.getId(), number, collectionName));
-			}
-			maybeEmitEvent(new AfterSaveEvent<>(toSave, mapped.getDocument(), collectionName));
-
-			return toSave;
+		if (source.isNew()) {
+			return (T) doInsert(collectionName, source.getBean(), this.mongoConverter);
 		}
 
-		return (T) doInsert(collectionName, source.getBean(), this.mongoConverter);
+		// Create query for entity with the id and old version
+		Query query = source.getQueryForVersion();
+
+		// Bump version number
+		T toSave = source.incrementVersion();
+
+		toSave = maybeEmitEvent(new BeforeConvertEvent<T>(toSave, collectionName)).getSource();
+
+		source.assertUpdateableIdIfNotSet();
+
+		MappedDocument mapped = source.toMappedDocument(mongoConverter);
+
+		maybeEmitEvent(new BeforeSaveEvent<>(toSave, mapped.getDocument(), collectionName));
+		Update update = mapped.updateWithoutId();
+
+		UpdateResult result = doUpdate(collectionName, query, update, toSave.getClass(), false, false);
+
+		if (result.getModifiedCount() == 0) {
+
+			throw new OptimisticLockingFailureException(
+					String.format("Cannot save entity %s with version %s to collection %s. Has it been modified meanwhile?",
+							source.getId(), source.getVersion(), collectionName));
+		}
+		maybeEmitEvent(new AfterSaveEvent<>(toSave, mapped.getDocument(), collectionName));
+
+		return toSave;
 	}
 
 	protected <T> T doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {

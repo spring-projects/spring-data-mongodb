@@ -15,11 +15,13 @@
  */
 package org.springframework.data.mongodb.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,15 +30,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.core.AuditablePerson;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**
@@ -51,6 +56,9 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 	@Autowired AuditablePersonRepository auditablePersonRepository;
 	@Autowired AuditorAware<AuditablePerson> auditorAware;
+	@Autowired MongoMappingContext context;
+	@Autowired MongoOperations operations;
+
 	AuditablePerson auditor;
 
 	@Configuration
@@ -107,6 +115,61 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		new AnnotationConfigApplicationContext(SimpleConfig.class);
 	}
 
+	@Test // DATAMONGO-2139
+	public void auditingWorksForVersionedEntityWithWrapperVersion() {
+
+		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
+				it -> it.version, //
+				auditablePersonRepository::save, //
+				null, 0L, 1L);
+	}
+
+	@Test // DATAMONGO-2139
+	public void auditingWorksForVersionedEntityWithSimpleVersion() {
+
+		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
+				it -> it.version, //
+				auditablePersonRepository::save, //
+				0L, 1L, 2L);
+	}
+
+	@Test // DATAMONGO-2139
+	public void auditingWorksForVersionedEntityWithWrapperVersionOnTemplate() {
+
+		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
+				it -> it.version, //
+				operations::save, //
+				null, 0L, 1L);
+	}
+
+	@Test // DATAMONGO-2139
+	public void auditingWorksForVersionedEntityWithSimpleVersionOnTemplate() {
+
+		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
+				it -> it.version, //
+				operations::save, //
+				0L, 1L, 2L);
+	}
+
+	private <T extends AuditablePerson> void verifyAuditingViaVersionProperty(T instance,
+			Function<T, Object> versionExtractor, Function<T, T> persister, Object... expectedValues) {
+
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(instance.getClass());
+
+		assertThat(versionExtractor.apply(instance)).isEqualTo(expectedValues[0]);
+		assertThat(entity.isNew(instance)).isTrue();
+
+		instance = auditablePersonRepository.save(instance);
+
+		assertThat(versionExtractor.apply(instance)).isEqualTo(expectedValues[1]);
+		assertThat(entity.isNew(instance)).isFalse();
+
+		instance = auditablePersonRepository.save(instance);
+
+		assertThat(versionExtractor.apply(instance)).isEqualTo(expectedValues[2]);
+		assertThat(entity.isNew(instance)).isFalse();
+	}
+
 	@Repository
 	static interface AuditablePersonRepository extends MongoRepository<AuditablePerson, String> {}
 
@@ -127,5 +190,13 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		protected String getDatabaseName() {
 			return "database";
 		}
+	}
+
+	static class VersionedAuditablePerson extends AuditablePerson {
+		@Version Long version;
+	}
+
+	static class SimpleVersionedAuditablePerson extends AuditablePerson {
+		@Version long version;
 	}
 }
