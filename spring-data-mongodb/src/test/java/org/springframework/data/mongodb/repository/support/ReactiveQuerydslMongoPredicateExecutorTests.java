@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
@@ -27,6 +28,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -303,14 +305,14 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-2182
+	@Test // DATAMONGO-2182, DATAMONGO-2265
 	public void translatesExceptionsCorrectly() {
 
 		ReactiveMongoOperations ops = new ReactiveMongoTemplate(dbFactory) {
 
 			@Override
-			protected MongoDatabase doGetDatabase() {
-				throw new MongoException(18, "Authentication Failed");
+			protected Mono<MongoDatabase> doGetDatabase() {
+				return Mono.error(new MongoException(18, "Authentication Failed"));
 			}
 		};
 

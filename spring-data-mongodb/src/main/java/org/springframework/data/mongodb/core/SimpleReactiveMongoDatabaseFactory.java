@@ -211,6 +211,15 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 			return delegate.withSession(session);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#isTransactionActive()
+		 */
+		@Override
+		public boolean isTransactionActive() {
+			return session != null && session.hasActiveTransaction();
+		}
+
 		private MongoDatabase decorateDatabase(MongoDatabase database) {
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}

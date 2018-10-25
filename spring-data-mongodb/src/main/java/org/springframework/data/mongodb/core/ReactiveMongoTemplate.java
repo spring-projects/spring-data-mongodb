@@ -63,6 +63,8 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.ReactiveMongoDatabaseUtils;
+import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
@@ -575,7 +577,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Flux.defer(() -> callback.doInDB(prepareDatabase(doGetDatabase()))).onErrorMap(translateException());
+		return Mono.defer(this::doGetDatabase).flatMapMany(database -> callback.doInDB(prepareDatabase(database)))
+				.onErrorMap(translateException());
 	}
 
 	/**
@@ -589,7 +592,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		return Mono.defer(() -> Mono.from(callback.doInDB(prepareDatabase(doGetDatabase()))))
+		return Mono.defer(this::doGetDatabase).flatMap(database -> Mono.from(callback.doInDB(prepareDatabase(database))))
 				.onErrorMap(translateException());
 	}
 
@@ -605,8 +608,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
 
-		Mono<MongoCollection<Document>> collectionPublisher = Mono
-				.fromCallable(() -> getAndPrepareCollection(doGetDatabase(), collectionName));
+		Mono<MongoCollection<Document>> collectionPublisher = doGetDatabase()
+				.map(database -> getAndPrepareCollection(database, collectionName));
 
 		return collectionPublisher.flatMapMany(callback::doInCollection).onErrorMap(translateException());
 	}
@@ -624,8 +627,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(callback, "ReactiveCollectionCallback must not be null!");
 
-		Mono<MongoCollection<Document>> collectionPublisher = Mono
-				.fromCallable(() -> getAndPrepareCollection(doGetDatabase(), collectionName));
+		Mono<MongoCollection<Document>> collectionPublisher = doGetDatabase()
+				.map(database -> getAndPrepareCollection(database, collectionName));
 
 		return collectionPublisher.flatMap(collection -> Mono.from(callback.doInCollection(collection)))
 				.onErrorMap(translateException());
@@ -680,7 +683,25 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#getCollection(java.lang.String)
 	 */
 	public MongoCollection<Document> getCollection(String collectionName) {
-		return execute((MongoDatabaseCallback<MongoCollection<Document>>) db -> db.getCollection(collectionName));
+
+		Assert.notNull(collectionName, "Collection name must not be null!");
+
+		try {
+			return this.mongoDatabaseFactory.getMongoDatabase().getCollection(collectionName);
+		} catch (RuntimeException e) {
+			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#getCollection(java.lang.String)
+	 */
+	public Mono<MongoCollection<Document>> getCollection2(final String collectionName) {
+
+		Assert.notNull(collectionName, "Collection name must not be null!");
+
+		return doGetDatabase().map(it -> it.getCollection(collectionName));
 	}
 
 	/*
@@ -732,11 +753,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	public MongoDatabase getMongoDatabase() {
-		return doGetDatabase();
+		return mongoDatabaseFactory.getMongoDatabase();
 	}
 
-	protected MongoDatabase doGetDatabase() {
-		return mongoDatabaseFactory.getMongoDatabase();
+	protected Mono<MongoDatabase> doGetDatabase() {
+		return ReactiveMongoDatabaseUtils.getDatabase(mongoDatabaseFactory, SessionSynchronization.ON_ACTUAL_TRANSACTION);
 	}
 
 	/*
@@ -2588,18 +2609,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 			return Flux.from(findPublisher).map(objectCallback::doWith);
 		});
-	}
-
-	private <T> T execute(MongoDatabaseCallback<T> action) {
-
-		Assert.notNull(action, "MongoDatabaseCallback must not be null!");
-
-		try {
-			MongoDatabase db = this.doGetDatabase();
-			return action.doInDatabase(db);
-		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
-		}
 	}
 
 	/**
