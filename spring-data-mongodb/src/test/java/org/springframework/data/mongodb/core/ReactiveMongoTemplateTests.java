@@ -29,6 +29,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1355,7 +1356,7 @@ public class ReactiveMongoTemplateTests {
 		}
 	}
 
-	@Test // DATAMONGO-2012
+	@Test // DATAMONGO-2012, DATAMONGO-2113
 	public void resumesAtTimestampCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -1372,7 +1373,7 @@ public class ReactiveMongoTemplateTests {
 		Person person2 = new Person("Data", 37);
 		Person person3 = new Person("MongoDB", 39);
 
-		StepVerifier.create(template.save(person1)).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person1).delayElement(Duration.ofSeconds(1))).expectNextCount(1).verifyComplete();
 		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
 
 		Thread.sleep(500); // just give it some time to link receive all events

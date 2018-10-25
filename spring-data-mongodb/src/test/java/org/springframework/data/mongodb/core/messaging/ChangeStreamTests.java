@@ -405,7 +405,7 @@ public class ChangeStreamTests {
 				.append("user_name", "jellyBelly").append("age", 8).append("_class", User.class.getName()));
 	}
 
-	@Test // DATAMONGO-2012
+	@Test // DATAMONGO-2012, DATAMONGO-2113
 	public void resumeAtTimestampCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener1 = new CollectingMessageListener<>();
@@ -415,6 +415,9 @@ public class ChangeStreamTests {
 		awaitSubscription(subscription1);
 
 		template.save(jellyBelly);
+
+		Thread.sleep(1000); // cluster timestamp is in seconds, so we need to wait at least one.
+
 		template.save(sugarSplashy);
 
 		awaitMessages(messageListener1, 12);

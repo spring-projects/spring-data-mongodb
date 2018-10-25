@@ -83,7 +83,9 @@ public class ChangeStreamEvent<T> {
 	 */
 	@Nullable
 	public Instant getTimestamp() {
-		return raw != null && raw.getClusterTime() != null ? Instant.ofEpochMilli(raw.getClusterTime().getValue()) : null;
+
+		return raw != null && raw.getClusterTime() != null
+				? converter.getConversionService().convert(raw.getClusterTime(), Instant.class) : null;
 	}
 
 	/**
