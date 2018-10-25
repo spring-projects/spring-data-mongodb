@@ -60,6 +60,7 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCre
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -160,6 +161,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return null;
 	}
 
+	@Nullable
 	private BeanDefinition potentiallyCreateValidatingMongoEventListener(Element element, ParserContext parserContext) {
 
 		String disableValidation = element.getAttribute("disable-validation");
@@ -181,6 +183,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return null;
 	}
 
+	@Nullable
 	private RuntimeBeanReference getValidator(Object source, ParserContext parserContext) {
 
 		if (!JSR_303_PRESENT) {
@@ -198,7 +201,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 	}
 
 	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
-			BeanDefinition conversionsDefinition, String converterId) {
+			@Nullable BeanDefinition conversionsDefinition, @Nullable String converterId) {
 
 		String ctxRef = element.getAttribute("mapping-context-ref");
 
@@ -263,6 +266,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		}
 	}
 
+	@Nullable
 	private BeanDefinition getCustomConversions(Element element, ParserContext parserContext) {
 
 		List<Element> customConvertersElements = DomUtils.getChildElementsByTagName(element, "custom-converters");
@@ -270,7 +274,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		if (customConvertersElements.size() == 1) {
 
 			Element customerConvertersElement = customConvertersElements.get(0);
-			ManagedList<BeanMetadataElement> converterBeans = new ManagedList<BeanMetadataElement>();
+			ManagedList<BeanMetadataElement> converterBeans = new ManagedList<>();
 			List<Element> converterElements = DomUtils.getChildElementsByTagName(customerConvertersElement, "converter");
 
 			if (converterElements != null) {
@@ -286,9 +290,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 				provider.addExcludeFilter(new NegatingFilter(new AssignableTypeFilter(Converter.class),
 						new AssignableTypeFilter(GenericConverter.class)));
 
-				for (BeanDefinition candidate : provider.findCandidateComponents(packageToScan)) {
-					converterBeans.add(candidate);
-				}
+				converterBeans.addAll(provider.findCandidateComponents(packageToScan));
 			}
 
 			BeanDefinitionBuilder conversionsBuilder = BeanDefinitionBuilder.rootBeanDefinition(MongoCustomConversions.class);
@@ -305,6 +307,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return null;
 	}
 
+	@Nullable
 	private static Set<String> getInitialEntityClasses(Element element) {
 
 		String basePackage = element.getAttribute(BASE_PACKAGE);
@@ -318,7 +321,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
 		componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
 
-		Set<String> classes = new ManagedSet<String>();
+		Set<String> classes = new ManagedSet<>();
 		for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
 			classes.add(candidate.getBeanClassName());
 		}
@@ -326,6 +329,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return classes;
 	}
 
+	@Nullable
 	public BeanMetadataElement parseConverter(Element element, ParserContext parserContext) {
 
 		String converterRef = element.getAttribute("ref");
@@ -376,7 +380,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 			Assert.notNull(filters, "TypeFilters must not be null");
 
-			this.delegates = new HashSet<TypeFilter>(Arrays.asList(filters));
+			this.delegates = new HashSet<>(Arrays.asList(filters));
 		}
 
 		/*
