@@ -1915,7 +1915,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
 		publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
-		publisher = options.getResumeTimestamp().map(it -> new BsonTimestamp(it.toEpochMilli()))
+		publisher = options.getResumeTimestamp().map(it -> new BsonTimestamp((int) it.getEpochSecond(), 0))
 				.map(publisher::startAtOperationTime).orElse(publisher);
 		publisher = publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
 
