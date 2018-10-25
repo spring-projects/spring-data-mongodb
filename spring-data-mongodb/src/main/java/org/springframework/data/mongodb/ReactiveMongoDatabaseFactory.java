@@ -19,6 +19,7 @@ package org.springframework.data.mongodb;
 import reactor.core.publisher.Mono;
 
 import org.bson.codecs.configuration.CodecRegistry;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
@@ -88,4 +89,16 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	 * @since 2.1
 	 */
 	ReactiveMongoDatabaseFactory withSession(ClientSession session);
+
+	/**
+	 * Returns if the given {@link ReactiveMongoDatabaseFactory} is bound to a
+	 * {@link com.mongodb.reactivestreams.client.ClientSession} that has an
+	 * {@link com.mongodb.reactivestreams.client.ClientSession#hasActiveTransaction() active transaction}.
+	 *
+	 * @return {@literal true} if there's an active transaction, {@literal false} otherwise.
+	 * @since 2.2
+	 */
+	default boolean isTransactionActive() {
+		return false;
+	}
 }

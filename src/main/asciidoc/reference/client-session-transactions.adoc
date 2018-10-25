@@ -220,7 +220,7 @@ NOTE: `@Transactional(readOnly = true)` advises `MongoTransactionManager` to als
 Same as with the reactive `ClientSession` support, the `ReactiveMongoTemplate` offers dedicated methods for operating
 within a transaction without having to worry about the commit/abort actions depending on the operations outcome.
 
-NOTE: Reactive use of `ClientSession` and transactions is limited to Template API usage. There's currently no session or transaction integration with reactive repositories.
+NOTE: Unless you specify a `ReactiveMongoTransactionManager` within your application context, transaction support is *DISABLED*. You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
 
 Using the plain MongoDB reactive driver API a `delete` within a transactional flow may look like this.
 
@@ -254,48 +254,77 @@ Mono<DeleteResult> result = Mono
 The culprit of the above operation is in keeping the main flows `DeleteResult` instead of the transaction outcome
 published via either `commitTransaction()` or `abortTransaction()`, which leads to a rather complicated setup.
 
-`MongoOperations.inTransaction()` allows you to utilize the callback from for the <<mongo.sessions.reactive,
-reactive session support>> to actually preserve the flows outcome but also perform commit and abort actions
-accordingly. This allows you to express the above flow simply as the following:
+== Transactions with `TransactionalOperator`
 
-.`ReactiveMongoTemplate` Transactions
+Spring Data MongoDB transactions support a `TransactionalOperator`. The following example shows how to create and use a `TransactionalOperator`:
+
+.Transactions with `TransactionalOperator`
 ====
 [source,java]
 ----
-Mono<DeleteResult> result = template.inTransaction()                                      <1>
+template.setSessionSynchronization(ALWAYS);                                          <1>
 
-    .execute(action -> action.remove(query(where("id").is("step-1")), Step.class));       <2>
+// ...
+
+TransactionalOperator rxtx = TransactionalOperator.create(anyTxManager,
+                                   new DefaultTransactionDefinition());              <2>
+
+
+Step step = // ...;
+template.insert(step);
+
+Mono<Void> process(step)
+					.then(template.update(Step.class).apply(Update.set("state", …))
+					.as(rxtx::transactional)                                         <3>
+					.then();
 ----
-<1> Initiate the transaction.
-<2> Operate within the `ClientSession`. Each `execute(…)` unit of work callback initiates a new transaction in the scope of the same `ClientSession`.
+<1> Enable transaction synchronization for Transactional participation.
+<2> Create the `TransactionalOperator` using the provided `ReactiveTransactionManager`.
+<3> `TransactionalOperator.transactional(…)` provides transaction management for all upstream operations.
 ====
 
-NOTE: In case you need access to the `ClientSession` within the flow, you can use `ReactiveMongoContext.getSession()`
- to obtain in from the Reactor `Context`.
+== Transactions with `ReactiveMongoTransactionManager`
 
-Everything happening inside the transactional callback is executed within a managed transaction. Errors within the
-reactive flow of `execute(…)` that are not propagated to outside of the callback do not affect the operations within the transaction.
+`ReactiveMongoTransactionManager` is the gateway to the well known Spring transaction support.
+It lets applications use  https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/html/transaction.html[the managed transaction features of Spring].
+The `ReactiveMongoTransactionManager` binds a `ClientSession` to the subscriber `Context`.
+`ReactiveMongoTemplate` detects the session and operates on these resources which are associated with the transaction accordingly.
+`ReactiveMongoTemplate` can also participate in other, ongoing transactions.
+The following example shows how to create and use transactions with a `ReactiveMongoTransactionManager`:
 
+.Transactions with `ReactiveMongoTransactionManager`
 ====
 [source,java]
 ----
-template.inTransaction()                                                            <1>
+@Configuration
+static class Config extends AbstractMongoConfiguration {
 
-    .execute(action -> action.find(query(where("state").is("active")), Step.class)
-        .flatMap(step -> action.update(Step.class)
-            .matching(query(where("id").is(step.id)))
-            .apply(update("state", "paused"))
-            .all()))                                                                <2>
+    @Bean
+    ReactiveMongoTransactionManager transactionManager(ReactiveDatabaseFactory factory) {  <1>
+        return new ReactiveMongoTransactionManager(factory);
+    }
 
-    .flatMap(updated -> {
-        // Exception could happen here                                              <3>
-    });
+    // ...
+}
+
+@Component
+public class StateService {
+
+    @Transactional
+    Mono<UpdateResult> someBusinessFunction(Step step) {                                  <2>
+
+        return template.insert(step)
+                   .then(process(step))
+                   .then(template.update(Step.class).apply(Update.set("state", …));
+    };
+});
+
 ----
-<1> Initiate the managed transaction.
-<2> Operate within the `ClientSession`. The transaction is committed after this is done or rolled back if an
-error occurs here.
-<3> An error outside the transaction flow has no affect on the previous transactional execution.
+<1> Register `ReactiveMongoTransactionManager` in the application context.
+<2> Mark methods as transactional.
 ====
+
+NOTE: `@Transactional(readOnly = true)` advises `ReactiveMongoTransactionManager` to also start a transaction that adds the `ClientSession` to outgoing requests.
 
 [[mongo.transactions.behavior]]
 == Special behavior inside transactions

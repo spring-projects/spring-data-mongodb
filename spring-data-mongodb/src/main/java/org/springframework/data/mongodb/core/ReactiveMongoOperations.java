@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.lang.Nullable;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -217,7 +218,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * {@link ClientSession#abortTransaction() rolled back} upon errors.
 	 *
 	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
+	 * @deprecated since 2.2. Use {@code @Transactional} or {@link TransactionalOperator}.
 	 */
+	@Deprecated
 	ReactiveSessionScoped inTransaction();
 
 	/**
@@ -232,7 +235,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param sessionProvider must not be {@literal null}.
 	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
 	 * @since 2.1
+	 * @deprecated since 2.2. Use {@code @Transactional} or {@link TransactionalOperator}.
 	 */
+	@Deprecated
 	ReactiveSessionScoped inTransaction(Publisher<ClientSession> sessionProvider);
 
 	/**
