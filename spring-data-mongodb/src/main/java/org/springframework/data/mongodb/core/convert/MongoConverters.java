@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Currency;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.bson.types.Binary;
 import org.bson.types.Code;
@@ -86,6 +88,7 @@ abstract class MongoConverters {
 		converters.add(LongToAtomicLongConverter.INSTANCE);
 		converters.add(IntegerToAtomicIntegerConverter.INSTANCE);
 		converters.add(BinaryToByteArrayConverter.INSTANCE);
+		converters.add(BsonTimestampToInstantConverter.INSTANCE);
 
 		return converters;
 	}
@@ -463,6 +466,24 @@ abstract class MongoConverters {
 		@Override
 		public byte[] convert(Binary source) {
 			return source.getData();
+		}
+	}
+
+	/**
+	 * {@link Converter} implementation converting {@link BsonTimestamp} into {@link Instant}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.1.2
+	 */
+	@ReadingConverter
+	enum BsonTimestampToInstantConverter implements Converter<BsonTimestamp, Instant> {
+
+		INSTANCE;
+
+		@Nullable
+		@Override
+		public Instant convert(BsonTimestamp source) {
+			return Instant.ofEpochSecond(source.getTime(), 0);
 		}
 	}
 }

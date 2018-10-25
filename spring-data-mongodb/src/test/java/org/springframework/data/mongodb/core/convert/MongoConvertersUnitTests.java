@@ -19,10 +19,15 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Currency;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.assertj.core.data.TemporalUnitLessThanOffset;
+import org.bson.BsonTimestamp;
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -32,14 +37,14 @@ import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.core.convert.MongoConverters.AtomicIntegerToIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.AtomicLongToLongConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.BsonTimestampToInstantConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.CurrencyToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.IntegerToAtomicIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.LongToAtomicLongConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToCurrencyConverter;
 import org.springframework.data.mongodb.core.geo.Sphere;
-
-import org.bson.Document;
+import org.springframework.data.mongodb.test.util.Assertions;
 
 /**
  * Unit tests for {@link MongoConverters}.
@@ -145,4 +150,12 @@ public class MongoConvertersUnitTests {
 	public void convertsIntegerToAtomicIntegerCorrectly() {
 		assertThat(IntegerToAtomicIntegerConverter.INSTANCE.convert(100), is(instanceOf(AtomicInteger.class)));
 	}
+
+	@Test // DATAMONGO-2113
+	public void convertsBsonTimestampToInstantCorrectly() {
+		
+		Assertions.assertThat(BsonTimestampToInstantConverter.INSTANCE.convert(new BsonTimestamp(6615900307735969796L)))
+				.isCloseTo(Instant.ofEpochSecond(1540384327), new TemporalUnitLessThanOffset(100, ChronoUnit.MILLIS));
+	}
+
 }
