@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -44,7 +43,6 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.LongToAtomi
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToCurrencyConverter;
 import org.springframework.data.mongodb.core.geo.Sphere;
-import org.springframework.data.mongodb.test.util.Assertions;
 
 /**
  * Unit tests for {@link MongoConverters}.
@@ -60,10 +58,10 @@ public class MongoConvertersUnitTests {
 
 		BigDecimal bigDecimal = BigDecimal.valueOf(254, 1);
 		String value = BigDecimalToStringConverter.INSTANCE.convert(bigDecimal);
-		assertThat(value, is("25.4"));
+		assertThat(value).isEqualTo("25.4");
 
 		BigDecimal reference = StringToBigDecimalConverter.INSTANCE.convert(value);
-		assertThat(reference, is(bigDecimal));
+		assertThat(reference).isEqualTo(bigDecimal);
 	}
 
 	@Test // DATAMONGO-858
@@ -74,7 +72,7 @@ public class MongoConvertersUnitTests {
 		Document document = GeoConverters.BoxToDocumentConverter.INSTANCE.convert(box);
 		Shape shape = GeoConverters.DocumentToBoxConverter.INSTANCE.convert(document);
 
-		assertThat(shape, is((org.springframework.data.geo.Shape) box));
+		assertThat(shape).isEqualTo(box);
 	}
 
 	@Test // DATAMONGO-858
@@ -85,7 +83,7 @@ public class MongoConvertersUnitTests {
 		Document document = GeoConverters.CircleToDocumentConverter.INSTANCE.convert(circle);
 		Shape shape = GeoConverters.DocumentToCircleConverter.INSTANCE.convert(document);
 
-		assertThat(shape, is((org.springframework.data.geo.Shape) circle));
+		assertThat(shape).isEqualTo(circle);
 	}
 
 	@Test // DATAMONGO-858
@@ -96,7 +94,7 @@ public class MongoConvertersUnitTests {
 		Document document = GeoConverters.PolygonToDocumentConverter.INSTANCE.convert(polygon);
 		Shape shape = GeoConverters.DocumentToPolygonConverter.INSTANCE.convert(document);
 
-		assertThat(shape, is((org.springframework.data.geo.Shape) polygon));
+		assertThat(shape).isEqualTo(polygon);
 	}
 
 	@Test // DATAMONGO-858
@@ -107,7 +105,7 @@ public class MongoConvertersUnitTests {
 		Document document = GeoConverters.SphereToDocumentConverter.INSTANCE.convert(sphere);
 		org.springframework.data.geo.Shape shape = GeoConverters.DocumentToSphereConverter.INSTANCE.convert(document);
 
-		assertThat(shape, is((org.springframework.data.geo.Shape) sphere));
+		assertThat(shape).isEqualTo(sphere);
 	}
 
 	@Test // DATAMONGO-858
@@ -118,43 +116,43 @@ public class MongoConvertersUnitTests {
 		Document document = GeoConverters.PointToDocumentConverter.INSTANCE.convert(point);
 		org.springframework.data.geo.Point converted = GeoConverters.DocumentToPointConverter.INSTANCE.convert(document);
 
-		assertThat(converted, is((org.springframework.data.geo.Point) point));
+		assertThat(converted).isEqualTo(point);
 	}
 
 	@Test // DATAMONGO-1372
 	public void convertsCurrencyToStringCorrectly() {
-		assertThat(CurrencyToStringConverter.INSTANCE.convert(Currency.getInstance("USD")), is("USD"));
+		assertThat(CurrencyToStringConverter.INSTANCE.convert(Currency.getInstance("USD"))).isEqualTo("USD");
 	}
 
 	@Test // DATAMONGO-1372
 	public void convertsStringToCurrencyCorrectly() {
-		assertThat(StringToCurrencyConverter.INSTANCE.convert("USD"), is(Currency.getInstance("USD")));
+		assertThat(StringToCurrencyConverter.INSTANCE.convert("USD")).isEqualTo(Currency.getInstance("USD"));
 	}
 
 	@Test // DATAMONGO-1416
 	public void convertsAtomicLongToLongCorrectly() {
-		assertThat(AtomicLongToLongConverter.INSTANCE.convert(new AtomicLong(100L)), is(100L));
+		assertThat(AtomicLongToLongConverter.INSTANCE.convert(new AtomicLong(100L))).isEqualTo(100L);
 	}
 
 	@Test // DATAMONGO-1416
 	public void convertsAtomicIntegerToIntegerCorrectly() {
-		assertThat(AtomicIntegerToIntegerConverter.INSTANCE.convert(new AtomicInteger(100)), is(100));
+		assertThat(AtomicIntegerToIntegerConverter.INSTANCE.convert(new AtomicInteger(100))).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-1416
 	public void convertsLongToAtomicLongCorrectly() {
-		assertThat(LongToAtomicLongConverter.INSTANCE.convert(100L), is(instanceOf(AtomicLong.class)));
+		assertThat(LongToAtomicLongConverter.INSTANCE.convert(100L)).isInstanceOf(AtomicLong.class);
 	}
 
 	@Test // DATAMONGO-1416
 	public void convertsIntegerToAtomicIntegerCorrectly() {
-		assertThat(IntegerToAtomicIntegerConverter.INSTANCE.convert(100), is(instanceOf(AtomicInteger.class)));
+		assertThat(IntegerToAtomicIntegerConverter.INSTANCE.convert(100)).isInstanceOf(AtomicInteger.class);
 	}
 
 	@Test // DATAMONGO-2113
 	public void convertsBsonTimestampToInstantCorrectly() {
-		
-		Assertions.assertThat(BsonTimestampToInstantConverter.INSTANCE.convert(new BsonTimestamp(6615900307735969796L)))
+
+		assertThat(BsonTimestampToInstantConverter.INSTANCE.convert(new BsonTimestamp(6615900307735969796L)))
 				.isCloseTo(Instant.ofEpochSecond(1540384327), new TemporalUnitLessThanOffset(100, ChronoUnit.MILLIS));
 	}
 
