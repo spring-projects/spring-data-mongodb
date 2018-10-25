@@ -25,10 +25,11 @@ import java.util.List;
  * Utilities for testing long running asnyc message retrieval.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class SubscriptionUtils {
 
-	static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(1);
+	static final Duration DEFAULT_TIMEOUT = Duration.ofMillis(1500);
 
 	/**
 	 * Wait for {@link Subscription#isActive() to become active} but not longer than {@link #DEFAULT_TIMEOUT}.
