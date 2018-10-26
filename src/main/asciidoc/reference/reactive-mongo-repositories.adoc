@@ -47,7 +47,7 @@ Note that the entity defined in the preceding example has a property named `id` 
 ====
 [source]
 ----
-public interface ReactivePersonRepository extends ReactiveSortingRepository<Person, Long> {
+public interface ReactivePersonRepository extends ReactiveSortingRepository<Person, String> {
 
   Flux<Person> findByFirstname(String firstname);                                   <1>
 
