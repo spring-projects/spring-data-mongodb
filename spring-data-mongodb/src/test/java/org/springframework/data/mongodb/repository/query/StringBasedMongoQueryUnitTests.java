@@ -499,6 +499,16 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(new Document("lastname", new Document("$regex", "^(calamity)"))));
 	}
 
+	@Test
+	public void shouldAllowCombinationOfSpELAndRegex() {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByPersonLastnameRegex", Person.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Person("Janet", "Calamity"));
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		assertThat(query.getQueryObject(), is(new Document("lastname", new Document("$regex", "calamity"))));
+	}
+
 	@Test // DATAMONGO-1603
 	public void shouldAllowReuseOfPlaceholderWithinQuery() {
 
@@ -702,5 +712,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ arg0 : ?#{[0]} }")
 		List<Person> findByUsingSpel(Object arg0);
+
+		@Query("{ 'key.lastname' : { '$regex' : ?#{[0].lastname} }")
+		Person findByPersonLastnameRegex(Person key);
 	}
 }
