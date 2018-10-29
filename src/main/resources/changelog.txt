@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.2.RELEASE (2018-10-29)
+---------------------------------------------
+* DATAMONGO-2118 - Fix typo in repositories reference documentation.
+* DATAMONGO-2113 - ChangeStreamTasks incorrectly converts resumeAt Instants into BsonTimestamp.
+* DATAMONGO-2107 - Release 2.1.2 (Lovelace SR2).
+* DATAMONGO-2098 - Typo in MappingMongoConverterParser.
+
+
 Changes in version 1.10.16.RELEASE (2018-10-15)
 -----------------------------------------------
 * DATAMONGO-2096 - Aggregation.graphLookup.**.connectFrom(String) does not handle nested field.
