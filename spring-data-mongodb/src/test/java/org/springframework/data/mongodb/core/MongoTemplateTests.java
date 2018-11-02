@@ -26,8 +26,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,7 +42,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
@@ -75,6 +72,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoId;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
@@ -104,6 +102,8 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
@@ -113,6 +113,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -233,6 +234,7 @@ public class MongoTemplateTests {
 		template.dropCollection(WithGeoJson.class);
 		template.dropCollection(DocumentWithNestedTypeHavingStringIdProperty.class);
 		template.dropCollection(ImmutableAudited.class);
+		template.dropCollection(RawStringId.class);
 	}
 
 	@Test
@@ -3633,6 +3635,26 @@ public class MongoTemplateTests {
 		assertThat(read.modified).isEqualTo(result.modified).describedAs("Expected auditing information to be read!");
 	}
 
+	@Test // DATAMONGO-1798
+	public void saveAndLoadStringThatIsAnObjectIdAsString() {
+
+		RawStringId source = new RawStringId();
+		source.id = new ObjectId().toHexString();
+		source.value = "new value";
+
+		template.save(source);
+
+		org.bson.Document result = template
+				.execute(db -> (org.bson.Document) db.getCollection(template.getCollectionName(RawStringId.class))
+						.find(Filters.eq("_id", source.id)).limit(1).into(new ArrayList()).iterator().next());
+
+		assertThat(result).isNotNull();
+		assertThat(result.get("_id")).isEqualTo(source.id);
+
+		RawStringId target = template.findOne(query(where("id").is(source.id)), RawStringId.class);
+		assertThat(target).isEqualTo(source);
+	}
+
 	static class TypeWithNumbers {
 
 		@Id String id;
@@ -4133,5 +4155,12 @@ public class MongoTemplateTests {
 	static class ImmutableAudited {
 		@Id String id;
 		@LastModifiedDate Instant modified;
+	}
+
+	@Data
+	static class RawStringId {
+
+		@MongoId String id;
+		String value;
 	}
 }

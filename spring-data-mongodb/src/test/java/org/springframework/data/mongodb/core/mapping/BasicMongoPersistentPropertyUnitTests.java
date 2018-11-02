@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.assertj.core.api.Assertions;
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,6 +42,7 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.MongoId;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.ReflectionUtils;
 
@@ -202,6 +205,35 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(properties).containsExactly("first", "second", "third");
 	}
 
+	@Test // DATAMONGO-1798
+	public void idTypeShouldThrowExceptionForNonIdProperties() {
+
+		MongoPersistentProperty property = getPropertyFor(Person.class, "lastname");
+		Assertions.assertThatThrownBy(() -> property.getIdType()).isInstanceOf(IllegalStateException.class)
+				.hasMessageStartingWith("Property 'lastname'");
+	}
+
+	@Test // DATAMONGO-1798
+	public void idTypeShouldBeObjectIdForPropertiesAnnotatedWithCommonsId() {
+
+		MongoPersistentProperty property = getPropertyFor(Person.class, "id");
+		assertThat(property.getIdType()).isEqualTo(ObjectId.class);
+	}
+
+	@Test // DATAMONGO-1798
+	public void idTypeShouldBeStringForPropertiesAnnotatedWithMongoId() {
+
+		MongoPersistentProperty property = getPropertyFor(WithStringMongoId.class, "id");
+		assertThat(property.getIdType()).isEqualTo(String.class);
+	}
+
+	@Test // DATAMONGO-1798
+	public void idTypeShouldBeObjectIdForPropertiesAnnotatedWithMongoIdAndTargetTypeObjectId() {
+
+		MongoPersistentProperty property = getPropertyFor(WithStringMongoIdMappedToObjectId.class, "id");
+		assertThat(property.getIdType()).isEqualTo(ObjectId.class);
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
@@ -297,5 +329,15 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Target(ElementType.FIELD)
 	@Id
 	static @interface ComposedIdAnnotation {
+	}
+
+	static class WithStringMongoId {
+
+		@MongoId String id;
+	}
+
+	static class WithStringMongoIdMappedToObjectId {
+
+		@MongoId(ObjectId.class) String id;
 	}
 }

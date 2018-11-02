@@ -28,7 +28,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -50,6 +49,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -322,11 +322,11 @@ public class QueryMapper {
 					String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
 					List<Object> ids = new ArrayList<Object>();
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-						ids.add(convertId(id));
+						ids.add(convertId(id, getIdTypeForField(documentField)));
 					}
 					resultDbo.put(inKey, ids);
 				} else if (valueDbo.containsField("$ne")) {
-					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
+					resultDbo.put("$ne", convertId(valueDbo.get("$ne"), getIdTypeForField(documentField)));
 				} else {
 					return getMappedObject(resultDbo, Optional.empty());
 				}
@@ -341,18 +341,18 @@ public class QueryMapper {
 					String inKey = valueDbo.containsKey("$in") ? "$in" : "$nin";
 					List<Object> ids = new ArrayList<Object>();
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-						ids.add(convertId(id));
+						ids.add(convertId(id, getIdTypeForField(documentField)));
 					}
 					resultDbo.put(inKey, ids);
 				} else if (valueDbo.containsKey("$ne")) {
-					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
+					resultDbo.put("$ne", convertId(valueDbo.get("$ne"), getIdTypeForField(documentField)));
 				} else {
 					return getMappedObject(resultDbo, Optional.empty());
 				}
 				return resultDbo;
 
 			} else {
-				return convertId(value);
+				return convertId(value, getIdTypeForField(documentField));
 			}
 		}
 
@@ -365,6 +365,14 @@ public class QueryMapper {
 		}
 
 		return convertSimpleOrDocument(value, documentField.getPropertyEntity());
+	}
+
+	private boolean isIdField(Field documentField) {
+		return documentField.getProperty() != null && documentField.getProperty().isIdProperty();
+	}
+
+	private Class<?> getIdTypeForField(Field documentField) {
+		return isIdField(documentField) ? documentField.getProperty().getIdType() : ObjectId.class;
 	}
 
 	/**
@@ -468,7 +476,14 @@ public class QueryMapper {
 		if (source instanceof DBRef) {
 
 			DBRef ref = (DBRef) source;
-			return new DBRef(ref.getCollectionName(), convertId(ref.getId()));
+			Object id = convertId(ref.getId(),
+					property != null && property.isIdProperty() ? property.getIdType() : ObjectId.class);
+
+			if (StringUtils.hasText(ref.getDatabaseName())) {
+				return new DBRef(ref.getDatabaseName(), ref.getCollectionName(), id);
+			} else {
+				return new DBRef(ref.getCollectionName(), id);
+			}
 		}
 
 		if (source instanceof Iterable) {
@@ -549,24 +564,23 @@ public class QueryMapper {
 	 *
 	 * @param id
 	 * @return
+	 * @since 2.2
 	 */
 	@Nullable
 	public Object convertId(@Nullable Object id) {
+		return convertId(id, ObjectId.class);
+	}
 
-		if (id == null) {
-			return null;
-		}
-
-		if (id instanceof String) {
-			return ObjectId.isValid(id.toString()) ? conversionService.convert(id, ObjectId.class) : id;
-		}
-
-		try {
-			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService.convert(id, ObjectId.class)
-					: delegateConvertToMongoType(id, null);
-		} catch (ConversionException o_O) {
-			return delegateConvertToMongoType(id, null);
-		}
+	/**
+	 * Converts the given raw id value into either {@link ObjectId} or {@literal targetType}.
+	 *
+	 * @param id can be {@literal null}.
+	 * @return the converted {@literal id} or {@literal null} if the source was already {@literal null}.
+	 * @since 2.2
+	 */
+	@Nullable
+	public Object convertId(@Nullable Object id, Class<?> targetType) {
+		return converter.convertId(id, targetType);
 	}
 
 	/**

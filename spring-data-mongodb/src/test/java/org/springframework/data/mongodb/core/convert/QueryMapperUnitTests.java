@@ -615,12 +615,12 @@ public class QueryMapperUnitTests {
 		assertThat(document, equalTo(new org.bson.Document().append("_id", 1)));
 	}
 
-	@Test // DATAMONGO-1070
+	@Test // DATAMONGO-1070, DATAMONGO-1798
 	public void mapsIdReferenceToDBRefCorrectly() {
 
 		ObjectId id = new ObjectId();
 
-		org.bson.Document query = new org.bson.Document("reference.id", new com.mongodb.DBRef("reference", id.toString()));
+		org.bson.Document query = new org.bson.Document("reference.id", new com.mongodb.DBRef("reference", id));
 		org.bson.Document result = mapper.getMappedObject(query, context.getPersistentEntity(WithDBRef.class));
 
 		assertThat(result.containsKey("reference"), is(true));
