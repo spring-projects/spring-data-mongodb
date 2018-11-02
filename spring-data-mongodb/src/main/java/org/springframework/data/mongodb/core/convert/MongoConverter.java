@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.convert;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+import org.springframework.core.convert.ConversionException;
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.convert.TypeMapper;
@@ -83,7 +85,18 @@ public interface MongoConverter
 
 				if (sourceDocument.containsKey("$ref") && sourceDocument.containsKey("$id")) {
 
-					sourceDocument = dbRefResolver.fetch(new DBRef(sourceDocument.getString("$ref"), sourceDocument.get("$id")));
+					Object id = sourceDocument.get("$id");
+					String collection = sourceDocument.getString("$ref");
+
+					MongoPersistentEntity<?> entity = getMappingContext().getPersistentEntity(targetType);
+					if (entity.getIdType() != null) {
+						id = convertId(id, entity.getIdType());
+					}
+
+					DBRef ref = sourceDocument.containsKey("$db") ? new DBRef(sourceDocument.getString("$db"), collection, id)
+							: new DBRef(collection, id);
+
+					sourceDocument = dbRefResolver.fetch(ref);
 					if (sourceDocument == null) {
 						return null;
 					}
@@ -101,5 +114,37 @@ public interface MongoConverter
 			return (T) value;
 		}
 		return getConversionService().convert(source, targetType);
+	}
+
+	/**
+	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
+	 *
+	 * @param id
+	 * @return {@literal null} if source {@literal id} is already {@literal null}.
+	 * @since 2.2
+	 */
+	@Nullable
+	default Object convertId(@Nullable Object id, Class<?> targetType) {
+
+		if (id == null) {
+			return null;
+		}
+
+		if (ClassUtils.isAssignable(ObjectId.class, targetType)) {
+
+			if (id instanceof String) {
+
+				if (ObjectId.isValid(id.toString())) {
+					return new ObjectId(id.toString());
+				}
+			}
+		}
+
+		try {
+			return getConversionService().canConvert(id.getClass(), targetType)
+					? getConversionService().convert(id, targetType) : convertToMongoType(id, null);
+		} catch (ConversionException o_O) {
+			return convertToMongoType(id, null);
+		}
 	}
 }

@@ -1913,6 +1913,27 @@ public class MappingMongoConverterUnitTests {
 		assertThat(target).doesNotContainKeys("_class");
 	}
 
+	@Test  // DATAMONGO-1798
+	public void convertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsObjectId() {
+
+		ObjectId source = new ObjectId();
+		assertThat(converter.convertId(source.toHexString(), ObjectId.class)).isEqualTo(source);
+	}
+
+	@Test  // DATAMONGO-1798
+	public void donNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsString() {
+
+		ObjectId source = new ObjectId();
+		assertThat(converter.convertId(source.toHexString(), String.class)).isEqualTo(source.toHexString());
+	}
+
+	@Test  // DATAMONGO-1798
+	public void donNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsObject() {
+
+		ObjectId source = new ObjectId();
+		assertThat(converter.convertId(source.toHexString(), Object.class)).isEqualTo(source.toHexString());
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
