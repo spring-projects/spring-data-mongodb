@@ -517,7 +517,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (idProperty != null && !dbObjectAccessor.hasValue(idProperty)) {
 
-			Object value = idMapper.convertId(accessor.getProperty(idProperty), idProperty.getIdType());
+			Object value = idMapper.convertId(accessor.getProperty(idProperty), idProperty.getFieldType());
 
 			if (value != null) {
 				dbObjectAccessor.put(idProperty, value);
@@ -982,7 +982,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				throw new MappingException("Cannot create a reference to an object with a NULL id.");
 			}
 
-			return dbRefResolver.createDbRef(property == null ? null : property.getDBRef(), entity, idMapper.convertId(id, idProperty != null ? idProperty.getIdType() : ObjectId.class));
+			return dbRefResolver.createDbRef(property == null ? null : property.getDBRef(), entity,
+					idMapper.convertId(id, idProperty != null ? idProperty.getFieldType() : ObjectId.class));
 		}
 
 		throw new MappingException("No id property found on class " + entity.getType());

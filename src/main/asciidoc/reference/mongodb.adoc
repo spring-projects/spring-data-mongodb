@@ -669,8 +669,8 @@ If no field or property specified in the previous sets of rules is present in th
 
 When querying and updating, `MongoTemplate` uses the converter that corresponds to the preceding rules for saving documents so that field names and types used in your queries can match what is in your domain classes.
 
-Some environments however require a different approach to mapping `Id` values. Maybe data has feed to mongodb not running throught the Spring Data mapping layer, an thus containing plain `String` values as `id` that represent a valid `ObjectId`.
-Reading documents from the store back to the domain type works just fine but querying for documents via their `id` is cumbersome due to the `ObjectId` conversion. Therefore documents cannot be retrieved that way.
+Some environments require a customized approach to map `Id` values such as data stored in MongoDB that did not run through the Spring Data mapping layer. Documents can contain `_id` values that can be represented either as `ObjectId` or as `String`.
+Reading documents from the store back to the domain type works just fine. Querying for documents via their `id` can be cumbersome due to the implicit `ObjectId` conversion. Therefore documents cannot be retrieved that way.
 For those cases `@MongoId` provides more control over the actual id mapping attempts.
 
 .`@MongoId` mapping
@@ -686,12 +686,12 @@ public class PlainObjectId {
 }
 
 public class StringToObjectId {
-  @MongoId(ObjectId.class) String id; <3>
+  @MongoId(FieldType.OBJECT_ID) String id; <3>
 }
 ----
-<1> The id is treated as `String` no matter what.
+<1> The id is treated as `String` without further conversion.
 <2> The id is treated as `ObjectId`.
-<3> The id is treated as `ObjectId` if the given `String` is a valid ObjectId hex, otherwise as String.
+<3> The id is treated as `ObjectId` if the given `String` is a valid `ObjectId` hex, otherwise as `String`. Corresponds to `@Id` usage.
 ====
 
 [[mongo-template.type-mapping]]

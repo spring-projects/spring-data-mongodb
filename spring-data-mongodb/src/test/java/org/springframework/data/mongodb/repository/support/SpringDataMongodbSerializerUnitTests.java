@@ -110,8 +110,8 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat(serializer.getKeyForPath(address, address.getMetadata()), is(""));
 	}
 
-	@Test // DATAMONGO-467
-	public void convertsIdPropertyCorrectly() {
+	@Test // DATAMONGO-467, DATAMONGO-1798
+	public void retainsIdPropertyType() {
 
 		ObjectId id = new ObjectId();
 
@@ -120,8 +120,8 @@ public class SpringDataMongodbSerializerUnitTests {
 
 		Document result = (Document) serializer.visit((BooleanOperation) idPath.eq(id.toString()), null);
 		assertThat(result.get("_id"), is(notNullValue()));
-		assertThat(result.get("_id"), is(instanceOf(ObjectId.class)));
-		assertThat(result.get("_id"), is(id));
+		assertThat(result.get("_id"), is(instanceOf(String.class)));
+		assertThat(result.get("_id"), is(id.toString()));
 	}
 
 	@Test // DATAMONGO-761
@@ -132,35 +132,6 @@ public class SpringDataMongodbSerializerUnitTests {
 		String path = serializer.getKeyForPath(firstElementPath, firstElementPath.getMetadata());
 
 		assertThat(path, is("0"));
-	}
-
-	@Test // DATAMONGO-969
-	public void shouldConvertObjectIdEvenWhenNestedInOperatorDbObject() {
-
-		ObjectId value = new ObjectId("53bb9fd14438765b29c2d56e");
-		Document serialized = serializer.asDocument("_id", new Document("$ne", value.toString()));
-
-		Document _id = getTypedValue(serialized, "_id", Document.class);
-		ObjectId $ne = getTypedValue(_id, "$ne", ObjectId.class);
-		assertThat($ne, is(value));
-	}
-
-	@Test // DATAMONGO-969
-	public void shouldConvertCollectionOfObjectIdEvenWhenNestedInOperatorDocument() {
-
-		ObjectId firstId = new ObjectId("53bb9fd14438765b29c2d56e");
-		ObjectId secondId = new ObjectId("53bb9fda4438765b29c2d56f");
-
-		List<Object> objectIds = new ArrayList<>();
-		objectIds.add(firstId.toString());
-		objectIds.add(secondId.toString());
-
-		Document serialized = serializer.asDocument("_id", new Document("$in", objectIds));
-
-		Document _id = getTypedValue(serialized, "_id", Document.class);
-		List<Object> $in = getTypedValue(_id, "$in", List.class);
-
-		assertThat($in, IsIterableContainingInOrder.<Object> contains(firstId, secondId));
 	}
 
 	@Test // DATAMONGO-1485

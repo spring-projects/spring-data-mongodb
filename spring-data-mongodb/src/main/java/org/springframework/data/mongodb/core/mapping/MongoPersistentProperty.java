@@ -15,12 +15,10 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import org.bson.types.ObjectId;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
-import org.springframework.data.mongodb.MongoId;
 import org.springframework.lang.Nullable;
 
 /**
@@ -39,6 +37,15 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @return
 	 */
 	String getFieldName();
+
+	/**
+	 * Returns the {@link Class Java FieldType} of the field a property is persisted to.
+	 *
+	 * @return
+	 * @since 2.2
+	 * @see FieldType
+	 */
+	Class<?> getFieldType();
 
 	/**
 	 * Returns the order of the field if defined. Will return -1 if undefined.
@@ -62,33 +69,6 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @return
 	 */
 	boolean isExplicitIdProperty();
-
-	/**
-	 * Get the target id type to be used when writing the actual id value.
-	 *
-	 * @return The properties actual type of {@link Object Class&lt;Object&gt;} for properties using the native property
-	 *         type. <br />
-	 *         {@link org.bson.types.ObjectId Class&lt;ObjectId&gt;} indicates the attempt to parse the given raw value as
-	 *         {@link org.bson.types.ObjectId}.
-	 * @throws IllegalStateException if the property is not considered an id property. Please make sure to check
-	 *           {@link #isIdProperty()}.
-	 * @since 2.2
-	 */
-	default Class<?> getIdType() {
-
-		if (!isIdProperty()) {
-
-			throw new IllegalStateException(String.format("Property '%s' is not considerd an 'id' property",
-					getField() != null ? getField().getName() : getFieldName()));
-		}
-
-		MongoId idAnnotation = findAnnotation(MongoId.class);
-		if (idAnnotation == null) {
-			return ObjectId.class;
-		}
-
-		return Object.class.equals(idAnnotation.targetType()) ? getActualType() : idAnnotation.targetType();
-	}
 
 	/**
 	 * Returns true whether the property indicates the documents language either by having a {@link #getFieldName()} equal

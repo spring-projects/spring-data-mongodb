@@ -29,8 +29,10 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QPerson;
@@ -43,6 +45,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -213,6 +216,38 @@ public class QuerydslRepositorySupportTests {
 		assertThat(query.fetchOne(), equalTo(outer));
 	}
 
+	@Test // DATAMONGO-1798
+	public void shouldRetainIdPropertyTypeIfInvalidObjectId() {
+
+		Outer outer = new Outer();
+		outer.id = "foobar";
+
+		operations.save(outer);
+
+		QQuerydslRepositorySupportTests_Outer o = QQuerydslRepositorySupportTests_Outer.outer;
+		SpringDataMongodbQuery<Outer> query = repoSupport.from(o).where(o.id.eq(outer.id));
+
+		assertThat(query.fetchOne(), equalTo(outer));
+	}
+
+	@Test // DATAMONGO-1798
+	public void shouldUseStringForValidObjectIdHexStrings() {
+
+		WithMongoId document = new WithMongoId();
+		document.id = new ObjectId().toHexString();
+
+		operations.save(document);
+
+		QQuerydslRepositorySupportTests_WithMongoId o = QQuerydslRepositorySupportTests_WithMongoId.withMongoId;
+		SpringDataMongodbQuery<WithMongoId> eqQuery = repoSupport.from(o).where(o.id.eq(document.id));
+
+		assertThat(eqQuery.fetchOne(), equalTo(document));
+
+		SpringDataMongodbQuery<WithMongoId> inQuery = repoSupport.from(o).where(o.id.in(document.id));
+
+		assertThat(inQuery.fetchOne(), equalTo(document));
+	}
+
 	@Data
 	@Document
 	public static class Outer {
@@ -226,5 +261,12 @@ public class QuerydslRepositorySupportTests {
 
 		@Id String id;
 		String value;
+	}
+
+	@Data
+	@Document
+	public static class WithMongoId {
+
+		@MongoId(FieldType.STRING) String id;
 	}
 }
