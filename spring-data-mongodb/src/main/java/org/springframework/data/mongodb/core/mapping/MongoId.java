@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
+package org.springframework.data.mongodb.core.mapping;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,14 +24,16 @@ import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
 
 /**
- * {@link MongoId} represents a MongoDB specific {@link Id} annotation that allows tweaking {@literal id} conversion. By
- * default {@link Object Class&lt;Object&gt;} will be used as the {@literal id's} target type. This means that the
- * actual property value is used. No conversion attempts to any other type is made. <br />
+ * {@link MongoId} represents a MongoDB specific {@link Id} annotation that allows customizing {@literal id} conversion.
+ * Id properties use {@link org.springframework.data.mongodb.core.mapping.FieldType#IMPLICIT} as the default
+ * {@literal id's} target type. This means that the actual property value is used. No conversion attempts to any other
+ * type are made. <br />
  * In contrast to {@link Id &#64;Id}, {@link String} {@literal id's} are stored as the such even when the actual value
  * represents a valid {@link org.bson.types.ObjectId#isValid(String) ObjectId hex String}. To trigger {@link String} to
- * {@link org.bson.types.ObjectId} conversion use {@link MongoId#targetType() &#64;MongoId(ObjectId.class)}.
+ * {@link org.bson.types.ObjectId} conversion use {@link MongoId#targetType() &#64;MongoId(FieldType.OBJECT_ID)}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.2
  */
 @Id
@@ -44,16 +46,16 @@ public @interface MongoId {
 	 * @see #targetType()
 	 */
 	@AliasFor("targetType")
-	Class<?> value() default Object.class;
+	FieldType value() default FieldType.IMPLICIT;
 
 	/**
-	 * Get the preferred {@literal _id} type to be used. Defaulted to {@link Object Class&lt;Object&gt;} which used the
-	 * property's type. If defined different, the given value is attempted to be converted into the desired target type
-	 * via {@link org.springframework.data.mongodb.core.convert.MongoConverter#convertId(Object, Class)}.
+	 * Get the preferred {@literal _id} type to be used. Defaults to {@link FieldType#IMPLICIT} which uses the property's
+	 * type. If defined different, the given value is attempted to be converted into the desired target type via
+	 * {@link org.springframework.data.mongodb.core.convert.MongoConverter#convertId(Object, Class)}.
 	 *
-	 * @return the preferred {@literal id} type. {@link Object Class&lt;Object&gt;} by default.
+	 * @return the preferred {@literal id} type. {@link FieldType#IMPLICIT} by default.
 	 */
 	@AliasFor("value")
-	Class<?> targetType() default Object.class;
+	FieldType targetType() default FieldType.IMPLICIT;
 
 }

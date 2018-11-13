@@ -244,7 +244,16 @@ public class QueryMapper {
 	 */
 	protected Field createPropertyField(@Nullable MongoPersistentEntity<?> entity, String key,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		return entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
+
+		if (entity == null) {
+			return new Field(key);
+		}
+
+		if (Field.ID_KEY.equals(key)) {
+			return new MetadataBackedField(key, entity, mappingContext, entity.getIdProperty());
+		}
+
+		return new MetadataBackedField(key, entity, mappingContext);
 	}
 
 	/**
@@ -372,7 +381,7 @@ public class QueryMapper {
 	}
 
 	private Class<?> getIdTypeForField(Field documentField) {
-		return isIdField(documentField) ? documentField.getProperty().getIdType() : ObjectId.class;
+		return isIdField(documentField) ? documentField.getProperty().getFieldType() : ObjectId.class;
 	}
 
 	/**
@@ -477,7 +486,7 @@ public class QueryMapper {
 
 			DBRef ref = (DBRef) source;
 			Object id = convertId(ref.getId(),
-					property != null && property.isIdProperty() ? property.getIdType() : ObjectId.class);
+					property != null && property.isIdProperty() ? property.getFieldType() : ObjectId.class);
 
 			if (StringUtils.hasText(ref.getDatabaseName())) {
 				return new DBRef(ref.getDatabaseName(), ref.getCollectionName(), id);
@@ -572,9 +581,10 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Converts the given raw id value into either {@link ObjectId} or {@literal targetType}.
+	 * Converts the given raw id value into either {@link ObjectId} or {@link Class targetType}.
 	 *
 	 * @param id can be {@literal null}.
+	 * @param targetType
 	 * @return the converted {@literal id} or {@literal null} if the source was already {@literal null}.
 	 * @since 2.2
 	 */

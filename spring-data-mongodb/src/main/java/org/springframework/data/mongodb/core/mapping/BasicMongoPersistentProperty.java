@@ -67,8 +67,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	/**
 	 * Creates a new {@link BasicMongoPersistentProperty}.
 	 *
-	 * @param field
-	 * @param propertyDescriptor
+	 * @param property
 	 * @param owner
 	 * @param simpleTypeHolder
 	 * @param fieldNamingStrategy
@@ -142,6 +141,32 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		}
 
 		return fieldName;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getFieldType()
+	 */
+	@Override
+	public Class<?> getFieldType() {
+
+		if (!isIdProperty()) {
+			return getType();
+		}
+
+		MongoId idAnnotation = findAnnotation(MongoId.class);
+
+		if (idAnnotation == null) {
+			return FieldType.OBJECT_ID.getJavaClass();
+		}
+
+		FieldType fieldType = idAnnotation.targetType();
+
+		if (fieldType == FieldType.IMPLICIT) {
+			return getType();
+		}
+
+		return fieldType.getJavaClass();
 	}
 
 	/**

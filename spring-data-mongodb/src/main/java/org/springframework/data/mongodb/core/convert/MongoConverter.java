@@ -89,8 +89,8 @@ public interface MongoConverter
 					String collection = sourceDocument.getString("$ref");
 
 					MongoPersistentEntity<?> entity = getMappingContext().getPersistentEntity(targetType);
-					if (entity.getIdType() != null) {
-						id = convertId(id, entity.getIdType());
+					if (entity != null && entity.hasIdProperty()) {
+						id = convertId(id, entity.getIdProperty().getFieldType());
 					}
 
 					DBRef ref = sourceDocument.containsKey("$db") ? new DBRef(sourceDocument.getString("$db"), collection, id)
@@ -120,6 +120,7 @@ public interface MongoConverter
 	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
 	 *
 	 * @param id
+	 * @param targetType
 	 * @return {@literal null} if source {@literal id} is already {@literal null}.
 	 * @since 2.2
 	 */
@@ -142,7 +143,8 @@ public interface MongoConverter
 
 		try {
 			return getConversionService().canConvert(id.getClass(), targetType)
-					? getConversionService().convert(id, targetType) : convertToMongoType(id, null);
+					? getConversionService().convert(id, targetType)
+					: convertToMongoType(id, null);
 		} catch (ConversionException o_O) {
 			return convertToMongoType(id, null);
 		}

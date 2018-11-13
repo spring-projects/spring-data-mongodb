@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.assertj.core.api.Assertions;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,7 +41,6 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.mongodb.MongoId;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.ReflectionUtils;
 
@@ -206,32 +204,31 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	@Test // DATAMONGO-1798
-	public void idTypeShouldThrowExceptionForNonIdProperties() {
+	public void fieldTypeShouldReturnActualTypeForNonIdProperties() {
 
 		MongoPersistentProperty property = getPropertyFor(Person.class, "lastname");
-		Assertions.assertThatThrownBy(() -> property.getIdType()).isInstanceOf(IllegalStateException.class)
-				.hasMessageStartingWith("Property 'lastname'");
+		assertThat(property.getFieldType()).isEqualTo(String.class);
 	}
 
 	@Test // DATAMONGO-1798
-	public void idTypeShouldBeObjectIdForPropertiesAnnotatedWithCommonsId() {
+	public void fieldTypeShouldBeObjectIdForPropertiesAnnotatedWithCommonsId() {
 
 		MongoPersistentProperty property = getPropertyFor(Person.class, "id");
-		assertThat(property.getIdType()).isEqualTo(ObjectId.class);
+		assertThat(property.getFieldType()).isEqualTo(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-1798
-	public void idTypeShouldBeStringForPropertiesAnnotatedWithMongoId() {
+	public void fieldTypeShouldBeImplicitForPropertiesAnnotatedWithMongoId() {
 
 		MongoPersistentProperty property = getPropertyFor(WithStringMongoId.class, "id");
-		assertThat(property.getIdType()).isEqualTo(String.class);
+		assertThat(property.getFieldType()).isEqualTo(String.class);
 	}
 
 	@Test // DATAMONGO-1798
-	public void idTypeShouldBeObjectIdForPropertiesAnnotatedWithMongoIdAndTargetTypeObjectId() {
+	public void fieldTypeShouldBeObjectIdForPropertiesAnnotatedWithMongoIdAndTargetTypeObjectId() {
 
 		MongoPersistentProperty property = getPropertyFor(WithStringMongoIdMappedToObjectId.class, "id");
-		assertThat(property.getIdType()).isEqualTo(ObjectId.class);
+		assertThat(property.getFieldType()).isEqualTo(ObjectId.class);
 	}
 
 	private MongoPersistentProperty getPropertyFor(Field field) {
@@ -338,6 +335,6 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	static class WithStringMongoIdMappedToObjectId {
 
-		@MongoId(ObjectId.class) String id;
+		@MongoId(FieldType.OBJECT_ID) String id;
 	}
 }

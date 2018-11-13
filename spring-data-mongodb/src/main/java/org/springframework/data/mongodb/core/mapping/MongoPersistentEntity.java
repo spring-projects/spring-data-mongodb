@@ -59,20 +59,4 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 	 */
 	boolean hasTextScoreProperty();
 
-	/**
-	 * Returns the entities {@literal id} type of {@literal null} if the entity has no {@literal id} property.
-	 *
-	 * @return {@literal null} if the entity does not have an {@link #hasIdProperty() id property}.
-	 * @since 2.2
-	 */
-	@Nullable
-	default Class<?> getIdType() {
-
-		if (!hasIdProperty()) {
-			return null;
-		}
-
-		return getIdProperty().getIdType();
-	}
-
 }

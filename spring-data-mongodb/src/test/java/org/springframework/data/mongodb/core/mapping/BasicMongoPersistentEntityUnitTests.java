@@ -237,35 +237,6 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection()).isEqualTo("collectionName");
 	}
 
-	@Test // DATAMONGO-1798
-	public void idTypeShouldReadFromIdProperty() {
-
-		doReturn(true).when(propertyMock).isIdProperty();
-		doReturn(String.class).when(propertyMock).getIdType();
-
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
-				ClassTypeInformation.from(AnyDocument.class));
-		entity.addPersistentProperty(propertyMock);
-
-		assertThat(entity.getIdType()).isEqualTo(String.class);
-
-		verify(propertyMock).getIdType();
-	}
-
-	@Test // DATAMONGO-1798
-	public void idTypeShouldReturnNullForNonIdProperty() {
-
-		doReturn(false).when(propertyMock).isIdProperty();
-
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
-				ClassTypeInformation.from(AnyDocument.class));
-		entity.addPersistentProperty(propertyMock);
-
-		assertThat(entity.getIdType()).isNull();
-
-		verify(propertyMock, never()).getIdType();
-	}
-
 	@Document("contacts")
 	class Contact {}
 

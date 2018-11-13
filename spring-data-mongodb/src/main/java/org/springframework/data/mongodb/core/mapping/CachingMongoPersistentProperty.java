@@ -33,6 +33,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	private @Nullable boolean dbRefResolved;
 	private @Nullable DBRef dbref;
 	private @Nullable String fieldName;
+	private @Nullable Class<?> fieldType;
 	private @Nullable Boolean usePropertyAccess;
 	private @Nullable Boolean isTransient;
 
@@ -87,6 +88,20 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		}
 
 		return this.fieldName;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#getFieldType()
+	 */
+	@Override
+	public Class<?> getFieldType() {
+
+		if (this.fieldType == null) {
+			this.fieldType = super.getFieldType();
+		}
+
+		return this.fieldType;
 	}
 
 	/*
