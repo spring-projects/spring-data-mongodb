@@ -137,7 +137,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	 */
 	@Override
 	public long count() {
-		return mongoOperations.getCollection(entityInformation.getCollectionName()).count();
+		return mongoOperations.count(new Query(), entityInformation.getCollectionName());
 	}
 
 	/*

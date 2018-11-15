@@ -108,4 +108,15 @@ public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvi
 	 * @since 2.1
 	 */
 	MongoDbFactory withSession(ClientSession session);
+
+	/**
+	 * Returns if the given {@link MongoDbFactory} is bound to a {@link ClientSession} that has an
+	 * {@link ClientSession#hasActiveTransaction() active transaction}.
+	 *
+	 * @return {@literal true} if there's an active transaction, {@literal false} otherwise.
+	 * @since 2.1.3
+	 */
+	default boolean isTransactionActive() {
+		return false;
+	}
 }
