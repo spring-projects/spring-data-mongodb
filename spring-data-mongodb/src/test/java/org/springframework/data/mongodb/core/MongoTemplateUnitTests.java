@@ -22,6 +22,7 @@ import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import com.mongodb.MongoNamespace;
 import lombok.Data;
 
 import java.math.BigInteger;
@@ -135,6 +136,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.find(any(org.bson.Document.class), any(Class.class))).thenReturn(findIterable);
 		when(collection.mapReduce(any(), any(), eq(Document.class))).thenReturn(mapReduceIterable);
 		when(collection.count(any(Bson.class), any(CountOptions.class))).thenReturn(1L);
+		when(collection.getNamespace()).thenReturn(new MongoNamespace("db.mock-collection"));
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
 		when(collection.withReadPreference(any())).thenReturn(collection);
 		when(findIterable.projection(any())).thenReturn(findIterable);

@@ -110,12 +110,32 @@ public class MongoDatabaseUtils {
 
 		ClientSession session = doGetSession(factory, sessionSynchronization);
 
-		if(session == null) {
+		if (session == null) {
 			return StringUtils.hasText(dbName) ? factory.getDb(dbName) : factory.getDb();
 		}
 
 		MongoDbFactory factoryToUse = factory.withSession(session);
 		return StringUtils.hasText(dbName) ? factoryToUse.getDb(dbName) : factoryToUse.getDb();
+	}
+
+	/**
+	 * Check if the {@link MongoDbFactory} is actually bound to a {@link ClientSession} that has an active transaction, or
+	 * if a {@link TransactionSynchronization} has been registered for the {@link MongoDbFactory resource} and if the
+	 * associated {@link ClientSession} has an {@link ClientSession#hasActiveTransaction() active transaction}.
+	 *
+	 * @param dbFactory the resource to check transactions for. Must not be {@literal null}.
+	 * @return {@literal true} if the factory has an ongoing transaction.
+	 * @since 2.1.3
+	 */
+	public static boolean isTransactionActive(MongoDbFactory dbFactory) {
+
+		if (dbFactory.isTransactionActive()) {
+			return true;
+		}
+
+		MongoResourceHolder resourceHolder = (MongoResourceHolder) TransactionSynchronizationManager.getResource(dbFactory);
+		return resourceHolder != null
+				&& (resourceHolder.hasSession() && resourceHolder.getSession().hasActiveTransaction());
 	}
 
 	@Nullable

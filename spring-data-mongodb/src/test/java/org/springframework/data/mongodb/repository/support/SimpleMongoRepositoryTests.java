@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assumptions.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
 
 import java.util.ArrayList;
@@ -28,14 +29,16 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.ExampleMatcher.*;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -44,9 +47,13 @@ import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.test.util.MongoVersion;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
+import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * @author A. B. M. Kowser
@@ -59,6 +66,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 public class SimpleMongoRepositoryTests {
 
 	@Autowired private MongoTemplate template;
+	public @Rule MongoVersionRule mongoVersion = MongoVersionRule.any();
 
 	private Person oliver, dave, carter, boyd, stefan, leroi, alicia;
 	private List<Person> all;
@@ -381,6 +389,54 @@ public class SimpleMongoRepositoryTests {
 		repository.saveAll(Arrays.asList(first, second));
 
 		assertThat(repository.findAll()).containsExactlyInAnyOrder(first, second);
+	}
+
+	@Test // DATAMONGO-2130
+	@MongoVersion(asOf = "4.0")
+	public void countShouldBePossibleInTransaction() {
+
+		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		MongoTransactionManager txmgr = new MongoTransactionManager(template.getMongoDbFactory());
+		TransactionTemplate tt = new TransactionTemplate(txmgr);
+		tt.afterPropertiesSet();
+
+		long countPreTx = repository.count();
+
+		long count = tt.execute(status -> {
+
+			Person sample = new Person();
+			sample.setLastname("Matthews");
+
+			repository.save(sample);
+
+			return repository.count();
+		});
+
+		assertThat(count).isEqualTo(countPreTx + 1);
+	}
+
+	@Test // DATAMONGO-2130
+	@MongoVersion(asOf = "4.0")
+	public void existsShouldBePossibleInTransaction() {
+
+		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		MongoTransactionManager txmgr = new MongoTransactionManager(template.getMongoDbFactory());
+		TransactionTemplate tt = new TransactionTemplate(txmgr);
+		tt.afterPropertiesSet();
+
+		boolean exists = tt.execute(status -> {
+
+			Person sample = new Person();
+			sample.setLastname("Matthews");
+
+			repository.save(sample);
+
+			return repository.existsById(sample.getId());
+		});
+
+		assertThat(exists).isTrue();
 	}
 
 	private void assertThatAllReferencePersonsWereStoredCorrectly(Map<String, Person> references, List<Person> saved) {
