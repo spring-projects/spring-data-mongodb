@@ -28,7 +28,6 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -531,16 +530,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				: new BasicDBObject();
 		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, propDbObj);
 
-		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
+		MongoPersistentEntity<?> entity = isSubTypeOf(obj.getClass(), prop.getType())
 				? mappingContext.getPersistentEntity(obj.getClass())
 				: mappingContext.getPersistentEntity(type);
 
 		writeInternal(obj, propDbObj, entity);
 		accessor.put(prop, propDbObj);
-	}
-
-	private boolean isSubtype(Class<?> left, Class<?> right) {
-		return left.isAssignableFrom(right) && !left.equals(right);
 	}
 
 	/**
@@ -910,7 +905,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<?> componentType = targetType.getComponentType();
 		Class<?> rawComponentType = componentType == null ? null : componentType.getType();
 
-		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
+		collectionType = isSubTypeOf(collectionType, Collection.class) ? collectionType : List.class;
 		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>()
 				: CollectionFactory.createCollection(collectionType, rawComponentType, sourceValue.size());
 
@@ -920,7 +915,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (!DBRef.class.equals(rawComponentType) && isCollectionOfDbRefWhereBulkFetchIsPossible(sourceValue)) {
 
-			List<Object> objects = bulkReadAndConvertDBRefs((List<DBRef>)(List) sourceValue, componentType, path,
+			List<Object> objects = bulkReadAndConvertDBRefs((List<DBRef>) (List) sourceValue, componentType, path,
 					rawComponentType);
 			return getPotentiallyConvertedSimpleRead(objects, targetType.getType());
 		}
@@ -1358,6 +1353,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return true;
+	}
+
+	/**
+	 * Returns whether the given type is a sub type of the given reference, i.e. assignable but not the exact same type.
+	 * 
+	 * @param type must not be {@literal null}.
+	 * @param reference must not be {@literal null}.
+	 * @return
+	 */
+	private static boolean isSubTypeOf(Class<?> type, Class<?> reference) {
+		return !type.equals(reference) && reference.isAssignableFrom(type);
 	}
 
 	/**
