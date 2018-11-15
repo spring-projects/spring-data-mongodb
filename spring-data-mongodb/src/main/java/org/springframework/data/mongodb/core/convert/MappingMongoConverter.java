@@ -248,7 +248,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
 			DocumentAccessor source, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
-
 		AssociationAwareMongoDbPropertyValueProvider provider = new AssociationAwareMongoDbPropertyValueProvider(source,
 				evaluator, path);
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<>(
@@ -287,8 +286,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		// Make sure id property is set before all other properties
 
-		Object rawId = readAndPopulateIdentifier(accessor, documentAccessor, entity,
-				path, evaluator);
+		Object rawId = readAndPopulateIdentifier(accessor, documentAccessor, entity, path, evaluator);
 		ObjectPath currentPath = path.push(accessor.getBean(), entity, rawId);
 
 		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(documentAccessor, evaluator,
@@ -620,7 +618,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
+		MongoPersistentEntity<?> entity = isSubTypeOf(obj.getClass(), prop.getType())
 				? mappingContext.getRequiredPersistentEntity(obj.getClass())
 				: mappingContext.getRequiredPersistentEntity(type);
 
@@ -630,10 +628,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		writeInternal(obj, document, entity);
 		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, document);
 		accessor.put(prop, document);
-	}
-
-	private boolean isSubtype(Class<?> left, Class<?> right) {
-		return left.isAssignableFrom(right) && !left.equals(right);
 	}
 
 	/**
@@ -1012,7 +1006,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Assert.notNull(path, "Object path must not be null!");
 
 		Class<?> collectionType = targetType.getType();
-		collectionType = Collection.class.isAssignableFrom(collectionType) //
+		collectionType = isSubTypeOf(collectionType, Collection.class) //
 				? collectionType //
 				: List.class;
 
@@ -1628,6 +1622,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return true;
+	}
+
+	/**
+	 * Returns whether the given type is a sub type of the given reference, i.e. assignable but not the exact same type.
+	 * 
+	 * @param type must not be {@literal null}.
+	 * @param reference must not be {@literal null}.
+	 * @return
+	 */
+	private static boolean isSubTypeOf(Class<?> type, Class<?> reference) {
+		return !type.equals(reference) && reference.isAssignableFrom(type);
 	}
 
 	/**
