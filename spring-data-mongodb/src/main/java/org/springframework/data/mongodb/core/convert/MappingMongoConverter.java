@@ -74,6 +74,7 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Jordi Llach
  * @author Mark Paluch
+ * @author Wonha Shin
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
 
@@ -1012,9 +1013,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Assert.notNull(path, "Object path must not be null!");
 
 		Class<?> collectionType = targetType.getType();
-		collectionType = Collection.class.isAssignableFrom(collectionType) //
-				? collectionType //
-				: List.class;
+		collectionType = Collection.class.getName().equals(collectionType.getName()) || //
+						 !Collection.class.isAssignableFrom(collectionType) //
+				? List.class //
+				: collectionType;
 
 		TypeInformation<?> componentType = targetType.getComponentType() != null //
 				? targetType.getComponentType() //
