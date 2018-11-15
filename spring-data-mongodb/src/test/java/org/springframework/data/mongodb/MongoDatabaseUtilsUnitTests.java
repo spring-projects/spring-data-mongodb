@@ -78,6 +78,39 @@ public class MongoDatabaseUtilsUnitTests {
 		assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
 	}
 
+	@Test // DATAMONGO-2130
+	public void isTransactionActiveShouldDetectTxViaFactory() {
+
+		when(dbFactory.isTransactionActive()).thenReturn(true);
+
+		assertThat(MongoDatabaseUtils.isTransactionActive(dbFactory)).isTrue();
+	}
+
+	@Test // DATAMONGO-2130
+	public void isTransactionActiveShouldReturnFalseIfNoTxActive() {
+
+		when(dbFactory.isTransactionActive()).thenReturn(false);
+
+		assertThat(MongoDatabaseUtils.isTransactionActive(dbFactory)).isFalse();
+	}
+
+	@Test // DATAMONGO-2130
+	public void isTransactionActiveShouldLookupTxForActiveTransactionSynchronizationViaTxManager() {
+
+		when(dbFactory.isTransactionActive()).thenReturn(false);
+
+		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
+		TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+
+		txTemplate.execute(new TransactionCallbackWithoutResult() {
+
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+				assertThat(MongoDatabaseUtils.isTransactionActive(dbFactory)).isTrue();
+			}
+		});
+	}
+
 	@Test // DATAMONGO-1920
 	public void shouldNotStartSessionWhenNoTransactionOngoing() {
 

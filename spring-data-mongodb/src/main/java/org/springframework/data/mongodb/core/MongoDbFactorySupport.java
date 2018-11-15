@@ -233,6 +233,15 @@ public abstract class MongoDbFactorySupport<C> implements MongoDbFactory {
 			return delegate.withSession(session);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.MongoDbFactory#isTransactionActive()
+		 */
+		@Override
+		public boolean isTransactionActive() {
+			return session != null && session.hasActiveTransaction();
+		}
+
 		private MongoDatabase proxyMongoDatabase(MongoDatabase database) {
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
@@ -241,7 +250,8 @@ public abstract class MongoDbFactorySupport<C> implements MongoDbFactory {
 			return createProxyInstance(session, database, MongoDatabase.class);
 		}
 
-		private MongoCollection<?> proxyCollection(com.mongodb.session.ClientSession session, MongoCollection<?> collection) {
+		private MongoCollection<?> proxyCollection(com.mongodb.session.ClientSession session,
+				MongoCollection<?> collection) {
 			return createProxyInstance(session, collection, MongoCollection.class);
 		}
 

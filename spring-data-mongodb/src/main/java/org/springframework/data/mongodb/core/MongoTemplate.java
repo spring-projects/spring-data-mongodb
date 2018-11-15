@@ -1119,7 +1119,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document document = queryMapper.getMappedObject(query.getQueryObject(),
 				Optional.ofNullable(entityClass).map(it -> mappingContext.getPersistentEntity(entityClass)));
 
-		return execute(collectionName, collection -> collection.count(document, options));
+		return doCount(collectionName, document, options);
+	}
+
+	protected long doCount(String collectionName, Document filter, CountOptions options) {
+
+		if (!MongoDatabaseUtils.isTransactionActive(getMongoDbFactory())) {
+			return execute(collectionName, collection -> collection.count(filter, options));
+		}
+
+		return execute(collectionName, collection -> collection.countDocuments(filter, options));
 	}
 
 	/*
@@ -2820,21 +2829,23 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
-	 * Optimized {@link CollectionCallback} that takes an already mappend query and a nullable
+	 * Optimized {@link CollectionCallback} that takes an already mapped query and a nullable
 	 * {@link com.mongodb.client.model.Collation} to execute a count query limited to one element.
 	 *
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor
-	private static class ExistsCallback implements CollectionCallback<Boolean> {
+	private class ExistsCallback implements CollectionCallback<Boolean> {
 
 		private final Document mappedQuery;
 		private final com.mongodb.client.model.Collation collation;
 
 		@Override
 		public Boolean doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-			return collection.count(mappedQuery, new CountOptions().limit(1).collation(collation)) > 0;
+
+			return doCount(collection.getNamespace().getCollectionName(), mappedQuery,
+					new CountOptions().limit(1).collation(collation)) > 0;
 		}
 	}
 
@@ -3343,23 +3354,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.MongoTemplate#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 * @see org.springframework.data.mongodb.core.MongoTemplate#doCount(java.lang.String, org.bson.Document, com.mongodb.client.model.CountOptions)
 		 */
 		@Override
-		@SuppressWarnings("unchecked")
-		public long count(Query query, @Nullable Class<?> entityClass, String collectionName) {
+		protected long doCount(String collectionName, Document filter, CountOptions options) {
 
 			if (!session.hasActiveTransaction()) {
-				return super.count(query, entityClass, collectionName);
+				return super.doCount(collectionName, filter, options);
 			}
 
-			CountOptions options = new CountOptions();
-			query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
-
-			Document document = delegate.queryMapper.getMappedObject(query.getQueryObject(),
-					Optional.ofNullable(entityClass).map(it -> delegate.mappingContext.getPersistentEntity(entityClass)));
-
-			return execute(collectionName, collection -> collection.countDocuments(document, options));
+			return execute(collectionName, collection -> collection.countDocuments(filter, options));
 		}
 	}
 }
