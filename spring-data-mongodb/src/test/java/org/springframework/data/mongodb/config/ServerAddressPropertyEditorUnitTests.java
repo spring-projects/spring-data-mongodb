@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -124,7 +125,8 @@ public class ServerAddressPropertyEditorUnitTests {
 	 * We can't tell whether the last part of the hostAddress represents a port or not.
 	 */
 	@Test // DATAMONGO-808
-	public void shouldFailToHandleAmbiguousIPv6HostaddressLongWithoutPortAndWithoutBrackets() throws UnknownHostException {
+	public void shouldFailToHandleAmbiguousIPv6HostaddressLongWithoutPortAndWithoutBrackets()
+			throws UnknownHostException {
 
 		expectedException.expect(IllegalArgumentException.class);
 
@@ -173,9 +175,9 @@ public class ServerAddressPropertyEditorUnitTests {
 
 		for (String hostname : hostnames) {
 			try {
-				InetAddress.getByName(hostname);
+				InetAddress.getByName(hostname).isReachable(1500);
 				Assert.fail("Supposedly unresolveable hostname '" + hostname + "' can be resolved.");
-			} catch (UnknownHostException expected) {
+			} catch (IOException expected) {
 				// ok
 			}
 		}
