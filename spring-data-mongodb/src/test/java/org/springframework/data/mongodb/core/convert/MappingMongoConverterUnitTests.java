@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -1934,6 +1935,18 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.convertId(source.toHexString(), Object.class)).isEqualTo(source.toHexString());
 	}
 
+	@Test // DATAMONGO-2135
+	public void addsEqualObjectsToCollection() {
+
+		org.bson.Document itemDocument = new org.bson.Document("itemKey", "123");
+		org.bson.Document orderDocument = new org.bson.Document("items",
+				Arrays.asList(itemDocument, itemDocument, itemDocument));
+
+		Order order = converter.read(Order.class, orderDocument);
+
+		assertThat(order.items).hasSize(3);
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2361,5 +2374,16 @@ public class MappingMongoConverterUnitTests {
 
 		final @Id String id;
 		String value;
+	}
+
+	// DATAMONGO-2135
+
+	@EqualsAndHashCode // equality check by fields
+	static class SomeItem {
+		String itemKey;
+	}
+
+	static class Order {
+		Collection<SomeItem> items = new ArrayList<>();
 	}
 }

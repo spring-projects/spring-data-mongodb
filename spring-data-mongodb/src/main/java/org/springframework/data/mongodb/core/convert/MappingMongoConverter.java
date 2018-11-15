@@ -249,7 +249,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
 			DocumentAccessor source, SpELExpressionEvaluator evaluator, ObjectPath path) {
 
-
 		AssociationAwareMongoDbPropertyValueProvider provider = new AssociationAwareMongoDbPropertyValueProvider(source,
 				evaluator, path);
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<>(
@@ -288,8 +287,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		// Make sure id property is set before all other properties
 
-		Object rawId = readAndPopulateIdentifier(accessor, documentAccessor, entity,
-				path, evaluator);
+		Object rawId = readAndPopulateIdentifier(accessor, documentAccessor, entity, path, evaluator);
 		ObjectPath currentPath = path.push(accessor.getBean(), entity, rawId);
 
 		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(documentAccessor, evaluator,
@@ -621,7 +619,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
+		MongoPersistentEntity<?> entity = valueType.isSubTypeOf(prop.getType())
 				? mappingContext.getRequiredPersistentEntity(obj.getClass())
 				: mappingContext.getRequiredPersistentEntity(type);
 
@@ -631,10 +629,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		writeInternal(obj, document, entity);
 		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, document);
 		accessor.put(prop, document);
-	}
-
-	private boolean isSubtype(Class<?> left, Class<?> right) {
-		return left.isAssignableFrom(right) && !left.equals(right);
 	}
 
 	/**
@@ -1013,9 +1007,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Assert.notNull(targetType, "Target type must not be null!");
 		Assert.notNull(path, "Object path must not be null!");
 
-		Class<?> collectionType = targetType.getType();
-		collectionType = Collection.class.isAssignableFrom(collectionType) //
-				? collectionType //
+		Class<?> collectionType = targetType.isSubTypeOf(Collection.class) //
+				? targetType.getType() //
 				: List.class;
 
 		TypeInformation<?> componentType = targetType.getComponentType() != null //
