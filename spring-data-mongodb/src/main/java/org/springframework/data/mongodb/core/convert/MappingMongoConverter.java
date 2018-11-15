@@ -578,7 +578,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
+		MongoPersistentEntity<?> entity = isSubTypeOf(obj.getClass(), prop.getType())
 				? mappingContext.getRequiredPersistentEntity(obj.getClass())
 				: mappingContext.getRequiredPersistentEntity(type);
 
@@ -588,10 +588,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		writeInternal(obj, document, entity);
 		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, document);
 		accessor.put(prop, document);
-	}
-
-	private boolean isSubtype(Class<?> left, Class<?> right) {
-		return left.isAssignableFrom(right) && !left.equals(right);
 	}
 
 	/**
@@ -970,7 +966,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Assert.notNull(path, "Object path must not be null!");
 
 		Class<?> collectionType = targetType.getType();
-		collectionType = Collection.class.isAssignableFrom(collectionType) //
+		collectionType = isSubTypeOf(collectionType, Collection.class) //
 				? collectionType //
 				: List.class;
 
@@ -1542,6 +1538,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return true;
+	}
+
+	/**
+	 * Returns whether the given type is a sub type of the given reference, i.e. assignable but not the exact same type.
+	 * 
+	 * @param type must not be {@literal null}.
+	 * @param reference must not be {@literal null}.
+	 * @return
+	 */
+	private static boolean isSubTypeOf(Class<?> type, Class<?> reference) {
+		return !type.equals(reference) && reference.isAssignableFrom(type);
 	}
 
 	/**
