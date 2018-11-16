@@ -1124,6 +1124,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected long doCount(String collectionName, Document filter, CountOptions options) {
 
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
+		}
+
 		if (MongoDatabaseUtils.isTransactionActive(getMongoDbFactory())) {
 			return execute(collectionName, collection -> collection.countDocuments(filter, options));
 		}
