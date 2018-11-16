@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -1904,6 +1905,17 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(Attribute.class, source).value).isInstanceOf(List.class);
 	}
 
+	@Test // DATAMONGO-3125
+	public void readCollectionTypeOfSameHashCodeObjects() {
+		org.bson.Document itemDocument = new org.bson.Document("itemKey", "123");
+		org.bson.Document orderDocument = new org.bson.Document("items",
+				Arrays.asList(itemDocument, itemDocument, itemDocument));
+
+		SomeOrder order = converter.read(SomeOrder.class, orderDocument);
+
+		assertThat(order.items).hasSize(3);
+	}
+
 	@Test // DATAMONGO-2043
 	public void omitsTypeHintWhenWritingSimpleTypes() {
 
@@ -2333,6 +2345,17 @@ public class MappingMongoConverterUnitTests {
 		public boolean isWitherUsed() {
 			return witherUsed;
 		}
+	}
+
+	// DATAMONGO- 2135
+
+	@EqualsAndHashCode
+	static class SomeItem {
+		String itemKey;
+	}
+
+	static class SomeOrder {
+		Collection<SomeItem> items = new ArrayList<>();
 	}
 
 	@RequiredArgsConstructor
