@@ -134,8 +134,7 @@ public class MongoDatabaseUtils {
 		}
 
 		MongoResourceHolder resourceHolder = (MongoResourceHolder) TransactionSynchronizationManager.getResource(dbFactory);
-		return resourceHolder != null
-				&& (resourceHolder.hasSession() && resourceHolder.getSession().hasActiveTransaction());
+		return resourceHolder != null && resourceHolder.hasActiveTransaction();
 	}
 
 	@Nullable
@@ -160,7 +159,7 @@ public class MongoDatabaseUtils {
 		// init a non native MongoDB transaction by registering a MongoSessionSynchronization
 
 		resourceHolder = new MongoResourceHolder(createClientSession(dbFactory), dbFactory);
-		resourceHolder.getSession().startTransaction();
+		resourceHolder.getRequiredSession().startTransaction();
 
 		TransactionSynchronizationManager
 				.registerSynchronization(new MongoSessionSynchronization(resourceHolder, dbFactory));
@@ -207,8 +206,8 @@ public class MongoDatabaseUtils {
 		@Override
 		protected void processResourceAfterCommit(MongoResourceHolder resourceHolder) {
 
-			if (isTransactionActive(resourceHolder)) {
-				resourceHolder.getSession().commitTransaction();
+			if (resourceHolder.hasActiveTransaction()) {
+				resourceHolder.getRequiredSession().commitTransaction();
 			}
 		}
 
@@ -219,8 +218,8 @@ public class MongoDatabaseUtils {
 		@Override
 		public void afterCompletion(int status) {
 
-			if (status == TransactionSynchronization.STATUS_ROLLED_BACK && isTransactionActive(this.resourceHolder)) {
-				resourceHolder.getSession().abortTransaction();
+			if (status == TransactionSynchronization.STATUS_ROLLED_BACK && this.resourceHolder.hasActiveTransaction()) {
+				resourceHolder.getRequiredSession().abortTransaction();
 			}
 
 			super.afterCompletion(status);
@@ -234,17 +233,8 @@ public class MongoDatabaseUtils {
 		protected void releaseResource(MongoResourceHolder resourceHolder, Object resourceKey) {
 
 			if (resourceHolder.hasActiveSession()) {
-				resourceHolder.getSession().close();
+				resourceHolder.getRequiredSession().close();
 			}
-		}
-
-		private boolean isTransactionActive(MongoResourceHolder resourceHolder) {
-
-			if (!resourceHolder.hasSession()) {
-				return false;
-			}
-
-			return resourceHolder.getSession().hasActiveTransaction();
 		}
 	}
 }

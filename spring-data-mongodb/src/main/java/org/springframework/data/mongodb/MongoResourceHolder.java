@@ -28,6 +28,7 @@ import com.mongodb.client.ClientSession;
  * <strong>Note:</strong> Intended for internal usage only.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  * @see MongoTransactionManager
  * @see org.springframework.data.mongodb.core.MongoTemplate
@@ -54,6 +55,22 @@ class MongoResourceHolder extends ResourceHolderSupport {
 	 */
 	@Nullable
 	ClientSession getSession() {
+		return session;
+	}
+
+	/**
+	 * @return the required associated {@link ClientSession}.
+	 * @throws IllegalStateException if no {@link ClientSession} is associated with this {@link MongoResourceHolder}.
+	 * @since 2.1.3
+	 */
+	ClientSession getRequiredSession() {
+
+		ClientSession session = getSession();
+
+		if (session == null) {
+			throw new IllegalStateException("No session available!");
+		}
+
 		return session;
 	}
 
@@ -101,7 +118,21 @@ class MongoResourceHolder extends ResourceHolderSupport {
 			return false;
 		}
 
-		return hasServerSession() && !getSession().getServerSession().isClosed();
+		return hasServerSession() && !getRequiredSession().getServerSession().isClosed();
+	}
+
+	/**
+	 * @return {@literal true} if the session has an active transaction.
+	 * @since 2.1.3
+	 * @see #hasActiveSession()
+	 */
+	boolean hasActiveTransaction() {
+
+		if (!hasActiveSession()) {
+			return false;
+		}
+
+		return getRequiredSession().hasActiveTransaction();
 	}
 
 	/**
@@ -111,7 +142,7 @@ class MongoResourceHolder extends ResourceHolderSupport {
 	boolean hasServerSession() {
 
 		try {
-			return getSession().getServerSession() != null;
+			return getRequiredSession().getServerSession() != null;
 		} catch (IllegalStateException serverSessionClosed) {
 			// ignore
 		}
