@@ -590,6 +590,19 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(new Document("arg0", null)));
 	}
 
+	@Test // DATAMONGO-2119
+	public void spelShouldIgnoreJsonParseErrorsForRegex() {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByPersonLastnameRegex", Person.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
+				new Person("Molly", "Chandler"));
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getQueryObject().toJson(),
+				is(new BasicQuery("{lastname: {$regex: 'Chandler'}}").getQueryObject().toJson()));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) {
 
 		try {
@@ -697,10 +710,14 @@ public class StringBasedMongoQueryUnitTests {
 		@Query("{ 'arg0' : '?0', 'arg1' : '?1s' }")
 		List<Person> findByWhenQuotedAndSomeStuffAppended(String arg0, String arg1);
 
-		@Query("{ 'lastname' : { '$regex' : '^(?0|John ?1|?1)'} }") // use spel or some regex string this is fucking bad
+		@Query("{ 'lastname' : { '$regex' : '^(?0|John ?1|?1)'} }") // use spel or some regex string this is bad
 		Person findByLastnameRegex(String lastname, String alternative);
 
 		@Query("{ arg0 : ?#{[0]} }")
 		List<Person> findByUsingSpel(Object arg0);
+
+		@Query("{ 'lastname' : { '$regex' : ?#{[0].lastname} } }")
+		Person findByPersonLastnameRegex(Person key);
 	}
+
 }

@@ -20,7 +20,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
+import org.bson.BSON;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +39,7 @@ import org.springframework.util.StringUtils;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.util.JSON;
+import com.mongodb.util.JSONCallback;
 
 /**
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
@@ -225,7 +228,36 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			String transformedInput = transformQueryAndCollectExpressionParametersIntoBindings(input, bindings);
 			String parseableInput = makeParameterReferencesParseable(transformedInput);
 
-			collectParameterReferencesIntoBindings(bindings, JSON.parse(parseableInput));
+			collectParameterReferencesIntoBindings(bindings, JSON.parse(parseableInput, new JSONCallback() {
+
+				/*
+				 * (non-Javadoc)
+				 * @see com.mongodb.util.JSONCallback#objectDone()
+				 */
+				@Override
+				public Object objectDone() {
+					return exceptionSwallowingStackReducingObjectDone();
+				}
+
+				private Object exceptionSwallowingStackReducingObjectDone/*CauseWeJustNeedTheStructureNotTheActualValue*/() {
+
+					Object value;
+
+					try {
+						return super.objectDone();
+					} catch (PatternSyntaxException e) {
+						value = Pattern.compile("");
+					}
+
+					if (!isStackEmpty()) {
+						_put(curName(), value);
+					} else {
+						value = !BSON.hasDecodeHooks() ? value : BSON.applyDecodingHooks(value);
+						setRoot(value);
+					}
+					return value;
+				}
+			}));
 
 			return transformedInput;
 		}
