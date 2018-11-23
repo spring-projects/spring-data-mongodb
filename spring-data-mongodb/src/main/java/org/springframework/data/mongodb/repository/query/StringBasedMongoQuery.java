@@ -228,36 +228,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			String transformedInput = transformQueryAndCollectExpressionParametersIntoBindings(input, bindings);
 			String parseableInput = makeParameterReferencesParseable(transformedInput);
 
-			collectParameterReferencesIntoBindings(bindings, JSON.parse(parseableInput, new JSONCallback() {
-
-				/*
-				 * (non-Javadoc)
-				 * @see com.mongodb.util.JSONCallback#objectDone()
-				 */
-				@Override
-				public Object objectDone() {
-					return exceptionSwallowingStackReducingObjectDone();
-				}
-
-				private Object exceptionSwallowingStackReducingObjectDone/*CauseWeJustNeedTheStructureNotTheActualValue*/() {
-
-					Object value;
-
-					try {
-						return super.objectDone();
-					} catch (PatternSyntaxException e) {
-						value = Pattern.compile("");
-					}
-
-					if (!isStackEmpty()) {
-						_put(curName(), value);
-					} else {
-						value = !BSON.hasDecodeHooks() ? value : BSON.applyDecodingHooks(value);
-						setRoot(value);
-					}
-					return value;
-				}
-			}));
+			collectParameterReferencesIntoBindings(bindings,
+					JSON.parse(parseableInput, new LenientPatternDecodingCallback()));
 
 			return transformedInput;
 		}
@@ -389,6 +361,43 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 			return indexOfExpressionParameter < 0 ? input.indexOf(NAME_BASED_EXPRESSION_PARAM_START, position)
 					: indexOfExpressionParameter;
+		}
+	}
+
+	/**
+	 * {@link JSONCallback} with lenient handling for {@link PatternSyntaxException} falling back to a placeholder
+	 * {@link Pattern} for intermediate query document rendering.
+	 */
+	private static class LenientPatternDecodingCallback extends JSONCallback {
+
+		private static final Pattern EMPTY_MARKER = Pattern.compile("__Spring_Data_MongoDB_Bind_Marker__");
+
+		/*
+		 * (non-Javadoc)
+		 * @see com.mongodb.util.JSONCallback#objectDone()
+		 */
+		@Override
+		public Object objectDone() {
+			return exceptionSwallowingStackReducingObjectDone();
+		}
+
+		private Object exceptionSwallowingStackReducingObjectDone/*CauseWeJustNeedTheStructureNotTheActualValue*/() {
+
+			Object value;
+
+			try {
+				return super.objectDone();
+			} catch (PatternSyntaxException e) {
+				value = EMPTY_MARKER;
+			}
+
+			if (!isStackEmpty()) {
+				_put(curName(), value);
+			} else {
+				value = !BSON.hasDecodeHooks() ? value : BSON.applyDecodingHooks(value);
+				setRoot(value);
+			}
+			return value;
 		}
 	}
 
