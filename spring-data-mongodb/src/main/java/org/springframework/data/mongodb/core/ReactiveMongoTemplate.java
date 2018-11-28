@@ -496,11 +496,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						session.startTransaction();
 					}
 
-					return Flux
-							.usingWhen(Mono.just(session), //
-									s -> ReactiveMongoTemplate.this.withSession(action, s), //
-									ClientSession::commitTransaction, //
-									ClientSession::abortTransaction) //
+					return Flux.usingWhen(Mono.just(session), //
+							s -> ReactiveMongoTemplate.this.withSession(action, s), //
+							ClientSession::commitTransaction, //
+							ClientSession::abortTransaction) //
 							.doFinally(signalType -> doFinally.accept(session));
 				});
 			}
@@ -742,7 +741,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#exists(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
-	public Mono<Boolean> exists(final Query query, @Nullable Class<?> entityClass, String collectionName) {
+	public Mono<Boolean> exists(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException("Query passed in to exist can't be null");
@@ -750,9 +749,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return createFlux(collectionName, collection -> {
 
-			Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
-			FindPublisher<Document> findPublisher = collection.find(mappedQuery, Document.class)
+			Document filter = queryMapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
+			FindPublisher<Document> findPublisher = collection.find(filter, Document.class)
 					.projection(new Document("_id", 1));
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("exists: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
+			}
 
 			findPublisher = query.getCollation().map(Collation::toMongoCollation).map(findPublisher::collation)
 					.orElse(findPublisher);
@@ -834,6 +837,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.orElse((Class<T>) BsonValue.class);
 
 		Flux<?> result = execute(collectionName, collection -> {
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Executing findDistinct using query {} for field: {} in collection: {}",
+						serializeToJsonSafely(mappedQuery), field, collectionName);
+			}
 
 			DistinctPublisher<T> publisher = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
 
@@ -1151,7 +1159,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return createMono(collectionName, collection -> {
 
-			final Document Document = query == null ? null
+			Document filter = query == null ? null
 					: queryMapper.getMappedObject(query.getQueryObject(),
 							entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
 
@@ -1160,7 +1168,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 			}
 
-			return collection.count(Document, options);
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
+			}
+
+			return collection.count(filter, options);
 		});
 	}
 
@@ -3165,7 +3177,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			return createMono(collectionName, collection -> {
 
-				final Document Document = query == null ? null
+				Document filter = query == null ? null
 						: delegate.queryMapper.getMappedObject(query.getQueryObject(),
 								entityClass == null ? null : delegate.mappingContext.getPersistentEntity(entityClass));
 
@@ -3174,7 +3186,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 				}
 
-				return collection.countDocuments(Document, options);
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
+				}
+
+				return collection.countDocuments(filter, options);
 			});
 		}
 	}

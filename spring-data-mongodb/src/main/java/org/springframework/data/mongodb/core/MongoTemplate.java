@@ -150,6 +150,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Borislav Rangelov
  * @author duozhilin
  * @author Andreas Zink
+ * @author Cimon Lucas
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
@@ -874,6 +875,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				.orElse((Class<T>) BsonValue.class);
 
 		MongoIterable<?> result = execute(collectionName, (collection) -> {
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Executing findDistinct using query {} for field: {} in collection: {}",
+						serializeToJsonSafely(mappedQuery), field, collectionName);
+			}
 
 			DistinctIterable<T> iterable = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
 
