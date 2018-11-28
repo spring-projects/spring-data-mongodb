@@ -7,11 +7,11 @@
 		</encoder>
 	</appender>
 
-	<!-- 
+	<!--
 	<logger name="org.springframework" level="debug" />
 	 -->
-	 
-	 <logger name="org.springframework.data.mongodb.core.aggregation" level="debug" />
+
+	<logger name="org.springframework.data.mongodb.core" level="error"/>
 
 	<root level="error">
 		<appender-ref ref="console" />
