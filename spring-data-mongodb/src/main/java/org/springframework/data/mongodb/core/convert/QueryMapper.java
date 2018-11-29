@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -299,7 +300,7 @@ public class QueryMapper {
 	 */
 	protected Document getMappedKeyword(Field property, Keyword keyword) {
 
-		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
+		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists() && keyword.mayHoldDbRef();
 		Object value = keyword.getValue();
 
 		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
@@ -634,9 +635,11 @@ public class QueryMapper {
 	static class Keyword {
 
 		private static final String N_OR_PATTERN = "\\$.*or";
+		private static final Set<String> NON_DBREF_CONVERTING_KEYWORDS = new HashSet<>(Arrays.asList("$", "$size", "$slice", "$gt", "$lt"));
 
 		private final String key;
 		private final Object value;
+
 
 		public Keyword(Bson source, String key) {
 			this.key = key;
@@ -696,6 +699,15 @@ public class QueryMapper {
 		@SuppressWarnings("unchecked")
 		public <T> T getValue() {
 			return (T) value;
+		}
+
+		/**
+		 *
+		 * @return {@literal true} if key may hold a DbRef.
+		 * @since 2.0.13
+		 */
+		public boolean mayHoldDbRef() {
+			return !NON_DBREF_CONVERTING_KEYWORDS.contains(key);
 		}
 
 		/**
