@@ -529,6 +529,18 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is((DBObject) new BasicDBObject().append("arg0", null)));
 	}
 
+	@Test // DATAMONGO-2149
+	public void shouldParseFieldsProjectionWithSliceCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findWithSliceInProjection", String.class, int.class,
+				int.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Bruce Banner", 0, 5);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getFieldsObject(), is(equalTo(JSON.parse("{ \"fans\" : { \"$slice\" : [0, 5] } }"))));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -623,5 +635,11 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ arg0 : ?#{[0]} }")
 		List<Person> findByUsingSpel(Object arg0);
+
+		@Query("{ 'lastname' : { '$regex' : ?#{[0].lastname} } }")
+		Person findByPersonLastnameRegex(Person key);
+
+		@Query(value = "{ 'id' : ?0 }", fields = "{ 'fans': { '$slice': [ ?1, ?2 ] } }")
+		Person findWithSliceInProjection(String id, int skip, int limit);
 	}
 }

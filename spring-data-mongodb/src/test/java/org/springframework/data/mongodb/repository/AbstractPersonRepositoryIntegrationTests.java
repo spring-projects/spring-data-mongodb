@@ -23,7 +23,9 @@ import static org.springframework.data.geo.Metrics.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -56,6 +58,7 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
 import org.springframework.data.querydsl.QSort;
@@ -1181,4 +1184,48 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn)), hasSize(0));
 		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn, Pattern.CASE_INSENSITIVE)), hasSize(1));
 	}
+
+	@Test // DATAMONGO-2149
+	public void annotatedQueryShouldAllowSliceInFieldsProjectionWithDbRef() {
+
+		operations.remove(new Query(), User.class);
+
+		List<User> users = new ArrayList<User>();
+
+		for (int i = 0; i < 10; i++) {
+
+			User user = new User();
+			user.id = "id" + i;
+			user.username = "user" + i;
+
+			users.add(user);
+
+			operations.save(user);
+		}
+
+		alicia.fans = new ArrayList<User>(users);
+		operations.save(alicia);
+
+		Person target = repository.findWithSliceInProjection(alicia.getId(), 0, 5);
+		assertThat(target.getFans(), hasSize(5));
+	}
+
+	@Test // DATAMONGO-2149
+	public void annotatedQueryShouldAllowPositionalParameterInFieldsProjection() {
+
+		Set<Address> addressList = new LinkedHashSet<Address>();
+
+		for (int i = 0; i < 10; i++) {
+			  addressList.add(new Address("street-" + i, "zip", "lnz"));
+		}
+
+		alicia.setShippingAddresses(addressList);
+		operations.save(alicia);
+
+		Person target = repository.findWithArrayPositionInProjection(1);
+
+		assertThat(target, notNullValue());
+		assertThat(target.getShippingAddresses(), hasSize(1));
+	}
+
 }

@@ -328,4 +328,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	void deleteByThePersonsFirstname(String firstname);
 
 	List<Person> findByFirstnameRegex(Pattern pattern);
+
+	@Query(value = "{ 'id' : ?0 }", fields = "{ 'fans': { '$slice': [ ?1, ?2 ] } }")
+	Person findWithSliceInProjection(String id, int skip, int limit);
+
+	@Query(value = "{ 'shippingAddresses' : { '$elemMatch' : { 'city' : { '$eq' : 'lnz' } } } }", fields = "{ 'shippingAddresses.$': ?0 }")
+	Person findWithArrayPositionInProjection(int position);
 }
