@@ -27,13 +27,16 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -60,6 +63,7 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
 import org.springframework.data.querydsl.QSort;
@@ -1219,5 +1223,72 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn))).hasSize(0);
 		assertThat(repository.findByFirstnameRegex(Pattern.compile(fn, Pattern.CASE_INSENSITIVE))).hasSize(1);
+	}
+
+	@Test // DATAMONGO-2149
+	public void annotatedQueryShouldAllowSliceInFieldsProjectionWithDbRef() {
+
+		operations.remove(new Query(), User.class);
+
+		List<User> users = IntStream.range(0, 10).mapToObj(it -> {
+
+			User user = new User();
+			user.id = "id" + it;
+			user.username = "user" + it;
+
+			return user;
+		}).collect(Collectors.toList());
+
+		users.forEach(operations::save);
+
+		alicia.fans = new ArrayList<>(users);
+		operations.save(alicia);
+
+		Person target = repository.findWithSliceInProjection(alicia.getId(), 0, 5);
+		assertThat(target.getFans().size()).isEqualTo(5);
+	}
+
+	@Test // DATAMONGO-2149
+	public void annotatedQueryShouldAllowPositionalParameterInFieldsProjection() {
+
+		Set<Address> addressList = IntStream.range(0, 10).mapToObj(it -> new Address("street-" + it, "zip", "lnz"))
+				.collect(Collectors.toSet());
+
+		alicia.setShippingAddresses(addressList);
+		operations.save(alicia);
+
+		Person target = repository.findWithArrayPositionInProjection(1);
+
+		assertThat(target).isNotNull();
+		assertThat(target.getShippingAddresses()).hasSize(1);
+	}
+
+	@Test // DATAMONGO-2149
+	@Ignore("This one fails due to Json parse exception within MongoDB")
+	public void annotatedQueryShouldAllowPositionalParameterInFieldsProjectionWithDbRef() {
+
+		// the following needs to be added to PersonRepository.
+
+		// @Query(value = "{ 'fans' : { '$elemMatch' : { '$ref' : 'user' } } }", fields = "{ 'fans.$': ?0 }")
+		// Person findWithArrayPositionInProjectionWithDbRef(int position);
+
+		List<User> userList = IntStream.range(0, 10).mapToObj(it -> {
+
+			User user = new User();
+			user.id = "" + it;
+			user.username = "user" + it;
+
+			return user;
+		}).collect(Collectors.toList());
+
+		userList.forEach(operations::save);
+
+		alicia.setFans(userList);
+		operations.save(alicia);
+
+		// Person target = repository.findWithArrayPositionInProjectionWithDbRef(1);
+		//
+		// assertThat(target).isNotNull();
+		// assertThat(target.getShippingAddresses()).hasSize(1);
 	}
 }
