@@ -81,3 +81,6 @@ Flux<ChangeStreamEvent<Person>> resumed = template.changeStream("person", option
 <1> You may obtain the server time of an `ChangeStreamEvent` through the `getTimestamp` method or use the `resumeToken`
 exposed through `getResumeToken`.
 ====
+
+TIP: In some cases an `Instant` might not be a precise enough measure when resuming a Change Stream. Use a MongoDB native
+https://docs.mongodb.com/manual/reference/bson-types/#timestamps[BsonTimestamp] for that purpose.

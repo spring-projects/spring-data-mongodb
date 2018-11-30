@@ -115,8 +115,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 					.orElseGet(() -> ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
 							: FullDocument.UPDATE_LOOKUP);
 
-			startAt = changeStreamOptions.getResumeTimestamp().map(it -> new BsonTimestamp((int) it.getEpochSecond(), 0))
-					.orElse(null);
+			startAt = changeStreamOptions.getResumeBsonTimestamp().orElse(null);
 		}
 
 		MongoDatabase db = StringUtils.hasText(options.getDatabaseName())

@@ -20,6 +20,7 @@ import lombok.EqualsAndHashCode;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
+import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -84,8 +85,19 @@ public class ChangeStreamEvent<T> {
 	@Nullable
 	public Instant getTimestamp() {
 
-		return raw != null && raw.getClusterTime() != null
-				? converter.getConversionService().convert(raw.getClusterTime(), Instant.class) : null;
+		return getBsonTimestamp() != null ? converter.getConversionService().convert(raw.getClusterTime(), Instant.class)
+				: null;
+	}
+
+	/**
+	 * Get the {@link ChangeStreamDocument#getClusterTime() cluster time}.
+	 *
+	 * @return can be {@literal null}.
+	 * @since 2.2
+	 */
+	@Nullable
+	public BsonTimestamp getBsonTimestamp() {
+		return raw != null ? raw.getClusterTime() : null;
 	}
 
 	/**
