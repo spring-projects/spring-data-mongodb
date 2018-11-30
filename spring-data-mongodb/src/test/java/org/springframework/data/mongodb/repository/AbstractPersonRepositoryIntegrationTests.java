@@ -1263,7 +1263,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(target.getShippingAddresses()).hasSize(1);
 	}
 
-	@Test // DATAMONGO-2149
+	@Test // DATAMONGO-2149, DATAMONGO-2154
 	@Ignore("This one fails due to Json parse exception within MongoDB")
 	public void annotatedQueryShouldAllowPositionalParameterInFieldsProjectionWithDbRef() {
 
