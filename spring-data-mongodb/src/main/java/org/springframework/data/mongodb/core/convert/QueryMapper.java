@@ -680,7 +680,7 @@ public class QueryMapper {
 		/**
 		 *
 		 * @return {@literal true} if key may hold a DbRef.
-		 * @since 2.0.13
+		 * @since 2.1.4
 		 */
 		public boolean mayHoldDbRef() {
 			return !NON_DBREF_CONVERTING_KEYWORDS.contains(key);
