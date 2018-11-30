@@ -21,12 +21,15 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
 
+import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
@@ -47,7 +50,7 @@ public class ChangeStreamOptions {
 	private @Nullable BsonValue resumeToken;
 	private @Nullable FullDocument fullDocumentLookup;
 	private @Nullable Collation collation;
-	private @Nullable Instant resumeTimestamp;
+	private @Nullable Object resumeTimestamp;
 
 	protected ChangeStreamOptions() {}
 
@@ -83,7 +86,15 @@ public class ChangeStreamOptions {
 	 * @return {@link Optional#empty()} if not set.
 	 */
 	public Optional<Instant> getResumeTimestamp() {
-		return Optional.ofNullable(resumeTimestamp);
+		return Optional.ofNullable(resumeTimestamp).map(this::asInstant);
+	}
+
+	/**
+	 * @return {@link Optional#empty()} if not set.
+	 * @since 2.2
+	 */
+	public Optional<BsonTimestamp> getResumeBsonTimestamp() {
+		return Optional.ofNullable(resumeTimestamp).map(this::asBsonTimestamp);
 	}
 
 	/**
@@ -103,6 +114,33 @@ public class ChangeStreamOptions {
 		return new ChangeStreamOptionsBuilder();
 	}
 
+	private Instant asInstant(Object timestamp) {
+		return asTimestampOfType(timestamp, Instant.class);
+	}
+
+	private BsonTimestamp asBsonTimestamp(Object timestamp) {
+		return asTimestampOfType(timestamp, BsonTimestamp.class);
+	}
+
+	private <T> T asTimestampOfType(Object timestamp, Class<T> targetType) {
+
+		if (ClassUtils.isAssignableValue(targetType, timestamp)) {
+			return (T) timestamp;
+		}
+
+		if (timestamp instanceof Instant) {
+			return (T) new BsonTimestamp((int) ((Instant) timestamp).getEpochSecond(), 0);
+		}
+
+		if (timestamp instanceof BsonTimestamp) {
+			return (T) Instant.ofEpochSecond(((BsonTimestamp) timestamp).getTime());
+		}
+
+		throw new IllegalArgumentException(
+				"o_O that should actually not happen. The timestampt should be an Instant or a BsonTimestamp but was "
+						+ ObjectUtils.nullSafeClassName(timestamp));
+	}
+
 	/**
 	 * Builder for creating {@link ChangeStreamOptions}.
 	 *
@@ -115,7 +153,7 @@ public class ChangeStreamOptions {
 		private @Nullable BsonValue resumeToken;
 		private @Nullable FullDocument fullDocumentLookup;
 		private @Nullable Collation collation;
-		private @Nullable Instant resumeTimestamp;
+		private @Nullable Object resumeTimestamp;
 
 		private ChangeStreamOptionsBuilder() {}
 
@@ -217,6 +255,21 @@ public class ChangeStreamOptions {
 		 * @return this.
 		 */
 		public ChangeStreamOptionsBuilder resumeAt(Instant resumeTimestamp) {
+
+			Assert.notNull(resumeTimestamp, "ResumeTimestamp must not be null!");
+
+			this.resumeTimestamp = resumeTimestamp;
+			return this;
+		}
+
+		/**
+		 * Set the cluster time to resume from.
+		 *
+		 * @param resumeTimestamp must not be {@literal null}.
+		 * @return this.
+		 * @since 2.2
+		 */
+		public ChangeStreamOptionsBuilder resumeAt(BsonTimestamp resumeTimestamp) {
 
 			Assert.notNull(resumeTimestamp, "ResumeTimestamp must not be null!");
 

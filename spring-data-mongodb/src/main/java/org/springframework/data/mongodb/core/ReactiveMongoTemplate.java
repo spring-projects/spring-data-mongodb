@@ -31,7 +31,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
@@ -1927,8 +1926,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
 		publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
-		publisher = options.getResumeTimestamp().map(it -> new BsonTimestamp((int) it.getEpochSecond(), 0))
-				.map(publisher::startAtOperationTime).orElse(publisher);
+		publisher = options.getResumeBsonTimestamp().map(publisher::startAtOperationTime).orElse(publisher);
 		publisher = publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
 
 		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, targetType, getConverter()));

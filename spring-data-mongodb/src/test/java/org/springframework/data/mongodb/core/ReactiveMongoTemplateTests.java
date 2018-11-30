@@ -24,6 +24,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
+import org.bson.BsonTimestamp;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -1382,6 +1383,49 @@ public class ReactiveMongoTemplateTests {
 
 		documents.take(); // skip first
 		Instant resumeAt = documents.take().getTimestamp(); // take 2nd
+
+		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> resumeDocuments = new LinkedBlockingQueue<>(100);
+		template.changeStream("person", ChangeStreamOptions.builder().resumeAt(resumeAt).build(), Person.class)
+				.doOnNext(resumeDocuments::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		try {
+			Assertions.assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+					.containsExactly(person2, person3);
+		} finally {
+			disposable.dispose();
+		}
+	}
+
+	@Test // DATAMONGO-2115
+	public void resumesAtBsonTimestampCorrectly() throws InterruptedException {
+
+		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
+
+		StepVerifier.create(template.createCollection(Person.class)).expectNextCount(1).verifyComplete();
+
+		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
+		Disposable disposable = template.changeStream("person", ChangeStreamOptions.empty(), Person.class)
+				.doOnNext(documents::add).subscribe();
+
+		Thread.sleep(500); // just give it some time to link to the collection.
+
+		Person person1 = new Person("Spring", 38);
+		Person person2 = new Person("Data", 37);
+		Person person3 = new Person("MongoDB", 39);
+
+		StepVerifier.create(template.save(person1).delayElement(Duration.ofSeconds(1))).expectNextCount(1).verifyComplete();
+		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
+
+		Thread.sleep(500); // just give it some time to link receive all events
+
+		disposable.dispose();
+
+		documents.take(); // skip first
+		BsonTimestamp resumeAt = documents.take().getBsonTimestamp(); // take 2nd
 
 		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
 
