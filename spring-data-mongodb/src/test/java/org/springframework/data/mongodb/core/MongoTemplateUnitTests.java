@@ -22,7 +22,6 @@ import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
-import com.mongodb.MongoNamespace;
 import lombok.Data;
 
 import java.math.BigInteger;
@@ -82,6 +81,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
@@ -118,6 +118,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Mock FindIterable<Document> findIterable;
 	@Mock AggregateIterable aggregateIterable;
 	@Mock MapReduceIterable mapReduceIterable;
+	@Mock UpdateResult updateResult;
 
 	Document commandResultDocument = new Document();
 
@@ -139,6 +140,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.getNamespace()).thenReturn(new MongoNamespace("db.mock-collection"));
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
 		when(collection.withReadPreference(any())).thenReturn(collection);
+		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(updateResult);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 		when(findIterable.sort(any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.collation(any())).thenReturn(findIterable);
@@ -157,7 +159,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(aggregateIterable.into(any())).thenReturn(Collections.emptyList());
 
 		this.mappingContext = new MongoMappingContext();
-		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
+		this.converter = spy(new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext));
 		this.template = new MongoTemplate(factory, converter);
 	}
 
@@ -949,6 +951,27 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class, null);
 
 		verify(findIterable).projection(eq(new Document()));
+	}
+
+	@Test // DATAMONGO-2155
+	public void saveVersionedEntityShouldCallUpdateCorrectly() {
+
+		when(updateResult.getModifiedCount()).thenReturn(1L);
+
+		VersionedEntity entity = new VersionedEntity();
+		entity.id = 1;
+		entity.version = 10;
+
+		ArgumentCaptor<org.bson.Document> queryCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+		ArgumentCaptor<org.bson.Document> updateCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+
+		template.save(entity);
+
+		verify(collection, times(1)).replaceOne(queryCaptor.capture(), updateCaptor.capture(), any(ReplaceOptions.class));
+
+		assertThat(queryCaptor.getValue(), is(equalTo(new Document("_id", 1).append("version", 10))));
+		assertThat(updateCaptor.getValue(),
+				is(equalTo(new Document("version", 11).append("_class", VersionedEntity.class.getName()))));
 	}
 
 	class AutogenerateableId {
