@@ -979,6 +979,31 @@ public class UpdateMapperUnitTests {
 				.doesNotContainKey("$set.concreteInnerList.[0]._class");
 	}
 
+	@Test // DATAMONGO-2155
+	public void shouldPreserveFieldNamesOfMapProperties() {
+
+		Update update = Update
+				.fromDocument(new Document("concreteMap", new Document("Name", new Document("name", "fooo"))));
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObjectMap.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("concreteMap", new Document("Name", new Document("name", "fooo"))));
+	}
+
+	@Test // DATAMONGO-2155
+	public void shouldPreserveExplicitFieldNamesInsideMapProperties() {
+
+		Update update = Update
+				.fromDocument(new Document("map", new Document("Value", new Document("renamed-value", "fooo"))));
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithMapOfAliased.class));
+
+		assertThat(mappedUpdate)
+				.isEqualTo(new Document("map", new Document("Value", new Document("renamed-value", "fooo"))));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1199,6 +1224,10 @@ public class UpdateMapperUnitTests {
 
 		@Field("renamed-value") Object value;
 		Object field;
+	}
+
+	static class EntityWithMapOfAliased {
+		Map<String, EntityWithAliasedObject> map;
 	}
 
 	static class EntityWithObjectMap {

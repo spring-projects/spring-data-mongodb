@@ -35,6 +35,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -816,13 +817,24 @@ public class QueryMapper {
 			return null;
 		}
 
+		/**
+		 * Returns whether the field references a {@link java.util.Map}.
+		 * 
+		 * @return {@literal true} if property information is available and references a {@link java.util.Map}.
+		 * @see PersistentProperty#isMap()
+		 * @since 2.2
+		 */
+		public boolean isMap() {
+			return getProperty() != null && getProperty().isMap();
+		}
+
 		public TypeInformation<?> getTypeHint() {
 			return ClassTypeInformation.OBJECT;
 		}
 	}
 
 	/**
-	 * Extension of {@link DocumentField} to be backed with mapping metadata.
+	 * Extension of {@link Field} to be backed with mapping metadata.
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
