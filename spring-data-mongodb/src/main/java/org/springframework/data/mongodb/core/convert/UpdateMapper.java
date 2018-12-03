@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import org.bson.Document;
@@ -143,7 +144,9 @@ public class UpdateMapper extends QueryMapper {
 	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
 
 		if (isDocument(rawValue)) {
-			return createMapEntry(field, convertSimpleOrDocument(rawValue, field.getPropertyEntity()));
+
+			Object val = field.isMap() ? new LinkedHashMap<>((Document) rawValue) : rawValue; // unwrap to preserve field type
+			return createMapEntry(field, convertSimpleOrDocument(val, field.getPropertyEntity()));
 		}
 
 		if (isQuery(rawValue)) {

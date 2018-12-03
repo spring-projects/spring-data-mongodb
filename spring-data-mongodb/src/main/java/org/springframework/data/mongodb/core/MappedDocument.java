@@ -82,7 +82,21 @@ public class MappedDocument {
 		return Filters.eq(ID_FIELD, document.get(ID_FIELD));
 	}
 
-	public Update updateWithoutId() {
-		return Update.fromDocument(document, ID_FIELD);
+	public MappedUpdate updateWithoutId() {
+		return new MappedUpdate(Update.fromDocument(document, ID_FIELD));
+	}
+
+	public class MappedUpdate extends Update {
+
+		private final Update delegate;
+
+		public MappedUpdate(Update delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public Document getUpdateObject() {
+			return delegate.getUpdateObject();
+		}
 	}
 }

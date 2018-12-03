@@ -20,7 +20,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -36,6 +38,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -51,6 +54,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -432,6 +436,23 @@ public class QueryMapper {
 			return source;
 		}
 
+		if (source instanceof Map) {
+
+			LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+
+			((Map<String, Object>) source).entrySet().forEach(it -> {
+
+				String key = ObjectUtils.nullSafeToString(converter.convertToMongoType(it.getKey()));
+
+				if (it.getValue() instanceof Document) {
+					map.put(key, getMappedObject((Document) it.getValue(), entity));
+				} else {
+					map.put(key, delegateConvertToMongoType(it.getValue(), entity));
+				}
+			});
+			return map;
+		}
+
 		return delegateConvertToMongoType(source, entity);
 	}
 
@@ -792,13 +813,24 @@ public class QueryMapper {
 			return null;
 		}
 
+		/**
+		 * Returns whether the field references a {@link java.util.Map}.
+		 *
+		 * @return {@literal true} if property information is available and references a {@link java.util.Map}.
+		 * @see PersistentProperty#isMap()
+		 * @since 2.2
+		 */
+		public boolean isMap() {
+			return getProperty() != null && getProperty().isMap();
+		}
+
 		public TypeInformation<?> getTypeHint() {
 			return ClassTypeInformation.OBJECT;
 		}
 	}
 
 	/**
-	 * Extension of {@link DocumentField} to be backed with mapping metadata.
+	 * Extension of {@link Field} to be backed with mapping metadata.
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
