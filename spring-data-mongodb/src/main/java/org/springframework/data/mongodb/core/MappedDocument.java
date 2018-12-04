@@ -24,6 +24,7 @@ import java.util.List;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.util.StreamUtils;
 
 import com.mongodb.client.model.Filters;
@@ -86,17 +87,55 @@ public class MappedDocument {
 		return new MappedUpdate(Update.fromDocument(document, ID_FIELD));
 	}
 
-	public class MappedUpdate extends Update {
+	/**
+	 * An {@link UpdateDefinition} that indicates that the {@link #getUpdateObject() update object} has already been
+	 * mapped to the specific domain type.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	public class MappedUpdate implements UpdateDefinition {
 
 		private final Update delegate;
 
-		public MappedUpdate(Update delegate) {
+		MappedUpdate(Update delegate) {
 			this.delegate = delegate;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getUpdateObject()
+		 */
 		@Override
 		public Document getUpdateObject() {
 			return delegate.getUpdateObject();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#modifies(java.lang.String)
+		 */
+		@Override
+		public boolean modifies(String key) {
+			return delegate.modifies(key);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#incVersion(java.lang.String)
+		 */
+		@Override
+		public void incVersion(String version) {
+			delegate.incVersion(version);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#isIsolated()
+		 */
+		@Override
+		public Boolean isIsolated() {
+			return delegate.isIsolated();
 		}
 	}
 }
