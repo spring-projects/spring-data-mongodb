@@ -873,7 +873,7 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).containsEntry("$max", new Document("maxfield", 999));
 	}
 
-	@Test // DATAMONGO-1423
+	@Test // DATAMONGO-1423, DATAMONGO-2155
 	@SuppressWarnings("unchecked")
 	public void mappingShouldConsiderCustomConvertersForEnumMapKeys() {
 
@@ -897,8 +897,8 @@ public class UpdateMapperUnitTests {
 		Document $set = DocumentTestUtils.getAsDocument(mappedUpdate, "$set");
 		assertThat($set.containsKey("enumAsMapKey")).isTrue();
 
-		Document enumAsMapKey = $set.get("enumAsMapKey", Document.class);
-		assertThat(enumAsMapKey.get("AVAILABLE")).isEqualTo(100);
+		Map enumAsMapKey = $set.get("enumAsMapKey", Map.class);
+		assertThat(enumAsMapKey.get("V")).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-1176
@@ -937,15 +937,17 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedObject).hasSize(2);
 	}
 
-	@Test // DATAMONGO-1486
+	@Test // DATAMONGO-1486, DATAMONGO-2155
 	public void mappingShouldConvertMapKeysToString() {
 
 		Update update = new Update().set("map", Collections.singletonMap(25, "#StarTrek50"));
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithObjectMap.class));
 
-		Document mapToSet = getAsDocument(getAsDocument(mappedUpdate, "$set"), "map");
+		Document $set = DocumentTestUtils.getAsDocument(mappedUpdate, "$set");
+		assertThat($set.containsKey("map")).isTrue();
 
+		Map mapToSet = $set.get("map", Map.class);
 		for (Object key : mapToSet.keySet()) {
 			assertThat(key).isInstanceOf(String.class);
 		}
@@ -996,6 +998,19 @@ public class UpdateMapperUnitTests {
 
 		Update update = Update
 				.fromDocument(new Document("map", new Document("Value", new Document("renamed-value", "fooo"))));
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithMapOfAliased.class));
+
+		assertThat(mappedUpdate)
+				.isEqualTo(new Document("map", new Document("Value", new Document("renamed-value", "fooo"))));
+	}
+
+	@Test // DATAMONGO-2155
+	public void shouldMapAliasedFieldNamesInMapsCorrectly() {
+
+		Update update = Update
+				.fromDocument(new Document("map", Collections.singletonMap("Value", new Document("value", "fooo"))));
 
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithMapOfAliased.class));

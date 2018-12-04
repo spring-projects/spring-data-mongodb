@@ -288,7 +288,7 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 
 			String key = it.next().replace("\\.", ".");
 
-			if (!(current instanceof Bson) && !key.startsWith("[")) {
+			if ((!(current instanceof Bson) && !(current instanceof Map)) && !key.startsWith("[")) {
 				return Lookup.found(null);
 			}
 
@@ -308,6 +308,17 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 				if (current instanceof Document) {
 
 					Document document = (Document) current;
+
+					if (!it.hasNext() && !document.containsKey(key)) {
+						return Lookup.notFound();
+					}
+
+					current = document.get(key);
+				}
+
+				else if (current instanceof Map) {
+
+					Map document = (Map) current;
 
 					if (!it.hasNext() && !document.containsKey(key)) {
 						return Lookup.notFound();
