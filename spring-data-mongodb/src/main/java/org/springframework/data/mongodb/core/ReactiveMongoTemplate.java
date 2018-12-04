@@ -91,6 +91,7 @@ import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.Optionals;
@@ -1614,7 +1615,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
-	protected Mono<UpdateResult> doUpdate(final String collectionName, Query query, @Nullable Update update,
+	protected Mono<UpdateResult> doUpdate(final String collectionName, Query query, @Nullable UpdateDefinition update,
 			@Nullable Class<?> entityClass, final boolean upsert, final boolean multi) {
 
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
@@ -1671,12 +1672,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return result.next();
 	}
 
-	private void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity, Update update) {
+	private void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity,
+			UpdateDefinition update) {
 
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
 			if (!update.modifies(versionFieldName)) {
-				update.inc(versionFieldName, 1L);
+				update.incVersion(versionFieldName);
 			}
 		}
 	}

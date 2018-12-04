@@ -48,7 +48,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @author Pavel Vodrazka
  */
-public class Update {
+public class Update implements UpdateDefinition {
 
 	public enum Position {
 		LAST, FIRST
@@ -153,6 +153,15 @@ public class Update {
 	public Update inc(String key, Number inc) {
 		addMultiFieldOperation("$inc", key, inc);
 		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#incVersion()
+	 */
+	@Override
+	public void incVersion(String key) {
+		inc(key, 1L);
 	}
 
 	/**
@@ -390,14 +399,18 @@ public class Update {
 		return this;
 	}
 
-	/**
-	 * @return {@literal true} if update isolated is set.
-	 * @since 2.0
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#isIsolated()
 	 */
 	public Boolean isIsolated() {
 		return isolated;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getUpdateObject()
+	 */
 	public Document getUpdateObject() {
 		return new Document(modifierOps);
 	}

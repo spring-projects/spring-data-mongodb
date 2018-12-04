@@ -94,6 +94,7 @@ import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
@@ -1554,7 +1555,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
-	protected UpdateResult doUpdate(final String collectionName, final Query query, final Update update,
+	protected UpdateResult doUpdate(final String collectionName, final Query query, final UpdateDefinition update,
 			@Nullable final Class<?> entityClass, final boolean upsert, final boolean multi) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
@@ -1615,12 +1616,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	private void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity, Update update) {
+	private void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity, UpdateDefinition update) {
 
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
 			if (!update.modifies(versionFieldName)) {
-				update.inc(versionFieldName, 1L);
+				update.incVersion(versionFieldName);
 			}
 		}
 	}
