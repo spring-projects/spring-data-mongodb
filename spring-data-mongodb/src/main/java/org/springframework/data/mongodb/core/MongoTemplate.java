@@ -60,6 +60,7 @@ import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
+import org.springframework.data.mongodb.core.MappedDocument.MappedUpdate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -1383,7 +1384,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MappedDocument mapped = source.toMappedDocument(mongoConverter);
 
 		maybeEmitEvent(new BeforeSaveEvent<>(toSave, mapped.getDocument(), collectionName));
-		Update update = mapped.updateWithoutId();
+		MappedUpdate update = mapped.updateWithoutId();
 
 		UpdateResult result = doUpdate(collectionName, query, update, toSave.getClass(), false, false);
 
@@ -1579,7 +1580,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					query.getCollation().map(Collation::toMongoCollation).ifPresent(opts::collation);
 				}
 
-				Document updateObj = updateMapper.getMappedObject(update.getUpdateObject(), entity);
+				Document updateObj =  update instanceof MappedUpdate ? update.getUpdateObject() : updateMapper.getMappedObject(update.getUpdateObject(), entity);
 
 				if (multi && update.isIsolated() && !queryObj.containsKey("$isolated")) {
 					queryObj.put("$isolated", 1);
