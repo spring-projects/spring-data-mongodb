@@ -537,6 +537,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1639
 	public void beforeConvertEventForUpdateSeesNextVersion() {
 
+		when(updateResult.getModifiedCount()).thenReturn(1L);
+
 		final VersionedEntity entity = new VersionedEntity();
 		entity.id = 1;
 		entity.version = 0;
@@ -553,15 +555,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.setApplicationContext(context);
 
-		MongoTemplate spy = Mockito.spy(template);
-
-		UpdateResult result = mock(UpdateResult.class);
-		doReturn(1L).when(result).getModifiedCount();
-
-		doReturn(result).when(spy).doUpdate(anyString(), any(Query.class), any(Update.class), any(Class.class),
-				anyBoolean(), anyBoolean());
-
-		spy.save(entity);
+		template.save(entity);
 	}
 
 	@Test // DATAMONGO-1447
