@@ -86,7 +86,7 @@ public class ChangeStreamOptions {
 	 * @return {@link Optional#empty()} if not set.
 	 */
 	public Optional<Instant> getResumeTimestamp() {
-		return Optional.ofNullable(resumeTimestamp).map(this::asInstant);
+		return Optional.ofNullable(resumeTimestamp).map(timestamp -> asTimestampOfType(timestamp, Instant.class));
 	}
 
 	/**
@@ -94,7 +94,7 @@ public class ChangeStreamOptions {
 	 * @since 2.2
 	 */
 	public Optional<BsonTimestamp> getResumeBsonTimestamp() {
-		return Optional.ofNullable(resumeTimestamp).map(this::asBsonTimestamp);
+		return Optional.ofNullable(resumeTimestamp).map(timestamp -> asTimestampOfType(timestamp, BsonTimestamp.class));
 	}
 
 	/**
@@ -114,30 +114,26 @@ public class ChangeStreamOptions {
 		return new ChangeStreamOptionsBuilder();
 	}
 
-	private Instant asInstant(Object timestamp) {
-		return asTimestampOfType(timestamp, Instant.class);
+	private static <T> T asTimestampOfType(Object timestamp, Class<T> targetType) {
+		return targetType.cast(doGetTimestamp(timestamp, targetType));
 	}
 
-	private BsonTimestamp asBsonTimestamp(Object timestamp) {
-		return asTimestampOfType(timestamp, BsonTimestamp.class);
-	}
-
-	private <T> T asTimestampOfType(Object timestamp, Class<T> targetType) {
+	private static <T> Object doGetTimestamp(Object timestamp, Class<T> targetType) {
 
 		if (ClassUtils.isAssignableValue(targetType, timestamp)) {
-			return (T) timestamp;
+			return timestamp;
 		}
 
 		if (timestamp instanceof Instant) {
-			return (T) new BsonTimestamp((int) ((Instant) timestamp).getEpochSecond(), 0);
+			return new BsonTimestamp((int) ((Instant) timestamp).getEpochSecond(), 0);
 		}
 
 		if (timestamp instanceof BsonTimestamp) {
-			return (T) Instant.ofEpochSecond(((BsonTimestamp) timestamp).getTime());
+			return Instant.ofEpochSecond(((BsonTimestamp) timestamp).getTime());
 		}
 
 		throw new IllegalArgumentException(
-				"o_O that should actually not happen. The timestampt should be an Instant or a BsonTimestamp but was "
+				"o_O that should actually not happen. The timestamp should be an Instant or a BsonTimestamp but was "
 						+ ObjectUtils.nullSafeClassName(timestamp));
 	}
 

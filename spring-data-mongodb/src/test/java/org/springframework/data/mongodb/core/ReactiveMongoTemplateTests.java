@@ -24,7 +24,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
-import org.bson.BsonTimestamp;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -46,6 +45,7 @@ import java.util.stream.IntStream;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Assumptions;
 import org.bson.BsonDocument;
+import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.After;
@@ -1420,27 +1420,21 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.save(person1).delayElement(Duration.ofSeconds(1))).expectNextCount(1).verifyComplete();
 		StepVerifier.create(template.save(person2)).expectNextCount(1).verifyComplete();
 
-		Thread.sleep(500); // just give it some time to link receive all events
-
-		disposable.dispose();
-
 		documents.take(); // skip first
 		BsonTimestamp resumeAt = documents.take().getBsonTimestamp(); // take 2nd
 
+		disposable.dispose();
+
 		StepVerifier.create(template.save(person3)).expectNextCount(1).verifyComplete();
 
-		BlockingQueue<ChangeStreamEvent<Person>> resumeDocuments = new LinkedBlockingQueue<>(100);
 		template.changeStream("person", ChangeStreamOptions.builder().resumeAt(resumeAt).build(), Person.class)
-				.doOnNext(resumeDocuments::add).subscribe();
-
-		Thread.sleep(500); // just give it some time to link receive all events
-
-		try {
-			Assertions.assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
-					.containsExactly(person2, person3);
-		} finally {
-			disposable.dispose();
-		}
+				.map(ChangeStreamEvent::getBody) //
+				.buffer(2) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual).containsExactly(person2, person3);
+				}).thenCancel() //
+				.verify();
 	}
 
 	private PersonWithAList createPersonWithAList(String firstname, int age) {
