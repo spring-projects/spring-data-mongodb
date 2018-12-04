@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.bson.BSON;
 import org.bson.Document;
 import org.junit.Before;
@@ -56,6 +54,7 @@ import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.util.Base64Utils;
 
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
@@ -318,7 +317,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
-				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}}");
+				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}}");
 
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}
@@ -333,7 +332,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { $in: [{'$binary' : '"
-				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}] }}");
+				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}] }}");
 
 		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
 	}

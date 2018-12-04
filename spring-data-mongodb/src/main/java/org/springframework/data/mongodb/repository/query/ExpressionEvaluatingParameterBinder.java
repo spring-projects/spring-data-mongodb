@@ -33,8 +33,6 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.bson.codecs.BinaryCodec;
 import org.bson.codecs.Codec;
 import org.bson.codecs.UuidCodec;
@@ -48,6 +46,7 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.Base64Utils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -571,7 +570,7 @@ class ExpressionEvaluatingParameterBinder {
 
 		private final byte[] value;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.springframework.data.mongodb.CodecRegistryProvider, boolean)
 		 */
@@ -579,7 +578,7 @@ class ExpressionEvaluatingParameterBinder {
 		public String encode(CodecRegistryProvider provider, boolean quoted) {
 
 			if (quoted) {
-				return DatatypeConverter.printBase64Binary(this.value);
+				return Base64Utils.encodeToString(this.value);
 			}
 
 			return encode(provider, new Binary(this.value), BinaryCodec::new);
@@ -595,7 +594,7 @@ class ExpressionEvaluatingParameterBinder {
 
 		private final Collection<byte[]> value;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.springframework.data.mongodb.CodecRegistryProvider, boolean)
 		 */
@@ -613,7 +612,7 @@ class ExpressionEvaluatingParameterBinder {
 
 		private final UUID value;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.springframework.data.mongodb.CodecRegistryProvider, boolean)
 		 */
@@ -637,7 +636,7 @@ class ExpressionEvaluatingParameterBinder {
 
 		private final Collection<UUID> value;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.springframework.data.mongodb.CodecRegistryProvider, boolean)
 		 */
@@ -655,7 +654,7 @@ class ExpressionEvaluatingParameterBinder {
 
 		private final @Nullable Object value;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.EncodableValue#encode(org.springframework.data.mongodb.CodecRegistryProvider, boolean)
 		 */
