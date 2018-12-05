@@ -773,12 +773,9 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.save(map, "maps")).expectNextCount(1).verifyComplete();
 	}
 
-	@Test // DATAMONGO-1444, DATAMONGO-1730
+	@Test(expected = MappingException.class) // DATAMONGO-1444, DATAMONGO-1730, DATAMONGO-2150
 	public void savesMongoPrimitiveObjectCorrectly() {
-
-		StepVerifier.create(template.save(new Object(), "collection")) //
-				.expectError(MappingException.class) //
-				.verify();
+		template.save(new Object(), "collection");
 	}
 
 	@Test // DATAMONGO-1444
@@ -851,12 +848,9 @@ public class ReactiveMongoTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-1444
+	@Test(expected = MappingException.class) // DATAMONGO-1444, DATAMONGO-2150
 	public void rejectsNonJsonStringForSave() {
-
-		StepVerifier.create(template.save("Foobar!", "collection")) //
-				.expectError(MappingException.class) //
-				.verify();
+		template.save("Foobar!", "collection");
 	}
 
 	@Test // DATAMONGO-1444

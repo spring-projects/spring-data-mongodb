@@ -1235,23 +1235,22 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <T> Mono<T> doInsert(String collectionName, T objectToSave, MongoWriter<Object> writer) {
 
-		assertUpdateableIdIfNotSet(objectToSave);
-
 		return Mono.defer(() -> {
 
-			AdaptibleEntity<T> entity = operations.forEntity(objectToSave, mongoConverter.getConversionService());
-			T toSave = entity.initializeVersionProperty();
+			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(objectToSave, collectionName);
+			T toConvert = maybeEmitEvent(event).getSource();
+			AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
 
-			maybeEmitEvent(new BeforeConvertEvent<>(toSave, collectionName));
-
+			entity.assertUpdateableIdIfNotSet();
+			T initialized = entity.initializeVersionProperty();
 			Document dbDoc = entity.toMappedDocument(writer).getDocument();
 
-			maybeEmitEvent(new BeforeSaveEvent<>(toSave, dbDoc, collectionName));
+			maybeEmitEvent(new BeforeSaveEvent<>(initialized, dbDoc, collectionName));
 
-			Mono<T> afterInsert = insertDBObject(collectionName, dbDoc, toSave.getClass()).map(id -> {
+			Mono<T> afterInsert = insertDBObject(collectionName, dbDoc, initialized.getClass()).map(id -> {
 
 				T saved = entity.populateIdIfNecessary(id);
-				maybeEmitEvent(new AfterSaveEvent<>(saved, dbDoc, collectionName));
+				maybeEmitEvent(new AfterSaveEvent<>(initialized, dbDoc, collectionName));
 				return saved;
 			});
 
@@ -1389,34 +1388,27 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(objectToSave, "Object to save must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(objectToSave.getClass());
+		AdaptibleEntity<T> source = operations.forEntity(objectToSave, mongoConverter.getConversionService());
 
-		// No optimistic locking -> simple save
-		if (mongoPersistentEntity == null || !mongoPersistentEntity.hasVersionProperty()) {
-			return doSave(collectionName, objectToSave, this.mongoConverter);
-		}
-
-		return doSaveVersioned(objectToSave, mongoPersistentEntity, collectionName);
+		return source.isVersionedEntity() ? doSaveVersioned(source, collectionName)
+				: doSave(collectionName, objectToSave, this.mongoConverter);
 	}
 
-	private <T> Mono<T> doSaveVersioned(T objectToSave, MongoPersistentEntity<?> entity, String collectionName) {
+	private <T> Mono<T> doSaveVersioned(AdaptibleEntity<T> source, String collectionName) {
 
-		AdaptibleEntity<T> forEntity = operations.forEntity(objectToSave, mongoConverter.getConversionService());
+		if (source.isNew()) {
+			return doInsert(collectionName, source.getBean(), this.mongoConverter);
+		}
 
 		return createMono(collectionName, collection -> {
 
-			Number versionNumber = forEntity.getVersion();
+			// Create query for entity with the id and old version
+			Query query = source.getQueryForVersion();
 
-			// Fresh instance -> initialize version property
-			if (versionNumber == null) {
-				return doInsert(collectionName, objectToSave, mongoConverter);
-			}
+			// Bump version number
+			T toSave = source.incrementVersion();
 
-			forEntity.assertUpdateableIdIfNotSet();
-
-			Query query = forEntity.getQueryForVersion();
-
-			T toSave = forEntity.incrementVersion();
+			source.assertUpdateableIdIfNotSet();
 
 			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(toSave, collectionName);
 			T afterEvent = ReactiveMongoTemplate.this.maybeEmitEvent(event).getSource();
@@ -1427,7 +1419,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			ReactiveMongoTemplate.this.maybeEmitEvent(new BeforeSaveEvent<>(afterEvent, document, collectionName));
 
 			return doUpdate(collectionName, query, mapped.updateWithoutId(), afterEvent.getClass(), false, false)
-					.map(updateResult -> maybeEmitEvent(new AfterSaveEvent<T>(afterEvent, document, collectionName)).getSource());
+					.map(result -> {
+						return maybeEmitEvent(new AfterSaveEvent<T>(afterEvent, document, collectionName)).getSource();
+					});
 		});
 	}
 
