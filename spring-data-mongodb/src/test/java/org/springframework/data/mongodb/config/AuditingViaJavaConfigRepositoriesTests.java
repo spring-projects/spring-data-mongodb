@@ -49,6 +49,7 @@ import com.mongodb.MongoClient;
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -159,19 +160,19 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		assertThat(versionExtractor.apply(instance)).isEqualTo(expectedValues[0]);
 		assertThat(entity.isNew(instance)).isTrue();
 
-		instance = auditablePersonRepository.save(instance);
+		instance = persister.apply(instance);
 
 		assertThat(versionExtractor.apply(instance)).isEqualTo(expectedValues[1]);
 		assertThat(entity.isNew(instance)).isFalse();
 
-		instance = auditablePersonRepository.save(instance);
+		instance = persister.apply(instance);
 
 		assertThat(versionExtractor.apply(instance)).isEqualTo(expectedValues[2]);
 		assertThat(entity.isNew(instance)).isFalse();
 	}
 
 	@Repository
-	static interface AuditablePersonRepository extends MongoRepository<AuditablePerson, String> {}
+	interface AuditablePersonRepository extends MongoRepository<AuditablePerson, String> {}
 
 	@Configuration
 	@EnableMongoRepositories
