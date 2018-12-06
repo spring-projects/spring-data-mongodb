@@ -15,17 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 
 import org.bson.BsonValue;
 import org.bson.Document;
@@ -414,6 +405,7 @@ public class QueryMapper {
 	 * @return
 	 */
 	@Nullable
+	@SuppressWarnings("unchecked")
 	protected Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (source instanceof List) {
@@ -438,7 +430,7 @@ public class QueryMapper {
 
 		if (source instanceof Map) {
 
-			LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+			Map<String, Object> map = new LinkedHashMap<>();
 
 			((Map<String, Object>) source).entrySet().forEach(it -> {
 
@@ -450,6 +442,7 @@ public class QueryMapper {
 					map.put(key, delegateConvertToMongoType(it.getValue(), entity));
 				}
 			});
+
 			return map;
 		}
 
@@ -632,11 +625,11 @@ public class QueryMapper {
 	static class Keyword {
 
 		private static final String N_OR_PATTERN = "\\$.*or";
-		private static final Set<String> NON_DBREF_CONVERTING_KEYWORDS = new HashSet<>(Arrays.asList("$", "$size", "$slice", "$gt", "$lt"));
+		private static final Set<String> NON_DBREF_CONVERTING_KEYWORDS = new HashSet<>(
+				Arrays.asList("$", "$size", "$slice", "$gt", "$lt"));
 
 		private final String key;
 		private final Object value;
-
 
 		public Keyword(Bson source, String key) {
 			this.key = key;
@@ -699,7 +692,6 @@ public class QueryMapper {
 		}
 
 		/**
-		 *
 		 * @return {@literal true} if key may hold a DbRef.
 		 * @since 2.1.4
 		 */
@@ -818,7 +810,6 @@ public class QueryMapper {
 		 *
 		 * @return {@literal true} if property information is available and references a {@link java.util.Map}.
 		 * @see PersistentProperty#isMap()
-		 * @since 2.2
 		 */
 		public boolean isMap() {
 			return getProperty() != null && getProperty().isMap();
