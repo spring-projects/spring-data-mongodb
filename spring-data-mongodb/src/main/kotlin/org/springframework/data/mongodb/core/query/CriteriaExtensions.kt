@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.query
 
+import kotlin.reflect.KProperty
+
 /**
  * Extension for [Criteria.is] providing an `isEqualTo` alias since `is` is a reserved keyword in Kotlin.
  *
@@ -38,3 +40,18 @@ fun <T: Any?> Criteria.inValues(c: Collection<T>) : Criteria = `in`(c)
  * @since 2.0
  */
 fun Criteria.inValues(vararg o: Any?) : Criteria = `in`(*o)
+
+/**
+ * Creates a Criteria using a KProperty as key.
+ * Supports nested field names with [NestedProperty].
+ * @author Tjeu Kayim
+ * @since 2.2
+ */
+fun where(key: KProperty<*>): Criteria = Criteria.where(nestedFieldName(key))
+/**
+ * Add new key to the criteria chain using a KProperty.
+ * Supports nested field names with [NestedProperty].
+ * @author Tjeu Kayim
+ * @since 2.2
+ */
+infix fun Criteria.and(key: KProperty<*>): Criteria = and(nestedFieldName(key))
