@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2017-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Answers
@@ -24,6 +25,7 @@ import org.mockito.junit.MockitoJUnitRunner
 
 /**
  * @author Sebastien Deleuze
+ * @author Tjeu Kayim
  */
 @RunWith(MockitoJUnitRunner::class)
 class CriteriaExtensionsTests {
@@ -87,4 +89,43 @@ class CriteriaExtensionsTests {
 
 		Mockito.verify(criteria, Mockito.times(1)).`in`(c)
 	}
+
+	@Test
+	fun `and(KProperty) extension should call its Java counterpart`() {
+
+		criteria.and(Book::title)
+
+		Mockito.verify(criteria, Mockito.times(1)).and("title")
+	}
+
+	@Test
+	fun `and(KProperty) extension should support nested properties`() {
+
+		criteria.and(Book::author / Author::name)
+
+		Mockito.verify(criteria, Mockito.times(1)).and("author.name")
+	}
+
+	@Test
+	fun `where(KProperty) should equal Criteria where()`() {
+
+		class Book(val title: String)
+
+		val typedCriteria = where(Book::title)
+		val classicCriteria = Criteria.where("title")
+
+		assertThat(typedCriteria).isEqualTo(classicCriteria)
+	}
+
+	@Test
+	fun `where(KProperty) should support nested properties`() {
+
+		val typedCriteria = where(Book::author / Author::name)
+		val classicCriteria = Criteria.where("author.name")
+
+		assertThat(typedCriteria).isEqualTo(classicCriteria)
+	}
+
+	class Book(val title: String, val author: Author)
+	class Author(val name: String)
 }
