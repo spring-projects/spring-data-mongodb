@@ -2,16 +2,8 @@
 Mark Pollack; Thomas Risberg; Oliver Gierke; Costin Leau; Jon Brisbin; Thomas Darimont; Christoph Strobl; Mark Paluch; Jay Bryant
 :revnumber: {version}
 :revdate: {localdate}
-:toc:
-:toc-placement!:
-:linkcss:
-:doctype: book
-:docinfo: shared
-:source-highlighter: prettify
-:icons: font
-:imagesdir: images
 ifdef::backend-epub3[:front-cover-image: image:epub-cover.png[Front Cover,1050,1600]]
-:spring-data-commons-docs: ../../../../spring-data-commons/src/main/asciidoc
+:spring-data-commons-docs: ../../../../../spring-data-commons/src/main/asciidoc
 
 (C) 2008-2018 The original authors.
 
