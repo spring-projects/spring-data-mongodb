@@ -1,6 +1,10 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.2-2-0]]
+== What's New in Spring Data MongoDB 2.2
+* <<mongo.query.kotlin-support,Type-safe Queries for Kotlin>>
+
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1
 

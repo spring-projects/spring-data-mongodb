@@ -23,7 +23,7 @@ import kotlin.reflect.KProperty
  * @author Sebastien Deleuze
  * @since 2.0
  */
-fun Criteria.isEqualTo(o: Any?) : Criteria = `is`(o)
+fun Criteria.isEqualTo(o: Any?): Criteria = `is`(o)
 
 /**
  * Extension for [Criteria.in] providing an `inValues` alias since `in` is a reserved keyword in Kotlin.
@@ -31,7 +31,7 @@ fun Criteria.isEqualTo(o: Any?) : Criteria = `is`(o)
  * @author Sebastien Deleuze
  * @since 2.0
  */
-fun <T: Any?> Criteria.inValues(c: Collection<T>) : Criteria = `in`(c)
+fun <T : Any?> Criteria.inValues(c: Collection<T>): Criteria = `in`(c)
 
 /**
  * Extension for [Criteria.in] providing an `inValues` alias since `in` is a reserved keyword in Kotlin.
@@ -39,19 +39,20 @@ fun <T: Any?> Criteria.inValues(c: Collection<T>) : Criteria = `in`(c)
  * @author Sebastien Deleuze
  * @since 2.0
  */
-fun Criteria.inValues(vararg o: Any?) : Criteria = `in`(*o)
+fun Criteria.inValues(vararg o: Any?): Criteria = `in`(*o)
 
 /**
  * Creates a Criteria using a KProperty as key.
- * Supports nested field names with [NestedProperty].
+ * Supports nested field names with [KPropertyPath].
  * @author Tjeu Kayim
  * @since 2.2
  */
-fun where(key: KProperty<*>): Criteria = Criteria.where(nestedFieldName(key))
+fun where(key: KProperty<*>): Criteria = Criteria.where(asString(key))
+
 /**
  * Add new key to the criteria chain using a KProperty.
- * Supports nested field names with [NestedProperty].
+ * Supports nested field names with [KPropertyPath].
  * @author Tjeu Kayim
  * @since 2.2
  */
-infix fun Criteria.and(key: KProperty<*>): Criteria = and(nestedFieldName(key))
+infix fun Criteria.and(key: KProperty<*>): Criteria = and(asString(key))

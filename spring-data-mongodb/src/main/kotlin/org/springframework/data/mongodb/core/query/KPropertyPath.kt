@@ -19,29 +19,30 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
 /**
- * Refer to a field in an embedded/nested document.
+ * Abstraction of a property path consisting of [KProperty].
  * @author Tjeu Kayim
+ * @author Mark Paluch
  * @since 2.2
  */
-class NestedProperty<T, U>(
-	internal val parent: KProperty<U>,
-	internal val child: KProperty1<U, T>
+class KPropertyPath<T, U>(
+		internal val parent: KProperty<U>,
+		internal val child: KProperty1<U, T>
 ) : KProperty<T> by child
 
 /**
  * Recursively construct field name for a nested property.
  * @author Tjeu Kayim
  */
-internal fun nestedFieldName(property: KProperty<*>): String {
+internal fun asString(property: KProperty<*>): String {
 	return when (property) {
-		is NestedProperty<*, *> ->
-			"${nestedFieldName(property.parent)}.${property.child.name}"
+		is KPropertyPath<*, *> ->
+			"${asString(property.parent)}.${property.child.name}"
 		else -> property.name
 	}
 }
 
 /**
- * Builds [NestedProperty] from Property References.
+ * Builds [KPropertyPath] from Property References.
  * Refer to a field in an embedded/nested document.
  *
  * For example, referring to the field "book.author":
@@ -52,4 +53,4 @@ internal fun nestedFieldName(property: KProperty<*>): String {
  * @since 2.2
  */
 operator fun <T, U> KProperty<T>.div(other: KProperty1<T, U>) =
-	NestedProperty(this, other)
+		KPropertyPath(this, other)

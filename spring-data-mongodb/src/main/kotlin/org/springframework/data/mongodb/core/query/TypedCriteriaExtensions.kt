@@ -31,7 +31,7 @@ import kotlin.reflect.KProperty
  * @see Criteria.isEqualTo
  */
 infix fun <T> KProperty<T>.isEqualTo(value: T) =
-	Criteria(nestedFieldName(this)).isEqualTo(value)
+		Criteria(asString(this)).isEqualTo(value)
 
 /**
  * Creates a criterion using the $ne operator.
@@ -42,7 +42,7 @@ infix fun <T> KProperty<T>.isEqualTo(value: T) =
  * @see Criteria.ne
  */
 infix fun <T> KProperty<T>.ne(value: T): Criteria =
-	Criteria(nestedFieldName(this)).ne(value)
+		Criteria(asString(this)).ne(value)
 
 /**
  * Creates a criterion using the $lt operator.
@@ -53,7 +53,7 @@ infix fun <T> KProperty<T>.ne(value: T): Criteria =
  * @see Criteria.lt
  */
 infix fun <T> KProperty<T>.lt(value: T): Criteria =
-	Criteria(nestedFieldName(this)).lt(value)
+		Criteria(asString(this)).lt(value)
 
 /**
  * Creates a criterion using the $lte operator.
@@ -64,7 +64,7 @@ infix fun <T> KProperty<T>.lt(value: T): Criteria =
  * @see Criteria.lte
  */
 infix fun <T> KProperty<T>.lte(value: T): Criteria =
-	Criteria(nestedFieldName(this)).lte(value)
+		Criteria(asString(this)).lte(value)
 
 /**
  * Creates a criterion using the $gt operator.
@@ -75,7 +75,7 @@ infix fun <T> KProperty<T>.lte(value: T): Criteria =
  * @see Criteria.gt
  */
 infix fun <T> KProperty<T>.gt(value: T): Criteria =
-	Criteria(nestedFieldName(this)).gt(value)
+		Criteria(asString(this)).gt(value)
 
 /**
  * Creates a criterion using the $gte operator.
@@ -86,7 +86,7 @@ infix fun <T> KProperty<T>.gt(value: T): Criteria =
  * @see Criteria.gte
  */
 infix fun <T> KProperty<T>.gte(value: T): Criteria =
-	Criteria(nestedFieldName(this)).gte(value)
+		Criteria(asString(this)).gte(value)
 
 /**
  * Creates a criterion using the $in operator.
@@ -97,7 +97,7 @@ infix fun <T> KProperty<T>.gte(value: T): Criteria =
  * @see Criteria.inValues
  */
 fun <T> KProperty<T>.inValues(vararg o: Any): Criteria =
-	Criteria(nestedFieldName(this)).`in`(*o)
+		Criteria(asString(this)).`in`(*o)
 
 /**
  * Creates a criterion using the $in operator.
@@ -108,7 +108,7 @@ fun <T> KProperty<T>.inValues(vararg o: Any): Criteria =
  * @see Criteria.inValues
  */
 infix fun <T> KProperty<T>.inValues(value: Collection<T>): Criteria =
-	Criteria(nestedFieldName(this)).`in`(value)
+		Criteria(asString(this)).`in`(value)
 
 /**
  * Creates a criterion using the $nin operator.
@@ -119,7 +119,7 @@ infix fun <T> KProperty<T>.inValues(value: Collection<T>): Criteria =
  * @see Criteria.nin
  */
 fun <T> KProperty<T>.nin(vararg o: Any): Criteria =
-	Criteria(nestedFieldName(this)).nin(*o)
+		Criteria(asString(this)).nin(*o)
 
 /**
  * Creates a criterion using the $nin operator.
@@ -130,7 +130,7 @@ fun <T> KProperty<T>.nin(vararg o: Any): Criteria =
  * @see Criteria.nin
  */
 infix fun <T> KProperty<T>.nin(value: Collection<T>): Criteria =
-	Criteria(nestedFieldName(this)).nin(value)
+		Criteria(asString(this)).nin(value)
 
 /**
  * Creates a criterion using the $mod operator.
@@ -141,7 +141,7 @@ infix fun <T> KProperty<T>.nin(value: Collection<T>): Criteria =
  * @see Criteria.mod
  */
 fun KProperty<Number>.mod(value: Number, remainder: Number): Criteria =
-	Criteria(nestedFieldName(this)).mod(value, remainder)
+		Criteria(asString(this)).mod(value, remainder)
 
 /**
  * Creates a criterion using the $all operator.
@@ -152,7 +152,7 @@ fun KProperty<Number>.mod(value: Number, remainder: Number): Criteria =
  * @see Criteria.all
  */
 fun KProperty<*>.all(vararg o: Any): Criteria =
-	Criteria(nestedFieldName(this)).all(*o)
+		Criteria(asString(this)).all(*o)
 
 /**
  * Creates a criterion using the $all operator.
@@ -163,7 +163,7 @@ fun KProperty<*>.all(vararg o: Any): Criteria =
  * @see Criteria.all
  */
 infix fun KProperty<*>.all(value: Collection<*>): Criteria =
-	Criteria(nestedFieldName(this)).all(value)
+		Criteria(asString(this)).all(value)
 
 /**
  * Creates a criterion using the $size operator.
@@ -174,7 +174,7 @@ infix fun KProperty<*>.all(value: Collection<*>): Criteria =
  * @see Criteria.size
  */
 infix fun KProperty<*>.size(s: Int): Criteria =
-	Criteria(nestedFieldName(this)).size(s)
+		Criteria(asString(this)).size(s)
 
 /**
  * Creates a criterion using the $exists operator.
@@ -185,7 +185,7 @@ infix fun KProperty<*>.size(s: Int): Criteria =
  * @see Criteria.exists
  */
 infix fun KProperty<*>.exists(b: Boolean): Criteria =
-	Criteria(nestedFieldName(this)).exists(b)
+		Criteria(asString(this)).exists(b)
 
 /**
  * Creates a criterion using the $type operator.
@@ -196,7 +196,7 @@ infix fun KProperty<*>.exists(b: Boolean): Criteria =
  * @see Criteria.type
  */
 infix fun KProperty<*>.type(t: Int): Criteria =
-	Criteria(nestedFieldName(this)).type(t)
+		Criteria(asString(this)).type(t)
 
 /**
  * Creates a criterion using the $type operator.
@@ -207,7 +207,7 @@ infix fun KProperty<*>.type(t: Int): Criteria =
  * @see Criteria.type
  */
 infix fun KProperty<*>.type(t: Collection<JsonSchemaObject.Type>): Criteria =
-	Criteria(nestedFieldName(this)).type(*t.toTypedArray())
+		Criteria(asString(this)).type(*t.toTypedArray())
 
 /**
  * Creates a criterion using the $type operator.
@@ -218,7 +218,7 @@ infix fun KProperty<*>.type(t: Collection<JsonSchemaObject.Type>): Criteria =
  * @see Criteria.type
  */
 fun KProperty<*>.type(vararg t: JsonSchemaObject.Type): Criteria =
-	Criteria(nestedFieldName(this)).type(*t)
+		Criteria(asString(this)).type(*t)
 
 /**
  * Creates a criterion using the $not meta operator which affects the clause directly following
@@ -229,7 +229,7 @@ fun KProperty<*>.type(vararg t: JsonSchemaObject.Type): Criteria =
  * @see Criteria.not
  */
 fun KProperty<*>.not(): Criteria =
-	Criteria(nestedFieldName(this)).not()
+		Criteria(asString(this)).not()
 
 /**
  * Creates a criterion using a $regex operator.
@@ -240,7 +240,7 @@ fun KProperty<*>.not(): Criteria =
  * @see Criteria.regex
  */
 infix fun KProperty<String?>.regex(re: String): Criteria =
-	Criteria(nestedFieldName(this)).regex(re, null)
+		Criteria(asString(this)).regex(re, null)
 
 /**
  * Creates a criterion using a $regex and $options operator.
@@ -251,7 +251,7 @@ infix fun KProperty<String?>.regex(re: String): Criteria =
  * @see Criteria.regex
  */
 fun KProperty<String?>.regex(re: String, options: String?): Criteria =
-	Criteria(nestedFieldName(this)).regex(re, options)
+		Criteria(asString(this)).regex(re, options)
 
 /**
  * Syntactical sugar for [isEqualTo] making obvious that we create a regex predicate.
@@ -260,7 +260,7 @@ fun KProperty<String?>.regex(re: String, options: String?): Criteria =
  * @see Criteria.regex
  */
 infix fun KProperty<String?>.regex(re: Regex): Criteria =
-	Criteria(nestedFieldName(this)).regex(re.toPattern())
+		Criteria(asString(this)).regex(re.toPattern())
 
 /**
  * Syntactical sugar for [isEqualTo] making obvious that we create a regex predicate.
@@ -269,7 +269,7 @@ infix fun KProperty<String?>.regex(re: Regex): Criteria =
  * @see Criteria.regex
  */
 infix fun KProperty<String?>.regex(re: Pattern): Criteria =
-	Criteria(nestedFieldName(this)).regex(re)
+		Criteria(asString(this)).regex(re)
 
 /**
  * Syntactical sugar for [isEqualTo] making obvious that we create a regex predicate.
@@ -278,35 +278,35 @@ infix fun KProperty<String?>.regex(re: Pattern): Criteria =
  * @see Criteria.regex
  */
 infix fun KProperty<String?>.regex(re: BsonRegularExpression): Criteria =
-	Criteria(nestedFieldName(this)).regex(re)
+		Criteria(asString(this)).regex(re)
 
 /**
  * Creates a geospatial criterion using a $geoWithin $centerSphere operation. This is only available for
  * Mongo 2.4 and higher.
  *
  * See [MongoDB Query operator:
-	 * $geoWithin](https://docs.mongodb.com/manual/reference/operator/query/geoWithin/)
+ * $geoWithin](https://docs.mongodb.com/manual/reference/operator/query/geoWithin/)
  *
  * See [MongoDB Query operator:
-	 * $centerSphere](https://docs.mongodb.com/manual/reference/operator/query/centerSphere/)
+ * $centerSphere](https://docs.mongodb.com/manual/reference/operator/query/centerSphere/)
  * @author Tjeu Kayim
  * @since 2.2
  * @see Criteria.withinSphere
  */
 infix fun KProperty<GeoJson<*>>.withinSphere(circle: Circle): Criteria =
-	Criteria(nestedFieldName(this)).withinSphere(circle)
+		Criteria(asString(this)).withinSphere(circle)
 
 /**
  * Creates a geospatial criterion using a $geoWithin operation.
  *
  * See [MongoDB Query operator:
-	 * $geoWithin](https://docs.mongodb.com/manual/reference/operator/query/geoWithin/)
+ * $geoWithin](https://docs.mongodb.com/manual/reference/operator/query/geoWithin/)
  * @author Tjeu Kayim
  * @since 2.2
  * @see Criteria.within
  */
 infix fun KProperty<GeoJson<*>>.within(shape: Shape): Criteria =
-	Criteria(nestedFieldName(this)).within(shape)
+		Criteria(asString(this)).within(shape)
 
 /**
  * Creates a geospatial criterion using a $near operation.
@@ -317,20 +317,20 @@ infix fun KProperty<GeoJson<*>>.within(shape: Shape): Criteria =
  * @see Criteria.near
  */
 infix fun KProperty<GeoJson<*>>.near(point: Point): Criteria =
-	Criteria(nestedFieldName(this)).near(point)
+		Criteria(asString(this)).near(point)
 
 /**
  * Creates a geospatial criterion using a $nearSphere operation. This is only available for Mongo 1.7 and
  * higher.
  *
  * See [MongoDB Query operator:
-	 * $nearSphere](https://docs.mongodb.com/manual/reference/operator/query/nearSphere/)
+ * $nearSphere](https://docs.mongodb.com/manual/reference/operator/query/nearSphere/)
  * @author Tjeu Kayim
  * @since 2.2
  * @see Criteria.nearSphere
  */
 infix fun KProperty<GeoJson<*>>.nearSphere(point: Point): Criteria =
-	Criteria(nestedFieldName(this)).nearSphere(point)
+		Criteria(asString(this)).nearSphere(point)
 
 /**
  * Creates criterion using `$geoIntersects` operator which matches intersections of the given `geoJson`
@@ -340,19 +340,19 @@ infix fun KProperty<GeoJson<*>>.nearSphere(point: Point): Criteria =
  * @see Criteria.intersects
  */
 infix fun KProperty<GeoJson<*>>.intersects(geoJson: GeoJson<*>): Criteria =
-	Criteria(nestedFieldName(this)).intersects(geoJson)
+		Criteria(asString(this)).intersects(geoJson)
 
 /**
  * Creates a geo-spatial criterion using a $maxDistance operation, for use with $near
  *
  * See [MongoDB Query operator:
-	 * $maxDistance](https://docs.mongodb.com/manual/reference/operator/query/maxDistance/)
+ * $maxDistance](https://docs.mongodb.com/manual/reference/operator/query/maxDistance/)
  * @author Tjeu Kayim
  * @since 2.2
  * @see Criteria.maxDistance
  */
 infix fun KProperty<GeoJson<*>>.maxDistance(d: Double): Criteria =
-	Criteria(nestedFieldName(this)).maxDistance(d)
+		Criteria(asString(this)).maxDistance(d)
 
 /**
  * Creates a geospatial criterion using a $minDistance operation, for use with $near or
@@ -362,19 +362,19 @@ infix fun KProperty<GeoJson<*>>.maxDistance(d: Double): Criteria =
  * @see Criteria.minDistance
  */
 infix fun KProperty<GeoJson<*>>.minDistance(d: Double): Criteria =
-	Criteria(nestedFieldName(this)).minDistance(d)
+		Criteria(asString(this)).minDistance(d)
 
 /**
  * Creates a criterion using the $elemMatch operator
  *
  * See [MongoDB Query operator:
-	 * $elemMatch](https://docs.mongodb.com/manual/reference/operator/query/elemMatch/)
+ * $elemMatch](https://docs.mongodb.com/manual/reference/operator/query/elemMatch/)
  * @author Tjeu Kayim
  * @since 2.2
  * @see Criteria.elemMatch
  */
 infix fun KProperty<*>.elemMatch(c: Criteria): Criteria =
-	Criteria(nestedFieldName(this)).elemMatch(c)
+		Criteria(asString(this)).elemMatch(c)
 
 /**
  * Use [Criteria.BitwiseCriteriaOperators] as gateway to create a criterion using one of the
@@ -390,4 +390,4 @@ infix fun KProperty<*>.elemMatch(c: Criteria): Criteria =
  * @see Criteria.bits
  */
 infix fun KProperty<*>.bits(bitwiseCriteria: Criteria.BitwiseCriteriaOperators.() -> Criteria) =
-	Criteria(nestedFieldName(this)).bits().let(bitwiseCriteria)
+		Criteria(asString(this)).bits().let(bitwiseCriteria)
