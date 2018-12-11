@@ -1,6 +1,27 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.0.M1 (2018-12-11)
+----------------------------------------
+* DATAMONGO-2161 - Simplify reference documentation setup.
+* DATAMONGO-2160 - Release 2.2 M1 (Moore).
+* DATAMONGO-2156 - Remove javax.xml.bind dependency from ExpressionEvaluatingParameterBinder.
+* DATAMONGO-2150 - Auditing broken for entities using optimistic locking via version properties in reactive mongo.
+* DATAMONGO-2149 - Target bean of type java.lang.Integer is not of type of the persistent entity.
+* DATAMONGO-2148 - Add logging for MongoTemplate.count(…).
+* DATAMONGO-2139 - Auditing broken for entities using optimistic locking via version properties.
+* DATAMONGO-2138 - Type-safe Kotlin query extension.
+* DATAMONGO-2135 - Use List instead of Collection when reading data with MappingMongoConverter.
+* DATAMONGO-2130 - Repository count errors in ClientSession / Transaction.
+* DATAMONGO-2119 - Combining a SpEL expression and a $regex filter triggers a PatternSyntaxException.
+* DATAMONGO-2118 - Fix typo in repositories reference documentation.
+* DATAMONGO-2115 - Ability to resume ChangeStream at a given cluster timestamp given as BsonTimestamp.
+* DATAMONGO-2113 - ChangeStreamTasks incorrectly converts resumeAt Instants into BsonTimestamp.
+* DATAMONGO-2098 - Typo in MappingMongoConverterParser.
+* DATAMONGO-2096 - Aggregation.graphLookup.**.connectFrom(String) does not handle nested field.
+* DATAMONGO-1798 - Introduce @MongoId to customize Id conversion.
+
+
 Changes in version 2.1.3.RELEASE (2018-11-27)
 ---------------------------------------------
 * DATAMONGO-2139 - Auditing broken for entities using optimistic locking via version properties.
