@@ -95,8 +95,9 @@ public class NearQueryUnitTests {
 		Pageable pageable = PageRequest.of(3, 5);
 		NearQuery query = NearQuery.near(new Point(1, 1)).with(pageable);
 
-		assertThat(query.getSkip(), is((long)pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat((Long) query.toDocument().get("num"), is((long)(pageable.getPageNumber() + 1) * pageable.getPageSize()));
+		assertThat(query.getSkip(), is((long) pageable.getPageNumber() * pageable.getPageSize()));
+		assertThat((Long) query.toDocument().get("num"),
+				is((long) (pageable.getPageNumber() + 1) * pageable.getPageSize()));
 	}
 
 	@Test // DATAMONGO-445
@@ -108,7 +109,7 @@ public class NearQueryUnitTests {
 				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip));
 
 		assertThat(query.getSkip(), is(skip));
-		assertThat((Long) query.toDocument().get("num"), is((long)limit));
+		assertThat((Long) query.toDocument().get("num"), is((long) limit));
 	}
 
 	@Test // DATAMONGO-445
@@ -120,8 +121,9 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new Point(1, 1))
 				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip)).with(pageable);
 
-		assertThat(query.getSkip(), is((long)pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat((Long) query.toDocument().get("num"), is((long)(pageable.getPageNumber() + 1) * pageable.getPageSize()));
+		assertThat(query.getSkip(), is((long) pageable.getPageNumber() * pageable.getPageSize()));
+		assertThat((Long) query.toDocument().get("num"),
+				is((long) (pageable.getPageNumber() + 1) * pageable.getPageSize()));
 	}
 
 	@Test // DATAMONGO-829

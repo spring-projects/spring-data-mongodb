@@ -28,6 +28,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
@@ -56,6 +57,7 @@ import com.mongodb.client.MongoCollection;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -104,6 +106,36 @@ public class GeoJsonTests {
 		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
 	}
 
+	@Test // DATAMONGO-1148
+	public void geoNearShouldReturnDistanceCorrectlyUsingGeoJson/*which is using the meters*/() {
+
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73.99171, 40.738868), Metrics.KILOMETERS).num(10)
+				.maxDistance(0.4);
+
+		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
+
+		assertThat(result.getContent()).hasSize(3);
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
+		assertThat(result.getContent().get(0).getDistance().getValue()).isCloseTo(0.0, offset(0.000001));
+		assertThat(result.getContent().get(1).getDistance().getValue()).isCloseTo(0.0693582, offset(0.000001));
+		assertThat(result.getContent().get(2).getDistance().getValue()).isCloseTo(0.0693582, offset(0.000001));
+	}
+
+	@Test // DATAMONGO-1348
+	public void geoNearShouldReturnDistanceCorrectly/*which is using the meters*/() {
+
+		NearQuery geoNear = NearQuery.near(new Point(-73.99171, 40.738868), Metrics.KILOMETERS).num(10)
+				.maxDistance(0.4);
+
+		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
+
+		assertThat(result.getContent()).hasSize(3);
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
+		assertThat(result.getContent().get(0).getDistance().getValue()).isCloseTo(0.0, offset(0.000001));
+		assertThat(result.getContent().get(1).getDistance().getValue()).isCloseTo(0.0693582, offset(0.000001));
+		assertThat(result.getContent().get(2).getDistance().getValue()).isCloseTo(0.0693582, offset(0.000001));
+	}
+
 	@Test // DATAMONGO-1135
 	public void geoNearWithMiles() {
 
@@ -111,8 +143,8 @@ public class GeoJsonTests {
 
 		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
 
-		assertThat(result.getContent().size(), is(not(0)));
-		assertThat(result.getAverageDistance().getMetric(), is((Metric) Metrics.MILES));
+		assertThat(result.getContent()).isNotEmpty();
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.MILES);
 	}
 
 	@Test // DATAMONGO-1135
