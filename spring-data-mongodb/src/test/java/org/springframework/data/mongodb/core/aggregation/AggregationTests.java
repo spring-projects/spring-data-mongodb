@@ -23,7 +23,6 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
-import com.mongodb.DBObject;
 import lombok.Builder;
 
 import java.io.BufferedInputStream;
@@ -520,7 +519,7 @@ public class AggregationTests {
 		/*
 		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-
+		
 		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
@@ -1529,7 +1528,6 @@ public class AggregationTests {
 		assertThat(firstResult.containsKey("distance"), is(true));
 		assertThat((Double) firstResult.get("distance"), closeTo(73.08517, 0.00001));
 	}
-
 
 	@Test // DATAMONGO-1133
 	public void shouldHonorFieldAliasesForFieldReferences() {

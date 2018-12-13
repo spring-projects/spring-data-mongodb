@@ -27,7 +27,7 @@ import org.springframework.data.geo.Metrics;
  * {@link Metric} and {@link Distance} conversions using the metric system.
  *
  * @author Mark Paluch
- * @since 1.10
+ * @since 2.2
  */
 class MetricConversion {
 

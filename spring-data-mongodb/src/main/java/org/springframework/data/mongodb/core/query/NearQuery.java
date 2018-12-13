@@ -24,14 +24,147 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.lang.Nullable;
-import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
- * Builder class to build near-queries.
+ * Builder class to build near-queries. <br />
+ * MongoDB {@code $geoNear} operator allows usage of a {@literal GeoJSON Point} or legacy coordinate pair. Though
+ * syntactically different, there's no difference between {@code near: [-73.99171, 40.738868]} and {@code near: { type:
+ * "Point", coordinates: [-73.99171, 40.738868] } } for the MongoDB server<br />
+ * <br />
+ * Please note that there is a huge difference in the distance calculation. Using the legacy format (for near) operates
+ * upon {@literal Radians} on an Earth like sphere, whereas the {@literal GeoJSON} format uses {@literal Meters}. The
+ * actual type within the document is of no concern at this point.<br />
+ * To avoid a serious headache make sure to set the {@link Metric} to the desired unit of measure which ensures the
+ * distance to be calculated correctly.<br />
+ * <p />
+ * In other words: <br />
+ * Assume you've got 5 Documents like the ones below <br />
+ * 
+ * <pre>
+ *     <code>
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796a5"),
+ *     "name" : "Penn Station",
+ *     "location" : { "type" : "Point", "coordinates" : [  -73.99408, 40.75057 ] }
+ * }
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796a6"),
+ *     "name" : "10gen Office",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+ * }
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796a9"),
+ *     "name" : "City Bakery ",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+ * }
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796aa"),
+ *     "name" : "Splash Bar",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+ * }
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796ab"),
+ *     "name" : "Momofuku Milk Bar",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.985839, 40.731698 ] }
+ * }
+ *      </code>
+ * </pre>
+ * 
+ * Fetching all Documents within a 400 Meter radius from {@code [-73.99171, 40.738868] } would look like this using
+ * {@literal GeoJSON}:
+ * 
+ * <pre>
+ *     <code>
+ * {
+ *     $geoNear: {
+ *         maxDistance: 400,
+ *         num: 10,
+ *         near: { type: "Point", coordinates: [-73.99171, 40.738868] },
+ *         spherical:true,
+ *         key: "location",
+ *         distanceField: "distance"
+ *     }
+ * }
+ *
+ *     </code>
+ * </pre>
+ * 
+ * resulting in the following 3 Documents.
+ * 
+ * <pre>
+ *     <code>
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796a6"),
+ *     "name" : "10gen Office",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+ *     "distance" : 0.0 // Meters
+ * }
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796a9"),
+ *     "name" : "City Bakery ",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+ *     "distance" : 69.3582262492474 // Meters
+ * }
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796aa"),
+ *     "name" : "Splash Bar",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+ *     "distance" : 69.3582262492474 // Meters
+ * }
+ *     </code>
+ * </pre>
+ * 
+ * Using legacy coordinate pairs one operates upon radians as discussed before. Assume we use {@link Metrics#KILOMETERS}
+ * when constructing the geoNear command. The {@link Metric} will make sure the distance multiplier is set correctly, so
+ * the command is rendered like
+ * 
+ * <pre>
+ *     <code>
+ * {
+ *     $geoNear: {
+ *         maxDistance: 0.0000627142377, // 400 Meters
+ *         distanceMultiplier: 6378.137,
+ *         num: 10,
+ *         near: [-73.99171, 40.738868],
+ *         spherical:true,
+ *         key: "location",
+ *         distanceField: "distance"
+ *     }
+ * }
+ *     </code>
+ * </pre>
+ * 
+ * Please note the calculated distance now uses {@literal Kilometers} instead of {@literal Meters} as unit of measure,
+ * so we need to take it times 1000 to match up to {@literal Meters} as in the {@literal GeoJSON} variant. <br />
+ * Still as we've been requesting the {@link Distance} in {@link Metrics#KILOMETERS} the {@link Distance#getValue()}
+ * reflects exactly this.
+ * 
+ * <pre>
+ *     <code>
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796a6"),
+ *     "name" : "10gen Office",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+ *     "distance" : 0.0 // Kilometers
+ * }
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796a9"),
+ *     "name" : "City Bakery ",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+ *     "distance" : 0.0693586286032982 // Kilometers
+ * }
+ * {
+ *     "_id" : ObjectId("5c10f3735d38908db52796aa"),
+ *     "name" : "Splash Bar",
+ *     "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+ *     "distance" : 0.0693586286032982 // Kilometers
+ * }
+ *     </code>
+ * </pre>
  *
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -91,10 +224,14 @@ public final class NearQuery {
 	}
 
 	/**
-	 * Creates a new {@link NearQuery} starting at the given {@link Point}.
+	 * Creates a new {@link NearQuery} starting at the given {@link Point}. <br />
+	 * <strong>NOTE</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
+	 * values are rendered as coordinate pairs in the legacy format and operate upon radians, whereas the
+	 * {@link GeoJsonPoint} uses according to its specification {@literal meters} as unit of measure. This may lead to
+	 * different results when using a {@link Metrics#NEUTRAL neutral Metric}.
 	 *
 	 * @param point must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link NearQuery}.
 	 */
 	public static NearQuery near(Point point) {
 		return near(point, Metrics.NEUTRAL);
@@ -103,11 +240,15 @@ public final class NearQuery {
 	/**
 	 * Creates a {@link NearQuery} starting near the given {@link Point} using the given {@link Metric} to adapt given
 	 * values to further configuration. E.g. setting a {@link #maxDistance(double)} will be interpreted as a value of the
-	 * initially set {@link Metric}.
+	 * initially set {@link Metric}. <br />
+	 * <strong>NOTE</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
+	 * values are rendered as coordinate pairs in the legacy format and operate upon radians, whereas the
+	 * {@link GeoJsonPoint} uses according to its specification {@literal meters} as unit of measure. This may lead to
+	 * different results when using a {@link Metrics#NEUTRAL neutral Metric}.
 	 *
 	 * @param point must not be {@literal null}.
 	 * @param metric must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link NearQuery}.
 	 */
 	public static NearQuery near(Point point, Metric metric) {
 		return new NearQuery(point, metric);
