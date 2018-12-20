@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.domain.Sort.Direction;
 
@@ -27,8 +27,12 @@ import org.springframework.data.domain.Sort.Direction;
  * Unit tests for {@link IndexInfo}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class IndexInfoUnitTests {
+
+	static final String ID_INDEX = "{ \"v\" : 2, \"key\" : { \"_id\" : 1 }, \"name\" : \"_id_\", \"ns\" : \"db.collection\" }";
+	static final String INDEX_WITH_PARTIAL_FILTER = "{ \"v\" : 2, \"key\" : { \"k3y\" : 1 }, \"name\" : \"partial-filter-index\", \"ns\" : \"db.collection\", \"partialFilterExpression\" : { \"quantity\" : { \"$gte\" : 10 } } }";
 
 	@Test
 	public void isIndexForFieldsCorrectly() {
@@ -37,6 +41,18 @@ public class IndexInfoUnitTests {
 		IndexField barField = IndexField.create("bar", Direction.DESC);
 
 		IndexInfo info = new IndexInfo(Arrays.asList(fooField, barField), "myIndex", false, false, "");
-		assertThat(info.isIndexForFields(Arrays.asList("foo", "bar")), is(true));
+		assertThat(info.isIndexForFields(Arrays.asList("foo", "bar"))).isTrue();
+	}
+
+	@Test // DATAMONGO-2170
+	public void partialFilterExpressionShouldBeNullIfNotSetInSource() {
+		assertThat(IndexInfo.indexInfoOf(Document.parse(ID_INDEX)).getPartialFilterExpression()).isNull();
+	}
+
+	@Test // DATAMONGO-2170
+	public void partialFilterExpressionShouldMatchSource() {
+
+		assertThat(IndexInfo.indexInfoOf(Document.parse(INDEX_WITH_PARTIAL_FILTER)).getPartialFilterExpression())
+				.isEqualTo("{ \"quantity\" : { \"$gte\" : 10 } }");
 	}
 }
