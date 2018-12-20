@@ -108,7 +108,7 @@ public class IndexInfo {
 		String language = sourceDocument.containsKey("default_language") ? (String) sourceDocument.get("default_language")
 				: "";
 		String partialFilter = sourceDocument.containsKey("partialFilterExpression")
-				? ((Document) sourceDocument.get("partialFilterExpression")).toJson() : "";
+				? ((Document) sourceDocument.get("partialFilterExpression")).toJson() : null;
 
 		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
 		info.partialFilterExpression = partialFilter;
