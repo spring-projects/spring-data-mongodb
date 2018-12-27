@@ -21,7 +21,12 @@ import static org.mockito.Mockito.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.junit.Test;
@@ -112,6 +117,50 @@ public class ReactiveAuditingTests {
 				it -> it.version, //
 				operations::save, //
 				0L, 1L, 2L);
+	}
+
+	@Test
+	public void auditingWorksForBatchCreatedEntitiesWithWrapperVersionOnTemplate() {
+
+		List<VersionedAuditablePerson> list = Arrays.asList(
+				new VersionedAuditablePerson(),
+				new VersionedAuditablePerson()
+		);
+		verifyAuditingAndVersionProperty(list,
+				it -> it.version, //
+				0L);
+	}
+
+	@Test
+	public void auditingWorksForBatchCreatedEntitiesWithSimpleVersionOnTemplate() {
+
+		List<SimpleVersionedAuditablePerson> list = Arrays.asList(
+				new SimpleVersionedAuditablePerson(),
+				new SimpleVersionedAuditablePerson()
+		);
+		verifyAuditingAndVersionProperty(list,
+				it -> it.version, //
+				1L);
+	}
+
+	private <T extends AuditablePerson> void verifyAuditingAndVersionProperty(
+			Collection<? extends T> objectsToSave, Function<? super T, Object> versionExtractor, Object expected) {
+
+		String auditorFirstName = "auditor";
+		AuditablePerson auditor = new AuditablePerson(auditorFirstName);
+		auditor.setId("genId");
+		doReturn(Optional.of(auditor)).when(auditorAware).getCurrentAuditor();
+		Consumer<T> consumer = person -> {
+			assertThat(person.getCreatedAt()).isNotNull();
+			assertThat(person.getCreatedBy()).isNotNull();
+			assertThat(person.getCreatedBy().getFirstname()).isEqualTo(auditorFirstName);
+			assertThat(versionExtractor.apply(person)).isEqualTo(expected);
+		};
+		operations.insertAll(objectsToSave)
+				.as(StepVerifier::create)
+				.consumeNextWith(consumer)
+				.consumeNextWith(consumer)
+				.verifyComplete();
 	}
 
 	private <T extends AuditablePerson> void verifyAuditingViaVersionProperty(T instance,

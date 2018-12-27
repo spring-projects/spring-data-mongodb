@@ -1315,15 +1315,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Mono<List<Tuple2<AdaptibleEntity<T>, Document>>> prepareDocuments = Flux.fromIterable(batchToSave).map(o -> {
 
-			AdaptibleEntity<T> entity = operations.forEntity(o, mongoConverter.getConversionService());
-			T toSave = entity.initializeVersionProperty();
+			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(o, collectionName);
+			T toConvert = maybeEmitEvent(event).getSource();
+			AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
 
-			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(toSave, collectionName);
-			toSave = maybeEmitEvent(event).getSource();
-
+			entity.assertUpdateableIdIfNotSet();
+			T initialized = entity.initializeVersionProperty();
 			Document dbDoc = entity.toMappedDocument(writer).getDocument();
 
-			maybeEmitEvent(new BeforeSaveEvent<>(toSave, dbDoc, collectionName));
+			maybeEmitEvent(new BeforeSaveEvent<>(initialized, dbDoc, collectionName));
 			return Tuples.of(entity, dbDoc);
 		}).collectList();
 
