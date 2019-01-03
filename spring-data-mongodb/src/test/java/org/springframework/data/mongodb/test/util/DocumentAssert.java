@@ -85,6 +85,28 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return myself;
 	}
 
+	/**
+	 * Verifies that the actual value is equal to the given one by accepting the expected {@link Document} in its
+	 * JSON/BSON representation.
+	 * <p>
+	 * Example:
+	 *
+	 * <pre>
+	 * <code class='java'> // assertions will pass
+	 * assertThat(Document.parse(&quot;{foo: 1}&quot;).isEqualTo(&quot;{foo: 1}&quot;);
+	 * </pre>
+	 *
+	 * @param expectedBson the given value to compare the actual value to in BSON/JSON format.
+	 * @return {@code this} assertion object.
+	 * @throws AssertionError if the actual value is not equal to the given one.
+	 * @see Document#parse(String)
+	 */
+	public DocumentAssert isEqualTo(String expectedBson) {
+
+		isEqualTo(Document.parse(expectedBson));
+		return myself;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.assertj.core.api.AbstractMapAssert#doesNotContainEntry(java.lang.Object, java.lang.Object)
