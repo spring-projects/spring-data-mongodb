@@ -15,22 +15,20 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.bson.types.ObjectId;
-import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,8 +53,6 @@ import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.test.util.Assertions;
-import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -98,8 +94,8 @@ public class QueryMapperUnitTests {
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(Sample.class);
 
 		org.bson.Document result = mapper.getMappedObject(query, entity);
-		assertThat(result.get("_id"), is(notNullValue()));
-		assertThat(result.get("foo"), is(nullValue()));
+		assertThat(result.get("_id")).isNotNull();
+		assertThat(result.get("foo")).isNull();
 	}
 
 	@Test
@@ -107,7 +103,7 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document query = new org.bson.Document("_id", new ObjectId().toString());
 		org.bson.Document result = mapper.getMappedObject(query, context.getPersistentEntity(IdWrapper.class));
-		assertThat(result.get("_id"), is(instanceOf(ObjectId.class)));
+		assertThat(result.get("_id")).isInstanceOf(ObjectId.class);
 	}
 
 	@Test
@@ -115,7 +111,7 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document document = new org.bson.Document("id", new BigInteger("1"));
 		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
-		assertThat(result.get("_id"), is((Object) "1"));
+		assertThat(result.get("_id")).isEqualTo("1");
 	}
 
 	@Test
@@ -124,7 +120,7 @@ public class QueryMapperUnitTests {
 		ObjectId id = new ObjectId();
 		org.bson.Document document = new org.bson.Document("id", new BigInteger(id.toString(), 16));
 		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
-		assertThat(result.get("_id"), is((Object) id));
+		assertThat(result.get("_id")).isEqualTo(id);
 	}
 
 	@Test // DATAMONGO-278
@@ -135,9 +131,9 @@ public class QueryMapperUnitTests {
 		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
 				context.getPersistentEntity(Sample.class));
 		Object object = result.get("_id");
-		assertThat(object, is(instanceOf(org.bson.Document.class)));
+		assertThat(object).isInstanceOf(org.bson.Document.class);
 		org.bson.Document document = (org.bson.Document) object;
-		assertThat(document.get("$ne"), is(instanceOf(ObjectId.class)));
+		assertThat(document.get("$ne")).isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-326
@@ -146,7 +142,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
 		Object object = result.get("foo");
-		assertThat(object, is(instanceOf(String.class)));
+		assertThat(object).isInstanceOf(String.class);
 	}
 
 	@Test
@@ -155,11 +151,11 @@ public class QueryMapperUnitTests {
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
 		Object object = result.get("foo");
-		assertThat(object, is(instanceOf(org.bson.Document.class)));
+		assertThat(object).isInstanceOf(org.bson.Document.class);
 
 		Object ne = ((org.bson.Document) object).get("$ne");
-		assertThat(ne, is(instanceOf(String.class)));
-		assertThat(ne.toString(), is(Enum.INSTANCE.name()));
+		assertThat(ne).isInstanceOf(String.class);
+		assertThat(ne.toString()).isEqualTo(Enum.INSTANCE.name());
 	}
 
 	@Test
@@ -169,15 +165,15 @@ public class QueryMapperUnitTests {
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
 		Object object = result.get("foo");
-		assertThat(object, is(instanceOf(org.bson.Document.class)));
+		assertThat(object).isInstanceOf(org.bson.Document.class);
 
 		Object in = ((org.bson.Document) object).get("$in");
-		assertThat(in, is(instanceOf(List.class)));
+		assertThat(in).isInstanceOf(List.class);
 
 		List list = (List) in;
-		assertThat(list.size(), is(1));
-		assertThat(list.get(0), is(instanceOf(String.class)));
-		assertThat(list.get(0).toString(), is(Enum.INSTANCE.name()));
+		assertThat(list).hasSize(1);
+		assertThat(list.get(0)).isInstanceOf(String.class);
+		assertThat(list.get(0).toString()).isEqualTo(Enum.INSTANCE.name());
 	}
 
 	@Test // DATAMONGO-373
@@ -195,7 +191,7 @@ public class QueryMapperUnitTests {
 		query.put("bar", new Person());
 
 		org.bson.Document result = mapper.getMappedObject(query, Optional.empty());
-		assertThat(result.get("bar"), is(notNullValue()));
+		assertThat(result.get("bar")).isNotNull();
 	}
 
 	@Test // DATAMONGO-429
@@ -204,7 +200,7 @@ public class QueryMapperUnitTests {
 		Query query = new BasicQuery("{ 'tags' : { '$all' : [ 'green', 'orange']}}");
 
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
-		assertThat(result.toJson(), is(query.getQueryObject().toJson()));
+		assertThat(result.toJson()).isEqualTo(query.getQueryObject().toJson());
 	}
 
 	@Test
@@ -216,8 +212,8 @@ public class QueryMapperUnitTests {
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(ClassWithDefaultId.class);
 
 		org.bson.Document result = mapper.getMappedObject(document, entity);
-		assertThat(result.get("_id"), is(instanceOf(ObjectId.class)));
-		assertThat(((org.bson.Document) result.get("nested")).get("_id"), is(instanceOf(ObjectId.class)));
+		assertThat(result.get("_id")).isInstanceOf(ObjectId.class);
+		assertThat(((org.bson.Document) result.get("nested")).get("_id")).isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-493
@@ -230,11 +226,11 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(UserEntity.class));
-		assertThat(document.get("publishers"), is(instanceOf(org.bson.Document.class)));
+		assertThat(document.get("publishers")).isInstanceOf(org.bson.Document.class);
 
 		org.bson.Document publishers = (org.bson.Document) document.get("publishers");
-		assertThat(publishers.containsKey("$ne"), is(true));
-		assertThat(publishers.get("$ne"), is(instanceOf(String.class)));
+		assertThat(publishers.containsKey("$ne")).isTrue();
+		assertThat(publishers.get("$ne")).isInstanceOf(String.class);
 	}
 
 	@Test // DATAMONGO-494
@@ -244,15 +240,13 @@ public class QueryMapperUnitTests {
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(Sample.class));
 
-		assertThat(result.keySet(), hasSize(1));
-		assertThat(result.keySet(), hasItem("$or"));
+		assertThat(result.keySet()).hasSize(1).containsOnly("$or");
 
 		List<Object> ors = getAsDBList(result, "$or");
-		assertThat(ors, hasSize(1));
+		assertThat(ors).hasSize(1);
 		org.bson.Document criterias = getAsDocument(ors, 0);
-		assertThat(criterias.keySet(), hasSize(1));
-		assertThat(criterias.get("_id"), is(notNullValue()));
-		assertThat(criterias.get("foo"), is(nullValue()));
+		assertThat(criterias.keySet()).hasSize(1).doesNotContain("foo");
+		assertThat(criterias.get("_id")).isNotNull();
 	}
 
 	@Test
@@ -262,8 +256,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(CustomizedField.class));
 
-		assertThat(result.containsKey("foo"), is(true));
-		assertThat(result.keySet().size(), is(1));
+		assertThat(result.containsKey("foo")).isTrue();
+		assertThat(result.keySet()).hasSize(1);
 	}
 
 	@Test
@@ -273,8 +267,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(CustomizedField.class));
 
-		assertThat(result.containsKey("foo.foo"), is(true));
-		assertThat(result.keySet().size(), is(1));
+		assertThat(result.containsKey("foo.foo")).isTrue();
+		assertThat(result.keySet()).hasSize(1);
 	}
 
 	@Test
@@ -284,8 +278,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(CustomizedField.class));
 
-		assertThat(result.containsKey("bar"), is(true));
-		assertThat(result.keySet().size(), is(1));
+		assertThat(result.containsKey("bar")).isTrue();
+		assertThat(result.keySet()).hasSize(1);
 	}
 
 	@Test
@@ -300,7 +294,7 @@ public class QueryMapperUnitTests {
 
 		Object referenceObject = object.get("reference");
 
-		assertThat(referenceObject, is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(referenceObject).isInstanceOf(com.mongodb.DBRef.class);
 	}
 
 	@Test
@@ -315,7 +309,7 @@ public class QueryMapperUnitTests {
 
 		Object referenceObject = object.get("withDbRef.reference");
 
-		assertThat(referenceObject, is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(referenceObject).isInstanceOf(com.mongodb.DBRef.class);
 	}
 
 	@Test
@@ -334,9 +328,9 @@ public class QueryMapperUnitTests {
 		org.bson.Document reference = DocumentTestUtils.getAsDocument(result, "reference");
 
 		List<Object> inClause = getAsDBList(reference, "$in");
-		assertThat(inClause, hasSize(2));
-		assertThat(inClause.get(0), is(instanceOf(com.mongodb.DBRef.class)));
-		assertThat(inClause.get(1), is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(inClause).hasSize(2);
+		assertThat(inClause.get(0)).isInstanceOf(com.mongodb.DBRef.class);
+		assertThat(inClause.get(1)).isInstanceOf(com.mongodb.DBRef.class);
 	}
 
 	@Test // DATAMONGO-570
@@ -346,7 +340,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document object = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WithDBRef.class));
 
-		assertThat(object.get("reference"), is(nullValue()));
+		assertThat(object.get("reference")).isNull();
 	}
 
 	@Test // DATAMONGO-629
@@ -357,9 +351,9 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document object = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
-		assertThat(object.containsKey("id"), is(true));
-		assertThat(object.get("id"), is((Object) id));
-		assertThat(object.containsKey("_id"), is(false));
+		assertThat(object.containsKey("id")).isTrue();
+		assertThat(object.get("id")).isEqualTo(id);
+		assertThat(object.containsKey("_id")).isFalse();
 	}
 
 	@Test // DATAMONGO-677
@@ -372,10 +366,10 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document mapped = mapper.getMappedObject(document, context.getPersistentEntity(WithMapDBRef.class));
 
-		assertThat(mapped.containsKey("mapWithDBRef"), is(true));
-		assertThat(mapped.get("mapWithDBRef"), instanceOf(org.bson.Document.class));
-		assertThat(((org.bson.Document) mapped.get("mapWithDBRef")).containsKey("test"), is(true));
-		assertThat(((org.bson.Document) mapped.get("mapWithDBRef")).get("test"), instanceOf(com.mongodb.DBRef.class));
+		assertThat(mapped.containsKey("mapWithDBRef")).isTrue();
+		assertThat(mapped.get("mapWithDBRef")).isInstanceOf(org.bson.Document.class);
+		assertThat(((org.bson.Document) mapped.get("mapWithDBRef")).containsKey("test")).isTrue();
+		assertThat(((org.bson.Document) mapped.get("mapWithDBRef")).get("test")).isInstanceOf(com.mongodb.DBRef.class);
 	}
 
 	@Test
@@ -384,8 +378,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = new org.bson.Document().append("_id", new ObjectId().toString());
 
 		org.bson.Document mapped = mapper.getMappedObject(document, Optional.empty());
-		assertThat(mapped.containsKey("_id"), is(true));
-		assertThat(mapped.get("_id"), is(instanceOf(ObjectId.class)));
+		assertThat(mapped.containsKey("_id")).isTrue();
+		assertThat(mapped.get("_id")).isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-705
@@ -397,8 +391,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
 
 		org.bson.Document reference = getAsDocument(mappedObject, "reference");
-		assertThat(reference.containsKey("$exists"), is(true));
-		assertThat(reference.get("$exists"), is((Object) false));
+		assertThat(reference.containsKey("$exists")).isTrue();
+		assertThat(reference.get("$exists")).isEqualTo(false);
 	}
 
 	@Test // DATAMONGO-706
@@ -412,14 +406,14 @@ public class QueryMapperUnitTests {
 		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
 
-		assertThat(mappedObject.get("someString"), is((Object) "foo"));
+		assertThat(mappedObject.get("someString")).isEqualTo("foo");
 
 		List<Object> andClause = getAsDBList(mappedObject, "$and");
-		assertThat(andClause, hasSize(1));
+		assertThat(andClause).hasSize(1);
 
 		List<Object> inClause = getAsDBList(getAsDocument(getAsDocument(andClause, 0), "reference"), "$in");
-		assertThat(inClause, hasSize(1));
-		assertThat(inClause.get(0), is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(inClause).hasSize(1);
+		assertThat(inClause.get(0)).isInstanceOf(com.mongodb.DBRef.class);
 	}
 
 	@Test // DATAMONGO-752
@@ -429,8 +423,8 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
-		assertThat(result.keySet(), hasSize(1));
-		assertThat(result.get("myvalue"), is((Object) "$334"));
+		assertThat(result.keySet()).hasSize(1);
+		assertThat(result.get("myvalue")).isEqualTo("$334");
 	}
 
 	@Test // DATAMONGO-752
@@ -440,8 +434,8 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
-		assertThat(result.keySet(), hasSize(1));
-		assertThat(result.get("myvalue"), is((Object) "$center"));
+		assertThat(result.keySet()).hasSize(1);
+		assertThat(result.get("myvalue")).isEqualTo("$center");
 	}
 
 	@Test // DATAMONGO-805
@@ -454,8 +448,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document queryResult = mapper.getMappedObject(query.getQueryObject(), entity);
 		org.bson.Document fieldsResult = mapper.getMappedObject(query.getFieldsObject(), entity);
 
-		assertThat(queryResult.get("someString"), is((Object) "foo"));
-		assertThat(fieldsResult.get("reference"), is((Object) 0));
+		assertThat(queryResult.get("someString")).isEqualTo("foo");
+		assertThat(fieldsResult.get("reference")).isEqualTo(0);
 	}
 
 	@Test // DATAMONGO-686
@@ -469,7 +463,7 @@ public class QueryMapperUnitTests {
 		mapper.getMappedObject(queryObject, persistentEntity);
 		Object idValuesAfter = getAsDocument(queryObject, idPropertyName).get("$in");
 
-		assertThat(idValuesAfter, is(idValuesBefore));
+		assertThat(idValuesAfter).isEqualTo(idValuesBefore);
 	}
 
 	@Test // DATAMONGO-821
@@ -484,7 +478,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document referenceObject = getAsDocument(mappedObject, "referenceList");
 		org.bson.Document nestedObject = getAsDocument(referenceObject, "$nested");
 
-		assertThat(nestedObject, is((org.bson.Document) new org.bson.Document("$keys", 0L)));
+		assertThat(nestedObject).isEqualTo(new org.bson.Document("$keys", 0L));
 	}
 
 	@Test // DATAMONGO-821
@@ -497,7 +491,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document referenceObject = getAsDocument(mappedObject, "reference");
 		org.bson.Document nestedObject = getAsDocument(referenceObject, "$nested");
 
-		assertThat(nestedObject, is((org.bson.Document) new org.bson.Document("$keys", 0L)));
+		assertThat(nestedObject).isEqualTo(new org.bson.Document("$keys", 0L));
 	}
 
 	@Test // DATAMONGO-821
@@ -505,15 +499,15 @@ public class QueryMapperUnitTests {
 
 		Reference sample = new Reference();
 		sample.id = 321L;
-		org.bson.Document queryObject = query(where("reference").is(new org.bson.Document("$in", Arrays.asList(sample))))
-				.getQueryObject();
+		org.bson.Document queryObject = query(
+				where("reference").is(new org.bson.Document("$in", Collections.singletonList(sample)))).getQueryObject();
 
 		org.bson.Document mappedObject = mapper.getMappedObject(queryObject, context.getPersistentEntity(WithDBRef.class));
 
 		org.bson.Document referenceObject = getAsDocument(mappedObject, "reference");
 		List<Object> inObject = getAsDBList(referenceObject, "$in");
 
-		assertThat(inObject.get(0), is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(inObject.get(0)).isInstanceOf(com.mongodb.DBRef.class);
 	}
 
 	@Test // DATAMONGO-773
@@ -525,7 +519,7 @@ public class QueryMapperUnitTests {
 		qry.fields().include("reference");
 
 		org.bson.Document mappedFields = mapper.getMappedObject(qry.getFieldsObject(), persistentEntity);
-		assertThat(mappedFields, is(notNullValue()));
+		assertThat(mappedFields).isNotNull();
 	}
 
 	@Test // DATAMONGO-893
@@ -539,8 +533,7 @@ public class QueryMapperUnitTests {
 		Query query = query(where("embedded").in(Arrays.asList(embedded, embedded2)));
 
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
-		assertThat(document,
-				equalTo(org.bson.Document.parse("{ \"embedded\" : { \"$in\" : [ { \"_id\" : \"1\"} , { \"_id\" : \"2\"}]}}")));
+		assertThat(document).isEqualTo("{ \"embedded\" : { \"$in\" : [ { \"_id\" : \"1\"} , { \"_id\" : \"2\"}]}}");
 	}
 
 	@Test // DATAMONGO-1406
@@ -550,7 +543,7 @@ public class QueryMapperUnitTests {
 		embeddedClass.customizedField = "hello";
 
 		Foo foo = new Foo();
-		foo.listOfItems = Arrays.asList(embeddedClass);
+		foo.listOfItems = Collections.singletonList(embeddedClass);
 
 		Query query = new Query(Criteria.where("listOfItems") //
 				.elemMatch(new Criteria(). //
@@ -558,8 +551,8 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
 
-		assertThat(document, isBsonObject().containing("my_items.$elemMatch.$and",
-				new BasicDbListBuilder().add(new BasicDBObject("fancy_custom_name", embeddedClass.customizedField)).get()));
+		assertThat(document).containsEntry("my_items.$elemMatch.$and",
+				Collections.singletonList(new org.bson.Document("fancy_custom_name", embeddedClass.customizedField)));
 	}
 
 	@Test // DATAMONGO-647
@@ -568,7 +561,7 @@ public class QueryMapperUnitTests {
 		Query query = query(where("field").is("bar")).with(Sort.by(Direction.DESC, "field"));
 		org.bson.Document document = mapper.getMappedObject(query.getSortObject(),
 				context.getPersistentEntity(CustomizedField.class));
-		assertThat(document, equalTo(new org.bson.Document().append("foo", -1)));
+		assertThat(document).isEqualTo(new org.bson.Document().append("foo", -1));
 	}
 
 	@Test // DATAMONGO-973
@@ -579,7 +572,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
 
-		assertThat(document, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
+		assertThat(document)
+				.isEqualTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore")));
 	}
 
 	@Test // DATAMONGO-973
@@ -591,7 +585,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
 
-		assertThat(document, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
+		assertThat(document)
+				.isEqualTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore")));
 	}
 
 	@Test // DATAMONGO-973
@@ -602,7 +597,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
 
-		assertThat(document, equalTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore"))));
+		assertThat(document)
+				.isEqualTo(new org.bson.Document().append("score", new org.bson.Document("$meta", "textScore")));
 	}
 
 	@Test // DATAMONGO-973
@@ -613,7 +609,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(WithTextScoreProperty.class));
 
-		assertThat(document, equalTo(new org.bson.Document().append("_id", 1)));
+		assertThat(document).isEqualTo(new org.bson.Document().append("_id", 1));
 	}
 
 	@Test // DATAMONGO-1070, DATAMONGO-1798
@@ -624,9 +620,9 @@ public class QueryMapperUnitTests {
 		org.bson.Document query = new org.bson.Document("reference.id", new com.mongodb.DBRef("reference", id));
 		org.bson.Document result = mapper.getMappedObject(query, context.getPersistentEntity(WithDBRef.class));
 
-		assertThat(result.containsKey("reference"), is(true));
+		assertThat(result.containsKey("reference")).isTrue();
 		com.mongodb.DBRef reference = getTypedValue(result, "reference", com.mongodb.DBRef.class);
-		assertThat(reference.getId(), is(instanceOf(ObjectId.class)));
+		assertThat(reference.getId()).isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-1050
@@ -637,7 +633,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
 
-		assertThat(document, equalTo(new org.bson.Document().append("nested.id", "bar")));
+		assertThat(document).isEqualTo(new org.bson.Document().append("nested.id", "bar"));
 	}
 
 	@Test // DATAMONGO-1050
@@ -648,7 +644,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
 
-		assertThat(document, equalTo(new org.bson.Document().append("nested.id", 1)));
+		assertThat(document).isEqualTo(new org.bson.Document().append("nested.id", 1));
 	}
 
 	@Test // DATAMONGO-1135
@@ -659,9 +655,9 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(document, isBsonObject().containing("foo.$near.$geometry.type", "Point"));
-		assertThat(document, isBsonObject().containing("foo.$near.$geometry.coordinates.[0]", 100D));
-		assertThat(document, isBsonObject().containing("foo.$near.$geometry.coordinates.[1]", 50D));
+		assertThat(document).containsEntry("foo.$near.$geometry.type", "Point");
+		assertThat(document).containsEntry("foo.$near.$geometry.coordinates.[0]", 100D);
+		assertThat(document).containsEntry("foo.$near.$geometry.coordinates.[1]", 50D);
 	}
 
 	@Test // DATAMONGO-1135
@@ -672,7 +668,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(document, isBsonObject().containing("geoJsonPoint.$near.$geometry.type", "Point"));
+		assertThat(document).containsEntry("geoJsonPoint.$near.$geometry.type", "Point");
 	}
 
 	@Test // DATAMONGO-1135
@@ -683,7 +679,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(document, isBsonObject().containing("geoJsonPoint.$nearSphere.$geometry.type", "Point"));
+		assertThat(document).containsEntry("geoJsonPoint.$nearSphere.$geometry.type", "Point");
 	}
 
 	@Test // DATAMONGO-1135
@@ -694,8 +690,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(document,
-				isBsonObject().containing("geoJsonPointWithNameViaFieldAnnotation.$nearSphere.$geometry.type", "Point"));
+		assertThat(document).containsEntry("geoJsonPointWithNameViaFieldAnnotation.$nearSphere.$geometry.type", "Point");
 	}
 
 	@Test // DATAMONGO-1135
@@ -707,7 +702,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(document, isBsonObject().containing("geoJsonPoint.$geoWithin.$geometry.type", "Polygon"));
+		assertThat(document).containsEntry("geoJsonPoint.$geoWithin.$geometry.type", "Polygon");
 	}
 
 	@Test // DATAMONGO-1134
@@ -719,8 +714,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithGeoTypes.class));
 
-		assertThat(document, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.type", "Polygon"));
-		assertThat(document, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.coordinates"));
+		assertThat(document).containsEntry("geoJsonPoint.$geoIntersects.$geometry.type", "Polygon");
+		assertThat(document).containsKey("geoJsonPoint.$geoIntersects.$geometry.coordinates");
 	}
 
 	@Test // DATAMONGO-1269
@@ -731,7 +726,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(EntityWithComplexValueTypeMap.class));
 
-		assertThat(document.containsKey("map.1.stringProperty"), is(true));
+		assertThat(document.containsKey("map.1.stringProperty")).isTrue();
 	}
 
 	@Test // DATAMONGO-1269
@@ -742,7 +737,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(EntityWithComplexValueTypeList.class));
 
-		assertThat(document.containsKey("list.1.stringProperty"), is(true));
+		assertThat(document.containsKey("list.1.stringProperty")).isTrue();
 	}
 
 	@Test // DATAMONGO-1245
@@ -756,7 +751,7 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
 
-		assertThat(document, isBsonObject().containing("embedded\\._id", "conflux"));
+		assertThat(document).containsEntry("embedded\\._id", "conflux");
 	}
 
 	@Test // DATAMONGO-1245
@@ -770,8 +765,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WithDBRef.class));
 
-		assertThat(document.get("legacyPoint.x"), Is.<Object> is(10D));
-		assertThat(document.get("legacyPoint.y"), Is.<Object> is(20D));
+		assertThat(document.get("legacyPoint.x")).isEqualTo(10D);
+		assertThat(document.get("legacyPoint.y")).isEqualTo(20D);
 	}
 
 	@Test // DATAMONGO-1988
@@ -781,7 +776,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithEmbedded.class));
 
-		assertThat(document.get("sample._id"), instanceOf(ObjectId.class));
+		assertThat(document.get("sample._id")).isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-1988
@@ -791,7 +786,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithEmbedded.class));
 
-		assertThat(document.get("sample.iid"), instanceOf(String.class));
+		assertThat(document.get("sample.iid")).isInstanceOf(String.class);
 	}
 
 	@Test // DATAMONGO-1988
@@ -801,7 +796,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(ClassWithEmbedded.class));
 
-		assertThat(document.get("sample._id"), instanceOf(String.class));
+		assertThat(document.get("sample._id")).isInstanceOf(String.class);
 	}
 
 	@Test // DATAMONGO-2168
@@ -812,7 +807,7 @@ public class QueryMapperUnitTests {
 		org.bson.Document update = new org.bson.Document("className", "foo");
 		org.bson.Document mappedObject = mapper.getMappedObject(update, context.getPersistentEntity(UserEntity.class));
 
-		Assertions.assertThat(mappedObject).containsEntry("className", "foo");
+		assertThat(mappedObject).containsEntry("className", "foo");
 	}
 
 	@Document
