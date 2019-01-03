@@ -55,6 +55,7 @@ import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.Assertions;
 import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 
 import com.mongodb.BasicDBObject;
@@ -801,6 +802,17 @@ public class QueryMapperUnitTests {
 				context.getPersistentEntity(ClassWithEmbedded.class));
 
 		assertThat(document.get("sample._id"), instanceOf(String.class));
+	}
+
+	@Test // DATAMONGO-2168
+	public void getMappedObjectShouldNotMapTypeHint() {
+
+		converter.setTypeMapper(new DefaultMongoTypeMapper("className"));
+
+		org.bson.Document update = new org.bson.Document("className", "foo");
+		org.bson.Document mappedObject = mapper.getMappedObject(update, context.getPersistentEntity(UserEntity.class));
+
+		Assertions.assertThat(mappedObject).containsEntry("className", "foo");
 	}
 
 	@Document

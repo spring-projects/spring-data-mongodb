@@ -132,6 +132,11 @@ public class QueryMapper {
 				continue;
 			}
 
+			if (isTypeKey(key)) {
+				result.put(key, BsonUtils.get(query, key));
+				continue;
+			}
+
 			if (isKeyword(key)) {
 				result.putAll(getMappedKeyword(new Keyword(query, key), entity));
 				continue;
@@ -613,6 +618,18 @@ public class QueryMapper {
 		}
 
 		return isKeyword(keys.iterator().next().toString());
+	}
+
+	/**
+	 * Returns whether the given {@link String} is the type key.
+	 * 
+	 * @param key
+	 * @return
+	 * @see MongoTypeMapper#isTypeKey(String)
+	 * @since 2.2
+	 */
+	protected boolean isTypeKey(String key) {
+		return converter.getTypeMapper().isTypeKey(key);
 	}
 
 	/**
