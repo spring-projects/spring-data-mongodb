@@ -999,11 +999,17 @@ public class QueryMapper {
 		 * @param pathExpression
 		 * @return
 		 */
+		@Nullable
 		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression) {
 
 			try {
 
 				PropertyPath path = PropertyPath.from(pathExpression.replaceAll("\\.\\d+", ""), entity.getTypeInformation());
+
+				if (isPathToJavaLangClassProperty(path)) {
+					return null;
+				}
+
 				PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
 
 				Iterator<MongoPersistentProperty> iterator = propertyPath.iterator();
@@ -1027,6 +1033,14 @@ public class QueryMapper {
 			} catch (PropertyReferenceException e) {
 				return null;
 			}
+		}
+
+		private boolean isPathToJavaLangClassProperty(PropertyPath path) {
+
+			if (path.getType().equals(Class.class) && path.getLeafProperty().getOwningType().getType().equals(Class.class)) {
+				return true;
+			}
+			return false;
 		}
 
 		/**
