@@ -301,8 +301,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Streamable<S> source = Streamable.of(entities);
 
-		return source.stream().allMatch(it -> entityInformation.isNew(it)) ? //
-				mongoOperations.insertAll(source.stream().collect(Collectors.toList())) : //
+		return source.stream().allMatch(entityInformation::isNew) ? //
+				mongoOperations.insert(source.stream().collect(Collectors.toList()), entityInformation.getCollectionName()) : //
 				Flux.fromIterable(entities).flatMap(this::save);
 	}
 
