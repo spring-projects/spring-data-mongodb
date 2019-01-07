@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.assertj.core.api.Assertions.offset;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
@@ -78,6 +78,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	ClassLoader classLoader;
 	BeanFactory beanFactory;
 	ReactivePersonRepository repository;
+	ReactiveContactRepository contactRepository;
 	ReactiveCappedCollectionRepository cappedRepository;
 
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
@@ -102,6 +103,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		factory.setEvaluationContextProvider(QueryMethodEvaluationContextProvider.DEFAULT);
 
 		repository = factory.getRepository(ReactivePersonRepository.class);
+		contactRepository = factory.getRepository(ReactiveContactRepository.class);
 		cappedRepository = factory.getRepository(ReactiveCappedCollectionRepository.class);
 
 		StepVerifier.create(repository.deleteAll()).verifyComplete();
@@ -345,6 +347,35 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 				}).verifyComplete();
 	}
 
+	@Test // DATAMONGO-2181
+	public void considersRepositoryCollectionName() {
+
+		repository.deleteAll() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		contactRepository.deleteAll() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		leroi.id = null;
+		boyd.id = null;
+		contactRepository.saveAll(Arrays.asList(leroi, boyd)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2) //
+				.verifyComplete();
+
+		repository.count() //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
+
+		contactRepository.count() //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+	}
+
 	interface ReactivePersonRepository extends ReactiveMongoRepository<Person, String> {
 
 		Flux<Person> findByLastname(String lastname);
@@ -384,6 +415,8 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		@Query(sort = "{ age : -1 }")
 		Flux<Person> findByAgeGreaterThan(int age, Sort sort);
 	}
+
+	interface ReactiveContactRepository extends ReactiveMongoRepository<Contact, String> {}
 
 	interface ReactiveCappedCollectionRepository extends Repository<Capped, String> {
 
