@@ -1238,9 +1238,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(objectToSave, collectionName);
 			T toConvert = maybeEmitEvent(event).getSource();
-			AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
 
+			AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
 			entity.assertUpdateableIdIfNotSet();
+
 			T initialized = entity.initializeVersionProperty();
 			Document dbDoc = entity.toMappedDocument(writer).getDocument();
 
@@ -1313,19 +1314,22 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(writer, "MongoWriter must not be null!");
 
-		Mono<List<Tuple2<AdaptibleEntity<T>, Document>>> prepareDocuments = Flux.fromIterable(batchToSave).map(o -> {
+		Mono<List<Tuple2<AdaptibleEntity<T>, Document>>> prepareDocuments = Flux.fromIterable(batchToSave)
+				.map(uninitialized -> {
 
-			AdaptibleEntity<T> entity = operations.forEntity(o, mongoConverter.getConversionService());
-			T toSave = entity.initializeVersionProperty();
+					BeforeConvertEvent<T> event = new BeforeConvertEvent<>(uninitialized, collectionName);
+					T toConvert = maybeEmitEvent(event).getSource();
 
-			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(toSave, collectionName);
-			toSave = maybeEmitEvent(event).getSource();
+					AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
+					entity.assertUpdateableIdIfNotSet();
 
-			Document dbDoc = entity.toMappedDocument(writer).getDocument();
+					T initialized = entity.initializeVersionProperty();
+					Document dbDoc = entity.toMappedDocument(writer).getDocument();
 
-			maybeEmitEvent(new BeforeSaveEvent<>(toSave, dbDoc, collectionName));
-			return Tuples.of(entity, dbDoc);
-		}).collectList();
+					maybeEmitEvent(new BeforeSaveEvent<>(initialized, dbDoc, collectionName));
+
+					return Tuples.of(entity, dbDoc);
+				}).collectList();
 
 		Flux<Tuple2<AdaptibleEntity<T>, Document>> insertDocuments = prepareDocuments.flatMapMany(tuples -> {
 

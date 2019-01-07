@@ -1309,17 +1309,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		List<T> initializedBatchToSave = new ArrayList<>(batchToSave.size());
 		for (T uninitialized : batchToSave) {
 
-			AdaptibleEntity<T> entity = operations.forEntity(uninitialized, mongoConverter.getConversionService());
-			T toSave = entity.initializeVersionProperty();
+			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(uninitialized, collectionName);
+			T toConvert = maybeEmitEvent(event).getSource();
 
-			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(toSave, collectionName);
-			toSave = maybeEmitEvent(event).getSource();
+			AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
+			entity.assertUpdateableIdIfNotSet();
 
+			T initialized = entity.initializeVersionProperty();
 			Document document = entity.toMappedDocument(writer).getDocument();
+			maybeEmitEvent(new BeforeSaveEvent<>(initialized, document, collectionName));
 
-			maybeEmitEvent(new BeforeSaveEvent<>(toSave, document, collectionName));
 			documentList.add(document);
-			initializedBatchToSave.add(toSave);
+			initializedBatchToSave.add(initialized);
 		}
 
 		List<Object> ids = insertDocumentList(collectionName, documentList);
