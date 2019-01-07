@@ -118,7 +118,7 @@ public class IndexInfo {
 
 	/**
 	 * Returns the individual index fields of the index.
-	 * 
+	 *
 	 * @return
 	 */
 	public List<IndexField> getIndexFields() {
@@ -127,7 +127,7 @@ public class IndexInfo {
 
 	/**
 	 * Returns whether the index is covering exactly the fields given independently of the order.
-	 * 
+	 *
 	 * @param keys must not be {@literal null}.
 	 * @return
 	 */
@@ -193,15 +193,14 @@ public class IndexInfo {
 	@Override
 	public int hashCode() {
 
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ObjectUtils.nullSafeHashCode(indexFields);
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + (sparse ? 1231 : 1237);
-		result = prime * result + (unique ? 1231 : 1237);
-		result = prime * result + ObjectUtils.nullSafeHashCode(language);
-		result = prime * result + ObjectUtils.nullSafeHashCode(partialFilterExpression);
-		result = prime * result + ObjectUtils.nullSafeHashCode(collation);
+		int result = 17;
+		result += 31 * ObjectUtils.nullSafeHashCode(indexFields);
+		result += 31 * ObjectUtils.nullSafeHashCode(name);
+		result += 31 * ObjectUtils.nullSafeHashCode(unique);
+		result += 31 * ObjectUtils.nullSafeHashCode(sparse);
+		result += 31 * ObjectUtils.nullSafeHashCode(language);
+		result += 31 * ObjectUtils.nullSafeHashCode(partialFilterExpression);
+		result += 31 * ObjectUtils.nullSafeHashCode(collation);
 		return result;
 	}
 
