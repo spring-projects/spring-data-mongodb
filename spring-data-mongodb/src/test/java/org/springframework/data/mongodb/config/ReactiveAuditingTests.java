@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -84,7 +85,18 @@ public class ReactiveAuditingTests {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
 				auditablePersonRepository::save, //
+				null, 0L, 1L);
+	}
+
+	@Test // DATAMONGO-2179
+	public void auditingWorksForVersionedEntityBatchWithWrapperVersion() {
+
+		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
+				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
+				s -> auditablePersonRepository.saveAll(Collections.singletonList(s)).next(), //
 				null, 0L, 1L);
 	}
 
@@ -93,6 +105,7 @@ public class ReactiveAuditingTests {
 
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
 				auditablePersonRepository::save, //
 				0L, 1L, 2L);
 	}
@@ -102,6 +115,7 @@ public class ReactiveAuditingTests {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
 				operations::save, //
 				null, 0L, 1L);
 	}
@@ -110,17 +124,20 @@ public class ReactiveAuditingTests {
 	public void auditingWorksForVersionedEntityWithSimpleVersionOnTemplate() {
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
 				operations::save, //
 				0L, 1L, 2L);
 	}
 
 	private <T extends AuditablePerson> void verifyAuditingViaVersionProperty(T instance,
-			Function<T, Object> versionExtractor, Function<T, Mono<T>> persister, Object... expectedValues) {
+			Function<T, Object> versionExtractor, Function<T, Object> createdDateExtractor, Function<T, Mono<T>> persister,
+			Object... expectedValues) {
 
 		AtomicReference<T> instanceHolder = new AtomicReference<>(instance);
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(instance.getClass());
 
 		assertThat(versionExtractor.apply(instance)).isEqualTo(expectedValues[0]);
+		assertThat(createdDateExtractor.apply(instance)).isNull();
 		assertThat(entity.isNew(instance)).isTrue();
 
 		persister.apply(instanceHolder.get()) //
@@ -129,6 +146,7 @@ public class ReactiveAuditingTests {
 					instanceHolder.set(actual);
 
 					assertThat(versionExtractor.apply(actual)).isEqualTo(expectedValues[1]);
+					assertThat(createdDateExtractor.apply(instance)).isNotNull();
 					assertThat(entity.isNew(actual)).isFalse();
 				}).verifyComplete();
 

@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -121,7 +122,18 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
 				auditablePersonRepository::save, //
+				null, 0L, 1L);
+	}
+
+	@Test // DATAMONGO-2179
+	public void auditingWorksForVersionedEntityBatchWithWrapperVersion() {
+
+		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
+				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
+				s -> auditablePersonRepository.saveAll(Collections.singletonList(s)).get(0), //
 				null, 0L, 1L);
 	}
 
@@ -130,6 +142,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
 				auditablePersonRepository::save, //
 				0L, 1L, 2L);
 	}
@@ -139,6 +152,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
 				operations::save, //
 				null, 0L, 1L);
 	}
@@ -148,21 +162,25 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
+				AuditablePerson::getCreatedAt, //
 				operations::save, //
 				0L, 1L, 2L);
 	}
 
 	private <T extends AuditablePerson> void verifyAuditingViaVersionProperty(T instance,
-			Function<T, Object> versionExtractor, Function<T, T> persister, Object... expectedValues) {
+			Function<T, Object> versionExtractor, Function<T, Object> createdDateExtractor, Function<T, T> persister,
+			Object... expectedValues) {
 
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(instance.getClass());
 
 		assertThat(versionExtractor.apply(instance)).isEqualTo(expectedValues[0]);
+		assertThat(createdDateExtractor.apply(instance)).isNull();
 		assertThat(entity.isNew(instance)).isTrue();
 
 		instance = persister.apply(instance);
 
 		assertThat(versionExtractor.apply(instance)).isEqualTo(expectedValues[1]);
+		assertThat(createdDateExtractor.apply(instance)).isNotNull();
 		assertThat(entity.isNew(instance)).isFalse();
 
 		instance = persister.apply(instance);
