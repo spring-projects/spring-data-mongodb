@@ -810,6 +810,15 @@ public class QueryMapperUnitTests {
 		assertThat(mappedObject).containsEntry("className", "foo");
 	}
 
+	@Test // DATAMONGO-2168
+	public void getMappedObjectShouldIgnorePathsLeadingToJavaLangClassProperties/* like Class#getName() */() {
+
+		org.bson.Document update = new org.bson.Document("className", "foo");
+		org.bson.Document mappedObject = mapper.getMappedObject(update, context.getPersistentEntity(UserEntity.class));
+
+		assertThat(mappedObject).containsEntry("className", "foo");
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -855,7 +864,7 @@ public class QueryMapperUnitTests {
 
 	class UserEntity {
 		String id;
-		List<String> publishers = new ArrayList<String>();
+		List<String> publishers = new ArrayList<>();
 	}
 
 	class CustomizedField {
