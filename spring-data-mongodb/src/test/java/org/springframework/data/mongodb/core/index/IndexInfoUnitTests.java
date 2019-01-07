@@ -46,13 +46,17 @@ public class IndexInfoUnitTests {
 
 	@Test // DATAMONGO-2170
 	public void partialFilterExpressionShouldBeNullIfNotSetInSource() {
-		assertThat(IndexInfo.indexInfoOf(Document.parse(ID_INDEX)).getPartialFilterExpression()).isNull();
+		assertThat(getIndexInfo(ID_INDEX).getPartialFilterExpression()).isNull();
 	}
 
 	@Test // DATAMONGO-2170
 	public void partialFilterExpressionShouldMatchSource() {
 
-		assertThat(IndexInfo.indexInfoOf(Document.parse(INDEX_WITH_PARTIAL_FILTER)).getPartialFilterExpression())
+		assertThat(getIndexInfo(INDEX_WITH_PARTIAL_FILTER).getPartialFilterExpression())
 				.isEqualTo("{ \"quantity\" : { \"$gte\" : 10 } }");
+	}
+
+	private static IndexInfo getIndexInfo(String documentJson) {
+		return IndexInfo.indexInfoOf(Document.parse(documentJson));
 	}
 }
