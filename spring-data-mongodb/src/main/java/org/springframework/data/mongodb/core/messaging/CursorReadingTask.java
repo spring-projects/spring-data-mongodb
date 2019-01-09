@@ -91,7 +91,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 				synchronized (lifecycleMonitor) {
 					state = State.CANCELLED;
 				}
-				Thread.interrupted();
+				Thread.currentThread().interrupt();
 			}
 		}
 	}
@@ -126,7 +126,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 					if (valid) {
 						this.cursor = cursor;
 						state = State.RUNNING;
-					} else {
+					} else if(cursor != null){
 						cursor.close();
 					}
 				}
@@ -141,7 +141,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 					synchronized (lifecycleMonitor) {
 						state = State.CANCELLED;
 					}
-					Thread.interrupted();
+					Thread.currentThread().interrupt();
 				}
 			}
 		} while (State.STARTING.equals(getState()));
@@ -258,7 +258,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 * @throws RuntimeException The potentially translated exception.
 	 */
 	@Nullable
-	private <T> T execute(Supplier<T> callback) {
+	private <V> V execute(Supplier<V> callback) {
 
 		try {
 			return callback.get();
