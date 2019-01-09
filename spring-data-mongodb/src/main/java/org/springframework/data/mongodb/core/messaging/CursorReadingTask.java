@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.messaging;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -257,10 +258,10 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 * @throws RuntimeException The potentially translated exception.
 	 */
 	@Nullable
-	private <T> T execute(TaskOperationCallback<T> callback) {
+	private <T> T execute(Supplier<T> callback) {
 
 		try {
-			return callback.justDoIt();
+			return callback.get();
 		} catch (RuntimeException e) {
 
 			RuntimeException translated = template.getExceptionTranslator().translateExceptionIfPossible(e);
@@ -269,19 +270,5 @@ abstract class CursorReadingTask<T, R> implements Task {
 			errorHandler.handleError(toHandle);
 			throw toHandle;
 		}
-	}
-
-	/**
-	 * Callback interface to execute internal task operations like obtaining the cursor, reading from it.
-	 *
-	 * @param <T>
-	 */
-	private interface TaskOperationCallback<T> {
-
-		/**
-		 * @return the operation result. Can be {@literal null}.
-		 */
-		@Nullable
-		T justDoIt();
 	}
 }
