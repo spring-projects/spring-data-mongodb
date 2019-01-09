@@ -27,8 +27,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.core.messaging.Task.State;
@@ -64,6 +66,7 @@ public class CursorReadingTaskUnitTests {
 		when(request.getMessageListener()).thenReturn(listener);
 		when(options.getCollectionName()).thenReturn("collection-name");
 		when(template.getDb()).thenReturn(db);
+		when(template.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
 		when(db.getName()).thenReturn("mock-db");
 
 		task = new ValueCapturingTaskStub(template, request, Object.class, cursor, errorHandler);
@@ -91,6 +94,17 @@ public class CursorReadingTaskUnitTests {
 		runOnce(new MultithreadedStopRunningWhileEmittingMessages(task, cursor));
 
 		verify(listener, times(task.getValues().size())).onMessage(any());
+	}
+
+	@Test // DATAMONGO-2173
+	public void writesErrorOnStartToErrorHandler() {
+
+		ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
+		Task task = new ErrorOnInitCursorTaskStub(template, request, Object.class, errorHandler);
+
+		assertThatExceptionOfType(RuntimeException.class).isThrownBy(task::run);
+		verify(errorHandler).handleError(errorCaptor.capture());
+		assertThat(errorCaptor.getValue()).hasMessageStartingWith("let's get it started (ha)");
 	}
 
 	private static class MultithreadedStopRunningWhileEmittingMessages extends MultithreadedTestCase {
@@ -220,6 +234,19 @@ public class CursorReadingTaskUnitTests {
 
 		public List<Object> getValues() {
 			return values;
+		}
+	}
+
+	static class ErrorOnInitCursorTaskStub extends CursorReadingTask {
+
+		public ErrorOnInitCursorTaskStub(MongoTemplate template, SubscriptionRequest request, Class targetType,
+				ErrorHandler errorHandler) {
+			super(template, request, targetType, errorHandler);
+		}
+
+		@Override
+		protected MongoCursor initCursor(MongoTemplate template, RequestOptions options, Class targetType) {
+			throw new RuntimeException("let's get it started (ha), let's get it started in here...");
 		}
 	}
 }
