@@ -21,7 +21,8 @@ import org.bson.Document;
  * Interface fixing must have operations for {@literal updates} as implemented via {@link Update}.
  *
  * @author Christoph Strobl
- * @since 2.2
+ * @author Mark Paluch
+ * @since 2.1.4
  */
 public interface UpdateDefinition {
 
@@ -47,9 +48,9 @@ public interface UpdateDefinition {
 	boolean modifies(String key);
 
 	/**
-	 * Bump the version of a given {@literal key} by {@code 1}.
+	 * Increment the value of a given {@literal key} by {@code 1}.
 	 *
 	 * @param key must not be {@literal null}.
 	 */
-	void incVersion(String key);
+	void inc(String key);
 }

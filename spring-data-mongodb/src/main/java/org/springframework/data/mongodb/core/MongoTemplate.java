@@ -1386,7 +1386,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MappedDocument mapped = source.toMappedDocument(mongoConverter);
 
 		maybeEmitEvent(new BeforeSaveEvent<>(toSave, mapped.getDocument(), collectionName));
-		MappedUpdate update = mapped.updateWithoutId();
+		UpdateDefinition update = mapped.updateWithoutId();
 
 		UpdateResult result = doUpdate(collectionName, query, update, toSave.getClass(), false, false);
 
@@ -1556,7 +1556,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
-	protected UpdateResult doUpdate(final String collectionName, final Query query, final UpdateDefinition update,
+	protected UpdateResult doUpdate(final String collectionName, final Query query, final Update update,
+			@Nullable final Class<?> entityClass, final boolean upsert, final boolean multi) {
+		return doUpdate(collectionName, query, (UpdateDefinition) update, entityClass, upsert, multi);
+	}
+
+	private UpdateResult doUpdate(final String collectionName, final Query query, final UpdateDefinition update,
 			@Nullable final Class<?> entityClass, final boolean upsert, final boolean multi) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
@@ -1622,7 +1627,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
 			if (!update.modifies(versionFieldName)) {
-				update.incVersion(versionFieldName);
+				update.inc(versionFieldName);
 			}
 		}
 	}

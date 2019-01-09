@@ -157,10 +157,10 @@ public class Update implements UpdateDefinition {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#incVersion()
+	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#inc()
 	 */
 	@Override
-	public void incVersion(String key) {
+	public void inc(String key) {
 		inc(key, 1L);
 	}
 

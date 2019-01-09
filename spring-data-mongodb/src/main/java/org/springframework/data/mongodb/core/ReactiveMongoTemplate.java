@@ -1612,7 +1612,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
-	protected Mono<UpdateResult> doUpdate(String collectionName, Query query, @Nullable UpdateDefinition update,
+	protected Mono<UpdateResult> doUpdate(String collectionName, Query query, @Nullable Update update,
+			@Nullable Class<?> entityClass, boolean upsert, boolean multi) {
+		return doUpdate(collectionName, query, (UpdateDefinition) update, entityClass, upsert, multi);
+	}
+
+	private Mono<UpdateResult> doUpdate(String collectionName, Query query, @Nullable UpdateDefinition update,
 			@Nullable Class<?> entityClass, boolean upsert, boolean multi) {
 
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
@@ -1675,7 +1680,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
 			if (!update.modifies(versionFieldName)) {
-				update.incVersion(versionFieldName);
+				update.inc(versionFieldName);
 			}
 		}
 	}
