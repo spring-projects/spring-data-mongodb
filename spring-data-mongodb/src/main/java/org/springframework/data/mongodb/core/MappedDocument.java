@@ -83,7 +83,7 @@ public class MappedDocument {
 		return Filters.eq(ID_FIELD, document.get(ID_FIELD));
 	}
 
-	public MappedUpdate updateWithoutId() {
+	public UpdateDefinition updateWithoutId() {
 		return new MappedUpdate(Update.fromDocument(document, ID_FIELD));
 	}
 
@@ -94,7 +94,7 @@ public class MappedDocument {
 	 * @author Christoph Strobl
 	 * @since 2.2
 	 */
-	public class MappedUpdate implements UpdateDefinition {
+	class MappedUpdate implements UpdateDefinition {
 
 		private final Update delegate;
 
@@ -122,11 +122,11 @@ public class MappedDocument {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#incVersion(java.lang.String)
+		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#inc(java.lang.String)
 		 */
 		@Override
-		public void incVersion(String version) {
-			delegate.incVersion(version);
+		public void inc(String version) {
+			delegate.inc(version);
 		}
 
 		/*

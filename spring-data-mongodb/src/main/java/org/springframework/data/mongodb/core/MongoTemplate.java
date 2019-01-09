@@ -1386,7 +1386,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MappedDocument mapped = source.toMappedDocument(mongoConverter);
 
 		maybeEmitEvent(new BeforeSaveEvent<>(toSave, mapped.getDocument(), collectionName));
-		MappedUpdate update = mapped.updateWithoutId();
+		UpdateDefinition update = mapped.updateWithoutId();
 
 		UpdateResult result = doUpdate(collectionName, query, update, toSave.getClass(), false, false);
 
@@ -1622,7 +1622,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
 			if (!update.modifies(versionFieldName)) {
-				update.incVersion(versionFieldName);
+				update.inc(versionFieldName);
 			}
 		}
 	}

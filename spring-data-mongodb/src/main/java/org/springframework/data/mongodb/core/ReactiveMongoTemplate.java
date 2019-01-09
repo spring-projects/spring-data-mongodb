@@ -1674,7 +1674,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
 			if (!update.modifies(versionFieldName)) {
-				update.incVersion(versionFieldName);
+				update.inc(versionFieldName);
 			}
 		}
 	}
