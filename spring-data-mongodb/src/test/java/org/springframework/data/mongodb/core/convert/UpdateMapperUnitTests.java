@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
@@ -979,6 +980,15 @@ public class UpdateMapperUnitTests {
 				.doesNotContainKey("$set.concreteInnerList.[0]._class");
 	}
 
+	@Test // DATAMONGO-2174
+	public void mappingUpdateDocumentWithExplicitFieldNameShouldBePossible() {
+
+		Document mappedUpdate = mapper.getMappedObject(new Document("AValue", "a value"),
+				context.getPersistentEntity(TypeWithFieldNameThatCannotBeDecapitalized.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("AValue", "a value"));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1289,6 +1299,17 @@ public class UpdateMapperUnitTests {
 	static class SomeInterfaceImpl extends SomeAbstractType implements SomeInterfaceType {
 
 		String value;
+	}
+
+	@Data
+	static class TypeWithFieldNameThatCannotBeDecapitalized {
+
+		@Id
+		protected String id;
+
+		@Field("AValue")
+		private Long aValue = 0L;
+
 	}
 
 }
