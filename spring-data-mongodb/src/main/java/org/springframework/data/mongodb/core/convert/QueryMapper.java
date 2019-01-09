@@ -941,6 +941,7 @@ public class QueryMapper {
 		 * @param pathExpression
 		 * @return
 		 */
+		@Nullable
 		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression) {
 
 			try {
@@ -966,7 +967,7 @@ public class QueryMapper {
 				}
 
 				return propertyPath;
-			} catch (PropertyReferenceException e) {
+			} catch (PropertyReferenceException | InvalidPersistentPropertyPath  e) {
 				return null;
 			}
 		}
