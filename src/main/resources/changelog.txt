@@ -1,6 +1,13 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.18.RELEASE (2019-01-10)
+-----------------------------------------------
+* DATAMONGO-2175 - Update copyright years to 2019.
+* DATAMONGO-2149 - Target bean of type java.lang.Integer is not of type of the persistent entity.
+* DATAMONGO-2143 - Release 1.10.18 (Ingalls SR18).
+
+
 Changes in version 2.2.0.M1 (2018-12-11)
 ----------------------------------------
 * DATAMONGO-2161 - Simplify reference documentation setup.
