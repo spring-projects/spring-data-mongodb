@@ -1,6 +1,22 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.4.RELEASE (2019-01-10)
+---------------------------------------------
+* DATAMONGO-2181 - ReactiveMongoRepository.saveAll(…) does not consider collection name for new entities.
+* DATAMONGO-2179 - CreatedDate is null for entities using optimistic locking via version property when saving/inserting in batch.
+* DATAMONGO-2175 - Update copyright years to 2019.
+* DATAMONGO-2174 - InvalidPersistentPropertyPath with @Version.
+* DATAMONGO-2173 - CursorReadingTask.start() doesn't pass exceptions to configured errorHandler.
+* DATAMONGO-2170 - IndexInfo.partialFilterExpression should be null (not an empty String) when undefined.
+* DATAMONGO-2156 - Remove javax.xml.bind dependency from ExpressionEvaluatingParameterBinder.
+* DATAMONGO-2155 - Map field is renamed if the Map associates a value-type with a similar field.
+* DATAMONGO-2150 - Auditing broken for entities using optimistic locking via version properties in reactive mongo.
+* DATAMONGO-2149 - Target bean of type java.lang.Integer is not of type of the persistent entity.
+* DATAMONGO-2148 - Add logging for MongoTemplate.count(…).
+* DATAMONGO-2145 - Release 2.1.4 (Lovelace SR4).
+
+
 Changes in version 2.0.13.RELEASE (2019-01-10)
 ----------------------------------------------
 * DATAMONGO-2175 - Update copyright years to 2019.
