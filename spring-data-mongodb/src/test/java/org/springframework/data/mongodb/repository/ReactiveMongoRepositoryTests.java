@@ -56,6 +56,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
+import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.test.context.ContextConfiguration;
@@ -82,6 +83,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	ReactiveCappedCollectionRepository cappedRepository;
 
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
+	QPerson person = new QPerson("person");
 
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
@@ -376,7 +378,19 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 				.verifyComplete();
 	}
 
-	interface ReactivePersonRepository extends ReactiveMongoRepository<Person, String> {
+	@Test // DATAMONGO-2182
+	public void shouldFindPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
+
+		repository.findAll(person.id.in(Arrays.asList(dave.id, carter.id))) //
+				.collectList() //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+					assertThat(actual).containsExactlyInAnyOrder(dave, carter);
+				}).verifyComplete();
+	}
+
+	interface ReactivePersonRepository
+			extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
 
 		Flux<Person> findByLastname(String lastname);
 
