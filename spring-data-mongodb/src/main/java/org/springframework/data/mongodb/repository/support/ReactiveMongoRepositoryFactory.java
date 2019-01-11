@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import static org.springframework.data.querydsl.QuerydslUtils.*;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
@@ -32,10 +34,13 @@ import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryMetho
 import org.springframework.data.mongodb.repository.query.ReactivePartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.ReactiveStringBasedMongoQuery;
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.ReactiveRepositoryFactorySupport;
+import org.springframework.data.repository.core.support.RepositoryComposition.RepositoryFragments;
+import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
@@ -83,6 +88,30 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getRepositoryFragments(org.springframework.data.repository.core.RepositoryMetadata)
+	 */
+	@Override
+	protected RepositoryFragments getRepositoryFragments(RepositoryMetadata metadata) {
+
+		RepositoryFragments fragments = RepositoryFragments.empty();
+
+		boolean isQueryDslRepository = QUERY_DSL_PRESENT
+				&& ReactiveQuerydslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
+
+		if (isQueryDslRepository) {
+
+			MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainType(),
+					metadata);
+
+			fragments = fragments.append(RepositoryFragment.implemented(getTargetRepositoryViaReflection(
+					ReactiveQuerydslMongoPredicateExecutor.class, entityInformation, operations)));
+		}
+
+		return fragments;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getTargetRepository(org.springframework.data.repository.core.RepositoryInformation)
 	 */
 	@Override
@@ -113,12 +142,12 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 	@SuppressWarnings("unchecked")
 	private <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
-			@Nullable RepositoryInformation information) {
+			@Nullable RepositoryMetadata metadata) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
 
-		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity,
-				information != null ? (Class<ID>) information.getIdType() : null);
+		return new MappingMongoEntityInformation<>((MongoPersistentEntity<T>) entity,
+				metadata != null ? (Class<ID>) metadata.getIdType() : null);
 	}
 
 	/**
