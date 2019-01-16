@@ -16,16 +16,33 @@
 package org.springframework.data.mongodb.core.index;
 
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.Assert;
 
 /**
  * {@link IndexResolver} finds those {@link IndexDefinition}s to be created for a given class.
  *
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  * @since 1.5
  */
-interface IndexResolver {
+public interface IndexResolver {
+
+	/**
+	 * Creates a new {@link IndexResolver} given {@link MongoMappingContext}.
+	 *
+	 * @param mappingContext must not be {@literal null}.
+	 * @return the new {@link IndexResolver}.
+	 */
+	static IndexResolver create(MongoMappingContext mappingContext) {
+
+		Assert.notNull(mappingContext, "MongoMappingContext must not be null!");
+
+		return new MongoPersistentEntityIndexResolver(mappingContext);
+	}
 
 	/**
 	 * Find and create {@link IndexDefinition}s for properties of given {@link TypeInformation}. {@link IndexDefinition}s
@@ -35,5 +52,17 @@ interface IndexResolver {
 	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
 	 */
 	Iterable<? extends IndexDefinitionHolder> resolveIndexFor(TypeInformation<?> typeInformation);
+
+	/**
+	 * Find and create {@link IndexDefinition}s for properties of given {@link TypeInformation}. {@link IndexDefinition}s
+	 * are created for properties and types with {@link Indexed}, {@link CompoundIndexes} or {@link GeoSpatialIndexed}.
+	 *
+	 * @param entityType
+	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
+	 * @see 2.2
+	 */
+	default Iterable<? extends IndexDefinitionHolder> resolveIndexFor(Class<?> entityType) {
+		return resolveIndexFor(ClassTypeInformation.from(entityType));
+	}
 
 }

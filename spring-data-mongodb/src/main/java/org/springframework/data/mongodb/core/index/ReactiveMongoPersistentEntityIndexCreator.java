@@ -63,7 +63,7 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 	 */
 	public ReactiveMongoPersistentEntityIndexCreator(MongoMappingContext mappingContext,
 			ReactiveIndexOperationsProvider operationsProvider) {
-		this(mappingContext, operationsProvider, new MongoPersistentEntityIndexResolver(mappingContext));
+		this(mappingContext, operationsProvider, IndexResolver.create(mappingContext));
 	}
 
 	/**
