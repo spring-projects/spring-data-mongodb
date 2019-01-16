@@ -378,7 +378,7 @@ public class Person {
 
 IMPORTANT: The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property, and the `@Indexed` annotation tells the mapping framework to call `createIndex(…)` on that property of your document, making searches faster.
 
-IMPORTANT: Automatic index creation is only done for types annotated with `@Document`.
+IMPORTANT: Automatic index creation is deprecated since version 2.2 because controlling the actual time of index creation is rather difficult. Index creation can be part of the application startup, happen during runtime or an out of band process. Therefore, Spring Data MongoDB backs off entirely and recommends index creation to happen either out of band or as part of the application startup using `IndexOperations`. Automatic index creation is still available and is is only done for types annotated with `@Document`.
 
 [[mapping-usage-annotations]]
 === Mapping Annotation Overview

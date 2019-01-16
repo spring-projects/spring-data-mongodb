@@ -55,7 +55,8 @@ public @interface CompoundIndex {
 
 	/**
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
 	boolean unique() default false;
 
@@ -63,13 +64,15 @@ public @interface CompoundIndex {
 	 * If set to true index will skip over any document that is missing the indexed field.
 	 *
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
 	boolean sparse() default false;
 
 	/**
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping">https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping">https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping</a>
 	 * @deprecated since 2.1. No longer supported by MongoDB as of server version 3.0.
 	 */
 	@Deprecated
@@ -131,7 +134,8 @@ public @interface CompoundIndex {
 	 * If {@literal true} the index will be created in the background.
 	 *
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
 	 */
 	boolean background() default false;
 

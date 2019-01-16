@@ -28,8 +28,8 @@ import org.springframework.data.util.TypeInformation;
 interface IndexResolver {
 
 	/**
-	 * Find and create {@link IndexDefinition}s for properties of given {@link TypeInformation}. {@link IndexDefinition}s are created
-	 * for properties and types with {@link Indexed}, {@link CompoundIndexes} or {@link GeoSpatialIndexed}.
+	 * Find and create {@link IndexDefinition}s for properties of given {@link TypeInformation}. {@link IndexDefinition}s
+	 * are created for properties and types with {@link Indexed}, {@link CompoundIndexes} or {@link GeoSpatialIndexed}.
 	 *
 	 * @param typeInformation
 	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
