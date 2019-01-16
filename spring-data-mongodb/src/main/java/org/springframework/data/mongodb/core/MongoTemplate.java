@@ -246,10 +246,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		mappingContext = this.mongoConverter.getMappingContext();
 		// We create indexes based on mapping events
 		if (mappingContext instanceof MongoMappingContext) {
-			indexCreator = new MongoPersistentEntityIndexCreator((MongoMappingContext) mappingContext, this);
-			eventPublisher = new MongoMappingEventPublisher(indexCreator);
-			if (mappingContext instanceof ApplicationEventPublisherAware) {
-				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
+
+			MongoMappingContext mappingContext = (MongoMappingContext) this.mappingContext;
+
+			if (mappingContext.isAutoIndexCreation()) {
+
+				indexCreator = new MongoPersistentEntityIndexCreator(mappingContext, this);
+				eventPublisher = new MongoMappingEventPublisher(indexCreator);
+				mappingContext.setApplicationEventPublisher(eventPublisher);
 			}
 		}
 	}
@@ -1582,7 +1586,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					query.getCollation().map(Collation::toMongoCollation).ifPresent(opts::collation);
 				}
 
-				Document updateObj =  update instanceof MappedUpdate ? update.getUpdateObject() : updateMapper.getMappedObject(update.getUpdateObject(), entity);
+				Document updateObj = update instanceof MappedUpdate ? update.getUpdateObject()
+						: updateMapper.getMappedObject(update.getUpdateObject(), entity);
 
 				if (multi && update.isIsolated() && !queryObj.containsKey("$isolated")) {
 					queryObj.put("$isolated", 1);
@@ -1617,7 +1622,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	private void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity, UpdateDefinition update) {
+	private void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity,
+			UpdateDefinition update) {
 
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();

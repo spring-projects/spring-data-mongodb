@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * @author Christoph Strobl
  * @author Jordi Llach
  */
-@Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD})
+@Target({ ElementType.ANNOTATION_TYPE, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Indexed {
 
@@ -39,7 +39,8 @@ public @interface Indexed {
 	 * If set to true reject all documents that contain a duplicate value for the indexed field.
 	 *
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
 	boolean unique() default false;
 
@@ -49,13 +50,15 @@ public @interface Indexed {
 	 * If set to true index will skip over any document that is missing the indexed field.
 	 *
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
 	boolean sparse() default false;
 
 	/**
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping">https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping">https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping</a>
 	 * @deprecated since 2.1. No longer supported by MongoDB as of server version 3.0.
 	 */
 	@Deprecated
@@ -115,7 +118,8 @@ public @interface Indexed {
 	 * If {@literal true} the index will be created in the background.
 	 *
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
 	 */
 	boolean background() default false;
 
@@ -123,7 +127,8 @@ public @interface Indexed {
 	 * Configures the number of seconds after which the collection should expire. Defaults to -1 for no expiry.
 	 *
 	 * @return
-	 * @see <a href="https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
+	 * @see <a href=
+	 *      "https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
 	 */
 	int expireAfterSeconds() default -1;
 }

@@ -63,10 +63,12 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	/**
 	 * Creates a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
 	 * {@link MongoDbFactory}.
-	 *  @param mappingContext must not be {@literal null}.
+	 *
+	 * @param mappingContext must not be {@literal null}.
 	 * @param indexOperationsProvider must not be {@literal null}.
 	 */
-	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, IndexOperationsProvider indexOperationsProvider) {
+	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext,
+			IndexOperationsProvider indexOperationsProvider) {
 		this(mappingContext, indexOperationsProvider, new MongoPersistentEntityIndexResolver(mappingContext));
 	}
 
@@ -78,8 +80,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param indexResolver must not be {@literal null}.
 	 */
-	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, IndexOperationsProvider indexOperationsProvider,
-											 IndexResolver indexResolver) {
+	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext,
+			IndexOperationsProvider indexOperationsProvider, IndexResolver indexResolver) {
 
 		Assert.notNull(mappingContext, "MongoMappingContext must not be null!");
 		Assert.notNull(indexOperationsProvider, "IndexOperationsProvider must not be null!");
@@ -146,8 +148,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 		} catch (UncategorizedMongoDbException ex) {
 
-			if (ex.getCause() instanceof MongoException &&
-					MongoDbErrorCodes.isDataIntegrityViolationCode(((MongoException) ex.getCause()).getCode())) {
+			if (ex.getCause() instanceof MongoException
+					&& MongoDbErrorCodes.isDataIntegrityViolationCode(((MongoException) ex.getCause()).getCode())) {
 
 				IndexInfo existingIndex = fetchIndexInformation(indexDefinition);
 				String message = "Cannot create index for '%s' in collection '%s' with keys '%s' and options '%s'.";

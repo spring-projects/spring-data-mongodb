@@ -42,7 +42,10 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @deprecated since 2.2. Use {@link org.springframework.data.mongodb.core.index.IndexOperations} to define and create
+ *             indexes.
  */
+@Deprecated
 class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
 	private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
