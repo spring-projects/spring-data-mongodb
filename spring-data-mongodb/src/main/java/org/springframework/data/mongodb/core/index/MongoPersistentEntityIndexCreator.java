@@ -69,7 +69,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	 */
 	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext,
 			IndexOperationsProvider indexOperationsProvider) {
-		this(mappingContext, indexOperationsProvider, new MongoPersistentEntityIndexResolver(mappingContext));
+		this(mappingContext, indexOperationsProvider, IndexResolver.create(mappingContext));
 	}
 
 	/**

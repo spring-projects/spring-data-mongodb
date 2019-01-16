@@ -64,6 +64,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 	 * Test resolution of {@link Indexed}.
 	 *
 	 * @author Christoph Strobl
+	 * @author Mark Paluch
 	 */
 	public static class IndexResolutionTests {
 
@@ -87,7 +88,17 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Test // DATAMONGO-899
-		public void depplyNestedIndexPathIsResolvedCorrectly() {
+		public void shouldResolveIndexViaClass() {
+
+			MongoMappingContext mappingContext = new MongoMappingContext();
+			IndexResolver indexResolver = IndexResolver.create(mappingContext);
+			Iterable<? extends IndexDefinitionHolder> definitions = indexResolver.resolveIndexFor(IndexOnLevelOne.class);
+
+			assertThat(definitions.iterator().hasNext(), is(true));
+		}
+
+		@Test // DATAMONGO-899
+		public void deeplyNestedIndexPathIsResolvedCorrectly() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(IndexOnLevelTwo.class);
 
