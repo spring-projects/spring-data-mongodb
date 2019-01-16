@@ -30,18 +30,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.dao.DataAccessException;
+import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.mongodb.MongoException;
-import com.mongodb.client.MongoCollection;
 
 /**
  * Integration tests for index handling.
@@ -49,6 +49,7 @@ import com.mongodb.client.MongoCollection;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Jordi Llach
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -70,6 +71,21 @@ public class IndexingIntegrationTests {
 		operations.getConverter().getMappingContext().getPersistentEntity(IndexedPerson.class);
 
 		assertThat(hasIndex("_firstname", IndexedPerson.class), is(true));
+	}
+
+	@Test // DATAMONGO-237
+	@DirtiesContext
+	public void shouldNotCreateIndexOnIndexingDisabled() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setAutoIndexCreation(false);
+
+		MongoTemplate template = new MongoTemplate(mongoDbFactory,
+				new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context));
+
+		template.getConverter().getMappingContext().getPersistentEntity(IndexedPerson.class);
+
+		assertThat(hasIndex("_firstname", MongoCollectionUtils.getPreferredCollectionName(IndexedPerson.class)), is(false));
 	}
 
 	@Test // DATAMONGO-1163
@@ -101,22 +117,30 @@ public class IndexingIntegrationTests {
 	 * @param entityType
 	 * @return
 	 */
-	private boolean hasIndex(final String indexName, Class<?> entityType) {
+	private boolean hasIndex(String indexName, Class<?> entityType) {
+		return hasIndex(indexName, operations.getCollectionName(entityType));
+	}
 
-		return operations.execute(entityType, new CollectionCallback<Boolean>() {
-			public Boolean doInCollection(MongoCollection<org.bson.Document> collection)
-					throws MongoException, DataAccessException {
+	/**
+	 * Returns whether an index with the given name exists for the given collection.
+	 *
+	 * @param indexName
+	 * @param collectionName
+	 * @return
+	 */
+	private boolean hasIndex(String indexName, String collectionName) {
 
-				List<org.bson.Document> indexes = new ArrayList<org.bson.Document>();
-				collection.listIndexes(org.bson.Document.class).into(indexes);
+		return operations.execute(collectionName, collection -> {
 
-				for (org.bson.Document indexInfo : indexes) {
-					if (indexName.equals(indexInfo.get("name"))) {
-						return true;
-					}
+			List<org.bson.Document> indexes = new ArrayList<>();
+			collection.listIndexes(org.bson.Document.class).into(indexes);
+
+			for (org.bson.Document indexInfo : indexes) {
+				if (indexName.equals(indexInfo.get("name"))) {
+					return true;
 				}
-				return false;
 			}
+			return false;
 		});
 	}
 }

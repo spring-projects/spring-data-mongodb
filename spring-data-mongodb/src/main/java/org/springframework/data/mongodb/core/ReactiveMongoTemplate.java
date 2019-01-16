@@ -232,12 +232,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		if (this.mappingContext instanceof MongoMappingContext) {
 
 			MongoMappingContext mongoMappingContext = (MongoMappingContext) this.mappingContext;
-			this.indexCreator = new ReactiveMongoPersistentEntityIndexCreator(mongoMappingContext, this::indexOps);
-			this.eventPublisher = new MongoMappingEventPublisher(this.indexCreatorListener);
 
-			mongoMappingContext.setApplicationEventPublisher(this.eventPublisher);
-			this.mappingContext.getPersistentEntities()
-					.forEach(entity -> onCheckForIndexes(entity, subscriptionExceptionHandler));
+			if (mongoMappingContext.isAutoIndexCreation()) {
+				this.indexCreator = new ReactiveMongoPersistentEntityIndexCreator(mongoMappingContext, this::indexOps);
+				this.eventPublisher = new MongoMappingEventPublisher(this.indexCreatorListener);
+
+				mongoMappingContext.setApplicationEventPublisher(this.eventPublisher);
+				this.mappingContext.getPersistentEntities()
+						.forEach(entity -> onCheckForIndexes(entity, subscriptionExceptionHandler));
+			}
 		}
 	}
 
