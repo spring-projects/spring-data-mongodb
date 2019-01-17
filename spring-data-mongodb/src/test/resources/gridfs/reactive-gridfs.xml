@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<bean id="mongoClient" class="org.springframework.data.mongodb.core.ReactiveMongoClientFactoryBean">
+		<property name="host" value="127.0.0.1"/>
+		<property name="port" value="27017"/>
+	</bean>
+
+	<bean id="reactiveMongoDbFactory" class="org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory">
+		<constructor-arg name="mongoClient" ref="mongoClient"/>
+		<constructor-arg name="databaseName" value="reactive_gridfs"/>
+	</bean>
+
+	<bean id="converter" class="org.springframework.data.mongodb.core.convert.MappingMongoConverter">
+		<constructor-arg name="dbRefResolver">
+			<util:constant static-field="org.springframework.data.mongodb.core.convert.NoOpDbRefResolver.INSTANCE"/>
+		</constructor-arg>
+		<constructor-arg name="mappingContext">
+			<bean class="org.springframework.data.mongodb.core.mapping.MongoMappingContext"/>
+		</constructor-arg>
+	</bean>
+
+	<bean class="org.springframework.data.mongodb.gridfs.ReactiveGridFsTemplate">
+		<constructor-arg ref="reactiveMongoDbFactory"/>
+		<constructor-arg ref="converter"/>
+	</bean>
+
+</beans>
