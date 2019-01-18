@@ -18,30 +18,16 @@ package org.springframework.data.mongodb.gridfs;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
-import lombok.RequiredArgsConstructor;
-import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Operators;
-import reactor.util.concurrent.Queues;
-import reactor.util.context.Context;
 
-import java.nio.ByteBuffer;
 import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLongFieldUpdater;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscription;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -54,7 +40,6 @@ import org.springframework.util.StringUtils;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.reactivestreams.client.Success;
 import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 import com.mongodb.reactivestreams.client.gridfs.GridFSBucket;
 import com.mongodb.reactivestreams.client.gridfs.GridFSBuckets;
@@ -181,15 +166,7 @@ public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
 
 		Assert.notNull(content, "Content must not be null!");
 
-		return Mono.<Mono<ObjectId>> create(sink -> {
-
-			BinaryPublisherToAsyncInputStreamAdapter adapter = new BinaryPublisherToAsyncInputStreamAdapter(content,
-					sink.currentContext());
-
-			Mono<ObjectId> store = store(adapter, filename, contentType, metadata);
-
-			sink.success(store);
-		}).flatMap(Function.identity());
+		return BinaryStreamAdapters.toAsyncInputStream(content).flatMap(it -> store(it, filename, contentType, metadata));
 	}
 
 	/*
@@ -253,7 +230,7 @@ public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
 
 			GridFSDownloadStream stream = getGridFs().openDownloadStream(file.getObjectId());
 
-			return new ReactiveGridFsResource(file, BinaryStreamUtility.createBinaryStream(dataBufferFactory, stream));
+			return new ReactiveGridFsResource(file, BinaryStreamAdapters.toPublisher(stream, dataBufferFactory));
 		});
 	}
 
@@ -316,270 +293,5 @@ public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
 			converter.write(metadata, document);
 		}
 		return document;
-	}
-
-	/**
-	 * Adapter accepting a binary stream {@link Publisher} and transforming its contents into a {@link AsyncInputStream}.
-	 * <p>
-	 * This adapter subscribes to the binary {@link Publisher} as soon as the first chunk gets {@link #read(ByteBuffer)
-	 * requested}. Requests are queued and binary chunks are requested from the {@link Publisher}. As soon as the
-	 * {@link Publisher} emits items, chunks are provided to the read request which completes the number-of-written-bytes
-	 * {@link Publisher}.
-	 * <p>
-	 * {@link AsyncInputStream} is supposed to work as sequential callback API that is called until reaching EOF.
-	 * {@link #close()} is propagated as cancellation signal to the binary {@link Publisher}.
-	 *
-	 * @author Mark Paluch
-	 */
-	@RequiredArgsConstructor
-	static class BinaryPublisherToAsyncInputStreamAdapter implements AsyncInputStream {
-
-		private static final AtomicLongFieldUpdater<BinaryPublisherToAsyncInputStreamAdapter> UPDATER = AtomicLongFieldUpdater
-				.newUpdater(BinaryPublisherToAsyncInputStreamAdapter.class, "demand");
-
-		private final Publisher<DataBuffer> buffers;
-		private final Context subscriberContext;
-		private final DefaultDataBufferFactory factory = new DefaultDataBufferFactory();
-
-		private final AtomicBoolean subscribed = new AtomicBoolean();
-		private volatile Subscription subscription;
-		private volatile boolean cancelled;
-		private volatile boolean complete;
-		private volatile Throwable error;
-		private final Queue<BiConsumer<DataBuffer, Integer>> readRequests = Queues.<BiConsumer<DataBuffer, Integer>> small()
-				.get();
-
-		// See UPDATER
-		private volatile long demand;
-
-		/*
-		 * (non-Javadoc)
-		 * @see com.mongodb.reactivestreams.client.gridfs.AsyncInputStream#read(java.nio.ByteBuffer)
-		 */
-		@Override
-		public Publisher<Integer> read(ByteBuffer dst) {
-
-			return Mono.create(sink -> {
-
-				readRequests.offer((db, bytecount) -> {
-
-					try {
-
-						if (error != null) {
-							sink.error(error);
-							return;
-						}
-
-						if (bytecount == -1) {
-							sink.success(-1);
-							return;
-						}
-
-						ByteBuffer byteBuffer = db.asByteBuffer();
-						int toWrite = byteBuffer.remaining();
-						dst.put(byteBuffer);
-
-						sink.success(toWrite);
-					} catch (Exception e) {
-						sink.error(e);
-					} finally {
-						DataBufferUtils.release(db);
-					}
-				});
-
-				request(1);
-			});
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see com.mongodb.reactivestreams.client.gridfs.AsyncInputStream#close()
-		 */
-		@Override
-		public Publisher<Success> close() {
-
-			return Mono.create(sink -> {
-				cancelled = true;
-
-				if (error != null) {
-					sink.error(error);
-					return;
-				}
-
-				sink.success(Success.SUCCESS);
-			});
-		}
-
-		protected void request(int n) {
-
-			if (complete) {
-				terminatePendingReads();
-				return;
-			}
-
-			Operators.addCap(UPDATER, this, n);
-
-			if (!subscribed.get()) {
-
-				if (subscribed.compareAndSet(false, true)) {
-
-					buffers.subscribe(new CoreSubscriber<DataBuffer>() {
-
-						@Override
-						public Context currentContext() {
-							return subscriberContext;
-						}
-
-						@Override
-						public void onSubscribe(Subscription s) {
-							subscription = s;
-
-							Operators.addCap(UPDATER, BinaryPublisherToAsyncInputStreamAdapter.this, -1);
-							s.request(1);
-						}
-
-						@Override
-						public void onNext(DataBuffer dataBuffer) {
-
-							if (cancelled || complete) {
-								DataBufferUtils.release(dataBuffer);
-								Operators.onNextDropped(dataBuffer, subscriberContext);
-								return;
-							}
-
-							BiConsumer<DataBuffer, Integer> poll = readRequests.poll();
-
-							if (poll == null) {
-
-								DataBufferUtils.release(dataBuffer);
-								Operators.onNextDropped(dataBuffer, subscriberContext);
-								subscription.cancel();
-								return;
-							}
-
-							poll.accept(dataBuffer, dataBuffer.readableByteCount());
-
-							requestFromSubscription(subscription);
-						}
-
-						@Override
-						public void onError(Throwable t) {
-
-							if (cancelled || complete) {
-								Operators.onErrorDropped(t, subscriberContext);
-								return;
-							}
-
-							error = t;
-							complete = true;
-							terminatePendingReads();
-						}
-
-						@Override
-						public void onComplete() {
-
-							complete = true;
-							terminatePendingReads();
-						}
-					});
-				}
-			} else {
-
-				Subscription subscription = this.subscription;
-
-				if (subscription != null) {
-					requestFromSubscription(subscription);
-				}
-			}
-		}
-
-		void requestFromSubscription(Subscription subscription) {
-
-			long demand = UPDATER.get(BinaryPublisherToAsyncInputStreamAdapter.this);
-
-			if (cancelled) {
-				subscription.cancel();
-			}
-
-			if (demand > 0 && UPDATER.compareAndSet(BinaryPublisherToAsyncInputStreamAdapter.this, demand, demand - 1)) {
-				subscription.request(1);
-			}
-		}
-
-		/**
-		 * Terminates pending reads with empty buffers.
-		 */
-		void terminatePendingReads() {
-
-			BiConsumer<DataBuffer, Integer> readers;
-
-			while ((readers = readRequests.poll()) != null) {
-				readers.accept(factory.wrap(new byte[0]), -1);
-			}
-		}
-	}
-
-	/**
-	 * Utility to adapt a {@link AsyncInputStream} to a {@link Publisher} emitting {@link DataBuffer}.
-	 */
-	static class BinaryStreamUtility {
-
-		/**
-		 * Creates a {@link Publisher} emitting {@link DataBuffer}s.
-		 *
-		 * @param dataBufferFactory must not be {@literal null}.
-		 * @param inputStream must not be {@literal null}.
-		 * @return the resulting {@link Publisher}.
-		 */
-		public static Flux<DataBuffer> createBinaryStream(DataBufferFactory dataBufferFactory,
-				AsyncInputStream inputStream) {
-
-			AtomicBoolean closed = new AtomicBoolean();
-
-			return Flux.push((sink) -> {
-
-				sink.onDispose(() -> {
-					close(inputStream, closed);
-				});
-
-				sink.onCancel(() -> {
-					close(inputStream, closed);
-				});
-
-				emitNext(dataBufferFactory, inputStream, sink);
-			});
-		}
-
-		/**
-		 * Emit the next {@link DataBuffer}.
-		 *
-		 * @param dataBufferFactory
-		 * @param inputStream
-		 * @param sink
-		 */
-		static void emitNext(DataBufferFactory dataBufferFactory, AsyncInputStream inputStream, FluxSink<DataBuffer> sink) {
-
-			DataBuffer dataBuffer = dataBufferFactory.allocateBuffer();
-			ByteBuffer intermediate = ByteBuffer.allocate(dataBuffer.capacity());
-
-			Mono.from(inputStream.read(intermediate)).subscribe(bytes -> {
-
-				intermediate.flip();
-				dataBuffer.write(intermediate);
-				sink.next(dataBuffer);
-
-				if (bytes == -1) {
-					sink.complete();
-				} else {
-					emitNext(dataBufferFactory, inputStream, sink);
-				}
-			}, sink::error);
-		}
-
-		static void close(AsyncInputStream inputStream, AtomicBoolean closed) {
-			if (closed.compareAndSet(false, true)) {
-				Mono.from(inputStream.close()).subscribe();
-			}
-		}
 	}
 }
