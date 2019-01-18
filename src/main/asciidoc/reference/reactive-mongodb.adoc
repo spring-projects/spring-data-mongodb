@@ -482,3 +482,96 @@ Flux<Boolean> hasIndex = operations.execute("geolocation",
       .flatMap(document -> Mono.just(true))
       .defaultIfEmpty(false));
 ----
+
+[[reactive.gridfs]]
+== GridFS Support
+
+MongoDB supports storing binary files inside its filesystem, GridFS.
+Spring Data MongoDB provides a `ReactiveGridFsOperations` interface as well as the corresponding implementation, `ReactiveGridFsTemplate`, to let you interact with the filesystem.
+You can set up a `ReactiveGridFsTemplate` instance by handing it a `ReactiveMongoDatabaseFactory` as well as a `MongoConverter`, as the following example shows:
+
+.JavaConfig setup for a ReactiveGridFsTemplate
+====
+[source,java]
+----
+class GridFsConfiguration extends AbstractReactiveMongoConfiguration {
+
+  // … further configuration omitted
+
+  @Bean
+  public ReactiveGridFsTemplate reactiveGridFsTemplate() {
+    return new ReactiveGridFsTemplate(reactiveMongoDbFactory(), mappingMongoConverter());
+  }
+}
+----
+====
+
+The template can now be injected and used to perform storage and retrieval operations, as the following example shows:
+
+.Using ReactiveGridFsTemplate to store files
+====
+[source,java]
+----
+class ReactiveGridFsClient {
+
+  @Autowired
+  ReactiveGridFsTemplate operations;
+
+  @Test
+  public Mono<ObjectId> storeFileToGridFs() {
+
+    FileMetadata metadata = new FileMetadata();
+    // populate metadata
+    Publisher<DataBuffer> file = … // lookup File or Resource
+
+    return operations.store(file, "filename.txt", metadata);
+  }
+}
+----
+====
+
+The `store(…)` operations take an `Publisher<DataBuffer>`, a filename, and (optionally) metadata information about the file to store. The metadata can be an arbitrary object, which will be marshaled by the `MongoConverter` configured with the `ReactiveGridFsTemplate`. Alternatively, you can also provide a `Document`.
+
+NOTE: MongoDB's driver uses `AsyncInputStream` and `AsyncOutputStream` interfaces to exchange binary streams. Spring Data MongoDB adapts these interfaces to `Publisher<DataBuffer>`. Read more about `DataBuffer` in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#databuffers[Spring's reference documentation].
+
+You can read files from the filesystem through either the `find(…)` or the `getResources(…)` methods. Let's have a look at the `find(…)` methods first. You can either find a single file or multiple files that match a `Query`. You can use the `GridFsCriteria` helper class to define queries. It provides static factory methods to encapsulate default metadata fields (such as `whereFilename()` and `whereContentType()`) or a custom one through `whereMetaData()`. The following example shows how to use `ReactiveGridFsTemplate` to query for files:
+
+.Using ReactiveGridFsTemplate to query for files
+====
+[source,java]
+----
+class ReactiveGridFsClient {
+
+  @Autowired
+  ReactiveGridFsTemplate operations;
+
+  @Test
+  public Flux<GridFSFile> findFilesInGridFs() {
+    return operations.find(query(whereFilename().is("filename.txt")))
+  }
+}
+----
+====
+
+NOTE: Currently, MongoDB does not support defining sort criteria when retrieving files from GridFS. For this reason, any sort criteria defined on the `Query` instance handed into the `find(…)` method are disregarded.
+
+The other option to read files from the GridFs is to use the methods modeled along the lines of `ResourcePatternResolver`.
+`ReactiveGridFsOperations` uses reactive types to defer execution while `ResourcePatternResolver` uses a synchronous interface.
+These methods allow handing an Ant path into the method and can thus retrieve files matching the given pattern. The following example shows how to use `ReactiveGridFsTemplate` to read files:
+
+.Using ReactiveGridFsTemplate to read files
+====
+[source,java]
+----
+class ReactiveGridFsClient {
+
+  @Autowired
+  ReactiveGridFsOperations operations;
+
+  @Test
+  public void readFilesFromGridFs() {
+     Flux<ReactiveGridFsResource> txtFiles = operations.getResources("*.txt");
+  }
+}
+----
+====
