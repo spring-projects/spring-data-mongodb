@@ -18,36 +18,29 @@ package org.springframework.data.mongodb.repository.support;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
-import org.springframework.data.querydsl.QSort;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
-import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.util.Assert;
 
 import com.querydsl.core.types.EntityPath;
-import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.dsl.PathBuilder;
 
 /**
  * MongoDB-specific {@link QuerydslPredicateExecutor} that allows execution {@link Predicate}s in various forms.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  */
-public class ReactiveQuerydslMongoPredicateExecutor<T> implements ReactiveQuerydslPredicateExecutor<T> {
+public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutorSupport<T>
+		implements ReactiveQuerydslPredicateExecutor<T> {
 
-	private final PathBuilder<T> builder;
-	private final EntityInformation<T, ?> entityInformation;
 	private final ReactiveMongoOperations mongoOperations;
 
 	/**
@@ -60,6 +53,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> implements ReactiveQueryd
 	 */
 	public ReactiveQuerydslMongoPredicateExecutor(MongoEntityInformation<T, ?> entityInformation,
 			ReactiveMongoOperations mongoOperations) {
+
 		this(entityInformation, mongoOperations, SimpleEntityPathResolver.INSTANCE);
 	}
 
@@ -74,12 +68,8 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> implements ReactiveQueryd
 	public ReactiveQuerydslMongoPredicateExecutor(MongoEntityInformation<T, ?> entityInformation,
 			ReactiveMongoOperations mongoOperations, EntityPathResolver resolver) {
 
-		Assert.notNull(resolver, "EntityPathResolver must not be null!");
-
-		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
-
-		this.builder = new PathBuilder<T>(path.getType(), path.getMetadata());
-		this.entityInformation = entityInformation;
+		super(mongoOperations.getConverter(), pathBuilderFor(resolver.createPath(entityInformation.getJavaType())),
+				entityInformation);
 		this.mongoOperations = mongoOperations;
 	}
 
@@ -185,10 +175,9 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> implements ReactiveQueryd
 	 * @return
 	 */
 	private ReactiveSpringDataMongodbQuery<T> createQuery() {
-		SpringDataMongodbSerializer serializer = new SpringDataMongodbSerializer(mongoOperations.getConverter());
 
-		Class<T> javaType = entityInformation.getJavaType();
-		return new ReactiveSpringDataMongodbQuery<>(serializer, mongoOperations, javaType,
+		Class<T> javaType = typeInformation().getJavaType();
+		return new ReactiveSpringDataMongodbQuery<>(mongodbSerializer(), mongoOperations, javaType,
 				mongoOperations.getCollectionName(javaType));
 	}
 
@@ -201,32 +190,8 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> implements ReactiveQueryd
 	 */
 	private ReactiveSpringDataMongodbQuery<T> applySorting(ReactiveSpringDataMongodbQuery<T> query, Sort sort) {
 
-		// TODO: find better solution than instanceof check
-		if (sort instanceof QSort) {
-
-			List<OrderSpecifier<?>> orderSpecifiers = ((QSort) sort).getOrderSpecifiers();
-			query.orderBy(orderSpecifiers.toArray(new OrderSpecifier<?>[orderSpecifiers.size()]));
-
-			return query;
-		}
-
-		sort.stream().map(this::toOrder).forEach(query::orderBy);
-
+		toOrderSpecifiers(sort).forEach(query::orderBy);
 		return query;
 	}
 
-	/**
-	 * Transforms a plain {@link Order} into a Querydsl specific {@link OrderSpecifier}.
-	 *
-	 * @param order
-	 * @return
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private OrderSpecifier<?> toOrder(Order order) {
-
-		Expression<Object> property = builder.get(order.getProperty());
-
-		return new OrderSpecifier(
-				order.isAscending() ? com.querydsl.core.types.Order.ASC : com.querydsl.core.types.Order.DESC, property);
-	}
 }

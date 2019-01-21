@@ -83,7 +83,7 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 	ReactiveCappedCollectionRepository cappedRepository;
 
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
-	QPerson person = new QPerson("person");
+	QPerson person = QPerson.person;
 
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
