@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.test.util;
 
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import org.bson.Document;
 
@@ -79,6 +80,23 @@ public class MongoTestUtils {
 
 		return Mono.from(database.getCollection(collectionName).drop())
 				.then(Mono.from(database.createCollection(collectionName)));
+	}
+
+	/**
+	 * Create a {@link com.mongodb.client.MongoCollection} if it does not exist, or drop and recreate it if it does and
+	 * verify operation result.
+	 *
+	 * @param dbName must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 * @param client must not be {@literal null}.
+	 */
+	public static void createOrReplaceCollectionNow(String dbName, String collectionName,
+			com.mongodb.reactivestreams.client.MongoClient client) {
+
+		createOrReplaceCollection(dbName, collectionName, client) //
+				.as(StepVerifier::create) //
+				.expectNext(Success.SUCCESS) //
+				.verifyComplete();
 	}
 
 	/**
