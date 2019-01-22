@@ -36,9 +36,7 @@ import org.springframework.util.Assert;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Mark Paluch
- * @deprecated since 2.2. Use {@link IndexOperations} to define and create indexes.
  */
-@Deprecated
 public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 
 	private final ApplicationListener<MappingContextEvent<?, ?>> indexCreator;

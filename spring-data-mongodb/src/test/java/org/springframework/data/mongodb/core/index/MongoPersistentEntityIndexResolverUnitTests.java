@@ -92,7 +92,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			MongoMappingContext mappingContext = new MongoMappingContext();
 			IndexResolver indexResolver = IndexResolver.create(mappingContext);
-			Iterable<? extends IndexDefinitionHolder> definitions = indexResolver.resolveIndexFor(IndexOnLevelOne.class);
+			Iterable<? extends IndexDefinition> definitions = indexResolver.resolveIndexFor(IndexOnLevelOne.class);
 
 			assertThat(definitions.iterator().hasNext(), is(true));
 		}

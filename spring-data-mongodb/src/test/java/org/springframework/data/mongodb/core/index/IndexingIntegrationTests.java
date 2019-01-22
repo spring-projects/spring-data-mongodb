@@ -73,7 +73,7 @@ public class IndexingIntegrationTests {
 		assertThat(hasIndex("_firstname", IndexedPerson.class), is(true));
 	}
 
-	@Test // DATAMONGO-237
+	@Test // DATAMONGO-2188
 	@DirtiesContext
 	public void shouldNotCreateIndexOnIndexingDisabled() {
 

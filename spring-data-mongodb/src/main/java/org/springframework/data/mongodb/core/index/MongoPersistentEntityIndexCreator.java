@@ -110,6 +110,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 		// Double check type as Spring infrastructure does not consider nested generics
 		if (entity instanceof MongoPersistentEntity) {
+
 			checkForIndexes((MongoPersistentEntity<?>) entity);
 		}
 	}
@@ -133,8 +134,16 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	private void checkForAndCreateIndexes(MongoPersistentEntity<?> entity) {
 
 		if (entity.isAnnotationPresent(Document.class)) {
-			for (IndexDefinitionHolder indexToCreate : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
+			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
+
+				JustOnceLogger.logWarnIndexCreationConfigurationChange(this.getClass().getName());
+
+				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
+						? (IndexDefinitionHolder) indexDefinition
+						: new IndexDefinitionHolder("", indexDefinition, entity.getCollection());
+
 				createIndex(indexToCreate);
+
 			}
 		}
 	}

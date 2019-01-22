@@ -104,8 +104,9 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	}
 
 	/**
-	 * Returns whether auto-index creation is enabled or disabled. Please note that auto-index creation is deprecated.
-	 * Index creation should happen at a well-defined time that is ideally controlled by the application itself.
+	 * Returns whether auto-index creation is enabled or disabled. <br />
+	 * <strong>NOTE:</strong>Index creation should happen at a well-defined time that is ideally controlled by the
+	 * application itself.
 	 *
 	 * @return {@literal true} when auto-index creation is enabled; {@literal false} otherwise.
 	 * @since 2.2
@@ -116,10 +117,11 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	}
 
 	/**
-	 * Enables/disables auto-index creation. Please note that auto-index creation is deprecated. Index creation should
-	 * happen at a well-defined time that is ideally controlled by the application its
+	 * Enables/disables auto-index creation. <br />
+	 * <strong>NOTE:</strong>Index creation should happen at a well-defined time that is ideally controlled by the
+	 * application itself.
 	 *
-	 * @param autoCreateIndexes {@literal true} to enable auto-index creation. Enabled by default.
+	 * @param autoCreateIndexes set to {@literal false} to disable auto-index creation.
 	 * @since 2.2
 	 * @see org.springframework.data.mongodb.core.index.Indexed
 	 */
