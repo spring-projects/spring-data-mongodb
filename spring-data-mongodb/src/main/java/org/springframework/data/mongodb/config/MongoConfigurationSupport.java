@@ -87,6 +87,7 @@ public abstract class MongoConfigurationSupport {
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
 		mappingContext.setSimpleTypeHolder(customConversions().getSimpleTypeHolder());
 		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
+		mappingContext.setAutoIndexCreation(autoIndexCreation());
 
 		return mappingContext;
 	}
@@ -189,5 +190,17 @@ public abstract class MongoConfigurationSupport {
 	protected FieldNamingStrategy fieldNamingStrategy() {
 		return abbreviateFieldNames() ? new CamelCaseAbbreviatingFieldNamingStrategy()
 				: PropertyNameFieldNamingStrategy.INSTANCE;
+	}
+
+	/**
+	 * Configure whether to automatically create indices for domain types by deriving the
+	 * {@link org.springframework.data.mongodb.core.index.IndexDefinition} from the entity or not.
+	 *
+	 * @return {@literal true} by default. <br />
+	 *         <strong>INFO</strong>: As of 3.x the default will be set to {@literal false}.
+	 * @since 2.2
+	 */
+	protected boolean autoIndexCreation() {
+		return true;
 	}
 }

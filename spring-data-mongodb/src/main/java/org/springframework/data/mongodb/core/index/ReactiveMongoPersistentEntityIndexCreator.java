@@ -125,7 +125,12 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 		List<Mono<?>> publishers = new ArrayList<>();
 
 		if (entity.isAnnotationPresent(Document.class)) {
-			for (IndexDefinitionHolder indexToCreate : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
+			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
+
+				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
+						? (IndexDefinitionHolder) indexDefinition
+						: new IndexDefinitionHolder("", indexDefinition, entity.getCollection());
+
 				publishers.add(createIndex(indexToCreate));
 			}
 		}
@@ -134,6 +139,8 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 	}
 
 	Mono<String> createIndex(IndexDefinitionHolder indexDefinition) {
+
+		JustOnceLogger.logWarnIndexCreationConfigurationChange(this.getClass().getName());
 
 		return operationsProvider.indexOps(indexDefinition.getCollection()).ensureIndex(indexDefinition) //
 				.onErrorResume(ReactiveMongoPersistentEntityIndexCreator::isDataIntegrityViolation,

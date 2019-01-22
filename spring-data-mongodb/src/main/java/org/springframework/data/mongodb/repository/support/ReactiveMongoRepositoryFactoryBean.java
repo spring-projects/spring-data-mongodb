@@ -40,8 +40,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
 
 	private @Nullable ReactiveMongoOperations operations;
-
-	@Deprecated private boolean createIndexesForQueryMethods = false;
+	private boolean createIndexesForQueryMethods = false;
 	private boolean mappingContextConfigured = false;
 
 	/**
@@ -66,10 +65,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	 * Configures whether to automatically create indexes for the properties referenced in a query method.
 	 *
 	 * @param createIndexesForQueryMethods the createIndexesForQueryMethods to set
-	 * @deprecated since 2.2. Use {@link org.springframework.data.mongodb.core.index.IndexOperations} to define and create
-	 *             indexes.
 	 */
-	@Deprecated
 	public void setCreateIndexesForQueryMethods(boolean createIndexesForQueryMethods) {
 		this.createIndexesForQueryMethods = createIndexesForQueryMethods;
 	}

@@ -3185,6 +3185,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			// Double check type as Spring infrastructure does not consider nested generics
 			if (entity instanceof MongoPersistentEntity) {
+
 				onCheckForIndexes((MongoPersistentEntity<?>) entity, subscriptionExceptionHandler);
 			}
 		}

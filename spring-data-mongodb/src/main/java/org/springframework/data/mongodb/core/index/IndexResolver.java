@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -36,6 +35,7 @@ public interface IndexResolver {
 	 *
 	 * @param mappingContext must not be {@literal null}.
 	 * @return the new {@link IndexResolver}.
+	 * @since 2.2
 	 */
 	static IndexResolver create(MongoMappingContext mappingContext) {
 
@@ -51,7 +51,7 @@ public interface IndexResolver {
 	 * @param typeInformation
 	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
 	 */
-	Iterable<? extends IndexDefinitionHolder> resolveIndexFor(TypeInformation<?> typeInformation);
+	Iterable<? extends IndexDefinition> resolveIndexFor(TypeInformation<?> typeInformation);
 
 	/**
 	 * Find and create {@link IndexDefinition}s for properties of given {@link TypeInformation}. {@link IndexDefinition}s
@@ -61,7 +61,7 @@ public interface IndexResolver {
 	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
 	 * @see 2.2
 	 */
-	default Iterable<? extends IndexDefinitionHolder> resolveIndexFor(Class<?> entityType) {
+	default Iterable<? extends IndexDefinition> resolveIndexFor(Class<?> entityType) {
 		return resolveIndexFor(ClassTypeInformation.from(entityType));
 	}
 

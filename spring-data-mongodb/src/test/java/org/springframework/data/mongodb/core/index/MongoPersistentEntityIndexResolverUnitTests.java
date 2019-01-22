@@ -87,12 +87,12 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertIndexPathAndCollection("zero.indexedProperty", "One", indexDefinitions.get(0));
 		}
 
-		@Test // DATAMONGO-899
+		@Test // DATAMONGO-899, DATAMONGO-2188
 		public void shouldResolveIndexViaClass() {
 
 			MongoMappingContext mappingContext = new MongoMappingContext();
 			IndexResolver indexResolver = IndexResolver.create(mappingContext);
-			Iterable<? extends IndexDefinitionHolder> definitions = indexResolver.resolveIndexFor(IndexOnLevelOne.class);
+			Iterable<? extends IndexDefinition> definitions = indexResolver.resolveIndexFor(IndexOnLevelOne.class);
 
 			assertThat(definitions.iterator().hasNext(), is(true));
 		}
