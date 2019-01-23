@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 
 import com.querydsl.core.JoinExpression;
 import com.querydsl.core.QueryMetadata;
@@ -45,8 +46,8 @@ import com.querydsl.core.types.dsl.CollectionPathBase;
  * MongoDB query with utilizing {@link ReactiveMongoOperations} for command execution.
  *
  * @param <K> result type
- * @param <Q> concrete subtype
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  */
 class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, ReactiveSpringDataMongodbQuery<K>> {
@@ -56,22 +57,18 @@ class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, 
 	private final FindWithProjection<K> find;
 
 	ReactiveSpringDataMongodbQuery(ReactiveMongoOperations mongoOperations, Class<? extends K> entityClass) {
-
-		super(new SpringDataMongodbSerializer(mongoOperations.getConverter()));
-
-		this.entityClass = (Class<K>) entityClass;
-		this.mongoOperations = mongoOperations;
-		this.find = mongoOperations.query(this.entityClass);
+		this(new SpringDataMongodbSerializer(mongoOperations.getConverter()), mongoOperations, entityClass, null);
 	}
 
 	ReactiveSpringDataMongodbQuery(MongodbDocumentSerializer serializer, ReactiveMongoOperations mongoOperations,
-			Class<? extends K> entityClass, String collection) {
+			Class<? extends K> entityClass, @Nullable String collection) {
 
 		super(serializer);
 
 		this.entityClass = (Class<K>) entityClass;
 		this.mongoOperations = mongoOperations;
-		this.find = mongoOperations.query(this.entityClass).inCollection(collection);
+		this.find = StringUtils.hasText(collection) ? mongoOperations.query(this.entityClass).inCollection(collection)
+				: mongoOperations.query(this.entityClass);
 	}
 
 	/**
@@ -79,7 +76,7 @@ class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, 
 	 *
 	 * @return {@link Flux} emitting all query results or {@link Flux#empty()} if there are none.
 	 */
-	public Flux<K> fetch() {
+	Flux<K> fetch() {
 		return createQuery().flatMapMany(it -> find.matching(it).all());
 	}
 
@@ -89,7 +86,7 @@ class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, 
 	 * @return {@link Mono} emitting the first query result or {@link Mono#empty()} if there are none.
 	 * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if more than one match found.
 	 */
-	public Mono<K> fetchOne() {
+	Mono<K> fetchOne() {
 		return createQuery().flatMap(it -> find.matching(it).one());
 	}
 
@@ -98,7 +95,7 @@ class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, 
 	 *
 	 * @return {@link Mono} emitting the first query result count. Emits always a count even item.
 	 */
-	public Mono<Long> fetchCount() {
+	Mono<Long> fetchCount() {
 		return createQuery().flatMap(it -> find.matching(it).count());
 	}
 
@@ -109,7 +106,7 @@ class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, 
 	 * @param target join target
 	 * @return new instance of {@link QuerydslJoinBuilder}.
 	 */
-	public <T> QuerydslJoinBuilder<ReactiveSpringDataMongodbQuery<K>, K, T> join(Path<T> ref, Path<T> target) {
+	<T> QuerydslJoinBuilder<ReactiveSpringDataMongodbQuery<K>, K, T> join(Path<T> ref, Path<T> target) {
 		return new QuerydslJoinBuilder<>(getQueryMixin(), ref, target);
 	}
 
@@ -120,8 +117,9 @@ class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, 
 	 * @param target join target
 	 * @return new instance of {@link QuerydslJoinBuilder}.
 	 */
-	public <T> QuerydslJoinBuilder<ReactiveSpringDataMongodbQuery<K>, K, T> join(CollectionPathBase<?, T, ?> ref,
+	<T> QuerydslJoinBuilder<ReactiveSpringDataMongodbQuery<K>, K, T> join(CollectionPathBase<?, T, ?> ref,
 			Path<T> target) {
+
 		return new QuerydslJoinBuilder<>(getQueryMixin(), ref, target);
 	}
 
@@ -132,8 +130,9 @@ class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, 
 	 * @param target target must not be {@literal null}.
 	 * @return new instance of {@link QuerydslAnyEmbeddedBuilder}.
 	 */
-	public <T> QuerydslAnyEmbeddedBuilder<ReactiveSpringDataMongodbQuery<K>, K> anyEmbedded(
+	<T> QuerydslAnyEmbeddedBuilder<ReactiveSpringDataMongodbQuery<K>, K> anyEmbedded(
 			Path<? extends Collection<T>> collection, Path<T> target) {
+
 		return new QuerydslAnyEmbeddedBuilder<>(getQueryMixin(), collection);
 	}
 
@@ -259,6 +258,7 @@ class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, 
 	 * @return empty {@link List} if none found.
 	 */
 	protected Flux<Object> getIds(Class<?> targetType, @Nullable Predicate condition) {
+
 		return createQuery(Mono.justOrEmpty(condition), null, QueryModifiers.EMPTY, Collections.emptyList())
 				.flatMapMany(query -> mongoOperations.findDistinct(query, "_id", targetType, Object.class));
 	}
@@ -270,7 +270,7 @@ class ReactiveSpringDataMongodbQuery<K> extends QuerydslAbstractMongodbQuery<K, 
 
 		final Path<?> source;
 
-		public NoMatchException(Path<?> source) {
+		NoMatchException(Path<?> source) {
 			this.source = source;
 		}
 

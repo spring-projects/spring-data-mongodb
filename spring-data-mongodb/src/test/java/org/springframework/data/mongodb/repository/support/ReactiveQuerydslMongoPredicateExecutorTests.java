@@ -22,14 +22,17 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.repository.Address;
@@ -39,20 +42,24 @@ import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.QUser;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
  * Tests for {@link ReactiveQuerydslMongoPredicateExecutor}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:reactive-infrastructure.xml")
-public class ReactiveQuerydslMongoPredicateExecutorIntegrationTests {
+@ContextConfiguration
+public class ReactiveQuerydslMongoPredicateExecutorTests {
 
 	@Autowired ReactiveMongoOperations operations;
 	@Autowired ReactiveMongoDatabaseFactory dbFactory;
@@ -61,6 +68,30 @@ public class ReactiveQuerydslMongoPredicateExecutorIntegrationTests {
 
 	Person dave, oliver, carter;
 	QPerson person;
+
+	@Configuration
+	static class Config extends AbstractReactiveMongoConfiguration {
+
+		@Override
+		public MongoClient reactiveMongoClient() {
+			return MongoClients.create();
+		}
+
+		@Override
+		protected String getDatabaseName() {
+			return "reactive";
+		}
+	}
+
+	@BeforeClass
+	public static void cleanDb() {
+
+		try (MongoClient client = MongoClients.create()) {
+
+			MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
+			MongoTestUtils.createOrReplaceCollectionNow("reactive", "user", client);
+		}
+	}
 
 	@Before
 	public void setup() {
@@ -95,6 +126,20 @@ public class ReactiveQuerydslMongoPredicateExecutorIntegrationTests {
 		repository.exists(person.firstname.eq("Unknown")) //
 				.as(StepVerifier::create) //
 				.expectNext(false) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2182
+	public void shouldSupportCountWithPredicate() {
+
+		repository.count(person.firstname.eq("Dave")) //
+				.as(StepVerifier::create) //
+				.expectNext(1L) //
+				.verifyComplete();
+
+		repository.count(person.firstname.eq("Unknown")) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
 				.verifyComplete();
 	}
 

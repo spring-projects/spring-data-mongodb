@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.offset;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
@@ -32,14 +32,14 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -50,18 +50,23 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions;
+import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.ClassUtils;
+
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Test for {@link ReactiveMongoRepository} query methods.
@@ -70,45 +75,74 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:reactive-infrastructure.xml")
-public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanFactoryAware {
+@ContextConfiguration
+public class ReactiveMongoRepositoryTests {
 
 	@Autowired ReactiveMongoTemplate template;
 
-	ReactiveMongoRepositoryFactory factory;
-	ClassLoader classLoader;
-	BeanFactory beanFactory;
-	ReactivePersonRepository repository;
-	ReactiveContactRepository contactRepository;
-	ReactiveCappedCollectionRepository cappedRepository;
+	@Autowired ReactivePersonRepository repository;
+	@Autowired ReactiveContactRepository contactRepository;
+	@Autowired ReactiveCappedCollectionRepository cappedRepository;
 
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
-	QPerson person = new QPerson("person");
+	QPerson person = QPerson.person;
 
-	@Override
-	public void setBeanClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader == null ? ClassUtils.getDefaultClassLoader() : classLoader;
+	@Configuration
+	static class Config extends AbstractReactiveMongoConfiguration {
+
+		@Bean
+		@Override
+		public MongoClient reactiveMongoClient() {
+			return MongoClients.create();
+		}
+
+		@Override
+		protected String getDatabaseName() {
+			return "reactive";
+		}
+
+		@Bean
+		ReactiveMongoRepositoryFactory factory(ReactiveMongoOperations template, BeanFactory beanFactory) {
+
+			ReactiveMongoRepositoryFactory factory = new ReactiveMongoRepositoryFactory(template);
+			factory.setRepositoryBaseClass(SimpleReactiveMongoRepository.class);
+			factory.setBeanClassLoader(beanFactory.getClass().getClassLoader());
+			factory.setBeanFactory(beanFactory);
+			factory.setEvaluationContextProvider(QueryMethodEvaluationContextProvider.DEFAULT);
+
+			return factory;
+		}
+
+		@Bean
+		ReactivePersonRepository reactivePersonRepository(ReactiveMongoRepositoryFactory factory) {
+			return factory.getRepository(ReactivePersonRepository.class);
+		}
+
+		@Bean
+		ReactiveContactRepository reactiveContactRepository(ReactiveMongoRepositoryFactory factory) {
+			return factory.getRepository(ReactiveContactRepository.class);
+		}
+
+		@Bean
+		ReactiveCappedCollectionRepository reactiveCappedCollectionRepository(ReactiveMongoRepositoryFactory factory) {
+			return factory.getRepository(ReactiveCappedCollectionRepository.class);
+		}
 	}
 
-	@Override
-	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-		this.beanFactory = beanFactory;
+	@BeforeClass
+	public static void cleanDb() {
+
+		try (MongoClient client = MongoClients.create()) {
+
+			MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
+			MongoTestUtils.createOrReplaceCollectionNow("reactive", "capped", client);
+		}
 	}
 
 	@Before
 	public void setUp() throws Exception {
 
-		factory = new ReactiveMongoRepositoryFactory(template);
-		factory.setRepositoryBaseClass(SimpleReactiveMongoRepository.class);
-		factory.setBeanClassLoader(classLoader);
-		factory.setBeanFactory(beanFactory);
-		factory.setEvaluationContextProvider(QueryMethodEvaluationContextProvider.DEFAULT);
-
-		repository = factory.getRepository(ReactivePersonRepository.class);
-		contactRepository = factory.getRepository(ReactiveContactRepository.class);
-		cappedRepository = factory.getRepository(ReactiveCappedCollectionRepository.class);
-
-		StepVerifier.create(repository.deleteAll()).verifyComplete();
+		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
 		dave = new Person("Dave", "Matthews", 42);
 		oliver = new Person("Oliver August", "Matthews", 4);

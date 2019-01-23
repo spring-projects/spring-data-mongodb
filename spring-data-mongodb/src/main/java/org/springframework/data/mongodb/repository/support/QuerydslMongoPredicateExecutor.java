@@ -22,23 +22,18 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
-import org.springframework.data.querydsl.QSort;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
-import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.util.Assert;
 
 import com.querydsl.core.NonUniqueResultException;
 import com.querydsl.core.types.EntityPath;
-import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.dsl.PathBuilder;
 
 /**
  * MongoDB-specific {@link QuerydslPredicateExecutor} that allows execution {@link Predicate}s in various forms.
@@ -50,10 +45,9 @@ import com.querydsl.core.types.dsl.PathBuilder;
  * @author Mark Paluch
  * @since 2.0
  */
-public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecutor<T> {
+public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutorSupport<T>
+		implements QuerydslPredicateExecutor<T> {
 
-	private final PathBuilder<T> builder;
-	private final EntityInformation<T, ?> entityInformation;
 	private final MongoOperations mongoOperations;
 
 	/**
@@ -80,12 +74,8 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	public QuerydslMongoPredicateExecutor(MongoEntityInformation<T, ?> entityInformation, MongoOperations mongoOperations,
 			EntityPathResolver resolver) {
 
-		Assert.notNull(resolver, "EntityPathResolver must not be null!");
-
-		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
-
-		this.builder = new PathBuilder<T>(path.getType(), path.getMetadata());
-		this.entityInformation = entityInformation;
+		super(mongoOperations.getConverter(), pathBuilderFor(resolver.createPath(entityInformation.getJavaType())),
+				entityInformation);
 		this.mongoOperations = mongoOperations;
 	}
 
@@ -210,7 +200,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 * @return
 	 */
 	private SpringDataMongodbQuery<T> createQuery() {
-		return new SpringDataMongodbQuery<>(mongoOperations, entityInformation.getJavaType());
+		return new SpringDataMongodbQuery<>(mongoOperations, typeInformation().getJavaType());
 	}
 
 	/**
@@ -235,32 +225,7 @@ public class QuerydslMongoPredicateExecutor<T> implements QuerydslPredicateExecu
 	 */
 	private SpringDataMongodbQuery<T> applySorting(SpringDataMongodbQuery<T> query, Sort sort) {
 
-		// TODO: find better solution than instanceof check
-		if (sort instanceof QSort) {
-
-			List<OrderSpecifier<?>> orderSpecifiers = ((QSort) sort).getOrderSpecifiers();
-			query.orderBy(orderSpecifiers.toArray(new OrderSpecifier<?>[orderSpecifiers.size()]));
-
-			return query;
-		}
-
-		sort.stream().map(this::toOrder).forEach(query::orderBy);
-
+		toOrderSpecifiers(sort).forEach(query::orderBy);
 		return query;
-	}
-
-	/**
-	 * Transforms a plain {@link Order} into a Querydsl specific {@link OrderSpecifier}.
-	 *
-	 * @param order
-	 * @return
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private OrderSpecifier<?> toOrder(Order order) {
-
-		Expression<Object> property = builder.get(order.getProperty());
-
-		return new OrderSpecifier(
-				order.isAscending() ? com.querydsl.core.types.Order.ASC : com.querydsl.core.types.Order.DESC, property);
 	}
 }
