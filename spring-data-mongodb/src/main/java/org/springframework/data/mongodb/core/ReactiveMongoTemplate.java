@@ -1252,7 +1252,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Mono<T> afterInsert = insertDocument(collectionName, dbDoc, initialized.getClass()).map(id -> {
 
 				T saved = entity.populateIdIfNecessary(id);
-				maybeEmitEvent(new AfterSaveEvent<>(initialized, dbDoc, collectionName));
+				maybeEmitEvent(new AfterSaveEvent<>(saved, dbDoc, collectionName));
 				return saved;
 			});
 
