@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -55,6 +56,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -72,11 +74,14 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
+import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -96,6 +101,7 @@ public class ReactiveMongoTemplateTests {
 
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoTemplate template;
+	@Autowired ConfigurableApplicationContext context;
 
 	@Before
 	public void setUp() {
@@ -1317,6 +1323,50 @@ public class ReactiveMongoTemplateTests {
 				.verifyComplete();
 		StepVerifier.create(template.count(query(where("field").is("stark")), Sample.class)).expectNext(0L)
 				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2189
+	@DirtiesContext
+	public void afterSaveEventContainsSavedObjectUsingInsert() {
+
+		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+
+		template.insert(new ImmutableVersioned()) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		assertThat(saved.get()).isNotNull();
+		assertThat(saved.get().id).isNotNull();
+	}
+
+	@Test // DATAMONGO-2189
+	@DirtiesContext
+	public void afterSaveEventContainsSavedObjectUsingInsertAll() {
+
+		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+
+		template.insertAll(Collections.singleton(new ImmutableVersioned())) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		assertThat(saved.get()).isNotNull();
+		assertThat(saved.get().id).isNotNull();
+	}
+
+	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
+
+		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
+		context.addApplicationListener(new AbstractMongoEventListener<ImmutableVersioned>() {
+
+			@Override
+			public void onAfterSave(AfterSaveEvent<ImmutableVersioned> event) {
+				saved.set(event.getSource());
+			}
+		});
+
+		return saved;
 	}
 
 	@Test // DATAMONGO-2012

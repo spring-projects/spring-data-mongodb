@@ -39,6 +39,7 @@ import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -72,7 +73,6 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
@@ -83,8 +83,10 @@ import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
@@ -3511,6 +3513,44 @@ public class MongoTemplateTests {
 		template.insertAll(Collections.singletonList(document));
 
 		assertThat(document.id, is(notNullValue()));
+	}
+
+	@Test // DATAMONGO-2189
+	@DirtiesContext
+	public void afterSaveEventContainsSavedObjectUsingInsertAll() {
+
+		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+
+		template.insertAll(Collections.singletonList(new ImmutableVersioned()));
+
+		assertThat(saved.get(), is(notNullValue()));
+		assertThat(saved.get().id, is(notNullValue()));
+	}
+
+	@Test // DATAMONGO-2189
+	@DirtiesContext
+	public void afterSaveEventContainsSavedObjectUsingInsert() {
+
+		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+
+		template.insert(new ImmutableVersioned());
+
+		assertThat(saved.get(), is(notNullValue()));
+		assertThat(saved.get().id, is(notNullValue()));
+	}
+
+	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
+
+		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
+		context.addApplicationListener(new AbstractMongoEventListener<ImmutableVersioned>() {
+
+			@Override
+			public void onAfterSave(AfterSaveEvent<ImmutableVersioned> event) {
+				saved.set(event.getSource());
+			}
+		});
+
+		return saved;
 	}
 
 	@Test // DATAMONGO-1509
