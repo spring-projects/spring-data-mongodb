@@ -22,12 +22,10 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
 
-import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 
@@ -35,6 +33,7 @@ import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
  * Collection of operations to store and read files from MongoDB GridFS using reactive infrastructure.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  */
 public interface ReactiveGridFsOperations {
@@ -44,29 +43,32 @@ public interface ReactiveGridFsOperations {
 	 *
 	 * @param content must not be {@literal null}.
 	 * @param filename must not be {@literal null} or empty.
-	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
 	 */
 	default Mono<ObjectId> store(Publisher<DataBuffer> content, String filename) {
 		return store(content, filename, (Object) null);
 	}
 
 	/**
-	 * Stores the given content into a file with the given name.
+	 * Stores the given content into a file applying the given metadata.
 	 *
 	 * @param content must not be {@literal null}.
 	 * @param metadata can be {@literal null}.
-	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
 	 */
 	default Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable Object metadata) {
 		return store(content, null, metadata);
 	}
 
 	/**
-	 * Stores the given content into a file with the given name.
+	 * Stores the given content into a file applying the given metadata.
 	 *
 	 * @param content must not be {@literal null}.
 	 * @param metadata can be {@literal null}.
-	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
 	 */
 	default Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable Document metadata) {
 		return store(content, null, metadata);
@@ -78,7 +80,8 @@ public interface ReactiveGridFsOperations {
 	 * @param content must not be {@literal null}.
 	 * @param filename must not be {@literal null} or empty.
 	 * @param contentType can be {@literal null}.
-	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
 	 */
 	default Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType) {
 		return store(content, filename, contentType, (Object) null);
@@ -91,7 +94,8 @@ public interface ReactiveGridFsOperations {
 	 * @param content must not be {@literal null}.
 	 * @param filename can be {@literal null} or empty.
 	 * @param metadata can be {@literal null}.
-	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
 	 */
 	default Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable Object metadata) {
 		return store(content, filename, null, metadata);
@@ -105,7 +109,8 @@ public interface ReactiveGridFsOperations {
 	 * @param filename must not be {@literal null} or empty.
 	 * @param contentType can be {@literal null}.
 	 * @param metadata can be {@literal null}
-	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
 	 */
 	Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata);
@@ -118,7 +123,8 @@ public interface ReactiveGridFsOperations {
 	 * @param filename must not be {@literal null} or empty.
 	 * @param contentType can be {@literal null}.
 	 * @param metadata can be {@literal null}
-	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
 	 */
 	Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata);
@@ -129,7 +135,8 @@ public interface ReactiveGridFsOperations {
 	 * @param content must not be {@literal null}.
 	 * @param filename must not be {@literal null} or empty.
 	 * @param metadata can be {@literal null}.
-	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
 	 */
 	default Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable Document metadata) {
 		return store(content, filename, null, metadata);
@@ -142,63 +149,85 @@ public interface ReactiveGridFsOperations {
 	 * @param filename must not be {@literal null} or empty.
 	 * @param contentType can be {@literal null}.
 	 * @param metadata can be {@literal null}.
-	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
 	 */
 	Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Document metadata);
 
-	Mono<ObjectId> store(Publisher<DataBuffer> content, String filename, String contentType, Document metadata);
+	/**
+	 * Stores the given content into a file with the given name and content type using the given metadata.
+	 *
+	 * @param content must not be {@literal null}.
+	 * @param filename must not be {@literal null} or empty.
+	 * @param contentType can be {@literal null}.
+	 * @param metadata can be {@literal null}.
+	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
+	 *         created.
+	 */
+	Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType,
+			@Nullable Document metadata);
 
 	/**
-	 * Returns all files matching the given query. Note, that currently {@link Sort} criterias defined at the
-	 * {@link Query} will not be regarded as MongoDB does not support ordering for GridFS file access.
+	 * Returns a {@link Flux} emitting all files matching the given query. <br />
+	 * <strong>Note:</strong> Currently {@link Sort} criteria defined at the {@link Query} will not be regarded as MongoDB
+	 * does not support ordering for GridFS file access.
 	 *
 	 * @see <a href="https://jira.mongodb.org/browse/JAVA-431">MongoDB Jira: JAVA-431</a>
 	 * @param query must not be {@literal null}.
-	 * @return {@link GridFSFindIterable} to obtain results from. Eg. by calling
-	 *         {@link GridFSFindIterable#into(java.util.Collection)}.
+	 * @return {@link Flux#empty()} if no mach found.
 	 */
 	Flux<GridFSFile> find(Query query);
 
 	/**
-	 * Returns a single {@link com.mongodb.client.gridfs.model.GridFSFile} matching the given query or {@literal null} in
-	 * case no file matches.
+	 * Returns a {@link Mono} emitting a single {@link com.mongodb.client.gridfs.model.GridFSFile} matching the given
+	 * query or {@link Mono#empty()} in case no file matches. <br />
+	 * <strong>NOTE</strong> If more than one file matches the given query the resulting {@link Mono} emits an error. If
+	 * you want to obtain the first found file use {@link #findFirst(Query)}.
 	 *
 	 * @param query must not be {@literal null}.
-	 * @return
+	 * @return {@link Mono#empty()} if not match found.
 	 */
 	Mono<GridFSFile> findOne(Query query);
+
+	/**
+	 * Returns a {@link Mono} emitting the frist {@link com.mongodb.client.gridfs.model.GridFSFile} matching the given
+	 * query or {@link Mono#empty()} in case no file matches.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return {@link Mono#empty()} if not match found.
+	 */
+	Mono<GridFSFile> findFirst(Query query);
 
 	/**
 	 * Deletes all files matching the given {@link Query}.
 	 *
 	 * @param query must not be {@literal null}.
+	 * @return a {@link Mono} signalling operation completion.
 	 */
 	Mono<Void> delete(Query query);
 
 	/**
-	 * Returns the {@link GridFsResource} with the given file name.
+	 * Returns a {@link Mono} emitting the {@link ReactiveGridFsResource} with the given file name.
 	 *
 	 * @param filename must not be {@literal null}.
-	 * @return the resource. Use {@link org.springframework.core.io.Resource#exists()} to check if the returned
-	 *         {@link GridFsResource} is actually present.
-	 * @see ResourcePatternResolver#getResource(String)
+	 * @return {@link Mono#empty()} if no match found.
 	 */
 	Mono<ReactiveGridFsResource> getResource(String filename);
 
 	/**
-	 * Returns the {@link GridFsResource} for a {@link GridFSFile}.
+	 * Returns a {@link Mono} emitting the {@link ReactiveGridFsResource} for a {@link GridFSFile}.
 	 *
 	 * @param file must not be {@literal null}.
-	 * @return the resource for the file.
+	 * @return {@link Mono#empty()} if no match found.
 	 */
 	Mono<ReactiveGridFsResource> getResource(GridFSFile file);
 
 	/**
-	 * Returns all {@link GridFsResource}s matching the given file name pattern.
+	 * Returns a {@link Flux} emitting all {@link ReactiveGridFsResource}s matching the given file name pattern.
 	 *
 	 * @param filenamePattern must not be {@literal null}.
-	 * @return
+	 * @return {@link Flux#empty()} if no match found.
 	 */
 	Flux<ReactiveGridFsResource> getResources(String filenamePattern);
 }

@@ -29,7 +29,6 @@ import org.bson.types.ObjectId;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -40,7 +39,6 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 /**
  * {@link GridFsOperations} implementation to store content into MongoDB GridFS.
@@ -54,13 +52,11 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  * @author Hartmut Lang
  * @author Niklas Helge Hanft
  */
-public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
+public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOperations, ResourcePatternResolver {
 
 	private final MongoDbFactory dbFactory;
 
 	private final @Nullable String bucket;
-	private final MongoConverter converter;
-	private final QueryMapper queryMapper;
 
 	/**
 	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
@@ -81,14 +77,12 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 */
 	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter, @Nullable String bucket) {
 
+		super(converter);
+
 		Assert.notNull(dbFactory, "MongoDbFactory must not be null!");
-		Assert.notNull(converter, "MongoConverter must not be null!");
 
 		this.dbFactory = dbFactory;
-		this.converter = converter;
 		this.bucket = bucket;
-
-		this.queryMapper = new QueryMapper(converter);
 	}
 
 	/*
@@ -137,16 +131,9 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String, java.lang.Object)
 	 */
-	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType, @Nullable Object metadata) {
-
-		Document document = null;
-
-		if (metadata != null) {
-			document = new Document();
-			converter.write(metadata, document);
-		}
-
-		return store(content, filename, contentType, document);
+	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
+			@Nullable Object metadata) {
+		return store(content, filename, contentType, toDocument(metadata));
 	}
 
 	/*
@@ -161,25 +148,11 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.Document)
 	 */
-	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType, @Nullable Document metadata) {
+	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
+			@Nullable Document metadata) {
 
 		Assert.notNull(content, "InputStream must not be null!");
-
-		GridFSUploadOptions options = new GridFSUploadOptions();
-
-		Document mData = new Document();
-
-		if (StringUtils.hasText(contentType)) {
-			mData.put(GridFsResource.CONTENT_TYPE_FIELD, contentType);
-		}
-
-		if (metadata != null) {
-			mData.putAll(metadata);
-		}
-
-		options.metadata(mData);
-
-		return getGridFs().uploadFromStream(filename, content, options);
+		return getGridFs().uploadFromStream(filename, content, computeUploadOptionsFor(contentType, metadata));
 	}
 
 	/*
@@ -210,8 +183,8 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 */
 	public void delete(Query query) {
 
-		for (GridFSFile x : find(query)) {
-			getGridFs().delete(((BsonObjectId) x.getId()).getValue());
+		for (GridFSFile gridFSFile : find(query)) {
+			getGridFs().delete(((BsonObjectId) gridFSFile.getId()).getValue());
 		}
 	}
 
@@ -246,9 +219,9 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	}
 
 	/*
-     * (non-Javadoc)
-     * @see org.springframework.core.io.support.ResourcePatternResolver#getResources(java.lang.String)
-     */
+	 * (non-Javadoc)
+	 * @see org.springframework.core.io.support.ResourcePatternResolver#getResources(java.lang.String)
+	 */
 	public GridFsResource[] getResources(String locationPattern) {
 
 		if (!StringUtils.hasText(locationPattern)) {
@@ -270,10 +243,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		}
 
 		return new GridFsResource[] { getResource(locationPattern) };
-	}
-
-	private Document getMappedQuery(Document query) {
-		return queryMapper.getMappedObject(query, Optional.empty());
 	}
 
 	private GridFSBucket getGridFs() {

@@ -39,6 +39,7 @@ import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
  * Utility to adapt a {@link AsyncInputStream} to a {@link Publisher} emitting {@link DataBuffer}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  */
 class DataBufferPublisherAdapter {
@@ -51,7 +52,7 @@ class DataBufferPublisherAdapter {
 	 * @param dataBufferFactory must not be {@literal null}.
 	 * @return the resulting {@link Publisher}.
 	 */
-	public static Flux<DataBuffer> createBinaryStream(AsyncInputStream inputStream, DataBufferFactory dataBufferFactory) {
+	static Flux<DataBuffer> createBinaryStream(AsyncInputStream inputStream, DataBufferFactory dataBufferFactory) {
 
 		State state = new State(inputStream, dataBufferFactory);
 
@@ -73,17 +74,17 @@ class DataBufferPublisherAdapter {
 	@RequiredArgsConstructor
 	static class State {
 
-		static final AtomicLongFieldUpdater<State> DEMAND = AtomicLongFieldUpdater.newUpdater(State.class, "demand");
+		private static final AtomicLongFieldUpdater<State> DEMAND = AtomicLongFieldUpdater.newUpdater(State.class, "demand");
 
-		static final AtomicIntegerFieldUpdater<State> STATE = AtomicIntegerFieldUpdater.newUpdater(State.class, "state");
+		private static final AtomicIntegerFieldUpdater<State> STATE = AtomicIntegerFieldUpdater.newUpdater(State.class, "state");
 
-		static final AtomicIntegerFieldUpdater<State> READ = AtomicIntegerFieldUpdater.newUpdater(State.class, "read");
+		private static final AtomicIntegerFieldUpdater<State> READ = AtomicIntegerFieldUpdater.newUpdater(State.class, "read");
 
-		static final int STATE_OPEN = 0;
-		static final int STATE_CLOSED = 1;
+		private static final int STATE_OPEN = 0;
+		private static final int STATE_CLOSED = 1;
 
-		static final int READ_NONE = 0;
-		static final int READ_IN_PROGRESS = 1;
+		private static final int READ_NONE = 0;
+		private static final int READ_IN_PROGRESS = 1;
 
 		final AsyncInputStream inputStream;
 		final DataBufferFactory dataBufferFactory;
@@ -140,66 +141,79 @@ class DataBufferPublisherAdapter {
 			DataBuffer dataBuffer = dataBufferFactory.allocateBuffer();
 			ByteBuffer intermediate = ByteBuffer.allocate(dataBuffer.capacity());
 
-			Mono.from(inputStream.read(intermediate)).subscribe(new CoreSubscriber<Integer>() {
+			Mono.from(inputStream.read(intermediate)).subscribe(new BufferCoreSubscriber(sink, dataBuffer, intermediate));
+		}
 
-				@Override
-				public Context currentContext() {
-					return sink.currentContext();
-				}
+		private class BufferCoreSubscriber implements CoreSubscriber<Integer> {
 
-				@Override
-				public void onSubscribe(Subscription s) {
-					s.request(1);
-				}
+			private final FluxSink<DataBuffer> sink;
+			private final DataBuffer dataBuffer;
+			private final ByteBuffer intermediate;
 
-				@Override
-				public void onNext(Integer bytes) {
+			BufferCoreSubscriber(FluxSink<DataBuffer> sink, DataBuffer dataBuffer, ByteBuffer intermediate) {
 
-					if (isClosed()) {
+				this.sink = sink;
+				this.dataBuffer = dataBuffer;
+				this.intermediate = intermediate;
+			}
 
-						onReadDone();
-						DataBufferUtils.release(dataBuffer);
-						Operators.onNextDropped(dataBuffer, sink.currentContext());
-						return;
-					}
+			@Override
+			public Context currentContext() {
+				return sink.currentContext();
+			}
 
-					intermediate.flip();
-					dataBuffer.write(intermediate);
+			@Override
+			public void onSubscribe(Subscription s) {
+				s.request(1);
+			}
 
-					sink.next(dataBuffer);
+			@Override
+			public void onNext(Integer bytes) {
 
-					try {
-						if (bytes == -1) {
-							sink.complete();
-						}
-					} finally {
-						onReadDone();
-					}
-				}
-
-				@Override
-				public void onError(Throwable t) {
-
-					if (isClosed()) {
-
-						Operators.onErrorDropped(t, sink.currentContext());
-						return;
-					}
+				if (isClosed()) {
 
 					onReadDone();
 					DataBufferUtils.release(dataBuffer);
 					Operators.onNextDropped(dataBuffer, sink.currentContext());
-					sink.error(t);
+					return;
 				}
 
-				@Override
-				public void onComplete() {
+				intermediate.flip();
+				dataBuffer.write(intermediate);
 
-					if (onShouldRead()) {
-						emitNext(sink);
+				sink.next(dataBuffer);
+
+				try {
+					if (bytes == -1) {
+						sink.complete();
 					}
+				} finally {
+					onReadDone();
 				}
-			});
+			}
+
+			@Override
+			public void onError(Throwable t) {
+
+				if (isClosed()) {
+
+					Operators.onErrorDropped(t, sink.currentContext());
+					return;
+				}
+
+				onReadDone();
+				DataBufferUtils.release(dataBuffer);
+				Operators.onNextDropped(dataBuffer, sink.currentContext());
+				sink.error(t);
+			}
+
+			@Override
+			public void onComplete() {
+
+				if (onShouldRead()) {
+					emitNext(sink);
+				}
+			}
 		}
 	}
 }

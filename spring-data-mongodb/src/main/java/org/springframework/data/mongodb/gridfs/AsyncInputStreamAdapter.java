@@ -49,6 +49,7 @@ import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
  * {@link #close()} is propagated as cancellation signal to the binary {@link Publisher}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  */
 @RequiredArgsConstructor
@@ -75,10 +76,10 @@ class AsyncInputStreamAdapter implements AsyncInputStream {
 			.get();
 
 	// see DEMAND
-	private volatile long demand;
+	volatile long demand;
 
 	// see SUBSCRIBED
-	private volatile int subscribed = SUBSCRIPTION_NOT_SUBSCRIBED;
+	volatile int subscribed = SUBSCRIPTION_NOT_SUBSCRIBED;
 
 	/*
 	 * (non-Javadoc)
@@ -94,20 +95,23 @@ class AsyncInputStreamAdapter implements AsyncInputStream {
 				try {
 
 					if (error != null) {
+
 						sink.error(error);
 						return;
 					}
 
 					if (bytecount == -1) {
+
 						sink.success(-1);
 						return;
 					}
 
 					ByteBuffer byteBuffer = db.asByteBuffer();
 					int toWrite = byteBuffer.remaining();
-					dst.put(byteBuffer);
 
+					dst.put(byteBuffer);
 					sink.success(toWrite);
+
 				} catch (Exception e) {
 					sink.error(e);
 				} finally {
@@ -127,6 +131,7 @@ class AsyncInputStreamAdapter implements AsyncInputStream {
 	public Publisher<Success> close() {
 
 		return Mono.create(sink -> {
+
 			cancelled = true;
 
 			if (error != null) {
@@ -141,6 +146,7 @@ class AsyncInputStreamAdapter implements AsyncInputStream {
 	protected void request(int n) {
 
 		if (complete) {
+
 			terminatePendingReads();
 			return;
 		}
@@ -150,67 +156,9 @@ class AsyncInputStreamAdapter implements AsyncInputStream {
 		if (SUBSCRIBED.get(this) == SUBSCRIPTION_NOT_SUBSCRIBED) {
 
 			if (SUBSCRIBED.compareAndSet(this, SUBSCRIPTION_NOT_SUBSCRIBED, SUBSCRIPTION_SUBSCRIBED)) {
-
-				buffers.subscribe(new CoreSubscriber<DataBuffer>() {
-
-					@Override
-					public Context currentContext() {
-						return subscriberContext;
-					}
-
-					@Override
-					public void onSubscribe(Subscription s) {
-						subscription = s;
-
-						Operators.addCap(DEMAND, AsyncInputStreamAdapter.this, -1);
-						s.request(1);
-					}
-
-					@Override
-					public void onNext(DataBuffer dataBuffer) {
-
-						if (cancelled || complete) {
-							DataBufferUtils.release(dataBuffer);
-							Operators.onNextDropped(dataBuffer, subscriberContext);
-							return;
-						}
-
-						BiConsumer<DataBuffer, Integer> poll = readRequests.poll();
-
-						if (poll == null) {
-
-							DataBufferUtils.release(dataBuffer);
-							Operators.onNextDropped(dataBuffer, subscriberContext);
-							subscription.cancel();
-							return;
-						}
-
-						poll.accept(dataBuffer, dataBuffer.readableByteCount());
-
-						requestFromSubscription(subscription);
-					}
-
-					@Override
-					public void onError(Throwable t) {
-
-						if (cancelled || complete) {
-							Operators.onErrorDropped(t, subscriberContext);
-							return;
-						}
-
-						error = t;
-						complete = true;
-						terminatePendingReads();
-					}
-
-					@Override
-					public void onComplete() {
-
-						complete = true;
-						terminatePendingReads();
-					}
-				});
+				buffers.subscribe(new DataBufferCoreSubscriber());
 			}
+
 		} else {
 
 			Subscription subscription = this.subscription;
@@ -243,6 +191,67 @@ class AsyncInputStreamAdapter implements AsyncInputStream {
 
 		while ((readers = readRequests.poll()) != null) {
 			readers.accept(factory.wrap(new byte[0]), -1);
+		}
+	}
+
+	private class DataBufferCoreSubscriber implements CoreSubscriber<DataBuffer> {
+
+		@Override
+		public Context currentContext() {
+			return AsyncInputStreamAdapter.this.subscriberContext;
+		}
+
+		@Override
+		public void onSubscribe(Subscription s) {
+
+			AsyncInputStreamAdapter.this.subscription = s;
+
+			Operators.addCap(DEMAND, AsyncInputStreamAdapter.this, -1);
+			s.request(1);
+		}
+
+		@Override
+		public void onNext(DataBuffer dataBuffer) {
+
+			if (cancelled || complete) {
+				DataBufferUtils.release(dataBuffer);
+				Operators.onNextDropped(dataBuffer, AsyncInputStreamAdapter.this.subscriberContext);
+				return;
+			}
+
+			BiConsumer<DataBuffer, Integer> poll = AsyncInputStreamAdapter.this.readRequests.poll();
+
+			if (poll == null) {
+
+				DataBufferUtils.release(dataBuffer);
+				Operators.onNextDropped(dataBuffer, AsyncInputStreamAdapter.this.subscriberContext);
+				subscription.cancel();
+				return;
+			}
+
+			poll.accept(dataBuffer, dataBuffer.readableByteCount());
+
+			requestFromSubscription(subscription);
+		}
+
+		@Override
+		public void onError(Throwable t) {
+
+			if (AsyncInputStreamAdapter.this.cancelled || AsyncInputStreamAdapter.this.complete) {
+				Operators.onErrorDropped(t, AsyncInputStreamAdapter.this.subscriberContext);
+				return;
+			}
+
+			AsyncInputStreamAdapter.this.error = t;
+			AsyncInputStreamAdapter.this.complete = true;
+			terminatePendingReads();
+		}
+
+		@Override
+		public void onComplete() {
+
+			AsyncInputStreamAdapter.this.complete = true;
+			terminatePendingReads();
 		}
 	}
 }
