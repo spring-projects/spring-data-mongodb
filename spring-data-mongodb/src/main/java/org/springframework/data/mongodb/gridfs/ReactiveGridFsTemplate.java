@@ -21,24 +21,22 @@ import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 import com.mongodb.reactivestreams.client.gridfs.GridFSBucket;
@@ -53,13 +51,11 @@ import com.mongodb.reactivestreams.client.gridfs.GridFSFindPublisher;
  * @author Mark Paluch
  * @since 2.2
  */
-public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
+public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements ReactiveGridFsOperations {
 
-	private final DataBufferFactory dataBufferFactory;
 	private final ReactiveMongoDatabaseFactory dbFactory;
+	private final DataBufferFactory dataBufferFactory;
 	private final @Nullable String bucket;
-	private final MongoConverter converter;
-	private final QueryMapper queryMapper;
 
 	/**
 	 * Creates a new {@link ReactiveGridFsTemplate} using the given {@link ReactiveMongoDatabaseFactory} and
@@ -97,16 +93,14 @@ public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
 	public ReactiveGridFsTemplate(DataBufferFactory dataBufferFactory, ReactiveMongoDatabaseFactory dbFactory,
 			MongoConverter converter, @Nullable String bucket) {
 
+		super(converter);
+
 		Assert.notNull(dataBufferFactory, "DataBufferFactory must not be null!");
 		Assert.notNull(dbFactory, "ReactiveMongoDatabaseFactory must not be null!");
-		Assert.notNull(converter, "MongoConverter must not be null!");
 
 		this.dataBufferFactory = dataBufferFactory;
 		this.dbFactory = dbFactory;
-		this.converter = converter;
 		this.bucket = bucket;
-
-		this.queryMapper = new QueryMapper(converter);
 	}
 
 	/*
@@ -138,22 +132,7 @@ public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
 			@Nullable Document metadata) {
 
 		Assert.notNull(content, "InputStream must not be null!");
-
-		GridFSUploadOptions options = new GridFSUploadOptions();
-
-		Document mData = new Document();
-
-		if (StringUtils.hasText(contentType)) {
-			mData.put(GridFsResource.CONTENT_TYPE_FIELD, contentType);
-		}
-
-		if (metadata != null) {
-			mData.putAll(metadata);
-		}
-
-		options.metadata(mData);
-
-		return Mono.from(getGridFs().uploadFromStream(filename, content, options));
+		return Mono.from(getGridFs().uploadFromStream(filename, content, computeUploadOptionsFor(contentType, metadata)));
 	}
 
 	/*
@@ -175,10 +154,7 @@ public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
 	 */
 	@Override
 	public Flux<GridFSFile> find(Query query) {
-
-		GridFSFindPublisher publisherToUse = prepareQuery(query);
-
-		return Flux.from(publisherToUse);
+		return Flux.from(prepareQuery(query));
 	}
 
 	/*
@@ -188,9 +164,29 @@ public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
 	@Override
 	public Mono<GridFSFile> findOne(Query query) {
 
-		GridFSFindPublisher publisherToUse = prepareQuery(query);
+		return Flux.from(prepareQuery(query).limit(2)) //
+				.collectList() //
+				.flatMap(it -> {
+					if (it.isEmpty()) {
+						return Mono.empty();
+					}
 
-		return Flux.from(publisherToUse.limit(1)).next();
+					if (it.size() > 1) {
+						return Mono.error(new IncorrectResultSizeDataAccessException(
+								"Query " + SerializationUtils.serializeToJsonSafely(query) + " returned non unique result.", 1));
+					}
+
+					return Mono.just(it.get(0));
+				});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#findFirst(org.springframework.data.mongodb.core.query.Query)
+	 */
+	@Override
+	public Mono<GridFSFile> findFirst(Query query) {
+		return Flux.from(prepareQuery(query).limit(1)).next();
 	}
 
 	/*
@@ -199,9 +195,7 @@ public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
 	 */
 	@Override
 	public Mono<Void> delete(Query query) {
-
-		GridFSBucket gridFs = getGridFs();
-		return find(query).flatMap(it -> gridFs.delete(it.getId())).then();
+		return find(query).flatMap(it -> getGridFs().delete(it.getId())).then();
 	}
 
 	/*
@@ -273,25 +267,9 @@ public class ReactiveGridFsTemplate implements ReactiveGridFsOperations {
 		return publisherToUse;
 	}
 
-	private Document getMappedQuery(Document query) {
-		return queryMapper.getMappedObject(query, Optional.empty());
-	}
-
 	protected GridFSBucket getGridFs() {
 
 		MongoDatabase db = dbFactory.getMongoDatabase();
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
-	}
-
-	@Nullable
-	private Document toDocument(@Nullable Object metadata) {
-
-		Document document = null;
-
-		if (metadata != null) {
-			document = new Document();
-			converter.write(metadata, document);
-		}
-		return document;
 	}
 }

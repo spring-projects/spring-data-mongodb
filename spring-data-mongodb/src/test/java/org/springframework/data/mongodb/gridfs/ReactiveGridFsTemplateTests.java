@@ -16,10 +16,11 @@
 package org.springframework.data.mongodb.gridfs;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -46,11 +47,14 @@ import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 import com.mongodb.reactivestreams.client.gridfs.helpers.AsyncStreamHelper;
 
 /**
+ * Integration tests for {@link ReactiveGridFsTemplate}.
+ *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:gridfs/reactive-gridfs.xml")
-public class ReactiveGridFsTemplateIntegrationTests {
+public class ReactiveGridFsTemplateTests {
 
 	Resource resource = new ClassPathResource("gridfs/gridfs.xml");
 
@@ -58,6 +62,7 @@ public class ReactiveGridFsTemplateIntegrationTests {
 
 	@Before
 	public void setUp() {
+
 		operations.delete(new Query()) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
@@ -76,7 +81,8 @@ public class ReactiveGridFsTemplateIntegrationTests {
 				.as(StepVerifier::create) //
 				.assertNext(actual -> {
 					assertThat(((BsonObjectId) actual.getId()).getValue()).isEqualTo(reference);
-				}).verifyComplete();
+				}) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1855
@@ -92,7 +98,7 @@ public class ReactiveGridFsTemplateIntegrationTests {
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 					assertThat(actual.getObjectId()).isEqualTo(reference);
-				})//
+				}) //
 				.verifyComplete();
 	}
 
@@ -110,7 +116,8 @@ public class ReactiveGridFsTemplateIntegrationTests {
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 					assertThat(actual.getObjectId()).isEqualTo(reference);
-				})//
+					assertThat(actual.getMetadata()).containsEntry("version", "1.0");
+				}) //
 				.verifyComplete();
 	}
 
@@ -124,14 +131,69 @@ public class ReactiveGridFsTemplateIntegrationTests {
 
 		operations.findOne(query(where("_id").is(reference))).flatMap(operations::getResource)
 				.flatMapMany(ReactiveGridFsResource::getDownloadStream) //
-				.transform(DataBufferUtils::join).as(StepVerifier::create) //
+				.transform(DataBufferUtils::join) //
+				.as(StepVerifier::create) //
 				.consumeNextWith(dataBuffer -> {
 
 					byte[] actual = new byte[dataBuffer.readableByteCount()];
 					dataBuffer.read(actual);
 
 					assertThat(actual).isEqualTo(content);
-				}).verifyComplete();
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1855
+	public void shouldEmitFirstEntryWhenFindFirstRetrievesMoreThanOneResult() throws IOException {
+
+		AsyncInputStream upload1 = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
+		AsyncInputStream upload2 = AsyncStreamHelper.toAsyncInputStream(new ClassPathResource("gridfs/another-resource.xml").getInputStream());
+
+		operations.store(upload1, "foo.xml", null, null).block();
+		operations.store(upload2, "foo2.xml", null, null).block();
+
+		operations.findFirst(query(where("filename").regex("foo*"))) //
+				.flatMap(operations::getResource) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1855
+	public void shouldEmitErrorWhenFindOneRetrievesMoreThanOneResult() throws IOException {
+
+		AsyncInputStream upload1 = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
+		AsyncInputStream upload2 = AsyncStreamHelper.toAsyncInputStream(new ClassPathResource("gridfs/another-resource.xml").getInputStream());
+
+		operations.store(upload1, "foo.xml", null, null).block();
+		operations.store(upload2, "foo2.xml", null, null).block();
+
+		operations.findOne(query(where("filename").regex("foo*"))) //
+				.as(StepVerifier::create) //
+				.expectError(IncorrectResultSizeDataAccessException.class) //
+				.verify();
+	}
+
+	@Test // DATAMONGO-1855
+	public void getResourcesByPattern() throws IOException {
+
+		byte[] content = StreamUtils.copyToByteArray(resource.getInputStream());
+		AsyncInputStream upload = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
+
+		operations.store(upload, "foo.xml", null, null).block();
+
+		operations.getResources("foo*") //
+				.flatMap(ReactiveGridFsResource::getDownloadStream) //
+				.transform(DataBufferUtils::join) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(dataBuffer -> {
+
+					byte[] actual = new byte[dataBuffer.readableByteCount()];
+					dataBuffer.read(actual);
+
+					assertThat(actual).isEqualTo(content);
+				}) //
+				.verifyComplete();
 	}
 
 	static class Metadata {
