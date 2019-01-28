@@ -20,11 +20,14 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -70,7 +73,16 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.*;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.index.ReactiveMongoPersistentEntityIndexCreator;
@@ -102,6 +114,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -113,11 +126,29 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import com.mongodb.reactivestreams.client.*;
+import com.mongodb.reactivestreams.client.AggregatePublisher;
+import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
+import com.mongodb.reactivestreams.client.ClientSession;
+import com.mongodb.reactivestreams.client.DistinctPublisher;
+import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MapReducePublisher;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Primary implementation of {@link ReactiveMongoOperations}. It simplifies the use of Reactive MongoDB usage and helps
@@ -581,8 +612,97 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Mono<MongoCollection<Document>> collectionPublisher = Mono
 				.fromCallable(() -> getAndPrepareCollection(doGetDatabase(), collectionName));
 
-		return collectionPublisher.flatMapMany(callback::doInCollection).onErrorMap(translateException());
+		Flux<T> source = collectionPublisher.flatMapMany(callback::doInCollection).onErrorMap(translateException());
+
+
+		return new Flux<T>() {
+
+			@Override
+			public void subscribe(CoreSubscriber actual) {
+
+				Long skip = extractSkip(actual);
+				Long take = extractLimit(actual);
+
+				System.out.println(String.format("Setting offset %s and limit: %s", skip, take));
+
+				Context context = Context.empty();
+
+				// and here we use the original Flux and evaluate skip / take in the template
+				if (skip != null && skip > 0L) {
+					context = context.put("skip", skip);
+				}
+				if (take != null && take > 0L) {
+					context = context.put("take", take);
+				}
+
+
+				source.subscriberContext(context).subscribe(actual);
+			}
+		};
 	}
+
+	// --> HACKING
+
+	@Nullable
+	static Long extractSkip(Subscriber subscriber) {
+
+		if (subscriber == null || !ClassUtils.getShortName(subscriber.getClass()).endsWith("SkipSubscriber")) {
+			return null;
+		}
+
+		java.lang.reflect.Field field = ReflectionUtils.findField(subscriber.getClass(), "remaining");
+		if (field == null) {
+			return null;
+		}
+
+		ReflectionUtils.makeAccessible(field);
+		Long skip = (Long) ReflectionUtils.getField(field, subscriber);
+		if (skip != null && skip > 0L) {
+
+			// reset the field, otherwise we'd skip stuff in the code.
+			ReflectionUtils.setField(field, subscriber, 0L);
+		}
+
+		return skip;
+	}
+
+	@Nullable
+	static Long extractLimit(Subscriber subscriber) {
+
+		if (subscriber == null) {
+			return null;
+		}
+
+		if (!ClassUtils.getShortName(subscriber.getClass()).endsWith("TakeSubscriber")) {
+			return extractLimit(extractPotentialTakeSubscriber(subscriber));
+		}
+
+		java.lang.reflect.Field field = ReflectionUtils.findField(subscriber.getClass(), "n");
+		if (field == null) {
+			return null;
+		}
+
+		ReflectionUtils.makeAccessible(field);
+		return (Long) ReflectionUtils.getField(field, subscriber);
+	}
+
+	@Nullable
+	static Subscriber extractPotentialTakeSubscriber(Subscriber subscriber) {
+
+		if (!ClassUtils.getShortName(subscriber.getClass()).endsWith("SkipSubscriber")) {
+			return null;
+		}
+
+		Field field = ReflectionUtils.findField(subscriber.getClass(), "actual");
+		if (field == null) {
+			return null;
+		}
+
+		ReflectionUtils.makeAccessible(field);
+		return (Subscriber) ReflectionUtils.getField(field, subscriber);
+	}
+
+	// <--- HACKING
 
 	/**
 	 * Create a reusable {@link Mono} for the {@code collectionName} and {@link ReactiveCollectionCallback}.
@@ -2539,12 +2659,33 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return createFlux(collectionName, collection -> {
 
-			FindPublisher<Document> findPublisher = collectionCallback.doInCollection(collection);
+			return Mono.subscriberContext().flatMapMany(context -> {
 
-			if (preparer != null) {
-				findPublisher = preparer.prepare(findPublisher);
-			}
-			return Flux.from(findPublisher).map(objectCallback::doWith);
+				FindPublisher<Document> findPublisher = collectionCallback.doInCollection(collection);
+
+				if (preparer != null) {
+					findPublisher = preparer.prepare(findPublisher);
+				}
+
+				Long skip = context.getOrDefault("skip", null);
+				Long take = context.getOrDefault("take", null);
+
+				System.out.println(String.format("Using offset: %s and limit: %s", skip, take));
+
+				if(skip != null && skip > 0L) {
+					findPublisher = findPublisher.skip(skip.intValue());
+				}
+
+				if(take != null && take > 0L) {
+					findPublisher = findPublisher.limit(take.intValue());
+				}
+
+				return Flux.from(findPublisher).doOnNext(System.out::println).map(objectCallback::doWith);
+
+			});
+
+
+
 		});
 	}
 
