@@ -1469,6 +1469,22 @@ public class ReactiveMongoTemplateTests {
 				.verify();
 	}
 
+	@Test
+	public void fluxperiment() {
+
+		List<Person> people = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
+
+		StepVerifier.create(template.insertAll(people)).expectNextCount(3).verifyComplete();
+
+		template.find(new Query().skip(2).limit(1), Person.class);
+
+		template.findAll(Person.class).skip(2).take(1) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(System.out::println) //
+				.verifyComplete();
+
+	}
+
 	private PersonWithAList createPersonWithAList(String firstname, int age) {
 
 		PersonWithAList p = new PersonWithAList();
