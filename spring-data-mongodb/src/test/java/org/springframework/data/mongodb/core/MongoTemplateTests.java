@@ -45,6 +45,7 @@ import java.util.stream.IntStream;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
+import org.hamcrest.core.IsSame;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
@@ -3520,11 +3521,14 @@ public class MongoTemplateTests {
 	public void afterSaveEventContainsSavedObjectUsingInsertAll() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+		ImmutableVersioned source = new ImmutableVersioned();
 
-		template.insertAll(Collections.singletonList(new ImmutableVersioned()));
+		template.insertAll(Collections.singletonList(source));
 
 		assertThat(saved.get(), is(notNullValue()));
+		assertThat(saved.get(), is(not(sameInstance(source))));
 		assertThat(saved.get().id, is(notNullValue()));
+
 	}
 
 	@Test // DATAMONGO-2189
@@ -3532,25 +3536,13 @@ public class MongoTemplateTests {
 	public void afterSaveEventContainsSavedObjectUsingInsert() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+		ImmutableVersioned source = new ImmutableVersioned();
 
-		template.insert(new ImmutableVersioned());
+		template.insert(source);
 
 		assertThat(saved.get(), is(notNullValue()));
+		assertThat(saved.get(), is(not(sameInstance(source))));
 		assertThat(saved.get().id, is(notNullValue()));
-	}
-
-	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
-
-		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
-		context.addApplicationListener(new AbstractMongoEventListener<ImmutableVersioned>() {
-
-			@Override
-			public void onAfterSave(AfterSaveEvent<ImmutableVersioned> event) {
-				saved.set(event.getSource());
-			}
-		});
-
-		return saved;
 	}
 
 	@Test // DATAMONGO-1509
@@ -3693,6 +3685,20 @@ public class MongoTemplateTests {
 
 		RawStringId target = template.findOne(query(where("id").is(source.id)), RawStringId.class);
 		assertThat(target).isEqualTo(source);
+	}
+
+	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
+
+		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
+		context.addApplicationListener(new AbstractMongoEventListener<ImmutableVersioned>() {
+
+			@Override
+			public void onAfterSave(AfterSaveEvent<ImmutableVersioned> event) {
+				saved.set(event.getSource());
+			}
+		});
+
+		return saved;
 	}
 
 	static class TypeWithNumbers {
