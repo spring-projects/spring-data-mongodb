@@ -26,8 +26,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,7 +43,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
@@ -86,7 +83,6 @@ import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
@@ -107,6 +103,8 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
@@ -3519,11 +3517,14 @@ public class MongoTemplateTests {
 	public void afterSaveEventContainsSavedObjectUsingInsertAll() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+		ImmutableVersioned source = new ImmutableVersioned();
 
-		template.insertAll(Collections.singletonList(new ImmutableVersioned()));
+		template.insertAll(Collections.singletonList(source));
 
 		assertThat(saved.get(), is(notNullValue()));
+		assertThat(saved.get(), is(not(sameInstance(source))));
 		assertThat(saved.get().id, is(notNullValue()));
+
 	}
 
 	@Test // DATAMONGO-2189
@@ -3531,25 +3532,13 @@ public class MongoTemplateTests {
 	public void afterSaveEventContainsSavedObjectUsingInsert() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+		ImmutableVersioned source = new ImmutableVersioned();
 
-		template.insert(new ImmutableVersioned());
+		template.insert(source);
 
 		assertThat(saved.get(), is(notNullValue()));
+		assertThat(saved.get(), is(not(sameInstance(source))));
 		assertThat(saved.get().id, is(notNullValue()));
-	}
-
-	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
-
-		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
-		context.addApplicationListener(new AbstractMongoEventListener<ImmutableVersioned>() {
-
-			@Override
-			public void onAfterSave(AfterSaveEvent<ImmutableVersioned> event) {
-				saved.set(event.getSource());
-			}
-		});
-
-		return saved;
 	}
 
 	@Test // DATAMONGO-1509
@@ -3672,6 +3661,20 @@ public class MongoTemplateTests {
 		ImmutableAudited read = template.findOne(query(where("id").is(result.getId())), ImmutableAudited.class);
 
 		assertThat(read.modified).isEqualTo(result.modified).describedAs("Expected auditing information to be read!");
+	}
+
+	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
+
+		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
+		context.addApplicationListener(new AbstractMongoEventListener<ImmutableVersioned>() {
+
+			@Override
+			public void onAfterSave(AfterSaveEvent<ImmutableVersioned> event) {
+				saved.set(event.getSource());
+			}
+		});
+
+		return saved;
 	}
 
 	static class TypeWithNumbers {

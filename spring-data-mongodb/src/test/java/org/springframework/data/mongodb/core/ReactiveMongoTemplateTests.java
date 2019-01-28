@@ -1329,13 +1329,14 @@ public class ReactiveMongoTemplateTests {
 	public void afterSaveEventContainsSavedObjectUsingInsert() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+		ImmutableVersioned source = new ImmutableVersioned();
 
-		template.insert(new ImmutableVersioned()) //
+		template.insert(source) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		assertThat(saved.get()).isNotNull();
+		assertThat(saved.get()).isNotNull().isNotSameAs(source);
 		assertThat(saved.get().id).isNotNull();
 	}
 
@@ -1344,28 +1345,15 @@ public class ReactiveMongoTemplateTests {
 	public void afterSaveEventContainsSavedObjectUsingInsertAll() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+		ImmutableVersioned source = new ImmutableVersioned();
 
 		template.insertAll(Collections.singleton(new ImmutableVersioned())) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		assertThat(saved.get()).isNotNull();
+		assertThat(saved.get()).isNotNull().isNotSameAs(source);
 		assertThat(saved.get().id).isNotNull();
-	}
-
-	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
-
-		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
-		context.addApplicationListener(new AbstractMongoEventListener<ImmutableVersioned>() {
-
-			@Override
-			public void onAfterSave(AfterSaveEvent<ImmutableVersioned> event) {
-				saved.set(event.getSource());
-			}
-		});
-
-		return saved;
 	}
 
 	@Test // DATAMONGO-2012
@@ -1450,6 +1438,20 @@ public class ReactiveMongoTemplateTests {
 		p.setAge(age);
 
 		return p;
+	}
+
+	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
+
+		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
+		context.addApplicationListener(new AbstractMongoEventListener<ImmutableVersioned>() {
+
+			@Override
+			public void onAfterSave(AfterSaveEvent<ImmutableVersioned> event) {
+				saved.set(event.getSource());
+			}
+		});
+
+		return saved;
 	}
 
 	@AllArgsConstructor
