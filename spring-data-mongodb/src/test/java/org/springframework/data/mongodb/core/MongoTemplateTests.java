@@ -234,6 +234,7 @@ public class MongoTemplateTests {
 		template.dropCollection(WithGeoJson.class);
 		template.dropCollection(DocumentWithNestedTypeHavingStringIdProperty.class);
 		template.dropCollection(ImmutableAudited.class);
+		template.dropCollection(Outer.class);
 	}
 
 	@Test
@@ -3663,6 +3664,24 @@ public class MongoTemplateTests {
 		assertThat(read.modified).isEqualTo(result.modified).describedAs("Expected auditing information to be read!");
 	}
 
+	@Test // DATAMONGO-2193
+	public void shouldNotConvertStringToObjectIdForNonIdField() {
+
+		ObjectId outerId = new ObjectId();
+		String innerId = new ObjectId().toHexString();
+
+		org.bson.Document source = new org.bson.Document() //
+				.append("_id", outerId) //
+				.append("inner", new org.bson.Document("id", innerId).append("value", "boooh"));
+
+		template.getDb().getCollection(template.getCollectionName(Outer.class)).insertOne(source);
+
+		Outer target = template.findOne(query(where("inner.id").is(innerId)), Outer.class);
+		assertThat(target).isNotNull();
+		assertThat(target.id).isEqualTo(outerId);
+		assertThat(target.inner.id).isEqualTo(innerId);
+	}
+
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
 
 		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
@@ -4177,5 +4196,17 @@ public class MongoTemplateTests {
 	static class ImmutableAudited {
 		@Id String id;
 		@LastModifiedDate Instant modified;
+	}
+
+	static class Outer {
+
+		@Id ObjectId id;
+		Inner inner;
+	}
+
+	static class Inner {
+
+		@Field("id") String id;
+		String value;
 	}
 }

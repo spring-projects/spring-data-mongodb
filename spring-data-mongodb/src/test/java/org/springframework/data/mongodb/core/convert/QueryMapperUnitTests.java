@@ -819,6 +819,18 @@ public class QueryMapperUnitTests {
 		assertThat(mappedObject).containsEntry("className", "foo");
 	}
 
+	@Test // DATAMONGO-2193
+	public void shouldNotConvertHexStringToObjectIdForRenamedNestedIdField() {
+
+		String idHex = new ObjectId().toHexString();
+		Query query = new Query(where("nested.id").is(idHex));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("nested.id", idHex));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
