@@ -98,6 +98,11 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("strLenBytes", singleArgumentAggregationMethodReference().forOperator("$strLenBytes"));
 		map.put("strLenCP", singleArgumentAggregationMethodReference().forOperator("$strLenCP"));
 		map.put("substrCP", arrayArgumentAggregationMethodReference().forOperator("$substrCP"));
+		map.put("trim", mapArgumentAggregationMethodReference().forOperator("$trim").mappingParametersTo("input", "chars"));
+		map.put("ltrim",
+				mapArgumentAggregationMethodReference().forOperator("$ltrim").mappingParametersTo("input", "chars"));
+		map.put("rtrim",
+				mapArgumentAggregationMethodReference().forOperator("$rtrim").mappingParametersTo("input", "chars"));
 
 		// TEXT SEARCH OPERATORS
 		map.put("meta", singleArgumentAggregationMethodReference().forOperator("$meta"));
@@ -116,6 +121,9 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("zip", mapArgumentAggregationMethodReference().forOperator("$zip").mappingParametersTo("inputs",
 				"useLongestLength", "defaults"));
 		map.put("in", arrayArgumentAggregationMethodReference().forOperator("$in"));
+		map.put("arrayToObject", singleArgumentAggregationMethodReference().forOperator("$arrayToObject"));
+		map.put("indexOfArray", arrayArgumentAggregationMethodReference().forOperator("$indexOfArray"));
+		map.put("range", arrayArgumentAggregationMethodReference().forOperator("$range"));
 
 		// VARIABLE OPERATORS
 		map.put("map", mapArgumentAggregationMethodReference().forOperator("$map") //
@@ -138,6 +146,15 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("millisecond", singleArgumentAggregationMethodReference().forOperator("$millisecond"));
 		map.put("dateToString", mapArgumentAggregationMethodReference().forOperator("$dateToString") //
 				.mappingParametersTo("format", "date"));
+		map.put("dateFromString", mapArgumentAggregationMethodReference().forOperator("$dateFromString") //
+				.mappingParametersTo("dateString", "format", "timezone", "onError", "onNull"));
+		map.put("dateFromParts", mapArgumentAggregationMethodReference().forOperator("$dateFromParts")
+				.mappingParametersTo("year", "month", "day", "hour", "minute", "second", "milliseconds", "timezone"));
+		map.put("isoDateFromParts",
+				mapArgumentAggregationMethodReference().forOperator("$dateFromParts").mappingParametersTo("isoWeekYear",
+						"isoWeek", "isoDayOfWeek", "hour", "minute", "second", "milliseconds", "timezone"));
+		map.put("dateToParts", mapArgumentAggregationMethodReference().forOperator("$dateToParts") //
+				.mappingParametersTo("date", "timezone", "iso8601"));
 		map.put("isoDayOfWeek", singleArgumentAggregationMethodReference().forOperator("$isoDayOfWeek"));
 		map.put("isoWeek", singleArgumentAggregationMethodReference().forOperator("$isoWeek"));
 		map.put("isoWeekYear", singleArgumentAggregationMethodReference().forOperator("$isoWeekYear"));
@@ -161,6 +178,24 @@ public class MethodReferenceNode extends ExpressionNode {
 
 		// TYPE OPERATORS
 		map.put("type", singleArgumentAggregationMethodReference().forOperator("$type"));
+
+		// OBJECT OPERATORS
+		map.put("objectToArray", singleArgumentAggregationMethodReference().forOperator("$objectToArray"));
+		map.put("mergeObjects", arrayArgumentAggregationMethodReference().forOperator("$mergeObjects"));
+
+		// CONVERT OPERATORS
+		map.put("convert", mapArgumentAggregationMethodReference().forOperator("$convert") //
+				.mappingParametersTo("input", "to", "onError", "onNull"));
+		map.put("toBool", singleArgumentAggregationMethodReference().forOperator("$toBool"));
+		map.put("toDate", singleArgumentAggregationMethodReference().forOperator("$toDate"));
+		map.put("toDecimal", singleArgumentAggregationMethodReference().forOperator("$toDecimal"));
+		map.put("toDouble", singleArgumentAggregationMethodReference().forOperator("$toDouble"));
+		map.put("toInt", singleArgumentAggregationMethodReference().forOperator("$toInt"));
+		map.put("toLong", singleArgumentAggregationMethodReference().forOperator("$toLong"));
+		map.put("toObjectId", singleArgumentAggregationMethodReference().forOperator("$toObjectId"));
+		map.put("toString", singleArgumentAggregationMethodReference().forOperator("$toString"));
+
+
 
 		FUNCTIONS = Collections.unmodifiableMap(map);
 	}
