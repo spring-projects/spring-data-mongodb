@@ -931,8 +931,11 @@ public class QueryMapper {
 		@Override
 		public boolean isIdField() {
 
-			MongoPersistentProperty idProperty = (property != null && property.isIdProperty()) ? property
-					: entity.getIdProperty();
+			if(property != null) {
+				return property.isIdProperty();
+			}
+
+			MongoPersistentProperty idProperty = entity.getIdProperty();
 
 			if (idProperty != null) {
 
