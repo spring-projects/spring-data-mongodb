@@ -719,6 +719,216 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("type(a)"), is(Document.parse("{ \"$type\" : \"$a\"}")));
 	}
 
+	@Test // DATAMONGO-2077
+	public void shouldRenderArrayToObjectWithFieldReference() {
+		assertThat(transform("arrayToObject(field)"), is(Document.parse("{ \"$arrayToObject\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderArrayToObjectWithArray() {
+
+		assertThat(transform("arrayToObject(new String[]{'key', 'value'})"),
+				is(Document.parse("{ \"$arrayToObject\" : [\"key\", \"value\"]}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderObjectToArrayWithFieldReference() {
+		assertThat(transform("objectToArray(field)"), is(Document.parse("{ \"$objectToArray\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderMergeObjects() {
+
+		assertThat(transform("mergeObjects(field1, $$ROOT)"),
+				is(Document.parse("{ \"$mergeObjects\" : [\"$field1\", \"$$ROOT\"]}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderTrimWithoutChars() {
+		assertThat(transform("trim(field)"), is(Document.parse("{ \"$trim\" : {\"input\" : \"$field\"}}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderTrimWithChars() {
+
+		assertThat(transform("trim(field, 'ie')"),
+				is(Document.parse("{ \"$trim\" : {\"input\" : \"$field\", \"chars\" : \"ie\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderTrimWithCharsFromFieldReference() {
+
+		assertThat(transform("trim(field1, field2)"),
+				is(Document.parse("{ \"$trim\" : {\"input\" : \"$field1\", \"chars\" : \"$field2\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderLtrimWithoutChars() {
+		assertThat(transform("ltrim(field)"), is(Document.parse("{ \"$ltrim\" : {\"input\" : \"$field\"}}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderLtrimWithChars() {
+
+		assertThat(transform("ltrim(field, 'ie')"),
+				is(Document.parse("{ \"$ltrim\" : {\"input\" : \"$field\", \"chars\" : \"ie\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderLtrimWithCharsFromFieldReference() {
+
+		assertThat(transform("ltrim(field1, field2)"),
+				is(Document.parse("{ \"$ltrim\" : {\"input\" : \"$field1\", \"chars\" : \"$field2\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderRtrimWithoutChars() {
+		assertThat(transform("rtrim(field)"), is(Document.parse("{ \"$rtrim\" : {\"input\" : \"$field\"}}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderRtrimWithChars() {
+
+		assertThat(transform("rtrim(field, 'ie')"),
+				is(Document.parse("{ \"$rtrim\" : {\"input\" : \"$field\", \"chars\" : \"ie\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderRtrimWithCharsFromFieldReference() {
+
+		assertThat(transform("rtrim(field1, field2)"),
+				is(Document.parse("{ \"$rtrim\" : {\"input\" : \"$field1\", \"chars\" : \"$field2\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderConvertWithoutOptionalParameters() {
+
+		assertThat(transform("convert(field, 'string')"),
+				is(Document.parse("{ \"$convert\" : {\"input\" : \"$field\", \"to\" : \"string\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderConvertWithOnError() {
+
+		assertThat(transform("convert(field, 'int', 'Not an integer.')"), is(Document
+				.parse("{ \"$convert\" : {\"input\" : \"$field\", \"to\" : \"int\", \"onError\" : \"Not an integer.\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderConvertWithOnErrorOnNull() {
+
+		assertThat(transform("convert(field, 'int', 'Not an integer.', -1)"), is(Document.parse(
+				"{ \"$convert\" : {\"input\" : \"$field\", \"to\" : \"int\", \"onError\" : \"Not an integer.\", \"onNull\" : -1 }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderToBool() {
+		assertThat(transform("toBool(field)"), is(Document.parse("{ \"$toBool\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderToDate() {
+		assertThat(transform("toDate(field)"), is(Document.parse("{ \"$toDate\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderToDecimal() {
+		assertThat(transform("toDecimal(field)"), is(Document.parse("{ \"$toDecimal\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderToDouble() {
+		assertThat(transform("toDouble(field)"), is(Document.parse("{ \"$toDouble\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderToInt() {
+		assertThat(transform("toInt(field)"), is(Document.parse("{ \"$toInt\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderToLong() {
+		assertThat(transform("toLong(field)"), is(Document.parse("{ \"$toLong\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderToObjectId() {
+		assertThat(transform("toObjectId(field)"), is(Document.parse("{ \"$toObjectId\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderToString() {
+		assertThat(transform("toString(field)"), is(Document.parse("{ \"$toString\" : \"$field\"}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderDateFromStringWithoutOptionalParameters() {
+
+		assertThat(transform("dateFromString(field)"),
+				is(Document.parse("{ \"$dateFromString\" : {\"dateString\" : \"$field\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderDateFromStringWithFormat() {
+
+		assertThat(transform("dateFromString(field, 'DD-MM-YYYY')"),
+				is(Document.parse("{ \"$dateFromString\" : {\"dateString\" : \"$field\", \"format\" : \"DD-MM-YYYY\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderDateFromStringWithFormatAndTimezone() {
+
+		assertThat(transform("dateFromString(field, 'DD-MM-YYYY', 'UTC')"), is(Document.parse(
+				"{ \"$dateFromString\" : {\"dateString\" : \"$field\", \"format\" : \"DD-MM-YYYY\", \"timezone\" : \"UTC\" }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderDateFromStringWithFormatTimezoneAndOnError() {
+
+		assertThat(transform("dateFromString(field, 'DD-MM-YYYY', 'UTC', -1)"), is(Document.parse(
+				"{ \"$dateFromString\" : {\"dateString\" : \"$field\", \"format\" : \"DD-MM-YYYY\", \"timezone\" : \"UTC\", \"onError\" : -1 }}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderDateFromStringWithFormatTimezoneOnErrorAndOnNull() {
+
+		assertThat(transform("dateFromString(field, 'DD-MM-YYYY', 'UTC', -1, -2)"), is(Document.parse(
+				"{ \"$dateFromString\" : {\"dateString\" : \"$field\", \"format\" : \"DD-MM-YYYY\", \"timezone\" : \"UTC\", \"onError\" : -1,  \"onNull\" : -2}}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderDateFromParts() {
+
+		assertThat(transform("dateFromParts(y, m, d, h, mm, s, ms, 'UTC')"), is(Document.parse(
+				"{ \"$dateFromParts\" : {\"year\" : \"$y\", \"month\" : \"$m\", \"day\" : \"$d\", \"hour\" : \"$h\",  \"minute\" : \"$mm\",  \"second\" : \"$s\", \"milliseconds\" : \"$ms\", \"timezone\" : \"UTC\"}}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderIsoDateFromParts() {
+
+		assertThat(transform("isoDateFromParts(y, m, d, h, mm, s, ms, 'UTC')"), is(Document.parse(
+				"{ \"$dateFromParts\" : {\"isoWeekYear\" : \"$y\", \"isoWeek\" : \"$m\", \"isoDayOfWeek\" : \"$d\", \"hour\" : \"$h\",  \"minute\" : \"$mm\",  \"second\" : \"$s\", \"milliseconds\" : \"$ms\", \"timezone\" : \"UTC\"}}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderDateToParts() {
+
+		assertThat(transform("dateToParts(field, 'UTC', false)"), is(
+				Document.parse("{ \"$dateToParts\" : {\"date\" : \"$field\", \"timezone\" : \"UTC\", \"iso8601\" : false}}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderIndexOfArray() {
+
+		assertThat(transform("indexOfArray(field, 2)"), is(Document.parse("{ \"$indexOfArray\" : [\"$field\", 2 ]}")));
+	}
+
+	@Test // DATAMONGO-2077
+	public void shouldRenderRange() {
+
+		assertThat(transform("range(0, 10, 2)"), is(Document.parse("{ \"$range\" : [0, 10, 2 ]}")));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);
