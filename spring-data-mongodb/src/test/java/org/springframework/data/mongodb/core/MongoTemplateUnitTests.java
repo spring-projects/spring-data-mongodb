@@ -83,6 +83,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
@@ -96,6 +97,7 @@ import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.MapReduceAction;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
 /**
@@ -114,11 +116,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Mock MongoClient mongo;
 	@Mock MongoDatabase db;
 	@Mock MongoCollection<Document> collection;
+	@Mock MongoCollection<Document> collectionWithWriteConcern;
 	@Mock MongoCursor<Document> cursor;
 	@Mock FindIterable<Document> findIterable;
 	@Mock AggregateIterable aggregateIterable;
 	@Mock MapReduceIterable mapReduceIterable;
 	@Mock UpdateResult updateResult;
+	@Mock DeleteResult deleteResult;
 
 	Document commandResultDocument = new Document();
 
@@ -141,6 +145,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
 		when(collection.withReadPreference(any())).thenReturn(collection);
 		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(updateResult);
+		when(collection.withWriteConcern(any())).thenReturn(collectionWithWriteConcern);
+		when(collectionWithWriteConcern.deleteOne(any(Bson.class), any())).thenReturn(deleteResult);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 		when(findIterable.sort(any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.collation(any())).thenReturn(findIterable);
@@ -729,6 +735,19 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).findOneAndDelete(any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+	}
+
+	@Test // DATAMONGO-2196
+	public void removeShouldApplyWriteConcern() {
+
+		Person person = new Person();
+		person.id = "id-1";
+
+		template.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
+		template.remove(person);
+
+		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
+		verify(collectionWithWriteConcern).deleteOne(any(Bson.class), any());
 	}
 
 	@Test // DATAMONGO-1518

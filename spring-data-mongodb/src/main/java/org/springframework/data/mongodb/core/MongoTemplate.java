@@ -1720,7 +1720,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 						: collection;
 
 				DeleteResult result = multi ? collectionToUse.deleteMany(removeQuery, options)
-						: collection.deleteOne(removeQuery, options);
+						: collectionToUse.deleteOne(removeQuery, options);
 
 				maybeEmitEvent(new AfterDeleteEvent<>(queryObject, entityClass, collectionName));
 
