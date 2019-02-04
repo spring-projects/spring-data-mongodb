@@ -161,7 +161,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(entity, "The given entity must not be null!");
 
-		deleteById(entityInformation.getRequiredId(entity));
+		mongoOperations.remove(entity, entityInformation.getCollectionName());
 	}
 
 	/*

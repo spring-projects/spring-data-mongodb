@@ -1350,19 +1350,29 @@ public interface MongoOperations extends FluentMongoOperations {
 	UpdateResult updateMulti(Query query, Update update, Class<?> entityClass, String collectionName);
 
 	/**
-	 * Remove the given object from the collection by id.
+	 * Remove the given object from the collection by {@literal id} and (if applicable) its
+	 * {@link org.springframework.data.annotation.Version}.
 	 *
 	 * @param object must not be {@literal null}.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws org.springframework.dao.OptimisticLockingFailureException if the given {@literal object} is
+	 *           {@link org.springframework.data.annotation.Version versioned} and the current version does not match the
+	 *           one within the store. If no document with matching {@literal _id} exists in the collection the operation
+	 *           completes without error.
 	 */
 	DeleteResult remove(Object object);
 
 	/**
-	 * Removes the given object from the given collection.
+	 * Removes the given object from the given collection by {@literal id} and (if applicable) its
+	 * {@link org.springframework.data.annotation.Version}.
 	 *
 	 * @param object must not be {@literal null}.
 	 * @param collectionName name of the collection where the objects will removed, must not be {@literal null} or empty.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws org.springframework.dao.OptimisticLockingFailureException if the given {@literal object} is
+	 *           {@link org.springframework.data.annotation.Version versioned} and the current version does not match the
+	 *           one within the store. If no document with matching {@literal _id} exists in the collection the operation
+	 *           completes without error.
 	 */
 	DeleteResult remove(Object object, String collectionName);
 

@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.assertj.core.api.Assertions;
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
@@ -1644,6 +1645,62 @@ public class MongoTemplateTests {
 		template.insert(person);
 
 		assertThat(person.version, is(0));
+	}
+
+	@Test // DATAMONGO-2195
+	public void removeEntityWithMatchingVersion() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.firstName = "Dave";
+
+		template.insert(person);
+		assertThat(person.version, is(0));
+
+		template.remove(person);
+		assertThat(template.count(new Query(), Person.class)).isZero();
+	}
+
+	@Test // DATAMONGO-2195
+	public void removeEntityWithoutMatchingVersionThrowsOptimisticLockingFailureException() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.firstName = "Dave";
+
+		template.insert(person);
+		assertThat(person.version, is(0));
+		template.update(PersonWithVersionPropertyOfTypeInteger.class).matching(query(where("id").is(person.id)))
+				.apply(new Update().set("firstName", "Walter")).first();
+
+		Assertions.assertThatThrownBy(() -> template.remove(person)).isInstanceOf(OptimisticLockingFailureException.class)
+				.hasMessageContaining("Expected version 0 but was 1");
+		assertThat(template.count(new Query(), PersonWithVersionPropertyOfTypeInteger.class)).isOne();
+	}
+
+	@Test // DATAMONGO-2195
+	public void removeNonExistingVersionedEntityJustPasses() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.id = "id-1";
+		person.firstName = "Dave";
+		person.version = 10;
+
+		assertThat(template.remove(person).getDeletedCount()).isZero();
+	}
+
+	@Test // DATAMONGO-2195
+	@DirtiesContext
+	public void removeEntityWithoutMatchingVersionWhenUsingUnaknowledgedWriteDoesNotThrowsOptimisticLockingFailureException() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.firstName = "Dave";
+
+		template.insert(person);
+		assertThat(person.version, is(0));
+		template.update(PersonWithVersionPropertyOfTypeInteger.class).matching(query(where("id").is(person.id)))
+				.apply(new Update().set("firstName", "Walter")).first();
+
+		template.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
+		assertThat(template.remove(person).wasAcknowledged()).isFalse();
 	}
 
 	@Test // DATAMONGO-588

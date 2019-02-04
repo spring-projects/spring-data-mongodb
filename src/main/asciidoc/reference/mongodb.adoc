@@ -1080,6 +1080,11 @@ template.save(tmp); // throws OptimisticLockingFailureException                 
 
 IMPORTANT: Optimistic Locking requires to set the `WriteConcern` to `ACKNOWLEDGED`. Otherwise `OptimisticLockingFailureException` can be silently swallowed.
 
+NOTE: As of Version 2.2 `MongoOperations` also includes the `@Version` property when removing an entity from the database, raising an
+`OptimisticLockingFailureException` if a document with matching `_id` but a `version` mismatch shall be deleted. In cases
+where no Document with matching `_id` can be found the operation passes without error.
+To remove a `Document` without version check use `MongoOperations#remove(Query,...)` instead of `MongoOperations#remove(Object)`.
+
 [[mongo.query]]
 == Querying Documents
 

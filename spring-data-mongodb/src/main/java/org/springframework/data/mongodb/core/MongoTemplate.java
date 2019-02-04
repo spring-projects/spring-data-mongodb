@@ -68,7 +68,16 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.*;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -1638,9 +1647,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(object, "Object must not be null!");
 
-		Query query = operations.forEntity(object).getByIdQuery();
-
-		return remove(query, object.getClass());
+		return remove(object, operations.determineCollectionName(object.getClass()));
 	}
 
 	@Override
@@ -1649,7 +1656,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(object, "Object must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		Query query = operations.forEntity(object).getByIdQuery();
+		Query query = operations.forEntity(object).getRemoveByQuery();
 
 		return doRemove(collectionName, query, object.getClass(), false);
 	}
@@ -1723,9 +1730,35 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				DeleteResult result = multi ? collectionToUse.deleteMany(removeQuery, options)
 						: collectionToUse.deleteOne(removeQuery, options);
 
+				checkForOptimisticLockingFailures(result, removeQuery, collectionToUse);
+
 				maybeEmitEvent(new AfterDeleteEvent<>(queryObject, entityClass, collectionName));
 
 				return result;
+			}
+
+			private void checkForOptimisticLockingFailures(DeleteResult result, Document removeQuery,
+					MongoCollection<Document> collectionToUse) {
+
+				if (multi || !ResultOperations.isUndecidedDeleteResult(result, removeQuery, entity)) {
+					return;
+				}
+
+				String versionFieldName = entity.getVersionProperty().getFieldName();
+				Document idQuery = new Document(removeQuery);
+				idQuery.remove(versionFieldName);
+
+				Iterator<Document> it = collectionToUse.find(idQuery).projection(Projections.include("_id", versionFieldName))
+						.limit(1).iterator();
+
+				if (it.hasNext()) {
+
+					Document source = it.next();
+					throw ResultOperations.newDeleteVersionedOptimisticLockingException(source.get("_id"), collectionName,
+							removeQuery.get(versionFieldName), source.get(versionFieldName));
+
+				}
+
 			}
 		});
 	}
