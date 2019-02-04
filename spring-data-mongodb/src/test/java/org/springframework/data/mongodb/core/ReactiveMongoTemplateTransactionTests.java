@@ -31,6 +31,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.reactivestreams.Publisher;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -80,6 +81,12 @@ public class ReactiveMongoTemplateTransactionTests {
 				.verifyComplete();
 
 		StepVerifier.create(MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "person", client))
+				.expectNext(Success.SUCCESS) //
+				.verifyComplete();
+
+		StepVerifier
+				.create(
+						MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "personWithVersionPropertyOfTypeInteger", client))
 				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
 
@@ -268,6 +275,49 @@ public class ReactiveMongoTemplateTransactionTests {
 		template.count(query(where("age").exists(true)), Person.class) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2195
+	public void deleteWithMatchingVersion() {
+
+		PersonWithVersionPropertyOfTypeInteger rojer = new PersonWithVersionPropertyOfTypeInteger();
+		rojer.firstName = "rojer";
+
+		PersonWithVersionPropertyOfTypeInteger saved = template.insert(rojer).block();
+
+		template.inTransaction().execute(action -> action.remove(saved)) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(result -> assertThat(result.getDeletedCount()).isOne()) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2195
+	public void deleteWithVersionMismatch() {
+
+		PersonWithVersionPropertyOfTypeInteger rojer = new PersonWithVersionPropertyOfTypeInteger();
+		rojer.firstName = "rojer";
+
+		PersonWithVersionPropertyOfTypeInteger saved = template.insert(rojer).block();
+		saved.version = 5;
+
+		template.inTransaction().execute(action -> action.remove(saved)) //
+				.as(StepVerifier::create) //
+				.expectError(OptimisticLockingFailureException.class) //
+				.verify();
+	}
+
+	@Test // DATAMONGO-2195
+	public void deleteNonExistingWithVersion() {
+
+		PersonWithVersionPropertyOfTypeInteger rojer = new PersonWithVersionPropertyOfTypeInteger();
+		rojer.id = "deceased";
+		rojer.firstName = "rojer";
+		rojer.version = 5;
+
+		template.inTransaction().execute(action -> action.remove(rojer)) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(result -> assertThat(result.getDeletedCount()).isZero()) //
 				.verifyComplete();
 	}
 }

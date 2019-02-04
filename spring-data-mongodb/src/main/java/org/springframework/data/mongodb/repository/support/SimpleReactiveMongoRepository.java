@@ -355,7 +355,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entity, "The given entity must not be null!");
 
-		return deleteById(entityInformation.getRequiredId(entity));
+		return mongoOperations.remove(entity, entityInformation.getCollectionName()).then();
 	}
 
 	/*

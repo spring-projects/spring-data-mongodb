@@ -200,6 +200,21 @@ class EntityOperations {
 		Query getByIdQuery();
 
 		/**
+		 * Returns the {@link Query} to remove an entity by its {@literal id} and if applicable {@literal version}.
+		 *
+		 * @return the {@link Query} to use for removing the entity. Never {@literal null}.
+		 * @since 2.2
+		 */
+		default Query getRemoveByQuery() {
+
+			if (isVersionedEntity()) {
+				return getQueryForVersion();
+			}
+
+			return getByIdQuery();
+		}
+
+		/**
 		 * Returns the {@link Query} to find the entity in its current version.
 		 *
 		 * @return
@@ -490,10 +505,10 @@ class EntityOperations {
 		public Query getQueryForVersion() {
 
 			MongoPersistentProperty idProperty = entity.getRequiredIdProperty();
-			MongoPersistentProperty property = entity.getRequiredVersionProperty();
+			MongoPersistentProperty versionProperty = entity.getRequiredVersionProperty();
 
 			return new Query(Criteria.where(idProperty.getName()).is(getId())//
-					.and(property.getName()).is(getVersion()));
+					.and(versionProperty.getName()).is(getVersion()));
 		}
 
 		/*

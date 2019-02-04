@@ -1717,7 +1717,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(object, "Object must not be null!");
 
-		return remove(operations.forEntity(object).getByIdQuery(), object.getClass());
+		return remove(operations.forEntity(object).getRemoveByQuery(), object.getClass());
 	}
 
 	/*
@@ -1729,7 +1729,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(object, "Object must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		return doRemove(collectionName, operations.forEntity(object).getByIdQuery(), object.getClass());
+		return doRemove(collectionName, operations.forEntity(object).getRemoveByQuery(), object.getClass());
 	}
 
 	private void assertUpdateableIdIfNotSet(Object value) {
@@ -1787,15 +1787,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Document queryObject = query.getQueryObject();
 		MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
+		Document removeQuery = queryMapper.getMappedObject(queryObject, entity);
 
 		return execute(collectionName, collection -> {
 
-			Document removeQuey = queryMapper.getMappedObject(queryObject, entity);
-
-			maybeEmitEvent(new BeforeDeleteEvent<>(removeQuey, entityClass, collectionName));
+			maybeEmitEvent(new BeforeDeleteEvent<>(removeQuery, entityClass, collectionName));
 
 			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName, entityClass,
-					null, removeQuey);
+					null, removeQuery);
 
 			DeleteOptions deleteOptions = new DeleteOptions();
 			query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
@@ -1805,13 +1804,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Remove using query: {} in collection: {}.",
-						new Object[] { serializeToJsonSafely(removeQuey), collectionName });
+						new Object[] { serializeToJsonSafely(removeQuery), collectionName });
 			}
 
 			if (query.getLimit() > 0 || query.getSkip() > 0) {
 
 				FindPublisher<Document> cursor = new QueryFindPublisherPreparer(query, entityClass)
-						.prepare(collection.find(removeQuey)) //
+						.prepare(collection.find(removeQuery)) //
 						.projection(MappedDocument.getIdOnlyProjection());
 
 				return Flux.from(cursor) //
@@ -1822,10 +1821,47 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 							return collectionToUse.deleteMany(MappedDocument.getIdIn(val), deleteOptions);
 						});
 			} else {
-				return collectionToUse.deleteMany(removeQuey, deleteOptions);
+				return collectionToUse.deleteMany(removeQuery, deleteOptions);
 			}
 
-		}).doOnNext(deleteResult -> maybeEmitEvent(new AfterDeleteEvent<>(queryObject, entityClass, collectionName)))
+		}).flatMap(deleteResult -> {
+
+			if (entity != null && entity.hasVersionProperty()) {
+
+				if (deleteResult.wasAcknowledged() && deleteResult.getDeletedCount() == 0) {
+
+					if (query.getQueryObject().containsKey(entity.getVersionProperty().getFieldName())) {
+
+						return execute(collectionName, (coll -> {
+
+							String versionFieldName = entity.getVersionProperty().getFieldName();
+
+							Document daQuery = new Document(removeQuery);
+							daQuery.remove(versionFieldName);
+
+							Publisher<Document> publisher = coll.find(daQuery)
+									.projection(Projections.include("_id", entity.getVersionProperty().getFieldName())).limit(1).first();
+
+							return Mono.from(publisher) //
+									.defaultIfEmpty(new Document()) //
+									.flatMap(it -> {
+
+										if (it.isEmpty()) {
+											return Mono.just(deleteResult);
+										}
+										return Mono.error(new OptimisticLockingFailureException(String.format(
+												"The entity with id %s in %s has changed and cannot be deleted! " + System.lineSeparator() + //
+										"Expected version %s but was %s.", it.get("_id"), collectionName, removeQuery.get(versionFieldName),
+												it.get(versionFieldName))));
+
+									});
+						})).next();
+					}
+				}
+			}
+
+			return Mono.just(deleteResult);
+		}).doOnNext(it -> maybeEmitEvent(new AfterDeleteEvent<>(queryObject, entityClass, collectionName))) //
 				.next();
 	}
 
