@@ -45,7 +45,6 @@ import java.util.stream.IntStream;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
-import org.hamcrest.core.IsSame;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
