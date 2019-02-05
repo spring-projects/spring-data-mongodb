@@ -612,7 +612,7 @@ public class QueryMapper {
 
 	/**
 	 * Returns whether the given {@link String} is the type key.
-	 * 
+	 *
 	 * @param key
 	 * @return
 	 * @see MongoTypeMapper#isTypeKey(String)
@@ -907,7 +907,7 @@ public class QueryMapper {
 		@Override
 		public boolean isIdField() {
 
-			if(property != null) {
+			if (property != null) {
 				return property.isIdProperty();
 			}
 
@@ -1032,7 +1032,7 @@ public class QueryMapper {
 				}
 
 				return propertyPath;
-			} catch (PropertyReferenceException | InvalidPersistentPropertyPath  e) {
+			} catch (PropertyReferenceException | InvalidPersistentPropertyPath e) {
 				return null;
 			}
 		}
