@@ -206,12 +206,7 @@ class EntityOperations {
 		 * @since 2.2
 		 */
 		default Query getRemoveByQuery() {
-
-			if (isVersionedEntity()) {
-				return getQueryForVersion();
-			}
-
-			return getByIdQuery();
+			return isVersionedEntity() ? getQueryForVersion() : getByIdQuery();
 		}
 
 		/**

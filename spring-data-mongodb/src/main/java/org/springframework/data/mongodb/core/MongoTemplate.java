@@ -1740,29 +1740,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			private void checkForOptimisticLockingFailures(DeleteResult result, Document removeQuery,
 					MongoCollection<Document> collectionToUse) {
 
-				if (!multi && entity != null && entity.hasVersionProperty() && result.wasAcknowledged()) {
-
-					if (result.getDeletedCount() == 0) {
-
-						String versionFieldName = entity.getVersionProperty().getFieldName();
-						Document idQuery = new Document(removeQuery);
-						idQuery.remove(versionFieldName);
-
-						Iterator<Document> it = collectionToUse.find(idQuery)
-								.projection(Projections.include("_id", versionFieldName)).limit(1).iterator();
-
-						if (it.hasNext()) {
-
-							Document source = it.next();
-
-							throw new OptimisticLockingFailureException(String
-									.format("The entity with id %s in %s has changed and cannot be deleted! " + System.lineSeparator() + //
-							"Expected version %s but was %s.", source.get("_id"), collectionName, removeQuery.get(versionFieldName),
-											source.get(versionFieldName)));
-						}
-
-					}
+				if (multi || !ResultOperations.isUndecidedDeleteResult(result, removeQuery, entity)) {
+					return;
 				}
+
+				String versionFieldName = entity.getVersionProperty().getFieldName();
+				Document idQuery = new Document(removeQuery);
+				idQuery.remove(versionFieldName);
+
+				Iterator<Document> it = collectionToUse.find(idQuery).projection(Projections.include("_id", versionFieldName))
+						.limit(1).iterator();
+
+				if (it.hasNext()) {
+
+					Document source = it.next();
+					throw ResultOperations.newDeleteVersionedOptimisticLockingException(source.get("_id"), collectionName,
+							removeQuery.get(versionFieldName), source.get(versionFieldName));
+
+				}
+
 			}
 		});
 	}

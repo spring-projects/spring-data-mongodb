@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -32,6 +33,8 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.VersionedPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.test.util.MongoVersion;
+import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -91,7 +94,10 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	}
 
 	@Test // DATAMONGO-2195
+	@MongoVersion(asOf = "4.0")
 	public void deleteWithMatchingVersionInTx() {
+
+		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		long countBefore = repository.count();
 
@@ -118,7 +124,10 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	}
 
 	@Test // DATAMONGO-2195
+	@MongoVersion(asOf = "4.0")
 	public void deleteWithVersionMismatchInTx() {
+
+		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		long countBefore = repository.count();
 
@@ -141,7 +150,10 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	}
 
 	@Test // DATAMONGO-2195
+	@MongoVersion(asOf = "4.0")
 	public void deleteNonExistingInTx() {
+
+		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		initTxTemplate().execute(status -> {
 
