@@ -45,157 +45,149 @@ public class MethodReferenceNode extends ExpressionNode {
 		Map<String, AggregationMethodReference> map = new HashMap<String, AggregationMethodReference>();
 
 		// BOOLEAN OPERATORS
-		map.put("and", arrayArgumentAggregationMethodReference().forOperator("$and"));
-		map.put("or", arrayArgumentAggregationMethodReference().forOperator("$or"));
-		map.put("not", arrayArgumentAggregationMethodReference().forOperator("$not"));
+		map.put("and", arrayArgRef().forOperator("$and"));
+		map.put("or", arrayArgRef().forOperator("$or"));
+		map.put("not", arrayArgRef().forOperator("$not"));
 
 		// SET OPERATORS
-		map.put("setEquals", arrayArgumentAggregationMethodReference().forOperator("$setEquals"));
-		map.put("setIntersection", arrayArgumentAggregationMethodReference().forOperator("$setIntersection"));
-		map.put("setUnion", arrayArgumentAggregationMethodReference().forOperator("$setUnion"));
-		map.put("setDifference", arrayArgumentAggregationMethodReference().forOperator("$setDifference"));
+		map.put("setEquals", arrayArgRef().forOperator("$setEquals"));
+		map.put("setIntersection", arrayArgRef().forOperator("$setIntersection"));
+		map.put("setUnion", arrayArgRef().forOperator("$setUnion"));
+		map.put("setDifference", arrayArgRef().forOperator("$setDifference"));
 		// 2nd.
-		map.put("setIsSubset", arrayArgumentAggregationMethodReference().forOperator("$setIsSubset"));
-		map.put("anyElementTrue", arrayArgumentAggregationMethodReference().forOperator("$anyElementTrue"));
-		map.put("allElementsTrue", arrayArgumentAggregationMethodReference().forOperator("$allElementsTrue"));
+		map.put("setIsSubset", arrayArgRef().forOperator("$setIsSubset"));
+		map.put("anyElementTrue", arrayArgRef().forOperator("$anyElementTrue"));
+		map.put("allElementsTrue", arrayArgRef().forOperator("$allElementsTrue"));
 
 		// COMPARISON OPERATORS
-		map.put("cmp", arrayArgumentAggregationMethodReference().forOperator("$cmp"));
-		map.put("eq", arrayArgumentAggregationMethodReference().forOperator("$eq"));
-		map.put("gt", arrayArgumentAggregationMethodReference().forOperator("$gt"));
-		map.put("gte", arrayArgumentAggregationMethodReference().forOperator("$gte"));
-		map.put("lt", arrayArgumentAggregationMethodReference().forOperator("$lt"));
-		map.put("lte", arrayArgumentAggregationMethodReference().forOperator("$lte"));
-		map.put("ne", arrayArgumentAggregationMethodReference().forOperator("$ne"));
+		map.put("cmp", arrayArgRef().forOperator("$cmp"));
+		map.put("eq", arrayArgRef().forOperator("$eq"));
+		map.put("gt", arrayArgRef().forOperator("$gt"));
+		map.put("gte", arrayArgRef().forOperator("$gte"));
+		map.put("lt", arrayArgRef().forOperator("$lt"));
+		map.put("lte", arrayArgRef().forOperator("$lte"));
+		map.put("ne", arrayArgRef().forOperator("$ne"));
 
 		// ARITHMETIC OPERATORS
-		map.put("abs", singleArgumentAggregationMethodReference().forOperator("$abs"));
-		map.put("add", arrayArgumentAggregationMethodReference().forOperator("$add"));
-		map.put("ceil", singleArgumentAggregationMethodReference().forOperator("$ceil"));
-		map.put("divide", arrayArgumentAggregationMethodReference().forOperator("$divide"));
-		map.put("exp", singleArgumentAggregationMethodReference().forOperator("$exp"));
-		map.put("floor", singleArgumentAggregationMethodReference().forOperator("$floor"));
-		map.put("ln", singleArgumentAggregationMethodReference().forOperator("$ln"));
-		map.put("log", arrayArgumentAggregationMethodReference().forOperator("$log"));
-		map.put("log10", singleArgumentAggregationMethodReference().forOperator("$log10"));
-		map.put("mod", arrayArgumentAggregationMethodReference().forOperator("$mod"));
-		map.put("multiply", arrayArgumentAggregationMethodReference().forOperator("$multiply"));
-		map.put("pow", arrayArgumentAggregationMethodReference().forOperator("$pow"));
-		map.put("sqrt", singleArgumentAggregationMethodReference().forOperator("$sqrt"));
-		map.put("subtract", arrayArgumentAggregationMethodReference().forOperator("$subtract"));
-		map.put("trunc", singleArgumentAggregationMethodReference().forOperator("$trunc"));
+		map.put("abs", singleArgRef().forOperator("$abs"));
+		map.put("add", arrayArgRef().forOperator("$add"));
+		map.put("ceil", singleArgRef().forOperator("$ceil"));
+		map.put("divide", arrayArgRef().forOperator("$divide"));
+		map.put("exp", singleArgRef().forOperator("$exp"));
+		map.put("floor", singleArgRef().forOperator("$floor"));
+		map.put("ln", singleArgRef().forOperator("$ln"));
+		map.put("log", arrayArgRef().forOperator("$log"));
+		map.put("log10", singleArgRef().forOperator("$log10"));
+		map.put("mod", arrayArgRef().forOperator("$mod"));
+		map.put("multiply", arrayArgRef().forOperator("$multiply"));
+		map.put("pow", arrayArgRef().forOperator("$pow"));
+		map.put("sqrt", singleArgRef().forOperator("$sqrt"));
+		map.put("subtract", arrayArgRef().forOperator("$subtract"));
+		map.put("trunc", singleArgRef().forOperator("$trunc"));
 
 		// STRING OPERATORS
-		map.put("concat", arrayArgumentAggregationMethodReference().forOperator("$concat"));
-		map.put("strcasecmp", arrayArgumentAggregationMethodReference().forOperator("$strcasecmp"));
-		map.put("substr", arrayArgumentAggregationMethodReference().forOperator("$substr"));
-		map.put("toLower", singleArgumentAggregationMethodReference().forOperator("$toLower"));
-		map.put("toUpper", singleArgumentAggregationMethodReference().forOperator("$toUpper"));
-		map.put("strcasecmp", arrayArgumentAggregationMethodReference().forOperator("$strcasecmp"));
-		map.put("indexOfBytes", arrayArgumentAggregationMethodReference().forOperator("$indexOfBytes"));
-		map.put("indexOfCP", arrayArgumentAggregationMethodReference().forOperator("$indexOfCP"));
-		map.put("split", arrayArgumentAggregationMethodReference().forOperator("$split"));
-		map.put("strLenBytes", singleArgumentAggregationMethodReference().forOperator("$strLenBytes"));
-		map.put("strLenCP", singleArgumentAggregationMethodReference().forOperator("$strLenCP"));
-		map.put("substrCP", arrayArgumentAggregationMethodReference().forOperator("$substrCP"));
-		map.put("trim", mapArgumentAggregationMethodReference().forOperator("$trim").mappingParametersTo("input", "chars"));
-		map.put("ltrim",
-				mapArgumentAggregationMethodReference().forOperator("$ltrim").mappingParametersTo("input", "chars"));
-		map.put("rtrim",
-				mapArgumentAggregationMethodReference().forOperator("$rtrim").mappingParametersTo("input", "chars"));
+		map.put("concat", arrayArgRef().forOperator("$concat"));
+		map.put("strcasecmp", arrayArgRef().forOperator("$strcasecmp"));
+		map.put("substr", arrayArgRef().forOperator("$substr"));
+		map.put("toLower", singleArgRef().forOperator("$toLower"));
+		map.put("toUpper", singleArgRef().forOperator("$toUpper"));
+		map.put("indexOfBytes", arrayArgRef().forOperator("$indexOfBytes"));
+		map.put("indexOfCP", arrayArgRef().forOperator("$indexOfCP"));
+		map.put("split", arrayArgRef().forOperator("$split"));
+		map.put("strLenBytes", singleArgRef().forOperator("$strLenBytes"));
+		map.put("strLenCP", singleArgRef().forOperator("$strLenCP"));
+		map.put("substrCP", arrayArgRef().forOperator("$substrCP"));
+		map.put("trim", mapArgRef().forOperator("$trim").mappingParametersTo("input", "chars"));
+		map.put("ltrim", mapArgRef().forOperator("$ltrim").mappingParametersTo("input", "chars"));
+		map.put("rtrim", mapArgRef().forOperator("$rtrim").mappingParametersTo("input", "chars"));
 
 		// TEXT SEARCH OPERATORS
-		map.put("meta", singleArgumentAggregationMethodReference().forOperator("$meta"));
+		map.put("meta", singleArgRef().forOperator("$meta"));
 
 		// ARRAY OPERATORS
-		map.put("arrayElemAt", arrayArgumentAggregationMethodReference().forOperator("$arrayElemAt"));
-		map.put("concatArrays", arrayArgumentAggregationMethodReference().forOperator("$concatArrays"));
-		map.put("filter", mapArgumentAggregationMethodReference().forOperator("$filter") //
+		map.put("arrayElemAt", arrayArgRef().forOperator("$arrayElemAt"));
+		map.put("concatArrays", arrayArgRef().forOperator("$concatArrays"));
+		map.put("filter", mapArgRef().forOperator("$filter") //
 				.mappingParametersTo("input", "as", "cond"));
-		map.put("isArray", singleArgumentAggregationMethodReference().forOperator("$isArray"));
-		map.put("size", singleArgumentAggregationMethodReference().forOperator("$size"));
-		map.put("slice", arrayArgumentAggregationMethodReference().forOperator("$slice"));
-		map.put("reverseArray", singleArgumentAggregationMethodReference().forOperator("$reverseArray"));
-		map.put("reduce", mapArgumentAggregationMethodReference().forOperator("$reduce").mappingParametersTo("input",
-				"initialValue", "in"));
-		map.put("zip", mapArgumentAggregationMethodReference().forOperator("$zip").mappingParametersTo("inputs",
-				"useLongestLength", "defaults"));
-		map.put("in", arrayArgumentAggregationMethodReference().forOperator("$in"));
-		map.put("arrayToObject", singleArgumentAggregationMethodReference().forOperator("$arrayToObject"));
-		map.put("indexOfArray", arrayArgumentAggregationMethodReference().forOperator("$indexOfArray"));
-		map.put("range", arrayArgumentAggregationMethodReference().forOperator("$range"));
+		map.put("isArray", singleArgRef().forOperator("$isArray"));
+		map.put("size", singleArgRef().forOperator("$size"));
+		map.put("slice", arrayArgRef().forOperator("$slice"));
+		map.put("reverseArray", singleArgRef().forOperator("$reverseArray"));
+		map.put("reduce", mapArgRef().forOperator("$reduce").mappingParametersTo("input", "initialValue", "in"));
+		map.put("zip", mapArgRef().forOperator("$zip").mappingParametersTo("inputs", "useLongestLength", "defaults"));
+		map.put("in", arrayArgRef().forOperator("$in"));
+		map.put("arrayToObject", singleArgRef().forOperator("$arrayToObject"));
+		map.put("indexOfArray", arrayArgRef().forOperator("$indexOfArray"));
+		map.put("range", arrayArgRef().forOperator("$range"));
 
 		// VARIABLE OPERATORS
-		map.put("map", mapArgumentAggregationMethodReference().forOperator("$map") //
+		map.put("map", mapArgRef().forOperator("$map") //
 				.mappingParametersTo("input", "as", "in"));
-		map.put("let", mapArgumentAggregationMethodReference().forOperator("$let").mappingParametersTo("vars", "in"));
+		map.put("let", mapArgRef().forOperator("$let").mappingParametersTo("vars", "in"));
 
 		// LITERAL OPERATORS
-		map.put("literal", singleArgumentAggregationMethodReference().forOperator("$literal"));
+		map.put("literal", singleArgRef().forOperator("$literal"));
 
 		// DATE OPERATORS
-		map.put("dayOfYear", singleArgumentAggregationMethodReference().forOperator("$dayOfYear"));
-		map.put("dayOfMonth", singleArgumentAggregationMethodReference().forOperator("$dayOfMonth"));
-		map.put("dayOfWeek", singleArgumentAggregationMethodReference().forOperator("$dayOfWeek"));
-		map.put("year", singleArgumentAggregationMethodReference().forOperator("$year"));
-		map.put("month", singleArgumentAggregationMethodReference().forOperator("$month"));
-		map.put("week", singleArgumentAggregationMethodReference().forOperator("$week"));
-		map.put("hour", singleArgumentAggregationMethodReference().forOperator("$hour"));
-		map.put("minute", singleArgumentAggregationMethodReference().forOperator("$minute"));
-		map.put("second", singleArgumentAggregationMethodReference().forOperator("$second"));
-		map.put("millisecond", singleArgumentAggregationMethodReference().forOperator("$millisecond"));
-		map.put("dateToString", mapArgumentAggregationMethodReference().forOperator("$dateToString") //
+		map.put("dayOfYear", singleArgRef().forOperator("$dayOfYear"));
+		map.put("dayOfMonth", singleArgRef().forOperator("$dayOfMonth"));
+		map.put("dayOfWeek", singleArgRef().forOperator("$dayOfWeek"));
+		map.put("year", singleArgRef().forOperator("$year"));
+		map.put("month", singleArgRef().forOperator("$month"));
+		map.put("week", singleArgRef().forOperator("$week"));
+		map.put("hour", singleArgRef().forOperator("$hour"));
+		map.put("minute", singleArgRef().forOperator("$minute"));
+		map.put("second", singleArgRef().forOperator("$second"));
+		map.put("millisecond", singleArgRef().forOperator("$millisecond"));
+		map.put("dateToString", mapArgRef().forOperator("$dateToString") //
 				.mappingParametersTo("format", "date"));
-		map.put("dateFromString", mapArgumentAggregationMethodReference().forOperator("$dateFromString") //
+		map.put("dateFromString", mapArgRef().forOperator("$dateFromString") //
 				.mappingParametersTo("dateString", "format", "timezone", "onError", "onNull"));
-		map.put("dateFromParts", mapArgumentAggregationMethodReference().forOperator("$dateFromParts")
-				.mappingParametersTo("year", "month", "day", "hour", "minute", "second", "milliseconds", "timezone"));
-		map.put("isoDateFromParts",
-				mapArgumentAggregationMethodReference().forOperator("$dateFromParts").mappingParametersTo("isoWeekYear",
-						"isoWeek", "isoDayOfWeek", "hour", "minute", "second", "milliseconds", "timezone"));
-		map.put("dateToParts", mapArgumentAggregationMethodReference().forOperator("$dateToParts") //
+		map.put("dateFromParts", mapArgRef().forOperator("$dateFromParts").mappingParametersTo("year", "month", "day",
+				"hour", "minute", "second", "milliseconds", "timezone"));
+		map.put("isoDateFromParts", mapArgRef().forOperator("$dateFromParts").mappingParametersTo("isoWeekYear", "isoWeek",
+				"isoDayOfWeek", "hour", "minute", "second", "milliseconds", "timezone"));
+		map.put("dateToParts", mapArgRef().forOperator("$dateToParts") //
 				.mappingParametersTo("date", "timezone", "iso8601"));
-		map.put("isoDayOfWeek", singleArgumentAggregationMethodReference().forOperator("$isoDayOfWeek"));
-		map.put("isoWeek", singleArgumentAggregationMethodReference().forOperator("$isoWeek"));
-		map.put("isoWeekYear", singleArgumentAggregationMethodReference().forOperator("$isoWeekYear"));
+		map.put("isoDayOfWeek", singleArgRef().forOperator("$isoDayOfWeek"));
+		map.put("isoWeek", singleArgRef().forOperator("$isoWeek"));
+		map.put("isoWeekYear", singleArgRef().forOperator("$isoWeekYear"));
 
 		// CONDITIONAL OPERATORS
-		map.put("cond", mapArgumentAggregationMethodReference().forOperator("$cond") //
+		map.put("cond", mapArgRef().forOperator("$cond") //
 				.mappingParametersTo("if", "then", "else"));
-		map.put("ifNull", arrayArgumentAggregationMethodReference().forOperator("$ifNull"));
+		map.put("ifNull", arrayArgRef().forOperator("$ifNull"));
 
 		// GROUP OPERATORS
-		map.put("sum", arrayArgumentAggregationMethodReference().forOperator("$sum"));
-		map.put("avg", arrayArgumentAggregationMethodReference().forOperator("$avg"));
-		map.put("first", singleArgumentAggregationMethodReference().forOperator("$first"));
-		map.put("last", singleArgumentAggregationMethodReference().forOperator("$last"));
-		map.put("max", arrayArgumentAggregationMethodReference().forOperator("$max"));
-		map.put("min", arrayArgumentAggregationMethodReference().forOperator("$min"));
-		map.put("push", singleArgumentAggregationMethodReference().forOperator("$push"));
-		map.put("addToSet", singleArgumentAggregationMethodReference().forOperator("$addToSet"));
-		map.put("stdDevPop", arrayArgumentAggregationMethodReference().forOperator("$stdDevPop"));
-		map.put("stdDevSamp", arrayArgumentAggregationMethodReference().forOperator("$stdDevSamp"));
+		map.put("sum", arrayArgRef().forOperator("$sum"));
+		map.put("avg", arrayArgRef().forOperator("$avg"));
+		map.put("first", singleArgRef().forOperator("$first"));
+		map.put("last", singleArgRef().forOperator("$last"));
+		map.put("max", arrayArgRef().forOperator("$max"));
+		map.put("min", arrayArgRef().forOperator("$min"));
+		map.put("push", singleArgRef().forOperator("$push"));
+		map.put("addToSet", singleArgRef().forOperator("$addToSet"));
+		map.put("stdDevPop", arrayArgRef().forOperator("$stdDevPop"));
+		map.put("stdDevSamp", arrayArgRef().forOperator("$stdDevSamp"));
 
 		// TYPE OPERATORS
-		map.put("type", singleArgumentAggregationMethodReference().forOperator("$type"));
+		map.put("type", singleArgRef().forOperator("$type"));
 
 		// OBJECT OPERATORS
-		map.put("objectToArray", singleArgumentAggregationMethodReference().forOperator("$objectToArray"));
-		map.put("mergeObjects", arrayArgumentAggregationMethodReference().forOperator("$mergeObjects"));
+		map.put("objectToArray", singleArgRef().forOperator("$objectToArray"));
+		map.put("mergeObjects", arrayArgRef().forOperator("$mergeObjects"));
 
 		// CONVERT OPERATORS
-		map.put("convert", mapArgumentAggregationMethodReference().forOperator("$convert") //
+		map.put("convert", mapArgRef().forOperator("$convert") //
 				.mappingParametersTo("input", "to", "onError", "onNull"));
-		map.put("toBool", singleArgumentAggregationMethodReference().forOperator("$toBool"));
-		map.put("toDate", singleArgumentAggregationMethodReference().forOperator("$toDate"));
-		map.put("toDecimal", singleArgumentAggregationMethodReference().forOperator("$toDecimal"));
-		map.put("toDouble", singleArgumentAggregationMethodReference().forOperator("$toDouble"));
-		map.put("toInt", singleArgumentAggregationMethodReference().forOperator("$toInt"));
-		map.put("toLong", singleArgumentAggregationMethodReference().forOperator("$toLong"));
-		map.put("toObjectId", singleArgumentAggregationMethodReference().forOperator("$toObjectId"));
-		map.put("toString", singleArgumentAggregationMethodReference().forOperator("$toString"));
-
-
+		map.put("toBool", singleArgRef().forOperator("$toBool"));
+		map.put("toDate", singleArgRef().forOperator("$toDate"));
+		map.put("toDecimal", singleArgRef().forOperator("$toDecimal"));
+		map.put("toDouble", singleArgRef().forOperator("$toDouble"));
+		map.put("toInt", singleArgRef().forOperator("$toInt"));
+		map.put("toLong", singleArgRef().forOperator("$toLong"));
+		map.put("toObjectId", singleArgRef().forOperator("$toObjectId"));
+		map.put("toString", singleArgRef().forOperator("$toString"));
 
 		FUNCTIONS = Collections.unmodifiableMap(map);
 	}
@@ -207,7 +199,7 @@ public class MethodReferenceNode extends ExpressionNode {
 	/**
 	 * Returns the name of the method.
 	 *
-	 * @Deprecated since 1.10. Please use {@link #getMethodReference()}.
+	 * @deprecated since 1.10. Please use {@link #getMethodReference()}.
 	 */
 	@Nullable
 	@Deprecated
@@ -290,7 +282,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		 *
 		 * @return never {@literal null}.
 		 */
-		static AggregationMethodReference singleArgumentAggregationMethodReference() {
+		static AggregationMethodReference singleArgRef() {
 			return new AggregationMethodReference(null, ArgumentType.SINGLE, null);
 		}
 
@@ -299,7 +291,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		 *
 		 * @return never {@literal null}.
 		 */
-		static AggregationMethodReference arrayArgumentAggregationMethodReference() {
+		static AggregationMethodReference arrayArgRef() {
 			return new AggregationMethodReference(null, ArgumentType.ARRAY, null);
 		}
 
@@ -308,7 +300,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		 *
 		 * @return never {@literal null}.
 		 */
-		static AggregationMethodReference mapArgumentAggregationMethodReference() {
+		static AggregationMethodReference mapArgRef() {
 			return new AggregationMethodReference(null, ArgumentType.MAP, null);
 		}
 

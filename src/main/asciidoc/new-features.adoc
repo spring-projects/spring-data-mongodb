@@ -6,6 +6,7 @@
 * <<mongo.query.kotlin-support,Type-safe Queries for Kotlin>>
 * <<mongodb.reactive.repositories.queries.type-safe,Querydsl support for reactive repositories>> via `ReactiveQuerydslPredicateExecutor`.
 * <<reactive.gridfs,Reactive GridFS support>>.
+* Extended SpEL aggregation support for MongoDB 3.4 and MongoDB 4.0 operators (see <<mongo.aggregation.projection.expressions>>).
 
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1
