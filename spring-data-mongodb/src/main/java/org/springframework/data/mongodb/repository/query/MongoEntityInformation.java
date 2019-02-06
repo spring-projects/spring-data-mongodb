@@ -16,11 +16,13 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.springframework.data.repository.core.EntityInformation;
+import org.springframework.lang.Nullable;
 
 /**
  * Mongo specific {@link EntityInformation}.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public interface MongoEntityInformation<T, ID> extends EntityInformation<T, ID> {
 
@@ -37,4 +39,25 @@ public interface MongoEntityInformation<T, ID> extends EntityInformation<T, ID> 
 	 * @return
 	 */
 	String getIdAttribute();
+
+	/**
+	 * Returns whether the entity uses optimistic locking.
+	 *
+	 * @return
+	 * @since 2.2
+	 */
+	default boolean isVersioned() {
+		return false;
+	}
+
+	/**
+	 * Returns the version value for the entity or {@literal null} if the entity is not {@link #isVersioned() versioned}.
+	 *
+	 * @param entity must not be {@literal null}
+	 * @return
+	 */
+	@Nullable
+	default Object getVersion(T entity) {
+		return null;
+	}
 }

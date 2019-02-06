@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -39,6 +40,8 @@ import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import com.mongodb.client.result.DeleteResult;
 
 /**
  * Repository base implementation for Mongo.
@@ -161,7 +164,14 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(entity, "The given entity must not be null!");
 
-		mongoOperations.remove(entity, entityInformation.getCollectionName());
+		DeleteResult deleteResult = mongoOperations.remove(entity, entityInformation.getCollectionName());
+
+		if (entityInformation.isVersioned() && deleteResult.wasAcknowledged() && deleteResult.getDeletedCount() == 0) {
+			throw new OptimisticLockingFailureException(String.format(
+					"The entity with id %s with version %s in %s cannot be deleted! Was it modified or deleted in the meantime?",
+					entityInformation.getId(entity), entityInformation.getVersion(entity),
+					entityInformation.getCollectionName()));
+		}
 	}
 
 	/*

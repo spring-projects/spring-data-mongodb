@@ -1730,35 +1730,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				DeleteResult result = multi ? collectionToUse.deleteMany(removeQuery, options)
 						: collectionToUse.deleteOne(removeQuery, options);
 
-				checkForOptimisticLockingFailures(result, removeQuery, collectionToUse);
-
 				maybeEmitEvent(new AfterDeleteEvent<>(queryObject, entityClass, collectionName));
 
 				return result;
-			}
-
-			private void checkForOptimisticLockingFailures(DeleteResult result, Document removeQuery,
-					MongoCollection<Document> collectionToUse) {
-
-				if (multi || !ResultOperations.isUndecidedDeleteResult(result, removeQuery, entity)) {
-					return;
-				}
-
-				String versionFieldName = entity.getVersionProperty().getFieldName();
-				Document idQuery = new Document(removeQuery);
-				idQuery.remove(versionFieldName);
-
-				Iterator<Document> it = collectionToUse.find(idQuery).projection(Projections.include("_id", versionFieldName))
-						.limit(1).iterator();
-
-				if (it.hasNext()) {
-
-					Document source = it.next();
-					throw ResultOperations.newDeleteVersionedOptimisticLockingException(source.get("_id"), collectionName,
-							removeQuery.get(versionFieldName), source.get(versionFieldName));
-
-				}
-
 			}
 		});
 	}

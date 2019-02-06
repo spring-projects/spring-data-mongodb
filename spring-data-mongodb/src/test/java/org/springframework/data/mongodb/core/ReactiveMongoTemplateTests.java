@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -705,23 +705,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2195
-	public void removeEntityWithMatchingVersion() {
-
-		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
-		person.firstName = "Dave";
-
-		template.insert(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
-		assertThat(person.version).isZero();
-
-		template.remove(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
-		template.count(new Query(), PersonWithVersionPropertyOfTypeInteger.class) //
-				.as(StepVerifier::create) //
-				.expectNext(0L) //
-				.verifyComplete();
-	}
-
-	@Test // DATAMONGO-2195
-	public void removeEntityWithoutMatchingVersionThrowsOptimisticLockingFailureException() {
+	public void removeVersionedEntityConsidersVersion() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.firstName = "Dave";
@@ -734,42 +718,12 @@ public class ReactiveMongoTemplateTests {
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		template.remove(person).as(StepVerifier::create).expectError(OptimisticLockingFailureException.class).verify();
-		template.count(new Query(), PersonWithVersionPropertyOfTypeInteger.class) //
-				.as(StepVerifier::create) //
-				.expectNext(1L) //
-				.verifyComplete();
-	}
+		template.remove(person).as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
 
-	@Test // DATAMONGO-2195
-	public void removeNonExistingVersionedEntityJustPasses() {
-
-		 PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
-		 person.id = "id-1";
-		 person.firstName = "Dave";
-		 person.version = 10;
-
-		template.remove(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
-	}
-
-	@Test // DATAMONGO-2195
-	@DirtiesContext
-	public void removeEntityWithoutMatchingVersionWhenUsingUnaknowledgedWriteDoesNotThrowsOptimisticLockingFailureException() {
-
-		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
-		person.firstName = "Dave";
-
-		template.insert(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
-		assertThat(person.version).isZero();
-		template.update(PersonWithVersionPropertyOfTypeInteger.class).matching(query(where("id").is(person.id)))
-				.apply(new Update().set("firstName", "Walter")).first() //
-				.as(StepVerifier::create) //
-				.expectNextCount(1) //
-				.verifyComplete();
-
-		template.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
-
-		template.remove(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+					assertThat(actual.wasAcknowledged()).isTrue();
+					assertThat(actual.getDeletedCount()).isZero();
+				}).verifyComplete();
 		template.count(new Query(), PersonWithVersionPropertyOfTypeInteger.class) //
 				.as(StepVerifier::create) //
 				.expectNext(1L) //
