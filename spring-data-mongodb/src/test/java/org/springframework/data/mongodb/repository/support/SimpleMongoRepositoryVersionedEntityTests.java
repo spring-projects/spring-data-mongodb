@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assumptions.assumeThat;
+import static org.assertj.core.api.Assumptions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -45,6 +45,7 @@ import com.mongodb.client.MongoClients;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -64,9 +65,6 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 		}
 	}
 
-	private static final MongoPersistentEntity ENTITY = new BasicMongoPersistentEntity(
-			ClassTypeInformation.from(VersionedPerson.class));
-
 	@Autowired //
 	private MongoTemplate template;
 
@@ -78,7 +76,10 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	@Before
 	public void setUp() {
 
-		personEntityInformation = new MappingMongoEntityInformation(ENTITY);
+		MongoPersistentEntity entity = template.getConverter().getMappingContext()
+				.getRequiredPersistentEntity(VersionedPerson.class);
+
+		personEntityInformation = new MappingMongoEntityInformation(entity);
 		repository = new SimpleMongoRepository<>(personEntityInformation, template);
 		repository.deleteAll();
 
@@ -117,8 +118,7 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 
 		sarah.setVersion(5L);
 
-		assertThatExceptionOfType(OptimisticLockingFailureException.class).isThrownBy(() -> repository.delete(sarah)) //
-				.withMessageContaining("Expected version 5 but was 0");
+		assertThatExceptionOfType(OptimisticLockingFailureException.class).isThrownBy(() -> repository.delete(sarah));
 
 		assertThat(template.count(query(where("id").is(sarah.getId())), VersionedPerson.class)).isOne();
 	}
@@ -146,7 +146,8 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 
 	@Test // DATAMONGO-2195
 	public void deleteNonExisting() {
-		repository.delete(new VersionedPerson("T-800"));
+		assertThatThrownBy(() -> repository.delete(new VersionedPerson("T-800")))
+				.isInstanceOf(OptimisticLockingFailureException.class);
 	}
 
 	@Test // DATAMONGO-2195
@@ -157,7 +158,8 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 
 		initTxTemplate().execute(status -> {
 
-			repository.delete(new VersionedPerson("T-800"));
+			assertThatThrownBy(() -> repository.delete(new VersionedPerson("T-800")))
+					.isInstanceOf(OptimisticLockingFailureException.class);
 
 			return Void.TYPE;
 		});

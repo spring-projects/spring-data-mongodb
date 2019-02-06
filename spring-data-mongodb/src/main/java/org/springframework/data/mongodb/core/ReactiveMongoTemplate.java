@@ -1824,35 +1824,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				return collectionToUse.deleteMany(removeQuery, deleteOptions);
 			}
 
-		}).flatMap(deleteResult -> {
-
-			if (!ResultOperations.isUndecidedDeleteResult(deleteResult, removeQuery, entity)) {
-				return Mono.just(deleteResult);
-			}
-
-			return execute(collectionName, (coll -> {
-
-				String versionFieldName = entity.getVersionProperty().getFieldName();
-
-				Document queryWithoutVersion = new Document(removeQuery);
-				queryWithoutVersion.remove(versionFieldName);
-
-				Publisher<Document> publisher = coll.find(queryWithoutVersion)
-						.projection(Projections.include("_id", entity.getVersionProperty().getFieldName())).limit(1).first();
-
-				return Mono.from(publisher) //
-						.defaultIfEmpty(new Document()) //
-						.flatMap(it -> {
-
-							if (it.isEmpty()) {
-								return Mono.just(deleteResult);
-							}
-
-							return Mono.error(ResultOperations.newDeleteVersionedOptimisticLockingException(it.get("_id"),
-									collectionName, removeQuery.get(versionFieldName), it.get(versionFieldName)));
-						});
-			})).next();
-
 		}).doOnNext(it -> maybeEmitEvent(new AfterDeleteEvent<>(queryObject, entityClass, collectionName))) //
 				.next();
 	}

@@ -31,7 +31,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.reactivestreams.Publisher;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -303,8 +302,11 @@ public class ReactiveMongoTemplateTransactionTests {
 
 		template.inTransaction().execute(action -> action.remove(saved)) //
 				.as(StepVerifier::create) //
-				.expectError(OptimisticLockingFailureException.class) //
-				.verify();
+				.consumeNextWith(actual -> {
+
+					assertThat(actual.wasAcknowledged()).isTrue();
+					assertThat(actual.getDeletedCount()).isZero();
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2195

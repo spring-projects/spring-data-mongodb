@@ -1080,10 +1080,11 @@ template.save(tmp); // throws OptimisticLockingFailureException                 
 
 IMPORTANT: Optimistic Locking requires to set the `WriteConcern` to `ACKNOWLEDGED`. Otherwise `OptimisticLockingFailureException` can be silently swallowed.
 
-NOTE: As of Version 2.2 `MongoOperations` also includes the `@Version` property when removing an entity from the database, raising an
-`OptimisticLockingFailureException` if a document with matching `_id` but a `version` mismatch shall be deleted. In cases
-where no Document with matching `_id` can be found the operation passes without error.
+NOTE: As of Version 2.2 `MongoOperations` also includes the `@Version` property when removing an entity from the database.
 To remove a `Document` without version check use `MongoOperations#remove(Query,...)` instead of `MongoOperations#remove(Object)`.
+
+NOTE: As of Version 2.2 repositories check for the outcome of acknowledged deletes when removing versioned entities.
+An `OptimisticLockingFailureException` is raised if a versioned entity cannot be deleted through `CrudRepository.delete(Object)`. In such case, the version was changed or the object was deleted in the meantime. Use `CrudRepository.deleteById(ID)` to bypass optimistic locking functionality and delete objects regardless of their version.
 
 [[mongo.query]]
 == Querying Documents

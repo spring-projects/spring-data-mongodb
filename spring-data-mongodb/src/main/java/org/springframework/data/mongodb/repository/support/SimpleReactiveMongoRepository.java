@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -38,6 +39,8 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
+
+import com.mongodb.client.result.DeleteResult;
 
 /**
  * Reactive repository base implementation for Mongo.
@@ -355,7 +358,24 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entity, "The given entity must not be null!");
 
-		return mongoOperations.remove(entity, entityInformation.getCollectionName()).then();
+		Mono<DeleteResult> remove = mongoOperations.remove(entity, entityInformation.getCollectionName());
+
+		if (entityInformation.isVersioned()) {
+
+			remove = remove.handle((deleteResult, sink) -> {
+
+				if (deleteResult.wasAcknowledged() && deleteResult.getDeletedCount() == 0) {
+					sink.error(new OptimisticLockingFailureException(String.format(
+							"The entity with id %s with version %s in %s cannot be deleted! Was it modified or deleted in the meantime?",
+							entityInformation.getId(entity), entityInformation.getVersion(entity),
+							entityInformation.getCollectionName())));
+				} else {
+					sink.next(deleteResult);
+				}
+			});
+		}
+
+		return remove.then();
 	}
 
 	/*
@@ -367,7 +387,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
-		return Flux.fromIterable(entities).flatMap(entity -> deleteById(entityInformation.getRequiredId(entity))).then();
+		return Flux.fromIterable(entities).flatMap(this::delete).then();
 	}
 
 	/*

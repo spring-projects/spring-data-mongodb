@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.support;
 
 import org.bson.types.ObjectId;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
@@ -87,14 +88,16 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 		this.fallbackIdType = idType != null ? idType : (Class<ID>) ObjectId.class;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getCollectionName()
 	 */
 	public String getCollectionName() {
 		return customCollectionName == null ? entityMetadata.getCollection() : customCollectionName;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getIdAttribute()
 	 */
 	public String getIdAttribute() {
@@ -106,7 +109,6 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 	 * @see org.springframework.data.repository.core.support.PersistentEntityInformation#getIdType()
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	public Class<ID> getIdType() {
 
 		if (this.entityMetadata.hasIdProperty()) {
@@ -115,4 +117,30 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 
 		return fallbackIdType;
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#isVersioned()
+	 */
+	@Override
+	public boolean isVersioned() {
+		return this.entityMetadata.hasVersionProperty();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getVersion(Object)
+	 */
+	@Override
+	public Object getVersion(T entity) {
+
+		if (!isVersioned()) {
+			return null;
+		}
+
+		PersistentPropertyAccessor<T> accessor = this.entityMetadata.getPropertyAccessor(entity);
+
+		return accessor.getProperty(this.entityMetadata.getRequiredVersionProperty());
+	}
+
 }
