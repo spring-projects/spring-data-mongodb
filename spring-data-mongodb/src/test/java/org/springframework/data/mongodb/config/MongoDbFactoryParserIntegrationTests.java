@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
-import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
 import org.springframework.beans.factory.support.BeanDefinitionReader;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
@@ -58,23 +57,23 @@ public class MongoDbFactoryParserIntegrationTests {
 		reader = new XmlBeanDefinitionReader(factory);
 	}
 
-	@Test
+	@Test // DATAMONGO-2199
 	public void testWriteConcern() throws Exception {
 
 		SimpleMongoDbFactory dbFactory = new SimpleMongoDbFactory(new MongoClient("localhost"), "database");
-		dbFactory.setWriteConcern(WriteConcern.SAFE);
+		dbFactory.setWriteConcern(WriteConcern.ACKNOWLEDGED);
 		dbFactory.getDb();
 
-		assertThat(ReflectionTestUtils.getField(dbFactory, "writeConcern"), is((Object) WriteConcern.SAFE));
+		assertThat(ReflectionTestUtils.getField(dbFactory, "writeConcern"), is((Object) WriteConcern.ACKNOWLEDGED));
 	}
 
-	@Test
+	@Test // DATAMONGO-2199
 	public void parsesWriteConcern() {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");
-		assertWriteConcern(ctx, WriteConcern.SAFE);
+		assertWriteConcern(ctx, WriteConcern.ACKNOWLEDGED);
 	}
 
-	@Test
+	@Test // DATAMONGO-2199
 	public void parsesCustomWriteConcern() {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(
 				"namespace/db-factory-bean-custom-write-concern.xml");
@@ -89,7 +88,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		MongoDbFactory factory = ctx.getBean("second", MongoDbFactory.class);
 		MongoDatabase db = factory.getDb();
 
-		assertThat(db.getWriteConcern(), is(WriteConcern.REPLICAS_SAFE));
+		assertThat(db.getWriteConcern(), is(WriteConcern.W2));
 		ctx.close();
 	}
 

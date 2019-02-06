@@ -467,11 +467,11 @@ public class UpdateTests {
 		assertThat(update.getUpdateObject()).isEqualTo(new Document("$min", new Document("key", date)));
 	}
 
-	@Test // DATAMONGO-1777
+	@Test // DATAMONGO-1777, DATAMONGO-2199
 	public void toStringShouldPrettyPrintModifiers() {
 
 		assertThat(new Update().push("key").atPosition(Position.FIRST).value("Arya").toString()).isEqualTo(
-				"{ \"$push\" : { \"key\" : { \"$java\" : { \"$position\" : { \"$java\" : { \"$position\" : 0} }, \"$each\" : { \"$java\" : { \"$each\" : [ \"Arya\"]} } } } } }");
+				"{ \"$push\" : { \"key\" : { \"$java\" : { \"$position\" : { \"$java\" : { \"$position\" : 0} }, \"$each\" : { \"$java\" : { \"$each\" : [ \"Arya\" ] } } } } } }");
 	}
 
 	@Test // DATAMONGO-1777, DATAMONGO-2198

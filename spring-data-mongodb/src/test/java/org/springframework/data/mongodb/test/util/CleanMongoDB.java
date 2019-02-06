@@ -20,8 +20,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.bson.Document;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -33,6 +35,8 @@ import org.springframework.util.StringUtils;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * {@link CleanMongoDB} is a junit {@link TestRule} implementation to be used as for wiping data from MongoDB instance.
@@ -55,7 +59,7 @@ public class CleanMongoDB implements TestRule {
 		DATABASE, COLLECTION, INDEX;
 	}
 
-	@SuppressWarnings("serial")//
+	@SuppressWarnings("serial") //
 	private Set<String> preserveDatabases = new HashSet<String>() {
 		{
 			add("admin");
@@ -274,7 +278,7 @@ public class CleanMongoDB implements TestRule {
 				continue;
 			}
 
-			DB db = client.getDB(dbName);
+			MongoDatabase db = client.getDatabase(dbName);
 			dropCollectionsOrIndexIfRequried(db, initCollectionNames(db));
 		}
 	}
@@ -290,13 +294,15 @@ public class CleanMongoDB implements TestRule {
 		return true;
 	}
 
-	private void dropCollectionsOrIndexIfRequried(DB db, Collection<String> collectionsToUse) {
+	private void dropCollectionsOrIndexIfRequried(MongoDatabase db, Collection<String> collectionsToUse) {
+
+		Collection<String> availableCollections = db.listCollectionNames().into(new LinkedHashSet<>());
 
 		for (String collectionName : collectionsToUse) {
 
-			if (db.collectionExists(collectionName)) {
+			if (availableCollections.contains(collectionName)) {
 
-				DBCollection collection = db.getCollectionFromString(collectionName);
+				MongoCollection<Document> collection = db.getCollection(collectionName);
 				if (collection != null) {
 
 					if (types.contains(Struct.COLLECTION)) {
@@ -319,16 +325,16 @@ public class CleanMongoDB implements TestRule {
 
 		Collection<String> dbNamesToUse = dbNames;
 		if (dbNamesToUse.isEmpty()) {
-			dbNamesToUse = client.getDatabaseNames();
+			dbNamesToUse = client.listDatabaseNames().into(new LinkedHashSet<>());
 		}
 		return dbNamesToUse;
 	}
 
-	private Collection<String> initCollectionNames(DB db) {
+	private Collection<String> initCollectionNames(MongoDatabase db) {
 
 		Collection<String> collectionsToUse = collectionNames;
 		if (CollectionUtils.isEmpty(collectionsToUse)) {
-			collectionsToUse = db.getCollectionNames();
+			collectionsToUse = db.listCollectionNames().into(new LinkedHashSet<>());
 		}
 		return collectionsToUse;
 	}

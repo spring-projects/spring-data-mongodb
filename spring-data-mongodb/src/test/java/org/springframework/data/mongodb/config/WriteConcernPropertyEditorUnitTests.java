@@ -27,6 +27,7 @@ import com.mongodb.WriteConcern;
  * Unit tests for {@link WriteConcernPropertyEditor}.
  *
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class WriteConcernPropertyEditorUnitTests {
 
@@ -37,11 +38,11 @@ public class WriteConcernPropertyEditorUnitTests {
 		editor = new WriteConcernPropertyEditor();
 	}
 
-	@Test
+	@Test // DATAMONGO-2199
 	public void createsWriteConcernForWellKnownConstants() {
 
-		editor.setAsText("SAFE");
-		assertThat(editor.getValue(), is((Object) WriteConcern.SAFE));
+		editor.setAsText("JOURNALED");
+		assertThat(editor.getValue(), is((Object) WriteConcern.JOURNALED));
 	}
 
 	@Test

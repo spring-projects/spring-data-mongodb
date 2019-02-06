@@ -270,6 +270,7 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		if (meta.maxScanDocuments() > 0) {
+			// TODO: Mongo 4 - removal
 			metaAttributes.setMaxScan(meta.maxScanDocuments());
 		}
 
@@ -282,6 +283,8 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		if (meta.snapshot()) {
+
+			// TODO: Mongo 4 - removal
 			metaAttributes.setSnapshot(meta.snapshot());
 		}
 

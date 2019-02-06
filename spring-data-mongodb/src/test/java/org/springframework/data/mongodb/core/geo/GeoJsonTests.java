@@ -82,7 +82,7 @@ public class GeoJsonTests {
 	@Before
 	public void setUp() {
 
-		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
+		template.setWriteConcern(WriteConcern.JOURNALED);
 
 		createIndex();
 		addVenues();

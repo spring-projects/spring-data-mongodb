@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.bson.Document;
+import org.bson.json.JsonParseException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -29,8 +30,6 @@ import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.util.JSONParseException;
 
 /**
  * Reactive PartTree {@link RepositoryQuery} implementation for Mongo.
@@ -110,7 +109,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 			return result;
 
-		} catch (JSONParseException o_O) {
+		} catch (JsonParseException o_O) {
 			throw new IllegalStateException(String.format("Invalid query or field specification in %s!", getQueryMethod()),
 					o_O);
 		}

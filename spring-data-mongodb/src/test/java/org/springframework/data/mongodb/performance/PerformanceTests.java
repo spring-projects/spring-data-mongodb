@@ -19,20 +19,12 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.model.CreateCollectionOptions;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -53,12 +45,13 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Test class to execute performance tests for plain MongoDB driver usage, {@link MongoTemplate} and the repositories
@@ -76,7 +69,7 @@ public class PerformanceTests {
 	private static final StopWatch watch = new StopWatch();
 	private static final Collection<String> IGNORED_WRITE_CONCERNS = Arrays.asList("MAJORITY", "REPLICAS_SAFE",
 			"FSYNC_SAFE", "FSYNCED", "JOURNAL_SAFE", "JOURNALED", "REPLICA_ACKNOWLEDGED", "W2", "W3");
-	private static final int COLLECTION_SIZE = 1024-2018 * 1024-2018 * 256; // 256 MB
+	private static final int COLLECTION_SIZE = 1024 - 2018 * 1024 - 2018 * 256; // 256 MB
 	private static final Collection<String> COLLECTION_NAMES = Arrays.asList("template", "driver", "person");
 
 	MongoClient mongo;
@@ -149,7 +142,7 @@ public class PerformanceTests {
 				List<Person> persons = new ArrayList<PerformanceTests.Person>();
 
 				for (Document document : documents) {
-					persons.add(Person.from(new BasicDBObject(document)));
+					persons.add(Person.from(document));
 				}
 
 				return persons;
@@ -182,7 +175,7 @@ public class PerformanceTests {
 	@Test
 	public void writeAndRead() throws Exception {
 
-		mongo.setWriteConcern(WriteConcern.SAFE);
+		mongo.setWriteConcern(WriteConcern.ACKNOWLEDGED);
 
 		readsAndWrites(NUMBER_OF_PERSONS, ITERATIONS);
 	}
@@ -257,19 +250,26 @@ public class PerformanceTests {
 
 	private void setupCollections() {
 
-		DB db = this.mongo.getDB(DATABASE_NAME);
+		MongoDatabase db = this.mongo.getDatabase(DATABASE_NAME);
 
 		for (String collectionName : COLLECTION_NAMES) {
-			DBCollection collection = db.getCollection(collectionName);
+
+			MongoCollection<Document> collection = db.getCollection(collectionName);
 			collection.drop();
-			collection.getDB().command(getCreateCollectionCommand(collectionName));
-			collection.createIndex(new BasicDBObject("firstname", -1));
-			collection.createIndex(new BasicDBObject("lastname", -1));
+
+			CreateCollectionOptions collectionOptions = new CreateCollectionOptions();
+			collectionOptions.capped(false);
+			collectionOptions.sizeInBytes(COLLECTION_SIZE);
+
+			db.createCollection(collectionName, collectionOptions);
+
+			collection.createIndex(new Document("firstname", -1));
+			collection.createIndex(new Document("lastname", -1));
 		}
 	}
 
-	private DBObject getCreateCollectionCommand(String name) {
-		DBObject document = new BasicDBObject();
+	private Document getCreateCollectionCommand(String name) {
+		Document document = new Document();
 		document.put("createCollection", name);
 		document.put("capped", false);
 		document.put("size", COLLECTION_SIZE);
@@ -278,10 +278,14 @@ public class PerformanceTests {
 
 	private long writingObjectsUsingPlainDriver(int numberOfPersons) {
 
-		DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
+		MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver");
 		List<Person> persons = getPersonObjects(numberOfPersons);
 
-		executeWatched(() -> persons.stream().map(it -> collection.save(new BasicDBObject(it.toDocument()))));
+		executeWatched(() -> persons.stream().map(Person::toDocument).map(it -> {
+
+			collection.insertOne(it);
+			return true;
+		}));
 
 		return watch.getLastTaskTimeMillis();
 	}
@@ -308,7 +312,7 @@ public class PerformanceTests {
 
 	private long readingUsingPlainDriver() {
 
-		executeWatched(() -> toPersons(mongo.getDB(DATABASE_NAME).getCollection("driver").find()));
+		executeWatched(() -> toPersons(mongo.getDatabase(DATABASE_NAME).getCollection("driver").find()));
 
 		return watch.getLastTaskTimeMillis();
 	}
@@ -329,10 +333,10 @@ public class PerformanceTests {
 
 		executeWatched(() -> {
 
-			DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
+			MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver");
 
-			BasicDBObject regex = new BasicDBObject("$regex", Pattern.compile(".*1.*"));
-			BasicDBObject query = new BasicDBObject("addresses.zipCode", regex);
+			Document regex = new Document("$regex", Pattern.compile(".*1.*"));
+			Document query = new Document("addresses.zipCode", regex);
 			return toPersons(collection.find(query));
 		});
 
@@ -385,12 +389,13 @@ public class PerformanceTests {
 		}
 	}
 
-	private static List<Person> toPersons(DBCursor cursor) {
+	private static List<Person> toPersons(FindIterable<Document> cursor) {
 
 		List<Person> persons = new ArrayList<Person>();
 
-		while (cursor.hasNext()) {
-			persons.add(Person.from(cursor.next()));
+		Iterator<Document> it = cursor.iterator();
+		while (it.hasNext()) {
+			persons.add(Person.from(it.next()));
 		}
 
 		return persons;
@@ -410,15 +415,15 @@ public class PerformanceTests {
 			this.orders = new HashSet<Order>();
 		}
 
-		public static Person from(DBObject source) {
+		public static Person from(Document source) {
 
-			BasicDBList addressesSource = (BasicDBList) source.get("addresses");
+			List addressesSource = (List) source.get("addresses");
 			List<Address> addresses = new ArrayList<Address>(addressesSource.size());
 			for (Object addressSource : addressesSource) {
 				addresses.add(Address.from((Document) addressSource));
 			}
 
-			BasicDBList ordersSource = (BasicDBList) source.get("orders");
+			List ordersSource = (List) source.get("orders");
 			Set<Order> orders = new HashSet<Order>(ordersSource.size());
 			for (Object orderSource : ordersSource) {
 				orders.add(Order.from((Document) orderSource));

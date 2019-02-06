@@ -116,7 +116,7 @@ public class MongoTemplateTransactionTests {
 
 		assertionList.forEach(it -> {
 
-			boolean isPresent = collection.count(Filters.eq("_id", it.getId())) != 0;
+			boolean isPresent = collection.countDocuments(Filters.eq("_id", it.getId())) != 0;
 
 			assertThat(isPresent).isEqualTo(it.shouldBePresent())
 					.withFailMessage(String.format("After transaction entity %s should %s.", it.getPersistable(),

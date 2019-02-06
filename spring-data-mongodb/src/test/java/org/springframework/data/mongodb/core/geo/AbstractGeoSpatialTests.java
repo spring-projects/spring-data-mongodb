@@ -75,7 +75,7 @@ public abstract class AbstractGeoSpatialTests {
 	@Before
 	public void setUp() {
 
-		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
+		template.setWriteConcern(WriteConcern.JOURNALED);
 
 		createIndex();
 		addVenues();

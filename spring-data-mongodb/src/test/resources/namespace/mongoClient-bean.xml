@@ -8,7 +8,7 @@
 	<mongo:mongo-client id="mongo-client-with-host-and-port" host="localhost" port="42" />
 	
 	<mongo:mongo-client id="mongo-client-with-options-for-write-concern-and-read-preference">
-		<mongo:client-options write-concern="NORMAL" read-preference="SECONDARY" />
+		<mongo:client-options write-concern="UNACKNOWLEDGED" read-preference="SECONDARY" />
 	</mongo:mongo-client>
 	
 	<mongo:mongo-client id="mongo-client-with-credentials" credentials="jon:warg@snow?uri.authMechanism=PLAIN" />

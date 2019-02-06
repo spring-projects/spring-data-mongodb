@@ -41,7 +41,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	private static final MongoClientOptions DEFAULT_MONGO_OPTIONS = MongoClientOptions.builder().build();
 
-	private @Nullable String description = DEFAULT_MONGO_OPTIONS.getDescription();
+	private @Nullable String description = DEFAULT_MONGO_OPTIONS.getApplicationName(); // TODO: Mongo Driver 4 - use application name insetad of desription if not available
 	private int minConnectionsPerHost = DEFAULT_MONGO_OPTIONS.getMinConnectionsPerHost();
 	private int connectionsPerHost = DEFAULT_MONGO_OPTIONS.getConnectionsPerHost();
 	private int threadsAllowedToBlockForConnectionMultiplier = DEFAULT_MONGO_OPTIONS
@@ -51,14 +51,14 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	private int maxConnectionLifeTime = DEFAULT_MONGO_OPTIONS.getMaxConnectionLifeTime();
 	private int connectTimeout = DEFAULT_MONGO_OPTIONS.getConnectTimeout();
 	private int socketTimeout = DEFAULT_MONGO_OPTIONS.getSocketTimeout();
-	private boolean socketKeepAlive = DEFAULT_MONGO_OPTIONS.isSocketKeepAlive();
+	private boolean socketKeepAlive = DEFAULT_MONGO_OPTIONS.isSocketKeepAlive(); // TODO: Mongo Driver 4 - check if available
 	private @Nullable ReadPreference readPreference = DEFAULT_MONGO_OPTIONS.getReadPreference();
 	private DBDecoderFactory dbDecoderFactory = DEFAULT_MONGO_OPTIONS.getDbDecoderFactory();
 	private DBEncoderFactory dbEncoderFactory = DEFAULT_MONGO_OPTIONS.getDbEncoderFactory();
 	private @Nullable WriteConcern writeConcern = DEFAULT_MONGO_OPTIONS.getWriteConcern();
 	private @Nullable SocketFactory socketFactory = DEFAULT_MONGO_OPTIONS.getSocketFactory();
 	private boolean cursorFinalizerEnabled = DEFAULT_MONGO_OPTIONS.isCursorFinalizerEnabled();
-	private boolean alwaysUseMBeans = DEFAULT_MONGO_OPTIONS.isAlwaysUseMBeans();
+	private boolean alwaysUseMBeans = DEFAULT_MONGO_OPTIONS.isAlwaysUseMBeans(); // TODO: Mongo Driver 4 - remove this option
 	private int heartbeatFrequency = DEFAULT_MONGO_OPTIONS.getHeartbeatFrequency();
 	private int minHeartbeatFrequency = DEFAULT_MONGO_OPTIONS.getMinHeartbeatFrequency();
 	private int heartbeatConnectTimeout = DEFAULT_MONGO_OPTIONS.getHeartbeatConnectTimeout();
@@ -74,6 +74,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 	 *
 	 * @param description
 	 */
+	// TODO: Mongo Driver 4 - deprecate that one and add application name
 	public void setDescription(@Nullable String description) {
 		this.description = description;
 	}
@@ -285,7 +286,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 				.cursorFinalizerEnabled(cursorFinalizerEnabled) //
 				.dbDecoderFactory(dbDecoderFactory) //
 				.dbEncoderFactory(dbEncoderFactory) //
-				.description(description) //
+				.applicationName(description) // TODO: Mongo Driver 4 - use applicatoin name if description not available
 				.heartbeatConnectTimeout(heartbeatConnectTimeout) //
 				.heartbeatFrequency(heartbeatFrequency) //
 				.heartbeatSocketTimeout(heartbeatSocketTimeout) //
@@ -297,8 +298,8 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 				.readPreference(readPreference) //
 				.requiredReplicaSetName(requiredReplicaSetName) //
 				.serverSelectionTimeout(serverSelectionTimeout) //
-				.socketFactory(socketFactoryToUse) //
-				.socketKeepAlive(socketKeepAlive) //
+				.socketFactory(socketFactoryToUse) // TODO: Mongo Driver 4 - remove if not available
+				.socketKeepAlive(socketKeepAlive) // TODO: Mongo Driver 4 - remove if not available
 				.socketTimeout(socketTimeout) //
 				.threadsAllowedToBlockForConnectionMultiplier(threadsAllowedToBlockForConnectionMultiplier) //
 				.writeConcern(writeConcern).build();

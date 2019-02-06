@@ -39,6 +39,7 @@ import org.bson.codecs.UuidCodec;
 import org.bson.json.JsonWriter;
 import org.bson.types.Binary;
 import org.springframework.data.mongodb.CodecRegistryProvider;
+import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBinding;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
@@ -52,7 +53,6 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.util.JSON;
 
 /**
  * {@link ExpressionEvaluatingParameterBinder} allows to evaluate, convert and bind parameters to placeholders within a
@@ -221,7 +221,8 @@ class ExpressionEvaluatingParameterBinder {
 				return (String) value;
 			}
 
-			return binding.isExpression() ? JSON.serialize(value) : QuotedString.unquote(JSON.serialize(value));
+			String encodedValue = serialize(value);
+			return binding.isExpression() ? encodedValue : QuotedString.unquote(encodedValue);
 		}
 
 		return EncodableValue.create(value).encode(codecRegistryProvider, binding.isQuoted());
@@ -660,7 +661,11 @@ class ExpressionEvaluatingParameterBinder {
 		 */
 		@Override
 		public String encode(CodecRegistryProvider provider, boolean quoted) {
-			return JSON.serialize(this.value);
+			return serialize(this.value);
 		}
+	}
+
+	static String serialize(Object value) {
+		return SerializationUtils.serializeValue(value);
 	}
 }

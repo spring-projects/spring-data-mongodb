@@ -47,7 +47,7 @@ public class TextIndexTests extends AbstractIntegrationTests {
 	@Before
 	public void setUp() throws Exception {
 
-		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
+		template.setWriteConcern(WriteConcern.JOURNALED);
 		this.indexOps = template.indexOps(TextIndexedDocumentRoot.class);
 	}
 

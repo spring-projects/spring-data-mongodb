@@ -56,7 +56,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 	@Before
 	public void setUp() {
 
-		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
+		template.setWriteConcern(WriteConcern.JOURNALED);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 	}
 

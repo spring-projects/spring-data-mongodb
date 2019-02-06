@@ -228,6 +228,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			String transformedInput = transformQueryAndCollectExpressionParametersIntoBindings(input, bindings);
 			String parseableInput = makeParameterReferencesParseable(transformedInput);
 
+//			Document.parse(parseableInput)
+
 			collectParameterReferencesIntoBindings(bindings,
 					JSON.parse(parseableInput, new LenientPatternDecodingCallback()));
 

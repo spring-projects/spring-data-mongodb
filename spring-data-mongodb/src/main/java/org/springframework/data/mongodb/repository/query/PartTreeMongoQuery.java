@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.bson.Document;
+import org.bson.json.JsonParseException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -30,10 +31,6 @@ import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.util.JSON;
-import com.mongodb.util.JSONParseException;
 
 /**
  * {@link RepositoryQuery} implementation for Mongo.
@@ -114,12 +111,12 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 		try {
 
-			BasicQuery result = new BasicQuery(query.getQueryObject(), new Document((BasicDBObject) JSON.parse(fieldSpec)));
+			BasicQuery result = new BasicQuery(query.getQueryObject(), Document.parse(fieldSpec));
 			result.setSortObject(query.getSortObject());
 
 			return result;
 
-		} catch (JSONParseException o_O) {
+		} catch (JsonParseException o_O) {
 			throw new IllegalStateException(String.format("Invalid query or field specification in %s!", getQueryMethod()),
 					o_O);
 		}

@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.json.JsonParseException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,8 +51,6 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-
-import com.mongodb.util.JSONParseException;
 
 /**
  * Unit tests for {@link PartTreeMongoQuery}.
@@ -130,7 +129,7 @@ public class PartTreeMongoQueryUnitTests {
 	public void propagatesRootExceptionForInvalidQuery() {
 
 		exception.expect(IllegalStateException.class);
-		exception.expectCause(is(instanceOf(JSONParseException.class)));
+		exception.expectCause(is(instanceOf(JsonParseException.class)));
 
 		deriveQueryFromMethod("findByAge", 1);
 	}
