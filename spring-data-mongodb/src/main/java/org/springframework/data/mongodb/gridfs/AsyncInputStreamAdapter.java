@@ -123,6 +123,10 @@ class AsyncInputStreamAdapter implements AsyncInputStream {
 		});
 	}
 
+	public Publisher<Long> skip(long bytesToSkip) {
+		throw new UnsupportedOperationException("Skip is currently not implemented");
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see com.mongodb.reactivestreams.client.gridfs.AsyncInputStream#close()

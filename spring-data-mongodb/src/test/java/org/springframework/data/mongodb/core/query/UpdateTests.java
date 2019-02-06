@@ -474,11 +474,11 @@ public class UpdateTests {
 				"{ \"$push\" : { \"key\" : { \"$java\" : { \"$position\" : { \"$java\" : { \"$position\" : 0} }, \"$each\" : { \"$java\" : { \"$each\" : [ \"Arya\"]} } } } } }");
 	}
 
-	@Test // DATAMONGO-1777
+	@Test // DATAMONGO-1777, DATAMONGO-2198
 	public void toStringConsidersIsolated() {
 
 		assertThat(new Update().set("key", "value").isolated().toString())
-				.isEqualTo("{ \"$set\" : { \"key\" : \"value\" }, \"$isolated\" : 1 }");
+				.contains("\"$isolated\"");
 	}
 
 	@Test // DATAMONGO-1778

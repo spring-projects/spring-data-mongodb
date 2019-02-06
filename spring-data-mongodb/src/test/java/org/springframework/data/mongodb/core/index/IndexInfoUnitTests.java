@@ -52,8 +52,8 @@ public class IndexInfoUnitTests {
 	@Test // DATAMONGO-2170
 	public void partialFilterExpressionShouldMatchSource() {
 
-		assertThat(getIndexInfo(INDEX_WITH_PARTIAL_FILTER).getPartialFilterExpression())
-				.isEqualTo("{ \"quantity\" : { \"$gte\" : 10 } }");
+		assertThat(Document.parse(getIndexInfo(INDEX_WITH_PARTIAL_FILTER).getPartialFilterExpression()))
+				.isEqualTo(Document.parse("{ \"quantity\" : { \"$gte\" : 10 } }"));
 	}
 
 	private static IndexInfo getIndexInfo(String documentJson) {

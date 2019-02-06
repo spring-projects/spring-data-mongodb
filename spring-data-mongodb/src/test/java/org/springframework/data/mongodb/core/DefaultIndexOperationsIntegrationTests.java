@@ -90,7 +90,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		assertThat(info.getIndexFields().get(0).isGeo()).isEqualTo(true);
 	}
 
-	@Test // DATAMONGO-1467
+	@Test // DATAMONGO-1467, DATAMONGO-2198
 	public void shouldApplyPartialFilterCorrectly() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
@@ -101,10 +101,10 @@ public class DefaultIndexOperationsIntegrationTests {
 		indexOps.ensureIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-criteria");
-		assertThat(info.getPartialFilterExpression()).isEqualTo("{ \"q-t-y\" : { \"$gte\" : 10 } }");
+		assertThat(Document.parse(info.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"q-t-y\" : { \"$gte\" : 10 } }"));
 	}
 
-	@Test // DATAMONGO-1467
+	@Test // DATAMONGO-1467, DATAMONGO-2198
 	public void shouldApplyPartialFilterWithMappedPropertyCorrectly() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
@@ -115,10 +115,10 @@ public class DefaultIndexOperationsIntegrationTests {
 		indexOps.ensureIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-mapped-criteria");
-		assertThat(info.getPartialFilterExpression()).isEqualTo("{ \"qty\" : { \"$gte\" : 10 } }");
+		assertThat(Document.parse(info.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"qty\" : { \"$gte\" : 10 } }"));
 	}
 
-	@Test // DATAMONGO-1467
+	@Test // DATAMONGO-1467, DATAMONGO-2198
 	public void shouldApplyPartialDBOFilterCorrectly() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
@@ -129,10 +129,10 @@ public class DefaultIndexOperationsIntegrationTests {
 		indexOps.ensureIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-dbo");
-		assertThat(info.getPartialFilterExpression()).isEqualTo("{ \"qty\" : { \"$gte\" : 10 } }");
+		assertThat(Document.parse(info.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"qty\" : { \"$gte\" : 10 } }"));
 	}
 
-	@Test // DATAMONGO-1467
+	@Test // DATAMONGO-1467, DATAMONGO-2198
 	public void shouldFavorExplicitMappingHintViaClass() {
 
 		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO), is(true));
@@ -147,7 +147,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		indexOps.ensureIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-inheritance");
-		assertThat(info.getPartialFilterExpression()).isEqualTo("{ \"a_g_e\" : { \"$gte\" : 10 } }");
+		assertThat(Document.parse(info.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"a_g_e\" : { \"$gte\" : 10 } }"));
 	}
 
 	@Test // DATAMONGO-1518
