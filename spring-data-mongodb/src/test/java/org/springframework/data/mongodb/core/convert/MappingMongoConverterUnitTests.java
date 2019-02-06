@@ -1191,11 +1191,16 @@ public class MappingMongoConverterUnitTests {
 		assertThat(((Person) value).lastname, is("converter"));
 	}
 
-	@Test // DATAMONGO-743
+	@Test // DATAMONGO-743, DATAMONGO-2198
 	public void readsIntoStringsOutOfTheBox() {
 
-		org.bson.Document document = new org.bson.Document("firstname", "Dave");
-		assertThat(converter.read(String.class, document), is("{ \"firstname\" : \"Dave\" }"));
+
+		String target = converter.read(String.class, new org.bson.Document("firstname", "Dave"));
+
+		assertThat(target, Matchers.startsWith("{"));
+		assertThat(target, Matchers.endsWith("}"));
+		assertThat(target, Matchers.containsString( "\"firstname\""));
+		assertThat(target, Matchers.containsString( "\"Dave\""));
 	}
 
 	@Test // DATAMONGO-766
