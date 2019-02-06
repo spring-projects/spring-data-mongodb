@@ -38,10 +38,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-
-import com.mongodb.util.JSONParseException;
 
 /**
  * Common operations performed on an entity in the context of it's mapping metadata.
@@ -165,8 +164,15 @@ class EntityOperations {
 
 		try {
 			return Document.parse(source);
-		} catch (JSONParseException | org.bson.json.JsonParseException o_O) {
+		} catch (org.bson.json.JsonParseException o_O) {
 			throw new MappingException("Could not parse given String to save into a JSON document!", o_O);
+		} catch (RuntimeException o_O) {
+
+			// legacy 3.x exception
+			if (ClassUtils.matchesTypeName(o_O.getClass(), "JSONParseException")) {
+				throw new MappingException("Could not parse given String to save into a JSON document!", o_O);
+			}
+			throw o_O;
 		}
 	}
 

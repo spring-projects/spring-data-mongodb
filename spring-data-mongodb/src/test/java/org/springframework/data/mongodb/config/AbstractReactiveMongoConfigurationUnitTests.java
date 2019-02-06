@@ -86,8 +86,12 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		assertThat(context.getBean(SimpleReactiveMongoDatabaseFactory.class), is(notNullValue()));
 
 		exception.expect(NoSuchBeanDefinitionException.class);
-		context.getBean(Mongo.class);
-		context.close();
+
+		try {
+			context.getBean(Mongo.class);
+		} finally {
+			context.close();
+		}
 	}
 
 	@Test // DATAMONGO-1444

@@ -90,7 +90,7 @@ public class ApplicationContextEventTests {
 
 		applicationContext = new AnnotationConfigApplicationContext(ApplicationContextEventTestsAppConfig.class);
 		template = applicationContext.getBean(MongoTemplate.class);
-		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
+		template.setWriteConcern(WriteConcern.JOURNALED);
 		listener = applicationContext.getBean(SimpleMappingEventListener.class);
 	}
 

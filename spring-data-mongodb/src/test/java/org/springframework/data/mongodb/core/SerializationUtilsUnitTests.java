@@ -41,7 +41,7 @@ public class SerializationUtilsUnitTests {
 	public void writesSimpleDocument() {
 
 		Document document = new Document("foo", "bar");
-		assertThat(serializeToJsonSafely(document), is(document.toJson()));
+		assertThat(serializeToJsonSafely(document), is("{ \"foo\" : \"bar\"}"));
 	}
 
 	@Test

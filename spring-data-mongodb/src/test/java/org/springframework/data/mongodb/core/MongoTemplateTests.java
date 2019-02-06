@@ -26,6 +26,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
+import com.mongodb.MongoClient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -108,7 +109,6 @@ import org.springframework.util.StringUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -160,7 +160,7 @@ public class MongoTemplateTests {
 	}
 
 	@Autowired
-	public void setMongo(Mongo mongo) throws Exception {
+	public void setMongoClient(MongoClient mongo) throws Exception {
 
 		CustomConversions conversions = new MongoCustomConversions(
 				Arrays.asList(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE));
@@ -2820,9 +2820,9 @@ public class MongoTemplateTests {
 
 		assertThat(result, hasSize(2));
 
-		assertThat(template.getDb().getCollection("sample").count(
+		assertThat(template.getDb().getCollection("sample").countDocuments(
 				new org.bson.Document("field", new org.bson.Document("$in", Arrays.asList("spring", "mongodb")))), is(0L));
-		assertThat(template.getDb().getCollection("sample").count(new org.bson.Document("field", "data")), is(1L));
+		assertThat(template.getDb().getCollection("sample").countDocuments(new org.bson.Document("field", "data")), is(1L));
 	}
 
 	@Test // DATAMONGO-1001

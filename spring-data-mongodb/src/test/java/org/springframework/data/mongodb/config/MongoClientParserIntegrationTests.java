@@ -62,7 +62,7 @@ public class MongoClientParserIntegrationTests {
 		assertThat(factory.getBean("mongo-client-with-host-and-port"), instanceOf(MongoClient.class));
 	}
 
-	@Test // DATAMONGO-1158
+	@Test // DATAMONGO-1158, DATAMONGO-2199
 	public void createsMongoClientWithOptionsCorrectly() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
@@ -75,7 +75,7 @@ public class MongoClientParserIntegrationTests {
 					MongoClient.class);
 
 			assertThat(client.getReadPreference(), is(ReadPreference.secondary()));
-			assertThat(client.getWriteConcern(), is(WriteConcern.NORMAL));
+			assertThat(client.getWriteConcern(), is(WriteConcern.UNACKNOWLEDGED));
 		} finally {
 			context.close();
 		}

@@ -26,14 +26,15 @@ import com.mongodb.WriteConcern;
  * Unit tests for {@link StringToWriteConcernConverter}.
  *
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class StringToWriteConcernConverterUnitTests {
 
 	StringToWriteConcernConverter converter = new StringToWriteConcernConverter();
 
-	@Test
+	@Test // DATAMONGO-2199
 	public void createsWellKnownConstantsCorrectly() {
-		assertThat(converter.convert("SAFE"), is(WriteConcern.SAFE));
+		assertThat(converter.convert("ACKNOWLEDGED"), is(WriteConcern.ACKNOWLEDGED));
 	}
 
 	@Test

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -22,10 +23,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.bson.Document;
+import org.bson.json.JsonMode;
+import org.bson.json.JsonWriterSettings;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.Nullable;
-
-import com.mongodb.util.JSON;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Utility methods for JSON serialization.
@@ -118,17 +120,32 @@ public abstract class SerializationUtils {
 		}
 
 		try {
-			return value instanceof Document ? ((Document) value).toJson() : JSON.serialize(value);
+			String json =  value instanceof Document ? ((Document) value).toJson() : serializeValue(value);
+			return json.replaceAll("\"\\:", "\" :").replaceAll("\\{\"", "{ \""); //.replaceAll("\\]\\}", "] }");
 		} catch (Exception e) {
 
 			if (value instanceof Collection) {
 				return toString((Collection<?>) value);
 			} else if (value instanceof Map) {
 				return toString((Map<?, ?>) value);
-			} else {
+			} else if (ObjectUtils.isArray(value)) {
+				return toString(Arrays.asList(ObjectUtils.toObjectArray(value)));
+			}
+
+			else {
 				return String.format("{ \"$java\" : %s }", value.toString());
 			}
 		}
+	}
+
+	public static String serializeValue(@Nullable Object value) {
+
+		if(value == null) {
+			return "null";
+		}
+
+		String documentJson = new Document("toBeEncoded", value).toJson();
+		return documentJson.substring(documentJson.indexOf(':') + 1, documentJson.length() - 1).trim();
 	}
 
 	private static String toString(Map<?, ?> source) {

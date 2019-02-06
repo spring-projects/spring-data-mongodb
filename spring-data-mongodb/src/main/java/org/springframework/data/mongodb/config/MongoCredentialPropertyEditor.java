@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.lang.Nullable;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoCredential;
@@ -78,12 +80,23 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 
 						verifyUserNamePresent(userNameAndPassword);
 						credentials.add(MongoCredential.createGSSAPICredential(userNameAndPassword[0]));
-					} else if (MongoCredential.MONGODB_CR_MECHANISM.equals(authMechanism)) {
+					} else if ("MONGODB-CR".equals(authMechanism)) {
 
 						verifyUsernameAndPasswordPresent(userNameAndPassword);
 						verifyDatabasePresent(database);
-						credentials.add(MongoCredential.createMongoCRCredential(userNameAndPassword[0], database,
-								userNameAndPassword[1].toCharArray()));
+
+						Method createCRCredentialMethod = ReflectionUtils.findMethod(MongoCredential.class,
+								"createMongoCRCredential", String.class, String.class, char[].class);
+
+						if (createCRCredentialMethod == null) {
+							throw new IllegalArgumentException("MONGODB-CR is no longer supported.");
+						}
+
+						MongoCredential credential = MongoCredential.class
+								.cast(ReflectionUtils.invokeMethod(createCRCredentialMethod, null, userNameAndPassword[0], database,
+										userNameAndPassword[1].toCharArray()));
+						credentials.add(credential);
+
 					} else if (MongoCredential.MONGODB_X509_MECHANISM.equals(authMechanism)) {
 
 						verifyUserNamePresent(userNameAndPassword);

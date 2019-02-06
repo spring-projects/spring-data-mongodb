@@ -196,7 +196,7 @@ public class ReactivePerformanceTests {
 	@Test // DATAMONGO-1444
 	public void writeAndRead() throws Exception {
 
-		readsAndWrites(NUMBER_OF_PERSONS, ITERATIONS, WriteConcern.SAFE);
+		readsAndWrites(NUMBER_OF_PERSONS, ITERATIONS, WriteConcern.ACKNOWLEDGED);
 	}
 
 	private void readsAndWrites(int numberOfPersons, int iterations, WriteConcern concern) {

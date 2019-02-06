@@ -11,7 +11,7 @@
 		<mongo:client-options />
 	</mongo:mongo-client>
 	
-	<mongo:db-factory id="second" write-concern="REPLICAS_SAFE" />
+	<mongo:db-factory id="second" write-concern="W2" />
 	
 	<!-- now part of the namespace
 	<bean class="org.springframework.beans.factory.config.CustomEditorConfigurer">

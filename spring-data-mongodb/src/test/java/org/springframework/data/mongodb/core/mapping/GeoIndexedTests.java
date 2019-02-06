@@ -21,6 +21,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,12 +34,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.DB;
-import org.bson.Document;
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * @author Jon Brisbin
@@ -66,8 +65,8 @@ public class GeoIndexedTests {
 
 	private void cleanDb() throws UnknownHostException {
 
-		Mongo mongo = new MongoClient();
-		DB db = mongo.getDB(GeoIndexedAppConfig.GEO_DB);
+		MongoClient mongo = new MongoClient();
+		MongoDatabase db = mongo.getDatabase(GeoIndexedAppConfig.GEO_DB);
 
 		for (String coll : collectionsToDrop) {
 			db.getCollection(coll).drop();
