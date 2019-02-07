@@ -43,7 +43,7 @@ public interface MongoEntityInformation<T, ID> extends EntityInformation<T, ID> 
 	/**
 	 * Returns whether the entity uses optimistic locking.
 	 *
-	 * @return
+	 * @return true if the entity defines a {@link org.springframework.data.annotation.Version} property.
 	 * @since 2.2
 	 */
 	default boolean isVersioned() {
@@ -54,7 +54,8 @@ public interface MongoEntityInformation<T, ID> extends EntityInformation<T, ID> 
 	 * Returns the version value for the entity or {@literal null} if the entity is not {@link #isVersioned() versioned}.
 	 *
 	 * @param entity must not be {@literal null}
-	 * @return
+	 * @return can be {@literal null}.
+	 * @since 2.2
 	 */
 	@Nullable
 	default Object getVersion(T entity) {

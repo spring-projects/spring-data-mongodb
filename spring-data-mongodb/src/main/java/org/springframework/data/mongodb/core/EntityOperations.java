@@ -239,9 +239,11 @@ class EntityOperations {
 		}
 
 		/**
-		 * Returns the value of the version if the entity has a version property, {@literal null} otherwise.
+		 * Returns the value of the version if the entity {@link #isVersionedEntity() has a version property}.
 		 *
-		 * @return
+		 * @return the entity version. Can be {@literal null}.
+		 * @throws IllegalStateException if the entity does not define a {@literal version} property. Make sure to check
+		 *           {@link #isVersionedEntity()}.
 		 */
 		@Nullable
 		Object getVersion();
@@ -297,8 +299,8 @@ class EntityOperations {
 		/**
 		 * Returns the current version value if the entity has a version property.
 		 *
-		 * @return the current version or {@literal null} in case it's uninitialized or the entity doesn't expose a version
-		 *         property.
+		 * @return the current version or {@literal null} in case it's uninitialized.
+		 * @throws IllegalStateException if the entity does not define a {@literal version} property.
 		 */
 		@Nullable
 		Number getVersion();
