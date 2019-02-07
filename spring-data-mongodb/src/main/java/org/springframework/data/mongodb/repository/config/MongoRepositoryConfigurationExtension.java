@@ -19,21 +19,14 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.mongodb.config.BeanNames;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
-import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
-import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.w3c.dom.Element;
@@ -117,25 +110,6 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 
 		builder.addPropertyReference("mongoOperations", attributes.getString("mongoTemplateRef"));
 		builder.addPropertyValue("createIndexesForQueryMethods", attributes.getBoolean("createIndexesForQueryMethods"));
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#registerBeansForRoot(org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.data.repository.config.RepositoryConfigurationSource)
-	 */
-	@Override
-	public void registerBeansForRoot(BeanDefinitionRegistry registry, RepositoryConfigurationSource configurationSource) {
-
-		super.registerBeansForRoot(registry, configurationSource);
-
-		if (!registry.containsBeanDefinition(BeanNames.MAPPING_CONTEXT_BEAN_NAME)) {
-
-			RootBeanDefinition definition = new RootBeanDefinition(MongoMappingContext.class);
-			definition.setRole(AbstractBeanDefinition.ROLE_INFRASTRUCTURE);
-			definition.setSource(configurationSource.getSource());
-
-			registry.registerBeanDefinition(BeanNames.MAPPING_CONTEXT_BEAN_NAME, definition);
-		}
 	}
 
 	/*
