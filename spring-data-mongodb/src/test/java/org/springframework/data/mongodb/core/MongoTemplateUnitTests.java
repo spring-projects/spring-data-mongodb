@@ -146,7 +146,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.withReadPreference(any())).thenReturn(collection);
 		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(updateResult);
 		when(collection.withWriteConcern(any())).thenReturn(collectionWithWriteConcern);
-		when(collectionWithWriteConcern.deleteOne(any(Bson.class), any())).thenReturn(deleteResult);
+		when(collectionWithWriteConcern.deleteMany(any(Bson.class), any())).thenReturn(deleteResult);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 		when(findIterable.sort(any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.collation(any())).thenReturn(findIterable);
@@ -747,7 +747,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.remove(person);
 
 		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
-		verify(collectionWithWriteConcern).deleteOne(any(Bson.class), any());
+		verify(collectionWithWriteConcern).deleteMany(any(Bson.class), any());
 	}
 
 	@Test // DATAMONGO-1518
