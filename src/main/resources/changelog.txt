@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.5.RELEASE (2019-02-13)
+---------------------------------------------
+* DATAMONGO-2196 - Remove does not apply WriteConcern for single document delete operation.
+* DATAMONGO-2193 - Query on nested id field incorrectly returns no results.
+* DATAMONGO-2189 - AfterSaveEvent contains object to save and not the saved instance.
+* DATAMONGO-2187 - Release 2.1.5 (Lovelace SR5).
+
+
 Changes in version 2.1.4.RELEASE (2019-01-10)
 ---------------------------------------------
 * DATAMONGO-2181 - ReactiveMongoRepository.saveAll(…) does not consider collection name for new entities.
