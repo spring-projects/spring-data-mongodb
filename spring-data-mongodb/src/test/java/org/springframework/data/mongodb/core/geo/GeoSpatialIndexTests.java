@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,12 +28,12 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.CollectionCallback;
-import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.WriteResultChecking;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.mongodb.MongoException;
@@ -65,7 +64,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 
 		try {
 			template.save(new GeoSpatialEntity2D(45.2, 4.6));
-			assertThat(hasIndexOfType(GeoSpatialEntity2D.class, "2d"), is(true));
+			assertThat(hasIndexOfType(GeoSpatialEntity2D.class, "2d")).isTrue();
 		} finally {
 			template.dropCollection(GeoSpatialEntity2D.class);
 		}
@@ -76,7 +75,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 
 		try {
 			template.save(new GeoSpatialEntity2DSphere(45.2, 4.6));
-			assertThat(hasIndexOfType(GeoSpatialEntity2DSphere.class, "2dsphere"), is(true));
+			assertThat(hasIndexOfType(GeoSpatialEntity2DSphere.class, "2dsphere")).isTrue();
 		} finally {
 			template.dropCollection(GeoSpatialEntity2DSphere.class);
 		}
@@ -87,7 +86,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 
 		try {
 			template.save(new GeoSpatialEntityHaystack(45.2, 4.6, "Paris"));
-			assertThat(hasIndexOfType(GeoSpatialEntityHaystack.class, "geoHaystack"), is(true));
+			assertThat(hasIndexOfType(GeoSpatialEntityHaystack.class, "geoHaystack")).isTrue();
 		} finally {
 			template.dropCollection(GeoSpatialEntityHaystack.class);
 		}
@@ -104,9 +103,9 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 			IndexOperations indexOps = template.indexOps(GeoSpatialEntity2dWithGeneratedIndex.class);
 			List<IndexInfo> indexInfo = indexOps.getIndexInfo();
 
-			assertThat(indexInfo, hasSize(2));
-			assertThat(indexInfo.get(1), is(notNullValue()));
-			assertThat(indexInfo.get(1).getName(), is("location_2d"));
+			assertThat(indexInfo).hasSize(2);
+			assertThat(indexInfo.get(1)).isNotNull();
+			assertThat(indexInfo.get(1).getName()).isEqualTo("location_2d");
 
 		} finally {
 			template.dropCollection(GeoSpatialEntity2D.class);

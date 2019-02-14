@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
@@ -56,20 +55,18 @@ public class TextIndexTests extends AbstractIntegrationTests {
 
 		List<IndexInfo> indexInfos = indexOps.getIndexInfo();
 
-		assertThat(indexInfos.size(), is(2));
+		assertThat(indexInfos.size()).isEqualTo(2);
 
 		List<IndexField> fields = indexInfos.get(0).getIndexFields();
-		assertThat(fields.size(), is(1));
-		assertThat(fields, hasItem(IndexField.create("_id", Direction.ASC)));
+		assertThat(fields).containsExactly(IndexField.create("_id", Direction.ASC));
 
 		IndexInfo textIndexInfo = indexInfos.get(1);
 		List<IndexField> textIndexFields = textIndexInfo.getIndexFields();
-		assertThat(textIndexFields.size(), is(4));
-		assertThat(textIndexFields, hasItem(IndexField.text("textIndexedPropertyWithDefaultWeight", 1F)));
-		assertThat(textIndexFields, hasItem(IndexField.text("textIndexedPropertyWithWeight", 5F)));
-		assertThat(textIndexFields, hasItem(IndexField.text("nestedDocument.textIndexedPropertyInNestedDocument", 1F)));
-		assertThat(textIndexFields, hasItem(IndexField.create("_ftsx", Direction.ASC)));
-		assertThat(textIndexInfo.getLanguage(), is("spanish"));
+		assertThat(textIndexFields).hasSize(4).contains(IndexField.text("textIndexedPropertyWithDefaultWeight", 1F),
+				IndexField.text("textIndexedPropertyWithWeight", 5F),
+				IndexField.text("nestedDocument.textIndexedPropertyInNestedDocument", 1F),
+				IndexField.create("_ftsx", Direction.ASC));
+		assertThat(textIndexInfo.getLanguage()).isEqualTo("spanish");
 	}
 
 	@Document(language = "spanish")

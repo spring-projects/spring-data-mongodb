@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -35,7 +34,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.geo.GeoResults;
-import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -102,8 +100,8 @@ public class GeoJsonTests {
 
 		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
 
-		assertThat(result.getContent().size(), is(not(0)));
-		assertThat(result.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(result.getContent()).isNotEmpty();
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
 	}
 
 	@Test // DATAMONGO-1135
@@ -117,7 +115,7 @@ public class GeoJsonTests {
 		GeoJsonPolygon polygon = new GeoJsonPolygon(first, second, third, fourth, first);
 
 		List<Venue2DSphere> venues = template.find(query(where("location").within(polygon)), Venue2DSphere.class);
-		assertThat(venues.size(), is(4));
+		assertThat(venues).hasSize(4);
 	}
 
 	@Test // DATAMONGO-1135
@@ -127,7 +125,7 @@ public class GeoJsonTests {
 
 		Query query = query(where("location").near(point).maxDistance(0.01));
 		List<Venue2DSphere> venues = template.find(query, Venue2DSphere.class);
-		assertThat(venues.size(), is(1));
+		assertThat(venues).hasSize(1);
 	}
 
 	@Test // DATAMONGO-1135
@@ -138,7 +136,7 @@ public class GeoJsonTests {
 		Query query = query(where("location").nearSphere(point).maxDistance(0.003712240453784));
 		List<Venue2DSphere> venues = template.find(query, Venue2DSphere.class);
 
-		assertThat(venues.size(), is(1));
+		assertThat(venues).hasSize(1);
 	}
 
 	@Test // DATAMONGO-1137
@@ -153,7 +151,7 @@ public class GeoJsonTests {
 		DocumentWithPropertyUsingGeoJsonType result = template.findOne(query(where("id").is(obj.id)),
 				DocumentWithPropertyUsingGeoJsonType.class);
 
-		assertThat(result.geoJsonPoint, equalTo(obj.geoJsonPoint));
+		assertThat(result.geoJsonPoint).isEqualTo(obj.geoJsonPoint);
 	}
 
 	@Test // DATAMONGO-1137
@@ -169,7 +167,7 @@ public class GeoJsonTests {
 		DocumentWithPropertyUsingGeoJsonType result = template.findOne(query(where("id").is(obj.id)),
 				DocumentWithPropertyUsingGeoJsonType.class);
 
-		assertThat(result.geoJsonPolygon, equalTo(obj.geoJsonPolygon));
+		assertThat(result.geoJsonPolygon).isEqualTo(obj.geoJsonPolygon);
 	}
 
 	@Test // DATAMONGO-1137
@@ -184,7 +182,7 @@ public class GeoJsonTests {
 		DocumentWithPropertyUsingGeoJsonType result = template.findOne(query(where("id").is(obj.id)),
 				DocumentWithPropertyUsingGeoJsonType.class);
 
-		assertThat(result.geoJsonLineString, equalTo(obj.geoJsonLineString));
+		assertThat(result.geoJsonLineString).isEqualTo(obj.geoJsonLineString);
 	}
 
 	@Test // DATAMONGO-1137
@@ -201,7 +199,7 @@ public class GeoJsonTests {
 		DocumentWithPropertyUsingGeoJsonType result = template.findOne(query(where("id").is(obj.id)),
 				DocumentWithPropertyUsingGeoJsonType.class);
 
-		assertThat(result.geoJsonMultiLineString, equalTo(obj.geoJsonMultiLineString));
+		assertThat(result.geoJsonMultiLineString).isEqualTo(obj.geoJsonMultiLineString);
 	}
 
 	@Test // DATAMONGO-1137
@@ -216,7 +214,7 @@ public class GeoJsonTests {
 		DocumentWithPropertyUsingGeoJsonType result = template.findOne(query(where("id").is(obj.id)),
 				DocumentWithPropertyUsingGeoJsonType.class);
 
-		assertThat(result.geoJsonMultiPoint, equalTo(obj.geoJsonMultiPoint));
+		assertThat(result.geoJsonMultiPoint).isEqualTo(obj.geoJsonMultiPoint);
 	}
 
 	@Test // DATAMONGO-1137
@@ -232,7 +230,7 @@ public class GeoJsonTests {
 		DocumentWithPropertyUsingGeoJsonType result = template.findOne(query(where("id").is(obj.id)),
 				DocumentWithPropertyUsingGeoJsonType.class);
 
-		assertThat(result.geoJsonMultiPolygon, equalTo(obj.geoJsonMultiPolygon));
+		assertThat(result.geoJsonMultiPolygon).isEqualTo(obj.geoJsonMultiPolygon);
 	}
 
 	@Test // DATAMONGO-1137
@@ -248,7 +246,7 @@ public class GeoJsonTests {
 		DocumentWithPropertyUsingGeoJsonType result = template.findOne(query(where("id").is(obj.id)),
 				DocumentWithPropertyUsingGeoJsonType.class);
 
-		assertThat(result.geoJsonGeometryCollection, equalTo(obj.geoJsonGeometryCollection));
+		assertThat(result.geoJsonGeometryCollection).isEqualTo(obj.geoJsonGeometryCollection);
 	}
 
 	@Test // DATAMONGO-1110
@@ -258,7 +256,7 @@ public class GeoJsonTests {
 		List<Venue2DSphere> venues = template.find(query(where("location").near(point).minDistance(0.01)),
 				Venue2DSphere.class);
 
-		assertThat(venues.size(), is(11));
+		assertThat(venues).hasSize(11);
 	}
 
 	@Test // DATAMONGO-1110
@@ -268,7 +266,7 @@ public class GeoJsonTests {
 		List<Venue2DSphere> venues = template.find(query(where("location").nearSphere(point).minDistance(0.01)),
 				Venue2DSphere.class);
 
-		assertThat(venues.size(), is(11));
+		assertThat(venues).hasSize(11);
 	}
 
 	@Test // DATAMONGO-1135
@@ -278,7 +276,7 @@ public class GeoJsonTests {
 
 		Query query = query(where("location").near(point).minDistance(0.01).maxDistance(100));
 		List<Venue2DSphere> venues = template.find(query, Venue2DSphere.class);
-		assertThat(venues.size(), is(2));
+		assertThat(venues).hasSize(2);
 	}
 
 	@Test // DATAMONGO-1453
@@ -306,7 +304,7 @@ public class GeoJsonTests {
 				});
 
 		assertThat(template.findOne(query(where("id").is("datamongo-1453")),
-				DocumentWithPropertyUsingGeoJsonType.class).geoJsonPoint, is(equalTo(new GeoJsonPoint(0D, 0D))));
+				DocumentWithPropertyUsingGeoJsonType.class).geoJsonPoint).isEqualTo(new GeoJsonPoint(0D, 0D));
 	}
 
 	@Test // DATAMONGO-1453
@@ -335,10 +333,9 @@ public class GeoJsonTests {
 					}
 				});
 
-		assertThat(
-				template.findOne(query(where("id").is("datamongo-1453")),
-						DocumentWithPropertyUsingGeoJsonType.class).geoJsonLineString,
-				is(equalTo(new GeoJsonLineString(new Point(0D, 0D), new Point(1, 1)))));
+		assertThat(template.findOne(query(where("id").is("datamongo-1453")),
+				DocumentWithPropertyUsingGeoJsonType.class).geoJsonLineString)
+						.isEqualTo(new GeoJsonLineString(new Point(0D, 0D), new Point(1, 1)));
 	}
 
 	@Test // DATAMONGO-1466
@@ -359,7 +356,7 @@ public class GeoJsonTests {
 
 		OpenGeoJson target = template.findOne(query(where("id").is(source.id)), OpenGeoJson.class);
 
-		assertThat(target.shape, is(equalTo(source.shape)));
+		assertThat(target.shape).isEqualTo(source.shape);
 	}
 
 	private void addVenues() {

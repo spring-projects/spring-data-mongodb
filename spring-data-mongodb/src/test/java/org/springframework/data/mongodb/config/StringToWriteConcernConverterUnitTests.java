@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 
@@ -34,11 +33,11 @@ public class StringToWriteConcernConverterUnitTests {
 
 	@Test // DATAMONGO-2199
 	public void createsWellKnownConstantsCorrectly() {
-		assertThat(converter.convert("ACKNOWLEDGED"), is(WriteConcern.ACKNOWLEDGED));
+		assertThat(converter.convert("ACKNOWLEDGED")).isEqualTo(WriteConcern.ACKNOWLEDGED);
 	}
 
 	@Test
 	public void createsWriteConcernForUnknownValue() {
-		assertThat(converter.convert("-1"), is(new WriteConcern("-1")));
+		assertThat(converter.convert("-1")).isEqualTo(new WriteConcern("-1"));
 	}
 }

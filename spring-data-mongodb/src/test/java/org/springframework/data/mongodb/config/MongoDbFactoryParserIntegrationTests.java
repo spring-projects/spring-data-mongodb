@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -64,17 +63,19 @@ public class MongoDbFactoryParserIntegrationTests {
 		dbFactory.setWriteConcern(WriteConcern.ACKNOWLEDGED);
 		dbFactory.getDb();
 
-		assertThat(ReflectionTestUtils.getField(dbFactory, "writeConcern"), is((Object) WriteConcern.ACKNOWLEDGED));
+		assertThat(ReflectionTestUtils.getField(dbFactory, "writeConcern")).isEqualTo(WriteConcern.ACKNOWLEDGED);
 	}
 
 	@Test // DATAMONGO-2199
 	public void parsesWriteConcern() {
+
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");
 		assertWriteConcern(ctx, WriteConcern.ACKNOWLEDGED);
 	}
 
 	@Test // DATAMONGO-2199
 	public void parsesCustomWriteConcern() {
+
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(
 				"namespace/db-factory-bean-custom-write-concern.xml");
 		assertWriteConcern(ctx, new WriteConcern("rack1"));
@@ -88,17 +89,18 @@ public class MongoDbFactoryParserIntegrationTests {
 		MongoDbFactory factory = ctx.getBean("second", MongoDbFactory.class);
 		MongoDatabase db = factory.getDb();
 
-		assertThat(db.getWriteConcern(), is(WriteConcern.W2));
+		assertThat(db.getWriteConcern()).isEqualTo(WriteConcern.W2);
 		ctx.close();
 	}
 
 	// This test will fail since equals in WriteConcern uses == for _w and not .equals
 	public void testWriteConcernEquality() {
+
 		String s1 = new String("rack1");
 		String s2 = new String("rack1");
 		WriteConcern wc1 = new WriteConcern(s1);
 		WriteConcern wc2 = new WriteConcern(s2);
-		assertThat(wc1, is(wc2));
+		assertThat(wc1).isEqualTo(wc2);
 	}
 
 	@Test
@@ -115,13 +117,13 @@ public class MongoDbFactoryParserIntegrationTests {
 		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
 
-		assertThat(constructorArguments.getArgumentCount(), is(1));
+		assertThat(constructorArguments.getArgumentCount()).isOne();
 		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoURI.class);
-		assertThat(argument, is(notNullValue()));
+		assertThat(argument).isNotNull();
 
 		MongoDbFactory dbFactory = factory.getBean("mongoDbFactory", MongoDbFactory.class);
 		MongoDatabase db = dbFactory.getDb();
-		assertThat(db.getName(), is("database"));
+		assertThat(db.getName()).isEqualTo("database");
 	}
 
 	@Test // DATAMONGO-1218
@@ -131,9 +133,9 @@ public class MongoDbFactoryParserIntegrationTests {
 		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
 
-		assertThat(constructorArguments.getArgumentCount(), is(1));
+		assertThat(constructorArguments.getArgumentCount()).isOne();
 		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoClientURI.class);
-		assertThat(argument, is(notNullValue()));
+		assertThat(argument).isNotNull();
 	}
 
 	@Test // DATAMONGO-1293
@@ -143,9 +145,9 @@ public class MongoDbFactoryParserIntegrationTests {
 		BeanDefinition definition = factory.getBeanDefinition("testMongo");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
 
-		assertThat(constructorArguments.getArgumentCount(), is(1));
+		assertThat(constructorArguments.getArgumentCount()).isOne();
 		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoClientURI.class);
-		assertThat(argument, is(notNullValue()));
+		assertThat(argument).isNotNull();
 	}
 
 	@Test // DATAMONGO-1293
@@ -155,16 +157,16 @@ public class MongoDbFactoryParserIntegrationTests {
 		BeanDefinition definition = factory.getBeanDefinition("testMongo");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
 
-		assertThat(constructorArguments.getArgumentCount(), is(1));
+		assertThat(constructorArguments.getArgumentCount()).isOne();
 		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoClientURI.class);
-		assertThat(argument, is(notNullValue()));
+		assertThat(argument).isNotNull();
 	}
 
 	private static void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
 
 		SimpleMongoDbFactory dbFactory = ctx.getBean("first", SimpleMongoDbFactory.class);
 		MongoDatabase db = dbFactory.getDb();
-		assertThat(db.getName(), is("db"));
+		assertThat(db.getName()).isEqualTo("db");
 
 		WriteConcern configuredConcern = (WriteConcern) ReflectionTestUtils.getField(dbFactory, "writeConcern");
 
@@ -172,8 +174,8 @@ public class MongoDbFactoryParserIntegrationTests {
 		MyWriteConcern myDbWriteConcern = new MyWriteConcern(db.getWriteConcern());
 		MyWriteConcern myExpectedWriteConcern = new MyWriteConcern(expectedWriteConcern);
 
-		assertThat(myDbFactoryWriteConcern, is(myExpectedWriteConcern));
-		assertThat(myDbWriteConcern, is(myExpectedWriteConcern));
-		assertThat(myDbWriteConcern, is(myDbFactoryWriteConcern));
+		assertThat(myDbFactoryWriteConcern).isEqualTo(myExpectedWriteConcern);
+		assertThat(myDbWriteConcern).isEqualTo(myExpectedWriteConcern);
+		assertThat(myDbWriteConcern).isEqualTo(myDbFactoryWriteConcern);
 	}
 }
