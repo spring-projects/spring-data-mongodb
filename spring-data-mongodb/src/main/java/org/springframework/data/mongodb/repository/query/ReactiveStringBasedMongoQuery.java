@@ -15,18 +15,15 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.query.ExpressionEvaluatingParameterBinder.BindingContext;
-import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBinding;
-import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery.ParameterBindingParser;
+import org.springframework.data.mongodb.util.json.ParameterBindingContext;
+import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
@@ -42,16 +39,17 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time!";
 	private static final Logger LOG = LoggerFactory.getLogger(ReactiveStringBasedMongoQuery.class);
-	private static final ParameterBindingParser BINDING_PARSER = ParameterBindingParser.INSTANCE;
+	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 
 	private final String query;
 	private final String fieldSpec;
+
+	private final SpelExpressionParser expressionParser;
+	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+
 	private final boolean isCountQuery;
 	private final boolean isExistsQuery;
 	private final boolean isDeleteQuery;
-	private final List<ParameterBinding> queryParameterBindings;
-	private final List<ParameterBinding> fieldSpecParameterBindings;
-	private final ExpressionEvaluatingParameterBinder parameterBinder;
 
 	/**
 	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link MongoQueryMethod} and
@@ -85,13 +83,10 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
 
-		this.queryParameterBindings = new ArrayList<ParameterBinding>();
-		this.query = BINDING_PARSER.parseAndCollectParameterBindingsFromQueryIntoBindings(query,
-				this.queryParameterBindings);
-
-		this.fieldSpecParameterBindings = new ArrayList<ParameterBinding>();
-		this.fieldSpec = BINDING_PARSER.parseAndCollectParameterBindingsFromQueryIntoBindings(
-				method.getFieldSpecification(), this.fieldSpecParameterBindings);
+		this.query = query;
+		this.expressionParser = expressionParser;
+		this.evaluationContextProvider = evaluationContextProvider;
+		this.fieldSpec = method.getFieldSpecification();
 
 		if (method.hasAnnotatedQuery()) {
 
@@ -111,8 +106,6 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 			this.isExistsQuery = false;
 			this.isDeleteQuery = false;
 		}
-
-		this.parameterBinder = new ExpressionEvaluatingParameterBinder(expressionParser, evaluationContextProvider);
 	}
 
 	/*
@@ -122,12 +115,13 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		String queryString = parameterBinder.bind(this.query, accessor,
-				new BindingContext(getQueryMethod().getParameters(), queryParameterBindings));
-		String fieldsString = parameterBinder.bind(this.fieldSpec, accessor,
-				new BindingContext(getQueryMethod().getParameters(), fieldSpecParameterBindings));
+		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
+				evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
 
-		Query query = new BasicQuery(queryString, fieldsString).with(accessor.getSort());
+		Document queryObject = CODEC.decode(this.query, bindingContext);
+		Document fieldsObject = CODEC.decode(this.fieldSpec, bindingContext);
+
+		Query query = new BasicQuery(queryObject, fieldsObject).with(accessor.getSort());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("Created query %s for %s fields.", query.getQueryObject(), query.getFieldsObject()));
