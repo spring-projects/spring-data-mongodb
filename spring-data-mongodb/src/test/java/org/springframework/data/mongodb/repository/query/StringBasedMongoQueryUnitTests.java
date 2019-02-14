@@ -327,7 +327,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		byte[] binaryData = "Matthews".getBytes(StandardCharsets.UTF_8);
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
-				(Object) Arrays.asList(binaryData));
+				(Object) Collections.singletonList(binaryData));
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsBinaryIn", List.class);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
