@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -32,7 +31,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.GeoResults;
-import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
@@ -113,8 +111,8 @@ public abstract class AbstractGeoSpatialTests {
 
 		GeoResults<Venue> result = template.geoNear(geoNear, Venue.class);
 
-		assertThat(result.getContent().size(), is(not(0)));
-		assertThat(result.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(result.getContent()).isNotEmpty();
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
 	}
 
 	@Test
@@ -122,7 +120,7 @@ public abstract class AbstractGeoSpatialTests {
 
 		Circle circle = new Circle(-73.99171, 40.738868, 0.01);
 		List<Venue> venues = template.find(query(where("location").within(circle)), Venue.class);
-		assertThat(venues.size(), is(7));
+		assertThat(venues).hasSize(7);
 	}
 
 	@Test
@@ -130,7 +128,7 @@ public abstract class AbstractGeoSpatialTests {
 
 		Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
 		List<Venue> venues = template.find(query(where("location").withinSphere(circle)), Venue.class);
-		assertThat(venues.size(), is(11));
+		assertThat(venues).hasSize(11);
 	}
 
 	@Test
@@ -138,7 +136,7 @@ public abstract class AbstractGeoSpatialTests {
 
 		Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));
 		List<Venue> venues = template.find(query(where("location").within(box)), Venue.class);
-		assertThat(venues.size(), is(4));
+		assertThat(venues).hasSize(4);
 	}
 
 	@Test
@@ -152,15 +150,16 @@ public abstract class AbstractGeoSpatialTests {
 		Polygon polygon = new Polygon(first, second, third, fourth);
 
 		List<Venue> venues = template.find(query(where("location").within(polygon)), Venue.class);
-		assertThat(venues.size(), is(4));
+		assertThat(venues).hasSize(4);
 	}
 
 	@Test
 	public void nearSphere() {
+
 		Point point = new Point(-73.99171, 40.738868);
 		Query query = query(where("location").nearSphere(point).maxDistance(0.003712240453784));
 		List<Venue> venues = template.find(query, Venue.class);
-		assertThat(venues.size(), is(11));
+		assertThat(venues).hasSize(11);
 	}
 
 	@Test // DATAMONGO-1360

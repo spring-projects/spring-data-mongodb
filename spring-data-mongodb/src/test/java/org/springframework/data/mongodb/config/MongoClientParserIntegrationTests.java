@@ -15,11 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.collection.IsIterableContainingInOrder.*;
-import static org.hamcrest.core.Is.*;
-import static org.hamcrest.core.IsInstanceOf.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +25,6 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.mongodb.util.MongoClientVersion;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
@@ -59,7 +54,7 @@ public class MongoClientParserIntegrationTests {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
 
-		assertThat(factory.getBean("mongo-client-with-host-and-port"), instanceOf(MongoClient.class));
+		assertThat(factory.getBean("mongo-client-with-host-and-port")).isInstanceOf(MongoClient.class);
 	}
 
 	@Test // DATAMONGO-1158, DATAMONGO-2199
@@ -74,8 +69,8 @@ public class MongoClientParserIntegrationTests {
 			MongoClient client = context.getBean("mongo-client-with-options-for-write-concern-and-read-preference",
 					MongoClient.class);
 
-			assertThat(client.getReadPreference(), is(ReadPreference.secondary()));
-			assertThat(client.getWriteConcern(), is(WriteConcern.UNACKNOWLEDGED));
+			assertThat(client.getReadPreference()).isEqualTo(ReadPreference.secondary());
+			assertThat(client.getWriteConcern()).isEqualTo(WriteConcern.UNACKNOWLEDGED);
 		} finally {
 			context.close();
 		}
@@ -92,8 +87,8 @@ public class MongoClientParserIntegrationTests {
 		try {
 			MongoClient client = context.getBean("mongoClient", MongoClient.class);
 
-			assertThat(client.getAddress().getHost(), is("127.0.0.1"));
-			assertThat(client.getAddress().getPort(), is(27017));
+			assertThat(client.getAddress().getHost()).isEqualTo("127.0.0.1");
+			assertThat(client.getAddress().getPort()).isEqualTo(27017);
 		} finally {
 			context.close();
 		}
@@ -110,8 +105,8 @@ public class MongoClientParserIntegrationTests {
 		try {
 			MongoClient client = context.getBean("mongo-client-with-credentials", MongoClient.class);
 
-			assertThat(client.getCredentialsList(),
-					contains(MongoCredential.createPlainCredential("jon", "snow", "warg".toCharArray())));
+			assertThat(client.getCredentialsList())
+					.contains(MongoCredential.createPlainCredential("jon", "snow", "warg".toCharArray()));
 		} finally {
 			context.close();
 		}
@@ -128,7 +123,7 @@ public class MongoClientParserIntegrationTests {
 		try {
 
 			MongoClient client = context.getBean("mongo-client-with-server-selection-timeout", MongoClient.class);
-			assertThat(client.getMongoClientOptions().getServerSelectionTimeout(), is((Object) 100));
+			assertThat(client.getMongoClientOptions().getServerSelectionTimeout()).isEqualTo(100);
 		} finally {
 			context.close();
 		}

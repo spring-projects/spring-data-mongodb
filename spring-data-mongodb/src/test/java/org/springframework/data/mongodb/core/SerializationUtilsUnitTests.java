@@ -15,15 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import java.util.Arrays;
 import java.util.Map;
 
 import org.bson.Document;
-import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 
@@ -41,26 +39,24 @@ public class SerializationUtilsUnitTests {
 	public void writesSimpleDocument() {
 
 		Document document = new Document("foo", "bar");
-		assertThat(serializeToJsonSafely(document), is("{ \"foo\" : \"bar\"}"));
+		assertThat(serializeToJsonSafely(document)).isEqualTo("{ \"foo\" : \"bar\"}");
 	}
 
 	@Test
 	public void writesComplexObjectAsPlainToString() {
 
 		Document document = new Document("foo", new Complex());
-		assertThat(serializeToJsonSafely(document),
-				startsWith("{ \"foo\" : { \"$java\" : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"));
+		assertThat(serializeToJsonSafely(document).startsWith(
+				"{ \"foo\" : { \"$java\" : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"));
 	}
 
 	@Test
 	public void writesCollection() {
 
 		Document document = new Document("foo", Arrays.asList("bar", new Complex()));
-		Matcher<String> expectedOutput = allOf(
-				startsWith(
-						"{ \"foo\" : [ \"bar\", { \"$java\" : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex"),
-				endsWith(" } ] }"));
-		assertThat(serializeToJsonSafely(document), is(expectedOutput));
+		assertThat(serializeToJsonSafely(document)).startsWith(
+				"{ \"foo\" : [ \"bar\", { \"$java\" : org.springframework.data.mongodb.core.SerializationUtilsUnitTests$Complex")
+				.endsWith(" } ] }");
 	}
 
 	@Test // DATAMONGO-1245
@@ -70,8 +66,7 @@ public class SerializationUtilsUnitTests {
 		document.put("_id", 1);
 		document.put("nested", new Document("value", "conflux"));
 
-		assertThat(flattenMap(document), hasEntry("_id", (Object) 1));
-		assertThat(flattenMap(document), hasEntry("nested.value", (Object) "conflux"));
+		assertThat(flattenMap(document)).containsEntry("_id", 1).containsEntry("nested.value", "conflux");
 	}
 
 	@Test // DATAMONGO-1245
@@ -84,8 +79,7 @@ public class SerializationUtilsUnitTests {
 		document.put("_id", 1);
 		document.put("nested", new Document("value", dbl));
 
-		assertThat(flattenMap(document), hasEntry("_id", (Object) 1));
-		assertThat(flattenMap(document), hasEntry("nested.value", (Object) dbl));
+		assertThat(flattenMap(document)).containsEntry("_id", 1).containsEntry("nested.value", dbl);
 	}
 
 	@Test // DATAMONGO-1245
@@ -97,9 +91,8 @@ public class SerializationUtilsUnitTests {
 
 		Map<String, Object> map = flattenMap(document);
 
-		assertThat(map, hasEntry("_id", (Object) 1));
-		assertThat(map.get("nested"), notNullValue());
-		assertThat(((Map<String, Object>) map.get("nested")).get("$regex"), is((Object) "^conflux$"));
+		assertThat(map).containsEntry("_id", 1).containsKey("nested");
+		assertThat(((Map<String, Object>) map.get("nested")).get("$regex")).isEqualTo("^conflux$");
 	}
 
 	@Test // DATAMONGO-1245
@@ -114,15 +107,14 @@ public class SerializationUtilsUnitTests {
 
 		Map<String, Object> map = flattenMap(document);
 
-		assertThat(map, hasEntry("_id", (Object) 1));
-		assertThat(map.get("nested"), notNullValue());
-		assertThat(((Map<String, Object>) map.get("nested")).get("$regex"), is((Object) "^conflux$"));
-		assertThat(((Map<String, Object>) map.get("nested")).get("$options"), is((Object) "i"));
+		assertThat(map).containsEntry("_id", 1).containsKey("nested");
+		assertThat(((Map<String, Object>) map.get("nested")).get("$regex")).isEqualTo("^conflux$");
+		assertThat(((Map<String, Object>) map.get("nested")).get("$options")).isEqualTo("i");
 	}
 
 	@Test // DATAMONGO-1245
 	public void flattenMapShouldReturnEmptyMapWhenSourceIsNull() {
-		assertThat(flattenMap(null).isEmpty(), is(true));
+		assertThat(flattenMap(null)).isEmpty();
 	}
 
 	static class Complex {

@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,13 +41,13 @@ public class WriteConcernPropertyEditorUnitTests {
 	public void createsWriteConcernForWellKnownConstants() {
 
 		editor.setAsText("JOURNALED");
-		assertThat(editor.getValue(), is((Object) WriteConcern.JOURNALED));
+		assertThat(editor.getValue()).isEqualTo(WriteConcern.JOURNALED);
 	}
 
 	@Test
 	public void createsWriteConcernForUnknownConstants() {
 
 		editor.setAsText("-1");
-		assertThat(editor.getValue(), is((Object) new WriteConcern("-1")));
+		assertThat(editor.getValue()).isEqualTo(new WriteConcern("-1"));
 	}
 }

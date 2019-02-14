@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -42,6 +42,7 @@ import com.mongodb.client.MongoDatabase;
 /**
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = GeoIndexedAppConfig.class)
@@ -75,6 +76,7 @@ public class GeoIndexedTests {
 
 	@Test
 	public void testGeoLocation() {
+
 		GeoLocation geo = new GeoLocation(new double[] { 40.714346, -74.005966 });
 		template.insert(geo);
 
@@ -93,6 +95,6 @@ public class GeoIndexedTests {
 			}
 		});
 
-		assertTrue(hasIndex);
+		assertThat(hasIndex).isTrue();
 	}
 }
