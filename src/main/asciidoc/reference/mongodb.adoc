@@ -1736,6 +1736,41 @@ AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", T
 
 WARNING: Indexes are only used if the collation used for the operation matches the index collation.
 
+<<mongo.repositories>> support `Collations` via the `@org.springframework.data.mongodb.repository.Query` annotation.
+
+.Collation support for Repositories
+====
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  @Query(collation = "en_US")  <1>
+  List<Person> findByFirstname(String firstname);
+
+  @Query(collation = "{ 'locale' : 'en_US' }") <2>
+  List<Person> findPersonByFirstname(String firstname);
+
+  @Query(collation = "?1") <3>
+  List<Person> findByFirstname(String firstname, Object collation);
+
+  @Query(collation = "{ 'locale' : '?1' }") <4>
+  List<Person> findByFirstname(String firstname, String collation);
+
+  List<Person> findByFirstname(String firstname, Collation collation); <5>
+
+  @Query(collation = "{ 'locale' : 'en_US' }")
+  List<Person> findByFirstname(String firstname, @Nullable Collation collation); <6>
+}
+----
+<1> Static collation definition resulting in `{ 'locale' : 'en_US' }`.
+<2> Static collation definition resulting in `{ 'locale' : 'en_US' }`.
+<3> Dynamic collation depending on 2nd method argument. Allowed types include `String` (eg. 'en_US'), `Locacle` (eg. Locacle.US)
+and `Document` (eg. new Document("locale", "en_US"))
+<4> Dynamic collation depending on 2nd method argument.
+<5> Apply the `Collation` method parameter to the query.
+<6> The `Collation` method parameter overrides the default `collation` from `@Query` if not null.
+====
+
 [[mongo.jsonSchema]]
 === JSON Schema
 

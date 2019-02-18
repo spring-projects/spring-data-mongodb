@@ -86,6 +86,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		applyQueryMetaAttributesWhenPresent(query);
 		query = applyAnnotatedDefaultSortIfPresent(query);
+		query = applyAnnotatedCollationIfPresent(query, accessor);
 
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
@@ -152,6 +153,21 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		}
 
 		return QueryUtils.decorateSort(query, Document.parse(method.getAnnotatedSort()));
+	}
+
+	/**
+	 * If present apply a {@link org.springframework.data.mongodb.core.query.Collation} derived from the
+	 * {@link org.springframework.data.repository.query.QueryMethod} the given {@link Query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param accessor the {@link ParameterAccessor} used to obtain parameter placeholder replacement values.
+	 * @return
+	 * @since 2.2
+	 */
+	Query applyAnnotatedCollationIfPresent(Query query, ConvertingParameterAccessor accessor) {
+
+		return QueryUtils.applyCollation(query, method.hasAnnotatedCollation() ? method.getAnnotatedCollation() : null,
+				accessor);
 	}
 
 	/**

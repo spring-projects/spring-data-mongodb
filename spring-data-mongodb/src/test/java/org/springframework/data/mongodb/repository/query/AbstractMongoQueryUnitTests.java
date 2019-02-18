@@ -24,8 +24,10 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
+import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -52,6 +54,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -308,6 +311,126 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getValue().getSortObject(), is(equalTo(new Document("age", -1))));
 	}
 
+	@Test // DATAMONGO-1854
+	public void shouldApplyStaticAnnotatedCollation() {
+
+		createQueryForMethod("findWithCollationUsingSpimpleStringValueByFirstName", String.class) //
+				.execute(new Object[] { "dalinar" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	public void shouldApplyStaticAnnotatedCollationAsDocument() {
+
+		createQueryForMethod("findWithCollationUsingDocumentByFirstName", String.class) //
+				.execute(new Object[] { "dalinar" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	public void shouldApplyDynamicAnnotatedCollationAsString() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+				.execute(new Object[] { "dalinar", "en_US" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	public void shouldApplyDynamicAnnotatedCollationAsDocument() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+				.execute(new Object[] { "dalinar", new Document("locale", "en_US") });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	public void shouldApplyDynamicAnnotatedCollationAsLocale() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+				.execute(new Object[] { "dalinar", Locale.US });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1854
+	public void shouldThrowExceptionOnNonParsableCollation() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+				.execute(new Object[] { "dalinar", 100 });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	public void shouldApplyDynamicAnnotatedCollationIn() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholderInDocumentByFirstName", String.class, String.class) //
+				.execute(new Object[] { "dalinar", "en_US" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	public void shouldApplyCollationParameter() {
+
+		Collation collation = Collation.of("en_US");
+		createQueryForMethod("findWithCollationParameterByFirstName", String.class, Collation.class) //
+				.execute(new Object[] { "dalinar", collation });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // DATAMONGO-1854
+	public void collationParameterShouldOverrideAnnotation() {
+
+		Collation collation = Collation.of("de_AT");
+		createQueryForMethod("findWithWithCollationParameterAndAnnotationByFirstName", String.class, Collation.class) //
+				.execute(new Object[] { "dalinar", collation });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // DATAMONGO-1854
+	public void collationParameterShouldNotBeAppliedWhenNullOverrideAnnotation() {
+
+		createQueryForMethod("findWithWithCollationParameterAndAnnotationByFirstName", String.class, Collation.class) //
+				.execute(new Object[] { "dalinar", null });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 		return createQueryForMethod(Repo.class, methodName, paramTypes);
 	}
@@ -400,6 +523,23 @@ public class AbstractMongoQueryUnitTests {
 
 		@org.springframework.data.mongodb.repository.Query(sort = "{ age : 1 }")
 		List<Person> findByAge(Integer age, Sort page);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "en_US")
+		List<Person> findWithCollationUsingSpimpleStringValueByFirstName(String firstname);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
+		List<Person> findWithCollationUsingDocumentByFirstName(String firstname);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "?1")
+		List<Person> findWithCollationUsingPlaceholderByFirstName(String firstname, Object collation);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : '?1' }")
+		List<Person> findWithCollationUsingPlaceholderInDocumentByFirstName(String firstname, String collation);
+
+		List<Person> findWithCollationParameterByFirstName(String firstname, Collation collation);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
+		List<Person> findWithWithCollationParameterAndAnnotationByFirstName(String firstname, Collation collation);
 	}
 
 	// DATAMONGO-1872

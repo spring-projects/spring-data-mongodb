@@ -105,12 +105,14 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 	private Object execute(MongoParameterAccessor parameterAccessor) {
 
-		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), parameterAccessor));
+		ConvertingParameterAccessor convertingParamterAccessor = new ConvertingParameterAccessor(operations.getConverter(), parameterAccessor);
+		Query query = createQuery(convertingParamterAccessor);
 
 		applyQueryMetaAttributesWhenPresent(query);
 		query = applyAnnotatedDefaultSortIfPresent(query);
+		query = applyAnnotatedCollationIfPresent(query, convertingParamterAccessor);
 
-		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(parameterAccessor);
+		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(convertingParamterAccessor);
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
 
 		FindWithQuery<?> find = typeToRead == null //
@@ -119,7 +121,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		String collection = method.getEntityInformation().getCollectionName();
 
-		ReactiveMongoQueryExecution execution = getExecution(parameterAccessor,
+		ReactiveMongoQueryExecution execution = getExecution(convertingParamterAccessor,
 				new ResultProcessingConverter(processor, operations, instantiators), find);
 
 		return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
@@ -193,6 +195,21 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		}
 
 		return QueryUtils.decorateSort(query, Document.parse(method.getAnnotatedSort()));
+	}
+
+	/**
+	 * If present apply a {@link org.springframework.data.mongodb.core.query.Collation} derived from the
+	 * {@link org.springframework.data.repository.query.QueryMethod} the given {@link Query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param accessor the {@link ParameterAccessor} used to obtain parameter placeholder replacement values.
+	 * @return
+	 * @since 2.2
+	 */
+	Query applyAnnotatedCollationIfPresent(Query query, ConvertingParameterAccessor accessor) {
+
+		return QueryUtils.applyCollation(query, method.hasAnnotatedCollation() ? method.getAnnotatedCollation() : null,
+				accessor);
 	}
 
 	/**

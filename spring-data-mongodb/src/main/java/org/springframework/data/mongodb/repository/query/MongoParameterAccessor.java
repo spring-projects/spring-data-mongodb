@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.lang.Nullable;
@@ -56,6 +57,15 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 */
 	@Nullable
 	TextCriteria getFullText();
+
+	/**
+	 * Returns the {@link Collation} to be used for the query.
+	 *
+	 * @return {@literal null} if not set.
+	 * @since 2.2
+	 */
+	@Nullable
+	Collation getCollation();
 
 	/**
 	 * Returns the raw parameter values of the underlying query method.

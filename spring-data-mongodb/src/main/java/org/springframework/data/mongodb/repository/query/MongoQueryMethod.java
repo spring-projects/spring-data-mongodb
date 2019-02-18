@@ -322,6 +322,30 @@ public class MongoQueryMethod extends QueryMethod {
 				"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedSort() before."));
 	}
 
+	/**
+	 * Check if the query method is decorated with an non empty {@link Query#collation()}.
+	 *
+	 * @return true if method annotated with {@link Query} having an non empty collation attribute.
+	 * @since 2.2
+	 */
+	public boolean hasAnnotatedCollation() {
+		return lookupQueryAnnotation().map(it -> !it.collation().isEmpty()).orElse(false);
+	}
+
+	/**
+	 * Get the collation value extracted from the {@link Query} annotation.
+	 *
+	 * @return the {@link Query#sort()} value.
+	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
+	 *           {@link #hasAnnotatedQuery()} first.
+	 * @since 2.2
+	 */
+	public String getAnnotatedCollation() {
+
+		return lookupQueryAnnotation().map(Query::collation).orElseThrow(() -> new IllegalStateException(
+				"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedCollation() before."));
+	}
+
 	@SuppressWarnings("unchecked")
 	private <A extends Annotation> Optional<A> doFindAnnotation(Class<A> annotationType) {
 

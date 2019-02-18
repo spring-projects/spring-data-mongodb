@@ -29,6 +29,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.util.TypeInformation;
@@ -133,6 +134,15 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 */
 	public TextCriteria getFullText() {
 		return delegate.getFullText();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getCollation()
+	 */
+	@Override
+	public Collation getCollation() {
+		return delegate.getCollation();
 	}
 
 	/**
