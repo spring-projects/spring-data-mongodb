@@ -1771,6 +1771,9 @@ and `Document` (eg. new Document("locale", "en_US"))
 <4> Dynamic collation depending on 2nd method argument.
 <5> Apply the `Collation` method parameter to the query.
 <6> The `Collation` method parameter overrides the default `collation` from `@Query` if not null.
+
+NOTE: In case you enabled the automatic index creation for repository finder methods a potential static collation definition,
+as shown in (1) and (2), will be included when creating the index.
 ====
 
 [[mongo.jsonSchema]]

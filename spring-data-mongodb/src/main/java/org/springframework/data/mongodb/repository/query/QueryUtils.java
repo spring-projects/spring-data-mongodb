@@ -82,7 +82,7 @@ class QueryUtils {
 	 */
 	static Query applyCollation(Query query, @Nullable String collationExpression, ConvertingParameterAccessor accessor) {
 
-		if(accessor.getCollation() != null) {
+		if (accessor.getCollation() != null) {
 			return query.collation(accessor.getCollation());
 		}
 
@@ -95,7 +95,7 @@ class QueryUtils {
 		// TODO: use parameter binding Parser instead of Document.parse once DATAMONGO-2199 is merged.
 
 		if (!matcher.find()) {
-			return query.collation(collationFromString(collationExpression));
+			return query.collation(Collation.parse(collationExpression));
 		}
 
 		String placeholder = matcher.group();
@@ -104,7 +104,7 @@ class QueryUtils {
 		if (collationExpression.startsWith("?")) {
 
 			if (placeholderValue instanceof String) {
-				return query.collation(collationFromString(placeholderValue.toString()));
+				return query.collation(Collation.parse(placeholderValue.toString()));
 			}
 			if (placeholderValue instanceof Locale) {
 				return query.collation(Collation.of((Locale) placeholderValue));
@@ -116,11 +116,7 @@ class QueryUtils {
 					ObjectUtils.nullSafeClassName(placeholderValue)));
 		}
 
-		return query.collation(collationFromString(collationExpression.replace(placeholder, placeholderValue.toString())));
-	}
-
-	private static Collation collationFromString(String source) {
-		return source.startsWith("{") ? Collation.from(Document.parse(source)) : Collation.of(source);
+		return query.collation(Collation.parse(collationExpression.replace(placeholder, placeholderValue.toString())));
 	}
 
 	private static int computeParameterIndex(String parameter) {
