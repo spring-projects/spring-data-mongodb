@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 
-import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,7 +86,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -98,7 +98,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -110,7 +110,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -122,7 +122,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -134,7 +134,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -146,7 +146,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -158,7 +158,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -171,7 +171,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation()).contains(collation);
+		assertThat(captor.getValue().getCollation()).contains(collation);
 	}
 
 	@Test // DATAMONGO-1854
@@ -183,7 +183,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation()).contains(collation);
+		assertThat(captor.getValue().getCollation()).contains(collation);
 	}
 
 	@Test // DATAMONGO-1854
@@ -194,7 +194,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 

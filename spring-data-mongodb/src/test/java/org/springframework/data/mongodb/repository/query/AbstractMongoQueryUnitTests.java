@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -124,7 +122,7 @@ public class AbstractMongoQueryUnitTests {
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
-		assertThat(query.execute(new Object[] { "fake" }), is(0L));
+		assertThat(query.execute(new Object[] { "fake" })).isEqualTo(0L);
 	}
 
 	@Test // DATAMONGO-566, DATAMONGO-978
@@ -136,7 +134,7 @@ public class AbstractMongoQueryUnitTests {
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
-		assertThat(query.execute(new Object[] { "fake" }), is(100L));
+		assertThat(query.execute(new Object[] { "fake" })).isEqualTo(100L);
 		verify(mongoOperationsMock, times(1)).remove(any(), eq(Person.class), eq("persons"));
 	}
 
@@ -151,7 +149,8 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
 
-		assertThat(captor.getValue().getMeta().getComment(), nullValue());
+		assertThat(captor.getValue().getMeta().getComment()).isNull();
+		;
 	}
 
 	@Test // DATAMONGO-957
@@ -165,7 +164,7 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
 
-		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
+		assertThat(captor.getValue().getMeta().getComment()).isEqualTo("comment");
 	}
 
 	@Test // DATAMONGO-957
@@ -179,7 +178,7 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
 
-		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
+		assertThat(captor.getValue().getMeta().getComment()).isEqualTo("comment");
 	}
 
 	@Test // DATAMONGO-957
@@ -193,7 +192,7 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
 
-		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
+		assertThat(captor.getValue().getMeta().getComment()).isEqualTo("comment");
 	}
 
 	@Test // DATAMONGO-1057
@@ -211,8 +210,8 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind, times(2)).as(Person.class);
 		verify(withQueryMock, times(2)).matching(captor.capture());
 
-		assertThat(captor.getAllValues().get(0).getSkip(), is(0L));
-		assertThat(captor.getAllValues().get(1).getSkip(), is(10L));
+		assertThat(captor.getAllValues().get(0).getSkip()).isZero();
+		assertThat(captor.getAllValues().get(1).getSkip()).isEqualTo(10);
 	}
 
 	@Test // DATAMONGO-1057
@@ -230,8 +229,8 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind, times(2)).as(Person.class);
 		verify(withQueryMock, times(2)).matching(captor.capture());
 
-		assertThat(captor.getAllValues().get(0).getLimit(), is(11));
-		assertThat(captor.getAllValues().get(1).getLimit(), is(11));
+		assertThat(captor.getAllValues().get(0).getLimit()).isEqualTo(11);
+		assertThat(captor.getAllValues().get(1).getLimit()).isEqualTo(11);
 	}
 
 	@Test // DATAMONGO-1057
@@ -250,8 +249,8 @@ public class AbstractMongoQueryUnitTests {
 		verify(withQueryMock, times(2)).matching(captor.capture());
 
 		Document expectedSortObject = new Document().append("bar", -1);
-		assertThat(captor.getAllValues().get(0).getSortObject(), is(expectedSortObject));
-		assertThat(captor.getAllValues().get(1).getSortObject(), is(expectedSortObject));
+		assertThat(captor.getAllValues().get(0).getSortObject()).isEqualTo(expectedSortObject);
+		assertThat(captor.getAllValues().get(1).getSortObject()).isEqualTo(expectedSortObject);
 	}
 
 	@Test // DATAMONGO-1080
@@ -263,7 +262,7 @@ public class AbstractMongoQueryUnitTests {
 
 		AbstractMongoQuery query = createQueryForMethod("findByLastname", String.class);
 
-		assertThat(query.execute(new Object[] { "lastname" }), is(reference));
+		assertThat(query.execute(new Object[] { "lastname" })).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-1865
@@ -275,7 +274,7 @@ public class AbstractMongoQueryUnitTests {
 
 		AbstractMongoQuery query = createQueryForMethod("findFirstByLastname", String.class).setLimitingQuery(true);
 
-		assertThat(query.execute(new Object[] { "lastname" }), is(reference));
+		assertThat(query.execute(new Object[] { "lastname" })).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-1872
@@ -297,7 +296,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		assertThat(captor.getValue().getSortObject(), is(equalTo(new Document("age", 1))));
+		assertThat(captor.getValue().getSortObject()).isEqualTo(new Document("age", 1));
 	}
 
 	@Test // DATAMONGO-1979
@@ -308,7 +307,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		assertThat(captor.getValue().getSortObject(), is(equalTo(new Document("age", -1))));
+		assertThat(captor.getValue().getSortObject()).isEqualTo(new Document("age", -1));
 	}
 
 	@Test // DATAMONGO-1854
@@ -319,7 +318,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -331,7 +330,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -343,7 +342,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -355,7 +354,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -367,7 +366,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -379,7 +378,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -391,7 +390,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
@@ -404,7 +403,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation()).contains(collation);
+		assertThat(captor.getValue().getCollation()).contains(collation);
 	}
 
 	@Test // DATAMONGO-1854
@@ -416,7 +415,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation()).contains(collation);
+		assertThat(captor.getValue().getCollation()).contains(collation);
 	}
 
 	@Test // DATAMONGO-1854
@@ -427,7 +426,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		Assertions.assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
 				.contains(Collation.of("en_US").toDocument());
 	}
 
