@@ -15,16 +15,12 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.lang.reflect.Method;
 import java.util.List;
 
-import org.assertj.core.api.Assertions;
 import org.bson.Document;
-import org.hamcrest.core.IsNull;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
@@ -84,7 +80,7 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { new Point(10, 20), DISTANCE });
-		assertThat(accessor.getFullText(), IsNull.nullValue());
+		assertThat(accessor.getFullText()).isNull();
 	}
 
 	@Test // DATAMONGO-973
@@ -95,8 +91,8 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { "spring", TextCriteria.forDefaultLanguage().matching("data") });
-		assertThat(accessor.getFullText().getCriteriaObject().toJson(),
-				equalTo(Document.parse("{ \"$text\" : { \"$search\" : \"data\"}}").toJson()));
+		assertThat(accessor.getFullText().getCriteriaObject().toJson())
+				.isEqualTo(Document.parse("{ \"$text\" : { \"$search\" : \"data\"}}").toJson());
 	}
 
 	@Test // DATAMONGO-1110
@@ -113,8 +109,8 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		Range<Distance> range = accessor.getDistanceRange();
 
-		assertThat(range.getLowerBound(), is(Bound.inclusive(min)));
-		assertThat(range.getUpperBound(), is(Bound.inclusive(max)));
+		assertThat(range.getLowerBound()).isEqualTo(Bound.inclusive(min));
+		assertThat(range.getUpperBound()).isEqualTo(Bound.inclusive(max));
 	}
 
 	@Test // DATAMONGO-1854
@@ -127,7 +123,7 @@ public class MongoParametersParameterAccessorUnitTests {
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { "dalinar", collation });
 
-		Assertions.assertThat(accessor.getCollation()).isEqualTo(collation);
+		assertThat(accessor.getCollation()).isEqualTo(collation);
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
