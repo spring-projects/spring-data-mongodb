@@ -27,6 +27,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.query.MongoEntityMetadata;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.repository.core.support.QueryCreationListener;
@@ -90,6 +91,14 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		if (sort.isSorted()) {
 			for (Order order : sort) {
 				index.on(order.getProperty(), order.getDirection());
+			}
+		}
+
+		if (query.getQueryMethod().hasAnnotatedCollation()) {
+
+			String collation = query.getQueryMethod().getAnnotatedCollation();
+			if (!collation.contains("?")) {
+				index = index.collation(Collation.parse(collation));
 			}
 		}
 
