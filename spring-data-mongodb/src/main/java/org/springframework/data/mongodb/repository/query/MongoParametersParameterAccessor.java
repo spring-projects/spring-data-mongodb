@@ -22,6 +22,7 @@ import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -67,7 +68,8 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		}
 
 		int maxDistanceIndex = mongoParameters.getMaxDistanceIndex();
-		Bound<Distance> maxDistance = maxDistanceIndex == -1 ? Bound.unbounded() : Bound.inclusive((Distance) getValue(maxDistanceIndex));
+		Bound<Distance> maxDistance = maxDistanceIndex == -1 ? Bound.unbounded()
+				: Bound.inclusive((Distance) getValue(maxDistanceIndex));
 
 		return Range.of(Bound.unbounded(), maxDistance);
 	}
@@ -132,6 +134,20 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		throw new IllegalArgumentException(
 				String.format("Expected full text parameter to be one of String, Term or TextCriteria but found %s.",
 						ClassUtils.getShortName(fullText.getClass())));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getCollation()
+	 */
+	@Override
+	public Collation getCollation() {
+
+		if (method.getParameters().getCollationParameterIndex() == -1) {
+			return null;
+		}
+
+		return getValue(method.getParameters().getCollationParameterIndex());
 	}
 
 	/*

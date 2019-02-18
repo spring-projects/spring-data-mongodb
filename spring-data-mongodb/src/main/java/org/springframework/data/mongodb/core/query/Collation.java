@@ -119,6 +119,23 @@ public class Collation {
 	}
 
 	/**
+	 * Parse the given collation string into a {@link Collation}.
+	 *
+	 * @param collation the collation to parse. Can be a simple string like {@code en_US} or a
+	 *          {@link Document#parse(String) parsable} document like <code>&#123; 'locale' : '?0' &#125;</code> .
+	 * @return never {@literal null}.
+	 * @throws IllegalArgumentException if {@literal collation} is null.
+	 * @since 2.2
+	 */
+	public static Collation parse(String collation) {
+
+		Assert.notNull(collation, "Collation must not be null!");
+
+		return StringUtils.trimLeadingWhitespace(collation).startsWith("{") ? from(Document.parse(collation))
+				: of(collation);
+	}
+
+	/**
 	 * Create new {@link Collation} from values in {@link Document}.
 	 *
 	 * @param source must not be {@literal null}.
