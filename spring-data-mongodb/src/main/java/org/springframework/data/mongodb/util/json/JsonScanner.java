@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2008-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,13 @@ import org.bson.json.JsonParseException;
  * "https://github.com/mongodb/mongo-java-driver/blob/master/bson/src/main/org/bson/json/JsonScanner.java">MongoDB
  * Inc.</a> licensed under the Apache License, Version 2.0. <br />
  * Formatted and modified to allow reading Spring Data specific placeholder values.
- * 
- * @since 2.2
+ *
  * @author Jeff Yemin
  * @author Trisha Gee
  * @author Robert Guo
  * @author Ross Lawley
  * @author Christoph Strobl
+ * @since 2.2
  */
 class JsonScanner {
 
@@ -122,13 +122,13 @@ class JsonScanner {
 
 	/**
 	 * Reads {@code RegularExpressionToken} from source. The following variants of lexemes are possible:
-	 * 
+	 *
 	 * <pre>
 	 *  /pattern/
 	 *  /\(pattern\)/
 	 *  /pattern/ims
 	 * </pre>
-	 * 
+	 *
 	 * Options can include 'i','m','x','s'
 	 *
 	 * @return The regular expression token.
@@ -295,7 +295,7 @@ class JsonScanner {
 
 	/**
 	 * Reads number token from source. The following variants of lexemes are possible:
-	 * 
+	 *
 	 * <pre>
 	 *  12
 	 *  123

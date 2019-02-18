@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2008-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import org.bson.types.Decimal128;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
+
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -47,7 +48,7 @@ import org.springframework.util.NumberUtils;
  * Reads a JSON and evaluates placehoders and SpEL expressions. Modified version of <a href=
  * "https://github.com/mongodb/mongo-java-driver/blob/master/bson/src/main/org/bson/json/JsonReader.java">MongoDB Inc.
  * JsonReader</a> licensed under the Apache License, Version 2.0. <br />
- * 
+ *
  * @author Jeff Yemin
  * @author Ross Lawley
  * @author Thrisha Gee
@@ -55,6 +56,7 @@ import org.springframework.util.NumberUtils;
  * @author Florian Buecklers
  * @author Brendon Puntin
  * @author Christoph Strobl
+ * @since 2.2
  */
 public class ParameterBindingJsonReader extends AbstractBsonReader {
 
@@ -77,6 +79,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 	public ParameterBindingJsonReader(final String json) {
 		this(json, new Object[] {});
 	}
+
+	// Spring Data Customization START
 
 	/**
 	 * Constructs a new instance with the given JSON string.
@@ -115,6 +119,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			currentValue = bindableValueFor(new JsonToken(JsonTokenType.UNQUOTED_STRING, json)).getValue();
 		}
 	}
+
+	// Spring Data Customization END
 
 	@Override
 	protected BsonBinary doReadBinaryData() {
@@ -156,7 +162,12 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			switch (nameToken.getType()) {
 				case STRING:
 				case UNQUOTED_STRING:
+
+					// Spring Data Customization START
+
 					setCurrentName(bindableValueFor(nameToken).getValue().toString());
+
+					// Spring Data Customization END
 					break;
 				case END_OBJECT:
 					setState(State.END_OF_DOCUMENT);
@@ -176,6 +187,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			setState(State.END_OF_ARRAY);
 			return BsonType.END_OF_DOCUMENT;
 		}
+
+		// Spring Data Customization START
 
 		boolean noValueFound = false;
 		BindableValue bindableValue = null;
@@ -297,6 +310,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				noValueFound = true;
 				break;
 		}
+
+		// Spring Data Customization END
+
 		if (noValueFound) {
 			throw new JsonParseException("JSON reader was expecting a value but found '%s'.", token.getValue());
 		}
@@ -323,6 +339,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 		return getCurrentBsonType();
 	}
+
+	// Spring Data Customization START
 
 	@Override
 	public void setState(State newState) {
@@ -434,6 +452,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		return bindingContext.evaluateExpression(expressionString);
 	}
 
+	// Spring Data Customization END
 	// CHECKSTYLE:ON
 
 	@Override
@@ -1311,7 +1330,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			throw new JsonParseException("JSON reader expected a string but found '%s'.", patternToken.getValue());
 		}
 
+		// Spring Data Customization START
 		return bindableValueFor(patternToken).getValue().toString();
+		// Spring Data Customization END
 	}
 
 	private String visitSymbolExtendedJson() {
@@ -1576,6 +1597,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		return out;
 	}
 
+	// Spring Data Customization START
+
 	@Data
 	static class BindableValue {
 
@@ -1583,4 +1606,6 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		Object value;
 		int index;
 	}
+
+	// Spring Data Customization END
 }

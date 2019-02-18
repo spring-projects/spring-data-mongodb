@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2008-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,8 +35,19 @@ import org.bson.BsonValue;
 import org.bson.BsonWriter;
 import org.bson.Document;
 import org.bson.Transformer;
-import org.bson.codecs.*;
+import org.bson.codecs.BsonTypeClassMap;
+import org.bson.codecs.BsonTypeCodecMap;
+import org.bson.codecs.BsonValueCodecProvider;
+import org.bson.codecs.Codec;
+import org.bson.codecs.CollectibleCodec;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.DocumentCodecProvider;
+import org.bson.codecs.EncoderContext;
+import org.bson.codecs.IdGenerator;
+import org.bson.codecs.ObjectIdGenerator;
+import org.bson.codecs.ValueCodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
+
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
@@ -49,11 +60,11 @@ import org.springframework.util.StringUtils;
  * "https://github.com/mongodb/mongo-java-driver/blob/master/bson/src/main/org/bson/codecs/DocumentCodec.java">MongoDB
  * Inc. DocumentCodec</a> licensed under the Apache License, Version 2.0. <br />
  *
- * @since 2.2
  * @author Jeff Yemin
  * @author Ross Lawley
  * @author Ralph Schaer
  * @author Christoph Strobl
+ * @since 2.2
  */
 public class ParameterBindingDocumentCodec implements CollectibleCodec<Document> {
 
@@ -78,7 +89,6 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	 * Construct a new instance with the given registry.
 	 *
 	 * @param registry the registry
-	 * @since 3.5
 	 */
 	public ParameterBindingDocumentCodec(final CodecRegistry registry) {
 		this(registry, DEFAULT_BSON_TYPE_CLASS_MAP);
@@ -156,6 +166,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		writeMap(writer, document, encoderContext);
 	}
 
+	// Spring Data Customization START
 	public Document decode(@Nullable String json, Object[] values) {
 
 		return decode(json, new ParameterBindingContext((index) -> values[index], new SpelExpressionParser(),
@@ -196,6 +207,8 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 
 		return document;
 	}
+
+	// Spring Data Customization END
 
 	@Override
 	public Class<Document> getEncoderClass() {
@@ -254,11 +267,12 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 
 	private Object readValue(final BsonReader reader, final DecoderContext decoderContext) {
 
+		// Spring Data Customization START
 		if (reader instanceof ParameterBindingJsonReader) {
 
 			ParameterBindingJsonReader bindingReader = (ParameterBindingJsonReader) reader;
 
-			// check if the reader has actually found something to replaceand did so.
+			// check if the reader has actually found something to replace and did so.
 			// resets the reader state to move on after the actual value
 			// returns the replacement value
 			if (bindingReader.currentValue != null) {
@@ -269,6 +283,8 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 				return value;
 			}
 		}
+
+		// Spring Data Customization END
 
 		BsonType bsonType = reader.getCurrentBsonType();
 		if (bsonType == BsonType.NULL) {
@@ -281,6 +297,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			return registry.get(UUID.class).decode(reader, decoderContext);
 		}
 
+		// Spring Data Customization START
 		// By default the registry uses DocumentCodec for parsing.
 		// We need to reroute that to our very own implementation or we'll end up only mapping half the placeholders.
 		Codec<?> codecToUse = bsonTypeCodecMap.get(bsonType);
@@ -289,6 +306,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		}
 
 		return valueTransformer.transform(codecToUse.decode(reader, decoderContext));
+		// Spring Data Customization END
 	}
 
 	private List<Object> readList(final BsonReader reader, final DecoderContext decoderContext) {
@@ -296,12 +314,14 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		List<Object> list = new ArrayList<>();
 		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
 
+			// Spring Data Customization START
 			Object listValue = readValue(reader, decoderContext);
 			if (listValue instanceof Collection) {
 				list.addAll((Collection) listValue);
 				break;
 			}
 			list.add(listValue);
+			// Spring Data Customization END
 		}
 		reader.readEndArray();
 		return list;

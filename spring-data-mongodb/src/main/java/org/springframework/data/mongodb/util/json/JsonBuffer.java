@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2008-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ import org.bson.json.JsonParseException;
  * "https://github.com/mongodb/mongo-java-driver/blob/master/bson/src/main/org/bson/json/JsonBuffer.java">MongoDB
  * Inc.</a> licensed under the Apache License, Version 2.0. <br />
  * Formatted and modified.
- * 
- * @since 2.2
+ *
  * @author Jeff Yemin
  * @author Ross Lawley
+ * @since 2.2
  */
 class JsonBuffer {
 
