@@ -23,8 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.bson.Document;
-import org.bson.json.JsonMode;
-import org.bson.json.JsonWriterSettings;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
@@ -120,8 +119,8 @@ public abstract class SerializationUtils {
 		}
 
 		try {
-			String json =  value instanceof Document ? ((Document) value).toJson() : serializeValue(value);
-			return json.replaceAll("\"\\:", "\" :").replaceAll("\\{\"", "{ \""); //.replaceAll("\\]\\}", "] }");
+			String json = value instanceof Document ? ((Document) value).toJson() : serializeValue(value);
+			return json.replaceAll("\":", "\" :").replaceAll("\\{\"", "{ \"");
 		} catch (Exception e) {
 
 			if (value instanceof Collection) {
@@ -130,9 +129,7 @@ public abstract class SerializationUtils {
 				return toString((Map<?, ?>) value);
 			} else if (ObjectUtils.isArray(value)) {
 				return toString(Arrays.asList(ObjectUtils.toObjectArray(value)));
-			}
-
-			else {
+			} else {
 				return String.format("{ \"$java\" : %s }", value.toString());
 			}
 		}
@@ -140,7 +137,7 @@ public abstract class SerializationUtils {
 
 	public static String serializeValue(@Nullable Object value) {
 
-		if(value == null) {
+		if (value == null) {
 			return "null";
 		}
 

@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.bson.types.Binary;
+
 import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -920,7 +921,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Lookup the MongoDB specific flags for a given regex option string.
-	 * 
+	 *
 	 * @param s the Regex option/flag to look up. Can be {@literal null}.
 	 * @return zero if given {@link String} is {@literal null} or empty.
 	 * @since 2.2
@@ -945,10 +946,10 @@ public class Criteria implements CriteriaDefinition {
 	 *
 	 * @param c the Regex option/flag to look up.
 	 * @return
-	 * @throws IllegalArgumentException for unkown flags
+	 * @throws IllegalArgumentException for unknown flags
 	 * @since 2.2
 	 */
-	private static int regexFlag(final char c) {
+	private static int regexFlag(char c) {
 
 		int flag = FLAG_LOOKUP[c];
 
@@ -1135,7 +1136,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Default implementation of {@link BitwiseCriteriaOperators}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @currentRead Beyond the Shadows - Brent Weeks
 	 */
