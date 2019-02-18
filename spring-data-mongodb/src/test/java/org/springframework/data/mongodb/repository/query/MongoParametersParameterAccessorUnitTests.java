@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.hamcrest.core.IsNull;
 import org.junit.Test;
@@ -31,6 +32,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.projection.ProjectionFactory;
@@ -115,6 +117,19 @@ public class MongoParametersParameterAccessorUnitTests {
 		assertThat(range.getUpperBound(), is(Bound.inclusive(max)));
 	}
 
+	@Test // DATAMONGO-1854
+	public void shouldDetectCollation() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, Collation.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
+
+		Collation collation = Collation.of("en_US");
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { "dalinar", collation });
+
+		Assertions.assertThat(accessor.getCollation()).isEqualTo(collation);
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNear(Point point);
@@ -124,5 +139,8 @@ public class MongoParametersParameterAccessorUnitTests {
 		List<Person> findByLocationNear(Point point, Range<Distance> distances);
 
 		List<Person> findByFirstname(String firstname, TextCriteria fullText);
+
+		List<Person> findByFirstname(String firstname, Collation collation);
+
 	}
 }

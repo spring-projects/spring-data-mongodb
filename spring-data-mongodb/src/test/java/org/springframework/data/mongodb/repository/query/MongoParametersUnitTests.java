@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.Person;
@@ -127,14 +129,32 @@ public class MongoParametersUnitTests {
 	}
 
 	@Test // DATAMONGO-1110
-	public void shouldNotHaveMinDistanceIfOnlyOneDistanceParameterPresent() throws NoSuchMethodException,
-			SecurityException {
+	public void shouldNotHaveMinDistanceIfOnlyOneDistanceParameterPresent()
+			throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
 		MongoParameters parameters = new MongoParameters(method, false);
 
 		assertThat(parameters.getRangeIndex(), is(-1));
 		assertThat(parameters.getMaxDistanceIndex(), is(1));
+	}
+
+	@Test // DATAMONGO-1854
+	public void shouldReturnMinusOneIfCollationParameterDoesNotExist() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
+		MongoParameters parameters = new MongoParameters(method, false);
+
+		Assertions.assertThat(parameters.getCollationParameterIndex()).isEqualTo(-1);
+	}
+
+	@Test // DATAMONGO-1854
+	public void shouldReturnIndexOfCollationParameterIfExists() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByText", String.class, Collation.class);
+		MongoParameters parameters = new MongoParameters(method, false);
+
+		Assertions.assertThat(parameters.getCollationParameterIndex()).isOne();
 	}
 
 	interface PersonRepository {
@@ -154,5 +174,7 @@ public class MongoParametersUnitTests {
 		List<Person> findByNameAndText(String name, TextCriteria text);
 
 		List<Person> findByLocationNear(Point point, Range<Distance> range);
+
+		List<Person> findByText(String text, Collation collation);
 	}
 }

@@ -15,10 +15,18 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.bson.Document;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Nullable;
+import org.springframework.util.NumberUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Internal utility class to help avoid duplicate code required in both the reactive and the sync {@link Query} support
@@ -29,6 +37,8 @@ import org.springframework.data.mongodb.core.query.Query;
  * @currentRead Assassin's Apprentice - Robin Hobb
  */
 class QueryUtils {
+
+	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 
 	/**
 	 * Decorate {@link Query} and add a default sort expression to the given {@link Query}. Attributes of the given
@@ -57,5 +67,63 @@ class QueryUtils {
 		});
 
 		return (Query) factory.getProxy();
+	}
+
+	/**
+	 * Apply a collation extracted from the given {@literal collationExpression} to the given {@link Query}. Potentially
+	 * replace parameter placeholders with values from the {@link ConvertingParameterAccessor accessor}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param collationExpression must not be {@literal null}.
+	 * @param accessor must not be {@literal null}.
+	 * @return the {@link Query} having proper {@link Collation}.
+	 * @see Query#collation(Collation)
+	 * @since 2.2
+	 */
+	static Query applyCollation(Query query, @Nullable String collationExpression, ConvertingParameterAccessor accessor) {
+
+		if(accessor.getCollation() != null) {
+			return query.collation(accessor.getCollation());
+		}
+
+		if (collationExpression == null) {
+			return query;
+		}
+
+		Matcher matcher = PARAMETER_BINDING_PATTERN.matcher(collationExpression);
+
+		// TODO: use parameter binding Parser instead of Document.parse once DATAMONGO-2199 is merged.
+
+		if (!matcher.find()) {
+			return query.collation(collationFromString(collationExpression));
+		}
+
+		String placeholder = matcher.group();
+		Object placeholderValue = accessor.getBindableValue(computeParameterIndex(placeholder));
+
+		if (collationExpression.startsWith("?")) {
+
+			if (placeholderValue instanceof String) {
+				return query.collation(collationFromString(placeholderValue.toString()));
+			}
+			if (placeholderValue instanceof Locale) {
+				return query.collation(Collation.of((Locale) placeholderValue));
+			}
+			if (placeholderValue instanceof Document) {
+				return query.collation(Collation.from((Document) placeholderValue));
+			}
+			throw new IllegalArgumentException(String.format("Collation must be a String, Locale or Document but was %s",
+					ObjectUtils.nullSafeClassName(placeholderValue)));
+		}
+
+		return query.collation(collationFromString(collationExpression.replace(placeholder, placeholderValue.toString())));
+	}
+
+	private static Collation collationFromString(String source) {
+		return source.startsWith("{") ? Collation.from(Document.parse(source)) : Collation.of(source);
+	}
+
+	private static int computeParameterIndex(String parameter) {
+		return NumberUtils.parseNumber(parameter.replace("?", ""), Integer.class);
 	}
 }
