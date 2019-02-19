@@ -15,69 +15,62 @@
  */
 package org.springframework.data.mongodb.core
 
-import com.nhaarman.mockito_kotlin.verify
 import example.first.First
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Answers
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
 
 /**
  * @author Sebastien Deleuze
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner::class)
 class ExecutableFindOperationExtensionsTests {
 
-    @Mock(answer = Answers.RETURNS_MOCKS)
-    lateinit var operation: ExecutableFindOperation
+    val operation = mockk<ExecutableFindOperation>(relaxed = true)
 
-    @Mock(answer = Answers.RETURNS_MOCKS)
-    lateinit var operationWithProjection: ExecutableFindOperation.FindWithProjection<First>
+    val operationWithProjection = mockk<ExecutableFindOperation.FindWithProjection<First>>(relaxed = true)
 
-    @Mock(answer = Answers.RETURNS_MOCKS)
-    lateinit var distinctWithProjection: ExecutableFindOperation.DistinctWithProjection
+    val distinctWithProjection = mockk<ExecutableFindOperation.DistinctWithProjection>(relaxed = true)
 
     @Test // DATAMONGO-1689
     fun `ExecutableFindOperation#query(KClass) extension should call its Java counterpart`() {
 
         operation.query(First::class)
-        verify(operation).query(First::class.java)
+        verify { operation.query(First::class.java) }
     }
 
     @Test // DATAMONGO-1689
     fun `ExecutableFindOperation#query() with reified type parameter extension should call its Java counterpart`() {
 
         operation.query<First>()
-        verify(operation).query(First::class.java)
+        verify { operation.query(First::class.java) }
     }
 
     @Test // DATAMONGO-1689, DATAMONGO-2086
     fun `ExecutableFindOperation#FindOperationWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
         operationWithProjection.asType(User::class)
-        verify(operationWithProjection).`as`(User::class.java)
+        verify { operationWithProjection.`as`(User::class.java) }
     }
 
     @Test // DATAMONGO-1689, DATAMONGO-2086
     fun `ExecutableFindOperation#FindOperationWithProjection#asType() with reified type parameter extension should call its Java counterpart`() {
 
         operationWithProjection.asType<User>()
-        verify(operationWithProjection).`as`(User::class.java)
+        verify { operationWithProjection.`as`(User::class.java) }
     }
 
     @Test // DATAMONGO-1761, DATAMONGO-2086
     fun `ExecutableFindOperation#DistinctWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
         distinctWithProjection.asType(User::class)
-        verify(distinctWithProjection).`as`(User::class.java)
+        verify { distinctWithProjection.`as`(User::class.java) }
     }
 
     @Test // DATAMONGO-2086
     fun `ExecutableFindOperation#DistinctWithProjection#asType() with reified type parameter extension should call its Java counterpart`() {
 
         distinctWithProjection.asType<User>()
-        verify(distinctWithProjection).`as`(User::class.java)
+        verify { distinctWithProjection.`as`(User::class.java) }
     }
 }
