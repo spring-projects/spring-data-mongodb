@@ -15,36 +15,31 @@
  */
 package org.springframework.data.mongodb.core
 
-import com.nhaarman.mockito_kotlin.verify
 import example.first.First
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Answers
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
 
 /**
- * Unit tests for [ExecutableUpdateOperationExtensions].
+ * Unit tests for `ExecutableUpdateOperationExtensions.kt`.
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner::class)
 class ExecutableUpdateOperationExtensionsTests {
 
-	@Mock(answer = Answers.RETURNS_MOCKS)
-	lateinit var operation: ExecutableUpdateOperation
+	val operation = mockk<ExecutableUpdateOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1719
 	fun `update(KClass) extension should call its Java counterpart`() {
 
 		operation.update(First::class)
-		verify(operation).update(First::class.java)
+		verify { operation.update(First::class.java) }
 	}
 
 	@Test // DATAMONGO-1719
 	fun `update() with reified type parameter extension should call its Java counterpart`() {
 
 		operation.update<First>()
-		verify(operation).update(First::class.java)
+		verify { operation.update(First::class.java) }
 	}
 }

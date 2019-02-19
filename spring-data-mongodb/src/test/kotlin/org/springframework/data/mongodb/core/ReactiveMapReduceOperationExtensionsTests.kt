@@ -15,51 +15,45 @@
  */
 package org.springframework.data.mongodb.core
 
-import com.nhaarman.mockito_kotlin.verify
 import example.first.First
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Answers
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
 
 /**
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner::class)
 class ReactiveMapReduceOperationExtensionsTests {
 
-	@Mock(answer = Answers.RETURNS_MOCKS)
-	lateinit var operation: ReactiveMapReduceOperation
+	val operation = mockk<ReactiveMapReduceOperation>(relaxed = true)
 
-	@Mock(answer = Answers.RETURNS_MOCKS)
-	lateinit var operationWithProjection: ReactiveMapReduceOperation.MapReduceWithProjection<First>
+	val operationWithProjection = mockk<ReactiveMapReduceOperation.MapReduceWithProjection<First>>(relaxed = true)
 
 	@Test // DATAMONGO-1929
 	fun `ReactiveMapReduceOperation#mapReduce(KClass) extension should call its Java counterpart`() {
 
 		operation.mapReduce(First::class)
-		verify(operation).mapReduce(First::class.java)
+		verify { operation.mapReduce(First::class.java) }
 	}
 
 	@Test // DATAMONGO-1929
 	fun `ReactiveMapReduceOperation#mapReduce() with reified type parameter extension should call its Java counterpart`() {
 
 		operation.mapReduce<First>()
-		verify(operation).mapReduce(First::class.java)
+		verify { operation.mapReduce(First::class.java) }
 	}
 
 	@Test // DATAMONGO-1929, DATAMONGO-2086
 	fun `ReactiveMapReduceOperation#MapReduceWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
 		operationWithProjection.asType(User::class)
-		verify(operationWithProjection).`as`(User::class.java)
+		verify { operationWithProjection.`as`(User::class.java) }
 	}
 
 	@Test // DATAMONGO-1929, DATAMONGO-2086
 	fun `ReactiveMapReduceOperation#MapReduceWithProjection#asType() with reified type parameter extension should call its Java counterpart`() {
 
 		operationWithProjection.asType<User>()
-		verify(operationWithProjection).`as`(User::class.java)
+		verify { operationWithProjection.`as`(User::class.java) }
 	}
 }

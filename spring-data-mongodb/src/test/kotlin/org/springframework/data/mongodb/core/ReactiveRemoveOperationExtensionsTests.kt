@@ -15,34 +15,29 @@
  */
 package org.springframework.data.mongodb.core
 
-import com.nhaarman.mockito_kotlin.verify
 import example.first.First
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Answers
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
 
 /**
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner::class)
 class ReactiveRemoveOperationExtensionsTests {
 
-	@Mock(answer = Answers.RETURNS_MOCKS)
-	lateinit var operation: ReactiveRemoveOperation
+	val operation = mockk<ReactiveRemoveOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1719
 	fun `remove(KClass) extension should call its Java counterpart`() {
 
 		operation.remove(First::class)
-		verify(operation).remove(First::class.java)
+		verify { operation.remove(First::class.java) }
 	}
 
 	@Test // DATAMONGO-1719
 	fun `remove() with reified type parameter extension should call its Java counterpart`() {
 
 		operation.remove<First>()
-		verify(operation).remove(First::class.java)
+		verify { operation.remove(First::class.java) }
 	}
 }

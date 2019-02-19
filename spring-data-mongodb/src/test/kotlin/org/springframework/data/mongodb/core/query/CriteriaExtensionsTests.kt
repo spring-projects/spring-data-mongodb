@@ -15,23 +15,18 @@
  */
 package org.springframework.data.mongodb.core.query
 
+import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Answers
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.junit.MockitoJUnitRunner
 
 /**
  * @author Sebastien Deleuze
  * @author Tjeu Kayim
  */
-@RunWith(MockitoJUnitRunner::class)
 class CriteriaExtensionsTests {
 
-	@Mock(answer = Answers.RETURNS_MOCKS)
-	lateinit var criteria: Criteria
+	val criteria = mockk<Criteria>(relaxed = true)
 
 	@Test
 	fun `isEqualTo() extension should call its Java counterpart`() {
@@ -40,7 +35,7 @@ class CriteriaExtensionsTests {
 
 		criteria.isEqualTo(foo)
 
-		Mockito.verify(criteria, Mockito.times(1)).`is`(foo)
+		verify(exactly = 1) { criteria.`is`(foo) }
 	}
 
 	@Test
@@ -48,7 +43,7 @@ class CriteriaExtensionsTests {
 
 		criteria.isEqualTo(null)
 
-		Mockito.verify(criteria, Mockito.times(1)).`is`(null)
+		verify(exactly = 1) { criteria.`is`(null) }
 	}
 
 	@Test
@@ -59,7 +54,7 @@ class CriteriaExtensionsTests {
 
 		criteria.inValues(foo, bar)
 
-		Mockito.verify(criteria, Mockito.times(1)).`in`(foo, bar)
+		verify(exactly = 1) { criteria.`in`(foo, bar) }
 	}
 
 	@Test
@@ -67,7 +62,7 @@ class CriteriaExtensionsTests {
 
 		criteria.inValues(null, null)
 
-		Mockito.verify(criteria, Mockito.times(1)).`in`(null, null)
+		verify(exactly = 1) { criteria.`in`(null, null) }
 	}
 
 	@Test
@@ -77,7 +72,7 @@ class CriteriaExtensionsTests {
 
 		criteria.inValues(c)
 
-		Mockito.verify(criteria, Mockito.times(1)).`in`(c)
+		verify(exactly = 1) { criteria.`in`(c) }
 	}
 
 	@Test
@@ -87,7 +82,7 @@ class CriteriaExtensionsTests {
 
 		criteria.inValues(c)
 
-		Mockito.verify(criteria, Mockito.times(1)).`in`(c)
+		verify(exactly = 1) { criteria.`in`(c) }
 	}
 
 	@Test
@@ -95,7 +90,7 @@ class CriteriaExtensionsTests {
 
 		criteria.and(Book::title)
 
-		Mockito.verify(criteria, Mockito.times(1)).and("title")
+		verify(exactly = 1) { criteria.and("title") }
 	}
 
 	@Test
@@ -103,7 +98,7 @@ class CriteriaExtensionsTests {
 
 		criteria.and(Book::author / Author::name)
 
-		Mockito.verify(criteria, Mockito.times(1)).and("author.name")
+		verify(exactly = 1) { criteria.and("author.name") }
 	}
 
 	@Test
