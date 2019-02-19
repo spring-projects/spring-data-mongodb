@@ -32,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -646,6 +647,16 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, pattern), context);
 		assertThat(creator.createQuery()).isEqualTo(query(where("firstName").regex(".*", "iu")));
+	}
+
+	@Test // DATAMONGO-2071
+	public void betweenShouldAllowSingleRageParameter() {
+
+		PartTree tree = new PartTree("findByAgeBetween", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree,
+				getAccessor(converter, Range.of(Bound.exclusive(10), Bound.exclusive(11))), context);
+
+		assertThat(creator.createQuery()).isEqualTo(query(where("age").gt(10).lt(11)));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
