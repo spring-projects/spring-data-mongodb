@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
@@ -42,7 +43,6 @@ import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator.MatchMode;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor.PotentiallyConvertingIterator;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
@@ -187,7 +187,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case LESS_THAN_EQUAL:
 				return criteria.lte(parameters.next());
 			case BETWEEN:
-				return criteria.gt(parameters.next()).lt(parameters.next());
+				return computeBetweenPart(criteria, parameters.next(), parameters);
 			case IS_NOT_NULL:
 				return criteria.ne(null);
 			case IS_NULL:
@@ -416,6 +416,50 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Compute a {@link Type#BETWEEN} typed {@link Part} using {@link Criteria#gt(Object) $gt},
+	 * {@link Criteria#gte(Object) $gte}, {@link Criteria#lt(Object) $lt} and {@link Criteria#lte(Object) $lte}. <br />
+	 * In case the given {@literal value} is actually a {@link Range} the lower and upper bounds of the {@link Range} are
+	 * used according to their {@link Bound#isInclusive() inclusion} definition. Otherwise the {@literal value} is used
+	 * for {@literal $gt} and {@link Iterator#next() parameters.next()} as {@literal $lt}.
+	 *
+	 * @param criteria must not be {@literal null}.
+	 * @param value current value. Must not be {@literal null}.
+	 * @param parameters must not be {@literal null}.
+	 * @return
+	 * @since 2.2
+	 */
+	private static Criteria computeBetweenPart(Criteria criteria, Object value, Iterator<Object> parameters) {
+
+		if (!(value instanceof Range)) {
+			return criteria.gt(value).lt(parameters.next());
+		}
+
+		Range<?> range = (Range<?>) value;
+		Optional<?> min = range.getLowerBound().getValue();
+		Optional<?> max = range.getUpperBound().getValue();
+
+		min.ifPresent(it -> {
+
+			if (range.getLowerBound().isInclusive()) {
+				criteria.gte(it);
+			} else {
+				criteria.gt(it);
+			}
+		});
+
+		max.ifPresent(it -> {
+
+			if (range.getUpperBound().isInclusive()) {
+				criteria.lte(it);
+			} else {
+				criteria.lt(it);
+			}
+		});
+
+		return criteria;
 	}
 
 	private static MatchMode toMatchMode(Type type) {

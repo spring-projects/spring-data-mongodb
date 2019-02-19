@@ -188,8 +188,10 @@ The following table shows the keywords that are supported for query methods:
 | `{"age" : {"$lte" : age}}`
 
 | `Between`
-| `findByAgeBetween(int from, int to)`
-| `{"age" : {"$gt" : from, "$lt" : to}}`
+| `findByAgeBetween(int from, int to)` +
+`findByAgeBetween(Range<Integer> range)`
+| `{"age" : {"$gt" : from, "$lt" : to}}` +
+lower / upper bounds (`$gt` / `$gte` & `$lt` / `$lte`) according to `Range`
 
 | `In`
 | `findByAgeIn(Collection ages)`
