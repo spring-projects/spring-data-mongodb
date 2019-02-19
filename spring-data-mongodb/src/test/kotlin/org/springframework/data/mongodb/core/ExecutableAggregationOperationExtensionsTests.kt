@@ -15,36 +15,30 @@
  */
 package org.springframework.data.mongodb.core
 
-import com.nhaarman.mockito_kotlin.verify
 import example.first.First
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Answers
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.junit.MockitoJUnitRunner
 
 /**
  * @author Sebastien Deleuze
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner::class)
 class ExecutableAggregationOperationExtensionsTests {
 
-	@Mock(answer = Answers.RETURNS_MOCKS)
-	lateinit var operation: ExecutableAggregationOperation
+	val operation = mockk<ExecutableAggregationOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1689
 	fun `aggregateAndReturn(KClass) extension should call its Java counterpart`() {
 
 		operation.aggregateAndReturn(First::class)
-		verify(operation).aggregateAndReturn(First::class.java)
+		verify { operation.aggregateAndReturn(First::class.java) }
 	}
 
 	@Test // DATAMONGO-1689
 	fun `aggregateAndReturn() with reified type parameter extension should call its Java counterpart`() {
 
 		operation.aggregateAndReturn<First>()
-		verify(operation).aggregateAndReturn(First::class.java)
+		verify { operation.aggregateAndReturn(First::class.java) }
 	}
 }

@@ -15,36 +15,31 @@
  */
 package org.springframework.data.mongodb.core
 
-import com.nhaarman.mockito_kotlin.verify
 import example.first.First
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Answers
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
 
 /**
  * @author Sebastien Deleuze
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner::class)
 class ExecutableInsertOperationExtensionsTests {
 
-    @Mock(answer = Answers.RETURNS_MOCKS)
-    lateinit var operation: ExecutableInsertOperation
+    val operation = mockk<ExecutableInsertOperation>(relaxed = true)
 
     @Test // DATAMONGO-1689
     fun `insert(KClass) extension should call its Java counterpart`() {
 
         operation.insert(First::class)
-        verify(operation).insert(First::class.java)
+        verify { operation.insert(First::class.java) }
     }
 
     @Test // DATAMONGO-1689
     fun `insert() with reified type parameter extension should call its Java counterpart`() {
 
         operation.insert<First>()
-        verify(operation).insert(First::class.java)
+        verify { operation.insert(First::class.java) }
     }
 
 }
