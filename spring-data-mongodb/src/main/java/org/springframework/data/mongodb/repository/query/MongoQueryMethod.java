@@ -335,7 +335,7 @@ public class MongoQueryMethod extends QueryMethod {
 	/**
 	 * Get the collation value extracted from the {@link Query} annotation.
 	 *
-	 * @return the {@link Query#sort()} value.
+	 * @return the {@link Query#collation()} value.
 	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
 	 *           {@link #hasAnnotatedQuery()} first.
 	 * @since 2.2

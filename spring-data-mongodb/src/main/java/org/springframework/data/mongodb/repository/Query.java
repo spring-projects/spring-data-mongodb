@@ -97,11 +97,9 @@ public @interface Query {
 	String sort() default "";
 
 	/**
-	 * Defines the collation to apply when executing the query. <br />
+	 * Defines the collation to apply when executing the query.
 	 *
-	 * <pre>
-	 *     <code>
-	 *
+	 * <pre class="code">
 	 * // Fixed value
 	 * &#64;Query(collation = "en_US")
 	 * List<Entry> findAllByFixedCollation();
@@ -121,7 +119,6 @@ public @interface Query {
 	 * // SpEL expression
 	 * &#64;Query(collation = "?#{[0]}")
 	 * List<Entry> findAllByDynamicSpElCollation(String collation);
-	 *     </code>
 	 * </pre>
 	 *
 	 * @since 2.2
