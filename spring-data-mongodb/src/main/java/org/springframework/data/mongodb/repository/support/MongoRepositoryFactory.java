@@ -190,7 +190,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 			} else if (queryMethod.hasAnnotatedQuery()) {
 				return new StringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
 			} else {
-				return new PartTreeMongoQuery(queryMethod, operations);
+				return new PartTreeMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
 			}
 		}
 	}
