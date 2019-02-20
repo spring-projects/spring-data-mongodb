@@ -180,7 +180,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 			} else if (queryMethod.hasAnnotatedQuery()) {
 				return new ReactiveStringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
 			} else {
-				return new ReactivePartTreeMongoQuery(queryMethod, operations);
+				return new ReactivePartTreeMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
 			}
 		}
 	}
