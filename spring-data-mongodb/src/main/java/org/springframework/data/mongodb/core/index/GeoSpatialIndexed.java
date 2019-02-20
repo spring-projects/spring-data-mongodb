@@ -34,8 +34,8 @@ import java.lang.annotation.Target;
 public @interface GeoSpatialIndexed {
 
 	/**
-	 * Index name. <br />
-	 * <br />
+	 * Index name either as plain value or as {@link org.springframework.expression.spel.standard.SpelExpression template
+	 * expression}. <br />
 	 * The name will only be applied as is when defined on root level. For usage on nested or embedded structures the
 	 * provided name will be prefixed with the path leading to the entity. <br />
 	 * <br />
@@ -52,6 +52,7 @@ public @interface GeoSpatialIndexed {
 	 * &#64;Document
 	 * class Hybrid {
 	 *   &#64;GeoSpatialIndexed(name="index") Point h1;
+	 *   &#64;GeoSpatialIndexed(name="#{&#64;myBean.indexName}") Point h2;
 	 * }
 	 *
 	 * class Nested {
@@ -67,6 +68,7 @@ public @interface GeoSpatialIndexed {
 	 * db.root.createIndex( { hybrid.h1: "2d" } , { name: "hybrid.index" } )
 	 * db.root.createIndex( { nested.n1: "2d" } , { name: "nested.index" } )
 	 * db.hybrid.createIndex( { h1: "2d" } , { name: "index" } )
+	 * db.hybrid.createIndex( { h2: "2d"} , { name: the value myBean.getIndexName() returned } )
 	 * </code>
 	 * </pre>
 	 *
