@@ -131,4 +131,28 @@ public @interface Indexed {
 	 *      "https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
 	 */
 	int expireAfterSeconds() default -1;
+
+	/**
+	 * Alternative for {@link #expireAfterSeconds()} to configure the timeout after which the collection should expire.
+	 * Defaults to an empty String for no expiry. Accepts numeric values followed by their unit of measure (d(ays),
+	 * h(ours), m(inutes), s(seconds)) or a Spring {@literal template expression}.
+	 *
+	 * <pre>
+	 *     <code>
+	 *
+	 * &#0064;Indexed(expireAfter = "10s")
+	 * String expireAfterTenSeconds;
+	 *
+	 * &#0064;Indexed(expireAfter = "1d")
+	 * String expireAfterOneDay;
+	 *
+	 * &#0064;Indexed(expireAfter = "#{&#0064;mySpringBean.timeout}")
+	 * String expireAfterTimeoutObtainedFromSpringBean;
+	 *     </code>
+	 * </pre>
+	 *
+	 * @return {@literal 0s} by default.
+	 * @since 2.2
+	 */
+	String expireAfter() default "0s";
 }
