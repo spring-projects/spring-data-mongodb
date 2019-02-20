@@ -19,6 +19,7 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -43,14 +46,22 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexRes
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexedFieldSpec;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.common.LiteralExpression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -68,8 +79,11 @@ import org.springframework.util.StringUtils;
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexResolver.class);
+	private static final Pattern TIMEOUT_PATTERN = Pattern.compile("(\\d+)(\\W+)?([dhms])");
+	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private final MongoMappingContext mappingContext;
+	private EvaluationContextProvider evaluationContextProvider = EvaluationContextProvider.DEFAULT;
 
 	/**
 	 * Create new {@link MongoPersistentEntityIndexResolver}.
@@ -428,7 +442,52 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
 		}
 
+		if (!index.expireAfter().isEmpty() && !index.expireAfter().equals("0s")) {
+
+			if (index.expireAfterSeconds() >= 0) {
+				throw new IllegalStateException(String.format(
+						"@Indexed already defines an expiration timeout of %s sec. via Indexed#expireAfterSeconds. Please make to use either expireAfterSeconds or expireAfter.", index.expireAfterSeconds()));
+			}
+
+			EvaluationContext ctx = getEvaluationContext();
+
+			if (persitentProperty.getOwner() instanceof BasicMongoPersistentEntity) {
+
+				EvaluationContext contextFromEntity = ((BasicMongoPersistentEntity<?>) persitentProperty.getOwner())
+						.getEvaluationContext(null);
+				if (contextFromEntity != null && !EvaluationContextProvider.DEFAULT.equals(contextFromEntity)) {
+					ctx = contextFromEntity;
+				}
+			}
+
+			Duration timeout = computeIndexTimeout(index.expireAfter(), ctx);
+			if (!timeout.isZero() && !timeout.isNegative()) {
+				indexDefinition.expire(timeout);
+			}
+		}
+
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
+	}
+
+	/**
+	 * Get the default {@link EvaluationContext}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	protected EvaluationContext getEvaluationContext() {
+		return evaluationContextProvider.getEvaluationContext(null);
+	}
+
+	/**
+	 * Set the {@link EvaluationContextProvider} used for obtaining the {@link EvaluationContext} used to compute
+	 * {@link org.springframework.expression.spel.standard.SpelExpression expressions}.
+	 *
+	 * @param evaluationContextProvider must not be {@literal null}.
+	 * @since 2.2
+	 */
+	public void setEvaluationContextProvider(EvaluationContextProvider evaluationContextProvider) {
+		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	/**
@@ -509,6 +568,58 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		if (indexDefinitionHolder != null) {
 			indexes.add(indexDefinitionHolder);
 		}
+	}
+
+	/**
+	 * Compute the index timeout value by evaluating a potential
+	 * {@link org.springframework.expression.spel.standard.SpelExpression} and parsing the final value.
+	 *
+	 * @param timeoutValue must not be {@literal null}.
+	 * @param evaluationContext must not be {@literal null}.
+	 * @return never {@literal null}
+	 * @since 2.2
+	 * @throws IllegalArgumentException for invalid duration values.
+	 */
+	private static Duration computeIndexTimeout(String timeoutValue, EvaluationContext evaluationContext) {
+
+		String val = evaluatePotentialTemplateExpression(timeoutValue, evaluationContext);
+
+		if (val == null) {
+			return Duration.ZERO;
+		}
+
+		Matcher matcher = TIMEOUT_PATTERN.matcher(val);
+		if (matcher.find()) {
+
+			Long timeout = NumberUtils.parseNumber(matcher.group(1), Long.class);
+			String unit = matcher.group(3);
+
+			switch (unit) {
+				case "d":
+					return Duration.ofDays(timeout);
+				case "h":
+					return Duration.ofHours(timeout);
+				case "m":
+					return Duration.ofMinutes(timeout);
+				case "s":
+					return Duration.ofSeconds(timeout);
+			}
+		}
+
+		throw new IllegalArgumentException(
+				String.format("Index timeout %s cannot be parsed. Please use the following pattern '\\d+\\W?[dhms]'.", val));
+	}
+
+	@Nullable
+	private static String evaluatePotentialTemplateExpression(String value, EvaluationContext evaluationContext) {
+
+		Expression expression = PARSER.parseExpression(value, ParserContext.TEMPLATE_EXPRESSION);
+		if (expression instanceof LiteralExpression) {
+			return value;
+		}
+
+		return expression.getValue(evaluationContext, String.class);
+
 	}
 
 	/**
