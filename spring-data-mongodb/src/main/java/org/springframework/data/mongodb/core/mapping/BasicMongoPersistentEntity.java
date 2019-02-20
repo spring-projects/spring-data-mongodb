@@ -29,6 +29,7 @@ import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
@@ -136,6 +137,15 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		verifyFieldUniqueness();
 		verifyFieldTypes();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#getEvaluationContext(java.lang.Object)
+	 */
+	@Override
+	public EvaluationContext getEvaluationContext(Object rootObject) {
+		return super.getEvaluationContext(rootObject);
 	}
 
 	private void verifyFieldUniqueness() {
