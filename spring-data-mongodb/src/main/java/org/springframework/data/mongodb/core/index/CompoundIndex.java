@@ -36,9 +36,28 @@ import java.lang.annotation.Target;
 public @interface CompoundIndex {
 
 	/**
-	 * The actual index definition in JSON format. The keys of the JSON document are the fields to be indexed, the values
-	 * define the index direction (1 for ascending, -1 for descending). <br />
+	 * The actual index definition in JSON format or a {@link org.springframework.expression.spel.standard.SpelExpression
+	 * template expression} resolving to either a JSON String or a {@link org.bson.Document}. The keys of the JSON
+	 * document are the fields to be indexed, the values define the index direction (1 for ascending, -1 for descending).
+	 * <br />
 	 * If left empty on nested document, the whole document will be indexed.
+	 *
+	 * <pre>
+	 * <code>
+	 *
+	 * &#64;Document
+	 * &#64;CompoundIndex(def = "{'h1': 1, 'h2': 1}")
+	 * class JsonStringIndexDefinition {
+	 *   String h1, h2;
+	 * }
+	 *
+	 * &#64;Document
+	 * &#64;CompoundIndex(def = "#{T(org.bson.Document).parse("{ 'h1': 1, 'h2': 1 }")}")
+	 * class ExpressionIndexDefinition {
+	 *   String h1, h2;
+	 * }
+	 * </code>
+	 * </pre>
 	 *
 	 * @return
 	 */
@@ -79,7 +98,8 @@ public @interface CompoundIndex {
 	boolean dropDups() default false;
 
 	/**
-	 * The name of the index to be created. <br />
+	 * Index name of the index to be created either as plain value or as
+	 * {@link org.springframework.expression.spel.standard.SpelExpression template expression}. <br />
 	 * <br />
 	 * The name will only be applied as is when defined on root level. For usage on nested or embedded structures the
 	 * provided name will be prefixed with the path leading to the entity. <br />
