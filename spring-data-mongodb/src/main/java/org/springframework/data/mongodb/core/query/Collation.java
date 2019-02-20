@@ -119,7 +119,7 @@ public class Collation {
 	}
 
 	/**
-	 * Parse the given collation string into a {@link Collation}.
+	 * Parse the given {@code collation} string into a {@link Collation}.
 	 *
 	 * @param collation the collation to parse. Can be a simple string like {@code en_US} or a
 	 *          {@link Document#parse(String) parsable} document like <code>&#123; 'locale' : '?0' &#125;</code> .

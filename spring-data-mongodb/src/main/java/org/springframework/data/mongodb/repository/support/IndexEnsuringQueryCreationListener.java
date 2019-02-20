@@ -96,6 +96,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 
 		if (query.getQueryMethod().hasAnnotatedCollation()) {
 
+			// TODO: SPEL
 			String collation = query.getQueryMethod().getAnnotatedCollation();
 			if (!collation.contains("?")) {
 				index = index.collation(Collation.parse(collation));
