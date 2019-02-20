@@ -18,20 +18,27 @@ package org.springframework.data.mongodb.core.index;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -39,9 +46,12 @@ import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.test.util.Assertions;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.mongodb.MongoClient;
 
 /**
  * Integration tests for index handling.
@@ -52,12 +62,31 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@ContextConfiguration
 public class IndexingIntegrationTests {
 
 	@Autowired MongoOperations operations;
 	@Autowired MongoDbFactory mongoDbFactory;
 	@Autowired ConfigurableApplicationContext context;
+
+	@Configuration
+	static class Config extends AbstractMongoConfiguration {
+
+		@Override
+		public MongoClient mongoClient() {
+			return new MongoClient();
+		}
+
+		@Override
+		protected String getDatabaseName() {
+			return "database";
+		}
+
+		@Bean
+		TimeoutResolver myTimeoutResolver() {
+			return new TimeoutResolver("11s");
+		}
+	}
 
 	@After
 	public void tearDown() {
@@ -97,6 +126,24 @@ public class IndexingIntegrationTests {
 		assertThat(hasIndex("_lastname", IndexedPerson.class), is(true));
 	}
 
+	@Test // DATAMONGO-2112
+	@DirtiesContext
+	public void evaluatesTimeoutSpelExpresssionWithBeanReference() {
+
+		operations.getConverter().getMappingContext().getPersistentEntity(WithSpelIndexTimeout.class);
+
+		Optional<org.bson.Document> indexInfo = operations.execute("withSpelIndexTimeout", collection -> {
+
+			return collection.listIndexes(org.bson.Document.class).into(new ArrayList<>()) //
+					.stream() //
+					.filter(it -> it.get("name").equals("someString")) //
+					.findFirst();
+		});
+
+		Assertions.assertThat(indexInfo).isPresent();
+		Assertions.assertThat(indexInfo.get()).containsEntry("expireAfterSeconds", 11L);
+	}
+
 	@Target({ ElementType.FIELD })
 	@Retention(RetentionPolicy.RUNTIME)
 	@Indexed
@@ -108,6 +155,17 @@ public class IndexingIntegrationTests {
 
 		@Field("_firstname") @Indexed String firstname;
 		@Field("_lastname") @IndexedFieldAnnotation String lastname;
+	}
+
+	@RequiredArgsConstructor
+	@Getter
+	static class TimeoutResolver {
+		final String timeout;
+	}
+
+	@Document
+	class WithSpelIndexTimeout {
+		@Indexed(expireAfter = "#{@myTimeoutResolver?.timeout}") String someString;
 	}
 
 	/**

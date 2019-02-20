@@ -27,6 +27,7 @@ import java.lang.annotation.Target;
 import java.util.Collections;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -201,6 +202,45 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					isBsonObject().containing("sparse", true).containing("name", "different_name").notContaining("unique"));
 		}
 
+		@Test // DATAMONGO-2112
+		public void shouldResolveTimeoutFromString() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithExpireAfterAsPlainString.class);
+
+			Assertions.assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 600L);
+		}
+
+		@Test // DATAMONGO-2112
+		public void shouldResolveTimeoutFromExpression() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithExpireAfterAsExpression.class);
+
+			Assertions.assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 11L);
+		}
+
+		@Test // DATAMONGO-2112
+		public void shouldErrorOnInvalidTimeoutExpression() {
+
+			MongoMappingContext mappingContext = prepareMappingContext(WithInvalidExpireAfter.class);
+			MongoPersistentEntityIndexResolver indexResolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+			Assertions.assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> indexResolver
+					.resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(WithInvalidExpireAfter.class)));
+
+		}
+
+		@Test // DATAMONGO-2112
+		public void shouldErrorOnDuplicateTimeoutExpression() {
+
+			MongoMappingContext mappingContext = prepareMappingContext(WithDuplicateExpiry.class);
+			MongoPersistentEntityIndexResolver indexResolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+			Assertions.assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> indexResolver
+					.resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(WithDuplicateExpiry.class)));
+		}
+
 		@Document("Zero")
 		static class IndexOnLevelZero {
 			@Indexed String indexedProperty;
@@ -289,6 +329,26 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			@AliasFor(annotation = org.springframework.data.mongodb.core.mapping.Field.class, attribute = "value")
 			String name() default "_id";
+		}
+
+		@Document
+		static class WithExpireAfterAsPlainString {
+			@Indexed(expireAfter = "10m") String withTimeout;
+		}
+
+		@Document
+		static class WithExpireAfterAsExpression {
+			@Indexed(expireAfter = "#{10 + 1 + 's'}") String withTimeout;
+		}
+
+		@Document
+		class WithInvalidExpireAfter {
+			@Indexed(expireAfter = "123ops") String withTimeout;
+		}
+
+		@Document
+		class WithDuplicateExpiry {
+			@Indexed(expireAfter = "1s", expireAfterSeconds = 2) String withTimeout;
 		}
 	}
 
