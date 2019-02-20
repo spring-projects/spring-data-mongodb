@@ -22,6 +22,7 @@ import org.junit.Test
 
 /**
  * @author Mark Paluch
+ * @author Sebastien Deleuze
  */
 class ReactiveFindOperationExtensionsTests {
 

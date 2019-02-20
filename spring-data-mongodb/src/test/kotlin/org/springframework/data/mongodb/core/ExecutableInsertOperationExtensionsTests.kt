@@ -26,20 +26,20 @@ import org.junit.Test
  */
 class ExecutableInsertOperationExtensionsTests {
 
-    val operation = mockk<ExecutableInsertOperation>(relaxed = true)
+	val operation = mockk<ExecutableInsertOperation>(relaxed = true)
 
-    @Test // DATAMONGO-1689
-    fun `insert(KClass) extension should call its Java counterpart`() {
+	@Test // DATAMONGO-1689
+	fun `insert(KClass) extension should call its Java counterpart`() {
 
-        operation.insert(First::class)
-        verify { operation.insert(First::class.java) }
-    }
+		operation.insert(First::class)
+		verify { operation.insert(First::class.java) }
+	}
 
-    @Test // DATAMONGO-1689
-    fun `insert() with reified type parameter extension should call its Java counterpart`() {
+	@Test // DATAMONGO-1689
+	fun `insert() with reified type parameter extension should call its Java counterpart`() {
 
-        operation.insert<First>()
-        verify { operation.insert(First::class.java) }
-    }
+		operation.insert<First>()
+		verify { operation.insert(First::class.java) }
+	}
 
 }

@@ -22,23 +22,24 @@ import org.junit.Test
 
 /**
  * @author Mark Paluch
+ * @author Sebastien Deleuze
  */
 class ReactiveAggregationOperationExtensionsTests {
 
-    val operation = mockk<ReactiveAggregationOperation>(relaxed = true)
+	val operation = mockk<ReactiveAggregationOperation>(relaxed = true)
 
-    @Test // DATAMONGO-1719
-    fun `aggregateAndReturn(KClass) extension should call its Java counterpart`() {
+	@Test // DATAMONGO-1719
+	fun `aggregateAndReturn(KClass) extension should call its Java counterpart`() {
 
-        operation.aggregateAndReturn(First::class)
-        verify { operation.aggregateAndReturn(First::class.java) }
-    }
+		operation.aggregateAndReturn(First::class)
+		verify { operation.aggregateAndReturn(First::class.java) }
+	}
 
-    @Test // DATAMONGO-1719
-    fun `aggregateAndReturn() with reified type parameter extension should call its Java counterpart`() {
+	@Test // DATAMONGO-1719
+	fun `aggregateAndReturn() with reified type parameter extension should call its Java counterpart`() {
 
-        operation.aggregateAndReturn<First>()
-        verify { operation.aggregateAndReturn(First::class.java) }
-    }
+		operation.aggregateAndReturn<First>()
+		verify { operation.aggregateAndReturn(First::class.java) }
+	}
 
 }

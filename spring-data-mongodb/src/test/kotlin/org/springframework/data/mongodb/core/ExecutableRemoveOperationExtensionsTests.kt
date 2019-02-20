@@ -26,20 +26,20 @@ import org.junit.Test
  */
 class ExecutableRemoveOperationExtensionsTests {
 
-    val operation = mockk<ExecutableRemoveOperation>(relaxed = true)
+	val operation = mockk<ExecutableRemoveOperation>(relaxed = true)
 
-    @Test // DATAMONGO-1689
-    fun `remove(KClass) extension should call its Java counterpart`() {
+	@Test // DATAMONGO-1689
+	fun `remove(KClass) extension should call its Java counterpart`() {
 
-        operation.remove(First::class)
-        verify { operation.remove(First::class.java) }
-    }
+		operation.remove(First::class)
+		verify { operation.remove(First::class.java) }
+	}
 
-    @Test // DATAMONGO-1689
-    fun `remove() with reified type parameter extension should call its Java counterpart`() {
+	@Test // DATAMONGO-1689
+	fun `remove() with reified type parameter extension should call its Java counterpart`() {
 
-        operation.remove<First>()
-        verify { operation.remove(First::class.java) }
-    }
+		operation.remove<First>()
+		verify { operation.remove(First::class.java) }
+	}
 
 }

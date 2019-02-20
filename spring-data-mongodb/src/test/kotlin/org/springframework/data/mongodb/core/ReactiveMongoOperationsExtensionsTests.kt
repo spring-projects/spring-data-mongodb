@@ -566,7 +566,7 @@ class ReactiveMongoOperationsExtensionsTests {
 		verify { operations.findDistinct(query, "field", "collection", First::class.java, String::class.java) }
 	}
 
-	
+
 	@Test // DATAMONGO-1761
 	fun `findDistinct(Query, String,  KClass) should call java counterpart`() {
 

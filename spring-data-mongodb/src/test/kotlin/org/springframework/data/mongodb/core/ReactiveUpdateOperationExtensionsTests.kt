@@ -24,6 +24,7 @@ import org.junit.Test
  * Unit tests for `ReactiveExecutableUpdateOperationExtensions.kt`.
  *
  * @author Mark Paluch
+ * @author Sebastien Deleuze
  */
 class ReactiveUpdateOperationExtensionsTests {
 

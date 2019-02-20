@@ -279,12 +279,12 @@
 			<version>${kotlin}</version>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>io.mockk</groupId>
 			<artifactId>mockk</artifactId>
-			<version>1.9.1</version>
+			<version>${mockk}</version>
 			<scope>test</scope>
-
 		</dependency>
 
 	</dependencies>

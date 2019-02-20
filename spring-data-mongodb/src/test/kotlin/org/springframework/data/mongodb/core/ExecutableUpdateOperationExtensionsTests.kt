@@ -24,6 +24,7 @@ import org.junit.Test
  * Unit tests for `ExecutableUpdateOperationExtensions.kt`.
  *
  * @author Christoph Strobl
+ * @author Sebastien Deleuze
  */
 class ExecutableUpdateOperationExtensionsTests {
 
