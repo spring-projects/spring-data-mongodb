@@ -147,7 +147,7 @@ class MongoOperationsExtensionsTests {
 	fun `indexOps() with reified type parameter extension should call its Java counterpart`() {
 
 		operations.indexOps<First>()
-		verify { operations .indexOps(First::class.java) }
+		verify { operations.indexOps(First::class.java) }
 	}
 
 	@Test // DATAMONGO-1689
@@ -716,7 +716,7 @@ class MongoOperationsExtensionsTests {
 		operations.findDistinct<String, First>(query, "field", "collection")
 		verify { operations.findDistinct(query, "field", "collection", First::class.java, String::class.java) }
 	}
-	
+
 	@Test // DATAMONGO-1761
 	fun `findDistinct(Query, String,  KClass) should call java counterpart`() {
 

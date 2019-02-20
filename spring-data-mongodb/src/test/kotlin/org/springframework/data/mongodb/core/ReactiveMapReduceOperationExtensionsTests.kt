@@ -22,6 +22,7 @@ import org.junit.Test
 
 /**
  * @author Christoph Strobl
+ * @author Sebastien Deleuze
  */
 class ReactiveMapReduceOperationExtensionsTests {
 
