@@ -33,6 +33,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
@@ -51,6 +52,8 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * Unit tests for {@link PartTreeMongoQuery}.
@@ -217,7 +220,8 @@ public class PartTreeMongoQueryUnitTests {
 			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(Repo.class), factory,
 					mappingContext);
 
-			return new PartTreeMongoQuery(queryMethod, mongoOperationsMock);
+			return new PartTreeMongoQuery(queryMethod, mongoOperationsMock, new SpelExpressionParser(),
+					QueryMethodEvaluationContextProvider.DEFAULT);
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		}

@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -78,7 +79,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 			ReactiveMongoOperations mongoOperations, SpelExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
-		super(method, mongoOperations);
+		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");

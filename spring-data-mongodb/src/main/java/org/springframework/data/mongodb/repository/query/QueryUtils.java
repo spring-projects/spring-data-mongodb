@@ -21,22 +21,31 @@ import java.util.regex.Pattern;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.bson.Document;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.util.json.ParameterBindingContext;
+import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Internal utility class to help avoid duplicate code required in both the reactive and the sync {@link Query} support
  * offered by repositories.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  * @currentRead Assassin's Apprentice - Robin Hobb
  */
 class QueryUtils {
+
+	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 
@@ -80,7 +89,9 @@ class QueryUtils {
 	 * @see Query#collation(Collation)
 	 * @since 2.2
 	 */
-	static Query applyCollation(Query query, @Nullable String collationExpression, ConvertingParameterAccessor accessor) {
+	static Query applyCollation(Query query, @Nullable String collationExpression, ConvertingParameterAccessor accessor,
+			MongoParameters parameters, SpelExpressionParser expressionParser,
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		if (accessor.getCollation() != null) {
 			return query.collation(accessor.getCollation());
@@ -90,10 +101,15 @@ class QueryUtils {
 			return query;
 		}
 
+		if (StringUtils.trimLeadingWhitespace(collationExpression).startsWith("{")) {
+
+			ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue),
+					expressionParser, evaluationContextProvider.getEvaluationContext(parameters, accessor.getValues()));
+
+			return query.collation(Collation.from(CODEC.decode(collationExpression, bindingContext)));
+		}
+
 		Matcher matcher = PARAMETER_BINDING_PATTERN.matcher(collationExpression);
-
-		// TODO: use parameter binding Parser instead of Document.parse once DATAMONGO-2199 is merged.
-
 		if (!matcher.find()) {
 			return query.collation(Collation.parse(collationExpression));
 		}

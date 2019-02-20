@@ -30,6 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.ReactiveFind;
@@ -45,6 +46,8 @@ import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * @author Christoph Strobl
@@ -163,6 +166,19 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
+	public void shouldApplyDynamicAnnotatedCollationWithMultiplePlaceholders() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholdersInDocumentByFirstName", String.class, String.class,
+				int.class) //
+						.execute(new Object[] { "dalinar", "en_US", 2 });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").strength(2).toDocument());
+	}
+
+	@Test // DATAMONGO-1854
 	public void shouldApplyCollationParameter() {
 
 		Collation collation = Collation.of("en_US");
@@ -223,7 +239,7 @@ public class AbstractReactiveMongoQueryUnitTests {
 		private boolean isLimitingQuery;
 
 		public ReactiveMongoQueryFake(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations) {
-			super(method, operations);
+			super(method, operations, new SpelExpressionParser(), QueryMethodEvaluationContextProvider.DEFAULT);
 		}
 
 		@Override
@@ -276,6 +292,10 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : '?1' }")
 		List<Person> findWithCollationUsingPlaceholderInDocumentByFirstName(String firstname, String collation);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : '?1', 'strength' : ?#{[2]}}")
+		List<Person> findWithCollationUsingPlaceholdersInDocumentByFirstName(String firstname, String collation,
+				int strength);
 
 		List<Person> findWithCollationParameterByFirstName(String firstname, Collation collation);
 
