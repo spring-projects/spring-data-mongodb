@@ -221,6 +221,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Test // DATAMONGO-2112
+		public void shouldResolveTimeoutFromExpressionReturningDuration() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithExpireAfterAsExpressionResultingInDuration.class);
+
+			Assertions.assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 100L);
+		}
+
+		@Test // DATAMONGO-2112
 		public void shouldErrorOnInvalidTimeoutExpression() {
 
 			MongoMappingContext mappingContext = prepareMappingContext(WithInvalidExpireAfter.class);
@@ -239,6 +248,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			Assertions.assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> indexResolver
 					.resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(WithDuplicateExpiry.class)));
+		}
+
+		@Test // DATAMONGO-2112
+		public void resolveExpressionIndexName() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithIndexNameAsExpression.class);
+
+			Assertions.assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "my1st");
 		}
 
 		@Document("Zero")
@@ -342,6 +360,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
+		static class WithExpireAfterAsExpressionResultingInDuration {
+			@Indexed(expireAfter = "#{T(java.time.Duration).ofSeconds(100)}") String withTimeout;
+		}
+
+		@Document
 		class WithInvalidExpireAfter {
 			@Indexed(expireAfter = "123ops") String withTimeout;
 		}
@@ -349,6 +372,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class WithDuplicateExpiry {
 			@Indexed(expireAfter = "1s", expireAfterSeconds = 2) String withTimeout;
+		}
+
+		@Document
+		static class WithIndexNameAsExpression {
+			@Indexed(name = "#{'my' + 1 + 'st'}") String spelIndexName;
 		}
 	}
 
@@ -427,6 +455,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					isBsonObject().containing("name", "my_geo_index_name").containing("bucketSize", 2.0));
 		}
 
+		@Test // DATAMONGO-2112
+		public void resolveExpressionIndexNameForGeoIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					GeoIndexWithNameAsExpression.class);
+
+			Assertions.assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "my1st");
+		}
+
 		@Document("Zero")
 		static class GeoSpatialIndexOnLevelZero {
 			@GeoSpatialIndexed Point geoIndexedProperty;
@@ -472,6 +509,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			@AliasFor(annotation = GeoSpatialIndexed.class, attribute = "type")
 			GeoSpatialIndexType indexType() default GeoSpatialIndexType.GEO_HAYSTACK;
+		}
+
+		@Document
+		static class GeoIndexWithNameAsExpression {
+			@GeoSpatialIndexed(name = "#{'my' + 1 + 'st'}") Point spelIndexName;
 		}
 
 	}
@@ -573,6 +615,26 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					.containing("unique", true).containing("background", true));
 		}
 
+		@Test // DATAMONGO-2112
+		public void resolveExpressionIndexNameForCompoundIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					CompoundIndexWithNameExpression.class);
+
+			Assertions.assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "cmp2name");
+		}
+
+		@Test // DATAMONGO-2112
+		public void resolveExpressionDefForCompoundIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					CompoundIndexWithDefExpression.class);
+
+			assertThat(indexDefinitions, hasSize(1));
+			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "compoundIndexWithDefExpression",
+					indexDefinitions.get(0));
+		}
+
 		@Document("CompoundIndexOnLevelOne")
 		static class CompoundIndexOnLevelOne {
 
@@ -636,6 +698,14 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			boolean isUnique() default true;
 
 		}
+
+		@Document
+		@CompoundIndex(name = "#{'cmp' + 2 + 'name'}", def = "{'foo': 1, 'bar': -1}")
+		static class CompoundIndexWithNameExpression {}
+
+		@Document
+		@CompoundIndex(def = "#{T(org.bson.Document).parse(\"{ 'foo': 1, 'bar': -1 }\")}")
+		static class CompoundIndexWithDefExpression {}
 
 	}
 

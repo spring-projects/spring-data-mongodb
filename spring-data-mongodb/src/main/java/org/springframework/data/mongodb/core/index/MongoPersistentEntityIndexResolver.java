@@ -40,6 +40,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.CycleGuard.Path;
@@ -62,6 +63,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -356,10 +358,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			MongoPersistentEntity<?> entity) {
 
 		CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(
-				resolveCompoundIndexKeyFromStringDefinition(dotPath, index.def()));
+				resolveCompoundIndexKeyFromStringDefinition(dotPath, index.def(), entity));
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, null));
+			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, entity, null));
 		}
 
 		if (index.unique()) {
@@ -377,7 +379,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private org.bson.Document resolveCompoundIndexKeyFromStringDefinition(String dotPath, String keyDefinitionString) {
+	private org.bson.Document resolveCompoundIndexKeyFromStringDefinition(String dotPath, String keyDefinitionString,
+			PersistentEntity<?, ?> entity) {
 
 		if (!StringUtils.hasText(dotPath) && !StringUtils.hasText(keyDefinitionString)) {
 			throw new InvalidDataAccessApiUsageException("Cannot create index on root level for empty keys.");
@@ -387,7 +390,12 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return new org.bson.Document(dotPath, 1);
 		}
 
-		org.bson.Document dbo = org.bson.Document.parse(keyDefinitionString);
+		Object keyDefToUse = evaluatePotentialTemplateExpression(keyDefinitionString,
+				getEvaluationContextForProperty(entity));
+
+		org.bson.Document dbo = (keyDefToUse instanceof org.bson.Document) ? (org.bson.Document) keyDefToUse
+				: org.bson.Document.parse(ObjectUtils.nullSafeToString(keyDefToUse));
+
 		if (!StringUtils.hasText(dotPath)) {
 			return dbo;
 		}
@@ -423,7 +431,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persitentProperty));
+			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persitentProperty.getOwner(), persitentProperty));
 		}
 
 		if (index.unique()) {
@@ -446,21 +454,12 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 			if (index.expireAfterSeconds() >= 0) {
 				throw new IllegalStateException(String.format(
-						"@Indexed already defines an expiration timeout of %s sec. via Indexed#expireAfterSeconds. Please make to use either expireAfterSeconds or expireAfter.", index.expireAfterSeconds()));
+						"@Indexed already defines an expiration timeout of %s sec. via Indexed#expireAfterSeconds. Please make to use either expireAfterSeconds or expireAfter.",
+						index.expireAfterSeconds()));
 			}
 
-			EvaluationContext ctx = getEvaluationContext();
-
-			if (persitentProperty.getOwner() instanceof BasicMongoPersistentEntity) {
-
-				EvaluationContext contextFromEntity = ((BasicMongoPersistentEntity<?>) persitentProperty.getOwner())
-						.getEvaluationContext(null);
-				if (contextFromEntity != null && !EvaluationContextProvider.DEFAULT.equals(contextFromEntity)) {
-					ctx = contextFromEntity;
-				}
-			}
-
-			Duration timeout = computeIndexTimeout(index.expireAfter(), ctx);
+			Duration timeout = computeIndexTimeout(index.expireAfter(),
+					getEvaluationContextForProperty(persitentProperty.getOwner()));
 			if (!timeout.isZero() && !timeout.isNegative()) {
 				indexDefinition.expire(timeout);
 			}
@@ -477,6 +476,27 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 */
 	protected EvaluationContext getEvaluationContext() {
 		return evaluationContextProvider.getEvaluationContext(null);
+	}
+
+	/**
+	 * Get the {@link EvaluationContext} for a given {@link PersistentEntity entity} the default one.
+	 * 
+	 * @param persistentEntity can be {@literal null}
+	 * @return
+	 */
+	private EvaluationContext getEvaluationContextForProperty(@Nullable PersistentEntity<?, ?> persistentEntity) {
+
+		if (persistentEntity == null || !(persistentEntity instanceof BasicMongoPersistentEntity)) {
+			return getEvaluationContext();
+		}
+
+		EvaluationContext contextFromEntity = ((BasicMongoPersistentEntity<?>) persistentEntity).getEvaluationContext(null);
+
+		if (contextFromEntity != null && !EvaluationContextProvider.DEFAULT.equals(contextFromEntity)) {
+			return contextFromEntity;
+		}
+
+		return getEvaluationContext();
 	}
 
 	/**
@@ -514,7 +534,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		indexDefinition.withMin(index.min()).withMax(index.max());
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persistentProperty));
+			indexDefinition
+					.named(pathAwareIndexName(index.name(), dotPath, persistentProperty.getOwner(), persistentProperty));
 		}
 
 		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
@@ -522,9 +543,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private String pathAwareIndexName(String indexName, String dotPath, @Nullable MongoPersistentProperty property) {
+	private String pathAwareIndexName(String indexName, String dotPath, @Nullable PersistentEntity<?, ?> entity,
+			@Nullable MongoPersistentProperty property) {
 
-		String nameToUse = StringUtils.hasText(indexName) ? indexName : "";
+		String nameToUse = StringUtils.hasText(indexName)
+				? ObjectUtils
+						.nullSafeToString(evaluatePotentialTemplateExpression(indexName, getEvaluationContextForProperty(entity)))
+				: "";
 
 		if (!StringUtils.hasText(dotPath) || (property != null && dotPath.equals(property.getFieldName()))) {
 			return StringUtils.hasText(nameToUse) ? nameToUse : dotPath;
@@ -582,7 +607,17 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 */
 	private static Duration computeIndexTimeout(String timeoutValue, EvaluationContext evaluationContext) {
 
-		String val = evaluatePotentialTemplateExpression(timeoutValue, evaluationContext);
+		Object evaluatedTimeout = evaluatePotentialTemplateExpression(timeoutValue, evaluationContext);
+
+		if (evaluatedTimeout == null) {
+			return Duration.ZERO;
+		}
+
+		if (evaluatedTimeout instanceof Duration) {
+			return (Duration) evaluatedTimeout;
+		}
+
+		String val = evaluatedTimeout.toString();
 
 		if (val == null) {
 			return Duration.ZERO;
@@ -611,15 +646,14 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	@Nullable
-	private static String evaluatePotentialTemplateExpression(String value, EvaluationContext evaluationContext) {
+	private static Object evaluatePotentialTemplateExpression(String value, EvaluationContext evaluationContext) {
 
 		Expression expression = PARSER.parseExpression(value, ParserContext.TEMPLATE_EXPRESSION);
 		if (expression instanceof LiteralExpression) {
 			return value;
 		}
 
-		return expression.getValue(evaluationContext, String.class);
-
+		return expression.getValue(evaluationContext, Object.class);
 	}
 
 	/**
