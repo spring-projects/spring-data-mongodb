@@ -16,9 +16,13 @@
 package org.springframework.data.mongodb.core
 
 import example.first.First
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Test
+import reactor.core.publisher.Mono
 
 /**
  * @author Mark Paluch
@@ -40,5 +44,17 @@ class ReactiveInsertOperationExtensionsTests {
 
 		operation.insert<First>()
 		verify { operation.insert(First::class.java) }
+	}
+
+	@Test
+	fun terminatingFindAwaitOne() {
+		val find = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()
+		every { find.one("foo") } returns Mono.just("foo")
+		runBlocking {
+			assertEquals("foo", find.oneAndAwait("foo"))
+		}
+		verify {
+			find.one("foo")
+		}
 	}
 }

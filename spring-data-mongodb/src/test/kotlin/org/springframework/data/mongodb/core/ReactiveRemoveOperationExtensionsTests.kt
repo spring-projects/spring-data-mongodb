@@ -15,10 +15,15 @@
  */
 package org.springframework.data.mongodb.core
 
+import com.mongodb.client.result.DeleteResult
 import example.first.First
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Test
+import reactor.core.publisher.Mono
 
 /**
  * @author Mark Paluch
@@ -40,5 +45,18 @@ class ReactiveRemoveOperationExtensionsTests {
 
 		operation.remove<First>()
 		verify { operation.remove(First::class.java) }
+	}
+
+	@Test
+	fun allAndAwait() {
+		val remove = mockk<ReactiveRemoveOperation.TerminatingRemove<String>>()
+		val result = mockk<DeleteResult>()
+		every { remove.all() } returns Mono.just(result)
+		runBlocking {
+			assertEquals(result, remove.allAndAwait())
+		}
+		verify {
+			remove.all()
+		}
 	}
 }

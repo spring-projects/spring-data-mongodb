@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core
 
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlin.reflect.KClass
 
 /**
@@ -34,3 +35,12 @@ fun <T : Any> ReactiveInsertOperation.insert(entityClass: KClass<T>): ReactiveIn
  */
 inline fun <reified T : Any> ReactiveInsertOperation.insert(): ReactiveInsertOperation.ReactiveInsert<T> =
 		insert(T::class.java)
+
+/**
+ * Coroutines variant of [ReactiveInsertOperation.TerminatingInsert.one].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend inline fun <reified T: Any> ReactiveInsertOperation.TerminatingInsert<T>.oneAndAwait(o: T): T =
+		one(o).awaitSingle()

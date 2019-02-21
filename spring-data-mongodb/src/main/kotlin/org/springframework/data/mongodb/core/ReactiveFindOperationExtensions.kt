@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core
 
+import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlin.reflect.KClass
 
 /**
@@ -70,3 +72,39 @@ fun <T : Any> ReactiveFindOperation.DistinctWithProjection.asType(resultType: KC
  */
 inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType(): ReactiveFindOperation.DistinctWithProjection =
 		`as`(T::class.java)
+
+/**
+ * Coroutines variant of [ReactiveFindOperation.TerminatingFind.one].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend inline fun <reified T: Any> ReactiveFindOperation.TerminatingFind<T>.awaitOne(): T? =
+		one().awaitFirstOrNull()
+
+/**
+ * Coroutines variant of [ReactiveFindOperation.TerminatingFind.first].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend inline fun <reified T: Any> ReactiveFindOperation.TerminatingFind<T>.awaitFirst(): T? =
+		first().awaitFirstOrNull()
+
+/**
+ * Coroutines variant of [ReactiveFindOperation.TerminatingFind.count].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitCount(): Long =
+		count().awaitSingle()
+
+/**
+ * Coroutines variant of [ReactiveFindOperation.TerminatingFind.exists].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitExists(): Boolean =
+		exists().awaitSingle()
