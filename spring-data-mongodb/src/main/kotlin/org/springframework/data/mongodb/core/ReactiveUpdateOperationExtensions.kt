@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core
 
+import com.mongodb.client.result.UpdateResult
+import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlin.reflect.KClass
 
 /**
@@ -34,3 +37,57 @@ fun <T : Any> ReactiveUpdateOperation.update(entityClass: KClass<T>): ReactiveUp
  */
 inline fun <reified T : Any> ReactiveUpdateOperation.update(): ReactiveUpdateOperation.ReactiveUpdate<T> =
 		update(T::class.java)
+
+/**
+ * Coroutines variant of [ReactiveUpdateOperation.TerminatingFindAndModify.findModifyAndAwait].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveUpdateOperation.TerminatingFindAndModify<T>.findModifyAndAwait(): T? =
+		findAndModify().awaitFirstOrNull()
+
+
+/**
+ * Coroutines variant of [ReactiveUpdateOperation.TerminatingFindAndReplace.findAndReplace].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveUpdateOperation.TerminatingFindAndReplace<T>.findReplaceAndAwait(): T? =
+		findAndReplace().awaitFirstOrNull()
+
+/**
+ * Coroutines variant of [ReactiveUpdateOperation.TerminatingUpdate.all].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveUpdateOperation.TerminatingUpdate<T>.allAndAwait(): UpdateResult =
+		all().awaitSingle()
+
+/**
+ * Coroutines variant of [ReactiveUpdateOperation.TerminatingUpdate.first].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveUpdateOperation.TerminatingUpdate<T>.firstAndAwait(): UpdateResult =
+		first().awaitSingle()
+
+/**
+ * Coroutines variant of [ReactiveUpdateOperation.TerminatingUpdate.upsert].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveUpdateOperation.TerminatingUpdate<T>.upsertAndAwait(): UpdateResult = upsert().awaitSingle()
+
+/**
+ * Extension for [ReactiveUpdateOperation.FindAndReplaceWithProjection.as] leveraging reified type parameters.
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+inline fun <reified T : Any> ReactiveUpdateOperation.FindAndReplaceWithProjection<T>.asType(): ReactiveUpdateOperation.FindAndReplaceWithOptions<T> =
+		`as`(T::class.java)

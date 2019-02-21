@@ -16,9 +16,13 @@
 package org.springframework.data.mongodb.core
 
 import example.first.First
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Test
+import reactor.core.publisher.Mono
 
 /**
  * @author Mark Paluch
@@ -72,5 +76,53 @@ class ReactiveFindOperationExtensionsTests {
 
 		distinctWithProjection.asType<User>()
 		verify { distinctWithProjection.`as`(User::class.java) }
+	}
+
+	@Test
+	fun terminatingFindAwaitOne() {
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.one() } returns Mono.just("foo")
+		runBlocking {
+			assertEquals("foo", find.awaitOne())
+		}
+		verify {
+			find.one()
+		}
+	}
+
+	@Test
+	fun terminatingFindAwaitFirst() {
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.first() } returns Mono.just("foo")
+		runBlocking {
+			assertEquals("foo", find.awaitFirst())
+		}
+		verify {
+			find.first()
+		}
+	}
+
+	@Test
+	fun terminatingFindAwaitCount() {
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.count() } returns Mono.just(1)
+		runBlocking {
+			assertEquals(1, find.awaitCount())
+		}
+		verify {
+			find.count()
+		}
+	}
+
+	@Test
+	fun terminatingFindAwaitExists() {
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.exists() } returns Mono.just(true)
+		runBlocking {
+			assertEquals(true, find.awaitExists())
+		}
+		verify {
+			find.exists()
+		}
 	}
 }

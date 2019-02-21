@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core
 
+import com.mongodb.client.result.DeleteResult
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlin.reflect.KClass
 
 /**
@@ -34,3 +36,12 @@ fun <T : Any> ReactiveRemoveOperation.remove(entityClass: KClass<T>): ReactiveRe
  */
 inline fun <reified T : Any> ReactiveRemoveOperation.remove(): ReactiveRemoveOperation.ReactiveRemove<T> =
 		remove(T::class.java)
+
+/**
+ * Coroutines variant of [ReactiveRemoveOperation.TerminatingRemove.all].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveRemoveOperation.TerminatingRemove<T>.allAndAwait(): DeleteResult =
+		all().awaitSingle()
