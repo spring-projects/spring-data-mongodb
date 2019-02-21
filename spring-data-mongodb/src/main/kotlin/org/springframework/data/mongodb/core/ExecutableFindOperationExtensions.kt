@@ -24,6 +24,7 @@ import kotlin.reflect.KClass
  * @author Mark Paluch
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("query<T>()"))
 fun <T : Any> ExecutableFindOperation.query(entityClass: KClass<T>): ExecutableFindOperation.ExecutableFind<T> =
 		query(entityClass.java)
 
@@ -44,6 +45,7 @@ inline fun <reified T : Any> ExecutableFindOperation.query(): ExecutableFindOper
  * @author Mark Paluch
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
 fun <T : Any> ExecutableFindOperation.FindWithProjection<*>.asType(resultType: KClass<T>): ExecutableFindOperation.FindWithQuery<T> =
 		`as`(resultType.java)
 
@@ -63,6 +65,7 @@ inline fun <reified T : Any> ExecutableFindOperation.FindWithProjection<*>.asTyp
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
 fun <T : Any> ExecutableFindOperation.DistinctWithProjection.asType(resultType: KClass<T>): ExecutableFindOperation.TerminatingDistinct<T> =
 		`as`(resultType.java);
 

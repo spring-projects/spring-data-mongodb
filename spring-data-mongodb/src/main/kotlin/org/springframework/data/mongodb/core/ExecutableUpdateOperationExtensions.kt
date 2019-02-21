@@ -23,6 +23,7 @@ import kotlin.reflect.KClass
  * @author Christoph Strobl
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("update<T>()"))
 fun <T : Any> ExecutableUpdateOperation.update(entityClass: KClass<T>): ExecutableUpdateOperation.ExecutableUpdate<T> =
 		update(entityClass.java)
 

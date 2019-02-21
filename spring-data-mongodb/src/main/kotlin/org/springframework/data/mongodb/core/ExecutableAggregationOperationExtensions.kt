@@ -24,8 +24,9 @@ import kotlin.reflect.KClass
  * @author Mark Paluch
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("aggregateAndReturn<T>()"))
 fun <T : Any> ExecutableAggregationOperation.aggregateAndReturn(entityClass: KClass<T>): ExecutableAggregationOperation.ExecutableAggregation<T> =
-        aggregateAndReturn(entityClass.java)
+		aggregateAndReturn(entityClass.java)
 
 /**
  * Extension for [ExecutableAggregationOperation.aggregateAndReturn] leveraging reified type parameters.
@@ -35,4 +36,4 @@ fun <T : Any> ExecutableAggregationOperation.aggregateAndReturn(entityClass: KCl
  * @since 2.0
  */
 inline fun <reified T : Any> ExecutableAggregationOperation.aggregateAndReturn(): ExecutableAggregationOperation.ExecutableAggregation<T> =
-        aggregateAndReturn(T::class.java)
+		aggregateAndReturn(T::class.java)

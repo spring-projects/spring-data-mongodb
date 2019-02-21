@@ -9,6 +9,7 @@
 * Extended SpEL aggregation support for MongoDB 3.4 and MongoDB 4.0 operators (see <<mongo.aggregation.projection.expressions>>).
 * Template API delete by entity considers the version property in delete queries.
 * Repository deletes now throw `OptimisticLockingFailureException` when a versioned entity cannot be deleted.
+* Kotlin extension methods accepting `KClass` are deprecated now in favor of reified methods.
 
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1

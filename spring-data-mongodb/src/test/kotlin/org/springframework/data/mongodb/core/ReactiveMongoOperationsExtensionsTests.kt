@@ -322,6 +322,15 @@ class ReactiveMongoOperationsExtensionsTests {
 		verify { operations.insert(collection, First::class.java) }
 	}
 
+	@Test // DATAMONGO-2208
+	fun `insert(Collection) with reified type parameter extension should call its Java counterpart`() {
+
+		val collection = listOf(First(), First())
+
+		operations.insert<First>(collection)
+		verify { operations.insert(collection, First::class.java) }
+	}
+
 	@Test // DATAMONGO-1689
 	fun `insertAll(Mono, KClass) extension should call its Java counterpart`() {
 

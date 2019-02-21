@@ -23,6 +23,7 @@ import kotlin.reflect.KClass
  * @author Mark Paluch
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("aggregateAndReturn<T>()"))
 fun <T : Any> ReactiveAggregationOperation.aggregateAndReturn(entityClass: KClass<T>): ReactiveAggregationOperation.ReactiveAggregation<T> =
         aggregateAndReturn(entityClass.java)
 

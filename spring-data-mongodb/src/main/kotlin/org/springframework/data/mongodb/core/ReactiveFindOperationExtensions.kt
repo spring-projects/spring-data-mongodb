@@ -23,6 +23,7 @@ import kotlin.reflect.KClass
  * @author Mark Paluch
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("query<T>()"))
 fun <T : Any> ReactiveFindOperation.query(entityClass: KClass<T>): ReactiveFindOperation.ReactiveFind<T> =
 		query(entityClass.java)
 
@@ -41,6 +42,7 @@ inline fun <reified T : Any> ReactiveFindOperation.query(): ReactiveFindOperatio
  * @author Mark Paluch
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
 fun <T : Any> ReactiveFindOperation.FindWithProjection<*>.asType(resultType: KClass<T>): ReactiveFindOperation.FindWithQuery<T> =
 		`as`(resultType.java)
 
@@ -59,6 +61,7 @@ inline fun <reified T : Any> ReactiveFindOperation.FindWithProjection<*>.asType(
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
 fun <T : Any> ReactiveFindOperation.DistinctWithProjection.asType(resultType: KClass<T>): ReactiveFindOperation.TerminatingDistinct<T> =
 		`as`(resultType.java);
 
