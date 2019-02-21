@@ -41,6 +41,7 @@ import kotlin.reflect.KClass
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("getCollectionName<T>()"))
 fun <T : Any> MongoOperations.getCollectionName(entityClass: KClass<T>): String =
 		getCollectionName(entityClass.java)
 
@@ -87,6 +88,7 @@ inline fun <reified T : Any> MongoOperations.stream(query: Query, collectionName
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("createCollection<T>(collectionOptions)"))
 fun <T : Any> MongoOperations.createCollection(entityClass: KClass<T>, collectionOptions: CollectionOptions? = null): MongoCollection<Document> =
 		if (collectionOptions != null) createCollection(entityClass.java, collectionOptions)
 		else createCollection(entityClass.java)
@@ -108,6 +110,7 @@ inline fun <reified T : Any> MongoOperations.createCollection(
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("collectionExists<T>()"))
 fun <T : Any> MongoOperations.collectionExists(entityClass: KClass<T>): Boolean =
 		collectionExists(entityClass.java)
 
@@ -126,6 +129,7 @@ inline fun <reified T : Any> MongoOperations.collectionExists(): Boolean =
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("dropCollection<T>()"))
 fun <T : Any> MongoOperations.dropCollection(entityClass: KClass<T>) {
 	dropCollection(entityClass.java)
 }
@@ -146,6 +150,7 @@ inline fun <reified T : Any> MongoOperations.dropCollection() {
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("indexOps<T>()"))
 fun <T : Any> MongoOperations.indexOps(entityClass: KClass<T>): IndexOperations =
 		indexOps(entityClass.java)
 
@@ -164,6 +169,7 @@ inline fun <reified T : Any> MongoOperations.indexOps(): IndexOperations =
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("bulkOps<T>(bulkMode, collectionName)"))
 fun <T : Any> MongoOperations.bulkOps(bulkMode: BulkMode, entityClass: KClass<T>, collectionName: String? = null): BulkOperations =
 		if (collectionName != null) bulkOps(bulkMode, entityClass.java, collectionName)
 		else bulkOps(bulkMode, entityClass.java)
@@ -212,6 +218,7 @@ inline fun <reified T : Any> MongoOperations.group(criteria: Criteria, inputColl
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("aggregate<T>(aggregation)"))
 inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation, inputType: KClass<*>): AggregationResults<O> =
 		aggregate(aggregation, inputType.java, O::class.java)
 
@@ -230,6 +237,7 @@ inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation,
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("aggregateStream<T>(aggregation)"))
 inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation, inputType: KClass<*>): CloseableIterator<O> =
 		aggregateStream(aggregation, inputType.java, O::class.java)
 
@@ -287,6 +295,7 @@ inline fun <reified T : Any> MongoOperations.findOne(query: Query, collectionNam
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("exists<T>(query, collectionName)"))
 fun <T : Any> MongoOperations.exists(query: Query, entityClass: KClass<T>, collectionName: String? = null): Boolean =
 		if (collectionName != null) exists(query, entityClass.java, collectionName)
 		else exists(query, entityClass.java)
@@ -328,6 +337,7 @@ inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: S
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(field)"))
 inline fun <reified T : Any> MongoOperations.findDistinct(field: String, entityClass: KClass<*>): List<T> =
 		findDistinct(field, entityClass.java, T::class.java);
 
@@ -337,6 +347,7 @@ inline fun <reified T : Any> MongoOperations.findDistinct(field: String, entityC
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(query, field)"))
 inline fun <reified T : Any> MongoOperations.findDistinct(query: Query, field: String, entityClass: KClass<*>): List<T> =
 		findDistinct(query, field, entityClass.java, T::class.java)
 
@@ -346,6 +357,7 @@ inline fun <reified T : Any> MongoOperations.findDistinct(query: Query, field: S
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(query, field, collectionName)"))
 inline fun <reified T : Any> MongoOperations.findDistinct(query: Query, field: String, collectionName: String, entityClass: KClass<*>): List<T> =
 		findDistinct(query, field, collectionName, entityClass.java, T::class.java)
 
@@ -386,6 +398,7 @@ inline fun <reified T : Any> MongoOperations.findAndRemove(query: Query, collect
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("count<T>(query, collectionName)"))
 fun <T : Any> MongoOperations.count(query: Query = Query(), entityClass: KClass<T>, collectionName: String? = null): Long =
 		if (collectionName != null) count(query, entityClass.java, collectionName)
 		else count(query, entityClass.java)
@@ -406,9 +419,19 @@ inline fun <reified T : Any> MongoOperations.count(query: Query = Query(), colle
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("insert<T>(batchToSave)"))
 fun <T : Any> MongoOperations.insert(batchToSave: Collection<T>, entityClass: KClass<T>) {
 	insert(batchToSave, entityClass.java)
 }
+
+/**
+ * Extension for [MongoOperations.insert] leveraging reified type parameters.
+ *
+ * @author Mark Paluch
+ * @since 2.2
+ */
+@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
+inline fun <reified T : Any> MongoOperations.insert(batchToSave: Collection<T>): Collection<T> = insert(batchToSave, T::class.java)
 
 /**
  * Extension for [MongoOperations.upsert] providing a [KClass] based variant.
@@ -416,6 +439,7 @@ fun <T : Any> MongoOperations.insert(batchToSave: Collection<T>, entityClass: KC
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("upsert<T>(query, update, collectionName)"))
 fun <T : Any> MongoOperations.upsert(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) upsert(query, update, entityClass.java, collectionName)
 		else upsert(query, update, entityClass.java)
@@ -437,6 +461,7 @@ inline fun <reified T : Any> MongoOperations.upsert(query: Query, update: Update
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("updateFirst<T>(query, update, collectionName)"))
 fun <T : Any> MongoOperations.updateFirst(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateFirst(query, update, entityClass.java, collectionName)
 		else updateFirst(query, update, entityClass.java)
@@ -458,6 +483,7 @@ inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: U
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("updateMulti<T>(query, update, collectionName)"))
 fun <T : Any> MongoOperations.updateMulti(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateMulti(query, update, entityClass.java, collectionName)
 		else updateMulti(query, update, entityClass.java)
@@ -479,6 +505,7 @@ inline fun <reified T : Any> MongoOperations.updateMulti(query: Query, update: U
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("remove<T>(query, collectionName)"))
 fun <T : Any> MongoOperations.remove(query: Query, entityClass: KClass<T>, collectionName: String? = null): DeleteResult =
 		if (collectionName != null) remove(query, entityClass.java, collectionName)
 		else remove(query, entityClass.java)

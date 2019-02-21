@@ -25,6 +25,7 @@ import kotlin.reflect.KClass
  * @author Mark Paluch
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("remove<T>()"))
 fun <T : Any> ReactiveRemoveOperation.remove(entityClass: KClass<T>): ReactiveRemoveOperation.ReactiveRemove<T> =
 		remove(entityClass.java)
 

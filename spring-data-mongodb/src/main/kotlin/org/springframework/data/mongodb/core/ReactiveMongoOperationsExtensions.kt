@@ -34,6 +34,7 @@ import kotlin.reflect.KClass
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("indexOps<T>()"))
 fun <T : Any> ReactiveMongoOperations.indexOps(entityClass: KClass<T>): ReactiveIndexOperations =
 		indexOps(entityClass.java)
 
@@ -61,6 +62,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.execute(action: ReactiveCol
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("createCollection<T>(collectionOptions)"))
 fun <T : Any> ReactiveMongoOperations.createCollection(entityClass: KClass<T>, collectionOptions: CollectionOptions? = null): Mono<MongoCollection<Document>> =
 		if (collectionOptions != null) createCollection(entityClass.java, collectionOptions) else createCollection(entityClass.java)
 
@@ -79,6 +81,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.createCollection(collection
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("collectionExists<T>()"))
 fun <T : Any> ReactiveMongoOperations.collectionExists(entityClass: KClass<T>): Mono<Boolean> =
 		collectionExists(entityClass.java)
 
@@ -97,6 +100,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.collectionExists(): Mono<Bo
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("dropCollection<T>()"))
 fun <T : Any> ReactiveMongoOperations.dropCollection(entityClass: KClass<T>): Mono<Void> =
 		dropCollection(entityClass.java)
 
@@ -133,6 +137,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findOne(query: Query, colle
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("exists<T>(query, collectionName)"))
 fun <T : Any> ReactiveMongoOperations.exists(query: Query, entityClass: KClass<T>, collectionName: String? = null): Mono<Boolean> =
 		if (collectionName != null) exists(query, entityClass.java, collectionName) else exists(query, entityClass.java)
 
@@ -170,6 +175,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findById(id: Any, collectio
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(field)"))
 inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(field: String, entityClass: KClass<*>): Flux<T> =
 		findDistinct(field, entityClass.java, T::class.java);
 
@@ -179,6 +185,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(field: String,
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(query, field)"))
 inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(query: Query, field: String, entityClass: KClass<*>): Flux<T> =
 		findDistinct(query, field, entityClass.java, T::class.java)
 
@@ -188,6 +195,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(query: Query, 
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(query, field, collectionName)"))
 inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(query: Query, field: String, collectionName: String, entityClass: KClass<*>): Flux<T> =
 		findDistinct(query, field, collectionName, entityClass.java, T::class.java)
 
@@ -236,6 +244,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.findAndRemove(query: Query,
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("count<T>(query, collectionName)"))
 fun <T : Any> ReactiveMongoOperations.count(query: Query = Query(), entityClass: KClass<T>, collectionName: String? = null): Mono<Long> =
 		if (collectionName != null) count(query, entityClass.java, collectionName)
 		else count(query, entityClass.java)
@@ -257,8 +266,18 @@ inline fun <reified T : Any> ReactiveMongoOperations.count(query: Query = Query(
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("insert<T>(batchToSave)"))
 fun <T : Any> ReactiveMongoOperations.insert(batchToSave: Collection<T>, entityClass: KClass<T>): Flux<T> =
 		insert(batchToSave, entityClass.java)
+
+/**
+ * Extension for [ReactiveMongoOperations.insert] leveraging reified type parameters.
+ *
+ * @author Mark Paluch
+ * @since 2.2
+ */
+@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
+inline fun <reified T : Any> ReactiveMongoOperations.insert(batchToSave: Collection<T>): Flux<T> = insert(batchToSave, T::class.java)
 
 /**
  * Extension for [ReactiveMongoOperations.insertAll] providing a [KClass] based variant.
@@ -266,6 +285,7 @@ fun <T : Any> ReactiveMongoOperations.insert(batchToSave: Collection<T>, entityC
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("insertAll<T>(batchToSave)"))
 fun <T : Any> ReactiveMongoOperations.insertAll(batchToSave: Mono<out Collection<T>>, entityClass: KClass<T>): Flux<T> =
 		insertAll(batchToSave, entityClass.java)
 
@@ -275,6 +295,7 @@ fun <T : Any> ReactiveMongoOperations.insertAll(batchToSave: Mono<out Collection
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("upsert<T>(query, update, collectionName)"))
 fun <T : Any> ReactiveMongoOperations.upsert(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): Mono<UpdateResult> =
 		if (collectionName != null) upsert(query, update, entityClass.java, collectionName) else upsert(query, update, entityClass.java)
 
@@ -295,6 +316,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.upsert(query: Query, update
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("updateFirst<T>(query, update, collectionName)"))
 fun <T : Any> ReactiveMongoOperations.updateFirst(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): Mono<UpdateResult> =
 		if (collectionName != null) updateFirst(query, update, entityClass.java, collectionName)
 		else updateFirst(query, update, entityClass.java)
@@ -316,6 +338,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.updateFirst(query: Query, u
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("updateMulti<T>(query, update, collectionName)"))
 fun <T : Any> ReactiveMongoOperations.updateMulti(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): Mono<UpdateResult> =
 		if (collectionName != null) updateMulti(query, update, entityClass.java, collectionName)
 		else updateMulti(query, update, entityClass.java)
@@ -337,6 +360,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.updateMulti(query: Query, u
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("remove<T>(query, collectionName)"))
 fun <T : Any> ReactiveMongoOperations.remove(query: Query, entityClass: KClass<T>, collectionName: String? = null): Mono<DeleteResult> =
 		if (collectionName != null) remove(query, entityClass.java, collectionName)
 		else remove(query, entityClass.java)

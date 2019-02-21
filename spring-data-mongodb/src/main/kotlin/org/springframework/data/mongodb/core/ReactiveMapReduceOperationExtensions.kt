@@ -23,6 +23,7 @@ import kotlin.reflect.KClass
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("mapReduce<T>()"))
 fun <T : Any> ReactiveMapReduceOperation.mapReduce(entityClass: KClass<T>): ReactiveMapReduceOperation.MapReduceWithMapFunction<T> =
 		mapReduce(entityClass.java)
 
@@ -41,6 +42,7 @@ inline fun <reified T : Any> ReactiveMapReduceOperation.mapReduce(): ReactiveMap
  * @author Christoph Strobl
  * @since 2.1
  */
+@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
 fun <T : Any> ReactiveMapReduceOperation.MapReduceWithProjection<*>.asType(resultType: KClass<T>): ReactiveMapReduceOperation.MapReduceWithQuery<T> =
 		`as`(resultType.java)
 
