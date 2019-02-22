@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -187,7 +188,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case LESS_THAN_EQUAL:
 				return criteria.lte(parameters.next());
 			case BETWEEN:
-				return computeBetweenPart(criteria, parameters.next(), parameters);
+				return computeBetweenPart(criteria, parameters);
 			case IS_NOT_NULL:
 				return criteria.ne(null);
 			case IS_NULL:
@@ -420,19 +421,20 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	/**
 	 * Compute a {@link Type#BETWEEN} typed {@link Part} using {@link Criteria#gt(Object) $gt},
-	 * {@link Criteria#gte(Object) $gte}, {@link Criteria#lt(Object) $lt} and {@link Criteria#lte(Object) $lte}. <br />
-	 * In case the given {@literal value} is actually a {@link Range} the lower and upper bounds of the {@link Range} are
+	 * {@link Criteria#gte(Object) $gte}, {@link Criteria#lt(Object) $lt} and {@link Criteria#lte(Object) $lte}.
+	 * <p/>
+	 * In case the first {@literal value} is actually a {@link Range} the lower and upper bounds of the {@link Range} are
 	 * used according to their {@link Bound#isInclusive() inclusion} definition. Otherwise the {@literal value} is used
 	 * for {@literal $gt} and {@link Iterator#next() parameters.next()} as {@literal $lt}.
 	 *
 	 * @param criteria must not be {@literal null}.
-	 * @param value current value. Must not be {@literal null}.
 	 * @param parameters must not be {@literal null}.
 	 * @return
 	 * @since 2.2
 	 */
-	private static Criteria computeBetweenPart(Criteria criteria, Object value, Iterator<Object> parameters) {
+	private static Criteria computeBetweenPart(Criteria criteria, Iterator<Object> parameters) {
 
+		Object value = parameters.next();
 		if (!(value instanceof Range)) {
 			return criteria.gt(value).lt(parameters.next());
 		}
