@@ -89,5 +89,5 @@ suspend fun <T : Any> ReactiveUpdateOperation.TerminatingUpdate<T>.upsertAndAwai
  * @author Sebastien Deleuze
  * @since 2.2
  */
-inline fun <reified T : Any> ReactiveUpdateOperation.FindAndReplaceWithProjection<T>.asType(): ReactiveUpdateOperation.FindAndReplaceWithOptions<T> =
+inline fun <reified T : Any> ReactiveUpdateOperation.FindAndReplaceWithProjection<*>.asType(): ReactiveUpdateOperation.FindAndReplaceWithOptions<T> =
 		`as`(T::class.java)

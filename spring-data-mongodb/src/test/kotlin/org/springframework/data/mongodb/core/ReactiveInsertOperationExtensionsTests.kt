@@ -20,7 +20,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import reactor.core.publisher.Mono
 
@@ -46,13 +46,16 @@ class ReactiveInsertOperationExtensionsTests {
 		verify { operation.insert(First::class.java) }
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun terminatingFindAwaitOne() {
+
 		val find = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()
 		every { find.one("foo") } returns Mono.just("foo")
+
 		runBlocking {
-			assertEquals("foo", find.oneAndAwait("foo"))
+			assertThat(find.oneAndAwait("foo")).isEqualTo("foo")
 		}
+
 		verify {
 			find.one("foo")
 		}

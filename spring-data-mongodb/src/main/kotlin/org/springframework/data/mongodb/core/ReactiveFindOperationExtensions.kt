@@ -56,7 +56,7 @@ inline fun <reified T : Any> ReactiveFindOperation.FindWithProjection<*>.asType(
 		`as`(T::class.java)
 
 /**
- * Extension for [ExecutableFindOperation.DistinctWithProjection. as] providing a [KClass] based variant.
+ * Extension for [ExecutableFindOperation.DistinctWithProjection.as] providing a [KClass] based variant.
  *
  * @author Christoph Strobl
  * @since 2.1
@@ -65,7 +65,7 @@ fun <T : Any> ReactiveFindOperation.DistinctWithProjection.asType(resultType: KC
 		`as`(resultType.java);
 
 /**
- * Extension for [ReactiveFindOperation.DistinctWithProjection. as] leveraging reified type parameters.
+ * Extension for [ReactiveFindOperation.DistinctWithProjection.as] leveraging reified type parameters.
  *
  * @author Christoph Strobl
  * @since 2.1
@@ -79,7 +79,7 @@ inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType
  * @author Sebastien Deleuze
  * @since 2.2
  */
-suspend inline fun <reified T: Any> ReactiveFindOperation.TerminatingFind<T>.awaitOne(): T? =
+suspend inline fun <reified T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitOne(): T? =
 		one().awaitFirstOrNull()
 
 /**
@@ -88,7 +88,7 @@ suspend inline fun <reified T: Any> ReactiveFindOperation.TerminatingFind<T>.awa
  * @author Sebastien Deleuze
  * @since 2.2
  */
-suspend inline fun <reified T: Any> ReactiveFindOperation.TerminatingFind<T>.awaitFirst(): T? =
+suspend inline fun <reified T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitFirst(): T? =
 		first().awaitFirstOrNull()
 
 /**

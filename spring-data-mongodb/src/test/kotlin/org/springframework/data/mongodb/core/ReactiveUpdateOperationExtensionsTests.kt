@@ -21,7 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import reactor.core.publisher.Mono
 
@@ -49,75 +49,93 @@ class ReactiveUpdateOperationExtensionsTests {
 		verify { operation.update(First::class.java) }
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun findModifyAndAwait() {
+
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndModify<String>>()
 		every { find.findAndModify() } returns Mono.just("foo")
+
 		runBlocking {
-			assertEquals("foo", find.findModifyAndAwait())
+			assertThat(find.findModifyAndAwait()).isEqualTo("foo")
 		}
+
 		verify {
 			find.findAndModify()
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun findReplaceAndAwait() {
+
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndReplace<String>>()
 		every { find.findAndReplace() } returns Mono.just("foo")
+
 		runBlocking {
-			assertEquals("foo", find.findReplaceAndAwait())
+			assertThat(find.findReplaceAndAwait()).isEqualTo("foo")
 		}
+
 		verify {
 			find.findAndReplace()
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun allAndAwait() {
+
 		val update = mockk<ReactiveUpdateOperation.TerminatingUpdate<String>>()
 		val result = mockk<UpdateResult>()
 		every { update.all() } returns Mono.just(result)
+
 		runBlocking {
-			assertEquals(result, update.allAndAwait())
+			assertThat(update.allAndAwait()).isEqualTo(result)
 		}
+
 		verify {
 			update.all()
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun firstAndAwait() {
+
 		val update = mockk<ReactiveUpdateOperation.TerminatingUpdate<String>>()
 		val result = mockk<UpdateResult>()
 		every { update.first() } returns Mono.just(result)
+
 		runBlocking {
-			assertEquals(result, update.firstAndAwait())
+			assertThat(update.firstAndAwait()).isEqualTo(result)
 		}
+
 		verify {
 			update.first()
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun upsertAndAwait() {
+
 		val update = mockk<ReactiveUpdateOperation.TerminatingUpdate<String>>()
 		val result = mockk<UpdateResult>()
 		every { update.upsert() } returns Mono.just(result)
+
 		runBlocking {
-			assertEquals(result, update.upsertAndAwait())
+			assertThat(update.upsertAndAwait()).isEqualTo(result)
 		}
+
 		verify {
 			update.upsert()
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun findAndReplaceWithProjectionAsType() {
+
 		val update = mockk<ReactiveUpdateOperation.FindAndReplaceWithProjection<String>>()
 		val result = mockk<ReactiveUpdateOperation.FindAndReplaceWithOptions<String>>()
 		every { update.`as`(String::class.java) } returns result
-		assertEquals(result, update.asType<String>())
+
+		assertThat(update.asType<String>()).isEqualTo(result)
+
 		verify {
 			update.`as`(String::class.java)
 		}

@@ -20,6 +20,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import reactor.core.publisher.Mono
@@ -78,49 +79,61 @@ class ReactiveFindOperationExtensionsTests {
 		verify { distinctWithProjection.`as`(User::class.java) }
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun terminatingFindAwaitOne() {
+
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
 		every { find.one() } returns Mono.just("foo")
+
 		runBlocking {
-			assertEquals("foo", find.awaitOne())
+			assertThat(find.awaitOne()).isEqualTo("foo")
 		}
+
 		verify {
 			find.one()
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun terminatingFindAwaitFirst() {
+
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
 		every { find.first() } returns Mono.just("foo")
+
 		runBlocking {
-			assertEquals("foo", find.awaitFirst())
+			assertThat(find.awaitFirst()).isEqualTo("foo")
 		}
+
 		verify {
 			find.first()
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun terminatingFindAwaitCount() {
+
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
 		every { find.count() } returns Mono.just(1)
+
 		runBlocking {
-			assertEquals(1, find.awaitCount())
+			assertThat(find.awaitCount()).isEqualTo(1)
 		}
+
 		verify {
 			find.count()
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun terminatingFindAwaitExists() {
+
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
 		every { find.exists() } returns Mono.just(true)
+
 		runBlocking {
-			assertEquals(true, find.awaitExists())
+			assertThat(find.awaitExists()).isTrue()
 		}
+
 		verify {
 			find.exists()
 		}

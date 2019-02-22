@@ -21,7 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import reactor.core.publisher.Mono
 
@@ -47,14 +47,17 @@ class ReactiveRemoveOperationExtensionsTests {
 		verify { operation.remove(First::class.java) }
 	}
 
-	@Test
+	@Test // DATAMONGO-2209
 	fun allAndAwait() {
+
 		val remove = mockk<ReactiveRemoveOperation.TerminatingRemove<String>>()
 		val result = mockk<DeleteResult>()
 		every { remove.all() } returns Mono.just(result)
+
 		runBlocking {
-			assertEquals(result, remove.allAndAwait())
+			assertThat(remove.allAndAwait()).isEqualTo(result)
 		}
+
 		verify {
 			remove.all()
 		}
