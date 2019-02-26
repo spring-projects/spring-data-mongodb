@@ -212,7 +212,7 @@ public class Meta {
 	 * @param key must not be {@literal null} or empty.
 	 * @param value
 	 */
-	private void setValue(String key, @Nullable Object value) {
+	void setValue(String key, @Nullable Object value) {
 
 		Assert.hasText(key, "Meta key must not be 'null' or blank.");
 

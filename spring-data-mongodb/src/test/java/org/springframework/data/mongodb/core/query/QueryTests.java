@@ -219,7 +219,135 @@ public class QueryTests {
 			query.addCriteria(where("value").is(EnumType.VAL_2));
 		}).withMessageContaining("second 'value' criteria")
 				.withMessageContaining("already contains '{ \"value\" : { \"$java\" : VAL_1 } }'");
+	}
 
+	@Test // DATAMONGO-1783
+	public void queryOfShouldCreateNewQueryWithEqualBehaviour() {
+
+		Query source = new Query();
+		source.addCriteria(where("This you must ken!").is(EnumType.VAL_1));
+
+		compareQueries(Query.of(source), source);
+	}
+
+	@Test // DATAMONGO-1783
+	public void clonedQueryShouldNotDependOnCriteriaFromSource() {
+
+		Query source = new Query();
+		source.addCriteria(where("From one make ten").is("and two let be."));
+		Query target = Query.of(source);
+
+		compareQueries(target, source);
+		source.addCriteria(where("Make even three").is("then rich you'll be."));
+
+		assertThat(target.getQueryObject()).isEqualTo(new Document("From one make ten", "and two let be."))
+				.isNotEqualTo(source.getQueryObject());
+	}
+
+	@Test // DATAMONGO-1783
+	public void clonedQueryShouldAppendCriteria() {
+
+		Query source = new Query();
+		source.addCriteria(where("Skip o'er the four!").is("From five and six"));
+		Query target = Query.of(source);
+
+		compareQueries(target, source);
+		target.addCriteria(where("the Witch's tricks").is("make seven and eight"));
+
+		assertThat(target.getQueryObject()).isEqualTo(
+				new Document("Skip o'er the four!", "From five and six").append("the Witch's tricks", "make seven and eight"));
+	}
+
+	@Test // DATAMONGO-1783
+	public void clonedQueryShouldNotDependOnCollationFromSource() {
+
+		Query source = new Query().collation(Collation.simple());
+		Query target = Query.of(source);
+
+		compareQueries(target, source);
+		source.collation(Collation.of("Tis finished straight"));
+
+		assertThat(target.getCollation()).contains(Collation.simple()).isNotEqualTo(source.getCollation());
+	}
+
+	@Test // DATAMONGO-1783
+	public void clonedQueryShouldNotDependOnSortFromSource() {
+
+		Query source = new Query().with(Sort.by("And nine is one"));
+		Query target = Query.of(source);
+
+		compareQueries(target, source);
+		source.with(Sort.by("And ten is none"));
+
+		assertThat(target.getSortObject()).isEqualTo(new Document("And nine is one", 1))
+				.isNotEqualTo(source.getSortObject());
+	}
+
+	@Test // DATAMONGO-1783
+	public void clonedQueryShouldNotDependOnFieldsFromSource() {
+
+		Query source = new Query();
+		source.fields().include("That is the witch's one-time-one!");
+		Query target = Query.of(source);
+
+		compareQueries(target, source);
+		source.fields().exclude("Goethe");
+
+		assertThat(target.getFieldsObject()).isEqualTo(new Document("That is the witch's one-time-one!", 1))
+				.isNotEqualTo(source.getFieldsObject());
+	}
+
+	@Test // DATAMONGO-1783
+	public void clonedQueryShouldNotDependOnMetaFromSource() {
+
+		Query source = new Query().maxTimeMsec(100);
+		Query target = Query.of(source);
+
+		compareQueries(target, source);
+		source.slaveOk();
+
+		Meta meta = new Meta();
+		meta.setMaxTimeMsec(100);
+		assertThat(target.getMeta()).isEqualTo(meta).isNotEqualTo(source.getMeta());
+	}
+
+	@Test // DATAMONGO-1783
+	public void clonedQueryShouldNotDependOnRestrictedTypesFromSource() {
+
+		Query source = new Query();
+		source.restrict(EnumType.class);
+		Query target = Query.of(source);
+
+		compareQueries(target, source);
+		source.restrict(Query.class);
+
+		assertThat(target.getRestrictedTypes()).containsExactly(EnumType.class).isNotEqualTo(source.getRestrictedTypes());
+	}
+
+	@Test // DATAMONGO-1783
+	public void clonedQueryShouldApplyRestrictionsFromBasicQuery() {
+
+		BasicQuery source = new BasicQuery("{ 'foo' : 'bar'}");
+		Query target = Query.of(source);
+
+		compareQueries(target, source);
+
+		target.addCriteria(where("one").is("10"));
+		assertThat(target.getQueryObject()).isEqualTo(new Document("foo", "bar").append("one", "10"))
+				.isNotEqualTo(source.getQueryObject());
+	}
+
+	private void compareQueries(Query actual, Query expected) {
+
+		assertThat(actual.getCollation()).isEqualTo(expected.getCollation());
+		assertThat(actual.getSortObject()).isEqualTo(expected.getSortObject());
+		assertThat(actual.getFieldsObject()).isEqualTo(expected.getFieldsObject());
+		assertThat(actual.getQueryObject()).isEqualTo(expected.getQueryObject());
+		assertThat(actual.getHint()).isEqualTo(expected.getHint());
+		assertThat(actual.getLimit()).isEqualTo(expected.getLimit());
+		assertThat(actual.getSkip()).isEqualTo(expected.getSkip());
+		assertThat(actual.getMeta()).isEqualTo(expected.getMeta());
+		assertThat(actual.getRestrictedTypes()).isEqualTo(expected.getRestrictedTypes());
 	}
 
 	enum EnumType {

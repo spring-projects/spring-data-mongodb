@@ -1035,6 +1035,28 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				is(equalTo(new Document("version", 11).append("_class", VersionedEntity.class.getName()))));
 	}
 
+	@Test // DATAMONGO-1783
+	public void usesQueryOffsetForCountOperation() {
+
+		template.count(new BasicQuery("{}").skip(100), AutogenerateableId.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).count(any(), options.capture());
+
+		assertThat(options.getValue().getSkip(), is(equalTo(100)));
+	}
+
+	@Test // DATAMONGO-1783
+	public void usesQueryLimitForCountOperation() {
+
+		template.count(new BasicQuery("{}").limit(10), AutogenerateableId.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).count(any(), options.capture());
+
+		assertThat(options.getValue().getLimit(), is(equalTo(10)));
+	}
+
 	@Test // DATAMONGO-2215
 	public void updateShouldApplyArrayFilters() {
 
