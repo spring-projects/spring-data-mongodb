@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
@@ -450,11 +451,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
 		}
 
-		if (!index.expireAfter().isEmpty() && !index.expireAfter().equals("0s")) {
+		if (StringUtils.hasText(index.expireAfter())) {
 
 			if (index.expireAfterSeconds() >= 0) {
 				throw new IllegalStateException(String.format(
-						"@Indexed already defines an expiration timeout of %s sec. via Indexed#expireAfterSeconds. Please make to use either expireAfterSeconds or expireAfter.",
+						"@Indexed already defines an expiration timeout of %s seconds via Indexed#expireAfterSeconds. Please make to use either expireAfterSeconds or expireAfter.",
 						index.expireAfterSeconds()));
 			}
 
@@ -480,7 +481,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	/**
 	 * Get the {@link EvaluationContext} for a given {@link PersistentEntity entity} the default one.
-	 * 
+	 *
 	 * @param persistentEntity can be {@literal null}
 	 * @return
 	 */
@@ -626,7 +627,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		Matcher matcher = TIMEOUT_PATTERN.matcher(val);
 		if (matcher.find()) {
 
-			Long timeout = NumberUtils.parseNumber(matcher.group(1), Long.class);
+			long timeout = NumberUtils.parseNumber(matcher.group(1), Long.class);
 			String unit = matcher.group(3);
 
 			switch (unit) {
@@ -642,7 +643,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		throw new IllegalArgumentException(
-				String.format("Index timeout %s cannot be parsed. Please use the following pattern '\\d+\\W?[dhms]'.", val));
+				String.format("Index timeout %s cannot be parsed. Please use the pattern '\\d+\\W?[dhms]'.", val));
 	}
 
 	@Nullable

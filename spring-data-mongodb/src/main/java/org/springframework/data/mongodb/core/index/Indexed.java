@@ -136,27 +136,29 @@ public @interface Indexed {
 	int expireAfterSeconds() default -1;
 
 	/**
-	 * Alternative for {@link #expireAfterSeconds()} to configure the timeout after which the collection should expire.
-	 * Defaults to an empty String for no expiry. Accepts numeric values followed by their unit of measure (d(ays),
-	 * h(ours), m(inutes), s(seconds)) or a Spring {@literal template expression}. The expression can result in a a valid
-	 * expiration {@link String} following the conventions already mentioned or a {@link java.time.Duration}.
+	 * Alternative for {@link #expireAfterSeconds()} to configure the timeout after which the document should expire.
+	 * Defaults to an empty {@link String} for no expiry. Accepts numeric values followed by their unit of measure:
+	 * <ul>
+	 * <li><b>d</b>: Days</li>
+	 * <li><b>h</b>: Hours</li>
+	 * <li><b>m</b>: Minutes</li>
+	 * <li><b>s</b>: Seconds</li>
+	 * <li>Alternatively: A Spring {@literal template expression}. The expression can result in a
+	 * {@link java.time.Duration} or a valid expiration {@link String} according to the already mentioned
+	 * conventions.</li>
+	 * </ul>
 	 *
-	 * <pre>
-	 *     <code>
+	 * <pre class="code">
 	 *
-	 * &#0064;Indexed(expireAfter = "10s")
-	 * String expireAfterTenSeconds;
+	 * &#0064;Indexed(expireAfter = "10s") String expireAfterTenSeconds;
 	 *
-	 * &#0064;Indexed(expireAfter = "1d")
-	 * String expireAfterOneDay;
+	 * &#0064;Indexed(expireAfter = "1d") String expireAfterOneDay;
 	 *
-	 * &#0064;Indexed(expireAfter = "#{&#0064;mySpringBean.timeout}")
-	 * String expireAfterTimeoutObtainedFromSpringBean;
-	 *     </code>
+	 * &#0064;Indexed(expireAfter = "#{&#0064;mySpringBean.timeout}") String expireAfterTimeoutObtainedFromSpringBean;
 	 * </pre>
 	 *
-	 * @return {@literal 0s} by default.
+	 * @return empty by default.
 	 * @since 2.2
 	 */
-	String expireAfter() default "0s";
+	String expireAfter() default "";
 }
