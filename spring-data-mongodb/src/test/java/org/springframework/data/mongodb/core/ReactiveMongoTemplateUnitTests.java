@@ -55,6 +55,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -103,6 +104,7 @@ public class ReactiveMongoTemplateUnitTests {
 		when(collection.find(any(Document.class), any(Class.class))).thenReturn(findPublisher);
 		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
 		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
+		when(collection.count(any(), any(CountOptions.class))).thenReturn(Mono.just(0L));
 		when(collection.updateOne(any(), any(), any(UpdateOptions.class))).thenReturn(updatePublisher);
 		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class))).thenReturn(findAndUpdatePublisher);
 		when(findPublisher.projection(any())).thenReturn(findPublisher);
@@ -348,6 +350,28 @@ public class ReactiveMongoTemplateUnitTests {
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class, null).subscribe();
 
 		verify(findPublisher, never()).projection(any());
+	}
+
+	@Test // DATAMONGO-1783
+	public void countShouldUseSkipFromQuery() {
+
+		template.count(new Query().skip(10), Person.class, "star-wars").subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).count(any(), options.capture());
+
+		assertThat(options.getValue().getSkip(), is(equalTo(10)));
+	}
+
+	@Test // DATAMONGO-1783
+	public void countShouldUseLimitFromQuery() {
+
+		template.count(new Query().limit(100), Person.class, "star-wars").subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).count(any(), options.capture());
+
+		assertThat(options.getValue().getLimit(), is(equalTo(100)));
 	}
 
 	@Test // DATAMONGO-2215

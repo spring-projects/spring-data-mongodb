@@ -282,11 +282,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(example, "Sample must not be null!");
 		Assert.notNull(pageable, "Pageable must not be null!");
 
-		Query q = new Query(new Criteria().alike(example)).with(pageable);
-		List<S> list = mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName());
+		Query query = new Query(new Criteria().alike(example)).with(pageable);
+		List<S> list = mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 
 		return PageableExecutionUtils.getPage(list, pageable,
-				() -> mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName()));
+				() -> mongoOperations.count(Query.of(query).limit(-1).skip(-1), example.getProbeType(), entityInformation.getCollectionName()));
 	}
 
 	/*

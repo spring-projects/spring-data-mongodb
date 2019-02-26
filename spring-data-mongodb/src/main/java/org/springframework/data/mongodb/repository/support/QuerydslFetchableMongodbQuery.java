@@ -147,7 +147,7 @@ abstract class QuerydslFetchableMongodbQuery<K, Q extends QuerydslFetchableMongo
 	 */
 	@Override
 	public long fetchCount() {
-		return find.matching(createQuery()).count();
+		return find.matching(Query.of(createQuery()).skip(-1).limit(-1)).count();
 	}
 
 	/**

@@ -92,6 +92,7 @@ interface MongoQueryExecution {
 	 *
 	 * @author Oliver Gierke
 	 * @author Mark Paluch
+	 * @author Christoph Strobl
 	 */
 	@RequiredArgsConstructor
 	final class PagedExecution implements MongoQueryExecution {
@@ -120,7 +121,7 @@ interface MongoQueryExecution {
 
 			return PageableExecutionUtils.getPage(matching.all(), pageable, () -> {
 
-				long count = matching.count();
+				long count = operation.matching(Query.of(query).skip(-1).limit(-1)).count();
 				return overallLimit != 0 ? Math.min(count, overallLimit) : count;
 			});
 		}

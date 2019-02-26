@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.util;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -103,5 +105,28 @@ public class BsonUtils {
 			default:
 				return value;
 		}
+	}
+
+	/**
+	 * Merge the given {@link Document documents} into on in the given order. Keys contained within multiple documents are
+	 * overwritten by their follow ups.
+	 *
+	 * @param documents must not be {@literal null}. Can be empty.
+	 * @return the document containing all key value pairs.
+	 * @since 2.2
+	 */
+	public static Document merge(Document... documents) {
+
+		if (ObjectUtils.isEmpty(documents)) {
+			return new Document();
+		}
+
+		if (documents.length == 1) {
+			return documents[0];
+		}
+
+		Document target = new Document();
+		Arrays.asList(documents).forEach(target::putAll);
+		return target;
 	}
 }

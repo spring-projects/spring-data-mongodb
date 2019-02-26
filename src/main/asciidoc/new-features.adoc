@@ -10,6 +10,7 @@
 * Template API delete by entity considers the version property in delete queries.
 * Repository deletes now throw `OptimisticLockingFailureException` when a versioned entity cannot be deleted.
 * Support `Range<T>` in repository between queries.
+* Changed behavior of `Reactive/MongoOperations#count` now limiting the range to count matches within by passing on _offset_ & _limit_ to the server.
 * Kotlin extension methods accepting `KClass` are deprecated now in favor of `reified` methods.
 * Support of array filters in `Update` operations.
 
