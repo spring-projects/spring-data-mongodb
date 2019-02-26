@@ -1169,6 +1169,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			CountOptions options = new CountOptions();
 			if (query != null) {
 				query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
+
+				if (query.getLimit() > 0) {
+					options.limit(query.getLimit());
+				}
+				if (query.getSkip() > 0) {
+					options.skip((int) query.getSkip());
+				}
 			}
 
 			if (LOGGER.isDebugEnabled()) {

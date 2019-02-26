@@ -1094,6 +1094,11 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.
+	 * <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
 	 *          {@literal null}.
@@ -1105,7 +1110,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Returns the number of documents for the given {@link Query} querying the given collection. The given {@link Query}
 	 * must solely consist of document field references as we lack type information to map potential property references
-	 * onto document fields. Use {@link #count(Query, Class, String)} to get full type specific support.
+	 * onto document fields. Use {@link #count(Query, Class, String)} to get full type specific support. <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find documents.
 	 * @param collectionName must not be {@literal null} or empty.
@@ -1116,7 +1125,11 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Returns the number of documents for the given {@link Query} by querying the given collection using the given entity
-	 * class to map the given {@link Query}.
+	 * class to map the given {@link Query}. <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
 	 *          {@literal null}.

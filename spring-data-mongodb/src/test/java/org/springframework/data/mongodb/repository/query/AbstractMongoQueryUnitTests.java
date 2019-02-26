@@ -174,12 +174,12 @@ public class AbstractMongoQueryUnitTests {
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
 		verify(executableFind).as(Person.class);
-		verify(withQueryMock).matching(captor.capture());
+		verify(withQueryMock, atLeast(1)).matching(captor.capture());
 
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
-	@Test // DATAMONGO-957
+	@Test // DATAMONGO-957, DATAMONGO-1783
 	public void metadataShouldBeAddedToStringBasedQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByAnnotatedQuery", String.class, Pageable.class);

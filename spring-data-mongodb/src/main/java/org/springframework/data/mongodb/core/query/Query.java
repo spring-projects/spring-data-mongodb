@@ -34,6 +34,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -473,6 +474,59 @@ public class Query {
 
 	protected List<CriteriaDefinition> getCriteria() {
 		return new ArrayList<>(this.criteria.values());
+	}
+
+	/**
+	 * Create an independent copy of the given {@link Query}. <br />
+	 * The resulting {@link Query} will not be {@link Object#equals(Object) binary equal} to the given source but
+	 * semantically equal in terms of creating the same result when executed.
+	 *
+	 * @param source The source {@link Query} to use a reference. Must not be {@literal null}.
+	 * @return new {@link Query}.
+	 * @since 2.2
+	 */
+	public static Query of(Query source) {
+
+		Assert.notNull(source, "Source must not be null!");
+
+		Document sourceFields = source.getFieldsObject();
+		Document sourceSort = source.getSortObject();
+		Document sourceQuery = source.getQueryObject();
+
+		Query target = new Query() {
+
+			@Override
+			public Document getFieldsObject() {
+				return BsonUtils.merge(sourceFields, super.getFieldsObject());
+			}
+
+			@Override
+			public Document getSortObject() {
+				return BsonUtils.merge(sourceSort, super.getSortObject());
+			}
+
+			@Override
+			public Document getQueryObject() {
+				return BsonUtils.merge(sourceQuery, super.getQueryObject());
+			}
+		};
+
+		target.criteria.putAll(source.criteria);
+		target.skip = source.skip;
+		target.limit = source.limit;
+		target.sort = Sort.unsorted().and(source.sort);
+		target.hint = source.hint;
+		target.collation = source.collation;
+		target.restrictedTypes.addAll(source.restrictedTypes);
+
+		if (source.getMeta() != null && source.getMeta().hasValues()) {
+
+			Meta meta = new Meta();
+			source.getMeta().values().forEach(it -> meta.setValue(it.getKey(), it.getValue()));
+			target.setMeta(meta);
+		}
+
+		return target;
 	}
 
 	/*
