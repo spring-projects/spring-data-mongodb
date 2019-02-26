@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +31,7 @@ import java.util.Optional;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -46,7 +46,6 @@ import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.test.util.Assertions;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -99,7 +98,7 @@ public class IndexingIntegrationTests {
 
 		operations.getConverter().getMappingContext().getPersistentEntity(IndexedPerson.class);
 
-		assertThat(hasIndex("_firstname", IndexedPerson.class), is(true));
+		assertThat(hasIndex("_firstname", IndexedPerson.class)).isTrue();
 	}
 
 	@Test // DATAMONGO-2188
@@ -114,7 +113,7 @@ public class IndexingIntegrationTests {
 
 		template.getConverter().getMappingContext().getPersistentEntity(IndexedPerson.class);
 
-		assertThat(hasIndex("_firstname", MongoCollectionUtils.getPreferredCollectionName(IndexedPerson.class)), is(false));
+		assertThat(hasIndex("_firstname", MongoCollectionUtils.getPreferredCollectionName(IndexedPerson.class))).isFalse();
 	}
 
 	@Test // DATAMONGO-1163
@@ -123,7 +122,7 @@ public class IndexingIntegrationTests {
 
 		operations.getConverter().getMappingContext().getPersistentEntity(IndexedPerson.class);
 
-		assertThat(hasIndex("_lastname", IndexedPerson.class), is(true));
+		assertThat(hasIndex("_lastname", IndexedPerson.class)).isTrue();
 	}
 
 	@Test // DATAMONGO-2112
@@ -140,8 +139,8 @@ public class IndexingIntegrationTests {
 					.findFirst();
 		});
 
-		Assertions.assertThat(indexInfo).isPresent();
-		Assertions.assertThat(indexInfo.get()).containsEntry("expireAfterSeconds", 11L);
+		assertThat(indexInfo).isPresent();
+		assertThat(indexInfo.get()).containsEntry("expireAfterSeconds", 11L);
 	}
 
 	@Target({ ElementType.FIELD })

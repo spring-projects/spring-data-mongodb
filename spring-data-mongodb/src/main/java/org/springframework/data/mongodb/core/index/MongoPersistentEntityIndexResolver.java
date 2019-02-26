@@ -29,12 +29,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
@@ -62,7 +61,6 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -81,7 +79,6 @@ import org.springframework.util.StringUtils;
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexResolver.class);
-	private static final Pattern TIMEOUT_PATTERN = Pattern.compile("(\\d+)(\\W+)?([dhms])");
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private final MongoMappingContext mappingContext;
@@ -353,7 +350,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return indexDefinitions;
 	}
 
-	@SuppressWarnings("deprecation")
 	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String collection, CompoundIndex index,
 			MongoPersistentEntity<?> entity) {
 
@@ -390,8 +386,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return new org.bson.Document(dotPath, 1);
 		}
 
-		Object keyDefToUse = evaluatePotentialTemplateExpression(keyDefinitionString,
-				getEvaluationContextForProperty(entity));
+		Object keyDefToUse = evaluate(keyDefinitionString, getEvaluationContextForProperty(entity));
 
 		org.bson.Document dbo = (keyDefToUse instanceof org.bson.Document) ? (org.bson.Document) keyDefToUse
 				: org.bson.Document.parse(ObjectUtils.nullSafeToString(keyDefToUse));
@@ -450,11 +445,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
 		}
 
-		if (!index.expireAfter().isEmpty() && !index.expireAfter().equals("0s")) {
+		if (StringUtils.hasText(index.expireAfter())) {
 
 			if (index.expireAfterSeconds() >= 0) {
 				throw new IllegalStateException(String.format(
-						"@Indexed already defines an expiration timeout of %s sec. via Indexed#expireAfterSeconds. Please make to use either expireAfterSeconds or expireAfter.",
+						"@Indexed already defines an expiration timeout of %s seconds via Indexed#expireAfterSeconds. Please make to use either expireAfterSeconds or expireAfter.",
 						index.expireAfterSeconds()));
 			}
 
@@ -480,7 +475,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	/**
 	 * Get the {@link EvaluationContext} for a given {@link PersistentEntity entity} the default one.
-	 * 
+	 *
 	 * @param persistentEntity can be {@literal null}
 	 * @return
 	 */
@@ -546,10 +541,15 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private String pathAwareIndexName(String indexName, String dotPath, @Nullable PersistentEntity<?, ?> entity,
 			@Nullable MongoPersistentProperty property) {
 
-		String nameToUse = StringUtils.hasText(indexName)
-				? ObjectUtils
-						.nullSafeToString(evaluatePotentialTemplateExpression(indexName, getEvaluationContextForProperty(entity)))
-				: "";
+		String nameToUse = "";
+		if (StringUtils.hasText(indexName)) {
+
+			Object result = evaluate(indexName, getEvaluationContextForProperty(entity));
+
+			if (result != null) {
+				nameToUse = ObjectUtils.nullSafeToString(result);
+			}
+		}
 
 		if (!StringUtils.hasText(dotPath) || (property != null && dotPath.equals(property.getFieldName()))) {
 			return StringUtils.hasText(nameToUse) ? nameToUse : dotPath;
@@ -607,7 +607,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 */
 	private static Duration computeIndexTimeout(String timeoutValue, EvaluationContext evaluationContext) {
 
-		Object evaluatedTimeout = evaluatePotentialTemplateExpression(timeoutValue, evaluationContext);
+		Object evaluatedTimeout = evaluate(timeoutValue, evaluationContext);
 
 		if (evaluatedTimeout == null) {
 			return Duration.ZERO;
@@ -623,30 +623,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return Duration.ZERO;
 		}
 
-		Matcher matcher = TIMEOUT_PATTERN.matcher(val);
-		if (matcher.find()) {
-
-			Long timeout = NumberUtils.parseNumber(matcher.group(1), Long.class);
-			String unit = matcher.group(3);
-
-			switch (unit) {
-				case "d":
-					return Duration.ofDays(timeout);
-				case "h":
-					return Duration.ofHours(timeout);
-				case "m":
-					return Duration.ofMinutes(timeout);
-				case "s":
-					return Duration.ofSeconds(timeout);
-			}
-		}
-
-		throw new IllegalArgumentException(
-				String.format("Index timeout %s cannot be parsed. Please use the following pattern '\\d+\\W?[dhms]'.", val));
+		return DurationStyle.detectAndParse(val);
 	}
 
 	@Nullable
-	private static Object evaluatePotentialTemplateExpression(String value, EvaluationContext evaluationContext) {
+	private static Object evaluate(String value, EvaluationContext evaluationContext) {
 
 		Expression expression = PARSER.parseExpression(value, ParserContext.TEMPLATE_EXPRESSION);
 		if (expression instanceof LiteralExpression) {
