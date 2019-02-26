@@ -49,9 +49,23 @@ public class Meta {
 		}
 	}
 
-	private final Map<String, Object> values = new LinkedHashMap<String, Object>(2);
-	private final Set<CursorOption> flags = new LinkedHashSet<CursorOption>();
+	private final Map<String, Object> values = new LinkedHashMap<>(2);
+	private final Set<CursorOption> flags = new LinkedHashSet<>();
 	private Integer cursorBatchSize;
+
+	public Meta() {}
+
+	/**
+	 * Copy a {@link Meta} object.
+	 *
+	 * @since 2.2
+	 * @param source
+	 */
+	Meta(Meta source) {
+		this.values.putAll(source.values);
+		this.flags.addAll(source.flags);
+		this.cursorBatchSize = source.cursorBatchSize;
+	}
 
 	/**
 	 * @return {@literal null} if not set.

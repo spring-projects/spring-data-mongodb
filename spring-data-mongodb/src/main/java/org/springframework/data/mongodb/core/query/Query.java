@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -373,7 +374,7 @@ public class Query {
 	 * Set the number of documents to return in each response batch. <br />
 	 * Use {@literal 0 (zero)} for no limit. A <strong>negative limit</strong> closes the cursor after returning a single
 	 * batch indicating to the server that the client will not ask for a subsequent one.
-	 * 
+	 *
 	 * @param batchSize The number of documents to return per batch.
 	 * @return this.
 	 * @see Meta#setCursorBatchSize(int)
@@ -432,7 +433,7 @@ public class Query {
 	}
 
 	/**
-	 * @return never {@literal null}.ø
+	 * @return never {@literal null}.
 	 * @since 1.6
 	 */
 	public Meta getMeta() {
@@ -519,11 +520,8 @@ public class Query {
 		target.collation = source.collation;
 		target.restrictedTypes.addAll(source.restrictedTypes);
 
-		if (source.getMeta() != null && source.getMeta().hasValues()) {
-
-			Meta meta = new Meta();
-			source.getMeta().values().forEach(it -> meta.setValue(it.getKey(), it.getValue()));
-			target.setMeta(meta);
+		if (source.getMeta().hasValues()) {
+			target.setMeta(new Meta(source.getMeta()));
 		}
 
 		return target;
