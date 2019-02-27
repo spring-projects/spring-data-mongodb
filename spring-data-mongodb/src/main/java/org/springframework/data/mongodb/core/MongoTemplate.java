@@ -272,8 +272,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.mongoDbFactory = dbFactory;
 		this.exceptionTranslator = that.exceptionTranslator;
 		this.sessionSynchronization = that.sessionSynchronization;
-		this.mongoConverter = that.mongoConverter instanceof MappingMongoConverter ? getDefaultMongoConverter(dbFactory)
-				: that.mongoConverter;
+		this.mongoConverter = that.mongoConverter instanceof MappingMongoConverter ? that.mongoConverter : getDefaultMongoConverter(dbFactory);
 		this.queryMapper = that.queryMapper;
 		this.updateMapper = that.updateMapper;
 		this.schemaMapper = that.schemaMapper;
