@@ -29,8 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.assertj.core.api.Assertions;
 import org.bson.BSON;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -614,6 +616,39 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getFieldsObject(), is(equalTo(Document.parse("{ \"fans\" : { \"$slice\" : [0, 5] } }"))));
 	}
 
+	@Test // DATAMONGO-1593
+	public void shouldRenderObjectIdParameterCorrectly() {
+
+		ObjectId id = new ObjectId();
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("singeObjectIdArgInQueryString", String.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, id.toString());
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		Assertions.assertThat(query.getQueryObject()).isEqualTo(new Document("arg0", id));
+	}
+
+	@Test // DATAMONGO-1593
+	public void shouldRenderMultipleObjectIdParametersCorrectly() {
+
+		ObjectId id = new ObjectId();
+		ObjectId readUsersId = new ObjectId();
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("multipleObjectIdArgsInQueryString", String.class,
+				String.class);
+
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, id.toString(),
+				readUsersId.toString());
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		Assertions.assertThat(query.getQueryObject().get("arg0")).isEqualTo(id);
+		Assertions.assertThat(query.getQueryObject().get("$or")).isInstanceOf(List.class);
+		Assertions.assertThat(DocumentTestUtils.getAsDBList(query.getQueryObject(), "$or").get(0))
+				.isEqualTo(new Document("arg1.value0", readUsersId));
+		Assertions.assertThat(DocumentTestUtils.getAsDBList(query.getQueryObject(), "$or").get(1))
+				.isEqualTo(new Document("arg1.value1", readUsersId));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) {
 
 		try {
@@ -732,6 +767,12 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query(value = "{ 'id' : ?0 }", fields = "{ 'fans': { '$slice': [ ?1, ?2 ] } }")
 		Person findWithSliceInProjection(String id, int skip, int limit);
+
+		@Query("{ 'arg0' : { \"$oid\" : ?0} }")
+		List<Person> singeObjectIdArgInQueryString(String arg0);
+
+		@Query("{ 'arg0' :   { \"$oid\" : ?0}  , '$or' : [ { 'arg1.value0' :  { \"$oid\" : ?1 } }, { 'arg1.value1' :  { \"$oid\" : ?1 } } ]  }")
+		List<Person> multipleObjectIdArgsInQueryString(String arg0, String arg1);
 	}
 
 }
