@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -29,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.assertj.core.api.Assertions;
 import org.bson.BSON;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -94,7 +92,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test
@@ -113,7 +111,7 @@ public class StringBasedMongoQueryUnitTests {
 		Document queryObject = new Document("address", document);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
 
-		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	@Test
@@ -132,7 +130,7 @@ public class StringBasedMongoQueryUnitTests {
 		reference.append("address", addressDocument);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject().toJson(), is(reference.toJson()));
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.toJson());
 	}
 
 	@Test
@@ -142,8 +140,8 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { null });
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject().containsKey("address"), is(true));
-		assertThat(query.getQueryObject().get("address"), is(nullValue()));
+		assertThat(query.getQueryObject().containsKey("address")).isTrue();
+		assertThat(query.getQueryObject().get("address")).isNull();
 	}
 
 	@Test // DATAMONGO-821
@@ -153,14 +151,15 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new BasicQuery("{ fans : { $not : { $size : 0 } } }").getQueryObject()));
+		assertThat(query.getQueryObject())
+				.isEqualTo(new BasicQuery("{ fans : { $not : { $size : 0 } } }").getQueryObject());
 	}
 
 	@Test // DATAMONGO-566
 	public void constructsDeleteQueryCorrectly() {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("removeByLastname", String.class);
-		assertThat(mongoQuery.isDeleteQuery(), is(true));
+		assertThat(mongoQuery.isDeleteQuery()).isTrue();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-566
@@ -180,9 +179,9 @@ public class StringBasedMongoQueryUnitTests {
 				Map.class);
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject(),
-				is(new BasicQuery("{ \"firstname\": \"first\", \"lastname\": \"last\"}").getQueryObject()));
-		assertThat(query.getFieldsObject(), is(new BasicQuery(null, "{ \"lastname\": 1}").getFieldsObject()));
+		assertThat(query.getQueryObject())
+				.isEqualTo(new BasicQuery("{ \"firstname\": \"first\", \"lastname\": \"last\"}").getQueryObject());
+		assertThat(query.getFieldsObject()).isEqualTo(new BasicQuery(null, "{ \"lastname\": 1}").getFieldsObject());
 	}
 
 	@Test // DATAMONGO-420
@@ -193,8 +192,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject().toJson(),
-				is(new BasicQuery("{title: {$regex: '^fun', $options: 'i'}}").getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson())
+				.isEqualTo(new BasicQuery("{title: {$regex: '^fun', $options: 'i'}}").getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-995, DATAMONGO-420
@@ -206,9 +205,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject(),
-				is(new BasicQuery("{$where: 'return this.date.getUTCMonth() == 3 && this.date.getUTCDay() == 4;'}")
-						.getQueryObject()));
+		assertThat(query.getQueryObject())
+				.isEqualTo(new BasicQuery("{$where: 'return this.date.getUTCMonth() == 3 && this.date.getUTCDay() == 4;'}")
+						.getQueryObject());
 	}
 
 	@Test // DATAMONGO-995, DATAMONGO-420
@@ -220,7 +219,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-995, DATAMONGO-420
@@ -232,7 +231,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : '^Mat.*'}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-995, DATAMONGO-420
@@ -244,7 +243,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : '^Mat.*'}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1070
@@ -256,7 +255,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
 
 		Document dbRef = DocumentTestUtils.getTypedValue(query.getQueryObject(), "reference", Document.class);
-		assertThat(dbRef, is(new Document("$ref", "reference").append("$id", "myid")));
+		assertThat(dbRef).isEqualTo(new Document("$ref", "reference").append("$id", "myid"));
 	}
 
 	@Test // DATAMONGO-1072
@@ -268,7 +267,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
 
-		assertThat(query.getQueryObject(), is(new Document().append("key", "value")));
+		assertThat(query.getQueryObject()).isEqualTo(new Document().append("key", "value"));
 	}
 
 	@Test // DATAMONGO-990
@@ -280,7 +279,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1244
@@ -293,7 +292,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{ \"id\" : { \"$exists\" : true}}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1244
@@ -307,7 +306,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{ \"id\" : { \"$exists\" : true} , \"foo\" : 42 , \"bar\" : { \"$exists\" : false}}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1290
@@ -321,7 +320,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
 				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}}");
 
-		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-2029
@@ -336,7 +335,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { $in: [{'$binary' : '"
 				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}] }}");
 
-		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1911
@@ -350,7 +349,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{'lastname' : { $binary:\"5PHq4zvkTYa5WbZAgvtjNg==\", $type: \"03\"}}");
 
-		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-2029
@@ -367,7 +366,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{'lastname' : { $in: [{ $binary : \"5PHq4zvkTYa5WbZAgvtjNg==\", $type : \"03\" }, { $binary : \"5PH+yjvkTYa5WbZAgvtjNg==\", $type : \"03\" }]}}");
 
-		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1911
@@ -381,7 +380,7 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{'lastname' : '" + uuid.toString() + "'}");
 
-		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1454
@@ -389,7 +388,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("existsByLastname", String.class);
 
-		assertThat(mongoQuery.isExistsQuery(), is(true));
+		assertThat(mongoQuery.isExistsQuery()).isTrue();
 	}
 
 	@Test // DATAMONGO-1565
@@ -406,7 +405,7 @@ public class StringBasedMongoQueryUnitTests {
 		Document queryObject = new Document("$or", or);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1565
@@ -418,8 +417,8 @@ public class StringBasedMongoQueryUnitTests {
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByStringWithWildcardChar", String.class, String.class);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(),
-				is(Document.parse("{ \"arg0\" : \"argWith?1andText\" , \"arg1\" : \"nothing-special\"}")));
+		assertThat(query.getQueryObject())
+				.isEqualTo(Document.parse("{ \"arg0\" : \"argWith?1andText\" , \"arg1\" : \"nothing-special\"}"));
 	}
 
 	@Test // DATAMONGO-1565
@@ -429,9 +428,9 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews', password: 'foo");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(),
-				is(not(new Document().append("lastname", "Matthews").append("password", "foo"))));
-		assertThat(query.getQueryObject(), is(new Document("lastname", "Matthews', password: 'foo")));
+		assertThat(query.getQueryObject())
+				.isNotEqualTo(new Document().append("lastname", "Matthews").append("password", "foo"));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("lastname", "Matthews', password: 'foo"));
 	}
 
 	@Test // DATAMONGO-1565
@@ -441,9 +440,9 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews\", password: \"foo");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(),
-				is(not(new Document().append("lastname", "Matthews").append("password", "foo"))));
-		assertThat(query.getQueryObject(), is(new Document("lastname", "Matthews\", password: \"foo")));
+		assertThat(query.getQueryObject())
+				.isNotEqualTo(new Document().append("lastname", "Matthews").append("password", "foo"));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("lastname", "Matthews\", password: \"foo"));
 	}
 
 	@Test // DATAMONGO-1565
@@ -454,7 +453,7 @@ public class StringBasedMongoQueryUnitTests {
 				"\"Dave Matthews\", password: 'foo");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document("lastname", "\"Dave Matthews\", password: 'foo")));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("lastname", "\"Dave Matthews\", password: 'foo"));
 	}
 
 	@Test // DATAMONGO-1565, DATAMONGO-1575
@@ -464,7 +463,7 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "{ $ne : \"calamity\" }");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document("lastname", "{ $ne : \"calamity\" }")));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("lastname", "{ $ne : \"calamity\" }"));
 	}
 
 	@Test // DATAMONGO-1565, DATAMONGO-1575
@@ -476,7 +475,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject(), is(new Document("lastname", "{ $ne : \"\\\"calamity\\\"\" }")));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("lastname", "{ $ne : \"\\\"calamity\\\"\" }"));
 	}
 
 	@Test // DATAMONGO-1575, DATAMONGO-1770
@@ -487,7 +486,7 @@ public class StringBasedMongoQueryUnitTests {
 				new Document("$regex", "^calamity$"));
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document("arg0", new Document("$regex", "^calamity$"))));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("arg0", new Document("$regex", "^calamity$")));
 	}
 
 	@Test // DATAMONGO-1575, DATAMONGO-1770
@@ -497,7 +496,7 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document("lastname", new Document("$regex", "^(calamity)"))));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("lastname", new Document("$regex", "^(calamity)")));
 	}
 
 	@Test // DATAMONGO-1603
@@ -508,8 +507,8 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(),
-				is(new Document().append("arg0", "calamity").append("arg1", "regalia").append("arg2", "calamity")));
+		assertThat(query.getQueryObject())
+				.isEqualTo(new Document().append("arg0", "calamity").append("arg1", "regalia").append("arg2", "calamity"));
 	}
 
 	@Test // DATAMONGO-1603
@@ -520,8 +519,8 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(),
-				is(new Document().append("arg0", "calamity").append("arg1", "regalia").append("arg2", "calamity")));
+		assertThat(query.getQueryObject())
+				.isEqualTo(new Document().append("arg0", "calamity").append("arg1", "regalia").append("arg2", "calamity"));
 	}
 
 	@Test // DATAMONGO-1603
@@ -532,8 +531,8 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(),
-				is(new Document().append("arg0", "calamity").append("arg1", "regalia").append("arg2", "calamitys")));
+		assertThat(query.getQueryObject())
+				.isEqualTo(new Document().append("arg0", "calamity").append("arg1", "regalia").append("arg2", "calamitys"));
 	}
 
 	@Test // DATAMONGO-1603
@@ -544,7 +543,7 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "calamity", "regalia");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document().append("arg0", "calamity").append("arg1", "regalias")));
+		assertThat(query.getQueryObject()).isEqualTo(new Document().append("arg0", "calamity").append("arg1", "regalias"));
 	}
 
 	@Test // DATAMONGO-1603
@@ -555,8 +554,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject(), is(Document.parse(
-				"{ \"$or\" : [ { \"firstname\" : { \"$regex\" : \".*calamity.*\" , \"$options\" : \"i\"}} , { \"lastname\" : { \"$regex\" : \".*calamityxyz.*\" , \"$options\" : \"i\"}}]}")));
+		assertThat(query.getQueryObject()).isEqualTo(Document.parse(
+				"{ \"$or\" : [ { \"firstname\" : { \"$regex\" : \".*calamity.*\" , \"$options\" : \"i\"}} , { \"lastname\" : { \"$regex\" : \".*calamityxyz.*\" , \"$options\" : \"i\"}}]}"));
 	}
 
 	@Test // DATAMONGO-1603
@@ -567,8 +566,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject(),
-				is(Document.parse("{ 'lastname' : { '$regex' : '^(calamity|John regalia|regalia)'} }")));
+		assertThat(query.getQueryObject())
+				.isEqualTo(Document.parse("{ 'lastname' : { '$regex' : '^(calamity|John regalia|regalia)'} }"));
 	}
 
 	@Test // DATAMONGO-1605
@@ -578,7 +577,7 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, 100.01D);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document("arg0", 100.01D)));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("arg0", 100.01D));
 	}
 
 	@Test // DATAMONGO-1605
@@ -588,7 +587,7 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { null });
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		assertThat(query.getQueryObject(), is(new Document("arg0", null)));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("arg0", null));
 	}
 
 	@Test // DATAMONGO-2119
@@ -600,8 +599,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject().toJson(),
-				is(new BasicQuery("{lastname: {$regex: 'Chandler'}}").getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson())
+				.isEqualTo(new BasicQuery("{lastname: {$regex: 'Chandler'}}").getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-2149
@@ -613,7 +612,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getFieldsObject(), is(equalTo(Document.parse("{ \"fans\" : { \"$slice\" : [0, 5] } }"))));
+		assertThat(query.getFieldsObject()).isEqualTo(Document.parse("{ \"fans\" : { \"$slice\" : [0, 5] } }"));
 	}
 
 	@Test // DATAMONGO-1593
@@ -625,7 +624,7 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, id.toString());
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
-		Assertions.assertThat(query.getQueryObject()).isEqualTo(new Document("arg0", id));
+		assertThat(query.getQueryObject()).isEqualTo(new Document("arg0", id));
 	}
 
 	@Test // DATAMONGO-1593
@@ -641,11 +640,11 @@ public class StringBasedMongoQueryUnitTests {
 				readUsersId.toString());
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		Assertions.assertThat(query.getQueryObject().get("arg0")).isEqualTo(id);
-		Assertions.assertThat(query.getQueryObject().get("$or")).isInstanceOf(List.class);
-		Assertions.assertThat(DocumentTestUtils.getAsDBList(query.getQueryObject(), "$or").get(0))
+		assertThat(query.getQueryObject().get("arg0")).isEqualTo(id);
+		assertThat(query.getQueryObject().get("$or")).isInstanceOf(List.class);
+		assertThat(DocumentTestUtils.getAsDBList(query.getQueryObject(), "$or").get(0))
 				.isEqualTo(new Document("arg1.value0", readUsersId));
-		Assertions.assertThat(DocumentTestUtils.getAsDBList(query.getQueryObject(), "$or").get(1))
+		assertThat(DocumentTestUtils.getAsDBList(query.getQueryObject(), "$or").get(1))
 				.isEqualTo(new Document("arg1.value1", readUsersId));
 	}
 
