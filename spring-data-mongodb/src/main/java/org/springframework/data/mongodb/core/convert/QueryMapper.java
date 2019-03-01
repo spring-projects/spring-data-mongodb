@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bson.BsonValue;
 import org.bson.Document;
@@ -758,6 +760,8 @@ public class QueryMapper {
 	 */
 	protected static class Field {
 
+		protected static final Pattern POSITIONAL_PARM = Pattern.compile("\\$\\[.*\\]");
+
 		private static final String ID_KEY = "_id";
 
 		protected final String name;
@@ -1030,7 +1034,10 @@ public class QueryMapper {
 
 			try {
 
-				PropertyPath path = PropertyPath.from(pathExpression.replaceAll("\\.\\d+", ""), entity.getTypeInformation());
+				String rawPath = pathExpression.replaceAll("\\.\\d+", "") //
+						.replaceAll(POSITIONAL_PARM.pattern(), "");
+
+				PropertyPath path = PropertyPath.from(rawPath, entity.getTypeInformation());
 
 				if (isPathToJavaLangClassProperty(path)) {
 					return null;
@@ -1176,6 +1183,11 @@ public class QueryMapper {
 			private static boolean isPositionalParameter(String partial) {
 
 				if ("$".equals(partial)) {
+					return true;
+				}
+
+				Matcher matcher = POSITIONAL_PARM.matcher(partial);
+				if (matcher.find()) {
 					return true;
 				}
 
