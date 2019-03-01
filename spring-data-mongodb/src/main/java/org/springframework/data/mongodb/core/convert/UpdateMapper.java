@@ -289,7 +289,7 @@ public class UpdateMapper extends QueryMapper {
 		public MetadataBackedUpdateField(MongoPersistentEntity<?> entity, String key,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-			super(key.replaceAll("\\.\\$", ""), entity, mappingContext);
+			super(key.replaceAll("\\.\\$(\\[.*\\])?", ""), entity, mappingContext);
 			this.key = key;
 		}
 

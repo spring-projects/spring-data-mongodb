@@ -1029,6 +1029,28 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo(new Document("AValue", "a value"));
 	}
 
+	@Test // DATAMONGO-2054
+	public void mappingShouldAllowPositionAllParameter() {
+
+		Update update = new Update().inc("grades.$[]", 10);
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithListOfSimple.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$inc", new Document("grades.$[]", 10)));
+	}
+
+	@Test // DATAMONGO-2054
+	public void mappingShouldAllowPositionAllParameterWhenPopertyHasExplicitFieldName() {
+
+		Update update = new Update().inc("list.$[]", 10);
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$inc", new Document("aliased.$[]", 10)));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1245,6 +1267,10 @@ public class UpdateMapperUnitTests {
 		List<EntityWithAliasedObject> list;
 	}
 
+	static class EntityWithListOfSimple {
+		List<Integer> grades;
+	}
+
 	static class EntityWithAliasedObject {
 
 		@Field("renamed-value") Object value;
@@ -1348,11 +1374,9 @@ public class UpdateMapperUnitTests {
 	@Data
 	static class TypeWithFieldNameThatCannotBeDecapitalized {
 
-		@Id
-		protected String id;
+		@Id protected String id;
 
-		@Field("AValue")
-		private Long aValue = 0L;
+		@Field("AValue") private Long aValue = 0L;
 
 	}
 
