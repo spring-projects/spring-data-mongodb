@@ -1416,10 +1416,11 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(ObjectWithDate.class);
 
 		DateTime dateTime = new DateTime() //
+				.withZone(DateTimeZone.UTC) //
 				.withYear(2014) //
 				.withMonthOfYear(2) //
 				.withDayOfMonth(7) //
-				.withTime(3, 4, 5, 6).toDateTime(DateTimeZone.UTC).toDateTimeISO();
+				.withTime(3, 4, 5, 6).toDateTimeISO();
 
 		ObjectWithDate owd = new ObjectWithDate(dateTime.toDate());
 		mongoTemplate.insert(owd);
