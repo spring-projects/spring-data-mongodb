@@ -26,6 +26,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import java.util.List;
 import java.util.Optional;
 
+import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,16 +52,13 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.DeleteManyModel;
-import com.mongodb.client.model.UpdateManyModel;
-import com.mongodb.client.model.UpdateOneModel;
-import com.mongodb.client.model.WriteModel;
 
 /**
  * Unit tests for {@link DefaultBulkOperations}.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Minsu Kim
  */
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultBulkOperationsUnitTests {
@@ -133,6 +131,18 @@ public class DefaultBulkOperationsUnitTests {
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de").build());
 	}
 
+	@Test // DATAMONGO-2218
+	public void replaceOneShouldUseCollationWhenPresent() {
+
+		ops.replaceOne(new BasicQuery("{}").collation(Collation.of("de")), new SomeDomainType()).execute();
+
+		verify(collection).bulkWrite(captor.capture(), any());
+
+		assertThat(captor.getValue().get(0)).isInstanceOf(ReplaceOneModel.class);
+		assertThat(((ReplaceOneModel<Document>) captor.getValue().get(0)).getReplaceOptions().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de").build());
+	}
+
 	@Test // DATAMONGO-1678
 	public void bulkUpdateShouldMapQueryAndUpdateCorrectly() {
 
@@ -154,6 +164,23 @@ public class DefaultBulkOperationsUnitTests {
 
 		DeleteManyModel<Document> updateModel = (DeleteManyModel<Document>) captor.getValue().get(0);
 		assertThat(updateModel.getFilter()).isEqualTo(new Document("first_name", "danerys"));
+	}
+
+	@Test // DATAMONGO-2218
+	public void bulkReplaceOneShouldMapQueryCorrectly() {
+
+		SomeDomainType replacement = new SomeDomainType();
+		replacement.firstName = "Minsu";
+		replacement.lastName = "Kim";
+
+		ops.replaceOne(query(where("firstName").is("danerys")), replacement).execute();
+
+		verify(collection).bulkWrite(captor.capture(), any());
+
+		ReplaceOneModel<Document> updateModel = (ReplaceOneModel<Document>) captor.getValue().get(0);
+		assertThat(updateModel.getFilter()).isEqualTo(new Document("first_name", "danerys"));
+		assertThat(updateModel.getReplacement().getString("first_name")).isEqualTo("Minsu");
+		assertThat(updateModel.getReplacement().getString("lastName")).isEqualTo("Kim");
 	}
 
 	class SomeDomainType {

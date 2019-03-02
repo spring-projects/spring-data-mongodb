@@ -15,18 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
+import com.mongodb.WriteConcern;
+import com.mongodb.client.model.*;
 import lombok.NonNull;
 import lombok.Value;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
@@ -38,18 +32,11 @@ import org.springframework.data.util.Pair;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-import com.mongodb.BulkWriteException;
-import com.mongodb.WriteConcern;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.BulkWriteOptions;
-import com.mongodb.client.model.DeleteManyModel;
-import com.mongodb.client.model.DeleteOneModel;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.InsertOneModel;
-import com.mongodb.client.model.UpdateManyModel;
-import com.mongodb.client.model.UpdateOneModel;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.WriteModel;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Default implementation for {@link BulkOperations}.
@@ -58,6 +45,7 @@ import com.mongodb.client.model.WriteModel;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Minsu Kim
  * @since 1.9
  */
 class DefaultBulkOperations implements BulkOperations {
@@ -266,6 +254,32 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.mongodb.core.BulkOperations#replaceOne(org.springframework.data.mongodb.core.query.Query, java.lang.Object)
+     */
+	@Override
+	public BulkOperations replaceOne(Query query, Object document) {
+
+		Assert.notNull(query, "Query must not be null!");
+		Assert.notNull(document, "Document must not be null!");
+
+		ReplaceOptions replaceOptions = new ReplaceOptions();
+		query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
+		Bson mappedQuery = getMappedQuery(query.getQueryObject());
+
+		if (document instanceof Document) {
+			models.add(new ReplaceOneModel<>(mappedQuery, (Document) document, replaceOptions));
+			return this;
+		}
+
+		Document sink = new Document();
+		mongoOperations.getConverter().write(document, sink);
+		models.add(new ReplaceOneModel<>(mappedQuery, sink, replaceOptions));
+
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.BulkOperations#executeBulk()
@@ -274,7 +288,7 @@ class DefaultBulkOperations implements BulkOperations {
 	public com.mongodb.bulk.BulkWriteResult execute() {
 
 		try {
-			
+
 			return mongoOperations.execute(collectionName, collection -> {
 				return collection.bulkWrite(models.stream().map(this::mapWriteModel).collect(Collectors.toList()), bulkOptions);
 			});

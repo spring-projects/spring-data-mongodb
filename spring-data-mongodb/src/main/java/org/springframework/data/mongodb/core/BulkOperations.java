@@ -31,6 +31,7 @@ import com.mongodb.bulk.BulkWriteResult;
  *
  * @author Tobias Trelle
  * @author Oliver Gierke
+ * @author Minsu Kim
  * @since 1.9
  */
 public interface BulkOperations {
@@ -134,6 +135,15 @@ public interface BulkOperations {
 	 * @return the current {@link BulkOperations} instance with the removal added, will never be {@literal null}.
 	 */
 	BulkOperations remove(List<Query> removes);
+
+	/**
+	 * Add a single replace operation to the bulk operation.
+	 *
+	 * @param query Update criteria.
+	 * @param document the document to replace, must not be {@literal null}.
+	 * @return the current {@link BulkOperations} instance with the replace added, will never be {@literal null}.
+	 */
+	BulkOperations replaceOne(Query query, Object document);
 
 	/**
 	 * Execute all bulk operations using the default write concern.

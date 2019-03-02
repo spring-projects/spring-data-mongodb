@@ -53,6 +53,7 @@ import com.mongodb.client.MongoCollection;
  * @author Tobias Trelle
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Minsu Kim
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -200,6 +201,31 @@ public class DefaultBulkOperationsIntegrationTests {
 		testRemove(BulkMode.UNORDERED);
 	}
 
+	@Test // DATAMONGO-2218
+	public void replaceOneOrdered() {
+		testReplaceOne(BulkMode.ORDERED);
+	}
+
+	@Test // DATAMONGO-2218
+	public void replaceOneUnordered() {
+		testReplaceOne(BulkMode.UNORDERED);
+	}
+
+	@Test // DATAMONGO-2218
+	public void replaceOneDoesReplace() {
+
+		insertSomeDocuments();
+
+		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED).//
+				replaceOne(where("_id", "1"), rawDoc("1", "value2")).//
+				execute();
+
+		assertThat(result, notNullValue());
+		assertThat(result.getMatchedCount(), is(1));
+		assertThat(result.getModifiedCount(), is(1));
+		assertThat(result.getInsertedCount(), is(0));
+	}
+
 	/**
 	 * If working on the same set of documents, only an ordered bulk operation will yield predictable results.
 	 */
@@ -276,6 +302,19 @@ public class DefaultBulkOperationsIntegrationTests {
 		List<Query> removes = Arrays.asList(where("_id", "1"), where("value", "value2"));
 
 		assertThat(createBulkOps(mode).remove(removes).execute().getDeletedCount(), is(3));
+	}
+
+	private void testReplaceOne(BulkMode mode) {
+
+		BulkOperations bulkOps = createBulkOps(mode);
+
+		insertSomeDocuments();
+
+		Query query = where("_id", "1");
+		Document document = rawDoc("1", "value2");
+		int modifiedCount = bulkOps.replaceOne(query, document).execute().getModifiedCount();
+
+		assertThat(modifiedCount, is(1));
 	}
 
 	private BulkOperations createBulkOps(BulkMode mode) {
