@@ -1035,13 +1035,13 @@ public class UpdateMapperUnitTests {
 		Update update = new Update().inc("grades.$[]", 10);
 
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
-				context.getPersistentEntity(EntityWithListOfSimple.class));
+				context.getPersistentEntity(EntityWithListOfIntegers.class));
 
 		assertThat(mappedUpdate).isEqualTo(new Document("$inc", new Document("grades.$[]", 10)));
 	}
 
 	@Test // DATAMONGO-2054
-	public void mappingShouldAllowPositionAllParameterWhenPopertyHasExplicitFieldName() {
+	public void mappingShouldAllowPositionAllParameterWhenPropertyHasExplicitFieldName() {
 
 		Update update = new Update().inc("list.$[]", 10);
 
@@ -1267,7 +1267,7 @@ public class UpdateMapperUnitTests {
 		List<EntityWithAliasedObject> list;
 	}
 
-	static class EntityWithListOfSimple {
+	static class EntityWithListOfIntegers {
 		List<Integer> grades;
 	}
 

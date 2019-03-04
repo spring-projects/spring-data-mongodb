@@ -15,8 +15,17 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +33,7 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -760,7 +770,7 @@ public class QueryMapper {
 	 */
 	protected static class Field {
 
-		protected static final Pattern POSITIONAL_PARM = Pattern.compile("\\$\\[.*\\]");
+		protected static final Pattern POSITIONAL_OPERATOR = Pattern.compile("\\$\\[.*\\]");
 
 		private static final String ID_KEY = "_id";
 
@@ -852,7 +862,7 @@ public class QueryMapper {
 
 		/**
 		 * Returns whether the field references a {@link java.util.Map}.
-		 * 
+		 *
 		 * @return {@literal true} if property information is available and references a {@link java.util.Map}.
 		 * @see PersistentProperty#isMap()
 		 */
@@ -1035,7 +1045,7 @@ public class QueryMapper {
 			try {
 
 				String rawPath = pathExpression.replaceAll("\\.\\d+", "") //
-						.replaceAll(POSITIONAL_PARM.pattern(), "");
+						.replaceAll(POSITIONAL_OPERATOR.pattern(), "");
 
 				PropertyPath path = PropertyPath.from(rawPath, entity.getTypeInformation());
 
@@ -1186,7 +1196,7 @@ public class QueryMapper {
 					return true;
 				}
 
-				Matcher matcher = POSITIONAL_PARM.matcher(partial);
+				Matcher matcher = POSITIONAL_OPERATOR.matcher(partial);
 				if (matcher.find()) {
 					return true;
 				}
