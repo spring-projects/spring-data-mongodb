@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
@@ -35,11 +34,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import org.assertj.core.data.Offset;
 import org.bson.Document;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -178,7 +179,7 @@ public class AggregationTests {
 			});
 
 			long count = mongoTemplate.count(new Query(), ZipInfo.class);
-			assertThat(count, is(29467L));
+			assertThat(count).isEqualTo(29467L);
 
 			initialized = true;
 		}
@@ -216,12 +217,12 @@ public class AggregationTests {
 
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, TagCount.class);
 
-		assertThat(results, is(notNullValue()));
+		assertThat(results).isNotNull();
 
 		List<TagCount> tagCount = results.getMappedResults();
 
-		assertThat(tagCount, is(notNullValue()));
-		assertThat(tagCount.size(), is(3));
+		assertThat(tagCount).isNotNull();
+		assertThat(tagCount.size()).isEqualTo(3);
 
 		assertTagCount("spring", 3, tagCount.get(0));
 		assertTagCount("mongodb", 2, tagCount.get(1));
@@ -245,12 +246,12 @@ public class AggregationTests {
 
 		CloseableIterator<TagCount> iterator = mongoTemplate.aggregateStream(agg, INPUT_COLLECTION, TagCount.class);
 
-		assertThat(iterator, is(notNullValue()));
+		assertThat(iterator).isNotNull();
 		List<TagCount> tagCount = toList(iterator);
 		iterator.close();
 
-		assertThat(tagCount, is(notNullValue()));
-		assertThat(tagCount.size(), is(3));
+		assertThat(tagCount).isNotNull();
+		assertThat(tagCount.size()).isEqualTo(3);
 
 		assertTagCount("spring", 3, tagCount.get(0));
 		assertTagCount("mongodb", 2, tagCount.get(1));
@@ -272,12 +273,12 @@ public class AggregationTests {
 
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
-		assertThat(results, is(notNullValue()));
+		assertThat(results).isNotNull();
 
 		List<TagCount> tagCount = results.getMappedResults();
 
-		assertThat(tagCount, is(notNullValue()));
-		assertThat(tagCount.size(), is(0));
+		assertThat(tagCount).isNotNull();
+		assertThat(tagCount.size()).isEqualTo(0);
 	}
 
 	@Test // DATAMONGO-1637
@@ -295,12 +296,12 @@ public class AggregationTests {
 
 		CloseableIterator<TagCount> results = mongoTemplate.aggregateStream(aggregation, INPUT_COLLECTION, TagCount.class);
 
-		assertThat(results, is(notNullValue()));
+		assertThat(results).isNotNull();
 
 		List<TagCount> tagCount = toList(results);
 		results.close();
 
-		assertThat(tagCount.size(), is(0));
+		assertThat(tagCount.size()).isEqualTo(0);
 	}
 
 	@Test // DATAMONGO-1391
@@ -322,12 +323,12 @@ public class AggregationTests {
 
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, TagCount.class);
 
-		assertThat(results, is(notNullValue()));
+		assertThat(results).isNotNull();
 
 		List<TagCount> tagCount = results.getMappedResults();
 
-		assertThat(tagCount, is(notNullValue()));
-		assertThat(tagCount.size(), is(3));
+		assertThat(tagCount).isNotNull();
+		assertThat(tagCount.size()).isEqualTo(3);
 	}
 
 	@Test // DATAMONGO-1391
@@ -347,14 +348,14 @@ public class AggregationTests {
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, Document.class);
 
-		assertThat(results, is(notNullValue()));
+		assertThat(results).isNotNull();
 
 		List<Document> tagCount = results.getMappedResults();
 
-		assertThat(tagCount, is(notNullValue()));
-		assertThat(tagCount.size(), is(4));
-		assertThat(tagCount.get(0), isBsonObject().containing("n", 2L));
-		assertThat(tagCount.get(3), isBsonObject().notContaining("n"));
+		assertThat(tagCount).isNotNull();
+		assertThat(tagCount.size()).isEqualTo(4);
+		assertThat(tagCount.get(0)).containsEntry("n", 2L);
+		assertThat(tagCount.get(3)).containsEntry("n", null);
 	}
 
 	@Test // DATAMONGO-586
@@ -372,12 +373,12 @@ public class AggregationTests {
 
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
-		assertThat(results, is(notNullValue()));
+		assertThat(results).isNotNull();
 
 		List<TagCount> tagCount = results.getMappedResults();
 
-		assertThat(tagCount, is(notNullValue()));
-		assertThat(tagCount.size(), is(2));
+		assertThat(tagCount).isNotNull();
+		assertThat(tagCount.size()).isEqualTo(2);
 		assertTagCount(null, 0, tagCount.get(0));
 		assertTagCount(null, 0, tagCount.get(1));
 	}
@@ -397,12 +398,12 @@ public class AggregationTests {
 
 		CloseableIterator<TagCount> results = mongoTemplate.aggregateStream(aggregation, INPUT_COLLECTION, TagCount.class);
 
-		assertThat(results, is(notNullValue()));
+		assertThat(results).isNotNull();
 
 		List<TagCount> tagCount = toList(results);
 		results.close();
 
-		assertThat(tagCount.size(), is(2));
+		assertThat(tagCount.size()).isEqualTo(2);
 		assertTagCount(null, 0, tagCount.get(0));
 		assertTagCount(null, 0, tagCount.get(1));
 	}
@@ -484,35 +485,35 @@ public class AggregationTests {
 				sort(ASC, "state") //
 		);
 
-		assertThat(aggregation, is(notNullValue()));
-		assertThat(aggregation.toString(), is(notNullValue()));
+		assertThat(aggregation).isNotNull();
+		assertThat(aggregation.toString()).isNotNull();
 
 		AggregationResults<ZipInfoStats> result = mongoTemplate.aggregate(aggregation, ZipInfoStats.class);
-		assertThat(result, is(notNullValue()));
-		assertThat(result.getMappedResults(), is(notNullValue()));
-		assertThat(result.getMappedResults().size(), is(51));
+		assertThat(result).isNotNull();
+		assertThat(result.getMappedResults()).isNotNull();
+		assertThat(result.getMappedResults().size()).isEqualTo(51);
 
 		ZipInfoStats firstZipInfoStats = result.getMappedResults().get(0);
-		assertThat(firstZipInfoStats, is(notNullValue()));
-		assertThat(firstZipInfoStats.id, is(nullValue()));
-		assertThat(firstZipInfoStats.state, is("AK"));
-		assertThat(firstZipInfoStats.smallestCity, is(notNullValue()));
-		assertThat(firstZipInfoStats.smallestCity.name, is("CHEVAK"));
-		assertThat(firstZipInfoStats.smallestCity.population, is(0));
-		assertThat(firstZipInfoStats.biggestCity, is(notNullValue()));
-		assertThat(firstZipInfoStats.biggestCity.name, is("ANCHORAGE"));
-		assertThat(firstZipInfoStats.biggestCity.population, is(183987));
+		assertThat(firstZipInfoStats).isNotNull();
+		assertThat(firstZipInfoStats.id).isNull();
+		assertThat(firstZipInfoStats.state).isEqualTo("AK");
+		assertThat(firstZipInfoStats.smallestCity).isNotNull();
+		assertThat(firstZipInfoStats.smallestCity.name).isEqualTo("CHEVAK");
+		assertThat(firstZipInfoStats.smallestCity.population).isEqualTo(0);
+		assertThat(firstZipInfoStats.biggestCity).isNotNull();
+		assertThat(firstZipInfoStats.biggestCity.name).isEqualTo("ANCHORAGE");
+		assertThat(firstZipInfoStats.biggestCity.population).isEqualTo(183987);
 
 		ZipInfoStats lastZipInfoStats = result.getMappedResults().get(50);
-		assertThat(lastZipInfoStats, is(notNullValue()));
-		assertThat(lastZipInfoStats.id, is(nullValue()));
-		assertThat(lastZipInfoStats.state, is("WY"));
-		assertThat(lastZipInfoStats.smallestCity, is(notNullValue()));
-		assertThat(lastZipInfoStats.smallestCity.name, is("LOST SPRINGS"));
-		assertThat(lastZipInfoStats.smallestCity.population, is(6));
-		assertThat(lastZipInfoStats.biggestCity, is(notNullValue()));
-		assertThat(lastZipInfoStats.biggestCity.name, is("CHEYENNE"));
-		assertThat(lastZipInfoStats.biggestCity.population, is(70185));
+		assertThat(lastZipInfoStats).isNotNull();
+		assertThat(lastZipInfoStats.id).isNull();
+		assertThat(lastZipInfoStats.state).isEqualTo("WY");
+		assertThat(lastZipInfoStats.smallestCity).isNotNull();
+		assertThat(lastZipInfoStats.smallestCity.name).isEqualTo("LOST SPRINGS");
+		assertThat(lastZipInfoStats.smallestCity.population).isEqualTo(6);
+		assertThat(lastZipInfoStats.biggestCity).isNotNull();
+		assertThat(lastZipInfoStats.biggestCity.name).isEqualTo("CHEYENNE");
+		assertThat(lastZipInfoStats.biggestCity.population).isEqualTo(70185);
 	}
 
 	@Test // DATAMONGO-586
@@ -546,19 +547,19 @@ public class AggregationTests {
 				match(where("totalPop").gte(10 * 1000 * 1000)) //
 		);
 
-		assertThat(agg, is(notNullValue()));
-		assertThat(agg.toString(), is(notNullValue()));
+		assertThat(agg).isNotNull();
+		assertThat(agg.toString()).isNotNull();
 
 		AggregationResults<StateStats> result = mongoTemplate.aggregate(agg, StateStats.class);
-		assertThat(result, is(notNullValue()));
-		assertThat(result.getMappedResults(), is(notNullValue()));
-		assertThat(result.getMappedResults().size(), is(7));
+		assertThat(result).isNotNull();
+		assertThat(result.getMappedResults()).isNotNull();
+		assertThat(result.getMappedResults().size()).isEqualTo(7);
 
 		StateStats stateStats = result.getMappedResults().get(0);
-		assertThat(stateStats, is(notNullValue()));
-		assertThat(stateStats.id, is("CA"));
-		assertThat(stateStats.state, is(nullValue()));
-		assertThat(stateStats.totalPopulation, is(29760021));
+		assertThat(stateStats).isNotNull();
+		assertThat(stateStats.id).isEqualTo("CA");
+		assertThat(stateStats.state).isNull();
+		assertThat(stateStats.totalPopulation).isEqualTo(29760021);
 	}
 
 	/**
@@ -596,22 +597,22 @@ public class AggregationTests {
 								.then(30) //
 								.otherwise(20)));
 
-		assertThat(aggregation.toString(), is(notNullValue()));
+		assertThat(aggregation.toString()).isNotNull();
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
-		assertThat(result.getMappedResults().size(), is(3));
+		assertThat(result.getMappedResults().size()).isEqualTo(3);
 
 		Document first = result.getMappedResults().get(0);
-		assertThat(first.get("_id"), is((Object) 1));
-		assertThat(first.get("discount"), is((Object) 30));
+		assertThat(first.get("_id")).isEqualTo((Object) 1);
+		assertThat(first.get("discount")).isEqualTo((Object) 30);
 
 		Document second = result.getMappedResults().get(1);
-		assertThat(second.get("_id"), is((Object) 2));
-		assertThat(second.get("discount"), is((Object) 20));
+		assertThat(second.get("_id")).isEqualTo((Object) 2);
+		assertThat(second.get("discount")).isEqualTo((Object) 20);
 
 		Document third = result.getMappedResults().get(2);
-		assertThat(third.get("_id"), is((Object) 3));
-		assertThat(third.get("discount"), is((Object) 30));
+		assertThat(third.get("_id")).isEqualTo((Object) 3);
+		assertThat(third.get("discount")).isEqualTo((Object) 30);
 	}
 
 	/**
@@ -644,18 +645,18 @@ public class AggregationTests {
 						.as("description")//
 		);
 
-		assertThat(aggregation.toString(), is(notNullValue()));
+		assertThat(aggregation.toString()).isNotNull();
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
-		assertThat(result.getMappedResults().size(), is(3));
+		assertThat(result.getMappedResults().size()).isEqualTo(3);
 
 		Document first = result.getMappedResults().get(0);
-		assertThat(first.get("_id"), is((Object) 1));
-		assertThat(first.get("description"), is((Object) "product 1"));
+		assertThat(first.get("_id")).isEqualTo((Object) 1);
+		assertThat(first.get("description")).isEqualTo((Object) "product 1");
 
 		Document second = result.getMappedResults().get(1);
-		assertThat(second.get("_id"), is((Object) 2));
-		assertThat(second.get("description"), is((Object) "Unspecified"));
+		assertThat(second.get("_id")).isEqualTo((Object) 2);
+		assertThat(second.get("description")).isEqualTo((Object) "Unspecified");
 	}
 
 	@Test // DATAMONGO-861
@@ -669,15 +670,15 @@ public class AggregationTests {
 								.otherwise(false)) //
 						.and("population").as("population"));
 
-		assertThat(aggregation, is(notNullValue()));
-		assertThat(aggregation.toString(), is(notNullValue()));
+		assertThat(aggregation).isNotNull();
+		assertThat(aggregation.toString()).isNotNull();
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
-		assertThat(result.getMappedResults().size(), is(29467));
+		assertThat(result.getMappedResults().size()).isEqualTo(29467);
 
 		Document firstZipInfoStats = result.getMappedResults().get(0);
-		assertThat(firstZipInfoStats.get("largePopulation"), is((Object) false));
-		assertThat(firstZipInfoStats.get("population"), is((Object) 6055));
+		assertThat(firstZipInfoStats.get("largePopulation")).isEqualTo((Object) false);
+		assertThat(firstZipInfoStats.get("population")).isEqualTo((Object) 6055);
 	}
 
 	@Test // DATAMONGO-861
@@ -692,15 +693,15 @@ public class AggregationTests {
 								.otherwise("small")) //
 						.and("population").as("population"));
 
-		assertThat(aggregation, is(notNullValue()));
-		assertThat(aggregation.toString(), is(notNullValue()));
+		assertThat(aggregation).isNotNull();
+		assertThat(aggregation.toString()).isNotNull();
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
-		assertThat(result.getMappedResults().size(), is(29467));
+		assertThat(result.getMappedResults().size()).isEqualTo(29467);
 
 		Document firstZipInfoStats = result.getMappedResults().get(0);
-		assertThat(firstZipInfoStats.get("size"), is((Object) "small"));
-		assertThat(firstZipInfoStats.get("population"), is((Object) 6055));
+		assertThat(firstZipInfoStats.get("size")).isEqualTo((Object) "small");
+		assertThat(firstZipInfoStats.get("population")).isEqualTo((Object) 6055);
 	}
 
 	@Test // DATAMONGO-861
@@ -715,16 +716,16 @@ public class AggregationTests {
 						.applyCondition(ConditionalOperators.ifNull("caption").then("unknown")),
 				sort(ASC, "id"));
 
-		assertThat(aggregation.toString(), is(notNullValue()));
+		assertThat(aggregation.toString()).isNotNull();
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
-		assertThat(result.getMappedResults().size(), is(2));
+		assertThat(result.getMappedResults().size()).isEqualTo(2);
 
 		Document id = result.getMappedResults().get(0);
-		assertThat((String) id.get("caption"), is(equalTo("caption")));
+		assertThat((String) id.get("caption")).isEqualTo("caption");
 
 		Document idonly = result.getMappedResults().get(1);
-		assertThat((String) idonly.get("caption"), is(equalTo("unknown")));
+		assertThat((String) idonly.get("caption")).isEqualTo("unknown");
 	}
 
 	@Test // DATAMONGO-861
@@ -739,16 +740,16 @@ public class AggregationTests {
 						.applyCondition(ConditionalOperators.ifNull("caption").thenValueOf("id")),
 				sort(ASC, "id"));
 
-		assertThat(aggregation.toString(), is(notNullValue()));
+		assertThat(aggregation.toString()).isNotNull();
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
-		assertThat(result.getMappedResults().size(), is(2));
+		assertThat(result.getMappedResults().size()).isEqualTo(2);
 
 		Document id = result.getMappedResults().get(0);
-		assertThat((String) id.get("caption"), is(equalTo("caption")));
+		assertThat((String) id.get("caption")).isEqualTo("caption");
 
 		Document idonly = result.getMappedResults().get(1);
-		assertThat((String) idonly.get("caption"), is(equalTo("idonly")));
+		assertThat((String) idonly.get("caption")).isEqualTo("idonly");
 	}
 
 	@Test // DATAMONGO-861
@@ -783,15 +784,15 @@ public class AggregationTests {
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(2));
+		assertThat(result.getMappedResults()).hasSize(2);
 
 		Document meh = result.getMappedResults().get(0);
-		assertThat((String) meh.get("_id"), is(equalTo("meh")));
-		assertThat(((Number) meh.get("score")).longValue(), is(equalTo(1L)));
+		assertThat((String) meh.get("_id")).isEqualTo("meh");
+		assertThat(((Number) meh.get("score")).longValue()).isEqualTo(1L);
 
 		Document good = result.getMappedResults().get(1);
-		assertThat((String) good.get("_id"), is(equalTo("good")));
-		assertThat(((Number) good.get("score")).longValue(), is(equalTo(9000L)));
+		assertThat((String) good.get("_id")).isEqualTo("good");
+		assertThat(((Number) good.get("score")).longValue()).isEqualTo(9000L);
 	}
 
 	@Test // DATAMONGO-1784
@@ -826,15 +827,15 @@ public class AggregationTests {
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(2));
+		assertThat(result.getMappedResults()).hasSize(2);
 
 		Document meh = result.getMappedResults().get(0);
-		assertThat(meh.get("_id"), is(equalTo("meh")));
-		assertThat(((Number) meh.get("score")).longValue(), is(equalTo(2L)));
+		assertThat(meh.get("_id")).isEqualTo("meh");
+		assertThat(((Number) meh.get("score")).longValue()).isEqualTo(2L);
 
 		Document good = result.getMappedResults().get(1);
-		assertThat(good.get("_id"), is(equalTo("good")));
-		assertThat(((Number) good.get("score")).longValue(), is(equalTo(18000L)));
+		assertThat(good.get("_id")).isEqualTo("good");
+		assertThat(((Number) good.get("score")).longValue()).isEqualTo(18000L);
 	}
 
 	/**
@@ -849,13 +850,13 @@ public class AggregationTests {
 
 		TypedAggregation<UserWithLikes> agg = createUsersWithCommonLikesAggregation();
 
-		assertThat(agg, is(notNullValue()));
-		assertThat(agg.toString(), is(notNullValue()));
+		assertThat(agg).isNotNull();
+		assertThat(agg.toString()).isNotNull();
 
 		AggregationResults<LikeStats> result = mongoTemplate.aggregate(agg, LikeStats.class);
-		assertThat(result, is(notNullValue()));
-		assertThat(result.getMappedResults(), is(notNullValue()));
-		assertThat(result.getMappedResults().size(), is(5));
+		assertThat(result).isNotNull();
+		assertThat(result.getMappedResults()).isNotNull();
+		assertThat(result.getMappedResults().size()).isEqualTo(5);
 
 		assertLikeStats(result.getMappedResults().get(0), "a", 4);
 		assertLikeStats(result.getMappedResults().get(1), "b", 2);
@@ -897,23 +898,24 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 		List<Document> resultList = result.getMappedResults();
 
-		assertThat(resultList, is(notNullValue()));
-		assertThat((String) resultList.get(0).get("_id"), is(product.id));
-		assertThat((String) resultList.get(0).get("name"), is(product.name));
-		assertThat((Double) resultList.get(0).get("netPricePlus1"), is(product.netPrice + 1));
-		assertThat((Double) resultList.get(0).get("netPriceMinus1"), is(product.netPrice - 1));
-		assertThat((Double) resultList.get(0).get("netPriceMul2"), is(product.netPrice * 2));
-		assertThat((Double) resultList.get(0).get("netPriceDiv119"), is(product.netPrice / 1.19));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(product.spaceUnits % 2));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsPlusSpaceUnits"),
-				is(product.spaceUnits + product.spaceUnits));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsMinusSpaceUnits"),
-				is(product.spaceUnits - product.spaceUnits));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsMultiplySpaceUnits"),
-				is(product.spaceUnits * product.spaceUnits));
-		assertThat((Double) resultList.get(0).get("spaceUnitsDivideSpaceUnits"),
-				is((double) (product.spaceUnits / product.spaceUnits)));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsModSpaceUnits"), is(product.spaceUnits % product.spaceUnits));
+		assertThat(resultList).isNotNull();
+		assertThat((String) resultList.get(0).get("_id")).isEqualTo(product.id);
+		assertThat((String) resultList.get(0).get("name")).isEqualTo(product.name);
+		assertThat((Double) resultList.get(0).get("netPricePlus1")).isEqualTo(product.netPrice + 1);
+		assertThat((Double) resultList.get(0).get("netPriceMinus1")).isEqualTo(product.netPrice - 1);
+		assertThat((Double) resultList.get(0).get("netPriceMul2")).isEqualTo(product.netPrice * 2);
+		assertThat((Double) resultList.get(0).get("netPriceDiv119")).isEqualTo(product.netPrice / 1.19);
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2")).isEqualTo(product.spaceUnits % 2);
+		assertThat((Integer) resultList.get(0).get("spaceUnitsPlusSpaceUnits"))
+				.isEqualTo(product.spaceUnits + product.spaceUnits);
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMinusSpaceUnits"))
+				.isEqualTo(product.spaceUnits - product.spaceUnits);
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMultiplySpaceUnits"))
+				.isEqualTo(product.spaceUnits * product.spaceUnits);
+		assertThat((Double) resultList.get(0).get("spaceUnitsDivideSpaceUnits"))
+				.isEqualTo((double) (product.spaceUnits / product.spaceUnits));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsModSpaceUnits"))
+				.isEqualTo(product.spaceUnits % product.spaceUnits);
 	}
 
 	@Test // DATAMONGO-774
@@ -936,16 +938,16 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 		List<Document> resultList = result.getMappedResults();
 
-		assertThat(resultList, is(notNullValue()));
-		assertThat((String) resultList.get(0).get("_id"), is(product.id));
-		assertThat((String) resultList.get(0).get("name"), is(product.name));
-		assertThat((Double) resultList.get(0).get("netPricePlus1"), is(product.netPrice + 1));
-		assertThat((Double) resultList.get(0).get("netPriceMinus1"), is(product.netPrice - 1));
-		assertThat((Double) resultList.get(0).get("netPriceDiv2"), is(product.netPrice / 2));
-		assertThat((Double) resultList.get(0).get("grossPrice"), is(product.netPrice * 1.19));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(product.spaceUnits % 2));
-		assertThat((Double) resultList.get(0).get("grossPriceIncludingDiscountAndCharge"),
-				is((product.netPrice * 0.8 + 1.2) * 1.19));
+		assertThat(resultList).isNotNull();
+		assertThat((String) resultList.get(0).get("_id")).isEqualTo(product.id);
+		assertThat((String) resultList.get(0).get("name")).isEqualTo(product.name);
+		assertThat((Double) resultList.get(0).get("netPricePlus1")).isEqualTo(product.netPrice + 1);
+		assertThat((Double) resultList.get(0).get("netPriceMinus1")).isEqualTo(product.netPrice - 1);
+		assertThat((Double) resultList.get(0).get("netPriceDiv2")).isEqualTo(product.netPrice / 2);
+		assertThat((Double) resultList.get(0).get("grossPrice")).isEqualTo(product.netPrice * 1.19);
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2")).isEqualTo(product.spaceUnits % 2);
+		assertThat((Double) resultList.get(0).get("grossPriceIncludingDiscountAndCharge"))
+				.isEqualTo((product.netPrice * 0.8 + 1.2) * 1.19);
 	}
 
 	@Test // DATAMONGO-774
@@ -963,10 +965,10 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 		List<Document> resultList = result.getMappedResults();
 
-		assertThat(resultList, is(notNullValue()));
-		assertThat((String) resultList.get(0).get("_id"), is(product.id));
-		assertThat((String) resultList.get(0).get("name"), is(product.name));
-		assertThat((String) resultList.get(0).get("name_bubu"), is(product.name + "_bubu"));
+		assertThat(resultList).isNotNull();
+		assertThat((String) resultList.get(0).get("_id")).isEqualTo(product.id);
+		assertThat((String) resultList.get(0).get("name")).isEqualTo(product.name);
+		assertThat((String) resultList.get(0).get("name_bubu")).isEqualTo(product.name + "_bubu");
 	}
 
 	@Test // DATAMONGO-774
@@ -985,12 +987,12 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 		List<Document> resultList = result.getMappedResults();
 
-		assertThat(resultList, is(notNullValue()));
+		assertThat(resultList).isNotNull();
 		Document firstItem = resultList.get(0);
-		assertThat((String) firstItem.get("_id"), is(product.id));
-		assertThat((String) firstItem.get("name"), is(product.name));
-		assertThat((Double) firstItem.get("salesPrice"),
-				is((product.netPrice * (1 - product.discountRate) + shippingCosts) * (1 + product.taxRate)));
+		assertThat((String) firstItem.get("_id")).isEqualTo(product.id);
+		assertThat((String) firstItem.get("name")).isEqualTo(product.name);
+		assertThat((Double) firstItem.get("salesPrice"))
+				.isEqualTo((product.netPrice * (1 - product.discountRate) + shippingCosts) * (1 + product.taxRate));
 	}
 
 	@Test
@@ -1030,13 +1032,13 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 		List<Document> stats = result.getMappedResults();
 
-		assertThat(stats.size(), is(3));
-		assertThat(stats.get(0).get("_id").toString(), is("C"));
-		assertThat((Integer) stats.get(0).get("uplift"), is(2));
-		assertThat(stats.get(1).get("_id").toString(), is("B"));
-		assertThat((Integer) stats.get(1).get("uplift"), is(3));
-		assertThat(stats.get(2).get("_id").toString(), is("A"));
-		assertThat((Integer) stats.get(2).get("uplift"), is(1));
+		assertThat(stats.size()).isEqualTo(3);
+		assertThat(stats.get(0).get("_id").toString()).isEqualTo("C");
+		assertThat((Integer) stats.get(0).get("uplift")).isEqualTo(2);
+		assertThat(stats.get(1).get("_id").toString()).isEqualTo("B");
+		assertThat((Integer) stats.get(1).get("uplift")).isEqualTo(3);
+		assertThat(stats.get(2).get("_id").toString()).isEqualTo("A");
+		assertThat((Integer) stats.get(2).get("uplift")).isEqualTo(1);
 	}
 
 	/**
@@ -1057,9 +1059,9 @@ public class AggregationTests {
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, Document.class);
 		List<Document> mappedResults = results.getMappedResults();
 
-		assertThat(mappedResults, hasSize(6));
+		assertThat(mappedResults).hasSize(6);
 		for (Document element : mappedResults) {
-			assertThat(element.get("up"), is((Object) 1));
+			assertThat(element.get("up")).isEqualTo((Object) 1);
 		}
 	}
 
@@ -1071,24 +1073,23 @@ public class AggregationTests {
 		data.stringValue = "ABC";
 		mongoTemplate.insert(data);
 
-		TypedAggregation<Data> agg = newAggregation(Data.class,
-				project() //
-						.andExpression("concat(stringValue, 'DE')").as("concat") //
-						.andExpression("strcasecmp(stringValue,'XYZ')").as("strcasecmp") //
-						.andExpression("substr(stringValue,1,1)").as("substr") //
-						.andExpression("toLower(stringValue)").as("toLower") //
-						.andExpression("toUpper(toLower(stringValue))").as("toUpper") //
+		TypedAggregation<Data> agg = newAggregation(Data.class, project() //
+				.andExpression("concat(stringValue, 'DE')").as("concat") //
+				.andExpression("strcasecmp(stringValue,'XYZ')").as("strcasecmp") //
+				.andExpression("substr(stringValue,1,1)").as("substr") //
+				.andExpression("toLower(stringValue)").as("toLower") //
+				.andExpression("toUpper(toLower(stringValue))").as("toUpper") //
 		);
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, Document.class);
 		Document document = results.getUniqueMappedResult();
 
-		assertThat(document, is(notNullValue()));
-		assertThat((String) document.get("concat"), is("ABCDE"));
-		assertThat((Integer) document.get("strcasecmp"), is(-1));
-		assertThat((String) document.get("substr"), is("B"));
-		assertThat((String) document.get("toLower"), is("abc"));
-		assertThat((String) document.get("toUpper"), is("ABC"));
+		assertThat(document).isNotNull();
+		assertThat((String) document.get("concat")).isEqualTo("ABCDE");
+		assertThat((Integer) document.get("strcasecmp")).isEqualTo(-1);
+		assertThat((String) document.get("substr")).isEqualTo("B");
+		assertThat((String) document.get("toLower")).isEqualTo("abc");
+		assertThat((String) document.get("toUpper")).isEqualTo("ABC");
 	}
 
 	@Test // DATAMONGO-774
@@ -1099,34 +1100,33 @@ public class AggregationTests {
 		data.dateValue = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSSZ").parse("29.08.1983 12:34:56.789+0000");
 		mongoTemplate.insert(data);
 
-		TypedAggregation<Data> agg = newAggregation(Data.class,
-				project() //
-						.andExpression("dayOfYear(dateValue)").as("dayOfYear") //
-						.andExpression("dayOfMonth(dateValue)").as("dayOfMonth") //
-						.andExpression("dayOfWeek(dateValue)").as("dayOfWeek") //
-						.andExpression("year(dateValue)").as("year") //
-						.andExpression("month(dateValue)").as("month") //
-						.andExpression("week(dateValue)").as("week") //
-						.andExpression("hour(dateValue)").as("hour") //
-						.andExpression("minute(dateValue)").as("minute") //
-						.andExpression("second(dateValue)").as("second") //
-						.andExpression("millisecond(dateValue)").as("millisecond") //
+		TypedAggregation<Data> agg = newAggregation(Data.class, project() //
+				.andExpression("dayOfYear(dateValue)").as("dayOfYear") //
+				.andExpression("dayOfMonth(dateValue)").as("dayOfMonth") //
+				.andExpression("dayOfWeek(dateValue)").as("dayOfWeek") //
+				.andExpression("year(dateValue)").as("year") //
+				.andExpression("month(dateValue)").as("month") //
+				.andExpression("week(dateValue)").as("week") //
+				.andExpression("hour(dateValue)").as("hour") //
+				.andExpression("minute(dateValue)").as("minute") //
+				.andExpression("second(dateValue)").as("second") //
+				.andExpression("millisecond(dateValue)").as("millisecond") //
 		);
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, Document.class);
 		Document document = results.getUniqueMappedResult();
 
-		assertThat(document, is(notNullValue()));
-		assertThat((Integer) document.get("dayOfYear"), is(241));
-		assertThat((Integer) document.get("dayOfMonth"), is(29));
-		assertThat((Integer) document.get("dayOfWeek"), is(2));
-		assertThat((Integer) document.get("year"), is(1983));
-		assertThat((Integer) document.get("month"), is(8));
-		assertThat((Integer) document.get("week"), is(35));
-		assertThat((Integer) document.get("hour"), is(12));
-		assertThat((Integer) document.get("minute"), is(34));
-		assertThat((Integer) document.get("second"), is(56));
-		assertThat((Integer) document.get("millisecond"), is(789));
+		assertThat(document).isNotNull();
+		assertThat((Integer) document.get("dayOfYear")).isEqualTo(241);
+		assertThat((Integer) document.get("dayOfMonth")).isEqualTo(29);
+		assertThat((Integer) document.get("dayOfWeek")).isEqualTo(2);
+		assertThat((Integer) document.get("year")).isEqualTo(1983);
+		assertThat((Integer) document.get("month")).isEqualTo(8);
+		assertThat((Integer) document.get("week")).isEqualTo(35);
+		assertThat((Integer) document.get("hour")).isEqualTo(12);
+		assertThat((Integer) document.get("minute")).isEqualTo(34);
+		assertThat((Integer) document.get("second")).isEqualTo(56);
+		assertThat((Integer) document.get("millisecond")).isEqualTo(789);
 	}
 
 	@Test // DATAMONGO-1550
@@ -1146,9 +1146,9 @@ public class AggregationTests {
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, Document.class);
 		Document resultDocument = results.getUniqueMappedResult();
 
-		assertThat(resultDocument, is(notNullValue()));
-		assertThat((Integer) resultDocument.get("my_primitiveIntValue"), is(42));
-		assertThat((Integer) resultDocument.keySet().size(), is(1));
+		assertThat(resultDocument).isNotNull();
+		assertThat((Integer) resultDocument.get("my_primitiveIntValue")).isEqualTo(42);
+		assertThat((Integer) resultDocument.keySet().size()).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-788
@@ -1169,13 +1169,13 @@ public class AggregationTests {
 		AggregationResults<Document> aggResults = mongoTemplate.aggregate(aggregation, Document.class);
 		List<Document> items = aggResults.getMappedResults();
 
-		assertThat(items.size(), is(2));
-		assertThat((Integer) items.get(0).get("xPerY"), is(2));
-		assertThat((Integer) items.get(0).get("x"), is(2));
-		assertThat((Integer) items.get(0).get("y"), is(1));
-		assertThat((Integer) items.get(1).get("xPerY"), is(3));
-		assertThat((Integer) items.get(1).get("x"), is(1));
-		assertThat((Integer) items.get(1).get("y"), is(1));
+		assertThat(items.size()).isEqualTo(2);
+		assertThat((Integer) items.get(0).get("xPerY")).isEqualTo(2);
+		assertThat((Integer) items.get(0).get("x")).isEqualTo(2);
+		assertThat((Integer) items.get(0).get("y")).isEqualTo(1);
+		assertThat((Integer) items.get(1).get("xPerY")).isEqualTo(3);
+		assertThat((Integer) items.get(1).get("x")).isEqualTo(1);
+		assertThat((Integer) items.get(1).get("y")).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-806
@@ -1205,8 +1205,8 @@ public class AggregationTests {
 		List<Document> mappedResults = results.getMappedResults();
 
 		Document firstItem = mappedResults.get(0);
-		assertThat(firstItem.get("_id"), is(notNullValue()));
-		assertThat(String.valueOf(firstItem.get("_id")), is("u1"));
+		assertThat(firstItem.get("_id")).isNotNull();
+		assertThat(String.valueOf(firstItem.get("_id"))).isEqualTo("u1");
 	}
 
 	@Test // DATAMONGO-840
@@ -1239,11 +1239,11 @@ public class AggregationTests {
 
 		Invoice invoice = results.getUniqueMappedResult();
 
-		assertThat(invoice, is(notNullValue()));
-		assertThat(invoice.getOrderId(), is(order.getId()));
-		assertThat(invoice.getNetAmount(), is(closeTo(8.3, 000001)));
-		assertThat(invoice.getTaxAmount(), is(closeTo(1.577, 000001)));
-		assertThat(invoice.getTotalAmount(), is(closeTo(9.877, 000001)));
+		assertThat(invoice).isNotNull();
+		assertThat(invoice.getOrderId()).isEqualTo(order.getId());
+		assertThat(invoice.getNetAmount()).isCloseTo(8.3, Offset.offset(000001D));
+		assertThat(invoice.getTaxAmount()).isCloseTo(1.577, Offset.offset(000001D));
+		assertThat(invoice.getTotalAmount()).isCloseTo(9.877, Offset.offset(000001D));
 	}
 
 	@Test // DATAMONGO-924
@@ -1274,7 +1274,7 @@ public class AggregationTests {
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(3));
+		assertThat(result.getMappedResults()).hasSize(3);
 	}
 
 	@Test // DATAMONGO-960
@@ -1286,13 +1286,13 @@ public class AggregationTests {
 		TypedAggregation<UserWithLikes> agg = createUsersWithCommonLikesAggregation() //
 				.withOptions(newAggregationOptions().allowDiskUse(true).build());
 
-		assertThat(agg, is(notNullValue()));
-		assertThat(agg.toString(), is(notNullValue()));
+		assertThat(agg).isNotNull();
+		assertThat(agg.toString()).isNotNull();
 
 		AggregationResults<LikeStats> result = mongoTemplate.aggregate(agg, LikeStats.class);
-		assertThat(result, is(notNullValue()));
-		assertThat(result.getMappedResults(), is(notNullValue()));
-		assertThat(result.getMappedResults().size(), is(5));
+		assertThat(result).isNotNull();
+		assertThat(result.getMappedResults()).isNotNull();
+		assertThat(result.getMappedResults().size()).isEqualTo(5);
 
 		assertLikeStats(result.getMappedResults().get(0), "a", 4);
 		assertLikeStats(result.getMappedResults().get(1), "b", 2);
@@ -1310,16 +1310,16 @@ public class AggregationTests {
 		TypedAggregation<UserWithLikes> agg = createUsersWithCommonLikesAggregation() //
 				.withOptions(newAggregationOptions().allowDiskUse(true).build());
 
-		assertThat(agg, is(notNullValue()));
-		assertThat(agg.toString(), is(notNullValue()));
+		assertThat(agg).isNotNull();
+		assertThat(agg.toString()).isNotNull();
 
 		CloseableIterator<LikeStats> iterator = mongoTemplate.aggregateStream(agg, LikeStats.class);
 		List<LikeStats> result = toList(iterator);
 		iterator.close();
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result, is(notNullValue()));
-		assertThat(result.size(), is(5));
+		assertThat(result).isNotNull();
+		assertThat(result).isNotNull();
+		assertThat(result.size()).isEqualTo(5);
 
 		assertLikeStats(result.get(0), "a", 4);
 		assertLikeStats(result.get(1), "b", 2);
@@ -1339,12 +1339,12 @@ public class AggregationTests {
 
 		AggregationResults<LikeStats> result = mongoTemplate.aggregate(agg, LikeStats.class);
 
-		assertThat(result.getMappedResults(), is(empty()));
+		assertThat(result.getMappedResults()).isEmpty();
 
 		Document rawResult = result.getRawResults();
 
-		assertThat(rawResult, is(notNullValue()));
-		assertThat(rawResult.containsKey("stages"), is(true));
+		assertThat(rawResult).isNotNull();
+		assertThat(rawResult.containsKey("stages")).isEqualTo(true);
 	}
 
 	@Test // DATAMONGO-954
@@ -1362,12 +1362,12 @@ public class AggregationTests {
 		Aggregation agg = newAggregation(group("age").push(Aggregation.ROOT).as("users"));
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Person.class, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(3));
+		assertThat(result.getMappedResults()).hasSize(3);
 		Document o = result.getMappedResults().get(2);
 
-		assertThat(o.get("_id"), is((Object) 25));
-		assertThat((List<?>) o.get("users"), hasSize(2));
-		assertThat((List<?>) o.get("users"), is(contains(personsWithAge25.toArray())));
+		assertThat(o.get("_id")).isEqualTo((Object) 25);
+		assertThat((List<?>) o.get("users")).hasSize(2);
+		assertThat((List) o.get("users")).contains(personsWithAge25.toArray());
 	}
 
 	/**
@@ -1390,7 +1390,7 @@ public class AggregationTests {
 		);
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Reservation.class, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(2));
+		assertThat(result.getMappedResults()).hasSize(2);
 	}
 
 	@Test // DATAMONGO-1549
@@ -1407,10 +1407,10 @@ public class AggregationTests {
 						.andExpression("documents * 2").as("twice"));
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Reservation.class, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(1));
+		assertThat(result.getMappedResults()).hasSize(1);
 
 		Document document = result.getMappedResults().get(0);
-		assertThat(document, isBsonObject().containing("documents", 3).containing("twice", 6));
+		assertThat(document).containsEntry("documents", 3).containsEntry("twice", 6);
 	}
 
 	@Test // DATAMONGO-975
@@ -1446,24 +1446,24 @@ public class AggregationTests {
 		Aggregation agg = newAggregation(dateProjection);
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, ObjectWithDate.class, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(1));
+		assertThat(result.getMappedResults()).hasSize(1);
 		Document document = result.getMappedResults().get(0);
 
-		assertThat(document.get("hour"), is((Object) dateTime.getHourOfDay()));
-		assertThat(document.get("min"), is((Object) dateTime.getMinuteOfHour()));
-		assertThat(document.get("second"), is((Object) dateTime.getSecondOfMinute()));
-		assertThat(document.get("millis"), is((Object) dateTime.getMillisOfSecond()));
-		assertThat(document.get("year"), is((Object) dateTime.getYear()));
-		assertThat(document.get("month"), is((Object) dateTime.getMonthOfYear()));
+		assertThat(document.get("hour")).isEqualTo((Object) dateTime.getHourOfDay());
+		assertThat(document.get("min")).isEqualTo((Object) dateTime.getMinuteOfHour());
+		assertThat(document.get("second")).isEqualTo((Object) dateTime.getSecondOfMinute());
+		assertThat(document.get("millis")).isEqualTo((Object) dateTime.getMillisOfSecond());
+		assertThat(document.get("year")).isEqualTo((Object) dateTime.getYear());
+		assertThat(document.get("month")).isEqualTo((Object) dateTime.getMonthOfYear());
 		// dateTime.getWeekOfWeekyear()) returns 6 since for MongoDB the week starts on sunday and not on monday.
-		assertThat(document.get("week"), is((Object) 5));
-		assertThat(document.get("dayOfYear"), is((Object) dateTime.getDayOfYear()));
-		assertThat(document.get("dayOfMonth"), is((Object) dateTime.getDayOfMonth()));
+		assertThat(document.get("week")).isEqualTo((Object) 5);
+		assertThat(document.get("dayOfYear")).isEqualTo((Object) dateTime.getDayOfYear());
+		assertThat(document.get("dayOfMonth")).isEqualTo((Object) dateTime.getDayOfMonth());
 
 		// dateTime.getDayOfWeek()
-		assertThat(document.get("dayOfWeek"), is((Object) 6));
-		assertThat(document.get("dayOfYearPlus1Day"), is((Object) dateTime.plusDays(1).getDayOfYear()));
-		assertThat(document.get("dayOfYearPlus1DayManually"), is((Object) dateTime.plusDays(1).getDayOfYear()));
+		assertThat(document.get("dayOfWeek")).isEqualTo((Object) 6);
+		assertThat(document.get("dayOfYearPlus1Day")).isEqualTo((Object) dateTime.plusDays(1).getDayOfYear());
+		assertThat(document.get("dayOfYearPlus1DayManually")).isEqualTo((Object) dateTime.plusDays(1).getDayOfYear());
 	}
 
 	@Test // DATAMONGO-1127
@@ -1479,11 +1479,11 @@ public class AggregationTests {
 		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear, "distance"));
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Venue.class, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(3));
+		assertThat(result.getMappedResults()).hasSize(3);
 
 		Document firstResult = result.getMappedResults().get(0);
-		assertThat(firstResult.containsKey("distance"), is(true));
-		assertThat((Double) firstResult.get("distance"), closeTo(117.620092203928, 0.00001));
+		assertThat(firstResult.containsKey("distance")).isEqualTo(true);
+		assertThat((Double) firstResult.get("distance")).isCloseTo(117.620092203928, Offset.offset(0.00001D));
 	}
 
 	@Test // DATAMONGO-1348
@@ -1501,11 +1501,11 @@ public class AggregationTests {
 		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear, "distance"));
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Venue.class, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(3));
+		assertThat(result.getMappedResults()).hasSize(3);
 
 		Document firstResult = result.getMappedResults().get(0);
-		assertThat(firstResult.containsKey("distance"), is(true));
-		assertThat((Double) firstResult.get("distance"), closeTo(117.61940988193759, 0.00001));
+		assertThat(firstResult.containsKey("distance")).isEqualTo(true);
+		assertThat((Double) firstResult.get("distance")).isCloseTo(117.61940988193759, Offset.offset(0.00001D));
 	}
 
 	@Test // DATAMONGO-1348
@@ -1524,11 +1524,11 @@ public class AggregationTests {
 		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear, "distance"));
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Venue.class, Document.class);
 
-		assertThat(result.getMappedResults(), hasSize(3));
+		assertThat(result.getMappedResults()).hasSize(3);
 
 		Document firstResult = result.getMappedResults().get(0);
-		assertThat(firstResult.containsKey("distance"), is(true));
-		assertThat((Double) firstResult.get("distance"), closeTo(73.08517, 0.00001));
+		assertThat(firstResult.containsKey("distance")).isEqualTo(true);
+		assertThat((Double) firstResult.get("distance")).isCloseTo(73.08517, Offset.offset(0.00001D));
 	}
 
 	@Test // DATAMONGO-1133
@@ -1544,11 +1544,11 @@ public class AggregationTests {
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, Document.class);
 
-		assertThat(results.getMappedResults(), hasSize(1));
+		assertThat(results.getMappedResults()).hasSize(1);
 		Document result = results.getMappedResults().get(0);
 
-		assertThat(result.get("_id"), is(equalTo((Object) "counter1")));
-		assertThat(result.get("totalValue"), is(equalTo((Object) 100.0)));
+		assertThat(result.get("_id")).isEqualTo("counter1");
+		assertThat(result.get("totalValue")).isEqualTo(100.0);
 	}
 
 	@Test // DATAMONGO-1326
@@ -1567,8 +1567,8 @@ public class AggregationTests {
 
 		Document firstItem = mappedResults.get(0);
 
-		assertThat(firstItem, isBsonObject().containing("_id", "u1"));
-		assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
+		assertThat(firstItem).containsEntry("_id", "u1");
+		Assert.assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
 	}
 
 	@Test // DATAMONGO-1326
@@ -1588,8 +1588,8 @@ public class AggregationTests {
 
 		Document firstItem = mappedResults.get(0);
 
-		assertThat(firstItem, isBsonObject().containing("foreignKey", "u1"));
-		assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
+		assertThat(firstItem).containsEntry("foreignKey", "u1");
+		Assert.assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
 	}
 
 	@Test // DATAMONGO-1418, DATAMONGO-1824
@@ -1606,13 +1606,13 @@ public class AggregationTests {
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, Document.class);
 
-		assertThat(results.getMappedResults(), hasSize(2));
+		assertThat(results.getMappedResults()).hasSize(2);
 
 		List<Document> list = mongoTemplate.findAll(Document.class, tempOutCollection);
 
-		assertThat(list, hasSize(2));
-		assertThat(list.get(0), isBsonObject().containing("_id", "MALE").containing("count", 3));
-		assertThat(list.get(1), isBsonObject().containing("_id", "FEMALE").containing("count", 2));
+		assertThat(list).hasSize(2);
+		assertThat(list.get(0)).containsEntry("_id", "MALE").containsEntry("count", 3);
+		assertThat(list.get(1)).containsEntry("_id", "FEMALE").containsEntry("count", 2);
 
 		mongoTemplate.dropCollection(tempOutCollection);
 	}
@@ -1633,9 +1633,9 @@ public class AggregationTests {
 
 		List<Document> list = mongoTemplate.findAll(Document.class, tempOutCollection);
 
-		assertThat(list, hasSize(2));
-		assertThat(list.get(0), isBsonObject().containing("_id", "MALE").containing("count", 3));
-		assertThat(list.get(1), isBsonObject().containing("_id", "FEMALE").containing("count", 2));
+		assertThat(list).hasSize(2);
+		assertThat(list.get(0)).containsEntry("_id", "MALE").containsEntry("count", 3);
+		assertThat(list.get(1)).containsEntry("_id", "FEMALE").containsEntry("count", 2);
 
 		mongoTemplate.dropCollection(tempOutCollection);
 	}
@@ -1656,9 +1656,9 @@ public class AggregationTests {
 
 		List<Document> result = toList(iterator);
 
-		assertThat(result, hasSize(2));
-		assertThat(result.get(0), isBsonObject().containing("_id", "MALE").containing("count", 3));
-		assertThat(result.get(1), isBsonObject().containing("_id", "FEMALE").containing("count", 2));
+		assertThat(result).hasSize(2);
+		assertThat(result.get(0)).containsEntry("_id", "MALE").containsEntry("count", 3);
+		assertThat(result.get(1)).containsEntry("_id", "FEMALE").containsEntry("count", 2);
 
 		mongoTemplate.dropCollection(tempOutCollection);
 	}
@@ -1692,10 +1692,10 @@ public class AggregationTests {
 				sample(3) //
 		);
 
-		assertThat(agg.toString(), is(notNullValue()));
+		assertThat(agg.toString()).isNotNull();
 
 		AggregationResults<LikeStats> result = mongoTemplate.aggregate(agg, LikeStats.class);
-		assertThat(result.getMappedResults().size(), is(3));
+		assertThat(result.getMappedResults().size()).isEqualTo(3);
 	}
 
 	@Test // DATAMONGO-1457
@@ -1709,9 +1709,9 @@ public class AggregationTests {
 
 		AggregationResults<UserWithLikes> result = mongoTemplate.aggregate(agg, UserWithLikes.class);
 
-		assertThat(result.getMappedResults(), hasSize(9));
+		assertThat(result.getMappedResults()).hasSize(9);
 		for (UserWithLikes user : result) {
-			assertThat(user.likes.size() <= 2, is(true));
+			assertThat(user.likes.size() <= 2).isEqualTo(true);
 		}
 	}
 
@@ -1721,9 +1721,8 @@ public class AggregationTests {
 
 		Item item43 = Item.builder().itemId("43").quantity(2).price(2L).build();
 		Item item2 = Item.builder().itemId("2").quantity(1).price(240L).build();
-		Sales sales1 = Sales.builder().id("0")
-				.items(Arrays.asList( //
-						item43, item2)) //
+		Sales sales1 = Sales.builder().id("0").items(Arrays.asList( //
+				item43, item2)) //
 				.build();
 
 		Item item23 = Item.builder().itemId("23").quantity(3).price(110L).build();
@@ -1741,10 +1740,10 @@ public class AggregationTests {
 		TypedAggregation<Sales> agg = newAggregation(Sales.class, project().and("items")
 				.filter("item", AggregationFunctionExpressions.GTE.of(field("item.price"), 100)).as("items"));
 
-		assertThat(mongoTemplate.aggregate(agg, Sales.class).getMappedResults(),
-				contains(Sales.builder().id("0").items(Collections.singletonList(item2)).build(),
-						Sales.builder().id("1").items(Arrays.asList(item23, item38)).build(),
-						Sales.builder().id("2").items(Collections.<Item> emptyList()).build()));
+		assertThat(mongoTemplate.aggregate(agg, Sales.class).getMappedResults()).contains(
+				Sales.builder().id("0").items(Collections.singletonList(item2)).build(),
+				Sales.builder().id("1").items(Arrays.asList(item23, item38)).build(),
+				Sales.builder().id("2").items(Collections.<Item> emptyList()).build());
 	}
 
 	@Test // DATAMONGO-1538
@@ -1768,8 +1767,8 @@ public class AggregationTests {
 						.as("finalTotal"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
-		assertThat(result.getMappedResults(), contains(new Document("_id", "1").append("finalTotal", 9.450000000000001D),
-				new Document("_id", "2").append("finalTotal", 10.25D)));
+		assertThat(result.getMappedResults()).contains(new Document("_id", "1").append("finalTotal", 9.450000000000001D),
+				new Document("_id", "2").append("finalTotal", 10.25D));
 	}
 
 	@Test // DATAMONGO-1551
@@ -1797,9 +1796,9 @@ public class AggregationTests {
 		Document object = result.getUniqueMappedResult();
 		List<Object> list = (List<Object>) object.get("reportingHierarchy");
 
-		assertThat(object, isBsonObject().containing("reportingHierarchy", List.class));
-		assertThat((Document) list.get(0), isBsonObject().containing("name", "Dev").containing("depth", 1L));
-		assertThat((Document) list.get(1), isBsonObject().containing("name", "Eliot").containing("depth", 0L));
+		Assert.assertThat(object, isBsonObject().containing("reportingHierarchy", List.class));
+		assertThat((Document) list.get(0)).containsEntry("name", "Dev").containsEntry("depth", 1L);
+		assertThat((Document) list.get(1)).containsEntry("name", "Eliot").containsEntry("depth", 0L);
 	}
 
 	@Test // DATAMONGO-1552
@@ -1822,20 +1821,19 @@ public class AggregationTests {
 						.andOutputExpression("price * 10").sum().as("sum"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
-		assertThat(result.getMappedResults().size(), is(3));
+		assertThat(result.getMappedResults().size()).isEqualTo(3);
 
 		// { "_id" : 0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
 		Document bound0 = result.getMappedResults().get(0);
-		assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer"));
-		assertThat((Double) bound0.get("sum"), is(closeTo(760.40, 0.1)));
+		Assert.assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer"));
+		assertThat((Double) bound0.get("sum")).isCloseTo(760.40, Offset.offset(0.1D));
 
 		// { "_id" : 100 , "count" : 2 , "titles" : [ "The Pillars of Society" , "The Great Wave off Kanagawa"] , "sum" :
 		// 3672.9}
 		Document bound100 = result.getMappedResults().get(1);
-		assertThat(bound100, isBsonObject().containing("count", 2).containing("_id", 100));
-		assertThat((List<String>) bound100.get("titles"),
-				hasItems("The Pillars of Society", "The Great Wave off Kanagawa"));
-		assertThat((Double) bound100.get("sum"), is(closeTo(3672.9, 0.1)));
+		assertThat(bound100).containsEntry("count", 2).containsEntry("_id", 100);
+		assertThat((List<String>) bound100.get("titles")).contains("The Pillars of Society", "The Great Wave off Kanagawa");
+		assertThat((Double) bound100.get("sum")).isCloseTo(3672.9, Offset.offset(0.1D));
 	}
 
 	@Test // DATAMONGO-1552
@@ -1857,18 +1855,18 @@ public class AggregationTests {
 						.andOutputExpression("price * 10").sum().as("sum"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
-		assertThat(result.getMappedResults().size(), is(3));
+		assertThat(result.getMappedResults().size()).isEqualTo(3);
 
 		// { "min" : 680.0 , "max" : 820.0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
 		Document bound0 = result.getMappedResults().get(0);
-		assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer").containing("min", 680.0)
-				.containing("max"));
+		Assert.assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer")
+				.containing("min", 680.0).containing("max"));
 
 		// { "min" : 820.0 , "max" : 1800.0 , "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" : 1673.0}
 		Document bound1 = result.getMappedResults().get(1);
-		assertThat(bound1, isBsonObject().containing("count", 1).containing("min", 820.0));
-		assertThat((List<String>) bound1.get("titles"), hasItems("The Great Wave off Kanagawa"));
-		assertThat((Double) bound1.get("sum"), is(closeTo(1673.0, 0.1)));
+		assertThat(bound1).containsEntry("count", 1).containsEntry("min", 820.0);
+		assertThat((List<String>) bound1.get("titles")).contains("The Great Wave off Kanagawa");
+		assertThat((Double) bound1.get("sum")).isCloseTo(1673.0, Offset.offset(0.1D));
 	}
 
 	@Test // DATAMONGO-1552
@@ -1895,7 +1893,7 @@ public class AggregationTests {
 						.and(bucketAuto("year", 3)).as("categorizeByYear"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
-		assertThat(result.getMappedResults().size(), is(1));
+		assertThat(result.getMappedResults().size()).isEqualTo(1);
 
 		Document mappedResult = result.getUniqueMappedResult();
 
@@ -1906,13 +1904,13 @@ public class AggregationTests {
 		// { "_id" : { "min" : 1800.0 , "max" : 3300.0} , "count" : 2 , "titles" : [ "The Pillars of Society" , "Melancholy
 		// III"] , "sum" : 4799.9}]
 		List<Object> categorizeByPrice = (List<Object>) mappedResult.get("categorizeByPrice");
-		assertThat(categorizeByPrice, hasSize(3));
+		assertThat(categorizeByPrice).hasSize(3);
 
 		// [ { "_id" : { "min" : null , "max" : 1902} , "count" : 1} ,
 		// { "_id" : { "min" : 1902-2018 , "max" : 1925} , "count" : 1} ,
 		// { "_id" : { "min" : 1925-2018 , "max" : 1926} , "count" : 2}]
 		List<Object> categorizeByYear = (List<Object>) mappedResult.get("categorizeByYear");
-		assertThat(categorizeByYear, hasSize(3));
+		assertThat(categorizeByYear).hasSize(3);
 	}
 
 	@Test // DATAMONGO-1986
@@ -1927,7 +1925,7 @@ public class AggregationTests {
 
 		AggregationResults<Document> groupResults = mongoTemplate.aggregate(aggregation, "newyork", Document.class);
 
-		assertThat(groupResults.getMappedResults().size(), is(4));
+		assertThat(groupResults.getMappedResults().size()).isEqualTo(4);
 	}
 
 	@Test // DATAMONGO-1986
@@ -1942,7 +1940,7 @@ public class AggregationTests {
 
 		AggregationResults<Document> groupResults = mongoTemplate.aggregate(aggregation, "newyork", Document.class);
 
-		assertThat(groupResults.getMappedResults().size(), is(4));
+		assertThat(groupResults.getMappedResults().size()).isEqualTo(4);
 	}
 
 	private void createUsersWithReferencedPersons() {
@@ -1968,9 +1966,9 @@ public class AggregationTests {
 
 	private void assertLikeStats(LikeStats like, String id, long count) {
 
-		assertThat(like, is(notNullValue()));
-		assertThat(like.id, is(id));
-		assertThat(like.count, is(count));
+		assertThat(like).isNotNull();
+		assertThat(like.id).isEqualTo(id);
+		assertThat(like.count).isEqualTo(count);
 	}
 
 	private void createUserWithLikesDocuments() {
@@ -2009,8 +2007,8 @@ public class AggregationTests {
 
 	private static void assertTagCount(String tag, int n, TagCount tagCount) {
 
-		assertThat(tagCount.getTag(), is(tag));
-		assertThat(tagCount.getN(), is(n));
+		assertThat(tagCount.getTag()).isEqualTo(tag);
+		assertThat(tagCount.getN()).isEqualTo(n);
 	}
 
 	private static <T> List<T> toList(CloseableIterator<? extends T> results) {
