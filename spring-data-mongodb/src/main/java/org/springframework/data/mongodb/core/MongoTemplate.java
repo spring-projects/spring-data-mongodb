@@ -104,6 +104,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
@@ -1587,6 +1588,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				UpdateOptions opts = new UpdateOptions();
 				opts.upsert(upsert);
 
+				if (update.hasArrayFilters()) {
+					opts.arrayFilters(
+							update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
+				}
+
 				Document queryObj = new Document();
 
 				if (query != null) {
@@ -2551,7 +2557,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					collectionName);
 		}
 
-		return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, options),
+		return executeFindOneInternal(
+				new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate,
+						update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()), options),
 				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
@@ -2908,14 +2916,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final Document fields;
 		private final Document sort;
 		private final Document update;
+		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
 
 		public FindAndModifyCallback(Document query, Document fields, Document sort, Document update,
-				FindAndModifyOptions options) {
+				List<Document> arrayFilters, FindAndModifyOptions options) {
 			this.query = query;
 			this.fields = fields;
 			this.sort = sort;
 			this.update = update;
+			this.arrayFilters = arrayFilters;
 			this.options = options;
 		}
 
@@ -2932,6 +2942,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			options.getCollation().map(Collation::toMongoCollation).ifPresent(opts::collation);
+
+			if (!arrayFilters.isEmpty()) {
+				opts.arrayFilters(arrayFilters);
+			}
 
 			return collection.findOneAndUpdate(query, update, opts);
 		}

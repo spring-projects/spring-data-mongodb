@@ -92,6 +92,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.Optionals;
@@ -1640,6 +1641,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			UpdateOptions updateOptions = new UpdateOptions().upsert(upsert);
 			query.getCollation().map(Collation::toMongoCollation).ifPresent(updateOptions::collation);
 
+			if (update.hasArrayFilters()) {
+				updateOptions.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument)
+						.map(it -> queryMapper.getMappedObject(it, entity)).collect(Collectors.toList()));
+			}
+
 			if (!UpdateMapper.isUpdateObject(updateObj)) {
 
 				ReplaceOptions replaceOptions = new ReplaceOptions();
@@ -2367,7 +2373,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						collectionName));
 			}
 
-			return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, options),
+			return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()), options),
 					new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 		});
 	}
@@ -2751,6 +2757,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final Document fields;
 		private final Document sort;
 		private final Document update;
+		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
 
 		@Override
@@ -2766,12 +2773,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				return collection.findOneAndDelete(query, findOneAndDeleteOptions);
 			}
 
-			FindOneAndUpdateOptions findOneAndUpdateOptions = convertToFindOneAndUpdateOptions(options, fields, sort);
+			FindOneAndUpdateOptions findOneAndUpdateOptions = convertToFindOneAndUpdateOptions(options, fields, sort, arrayFilters);
 			return collection.findOneAndUpdate(query, update, findOneAndUpdateOptions);
 		}
 
-		private FindOneAndUpdateOptions convertToFindOneAndUpdateOptions(FindAndModifyOptions options, Document fields,
-				Document sort) {
+		private static FindOneAndUpdateOptions convertToFindOneAndUpdateOptions(FindAndModifyOptions options, Document fields,
+				Document sort, List<Document> arrayFilters) {
 
 			FindOneAndUpdateOptions result = new FindOneAndUpdateOptions();
 
@@ -2784,6 +2791,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 
 			result = options.getCollation().map(Collation::toMongoCollation).map(result::collation).orElse(result);
+			result.arrayFilters(arrayFilters);
 
 			return result;
 		}

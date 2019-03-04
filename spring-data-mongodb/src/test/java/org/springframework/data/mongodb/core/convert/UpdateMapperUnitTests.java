@@ -1051,6 +1051,42 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo(new Document("$inc", new Document("aliased.$[]", 10)));
 	}
 
+	@Test // DATAMONGO-2215
+	public void mappingShouldAllowPositionParameterWithIdentifier() {
+
+		Update update = new Update().set("grades.$[element]", 10) //
+				.filterArray(Criteria.where("element").gte(100));
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithListOfSimple.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("grades.$[element]", 10)));
+	}
+
+	@Test // DATAMONGO-2215
+	public void mappingShouldAllowPositionParameterWithIdentifierWhenFieldHasExplicitFieldName() {
+
+		Update update = new Update().set("list.$[element]", 10) //
+				.filterArray(Criteria.where("element").gte(100));
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("aliased.$[element]", 10)));
+	}
+
+	@Test // DATAMONGO-2215
+	public void mappingShouldAllowNestedPositionParameterWithIdentifierWhenFieldHasExplicitFieldName() {
+
+		Update update = new Update().set("list.$[element].value", 10) //
+				.filterArray(Criteria.where("element").gte(100));
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("aliased.$[element].value", 10)));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
