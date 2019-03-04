@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.List;
+
 import org.bson.Document;
 
 /**
@@ -53,4 +55,36 @@ public interface UpdateDefinition {
 	 * @param key must not be {@literal null}.
 	 */
 	void inc(String key);
+
+	/**
+	 * Get the specification which elements to modify in an array field.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	List<ArrayFilter> getArrayFilters();
+
+	/**
+	 * @return {@literal true} if {@link UpdateDefinition} contains {@link #getArrayFilters() array filters}.
+	 * @since 2.2
+	 */
+	default boolean hasArrayFilters() {
+		return !getArrayFilters().isEmpty();
+	}
+
+	/**
+	 * A filter to specify which elements to modify in an array field.
+	 *
+	 * @since 2.2
+	 */
+	interface ArrayFilter {
+
+		/**
+		 * Get the {@link Document} representation of the filter to apply. The returned Document is subject to mapping
+		 * domain type filed names.
+		 *
+		 * @return never {@literal null}.
+		 */
+		Document asDocument();
+	}
 }

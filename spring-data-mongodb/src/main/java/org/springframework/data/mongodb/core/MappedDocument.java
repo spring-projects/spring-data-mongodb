@@ -137,5 +137,14 @@ public class MappedDocument {
 		public Boolean isIsolated() {
 			return delegate.isIsolated();
 		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getArrayFilters()
+		 */
+		@Override
+		public List<ArrayFilter> getArrayFilters() {
+			return delegate.getArrayFilters();
+		}
 	}
 }

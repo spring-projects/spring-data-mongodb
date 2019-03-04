@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -58,6 +59,7 @@ public class Update implements UpdateDefinition {
 	private Set<String> keysToUpdate = new HashSet<>();
 	private Map<String, Object> modifierOps = new LinkedHashMap<>();
 	private Map<String, PushOperatorBuilder> pushCommandBuilders = new LinkedHashMap<>(1);
+	private List<ArrayFilter> arrayFilters = new ArrayList<>();
 
 	/**
 	 * Static factory method to create an Update using the provided key
@@ -399,6 +401,33 @@ public class Update implements UpdateDefinition {
 		return this;
 	}
 
+	/**
+	 * Filter elements in an array that match the given criteria for update.
+	 *
+	 * @param criteria must not be {@literal null}.
+	 * @return this.
+	 * @since 2.2
+	 */
+	public Update filterArray(CriteriaDefinition criteria) {
+
+		this.arrayFilters.add(() -> criteria.getCriteriaObject());
+		return this;
+	}
+
+	/**
+	 * Filter elements in an array that match the given criteria for update.
+	 *
+	 * @param identifier the positional operator identifier filter criteria name.
+	 * @param expression the positional operator filter expression.
+	 * @return this.
+	 * @since 2.2
+	 */
+	public Update filterArray(String identifier, Object expression) {
+
+		this.arrayFilters.add(() -> new Document(identifier, expression));
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#isIsolated()
@@ -413,6 +442,14 @@ public class Update implements UpdateDefinition {
 	 */
 	public Document getUpdateObject() {
 		return new Document(modifierOps);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getArrayFilters()
+	 */
+	public List<ArrayFilter> getArrayFilters() {
+		return Collections.unmodifiableList(this.arrayFilters);
 	}
 
 	/**

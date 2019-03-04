@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -987,6 +988,34 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				is(equalTo(new Document("version", 11).append("_class", VersionedEntity.class.getName()))));
 	}
 
+	@Test // DATAMONGO-2215
+	public void updateShouldApplyArrayFilters() {
+
+		template.updateFirst(new BasicQuery("{}"),
+				new Update().set("grades.$[element]", 100).filterArray(Criteria.where("element").gte(100)),
+				EntityWithListOfSimple.class);
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(), any(), options.capture());
+
+		Assertions.assertThat((List<Bson>) options.getValue().getArrayFilters())
+				.contains(new org.bson.Document("element", new Document("$gte", 100)));
+	}
+
+	@Test // DATAMONGO-2215
+	public void findAndModifyShouldApplyArrayFilters() {
+
+		template.findAndModify(new BasicQuery("{}"),
+				new Update().set("grades.$[element]", 100).filterArray(Criteria.where("element").gte(100)),
+				EntityWithListOfSimple.class);
+
+		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
+		verify(collection).findOneAndUpdate(any(), any(), options.capture());
+
+		Assertions.assertThat((List<Bson>) options.getValue().getArrayFilters())
+				.contains(new org.bson.Document("element", new Document("$gte", 100)));
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;
@@ -1053,6 +1082,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	class Wrapper {
 
 		AutogenerateableId foo;
+	}
+
+	static class EntityWithListOfSimple {
+		List<Integer> grades;
 	}
 
 	/**

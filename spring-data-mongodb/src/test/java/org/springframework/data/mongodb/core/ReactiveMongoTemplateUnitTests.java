@@ -25,8 +25,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -47,6 +49,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -81,6 +84,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Mock FindPublisher findPublisher;
 	@Mock AggregatePublisher aggregatePublisher;
 	@Mock Publisher runCommandPublisher;
+	@Mock Publisher updatePublisher;
+	@Mock Publisher findAndUpdatePublisher;
 
 	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	MappingMongoConverter converter;
@@ -98,6 +103,8 @@ public class ReactiveMongoTemplateUnitTests {
 		when(collection.find(any(Document.class), any(Class.class))).thenReturn(findPublisher);
 		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
 		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
+		when(collection.updateOne(any(), any(), any(UpdateOptions.class))).thenReturn(updatePublisher);
+		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class))).thenReturn(findAndUpdatePublisher);
 		when(findPublisher.projection(any())).thenReturn(findPublisher);
 		when(findPublisher.limit(anyInt())).thenReturn(findPublisher);
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
@@ -343,6 +350,34 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(findPublisher, never()).projection(any());
 	}
 
+	@Test // DATAMONGO-2215
+	public void updateShouldApplyArrayFilters() {
+
+		template.updateFirst(new BasicQuery("{}"),
+				new Update().set("grades.$[element]", 100).filterArray(Criteria.where("element").gte(100)),
+				EntityWithListOfSimple.class).subscribe();
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(), any(), options.capture());
+
+		Assertions.assertThat((List<Bson>) options.getValue().getArrayFilters())
+				.contains(new org.bson.Document("element", new Document("$gte", 100)));
+	}
+
+	@Test // DATAMONGO-2215
+	public void findAndModifyShouldApplyArrayFilters() {
+
+		template.findAndModify(new BasicQuery("{}"),
+				new Update().set("grades.$[element]", 100).filterArray(Criteria.where("element").gte(100)),
+				EntityWithListOfSimple.class).subscribe();
+
+		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
+		verify(collection).findOneAndUpdate(any(), any(), options.capture());
+
+		Assertions.assertThat((List<Bson>) options.getValue().getArrayFilters())
+				.contains(new org.bson.Document("element", new Document("$gte", 100)));
+	}
+
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
 	static class Person {
@@ -370,5 +405,9 @@ public class ReactiveMongoTemplateUnitTests {
 	static class Jedi {
 
 		@Field("firstname") String name;
+	}
+
+	static class EntityWithListOfSimple {
+		List<Integer> grades;
 	}
 }
