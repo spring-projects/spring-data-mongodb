@@ -46,6 +46,7 @@ import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -1784,7 +1785,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Flux<T> flux = find(query, entityClass, collectionName);
 
-		return Flux.from(flux).collectList()
+		return Flux.from(flux).collectList().filter(it -> !it.isEmpty())
 				.flatMapMany(list -> Flux.from(remove(getIdInQueryFor(list), entityClass, collectionName))
 						.flatMap(deleteResult -> Flux.fromIterable(list)));
 	}

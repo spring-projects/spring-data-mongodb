@@ -46,6 +46,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
@@ -465,6 +466,15 @@ public class ReactiveMongoTemplateTests {
 		StepVerifier.create(template.findAllAndRemove(qry, Sample.class)).expectNextCount(2).verifyComplete();
 
 		StepVerifier.create(template.findOne(new Query(), Sample.class)).expectNext(data).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2219
+	public void testFindAllAndRemoveReturnsEmptyWithoutMatches() {
+
+		Query qry = query(where("field").in("spring", "mongodb"));
+		template.findAllAndRemove(qry, Sample.class).as(StepVerifier::create).verifyComplete();
+
+		template.count(new Query(), Sample.class).as(StepVerifier::create).expectNext(0L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1774
