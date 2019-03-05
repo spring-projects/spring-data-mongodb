@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.bson.Document;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -402,7 +403,8 @@ public class Update implements UpdateDefinition {
 	}
 
 	/**
-	 * Filter elements in an array that match the given criteria for update.
+	 * Filter elements in an array that match the given criteria for update. {@link CriteriaDefinition} is passed directly
+	 * to the driver without further type or field mapping.
 	 *
 	 * @param criteria must not be {@literal null}.
 	 * @return this.
@@ -410,12 +412,13 @@ public class Update implements UpdateDefinition {
 	 */
 	public Update filterArray(CriteriaDefinition criteria) {
 
-		this.arrayFilters.add(() -> criteria.getCriteriaObject());
+		this.arrayFilters.add(criteria::getCriteriaObject);
 		return this;
 	}
 
 	/**
-	 * Filter elements in an array that match the given criteria for update.
+	 * Filter elements in an array that match the given criteria for update. {@code expression} is used directly with the
+	 * driver without further further type or field mapping.
 	 *
 	 * @param identifier the positional operator identifier filter criteria name.
 	 * @param expression the positional operator filter expression.

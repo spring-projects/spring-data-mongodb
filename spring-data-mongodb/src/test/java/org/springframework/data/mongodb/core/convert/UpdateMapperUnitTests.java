@@ -37,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.CustomConversions;
@@ -1058,7 +1059,7 @@ public class UpdateMapperUnitTests {
 				.filterArray(Criteria.where("element").gte(100));
 
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
-				context.getPersistentEntity(EntityWithListOfSimple.class));
+				context.getPersistentEntity(EntityWithListOfIntegers.class));
 
 		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("grades.$[element]", 10)));
 	}

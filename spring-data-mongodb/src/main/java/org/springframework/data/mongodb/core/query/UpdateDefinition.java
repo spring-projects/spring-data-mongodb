@@ -57,7 +57,8 @@ public interface UpdateDefinition {
 	void inc(String key);
 
 	/**
-	 * Get the specification which elements to modify in an array field.
+	 * Get the specification which elements to modify in an array field. {@link ArrayFilter} are passed directly to the
+	 * driver without further type or field mapping.
 	 *
 	 * @return never {@literal null}.
 	 * @since 2.2
@@ -80,8 +81,8 @@ public interface UpdateDefinition {
 	interface ArrayFilter {
 
 		/**
-		 * Get the {@link Document} representation of the filter to apply. The returned Document is subject to mapping
-		 * domain type filed names.
+		 * Get the {@link Document} representation of the filter to apply. The returned {@link Document} is used directly
+		 * with the driver without further type or field mapping.
 		 *
 		 * @return never {@literal null}.
 		 */

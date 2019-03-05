@@ -11,6 +11,7 @@
 * Repository deletes now throw `OptimisticLockingFailureException` when a versioned entity cannot be deleted.
 * Support `Range<T>` in repository between queries.
 * Kotlin extension methods accepting `KClass` are deprecated now in favor of `reified` methods.
+* Support of array filters in `Update` operations.
 
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1
