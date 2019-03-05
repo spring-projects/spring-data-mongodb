@@ -15,9 +15,12 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static org.springframework.data.convert.ConverterBuilder.*;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -89,6 +92,8 @@ abstract class MongoConverters {
 		converters.add(IntegerToAtomicIntegerConverter.INSTANCE);
 		converters.add(BinaryToByteArrayConverter.INSTANCE);
 		converters.add(BsonTimestampToInstantConverter.INSTANCE);
+
+		converters.add(reading(String.class, URI.class, URI::create).andWriting(URI::toString));
 
 		return converters;
 	}

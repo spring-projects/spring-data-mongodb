@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Currency;
@@ -28,6 +29,8 @@ import org.assertj.core.data.TemporalUnitLessThanOffset;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.junit.Test;
+import org.springframework.core.convert.support.ConfigurableConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -156,4 +159,17 @@ public class MongoConvertersUnitTests {
 				.isCloseTo(Instant.ofEpochSecond(1540384327), new TemporalUnitLessThanOffset(100, ChronoUnit.MILLIS));
 	}
 
+	@Test // DATAMONGO-2210
+	public void convertsUrisToString() {
+
+		MongoCustomConversions conversions = new MongoCustomConversions();
+
+		assertThat(conversions.getSimpleTypeHolder().isSimpleType(URI.class)).isTrue();
+
+		ConfigurableConversionService conversionService = new DefaultConversionService();
+		conversions.registerConvertersIn(conversionService);
+
+		assertThat(conversionService.convert(URI.create("/segment"), String.class)).isEqualTo("/segment");
+		assertThat(conversionService.convert("/segment", URI.class)).isEqualTo(URI.create("/segment"));
+	}
 }
