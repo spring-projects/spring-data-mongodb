@@ -55,7 +55,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -1382,9 +1381,10 @@ public class ReactiveMongoTemplateTests {
 		Person person2 = new Person("Data", 39);
 		Person person3 = new Person("MongoDB", 37);
 
-		template.insertAll(Arrays.asList(person1, person2, person3)) //
+
+		Flux.merge(template.insert(person1), template.insert(person2), template.insert(person3)) //
 				.as(StepVerifier::create) //
-				.expectNextCount(1) //
+				.expectNextCount(3) //
 				.verifyComplete();
 
 		Thread.sleep(500); // just give it some time to link receive all events
@@ -1414,9 +1414,9 @@ public class ReactiveMongoTemplateTests {
 		Person person2 = new Person("Data", 39);
 		Person person3 = new Person("MongoDB", 37);
 
-		template.insertAll(Arrays.asList(person1, person2, person3)) //
+		Flux.merge(template.insert(person1), template.insert(person2), template.insert(person3)) //
 				.as(StepVerifier::create) //
-				.expectNextCount(1) //
+				.expectNextCount(3) //
 				.verifyComplete();
 
 		Thread.sleep(500); // just give it some time to link receive all events
@@ -1447,9 +1447,9 @@ public class ReactiveMongoTemplateTests {
 		Person person2 = new Person("Data", 37);
 		Person person3 = new Person("MongoDB", 39);
 
-		template.insertAll(Arrays.asList(person1, person2, person3)) //
+		Flux.merge(template.save(person1), template.save(person2), template.save(person3)) //
 				.as(StepVerifier::create) //
-				.expectNextCount(1) //
+				.expectNextCount(3) //
 				.verifyComplete();
 
 		Thread.sleep(500); // just give it some time to link receive all events
@@ -1482,9 +1482,10 @@ public class ReactiveMongoTemplateTests {
 		Person person1 = new Person("Spring", 38);
 		Person person2 = new Person("Data", 37);
 
-		template.insertAll(Arrays.asList(person1, person2)) //
+
+		Flux.merge(template.insert(person1), template.insert(person2)) //
 				.as(StepVerifier::create) //
-				.expectNextCount(1) //
+				.expectNextCount(2) //
 				.verifyComplete();
 
 		Person replacement = new Person(person2.getId(), "BDognoM");
@@ -1522,9 +1523,9 @@ public class ReactiveMongoTemplateTests {
 		Person person2 = new Person("Data", 37);
 		Person person3 = new Person("MongoDB", 39);
 
-		template.insertAll(Arrays.asList(person1, person2, person3)) //
+		Flux.merge(template.insert(person1), template.insert(person2), template.insert(person3)) //
 				.as(StepVerifier::create) //
-				.expectNextCount(1) //
+				.expectNextCount(3) //
 				.verifyComplete();
 
 		Thread.sleep(500); // just give it some time to link receive all events
