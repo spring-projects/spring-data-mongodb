@@ -51,7 +51,7 @@ import org.springframework.util.NumberUtils;
  *
  * @author Jeff Yemin
  * @author Ross Lawley
- * @author Thrisha Gee
+ * @author Trisha Gee
  * @author Robert Guo
  * @author Florian Buecklers
  * @author Brendon Puntin
