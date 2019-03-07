@@ -1,6 +1,43 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.0.M2 (2019-03-07)
+----------------------------------------
+* DATAMONGO-2220 - Upgrade to MongoDB Reactive Streams Driver 1.11.0.
+* DATAMONGO-2219 - findAllAndRemove throws MongoWriteException if query has no matches.
+* DATAMONGO-2217 - AggregationTests fails depending on timezone.
+* DATAMONGO-2215 - Add support for array filters to Update.
+* DATAMONGO-2210 - Illegal reflective access for URI properties.
+* DATAMONGO-2209 - Add Kotlin extensions for Coroutines support.
+* DATAMONGO-2208 - Deprecate Kotlin extensions providing a KClass overload.
+* DATAMONGO-2207 - Remove version for managed Kotlin dependencies.
+* DATAMONGO-2206 - Migrate Kotlin tests to Mockk.
+* DATAMONGO-2199 - Fix deprecation warnings in preparation of MongoDB Java Driver 4.0 upgrade.
+* DATAMONGO-2198 - Upgrade to MongoDB Java driver 3.10.
+* DATAMONGO-2196 - Remove does not apply WriteConcern for single document delete operation.
+* DATAMONGO-2195 - @Version should be considered in MongoTemplate#remove.
+* DATAMONGO-2193 - Query on nested id field incorrectly returns no results.
+* DATAMONGO-2189 - AfterSaveEvent contains object to save and not the saved instance.
+* DATAMONGO-2188 - Add configuration option to enable/disable automatic index creation.
+* DATAMONGO-2184 - Introduce Concourse CI.
+* DATAMONGO-2182 - Add Querydsl support for reactive MongoDB repositories.
+* DATAMONGO-2181 - ReactiveMongoRepository.saveAll(…) does not consider collection name for new entities.
+* DATAMONGO-2179 - CreatedDate is null for entities using optimistic locking via version property when saving/inserting in batch.
+* DATAMONGO-2175 - Update copyright years to 2019.
+* DATAMONGO-2174 - InvalidPersistentPropertyPath with @Version.
+* DATAMONGO-2173 - CursorReadingTask.start() doesn't pass exceptions to configured errorHandler.
+* DATAMONGO-2170 - IndexInfo.partialFilterExpression should be null (not an empty String) when undefined.
+* DATAMONGO-2164 - Release 2.2 M2 (Moore).
+* DATAMONGO-2155 - Map field is renamed if the Map associates a value-type with a similar field.
+* DATAMONGO-2105 - Warning about illegal reflective access in JDK11 when using BigDecimal field.
+* DATAMONGO-2077 - Add SpEL support for MongoDB Aggregations introduced in MongoDB 3.6 and 4.0.
+* DATAMONGO-2072 - Add support for derived 'between' queries using Range.
+* DATAMONGO-2054 - Add support for the all positional operator $[] to updates.
+* DATAMONGO-1855 - Reactive GridFS support.
+* DATAMONGO-1593 - JSON Parse error for ObjectId queries.
+* DATAMONGO-1348 - NearQuery uses "legacy coordinate pairs" not GeoJSON points.
+
+
 Changes in version 2.1.5.RELEASE (2019-02-13)
 ---------------------------------------------
 * DATAMONGO-2196 - Remove does not apply WriteConcern for single document delete operation.
