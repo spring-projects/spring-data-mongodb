@@ -22,15 +22,18 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import lombok.Data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
+import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.model.Filters;
@@ -44,6 +47,7 @@ import com.mongodb.client.model.Filters;
 public class MongoTemplateDbRefTests {
 
 	MongoTemplate template;
+	MongoTemplate otherDbTemplate;
 
 	@Before
 	public void setUp() {
@@ -55,6 +59,13 @@ public class MongoTemplateDbRefTests {
 		template.dropCollection(RefCycleLoadingIntoDifferentTypeRootView.class);
 		template.dropCollection(WithDBRefOnRawStringId.class);
 		template.dropCollection(WithLazyDBRefOnRawStringId.class);
+		template.dropCollection(WithRefToAnotherDb.class);
+		template.dropCollection(WithLazyRefToAnotherDb.class);
+		template.dropCollection(WithListRefToAnotherDb.class);
+		template.dropCollection(WithLazyListRefToAnotherDb.class);
+
+		otherDbTemplate = new MongoTemplate(new MongoClient(), "mongo-template-dbref-tests-other-db");
+		otherDbTemplate.dropCollection(JustSomeType.class);
 	}
 
 	@Test // DATAMONGO-1703
@@ -145,6 +156,83 @@ public class MongoTemplateDbRefTests {
 		assertThat(target.getValue()).isEqualTo(ref);
 	}
 
+	@Test // DATAMONGO-2223
+	public void shouldResolveSingleDBRefToAnotherDb() {
+
+		JustSomeType one = new JustSomeType();
+		one.value = "one";
+
+		otherDbTemplate.insert(one);
+
+		WithRefToAnotherDb source = new WithRefToAnotherDb();
+		source.value = one;
+
+		template.save(source);
+
+		WithRefToAnotherDb target = template.findOne(query(where("id").is(source.id)), WithRefToAnotherDb.class);
+		assertThat(target.getValue()).isEqualTo(one);
+	}
+
+	@Test // DATAMONGO-2223
+	public void shouldResolveSingleLazyDBRefToAnotherDb() {
+
+		JustSomeType one = new JustSomeType();
+		one.value = "one";
+
+		otherDbTemplate.insert(one);
+
+		WithLazyRefToAnotherDb source = new WithLazyRefToAnotherDb();
+		source.value = one;
+
+		template.save(source);
+
+		WithLazyRefToAnotherDb target = template.findOne(query(where("id").is(source.id)), WithLazyRefToAnotherDb.class);
+		LazyLoadingTestUtils.assertProxyIsResolved(target.value, false);
+		assertThat(target.getValue()).isEqualTo(one);
+	}
+
+	@Test // DATAMONGO-2223
+	public void shouldResolveListDBRefToAnotherDb() {
+
+		JustSomeType one = new JustSomeType();
+		one.value = "one";
+
+		JustSomeType two = new JustSomeType();
+		two.value = "two";
+
+		otherDbTemplate.insertAll(Arrays.asList(one, two));
+
+		WithListRefToAnotherDb source = new WithListRefToAnotherDb();
+		source.value = Arrays.asList(one, two);
+
+		template.save(source);
+
+		WithListRefToAnotherDb target = template.findOne(query(where("id").is(source.id)), WithListRefToAnotherDb.class);
+		assertThat(target.getValue()).containsExactlyInAnyOrder(one, two);
+	}
+
+	@Test // DATAMONGO-2223
+	public void shouldResolveLazyListDBRefToAnotherDb() {
+
+		JustSomeType one = new JustSomeType();
+		one.value = "one";
+
+		JustSomeType two = new JustSomeType();
+		two.value = "two";
+
+		otherDbTemplate.insertAll(Arrays.asList(one, two));
+
+		WithLazyListRefToAnotherDb source = new WithLazyListRefToAnotherDb();
+		source.value = Arrays.asList(one, two);
+
+		template.save(source);
+
+		WithLazyListRefToAnotherDb target = template.findOne(query(where("id").is(source.id)),
+				WithLazyListRefToAnotherDb.class);
+		LazyLoadingTestUtils.assertProxyIsResolved(target.value, false);
+		assertThat(target.getValue()).containsExactlyInAnyOrder(one, two);
+	}
+
 	@Data
 	@Document("cycle-with-different-type-root")
 	static class RefCycleLoadingIntoDifferentTypeRoot {
@@ -189,6 +277,44 @@ public class MongoTemplateDbRefTests {
 
 		@Id String id;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) RawStringId value;
+	}
+
+	@Data
+	static class WithRefToAnotherDb {
+
+		@Id String id;
+		@org.springframework.data.mongodb.core.mapping.DBRef(db = "mongo-template-dbref-tests-other-db") JustSomeType value;
+	}
+
+	@Data
+	static class WithLazyRefToAnotherDb {
+
+		@Id String id;
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true,
+				db = "mongo-template-dbref-tests-other-db") JustSomeType value;
+	}
+
+	@Data
+	static class WithListRefToAnotherDb {
+
+		@Id String id;
+		@org.springframework.data.mongodb.core.mapping.DBRef(
+				db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
+	}
+
+	@Data
+	static class WithLazyListRefToAnotherDb {
+
+		@Id String id;
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true,
+				db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
+	}
+
+	@Data
+	static class JustSomeType {
+
+		@Id String id;
+		String value;
 	}
 
 }
