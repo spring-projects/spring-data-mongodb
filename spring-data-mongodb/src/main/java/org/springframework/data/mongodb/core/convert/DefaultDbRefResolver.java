@@ -32,6 +32,8 @@ import java.util.stream.Stream;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
@@ -65,6 +67,8 @@ import com.mongodb.client.model.Filters;
  * @since 1.4
  */
 public class DefaultDbRefResolver implements DbRefResolver {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultDbRefResolver.class);
 
 	private final MongoDbFactory mongoDbFactory;
 	private final PersistenceExceptionTranslator exceptionTranslator;
@@ -110,6 +114,12 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	@Override
 	public Document fetch(DBRef dbRef) {
 
+		if (LOGGER.isTraceEnabled()) {
+			LOGGER.trace("Fetching DBRef '{}' from {}.{}.", dbRef.getId(),
+					StringUtils.hasText(dbRef.getDatabaseName()) ? dbRef.getDatabaseName() : mongoDbFactory.getDb().getName(),
+					dbRef.getCollectionName());
+		}
+
 		StringUtils.hasText(dbRef.getDatabaseName());
 		return getCollection(dbRef).find(Filters.eq("_id", dbRef.getId())).first();
 	}
@@ -141,7 +151,16 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			ids.add(ref.getId());
 		}
 
-		List<Document> result = getCollection(refs.iterator().next()) //
+		DBRef databaseSource = refs.iterator().next();
+
+		if (LOGGER.isTraceEnabled()) {
+			LOGGER.trace("Bulk fetching DBRefs {} from {}.{}.", ids,
+					StringUtils.hasText(databaseSource.getDatabaseName()) ? databaseSource.getDatabaseName()
+							: mongoDbFactory.getDb().getName(),
+					databaseSource.getCollectionName());
+		}
+
+		List<Document> result = getCollection(databaseSource) //
 				.find(new Document("_id", new Document("$in", ids))) //
 				.into(new ArrayList<>());
 
@@ -438,26 +457,34 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		@Nullable
 		private synchronized Object resolve() {
 
-			if (!resolved) {
+			if (resolved) {
 
-				try {
-
-					return callback.resolve(property);
-
-				} catch (RuntimeException ex) {
-
-					DataAccessException translatedException = this.exceptionTranslator.translateExceptionIfPossible(ex);
-
-					if (translatedException instanceof ClientSessionException) {
-						throw new LazyLoadingException("Unable to lazily resolve DBRef! Invalid session state.", ex);
-					}
-
-					throw new LazyLoadingException("Unable to lazily resolve DBRef!",
-							translatedException != null ? translatedException : ex);
+				if (LOGGER.isTraceEnabled()) {
+					LOGGER.trace("Accessing already resolved lazy loading property {}.{}",
+							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
 				}
+				return result;
 			}
 
-			return result;
+			try {
+				if (LOGGER.isTraceEnabled()) {
+					LOGGER.trace("Resolving lazy loading property {}.{}",
+							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
+				}
+
+				return callback.resolve(property);
+
+			} catch (RuntimeException ex) {
+
+				DataAccessException translatedException = this.exceptionTranslator.translateExceptionIfPossible(ex);
+
+				if (translatedException instanceof ClientSessionException) {
+					throw new LazyLoadingException("Unable to lazily resolve DBRef! Invalid session state.", ex);
+				}
+
+				throw new LazyLoadingException("Unable to lazily resolve DBRef!",
+						translatedException != null ? translatedException : ex);
+			}
 		}
 	}
 
