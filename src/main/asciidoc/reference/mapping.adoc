@@ -593,6 +593,9 @@ IMPORTANT: The mapping framework does not handle cascading saves. If you change 
 ``DBRef``s can also be resolved lazily. In this case the actual `Object` or `Collection` of references is resolved on first access of the property. Use the `lazy` attribute of `@DBRef` to specify this.
 Required properties that are also defined as lazy loading ``DBRef`` and used as constructor arguments are also decorated with the lazy loading proxy making sure to put as little pressure on the database and network as possible.
 
+TIP: Lazily loaded ``DBRef``s can be hard to debug. Make sure tooling does not accidentally trigger proxy resolution by eg. calling `toString()` or some inline debug rendering invoking property getters.
+Please consider to enable _trace_ logging for `org.springframework.data.mongodb.core.convert.DefaultDbRefResolver` to gain insight on `DBRef` resolution.
+
 [[mapping-usage-events]]
 === Mapping Framework Events
 
